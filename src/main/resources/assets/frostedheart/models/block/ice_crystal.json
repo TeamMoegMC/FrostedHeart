@@ -1,37 +1,36 @@
 {
   "parent": "minecraft:block/block",
-  "render_type": "minecraft:translucent",
+  "render_type": "minecraft:solid",
+  "ambientocclusion": false,
   "textures": {
     "ice": "frostedheart:block/ice_1",
+    "facet": "frostedheart:block/packed_ice_1",
     "particle": "frostedheart:block/ice_1"
   },
   "elements": [
     {
       "from": [
-        5,
+        6.0,
         0,
-        5
+        6.51
       ],
       "to": [
-        10,
-        7,
-        10
+        10.0,
+        5.0,
+        9.49
       ],
       "faces": {
         "down": {
-          "texture": "#ice"
-        },
-        "up": {
-          "texture": "#ice"
+          "texture": "#facet"
         },
         "north": {
           "texture": "#ice"
         },
         "south": {
-          "texture": "#ice"
+          "texture": "#facet"
         },
         "west": {
-          "texture": "#ice"
+          "texture": "#facet"
         },
         "east": {
           "texture": "#ice"
@@ -40,18 +39,28 @@
     },
     {
       "from": [
-        3,
-        0,
-        4
+        6.585786437626905,
+        3.585786437626905,
+        6.5
       ],
       "to": [
-        6,
-        5,
-        7
+        9.414213562373096,
+        6.414213562373095,
+        9.5
       ],
+      "rotation": {
+        "origin": [
+          8,
+          5.0,
+          8
+        ],
+        "axis": "z",
+        "angle": 45,
+        "rescale": false
+      },
       "faces": {
         "down": {
-          "texture": "#ice"
+          "texture": "#facet"
         },
         "up": {
           "texture": "#ice"
@@ -60,40 +69,69 @@
           "texture": "#ice"
         },
         "south": {
-          "texture": "#ice"
+          "texture": "#facet"
         },
         "west": {
-          "texture": "#ice"
+          "texture": "#facet"
         },
         "east": {
           "texture": "#ice"
         }
-      },
-      "rotation": {
-        "origin": [
-          8,
-          0,
-          8
-        ],
-        "axis": "y",
-        "angle": -22.5,
-        "rescale": false
       }
     },
     {
       "from": [
-        9,
+        3.51,
         0,
-        8
+        4.75
       ],
       "to": [
-        13,
-        6,
-        12
+        5.49,
+        3.25,
+        7.25
       ],
       "faces": {
         "down": {
+          "texture": "#facet"
+        },
+        "north": {
           "texture": "#ice"
+        },
+        "south": {
+          "texture": "#facet"
+        },
+        "west": {
+          "texture": "#facet"
+        },
+        "east": {
+          "texture": "#ice"
+        }
+      }
+    },
+    {
+      "from": [
+        3.5,
+        2.3661165235168156,
+        5.116116523516816
+      ],
+      "to": [
+        5.5,
+        4.133883476483184,
+        6.883883476483184
+      ],
+      "rotation": {
+        "origin": [
+          4.5,
+          3.25,
+          6
+        ],
+        "axis": "x",
+        "angle": 45,
+        "rescale": false
+      },
+      "faces": {
+        "down": {
+          "texture": "#facet"
         },
         "up": {
           "texture": "#ice"
@@ -102,24 +140,85 @@
           "texture": "#ice"
         },
         "south": {
-          "texture": "#ice"
+          "texture": "#facet"
         },
         "west": {
-          "texture": "#ice"
+          "texture": "#facet"
         },
         "east": {
           "texture": "#ice"
         }
-      },
+      }
+    },
+    {
+      "from": [
+        9.5,
+        0,
+        9.26
+      ],
+      "to": [
+        12.5,
+        4.0,
+        11.74
+      ],
+      "faces": {
+        "down": {
+          "texture": "#facet"
+        },
+        "north": {
+          "texture": "#ice"
+        },
+        "south": {
+          "texture": "#facet"
+        },
+        "west": {
+          "texture": "#facet"
+        },
+        "east": {
+          "texture": "#ice"
+        }
+      }
+    },
+    {
+      "from": [
+        9.939339828220179,
+        2.939339828220179,
+        9.25
+      ],
+      "to": [
+        12.060660171779821,
+        5.060660171779821,
+        11.75
+      ],
       "rotation": {
         "origin": [
-          8,
-          0,
-          8
+          11,
+          4.0,
+          10.5
         ],
-        "axis": "y",
-        "angle": 22.5,
+        "axis": "z",
+        "angle": 45,
         "rescale": false
+      },
+      "faces": {
+        "down": {
+          "texture": "#facet"
+        },
+        "up": {
+          "texture": "#ice"
+        },
+        "north": {
+          "texture": "#ice"
+        },
+        "south": {
+          "texture": "#facet"
+        },
+        "west": {
+          "texture": "#facet"
+        },
+        "east": {
+          "texture": "#ice"
+        }
       }
     }
   ]

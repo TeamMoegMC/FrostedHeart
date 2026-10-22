@@ -64,13 +64,13 @@ public final class IceCaveFeatureGameTests {
             Terrain wide = new Terrain(helper, CENTER, false);
             wide.worldSeed = seed;
             helper.assertTrue(wide.place(FHFeatures.ICE_CAVE_SURFACE.get(), seed), "wide cave gains ice");
-            helper.assertTrue(wide.count(FHBlocks.ICE_CRYSTAL.get().defaultBlockState()) == 0
+            helper.assertTrue(wide.count(FHBlocks.LARGE_ICE_CRYSTAL.get().defaultBlockState()) == 0
                             && wide.count(FHBlocks.GLOWSTONE_CRYSTAL.get().defaultBlockState()) == 0,
                     "surface pass leaves crystal placement to the later decoration pass");
 
             Terrain narrow = new Terrain(helper, CENTER, true);
             helper.assertTrue(narrow.place(FHFeatures.ICE_CAVE_SURFACE.get(), seed), "narrow cave gains ice");
-            helper.assertTrue(narrow.count(FHBlocks.ICE_CRYSTAL.get().defaultBlockState()) == 0,
+            helper.assertTrue(narrow.count(FHBlocks.LARGE_ICE_CRYSTAL.get().defaultBlockState()) == 0,
                     "ordinary narrow passages do not gain ice crystals");
             helper.assertTrue(narrow.count(FHBlocks.GLOWSTONE_CRYSTAL.get().defaultBlockState()) == 0,
                     "ordinary narrow passages do not gain glowstone crystals");
@@ -101,7 +101,7 @@ public final class IceCaveFeatureGameTests {
                 }
             }
             helper.assertTrue(sources == 13, "basin keeps its configured radius-two footprint");
-            helper.assertTrue(terrain.count(FHBlocks.ICE_CRYSTAL.get().defaultBlockState()) > 0,
+            helper.assertTrue(terrain.count(FHBlocks.LARGE_ICE_CRYSTAL.get().defaultBlockState()) > 0,
                     "spring approach actually gains a marker");
             terrain.checkCrystals();
             if (seed == 0) {
@@ -309,7 +309,7 @@ public final class IceCaveFeatureGameTests {
             return Blocks.STONE.defaultBlockState();
         };
         helper.assertTrue(room.place(decoration, 41), "thick overhead ice gains later decoration");
-        helper.assertTrue(room.count(FHBlocks.ICE_CRYSTAL.get().defaultBlockState()) > 0,
+        helper.assertTrue(room.count(FHBlocks.LARGE_ICE_CRYSTAL.get().defaultBlockState()) > 0,
                 "real decoration places internal crystal pockets");
         room.checkCrystals();
         for (int x = 0; x < 16; x++) for (int z = 0; z < 16; z++) {
@@ -324,6 +324,7 @@ public final class IceCaveFeatureGameTests {
     public static void surfaceBandsHaveNoTinyFragmentsAndCanSpanHighWalls(GameTestHelper helper) {
         int largest = 0;
         int groups = 0;
+        Set<net.minecraft.world.level.block.Block> materials = new HashSet<>();
         for (int seed = 0; seed < 48; seed++) {
             Terrain room = new Terrain(helper, CENTER, false);
             room.worldSeed = seed * 7919L + 17;
@@ -332,7 +333,8 @@ public final class IceCaveFeatureGameTests {
             room.place(FHFeatures.ICE_CAVE_SURFACE.get(), seed);
             java.util.Set<BlockPos> remaining = new java.util.HashSet<>();
             room.states.forEach((pos, state) -> {
-                if (state.is(Blocks.PACKED_ICE) || state.is(Blocks.BLUE_ICE)) remaining.add(pos);
+                if (state.is(Blocks.PACKED_ICE) || state.is(Blocks.BLUE_ICE)
+                        || state.is(FHBlocks.THIN_ICE_BLOCK.get())) remaining.add(pos);
             });
             while (!remaining.isEmpty()) {
                 BlockPos start = remaining.iterator().next();
@@ -347,11 +349,57 @@ public final class IceCaveFeatureGameTests {
                     }
                 }
                 helper.assertTrue(group.size() >= 4, "every material ribbon contains at least four connected exposed-shell cells");
+                materials.add(room.get(start).getBlock());
                 largest = Math.max(largest, group.size());
                 groups++;
             }
         }
         helper.assertTrue(groups > 0 && largest >= 100, "coarse sparse bands can form hundred-block continuous regions, largest=" + largest);
+        helper.assertTrue(materials.containsAll(List.of(Blocks.PACKED_ICE, Blocks.BLUE_ICE, FHBlocks.THIN_ICE_BLOCK.get())),
+                "thin-ice ribbons coexist with both retained ribbon materials");
+        helper.succeed();
+    }
+
+    @GameTest(template = "phase0a_empty", batch = "ice_cave", timeoutTicks = 40)
+    public static void smallCrystalsUseEveryNaturalFaceWithoutThickIceOrWideHall(GameTestHelper helper) {
+        for (Direction side : Direction.values()) {
+            for (BlockState base : List.of(Blocks.STONE.defaultBlockState(), Blocks.ICE.defaultBlockState(),
+                    FHBlocks.PYRITE_ORE.get().defaultBlockState())) {
+                Terrain room = new Terrain(helper, CENTER, true);
+                room.shape = pos -> Blocks.AIR.defaultBlockState();
+                BlockPos support = CENTER.relative(side);
+                room.states.put(support, base);
+                room.states.put(CENTER.offset(1, 1, 1),
+                        FHFluids.HOT_SPRING.get().getSource().defaultFluidState().createLegacyBlock());
+                helper.assertTrue(IceCaveSmallCrystalFeature.tryPlace(room.level, CENTER, RandomSource.create(12)),
+                        "a natural face holds a small crystal even beside a spring");
+                var crystal = room.get(CENTER);
+                helper.assertTrue(crystal.is(FHBlocks.ICE_CRYSTAL.get()) && crystal.canSurvive(room.level, CENTER),
+                        "the small crystal has actual support on each of six faces");
+                helper.assertTrue(room.get(support) == base && room.writes.size() == 1,
+                        "surface crystals retain their stone, ice or mineral support without glowstone conversion");
+            }
+        }
+        Terrain construction = new Terrain(helper, CENTER, false);
+        construction.shape = pos -> pos.equals(CENTER.below()) ? Blocks.OAK_PLANKS.defaultBlockState() : Blocks.AIR.defaultBlockState();
+        helper.assertTrue(!IceCaveSmallCrystalFeature.tryPlace(construction.level, CENTER, RandomSource.create(1)),
+                "the natural decoration predicate does not attach to constructed wood");
+        helper.succeed();
+    }
+
+    @GameTest(template = "phase0a_empty", batch = "ice_cave", timeoutTicks = 40)
+    public static void smallCrystalCandidatesSearchLocallyAndPlaceAtMostOne(GameTestHelper helper) {
+        var small = FHFeatures.ICE_CAVE_SMALL_CRYSTAL.get();
+        Terrain room = new Terrain(helper, CENTER, false);
+        room.restrictToChunk = false;
+        room.shape = pos -> pos.getX() == CENTER.getX() + 16 ? Blocks.STONE.defaultBlockState() : Blocks.AIR.defaultBlockState();
+        helper.assertTrue(room.place(small, 21), "a ray finds a real wall across the chunk edge");
+        helper.assertTrue(room.writes.size() == 1 && room.get(room.writes.get(0)).is(FHBlocks.ICE_CRYSTAL.get()),
+                "one glow-lichen-style candidate produces at most one small crystal");
+        Terrain far = new Terrain(helper, CENTER, false);
+        far.restrictToChunk = false;
+        far.shape = pos -> pos.getX() >= CENTER.getX() + 22 ? Blocks.STONE.defaultBlockState() : Blocks.AIR.defaultBlockState();
+        helper.assertTrue(!far.place(small, 21) && far.writes.isEmpty(), "twenty-block searches do not reach distant terrain");
         helper.succeed();
     }
 
@@ -364,6 +412,7 @@ public final class IceCaveFeatureGameTests {
         private final WorldGenLevel level;
         private long worldSeed;
         private Function<BlockPos, BlockState> shape;
+        private boolean restrictToChunk = true;
 
         private Terrain(GameTestHelper helper, BlockPos origin, boolean narrow) {
             this.helper = helper;
@@ -383,7 +432,7 @@ public final class IceCaveFeatureGameTests {
                         if (method.getName().equals("setBlock")) {
                             BlockPos pos = ((BlockPos) args[0]).immutable();
                             BlockState next = (BlockState) args[1];
-                            helper.assertTrue((pos.getX() >> 4) == (origin.getX() >> 4)
+                            helper.assertTrue(!restrictToChunk || (pos.getX() >> 4) == (origin.getX() >> 4)
                                             && (pos.getZ() >> 4) == (origin.getZ() >> 4),
                                     "feature write remains in its generating chunk");
                             if (next.is(FHBlocks.GLOWSTONE_CRYSTAL.get())) {
@@ -422,7 +471,7 @@ public final class IceCaveFeatureGameTests {
 
         private void checkCrystals() {
             for (Map.Entry<BlockPos, BlockState> entry : states.entrySet()) {
-                if (!entry.getValue().is(FHBlocks.ICE_CRYSTAL.get())) continue;
+                if (!entry.getValue().is(FHBlocks.LARGE_ICE_CRYSTAL.get())) continue;
                 helper.assertTrue(entry.getValue().canSurvive(level, entry.getKey()), "ice crystal has valid support");
                 boolean glowstone = false;
                 for (Direction side : Direction.values()) {

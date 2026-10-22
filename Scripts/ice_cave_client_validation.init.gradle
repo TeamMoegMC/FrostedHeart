@@ -10,6 +10,7 @@ allprojects {
             property 'frostedheart.iceCaveClientSeeds', providers.gradleProperty('iceCaveClientSeeds').getOrElse('111,222,333')
             property 'frostedheart.iceCaveSampleChunks', providers.gradleProperty('iceCaveSampleChunks').getOrElse('4')
             property 'frostedheart.iceCaveClientTimeoutSeconds', '1800'
+            property 'frostedheart.iceCaveCrystalDisplay', providers.gradleProperty('iceCaveCrystalDisplay').getOrElse('false')
         }
         tasks.matching { it.name == 'runClient' }.configureEach {
             dependsOn tasks.named('compileGameTestJava')

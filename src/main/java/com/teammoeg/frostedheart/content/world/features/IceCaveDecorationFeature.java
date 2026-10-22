@@ -1,6 +1,7 @@
 package com.teammoeg.frostedheart.content.world.features;
 
 import com.mojang.serialization.Codec;
+import java.util.function.Predicate;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -41,7 +42,7 @@ public final class IceCaveDecorationFeature extends Feature<NoneFeatureConfigura
                                     || !IceCaveTerrain.inBiome(level, supportPos)
                                     || !IceCaveTerrain.ice(level.getBlockState(supportPos))
                                     || !IceCaveTerrain.ice(level.getBlockState(supportPos.relative(side)))) continue;
-                            var crystal = FHBlocks.ICE_CRYSTAL.get().defaultBlockState()
+                            var crystal = FHBlocks.LARGE_ICE_CRYSTAL.get().defaultBlockState()
                                     .setValue(AmethystClusterBlock.FACING, side.getOpposite());
                             if (!crystal.canSurvive(level, pos)) continue;
                             level.setBlock(supportPos, FHBlocks.GLOWSTONE_CRYSTAL.get().defaultBlockState(), 2);
@@ -63,15 +64,20 @@ public final class IceCaveDecorationFeature extends Feature<NoneFeatureConfigura
     }
 
     static boolean placeCrystalPocket(WorldGenLevel level, BlockPos pos) {
+        return placeCrystalPocket(level, pos, support -> true);
+    }
+
+    static boolean placeCrystalPocket(WorldGenLevel level, BlockPos pos, Predicate<BlockPos> allowedSupport) {
         var state = level.getBlockState(pos);
         if (!IceCaveTerrain.ice(state) || !level.ensureCanWrite(pos) || !IceCaveTerrain.inBiome(level, pos)
                 || !inThickIce(level, pos) || IceCaveTerrain.springNearby(level, pos)) return false;
         for (Direction side : Direction.values()) {
             BlockPos support = pos.relative(side);
-            if ((support.getX() >> 4) != (pos.getX() >> 4) || (support.getZ() >> 4) != (pos.getZ() >> 4)
+            if (!allowedSupport.test(support)
+                    || (support.getX() >> 4) != (pos.getX() >> 4) || (support.getZ() >> 4) != (pos.getZ() >> 4)
                     || !level.ensureCanWrite(support) || !IceCaveTerrain.inBiome(level, support)
                     || IceCaveTerrain.springNearby(level, support)) continue;
-            var crystal = FHBlocks.ICE_CRYSTAL.get().defaultBlockState()
+            var crystal = FHBlocks.LARGE_ICE_CRYSTAL.get().defaultBlockState()
                     .setValue(AmethystClusterBlock.FACING, side.getOpposite());
             var oldSupport = level.getBlockState(support);
             level.setBlock(support, FHBlocks.GLOWSTONE_CRYSTAL.get().defaultBlockState(), 2);

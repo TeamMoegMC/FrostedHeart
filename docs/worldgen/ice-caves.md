@@ -1,12 +1,12 @@
 # 冰霜洞穴：第二版当前实现
 
-- Status: `Partial`（第二版及本轮反馈修订已核对；28 项定向测试和三种子矿量对照通过；实际世界观感与长期玩法仍待用户验收）
+- Status: `Partial`（本轮条带、大小晶体与矿量修订已实现，定向测试、矿量采样和实际客户端观察已完成，最终试玩验收开放；历史结果分节保留）
 - Last verified: `2026-10-22`
 - Scope: `the_winter_rescue:ice_caves` 的覆冰、地下冰湖、大型冰体、薄冰陷阱、晶体、功能冰锥及既有温泉接口
-- Code anchors: [`FHFeatures`](../../src/main/java/com/teammoeg/frostedheart/content/world/FHFeatures.java)、`IceCaveSurfaceFeature.place`、`IceCaveIceBlobFeature.place`、`IceCaveLargeIceFeature.place`、`IceCaveSpikeFeature.place`、`IceCaveTrapFeature.tryPlace`、`IceCaveDecorationFeature.place`、`IcicleFeature.placeCaveIcicle`、`IceCaveTerrain`、`IceCaveIceBody`
+- Code anchors: [`FHFeatures`](../../src/main/java/com/teammoeg/frostedheart/content/world/FHFeatures.java)、`IceCaveSurfaceFeature.place`、`IceCaveIceBlobFeature.place`、`IceCaveLargeIceFeature.place`、`IceCaveSpikeFeature.place`、`IceCaveTrapFeature.tryPlace`、`IceCaveDecorationFeature.place`、`IceCaveSmallCrystalFeature.place` / `tryPlace`、`IceCaveSpringFeature.place`、`IcicleFeature.placeCaveIcicle`、`IceCaveTerrain`、`IceCaveIceBody`
 - Data anchors: TWR [`worldgen/biome/ice_caves.json`](../../../TheWinterRescue/kubejs/data/the_winter_rescue/worldgen/biome/ice_caves.json)、[`worldgen/placed_feature/cave/`](../../../TheWinterRescue/kubejs/data/the_winter_rescue/worldgen/placed_feature/cave/)
 
-本文描述当前工作区的第二版实现，参数为源码默认值或当前 TWR 数据值，不代表最终视觉验收结果。用户目标及尚未验收的比例见[第二版方案](../../plans/2026-10-22_01-04-46_ice-caves-landscape-revision.md)。[首版实现详解与实测对照](ice-caves-implementation-review.md)保留为历史快照，其中的小冰斑、单格水坑、旧生成顺序和旧参数不能作为第二版说明。
+本文描述当前工作区的第二版及后续修订实现，参数为源码默认值或当前 TWR 数据值，不代表最终视觉验收结果。本轮大小晶体、团块荧石和矿量调整见[当前实施计划](../../plans/2026-10-22_19-38-29_ice-caves-crystals-and-ore-revision.md)，原景观目标及尚未验收的比例见[第二版方案](../../plans/2026-10-22_01-04-46_ice-caves-landscape-revision.md)。[首版实现详解与实测对照](ice-caves-implementation-review.md)保留为历史快照，其中的小冰斑、单格水坑、旧生成顺序和旧参数不能作为当前说明。
 
 ## 地形基础、阶段与入口
 
@@ -20,7 +20,7 @@ TWR `ice_caves.json` 的 `features` 按原版 `GenerationStep.Decoration` 执行
 | `6 / UNDERGROUND_ORES` | 冰洞专属矿物、普通岩石与原版矿物；全局 biome modifier 还可加入通用矿物 |
 | `7 / UNDERGROUND_DECORATION` | `minecraft:ore_infested` |
 | `8 / FLUID_SPRINGS` | 原版普通水、熔岩泉 |
-| `9 / VEGETAL_DECORATION` | `minecraft:glow_lichen` → `ice_cave_surface` → `ice_cave_ice_blob` → `ice_cave_large_ice` → `ice_cave_spike` → `ice_cave_trap` → `ice_cave_decoration` |
+| `9 / VEGETAL_DECORATION` | `minecraft:glow_lichen` → `ice_cave_surface` → `ice_cave_ice_blob` → `ice_cave_large_ice` → `ice_cave_spike` → `ice_cave_trap` → `ice_cave_decoration` → `ice_cave_small_crystal` |
 
 因此先保留温泉和矿体，再处理整体覆冰、宏观冰体、陷阱，最后放晶体及下垂冰锥。下表注册 ID 均以 `frostedheart:` 为前缀，placed feature 以 `the_winter_rescue:cave/` 为前缀，同名 JSON 内嵌 configured feature。大型冰体使用 `LargeDripstoneConfiguration.CODEC`，其余景观 feature 使用 `NoneFeatureConfiguration.CODEC`。
 
@@ -32,6 +32,7 @@ TWR `ice_caves.json` 的 `features` 按原版 `GenerationStep.Decoration` 执行
 | `ice_cave_spike` / `ice_cave_spike.json` | `1`，再通过 `chance: 2` 筛选 | 同上；期望 `0.5` 次候选，不等于每两区块生成一根 |
 | `ice_cave_trap` / `ice_cave_trap.json` | `12` | 同上；完整坑体预检后仍可能无成功结果 |
 | `ice_cave_decoration` / `ice_cave_decoration.json` | `placement: []`，整区块扫描一次 | 同覆冰扫描窗口 |
+| `ice_cave_small_crystal` / `ice_cave_small_crystal.json` | 整数均匀 `104..157` 个候选，含两端 | 均匀 `above_bottom: 0` 到 `absolute: 256`，含两端；另有表面以下过滤，完整 placement 见后文 |
 | `ice_cave_spring` / `ice_cave_spring.json` | `4`，每次通过 `chance: 2` 筛选 | 均匀 `-40..0`；期望 `2` 次候选，保留首版配置 |
 
 `placement: []` 是有意安排：surface / decoration 在被区块群系集合调用后，自行逐格检查三维 `ice_caves`，不会因随机起点群系不匹配而跳过整块深层洞穴。候选型 feature 的成功率仍取决于地形、宿主、实际群系边界、已有装饰及完整体积检查。
@@ -48,7 +49,7 @@ TWR `ice_caves.json` 的 `features` 按原版 `GenerationStep.Decoration` 执行
 - 矿石原位保留，在其空气侧包冰。候选反方向必须再有连续 `3` 格空气，即原通道方向至少 `4` 格自由空间；相对两面同时包冰后仍保留 `2` 格。更窄通道允许保留露矿。
 - 普通覆冰和包矿避开温泉流体的 `3×3×3` 邻域，保留已有干岸；温泉流体不进入普通水面结冰分支。
 
-表面条带在普通覆冰候选收集后，由 `applyBands` 单独处理。材质噪声种子仍为 `level.getSeed() ^ 0x57a1beL`，先以区域掩码 `noise(0.008x+417,0.008z-831)>=0.25` 降低出现区域数量，再取 `M(x,z)=noise(0.018x,0.018z)`：`0.35<M<0.55` 用浮冰，`-0.65<M<-0.50` 用蓝冰。比首轮窄噪声条纹的水平尺度更大，同一 `x,z` 沿高度一致，偏纵向。
+表面条带在普通覆冰候选收集后，由 `applyBands` 单独处理。材质噪声种子仍为 `level.getSeed() ^ 0x57a1beL`，先以区域掩码 `noise(0.008x+417,0.008z-831)>=0.25` 降低出现区域数量，再取 `M(x,z)=noise(0.018x,0.018z)`。三个不重叠区间分别为：`0.35<M<0.55` 浮冰、`-0.65<M<-0.50` 蓝冰、`-0.15<M<0.05` 的 `frostedheart:thin_ice`。薄冰新增档与已有两档共用区域掩码、空间尺度和以下连通分组规则；普通冰仍是其他区域的默认材质。同一 `x,z` 沿高度一致，偏纵向。
 
 仅对本次真正暴露的表层候选按同材质六邻接分组，至少 `4` 格才着色，否则保留普通冰；埋藏第二层不计数。连续大墙可形成几十、上百格的条带，尺寸取决于真实表面及覆盖掩码，不承诺每段都达上百格。分组局限本区块，因此跨边界小于四格的尾段会回退，不能把噪声跨区块连续等同于最终条带绝无断点；后续冰体、陷阱和晶体也可能局部改变条带。该规则不套用团状冰的 `50%` 材质概率。
 
@@ -72,7 +73,9 @@ TWR `ice_caves.json` 的 `features` 按原版 `GenerationStep.Decoration` 执行
 
 每团统一选材：普通冰 `50%`、浮冰 `25%`、蓝冰 `12.5%`、FH 坚冰 `12.5%`。这是当前实现权重，同团不逐格随机拼色。矿格原地保留并计入嵌入支撑，允许局部矿斑，不为隐藏矿物删除资源。
 
-团块成功后对自身冰格增加 `1/180` 的内部晶体候选，调用 `IceCaveDecorationFeature.placeCrystalPocket`：六面必须仍是实体冰，荧石支撑及晶簇都在允许写入的冰洞格内，并避开温泉干岸。这是团块自身的额外机会，不建立持续的方块来源标记；叠加后置通用 `1/360` 后，未被其他改动阻断的团内格候选机会约为旧 `1/180` 的 `1.5` 倍，实际晶体数量不保证精确乘 1.5。提前形成的晶体仍受后续冰体的保护规则约束。
+团块完整放置成功后，目标是每团保底一处内部 `frostedheart:glowstone_crystal`。源码先记录实际球体体积；仅六个相邻格都属于该球体的非矿冰格可作内部候选，遍历从随机格起循环进行。优先调用 `IceCaveDecorationFeature.placeCrystalPocket`：候选六面须仍为实体冰，荧石支撑也须属于该团几何内部，支撑和大晶簇均在允许写入的冰洞格内，并避开温泉干岸。一次成功便结束团内检查；全部口袋失败时，将一格合格内部冰直接换成整块荧石，无需挖晶簇口袋。
+
+团内旧 `1/180` 逐格抽取已移除；这个专属步骤每团最多新增一块荧石，后置通用 `1/360` 机会另行保留。它不建立持久计数器，也不因缺少荧石位置而撤销本可生成的团块。极端情况下若所有几何内部格均是原位保留矿石，则没有可替换的内部冰格，该成功团块可没有荧石；不能删矿或拒绝这类团块来抬高比例。至少 `50%` 的目标须以全部成功团块为分母核验，不能仅统计抽中或有合格位置的团块。本轮测试包含无矿、混矿、全矿岩壁、最小与最大直径及跨区块起点，结果待集中验证。提前形成的晶体仍受后续冰体保护规则约束。
 
 ### 大型冰笋、冰钟乳与部分连接柱
 
@@ -116,13 +119,36 @@ TWR `ice_caves.json` 的 `features` 按原版 `GenerationStep.Decoration` 执行
 
 [`IceCaveDecorationFeature`](../../src/main/java/com/teammoeg/frostedheart/content/world/features/IceCaveDecorationFeature.java) 在冰体和陷阱之后，按与 surface 相同的窗口扫描：
 
-1. **内部口袋**：通用实体冰格 `1/360` 候选（原为 `1/180`），须六面均为实体冰且避开温泉。相邻冰格换 `frostedheart:glowstone_crystal` 作完整方块支撑，本格留出占位再放 `frostedheart:ice_crystal`；检查 `canSurvive`，失败恢复原冰和支撑。晶簇与完整冰不占同一格。团状冰的额外机会见上节。
-2. **外露镶嵌**：空气格 `1/360` 候选（原为 `1/120`），须宽敞并避开温泉。相邻支撑格及其后方均为实体冰；支撑换荧石晶体，空气格放朝外晶簇。支撑和晶簇写入限制在本区块、目标群系。减少一般冰壁散布，把荧石更偏向团状冰；内部口袋的透视效果仍受冰材质和客户端表现影响。温泉生成器自己的晶体指引未修改。
+1. **内部口袋**：通用实体冰格 `1/360` 候选，须六面均为实体冰且避开温泉。相邻冰格换 `frostedheart:glowstone_crystal` 作完整方块支撑，本格留出占位再放 `frostedheart:large_ice_crystal`；检查 `canSurvive`，失败恢复原冰和支撑。晶簇与完整冰不占同一格，薄冰不作为厚实体冰被挖口袋。团状冰自身的保底步骤见上节。
+2. **外露镶嵌**：空气格 `1/360` 候选，须宽敞并避开温泉。相邻支撑格及其后方均为实体冰；支撑换荧石晶体，空气格放朝外大晶簇。支撑和晶簇写入限制在本区块、目标群系。减少一般冰壁散布，把荧石更偏向团状冰；内部口袋的透视效果仍受冰材质和客户端表现影响。温泉生成器近处及入口的既有提示位置同样全部改用大晶体，选址和频率保留。
 3. **功能冰锥**：尚为空气且上方为实体冰/自然岩体时，冰下候选概率 `0.42`，岩下 `0.09`。调用 `IcicleFeature.placeCaveIcicle`，向下生成已有 `frostedheart:icicle` 链。
 
 [`IcicleFeature.placeCaveIcicle`](../../src/main/java/com/teammoeg/frostedheart/content/world/features/IcicleFeature.java) 使用世界生成专用间距：只排除四个水平邻格在 `dy=-1..1` 内的已有冰锥，不调用运行时 `IcicleBlock.hasNearbyRoot` 的 `5×5×3` 根部排斥。原 `IcicleFeature.place` 和运行时生长继续用原规则，未修改增长、断裂、伤害等属性。
 
 链长按 `round(2 + Gaussian × 3.75)` 抽取并夹到 `1..IcicleBlock.MAX_NATURAL_LENGTH`；当前上限 `8` 格。遇到非空气、建筑高度边界或实际三维群系边界即停止，使用原根/中段/尾/尖形态，不替换薄冰湖面、坑盖或水。
+
+### 独立小晶体与大小外观
+
+[`IceCaveSmallCrystalFeature`](../../src/main/java/com/teammoeg/frostedheart/content/world/features/IceCaveSmallCrystalFeature.java) 在上述装饰之后独立生成小晶体 `frostedheart:ice_crystal`。候选必须为空气；先尝试当前位置，再随机排列六个方向，每个方向沿空气最多搜索 `20` 格，遇到实体、建筑高度边界或不可读区块即停止该方向。每个可写候选格逐格检查实际三维 `ice_caves`，随机检查六向天然支撑面，以 `AmethystClusterBlock.canSurvive` 确认朝向，成功放一块即结束本候选。允许天然岩石、土质宿主、实体冰、薄冰、矿格和雪块等现有自然基底；包含地面、墙面及洞顶，不要求宽厅或厚冰，也不排除温泉附近。支撑保持原状，不转换成荧石；已有流体和实体不会被小晶体替换。
+
+TWR [`ice_cave_small_crystal.json`](../../../TheWinterRescue/kubejs/data/the_winter_rescue/worldgen/placed_feature/cave/ice_cave_small_crystal.json) 复用本地原版 `minecraft:glow_lichen` 的完整候选布置：
+
+```json
+{
+  "feature": { "type": "frostedheart:ice_cave_small_crystal", "config": {} },
+  "placement": [
+    { "type": "minecraft:count", "count": { "type": "minecraft:uniform", "value": { "min_inclusive": 104, "max_inclusive": 157 } } },
+    { "type": "minecraft:height_range", "height": { "type": "minecraft:uniform", "min_inclusive": { "above_bottom": 0 }, "max_inclusive": { "absolute": 256 } } },
+    { "type": "minecraft:in_square" },
+    { "type": "minecraft:surface_relative_threshold_filter", "heightmap": "OCEAN_FLOOR_WG", "max_inclusive": -13 },
+    { "type": "minecraft:biome" }
+  ]
+}
+```
+
+`count` 是每区块尝试数，整数端点均包含；高度从世界最低建筑层到 `Y=256` 均匀取值，随后仅保留 `OCEAN_FLOOR_WG` 表面下至少 `13` 格的候选，最后执行群系过滤。它独立于 surface / decoration 的 `-63..128` 扫描窗口。原版地衣的局部搜索同为 `20`，其 `chance_of_spreading=0.5` 与禁用地面属于原版 configured feature；本小晶体每候选最多一块、六面均可，不复制地衣扩散。候选数相同不保证两者的实际成功数或视觉密度相同。
+
+[`FHBlocks.ICE_CRYSTAL`](../../src/main/java/com/teammoeg/frostedheart/bootstrap/common/FHBlocks.java) 的高度为 `7/16` 格、亮度为 `1`；`FHBlocks.LARGE_ICE_CRYSTAL` / `frostedheart:large_ice_crystal` 高 `14/16` 格、亮度为 `3`。两者继续使用紫水晶簇式的六向附着与含水状态，不增加运行时生长。新静态晶簇模型参考紫水晶簇构形，复用 `frostedheart:block/ice_1` 与 `frostedheart:block/packed_ice_1` 的冰色纹理，以不透明 `minecraft:solid` 渲染；模型分别见 [`ice_crystal.json`](../../src/main/resources/assets/frostedheart/models/block/ice_crystal.json) 和 [`large_ice_crystal.json`](../../src/main/resources/assets/frostedheart/models/block/large_ice_crystal.json)。本轮真实客户端已观察大小辨识和自然放置；截图见文末，最终美术观感由用户验收。
 
 ## 区块、群系及运行开销边界
 
@@ -132,32 +158,36 @@ blob / large / spike 允许正常装饰邻区写入。`IceCaveIceBody.add` 相�
 
 trap 按正常邻区规则跨边，足迹半宽最多 `2` 格、侧壁多读 `1` 格，不夹中心。坑深最多 `12`，坑底支撑再下探 `1`，洞底搜索上下各 `16`；逐改动格检查群系、可写性和完整支撑。
 
+small crystal 使用候选原点加六条最多 `20` 格的空气搜索线，而非完整区块扫描；每个搜索格再读取相邻一格支撑，故最远局部读取为原点单轴 `21` 格。`hasChunk`、建筑高度及目标格 `ensureCanWrite` 限制实际范围，允许正常装饰邻区写入，目标格须属于三维冰洞群系。该 feature 没有运行时循环或持久状态；最坏候选搜索点数为 `1+6×20=121`，不是方块读取次数或实测耗时。
+
 完整 `-63..128` 窗口每个扫描 feature 最多有 `16×16×192=49,152` 个主循环位置，surface / decoration 各一遍，另有表面邻格、晶体和冰锥局部检查。这是循环位置上限，不是方块读取次数或已测耗时。surface 暂存实际改动，三类冰体暂存完整候选并对温泉邻岸读坐标去重；没有无限找洞或主动请求远处区块生成。
 
 大片冰仍进入既有 FH 相变系统；本次未为维持初始比例改变温度或薄冰机制。`biome_temperature/ice_caves.json` 继续是加法 `-5 °C` 修正，不是固定洞温。
 
 ## 温泉与矿物状态
 
-温泉逻辑和配置保留首版。[`IceCaveSpringFeature`](../../src/main/java/com/teammoeg/frostedheart/content/world/features/IceCaveSpringFeature.java) 在 `Y<=0` 检查九个附近洞底候选，中心夹在本区块局部坐标 `5..10`；校平一格起伏，凹入生成半径平方 `<=4` 的 `13` 格温泉源并保留干岸。池底期望 `75%` 热液岩、`25%` 方解石，仅为材质；近处和入口的短距离晶体提示保留，不保证长路线。热传输以流体和气候实现为准，温泉不提高整个群系温度。自然频率和回暖效果仍需验收。
+温泉选址、池体逻辑和配置保留首版。[`IceCaveSpringFeature`](../../src/main/java/com/teammoeg/frostedheart/content/world/features/IceCaveSpringFeature.java) 在 `Y<=0` 检查九个附近洞底候选，中心夹在本区块局部坐标 `5..10`；校平一格起伏，凹入生成半径平方 `<=4` 的 `13` 格温泉源并保留干岸。池底期望 `75%` 热液岩、`25%` 方解石，仅为材质；近处和入口的短距离晶体提示已全部改用大晶体，不保证长路线。热传输以流体和气候实现为准，温泉不提高整个群系温度。自然频率和回暖效果仍需验收。
 
-**第二版矿物参数与最终条件矿量结果见本文；正常世界露矿观感仍需实际确认。** 下表为 TWR `worldgen/placed_feature/cave/` 的冰洞附加档及软锰矿配对档，`count` 是每区块候选次数，`size` 是原版 `OreConfiguration.size`，不是实际产量或矿脉直径；通用矿物和热液晶洞仍须计入最终对照。
+**下表是本轮当前参数，软锰矿已按相同三种子样本校准至银矿附近，结果见文末。** TWR `worldgen/placed_feature/cave/` 的 `count` 是每区块候选次数，`size` 是原版 `OreConfiguration.size`，不是实际产量或矿脉直径；通用矿物和热液晶洞仍须计入最终对照。
 
 | 文件 / 矿种 | `count × size` | `discard_chance_on_air_exposure` |
 |---|---:|---:|
-| `ice_pyrite_ore.json` / 黄铁矿 | `10 × 24` | `0` |
+| `ice_pyrite_ore.json` / 黄铁矿 | `13 × 30`（恢复首版） | `0` |
 | `ice_zinc_ore.json` / 锌 | `10 × 18` | `0` |
 | `ice_lead_ore.json` / 铅 | `14 × 18` | `0` |
 | `ice_silver_ore.json` / 银 | `10 × 16` | `0` |
-| `ice_pyrolusite_ore.json` / 冰洞软锰矿 | `13 × 21` | `0` |
-| `ice_pyrolusite_ore_generic.json` / 通用档配对软锰矿 | `8 × 6` | `0` |
+| `ice_pyrolusite_ore.json` / 冰洞软锰矿 | `19 × 21` | `0` |
+| `ice_pyrolusite_ore_generic.json` / 通用档配对软锰矿 | `12 × 6` | `0` |
 
-按用户本轮反馈，前四种矿物的新增暴露丢弃参数已从 `0.25` 撤回 `0`；数量和单脉 size 保持第二版值。矿物先于冰壳生成，所以此前判断的是生成当时的空气，随后覆盖的冰不会补回被舍弃矿格；现在不再进行这项额外削减。软锰矿 `size` 从 `30→21`、`8→6` 缩小，原 `13`、`8` 次数未补量；附近宽厅 `1/2`、其他 `1/4` 仍仅是 [`CavePyrolusiteFeature.place`](../../src/main/java/com/teammoeg/frostedheart/content/world/features/CavePyrolusiteFeature.java) 的尝试门控。它不再构成与新黄铁矿预算配对的承诺，也不能推出最终软锰矿恰为黄铁矿 `1/2`、`1/4` 或原总量的 `70%`。逐矿种两倍目标仍须用实际对照核验。
+黄铁矿按本轮授权从 `10×24` 恢复首版 `13×30`，锌、铅、银的次数与 size 保持上表值；此前已撤销的新增空气暴露丢弃继续为 `0`。矿物先于冰壳生成，因此覆冰不会补回先前已舍弃的矿格。软锰矿保留较小的单脉 `size=21` / `6`，次数由前一轮 `13` / `8` 升至 `19` / `12`，已完成本轮固定群系条件采样校准；附近宽厅 `1/2`、其他 `1/4` 仍仅是 [`CavePyrolusiteFeature.place`](../../src/main/java/com/teammoeg/frostedheart/content/world/features/CavePyrolusiteFeature.java) 的尝试门控。`count×size` 只描述配置预算，不能推出实际总量与黄铁矿恰为 `1/2`、`1/4` 或旧总量某一固定比例。本轮合计软锰矿 8,602 块、银矿 8,374 块，相差约 2.7%；逐种子差异与统计边界见文末。
 
 历史统计口径见[矿物生成量对比](../worldgen-mineral-generation-estimate.md)和首版快照。旧 `build/ice-cave-natural-samples-initial.json` / `build/ice-cave-natural-samples-tuned.json` 是首版固定群系条件采样；其资产准备未完整带入 TWR KubeJS 群系标签，也遗漏了部分投影后成员为空但仍应保留的 `replace:true` 标签覆盖。因此旧矿数保留为当时环境的历史结果，不能作为严格忠实于完整整合包的热液对照，更不能证明第二版矿量、覆盖或自然频率达标。
 
 当前 [`ice_cave_sample_assets.py`](../../Scripts/ice_cave_sample_assets.py) 已为新工具补齐这些准备规则：正常预设保留真实群系标签脚本，固定群系采样把脚本中的字面量标签追加投影到选中群系，且保留空 `replace:true` 覆盖语义；同时按实际 pack 引用和配置准备资源。具体采样范围与适配仍应查看当轮生成的清单，工具准备修复不追溯改变旧结果。
 
-## 第二版初次部署基线（2026-10-22 13:52，早于本轮反馈调整）
+## 历史：第二版初次部署基线（2026-10-22 13:52）
+
+以下保留此前部署时的源码、参数与验证结果。其“最终”指该历史部署批次，不代表本文上半部的本轮薄冰条带、大小晶体、团块保底或矿量修订已经验证。
 
 最终源码运行 `Scripts/ice_cave_sample_validation.init.gradle`，启用 `frostedheart_ice_cave,frostedheart_ice_cave_body,frostedheart_thin_ice,frostedheart_ice_cave_sample`，**22 项 GameTest 全通过**。其中合成地形验证包含覆冰、整湖封顶、3～12 格完整干湿陷阱、开挖矿格而保留外部矿格、冰体与群系/区块边界、晶体支撑，以及既有薄冰行为。日志位于 `build/ice-caves-v2-deployment-final-tests.log`。
 
@@ -194,9 +224,9 @@ trap 按正常邻区规则跨边，足迹半宽最多 `2` 格、侧壁多读 `1`
 
 Prism 部署用于用户观察第二版，不等于所有景观和玩法均已验收。正常世界最终湖面材质比例、陷阱出现频率与自然干湿比例、大型冰体/小冰刺的观感、长期冻融，以及温泉自然频率和实际回暖仍应分别验证。旧区块不会自动重新铺冰或重新布矿。温泉参数和既有薄冰运行时行为未因本次世界生成修订而调整。
 
-## 本轮反馈修订验证（2026-10-22 下午）
+## 历史：前一轮试玩反馈修订验证（2026-10-22 下午）
 
-用户进一步要求取消新增矿物暴露舍弃、增加团状冰内晶体并减少外部散布、检查小冰刺、扩大并减少冰条带，以及加入实际温泉定位。本节记录上述当前参数的结果；前节保留初次部署基线，不将两轮结果混用。
+当时用户要求取消新增矿物暴露舍弃、增加团状冰内晶体并减少外部散布、检查小冰刺、扩大并减少冰条带，以及加入实际温泉定位。本节保留当时参数的结果，不包含本轮新增薄冰条带、大小晶体分工、团块荧石保底或恢复后的黄铁矿及暂定软锰矿次数；不能作为本轮通过验证的证据。
 
 - `build/ice-caves-feedback-tests.log`：**28/28 GameTest 通过**。新增测试覆盖团块自身晶体、矿质起伏地面的矮冰刺、条带最小连通数量和百格连片，以及温泉定位。保留了冰体/群系边界、湖盖、完整干湿坑和薄冰行为检查。
 - [三种子同体积最终矿量](validation/ice-caves-feedback-2026-10-22/ore-comparison.json)：冰洞/热液合计比值为黄铁矿 `0.635`、锌 `1.351`、铅 `1.240`、银 `0.703`；每个种子中四矿均低于两倍。取消舍弃不等于所有实际矿量必然单调上升，因为原版放置过程的随机消耗与相邻矿脉相互影响。次数/size 没有随本轮改动补调。[原始采样](validation/ice-caves-feedback-2026-10-22/conditional-final.json)。
@@ -210,3 +240,35 @@ Prism 部署用于用户观察第二版，不等于所有景观和玩法均已�
 ![本轮冰锥与覆冰接触区域](images/ice-caves-feedback-2026-10-22/seed-111-hall.png)
 
 找温泉可以使用 `/fh locate hot_spring`，默认只扫描已加载区块；扩大到未加载地形用 `/fh locate hot_spring generate 16`。命令输出真实流体坐标并提供传送建议，不修改温泉生成频率或热行为。范围、进度和取消规则见[温泉定位](hot-spring-locator.md)。
+
+
+## 2026-10-22 晚间：薄冰条带、大小冰晶与矿量校准
+
+本节对应当前参数。完整首轮32项GameTest中31项通过，唯一失败为测试种子未覆盖团块最大尺寸；连续种子0..23只抽到5/7/9直径。改用明确覆盖5..10的固定24种子集后，相关5项全部通过，其余27项不受测试输入修订影响。合计32项已获通过结果，未将两次运行冒充单次全绿。日志为 `build/ice-caves-crystal-tests.log`、`build/ice-caves-crystal-body-tests.log`。
+
+团块受控测试共288个成功候选，252个有内部荧石，比例 **87.5%**；包含普通、50%棋盘矿和全矿岩壁以及正负区块边缘，直径覆盖5/6/7/8/9/10。不删除失败荧石位置对应的成功冰体、不排除全矿团块。此比例是受控夹具结果，不是正常世界分布估计；普通和混矿样本逐团至少一块荧石。模型内容测试另验证真实物品六向放置、亮度1/3、支撑、水浸和两尺寸精准采集掉落。
+
+[本轮条件采样原始数据](validation/ice-caves-crystals-2026-10-22/conditional-final.json)采用种子111/222/333、每群系每种子16个内部区块和20个边界区块，含全局矿脉及热液晶洞。[逐种子及合计对照](validation/ice-caves-crystals-2026-10-22/ore-comparison.json)：
+
+| 矿物 | 冰洞合计方块 | 热液合计方块 |
+|---|---:|---:|
+| 黄铁矿 | 51,067 | 38,231 |
+| 锌 | 14,248 | 10,786 |
+| 铅 | 14,669 | 12,191 |
+| 银 | 8,374 | 12,319 |
+| 软锰矿 | 8,602 | 0 |
+
+软锰矿/银合计为1.027，相差约2.7%；逐种子分别为2595/2550、2764/3024、3243/2800。目标是同等体积下储量接近，不要求每个种子或矿脉相同。黄铁矿完整参数与首版提交43073952的JSON语义一致；锌/铅/银配置逐文件未改，但最终块数可因先生成的黄铁矿/软锰矿占用宿主及后续特征改变而波动。固定群系样本不代表正常世界群系出现频率或玩家开采收益。
+
+
+本轮正常预设 seed111 已在真实客户端完成截图并正常退出，日志 `build/ice-caves-crystals-client.log`，构建5分48秒。自然样本中小冰晶58枚、大冰晶6枚、荧石晶体6块；小冰晶58枚都邻接空气，大冰晶2枚邻接空气，符合分散小晶体与内部/镶嵌大晶体的不同路径。此为单片正常世界冰洞样本，不是全世界密度承诺。[原始统计及观察坐标](validation/ice-caves-crystals-2026-10-22/normal-seed-111.json)。
+
+![当前自然洞厅：薄冰条带与散布小晶体](images/ice-caves-crystals-2026-10-22/seed-111-hall.png)
+
+![当前洞厅的另一视角：大小晶体与覆冰](images/ice-caves-crystals-2026-10-22/seed-111-hall_alternate.png)
+
+另在独立验证世界的Y=180搭建了模型对照台，**在自然统计完成后**才放置，不计入上述自然数据。下图从左到右为原版紫水晶簇、大冰晶、小冰晶；冰色分面几何和大小可明确辨认。模型参考晶簇外形，未直接复用紫色像素材质。观察使用夜视，不能用画面明暗比较亮度1/3；实际注册光照值已由GameTest验证。
+
+![晶体模型对照，人工夹具，非自然生成](images/ice-caves-crystals-2026-10-22/seed-111-crystal_model_fixture.png)
+
+生成修改仅作用于新地形，旧区块中的旧小晶体不会自动升级为大晶体；新资源会更新已有小晶体的外观。长期薄冰冻融、全世界含荧石团块比例及视觉平衡仍属试玩验收，未用本次夜视静止捕获代替。

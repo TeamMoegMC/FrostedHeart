@@ -46,7 +46,7 @@ public final class IceCaveLandscapeMetrics {
 
     public IceCaveLandscapeMetrics() {
         for (String ore : ORES) { oreTotals.put(ore, 0L); exposedOre.put(ore, new HashSet<>()); }
-        for (String key : List.of("ice_crystal", "glowstone_crystal", "ice_crystal_exposed_to_air",
+        for (String key : List.of("ice_crystal", "large_ice_crystal", "large_ice_crystal_exposed_to_air", "glowstone_crystal", "ice_crystal_exposed_to_air",
                 "glowstone_crystal_exposed_to_air")) counters.put(key, 0L);
     }
 
@@ -89,8 +89,8 @@ public final class IceCaveLandscapeMetrics {
             add("sampled_blocks", 1);
             BlockState block = level.getBlockState(pos);
             String id = BuiltInRegistries.BLOCK.getKey(block.getBlock()).toString();
-            if (id.equals("frostedheart:ice_crystal") || id.equals("frostedheart:glowstone_crystal")) {
-                if (id.equals("frostedheart:ice_crystal")) crystalViewCandidates.add(pos.immutable());
+            if (id.equals("frostedheart:ice_crystal") || id.equals("frostedheart:large_ice_crystal") || id.equals("frostedheart:glowstone_crystal")) {
+                if (id.equals("frostedheart:ice_crystal") || id.equals("frostedheart:large_ice_crystal")) crystalViewCandidates.add(pos.immutable());
                 String crystal = id.substring(id.indexOf(':') + 1);
                 add(crystal, 1);
                 for (Direction side : Direction.values()) {
@@ -178,6 +178,8 @@ public final class IceCaveLandscapeMetrics {
         lakes.put("stable_fraction_of_original_top", waterTops.isEmpty() ? null : stable / (double) waterTops.size());
         report.put("lakes", lakes);
         report.put("crystals", Map.of("ice_crystal", counters.get("ice_crystal"),
+                "large_ice_crystal", counters.get("large_ice_crystal"),
+                "large_ice_crystal_exposed_to_air", counters.get("large_ice_crystal_exposed_to_air"),
                 "glowstone_crystal", counters.get("glowstone_crystal"),
                 "ice_crystal_exposed_to_air", counters.get("ice_crystal_exposed_to_air"),
                 "glowstone_crystal_exposed_to_air", counters.get("glowstone_crystal_exposed_to_air")));

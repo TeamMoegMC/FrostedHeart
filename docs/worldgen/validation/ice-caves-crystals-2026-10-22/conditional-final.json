@@ -1,0 +1,3750 @@
+[
+  {
+    "seed": 111,
+    "fixed_biome": "ice",
+    "scope": "Actual TWR noise/carver/feature terrain with fixed biome; not normal preset biome occurrence",
+    "world_directory": "ice-cave-sample-20261022-194031-824-57d192b1",
+    "runtime_directory": "D:\\games\\minecraft\\Project TWR\\FrostedHeart\\build\\ice-cave-sample-runtime",
+    "interior_chunk_start_xz": 1024,
+    "interior_chunks": 16,
+    "generated_border_chunks": 20,
+    "min_y_inclusive": -64,
+    "max_y_exclusive": 320,
+    "spring_source_components_clipped_to_interior": 1,
+    "distinct_viable_basins_before_features": 10,
+    "viable_basin_positions_before_features": [
+      [
+        16405,
+        -42,
+        16422
+      ],
+      [
+        16405,
+        -19,
+        16440
+      ],
+      [
+        16405,
+        -19,
+        16441
+      ],
+      [
+        16406,
+        -42,
+        16422
+      ],
+      [
+        16406,
+        -19,
+        16442
+      ],
+      [
+        16407,
+        -42,
+        16423
+      ],
+      [
+        16407,
+        -46,
+        16439
+      ],
+      [
+        16407,
+        -46,
+        16440
+      ],
+      [
+        16408,
+        -46,
+        16439
+      ],
+      [
+        16408,
+        -46,
+        16440
+      ]
+    ],
+    "counts": {
+      "sampled_volume": 1572864,
+      "air": 1090024,
+      "air_at_or_below_40": 38860,
+      "stone_deepslate_tuff": 370729,
+      "vanilla_ice": 23878,
+      "pyrite": 15659,
+      "pyrolusite": 2595,
+      "zinc": 4483,
+      "lead": 4597,
+      "silver": 2550,
+      "ice_crystal": 68,
+      "large_ice_crystal": 16,
+      "glowstone_crystal": 16,
+      "hydrothermal_rock": 11,
+      "spring_source": 13,
+      "spring_flowing": 0,
+      "deep_floor_with_two_air_after_decoration": 2724,
+      "wide_deep_floor_after_decoration": 380,
+      "valid_basin_origins_before_features": 84
+    },
+    "landscape": {
+      "min_y_inclusive": -63,
+      "max_y_exclusive": 129,
+      "surface_definition": "Final exposed full-collision-cube block faces, plus stable/thin ice; ores remain in denominator. Air or fluid-free partial non-ice decorations beside a face count as open space. High wall requires three such open blocks below its adjacent space. This is a complete block-face area approximation, not pixel-exact occlusion by icicles/crystal clusters. These partial decorations are not surface blocks. Full-cube glowstone crystal remains a non-ice solid. isSolid/legacySolid is not a full-cube test. Before surfaces retain strict air-only adjacency at CARVERS, covered if original block or face-adjacent block is ice after FEATURES. Surface and lake columns stop at the original WORLD_SURFACE_WG height minus 6; ore volume retains the full reported Y range.",
+      "primary_coverage_metric": "The original_area_covered_fraction fields; final_ice_fraction fields describe the final block-face approximation separately.",
+      "lake_definition": "Ordinary source-water top faces at CARVERS, before added traps; both same-cell freeze and cap-above count. Uncovered/changed positions are retained in denominator. Springs are not ordinary water.",
+      "counts": {
+        "ice_crystal": 68,
+        "large_ice_crystal": 16,
+        "large_ice_crystal_exposed_to_air": 2,
+        "glowstone_crystal": 16,
+        "ice_crystal_exposed_to_air": 68,
+        "glowstone_crystal_exposed_to_air": 1,
+        "sampled_blocks": 786432,
+        "final_floor_faces": 5598,
+        "excluded_legacy_partial_wall_faces": 5067,
+        "excluded_legacy_partial_high_wall_faces": 3913,
+        "final_faces_adjacent_to_partial_decoration": 4598,
+        "final_ceiling_faces": 5692,
+        "final_ceiling_ice": 4638,
+        "final_wall_faces": 23915,
+        "final_wall_ice": 19401,
+        "final_high_wall_faces": 11175,
+        "final_high_wall_ice": 9130,
+        "final_wall_ore_faces_in_denominator": 666,
+        "exposed_ore_faces": 955,
+        "final_floor_ice": 4365,
+        "final_high_wall_ore_faces_in_denominator": 291,
+        "final_ceiling_ore_faces_in_denominator": 144,
+        "final_floor_ore_faces_in_denominator": 145,
+        "excluded_legacy_partial_floor_faces": 3,
+        "excluded_legacy_partial_ceiling_faces": 1,
+        "before_floor_faces": 5353,
+        "before_ceiling_faces": 5395,
+        "before_ceiling_covered_after": 4366,
+        "before_wall_faces": 23230,
+        "before_wall_covered_after": 18810,
+        "before_high_wall_faces": 11748,
+        "before_high_wall_covered_after": 9598,
+        "before_floor_covered_after": 4138,
+        "lake_thin_ice": 11,
+        "lake_stable_ice": 1
+      },
+      "legacy_solid_partial_blocks_excluded": {
+        "frostedheart:icicle": 1554,
+        "frostedheart:large_ice_crystal": 16,
+        "minecraft:chest": 2
+      },
+      "surface_ratios": {
+        "floor_final_ice_fraction": 0.7797427652733119,
+        "floor_original_area_covered_fraction": 0.7730244722585466,
+        "wall_final_ice_fraction": 0.8112481706042233,
+        "wall_original_area_covered_fraction": 0.8097287989668532,
+        "high_wall_final_ice_fraction": 0.8170022371364654,
+        "high_wall_original_area_covered_fraction": 0.81699012597889,
+        "ceiling_final_ice_fraction": 0.814827828531272,
+        "ceiling_original_area_covered_fraction": 0.8092678405931418
+      },
+      "lakes": {
+        "original_water_top_faces": 12,
+        "covered_fraction": 1.0,
+        "thin_fraction_of_original_top": 0.9166666666666666,
+        "stable_fraction_of_original_top": 0.08333333333333333
+      },
+      "crystals": {
+        "ice_crystal": 68,
+        "ice_crystal_exposed_to_air": 68,
+        "glowstone_crystal": 16,
+        "large_ice_crystal_exposed_to_air": 2,
+        "large_ice_crystal": 16,
+        "glowstone_crystal_exposed_to_air": 1
+      },
+      "crystal_definition": "All final crystal blocks in the same included sample Y/volume as ore totals. Exposed means at least one of six adjacent blocks is air; each crystal counts once. This confirms open-air inlays, not camera line of sight or visibility through transparent ice.",
+      "traps": {
+        "definition": "Final thin-ice lids at original CARVERS solid floor faces or one block above them (ice shells over ore); ordinary natural water tops are excluded. Lids group by horizontal face adjacency at identical Y. Depth counts consecutive air or ordinary water cells immediately below each lid, observing at most 13 to distinguish the allowed 3..12 range. Fully observed groups require in-sample boundaries, observed solid floors and no adjacent unknown-baseline lids. Unmodified solid retaining floors may belong to another 3D biome and are observed within the sampled chunk/Y bounds even when excluded from biome counts; this is recorded separately rather than called a vertical sample cut. Cavity cells still require inclusion. This cannot identify lids raised more than one block above the original solid floor. Wet frequency uses only fully observed, valid-depth, consistently dry or source-water-filled groups; an empty denominator is unavailable, not a pass.",
+        "candidate_lid_blocks_on_original_solid_floor": 206,
+        "connected_lid_groups": 38,
+        "fully_observed_groups": 23,
+        "sample_clipped_groups": 0,
+        "fully_observed_valid_depth_groups": 1,
+        "fully_observed_consistent_dry_groups": 0,
+        "fully_observed_consistent_source_water_groups": 1,
+        "mixed_fill_groups_including_clipped": 0,
+        "wet_fraction_of_complete_consistent_valid_groups": 1.0,
+        "groups": [
+          {
+            "lid_anchor_xyz": [
+              16395,
+              -49,
+              16445
+            ],
+            "lid_blocks": 3,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": false,
+            "fully_observed": true,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              16436,
+              -49,
+              16442
+            ],
+            "lid_blocks": 11,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": false,
+            "fully_observed": true,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              16388,
+              -48,
+              16444
+            ],
+            "lid_blocks": 12,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": false,
+            "fully_observed": true,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              16398,
+              -48,
+              16442
+            ],
+            "lid_blocks": 23,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": false,
+            "fully_observed": true,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              16436,
+              -48,
+              16443
+            ],
+            "lid_blocks": 1,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": true,
+            "fully_observed": false,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              16437,
+              -48,
+              16444
+            ],
+            "lid_blocks": 2,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": true,
+            "fully_observed": false,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              16385,
+              -47,
+              16441
+            ],
+            "lid_blocks": 4,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": false,
+            "fully_observed": true,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              16388,
+              -47,
+              16444
+            ],
+            "lid_blocks": 15,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": false,
+            "fully_observed": true,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              16406,
+              -47,
+              16440
+            ],
+            "lid_blocks": 17,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": false,
+            "fully_observed": true,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              16387,
+              -46,
+              16440
+            ],
+            "lid_blocks": 13,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": false,
+            "fully_observed": true,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              16414,
+              -46,
+              16442
+            ],
+            "lid_blocks": 11,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": false,
+            "fully_observed": true,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              16418,
+              -45,
+              16444
+            ],
+            "lid_blocks": 7,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": false,
+            "fully_observed": true,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              16422,
+              -43,
+              16445
+            ],
+            "lid_blocks": 7,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": true,
+            "fully_observed": false,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              16422,
+              -42,
+              16445
+            ],
+            "lid_blocks": 1,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": true,
+            "fully_observed": false,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              16393,
+              -23,
+              16445
+            ],
+            "lid_blocks": 4,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": false,
+            "fully_observed": true,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              16387,
+              -22,
+              16441
+            ],
+            "lid_blocks": 5,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": false,
+            "fully_observed": true,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              16395,
+              -22,
+              16443
+            ],
+            "lid_blocks": 13,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": false,
+            "fully_observed": true,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              16409,
+              -19,
+              16441
+            ],
+            "lid_blocks": 2,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": true,
+            "fully_observed": false,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              16409,
+              -18,
+              16440
+            ],
+            "lid_blocks": 1,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": false,
+            "fully_observed": true,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              16410,
+              -18,
+              16441
+            ],
+            "lid_blocks": 7,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": false,
+            "fully_observed": true,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              16413,
+              -17,
+              16442
+            ],
+            "lid_blocks": 6,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": false,
+            "fully_observed": true,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              16416,
+              -15,
+              16444
+            ],
+            "lid_blocks": 1,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": false,
+            "fully_observed": true,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              16416,
+              -14,
+              16444
+            ],
+            "lid_blocks": 1,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": true,
+            "fully_observed": false,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              16417,
+              -14,
+              16445
+            ],
+            "lid_blocks": 1,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": true,
+            "fully_observed": false,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              16417,
+              -13,
+              16444
+            ],
+            "lid_blocks": 1,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": true,
+            "fully_observed": false,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              16417,
+              -12,
+              16444
+            ],
+            "lid_blocks": 1,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": true,
+            "fully_observed": false,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              16410,
+              -9,
+              16441
+            ],
+            "lid_blocks": 1,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": true,
+            "fully_observed": false,
+            "min_observed_depth": 8,
+            "max_observed_depth": 8,
+            "depth_within_3_to_12": true,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "dry",
+            "fill_consistent": true,
+            "observed_air_cells": 8,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              16409,
+              -8,
+              16442
+            ],
+            "lid_blocks": 1,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": true,
+            "fully_observed": false,
+            "min_observed_depth": 10,
+            "max_observed_depth": 10,
+            "depth_within_3_to_12": true,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "dry",
+            "fill_consistent": true,
+            "observed_air_cells": 10,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              16409,
+              -7,
+              16442
+            ],
+            "lid_blocks": 1,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": true,
+            "fully_observed": false,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              16443,
+              0,
+              16442
+            ],
+            "lid_blocks": 7,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": false,
+            "fully_observed": true,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              16445,
+              1,
+              16443
+            ],
+            "lid_blocks": 4,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": false,
+            "fully_observed": true,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              16435,
+              2,
+              16420
+            ],
+            "lid_blocks": 9,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": false,
+            "fully_observed": true,
+            "min_observed_depth": 12,
+            "max_observed_depth": 12,
+            "depth_within_3_to_12": true,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "wet",
+            "fill_consistent": true,
+            "observed_air_cells": 0,
+            "observed_water_cells": 108,
+            "all_observed_water_is_source": true
+          },
+          {
+            "lid_anchor_xyz": [
+              16442,
+              3,
+              16441
+            ],
+            "lid_blocks": 1,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": true,
+            "fully_observed": false,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              16443,
+              4,
+              16444
+            ],
+            "lid_blocks": 1,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": true,
+            "fully_observed": false,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              16442,
+              8,
+              16441
+            ],
+            "lid_blocks": 1,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": false,
+            "fully_observed": true,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              16443,
+              8,
+              16442
+            ],
+            "lid_blocks": 5,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": false,
+            "fully_observed": true,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              16443,
+              16,
+              16442
+            ],
+            "lid_blocks": 4,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": false,
+            "fully_observed": true,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              16392,
+              19,
+              16445
+            ],
+            "lid_blocks": 1,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": true,
+            "fully_observed": false,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          }
+        ]
+      },
+      "ores": {
+        "pyrite": {
+          "all_final_blocks": 15659,
+          "largest_coplanar_exposed_face_patch_clipped_to_sample": 20,
+          "exposed_faces": 500
+        },
+        "pyrolusite": {
+          "all_final_blocks": 2595,
+          "largest_coplanar_exposed_face_patch_clipped_to_sample": 7,
+          "exposed_faces": 96
+        },
+        "zinc": {
+          "all_final_blocks": 4483,
+          "largest_coplanar_exposed_face_patch_clipped_to_sample": 6,
+          "exposed_faces": 173
+        },
+        "lead": {
+          "all_final_blocks": 4597,
+          "largest_coplanar_exposed_face_patch_clipped_to_sample": 7,
+          "exposed_faces": 109
+        },
+        "silver": {
+          "all_final_blocks": 2550,
+          "largest_coplanar_exposed_face_patch_clipped_to_sample": 5,
+          "exposed_faces": 77
+        }
+      },
+      "suggested_views": [
+        {
+          "kind": "medium",
+          "x": 16384.5,
+          "y": -20,
+          "z": 16446.5,
+          "clear_height": 7,
+          "horizontal_cardinal_clearance_sum": 48,
+          "look_clearance": 16,
+          "alternate_clearance": 16,
+          "yaw": 180.0,
+          "alternate_yaw": 270.0,
+          "pitch": -8
+        },
+        {
+          "kind": "passage",
+          "x": 16384.5,
+          "y": -41,
+          "z": 16447.5,
+          "clear_height": 5,
+          "horizontal_cardinal_clearance_sum": 48,
+          "look_clearance": 16,
+          "alternate_clearance": 16,
+          "yaw": 180.0,
+          "alternate_yaw": 270.0,
+          "pitch": -8
+        },
+        {
+          "kind": "hall",
+          "x": 16387.5,
+          "y": -44,
+          "z": 16437.5,
+          "clear_height": 12,
+          "horizontal_cardinal_clearance_sum": 58,
+          "look_clearance": 16,
+          "alternate_clearance": 16,
+          "yaw": 180.0,
+          "alternate_yaw": 0.0,
+          "pitch": -8
+        },
+        {
+          "kind": "ice_crystal",
+          "x": 16381.5,
+          "y": -26.92,
+          "z": 16387.5,
+          "yaw": -90.0,
+          "pitch": 4.763642,
+          "target_xyz": [
+            16384.5,
+            -25.5,
+            16387.5
+          ],
+          "feature_block_xyz": [
+            16384,
+            -26,
+            16387
+          ],
+          "camera_body_in_air": true,
+          "sampled_line_to_target_clear": true
+        },
+        {
+          "kind": "trap",
+          "x": 16436.5,
+          "y": -47.47,
+          "z": 16439.5,
+          "yaw": -0.0,
+          "pitch": 36.253838,
+          "target_xyz": [
+            16436.5,
+            -48.0,
+            16442.5
+          ],
+          "feature_block_xyz": [
+            16436,
+            -49,
+            16442
+          ],
+          "camera_body_in_air": true,
+          "sampled_line_to_target_clear": true
+        }
+      ],
+      "suggested_view_availability": {
+        "hall": true,
+        "passage": true,
+        "medium": true,
+        "lake": false,
+        "ice_crystal": true,
+        "trap": true
+      },
+      "spring_status": "Natural generation and survival warming remain unaccepted; telemetry is not a pass requirement."
+    },
+    "timing_ms": {
+      "baseline_and_basin_scan": 763,
+      "features_to_full_requests": 11018,
+      "carvers_requests": 6393,
+      "final_count_scan": 2635,
+      "elapsed_wall": 24803
+    }
+  },
+  {
+    "seed": 111,
+    "fixed_biome": "hydrothermal",
+    "scope": "Actual TWR noise/carver/feature terrain with fixed biome; not normal preset biome occurrence",
+    "world_directory": "ice-cave-sample-20261022-194031-824-57d192b1",
+    "runtime_directory": "D:\\games\\minecraft\\Project TWR\\FrostedHeart\\build\\ice-cave-sample-runtime",
+    "interior_chunk_start_xz": 1024,
+    "interior_chunks": 16,
+    "generated_border_chunks": 20,
+    "min_y_inclusive": -64,
+    "max_y_exclusive": 320,
+    "spring_source_components_clipped_to_interior": 0,
+    "distinct_viable_basins_before_features": 17,
+    "viable_basin_positions_before_features": [
+      [
+        16405,
+        -42,
+        16422
+      ],
+      [
+        16405,
+        -19,
+        16440
+      ],
+      [
+        16405,
+        -19,
+        16441
+      ],
+      [
+        16406,
+        -4,
+        16392
+      ],
+      [
+        16406,
+        -4,
+        16393
+      ],
+      [
+        16406,
+        -42,
+        16422
+      ],
+      [
+        16406,
+        -19,
+        16442
+      ],
+      [
+        16407,
+        -4,
+        16393
+      ],
+      [
+        16407,
+        -4,
+        16394
+      ],
+      [
+        16407,
+        -42,
+        16423
+      ],
+      [
+        16407,
+        -46,
+        16439
+      ],
+      [
+        16407,
+        -46,
+        16440
+      ],
+      [
+        16408,
+        -3,
+        16393
+      ],
+      [
+        16408,
+        -46,
+        16439
+      ],
+      [
+        16408,
+        -46,
+        16440
+      ],
+      [
+        16437,
+        -17,
+        16409
+      ],
+      [
+        16438,
+        -17,
+        16410
+      ]
+    ],
+    "counts": {
+      "sampled_volume": 1572864,
+      "air": 1101506,
+      "air_at_or_below_40": 53523,
+      "stone_deepslate_tuff": 201499,
+      "vanilla_ice": 0,
+      "pyrite": 10694,
+      "pyrolusite": 0,
+      "zinc": 3413,
+      "lead": 2984,
+      "silver": 2921,
+      "ice_crystal": 0,
+      "large_ice_crystal": 0,
+      "glowstone_crystal": 0,
+      "hydrothermal_rock": 0,
+      "spring_source": 0,
+      "spring_flowing": 0,
+      "deep_floor_with_two_air_after_decoration": 4761,
+      "wide_deep_floor_after_decoration": 509,
+      "valid_basin_origins_before_features": 168
+    },
+    "landscape": {
+      "min_y_inclusive": -63,
+      "max_y_exclusive": 129,
+      "surface_definition": "Final exposed full-collision-cube block faces, plus stable/thin ice; ores remain in denominator. Air or fluid-free partial non-ice decorations beside a face count as open space. High wall requires three such open blocks below its adjacent space. This is a complete block-face area approximation, not pixel-exact occlusion by icicles/crystal clusters. These partial decorations are not surface blocks. Full-cube glowstone crystal remains a non-ice solid. isSolid/legacySolid is not a full-cube test. Before surfaces retain strict air-only adjacency at CARVERS, covered if original block or face-adjacent block is ice after FEATURES. Surface and lake columns stop at the original WORLD_SURFACE_WG height minus 6; ore volume retains the full reported Y range.",
+      "primary_coverage_metric": "The original_area_covered_fraction fields; final_ice_fraction fields describe the final block-face approximation separately.",
+      "lake_definition": "Ordinary source-water top faces at CARVERS, before added traps; both same-cell freeze and cap-above count. Uncovered/changed positions are retained in denominator. Springs are not ordinary water.",
+      "counts": {
+        "ice_crystal": 0,
+        "large_ice_crystal": 0,
+        "large_ice_crystal_exposed_to_air": 0,
+        "glowstone_crystal": 0,
+        "ice_crystal_exposed_to_air": 0,
+        "glowstone_crystal_exposed_to_air": 0,
+        "sampled_blocks": 786432,
+        "final_ceiling_faces": 11297,
+        "final_wall_faces": 33121,
+        "final_high_wall_faces": 10987,
+        "final_wall_ore_faces_in_denominator": 1255,
+        "final_high_wall_ore_faces_in_denominator": 358,
+        "exposed_ore_faces": 2022,
+        "final_floor_faces": 8018,
+        "final_faces_adjacent_to_partial_decoration": 345,
+        "final_floor_ore_faces_in_denominator": 270,
+        "final_wall_ice": 65,
+        "final_ceiling_ore_faces_in_denominator": 497,
+        "final_high_wall_ice": 12,
+        "before_floor_faces": 10205,
+        "before_ceiling_faces": 10541,
+        "before_wall_faces": 31977,
+        "before_high_wall_faces": 11052,
+        "before_wall_covered_after": 65,
+        "before_high_wall_covered_after": 12,
+        "lake_uncovered_or_changed": 12
+      },
+      "legacy_solid_partial_blocks_excluded": {},
+      "surface_ratios": {
+        "floor_final_ice_fraction": 0.0,
+        "floor_original_area_covered_fraction": 0.0,
+        "wall_final_ice_fraction": 0.0019625011322121915,
+        "wall_original_area_covered_fraction": 0.0020327110110391843,
+        "high_wall_final_ice_fraction": 0.0010921998725766816,
+        "high_wall_original_area_covered_fraction": 0.0010857763300760044,
+        "ceiling_final_ice_fraction": 0.0,
+        "ceiling_original_area_covered_fraction": 0.0
+      },
+      "lakes": {
+        "original_water_top_faces": 12,
+        "covered_fraction": 0.0,
+        "thin_fraction_of_original_top": 0.0,
+        "stable_fraction_of_original_top": 0.0
+      },
+      "crystals": {
+        "ice_crystal": 0,
+        "ice_crystal_exposed_to_air": 0,
+        "glowstone_crystal": 0,
+        "large_ice_crystal_exposed_to_air": 0,
+        "large_ice_crystal": 0,
+        "glowstone_crystal_exposed_to_air": 0
+      },
+      "crystal_definition": "All final crystal blocks in the same included sample Y/volume as ore totals. Exposed means at least one of six adjacent blocks is air; each crystal counts once. This confirms open-air inlays, not camera line of sight or visibility through transparent ice.",
+      "traps": {
+        "definition": "Final thin-ice lids at original CARVERS solid floor faces or one block above them (ice shells over ore); ordinary natural water tops are excluded. Lids group by horizontal face adjacency at identical Y. Depth counts consecutive air or ordinary water cells immediately below each lid, observing at most 13 to distinguish the allowed 3..12 range. Fully observed groups require in-sample boundaries, observed solid floors and no adjacent unknown-baseline lids. Unmodified solid retaining floors may belong to another 3D biome and are observed within the sampled chunk/Y bounds even when excluded from biome counts; this is recorded separately rather than called a vertical sample cut. Cavity cells still require inclusion. This cannot identify lids raised more than one block above the original solid floor. Wet frequency uses only fully observed, valid-depth, consistently dry or source-water-filled groups; an empty denominator is unavailable, not a pass.",
+        "candidate_lid_blocks_on_original_solid_floor": 0,
+        "connected_lid_groups": 0,
+        "fully_observed_groups": 0,
+        "sample_clipped_groups": 0,
+        "fully_observed_valid_depth_groups": 0,
+        "fully_observed_consistent_dry_groups": 0,
+        "fully_observed_consistent_source_water_groups": 0,
+        "mixed_fill_groups_including_clipped": 0,
+        "groups": []
+      },
+      "ores": {
+        "pyrite": {
+          "all_final_blocks": 10694,
+          "largest_coplanar_exposed_face_patch_clipped_to_sample": 22,
+          "exposed_faces": 1273
+        },
+        "pyrolusite": {
+          "all_final_blocks": 0,
+          "largest_coplanar_exposed_face_patch_clipped_to_sample": 0,
+          "exposed_faces": 0
+        },
+        "zinc": {
+          "all_final_blocks": 3413,
+          "largest_coplanar_exposed_face_patch_clipped_to_sample": 7,
+          "exposed_faces": 427
+        },
+        "lead": {
+          "all_final_blocks": 2984,
+          "largest_coplanar_exposed_face_patch_clipped_to_sample": 5,
+          "exposed_faces": 183
+        },
+        "silver": {
+          "all_final_blocks": 2921,
+          "largest_coplanar_exposed_face_patch_clipped_to_sample": 8,
+          "exposed_faces": 139
+        }
+      },
+      "suggested_views": [
+        {
+          "kind": "hall",
+          "x": 16387.5,
+          "y": -44,
+          "z": 16434.5,
+          "clear_height": 11,
+          "horizontal_cardinal_clearance_sum": 56,
+          "look_clearance": 16,
+          "alternate_clearance": 16,
+          "yaw": 0.0,
+          "alternate_yaw": 90.0,
+          "pitch": -8
+        },
+        {
+          "kind": "passage",
+          "x": 16403.5,
+          "y": -14,
+          "z": 16447.5,
+          "clear_height": 5,
+          "horizontal_cardinal_clearance_sum": 64,
+          "look_clearance": 16,
+          "alternate_clearance": 16,
+          "yaw": 180.0,
+          "alternate_yaw": 270.0,
+          "pitch": -8
+        },
+        {
+          "kind": "medium",
+          "x": 16405.5,
+          "y": -14,
+          "z": 16445.5,
+          "clear_height": 6,
+          "horizontal_cardinal_clearance_sum": 51,
+          "look_clearance": 16,
+          "alternate_clearance": 15,
+          "yaw": 90.0,
+          "alternate_yaw": 180.0,
+          "pitch": -8
+        }
+      ],
+      "suggested_view_availability": {
+        "hall": true,
+        "passage": true,
+        "medium": true,
+        "lake": false,
+        "ice_crystal": false,
+        "trap": false
+      },
+      "spring_status": "Natural generation and survival warming remain unaccepted; telemetry is not a pass requirement."
+    },
+    "timing_ms": {
+      "baseline_and_basin_scan": 549,
+      "features_to_full_requests": 8713,
+      "carvers_requests": 5212,
+      "final_count_scan": 1535,
+      "elapsed_wall": 19227
+    }
+  },
+  {
+    "seed": 222,
+    "fixed_biome": "ice",
+    "scope": "Actual TWR noise/carver/feature terrain with fixed biome; not normal preset biome occurrence",
+    "world_directory": "ice-cave-sample-20261022-194031-824-57d192b1",
+    "runtime_directory": "D:\\games\\minecraft\\Project TWR\\FrostedHeart\\build\\ice-cave-sample-runtime",
+    "interior_chunk_start_xz": 1152,
+    "interior_chunks": 16,
+    "generated_border_chunks": 20,
+    "min_y_inclusive": -64,
+    "max_y_exclusive": 320,
+    "spring_source_components_clipped_to_interior": 0,
+    "distinct_viable_basins_before_features": 0,
+    "viable_basin_positions_before_features": [],
+    "counts": {
+      "sampled_volume": 1572864,
+      "air": 1045229,
+      "air_at_or_below_40": 9615,
+      "stone_deepslate_tuff": 417096,
+      "vanilla_ice": 8586,
+      "pyrite": 17576,
+      "pyrolusite": 2764,
+      "zinc": 4930,
+      "lead": 5136,
+      "silver": 3024,
+      "ice_crystal": 10,
+      "large_ice_crystal": 0,
+      "glowstone_crystal": 0,
+      "hydrothermal_rock": 0,
+      "spring_source": 0,
+      "spring_flowing": 0,
+      "deep_floor_with_two_air_after_decoration": 388,
+      "wide_deep_floor_after_decoration": 0,
+      "valid_basin_origins_before_features": 0
+    },
+    "landscape": {
+      "min_y_inclusive": -63,
+      "max_y_exclusive": 129,
+      "surface_definition": "Final exposed full-collision-cube block faces, plus stable/thin ice; ores remain in denominator. Air or fluid-free partial non-ice decorations beside a face count as open space. High wall requires three such open blocks below its adjacent space. This is a complete block-face area approximation, not pixel-exact occlusion by icicles/crystal clusters. These partial decorations are not surface blocks. Full-cube glowstone crystal remains a non-ice solid. isSolid/legacySolid is not a full-cube test. Before surfaces retain strict air-only adjacency at CARVERS, covered if original block or face-adjacent block is ice after FEATURES. Surface and lake columns stop at the original WORLD_SURFACE_WG height minus 6; ore volume retains the full reported Y range.",
+      "primary_coverage_metric": "The original_area_covered_fraction fields; final_ice_fraction fields describe the final block-face approximation separately.",
+      "lake_definition": "Ordinary source-water top faces at CARVERS, before added traps; both same-cell freeze and cap-above count. Uncovered/changed positions are retained in denominator. Springs are not ordinary water.",
+      "counts": {
+        "ice_crystal": 10,
+        "large_ice_crystal": 0,
+        "large_ice_crystal_exposed_to_air": 0,
+        "glowstone_crystal": 0,
+        "ice_crystal_exposed_to_air": 10,
+        "glowstone_crystal_exposed_to_air": 0,
+        "sampled_blocks": 786432,
+        "final_wall_faces": 9384,
+        "final_floor_faces": 2228,
+        "final_faces_adjacent_to_partial_decoration": 2069,
+        "final_ceiling_faces": 2317,
+        "final_ceiling_ice": 1807,
+        "final_floor_ice": 1702,
+        "excluded_legacy_partial_wall_faces": 1474,
+        "excluded_legacy_partial_high_wall_faces": 862,
+        "final_wall_ice": 7335,
+        "final_high_wall_faces": 3264,
+        "final_high_wall_ice": 2472,
+        "final_wall_ore_faces_in_denominator": 345,
+        "final_high_wall_ore_faces_in_denominator": 66,
+        "exposed_ore_faces": 523,
+        "final_ceiling_ore_faces_in_denominator": 91,
+        "final_floor_ore_faces_in_denominator": 87,
+        "excluded_legacy_partial_floor_faces": 1,
+        "before_wall_faces": 9179,
+        "before_floor_faces": 2158,
+        "before_ceiling_faces": 2201,
+        "before_ceiling_covered_after": 1695,
+        "before_floor_covered_after": 1648,
+        "before_wall_covered_after": 7180,
+        "before_high_wall_faces": 3379,
+        "before_high_wall_covered_after": 2568,
+        "lake_stable_ice": 4,
+        "lake_thin_ice": 10
+      },
+      "legacy_solid_partial_blocks_excluded": {
+        "frostedheart:icicle": 511,
+        "minecraft:chest": 2
+      },
+      "surface_ratios": {
+        "floor_final_ice_fraction": 0.7639138240574507,
+        "floor_original_area_covered_fraction": 0.7636700648748842,
+        "wall_final_ice_fraction": 0.7816496163682864,
+        "wall_original_area_covered_fraction": 0.7822202854341431,
+        "high_wall_final_ice_fraction": 0.7573529411764706,
+        "high_wall_original_area_covered_fraction": 0.7599881621781592,
+        "ceiling_final_ice_fraction": 0.779887785930082,
+        "ceiling_original_area_covered_fraction": 0.7701044979554748
+      },
+      "lakes": {
+        "original_water_top_faces": 14,
+        "covered_fraction": 1.0,
+        "thin_fraction_of_original_top": 0.7142857142857143,
+        "stable_fraction_of_original_top": 0.2857142857142857
+      },
+      "crystals": {
+        "ice_crystal": 10,
+        "ice_crystal_exposed_to_air": 10,
+        "glowstone_crystal": 0,
+        "large_ice_crystal_exposed_to_air": 0,
+        "large_ice_crystal": 0,
+        "glowstone_crystal_exposed_to_air": 0
+      },
+      "crystal_definition": "All final crystal blocks in the same included sample Y/volume as ore totals. Exposed means at least one of six adjacent blocks is air; each crystal counts once. This confirms open-air inlays, not camera line of sight or visibility through transparent ice.",
+      "traps": {
+        "definition": "Final thin-ice lids at original CARVERS solid floor faces or one block above them (ice shells over ore); ordinary natural water tops are excluded. Lids group by horizontal face adjacency at identical Y. Depth counts consecutive air or ordinary water cells immediately below each lid, observing at most 13 to distinguish the allowed 3..12 range. Fully observed groups require in-sample boundaries, observed solid floors and no adjacent unknown-baseline lids. Unmodified solid retaining floors may belong to another 3D biome and are observed within the sampled chunk/Y bounds even when excluded from biome counts; this is recorded separately rather than called a vertical sample cut. Cavity cells still require inclusion. This cannot identify lids raised more than one block above the original solid floor. Wet frequency uses only fully observed, valid-depth, consistently dry or source-water-filled groups; an empty denominator is unavailable, not a pass.",
+        "candidate_lid_blocks_on_original_solid_floor": 104,
+        "connected_lid_groups": 57,
+        "fully_observed_groups": 22,
+        "sample_clipped_groups": 4,
+        "fully_observed_valid_depth_groups": 0,
+        "fully_observed_consistent_dry_groups": 0,
+        "fully_observed_consistent_source_water_groups": 0,
+        "mixed_fill_groups_including_clipped": 0,
+        "groups": [
+          {
+            "lid_anchor_xyz": [
+              18493,
+              -52,
+              18463
+            ],
+            "lid_blocks": 2,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": true,
+            "fully_observed": false,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              18495,
+              -51,
+              18463
+            ],
+            "lid_blocks": 1,
+            "sample_clipped_horizontal": true,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": false,
+            "fully_observed": false,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              18466,
+              -50,
+              18438
+            ],
+            "lid_blocks": 1,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": false,
+            "fully_observed": true,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              18493,
+              -50,
+              18461
+            ],
+            "lid_blocks": 1,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": true,
+            "fully_observed": false,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              18466,
+              -49,
+              18438
+            ],
+            "lid_blocks": 1,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": false,
+            "fully_observed": true,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              18488,
+              -49,
+              18455
+            ],
+            "lid_blocks": 4,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": false,
+            "fully_observed": true,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              18494,
+              -49,
+              18461
+            ],
+            "lid_blocks": 2,
+            "sample_clipped_horizontal": true,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": false,
+            "fully_observed": false,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              18487,
+              -48,
+              18454
+            ],
+            "lid_blocks": 8,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": false,
+            "fully_observed": true,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              18491,
+              -48,
+              18457
+            ],
+            "lid_blocks": 1,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": false,
+            "fully_observed": true,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              18463,
+              -47,
+              18435
+            ],
+            "lid_blocks": 5,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": true,
+            "fully_observed": false,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              18465,
+              -47,
+              18438
+            ],
+            "lid_blocks": 1,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": true,
+            "fully_observed": false,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              18487,
+              -47,
+              18452
+            ],
+            "lid_blocks": 4,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": false,
+            "fully_observed": true,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              18491,
+              -47,
+              18454
+            ],
+            "lid_blocks": 4,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": false,
+            "fully_observed": true,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              18463,
+              -46,
+              18437
+            ],
+            "lid_blocks": 1,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": true,
+            "fully_observed": false,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              18487,
+              -46,
+              18452
+            ],
+            "lid_blocks": 1,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": false,
+            "fully_observed": true,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              18488,
+              -46,
+              18451
+            ],
+            "lid_blocks": 1,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": true,
+            "fully_observed": false,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              18492,
+              -46,
+              18454
+            ],
+            "lid_blocks": 1,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": true,
+            "fully_observed": false,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              18492,
+              -46,
+              18456
+            ],
+            "lid_blocks": 1,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": true,
+            "fully_observed": false,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              18461,
+              -30,
+              18433
+            ],
+            "lid_blocks": 4,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": false,
+            "fully_observed": true,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              18460,
+              -29,
+              18433
+            ],
+            "lid_blocks": 1,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": true,
+            "fully_observed": false,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              18476,
+              -4,
+              18477
+            ],
+            "lid_blocks": 1,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": true,
+            "fully_observed": false,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              18476,
+              -3,
+              18476
+            ],
+            "lid_blocks": 1,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": true,
+            "fully_observed": false,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              18476,
+              -2,
+              18475
+            ],
+            "lid_blocks": 1,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": false,
+            "fully_observed": true,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              18476,
+              1,
+              18473
+            ],
+            "lid_blocks": 1,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": true,
+            "fully_observed": false,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              18487,
+              1,
+              18454
+            ],
+            "lid_blocks": 2,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": true,
+            "fully_observed": false,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              18475,
+              2,
+              18473
+            ],
+            "lid_blocks": 1,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": false,
+            "fully_observed": true,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              18488,
+              2,
+              18454
+            ],
+            "lid_blocks": 1,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": true,
+            "fully_observed": false,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              18486,
+              4,
+              18439
+            ],
+            "lid_blocks": 4,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": false,
+            "fully_observed": true,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              18487,
+              4,
+              18443
+            ],
+            "lid_blocks": 6,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": false,
+            "fully_observed": true,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              18485,
+              5,
+              18439
+            ],
+            "lid_blocks": 7,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": false,
+            "fully_observed": true,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              18486,
+              5,
+              18443
+            ],
+            "lid_blocks": 4,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": false,
+            "fully_observed": true,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              18485,
+              6,
+              18443
+            ],
+            "lid_blocks": 1,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": true,
+            "fully_observed": false,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              18486,
+              6,
+              18442
+            ],
+            "lid_blocks": 1,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": true,
+            "fully_observed": false,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              18490,
+              6,
+              18458
+            ],
+            "lid_blocks": 1,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": true,
+            "fully_observed": false,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              18485,
+              7,
+              18442
+            ],
+            "lid_blocks": 1,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": false,
+            "fully_observed": true,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              18488,
+              7,
+              18456
+            ],
+            "lid_blocks": 1,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": true,
+            "fully_observed": false,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              18489,
+              8,
+              18456
+            ],
+            "lid_blocks": 1,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": false,
+            "fully_observed": true,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              18486,
+              9,
+              18453
+            ],
+            "lid_blocks": 3,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": true,
+            "fully_observed": false,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              18463,
+              16,
+              18433
+            ],
+            "lid_blocks": 1,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": true,
+            "fully_observed": false,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              18462,
+              17,
+              18433
+            ],
+            "lid_blocks": 1,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": true,
+            "fully_observed": false,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              18461,
+              18,
+              18433
+            ],
+            "lid_blocks": 1,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": true,
+            "fully_observed": false,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              18462,
+              18,
+              18434
+            ],
+            "lid_blocks": 1,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": false,
+            "fully_observed": true,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              18486,
+              18,
+              18433
+            ],
+            "lid_blocks": 1,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": true,
+            "fully_observed": false,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              18460,
+              19,
+              18433
+            ],
+            "lid_blocks": 1,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": true,
+            "fully_observed": false,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              18461,
+              19,
+              18434
+            ],
+            "lid_blocks": 2,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": false,
+            "fully_observed": true,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              18463,
+              19,
+              18435
+            ],
+            "lid_blocks": 1,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": false,
+            "fully_observed": true,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              18463,
+              20,
+              18435
+            ],
+            "lid_blocks": 1,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": true,
+            "fully_observed": false,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              18459,
+              21,
+              18433
+            ],
+            "lid_blocks": 1,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": false,
+            "fully_observed": true,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              18462,
+              21,
+              18435
+            ],
+            "lid_blocks": 1,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": true,
+            "fully_observed": false,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              18463,
+              21,
+              18436
+            ],
+            "lid_blocks": 1,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": true,
+            "fully_observed": false,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              18465,
+              22,
+              18438
+            ],
+            "lid_blocks": 1,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": true,
+            "fully_observed": false,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              18461,
+              23,
+              18435
+            ],
+            "lid_blocks": 1,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": false,
+            "fully_observed": true,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              18462,
+              25,
+              18432
+            ],
+            "lid_blocks": 1,
+            "sample_clipped_horizontal": true,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": true,
+            "fully_observed": false,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              18461,
+              26,
+              18432
+            ],
+            "lid_blocks": 1,
+            "sample_clipped_horizontal": true,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": false,
+            "fully_observed": false,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              18461,
+              27,
+              18433
+            ],
+            "lid_blocks": 2,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": true,
+            "fully_observed": false,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              18443,
+              53,
+              18476
+            ],
+            "lid_blocks": 1,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": true,
+            "fully_observed": false,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              18444,
+              54,
+              18476
+            ],
+            "lid_blocks": 1,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": true,
+            "fully_observed": false,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          }
+        ]
+      },
+      "ores": {
+        "pyrite": {
+          "all_final_blocks": 17576,
+          "largest_coplanar_exposed_face_patch_clipped_to_sample": 11,
+          "exposed_faces": 270
+        },
+        "pyrolusite": {
+          "all_final_blocks": 2764,
+          "largest_coplanar_exposed_face_patch_clipped_to_sample": 14,
+          "exposed_faces": 73
+        },
+        "zinc": {
+          "all_final_blocks": 4930,
+          "largest_coplanar_exposed_face_patch_clipped_to_sample": 6,
+          "exposed_faces": 98
+        },
+        "lead": {
+          "all_final_blocks": 5136,
+          "largest_coplanar_exposed_face_patch_clipped_to_sample": 4,
+          "exposed_faces": 60
+        },
+        "silver": {
+          "all_final_blocks": 3024,
+          "largest_coplanar_exposed_face_patch_clipped_to_sample": 5,
+          "exposed_faces": 22
+        }
+      },
+      "suggested_views": [
+        {
+          "kind": "passage",
+          "x": 18461.5,
+          "y": 11,
+          "z": 18452.5,
+          "clear_height": 5,
+          "horizontal_cardinal_clearance_sum": 29,
+          "look_clearance": 14,
+          "alternate_clearance": 11,
+          "yaw": 180.0,
+          "alternate_yaw": 0.0,
+          "pitch": -8
+        },
+        {
+          "kind": "medium",
+          "x": 18464.5,
+          "y": 4,
+          "z": 18459.5,
+          "clear_height": 15,
+          "horizontal_cardinal_clearance_sum": 30,
+          "look_clearance": 14,
+          "alternate_clearance": 13,
+          "yaw": 180.0,
+          "alternate_yaw": 0.0,
+          "pitch": -8
+        },
+        {
+          "kind": "hall",
+          "x": 18465.5,
+          "y": 12,
+          "z": 18451.5,
+          "clear_height": 10,
+          "horizontal_cardinal_clearance_sum": 21,
+          "look_clearance": 13,
+          "alternate_clearance": 4,
+          "yaw": 0.0,
+          "alternate_yaw": 180.0,
+          "pitch": -8
+        },
+        {
+          "kind": "lake",
+          "x": 18487.5,
+          "y": 17.53,
+          "z": 18470.5,
+          "yaw": 90.0,
+          "pitch": 36.253838,
+          "target_xyz": [
+            18484.5,
+            17.0,
+            18470.5
+          ],
+          "feature_block_xyz": [
+            18484,
+            16,
+            18470
+          ],
+          "camera_body_in_air": true,
+          "sampled_line_to_target_clear": true
+        },
+        {
+          "kind": "ice_crystal",
+          "x": 18450.5,
+          "y": 23.08,
+          "z": 18433.5,
+          "yaw": -0.0,
+          "pitch": -90.0,
+          "target_xyz": [
+            18450.5,
+            27.5,
+            18433.5
+          ],
+          "feature_block_xyz": [
+            18450,
+            27,
+            18433
+          ],
+          "camera_body_in_air": true,
+          "sampled_line_to_target_clear": true
+        },
+        {
+          "kind": "trap",
+          "x": 18490.5,
+          "y": -46.47,
+          "z": 18454.5,
+          "yaw": 90.0,
+          "pitch": 36.253838,
+          "target_xyz": [
+            18487.5,
+            -47.0,
+            18454.5
+          ],
+          "feature_block_xyz": [
+            18487,
+            -48,
+            18454
+          ],
+          "camera_body_in_air": true,
+          "sampled_line_to_target_clear": true
+        }
+      ],
+      "suggested_view_availability": {
+        "hall": true,
+        "passage": true,
+        "medium": true,
+        "lake": true,
+        "ice_crystal": true,
+        "trap": true
+      },
+      "spring_status": "Natural generation and survival warming remain unaccepted; telemetry is not a pass requirement."
+    },
+    "timing_ms": {
+      "baseline_and_basin_scan": 511,
+      "features_to_full_requests": 9323,
+      "carvers_requests": 4962,
+      "final_count_scan": 1402,
+      "elapsed_wall": 19068
+    }
+  },
+  {
+    "seed": 222,
+    "fixed_biome": "hydrothermal",
+    "scope": "Actual TWR noise/carver/feature terrain with fixed biome; not normal preset biome occurrence",
+    "world_directory": "ice-cave-sample-20261022-194031-824-57d192b1",
+    "runtime_directory": "D:\\games\\minecraft\\Project TWR\\FrostedHeart\\build\\ice-cave-sample-runtime",
+    "interior_chunk_start_xz": 1152,
+    "interior_chunks": 16,
+    "generated_border_chunks": 20,
+    "min_y_inclusive": -64,
+    "max_y_exclusive": 320,
+    "spring_source_components_clipped_to_interior": 0,
+    "distinct_viable_basins_before_features": 4,
+    "viable_basin_positions_before_features": [
+      [
+        18441,
+        -8,
+        18489
+      ],
+      [
+        18441,
+        -8,
+        18490
+      ],
+      [
+        18442,
+        -8,
+        18488
+      ],
+      [
+        18442,
+        -8,
+        18489
+      ]
+    ],
+    "counts": {
+      "sampled_volume": 1572864,
+      "air": 1062524,
+      "air_at_or_below_40": 26783,
+      "stone_deepslate_tuff": 223343,
+      "vanilla_ice": 0,
+      "pyrite": 13443,
+      "pyrolusite": 0,
+      "zinc": 3680,
+      "lead": 4204,
+      "silver": 4248,
+      "ice_crystal": 0,
+      "large_ice_crystal": 0,
+      "glowstone_crystal": 0,
+      "hydrothermal_rock": 0,
+      "spring_source": 0,
+      "spring_flowing": 0,
+      "deep_floor_with_two_air_after_decoration": 2722,
+      "wide_deep_floor_after_decoration": 104,
+      "valid_basin_origins_before_features": 68
+    },
+    "landscape": {
+      "min_y_inclusive": -63,
+      "max_y_exclusive": 129,
+      "surface_definition": "Final exposed full-collision-cube block faces, plus stable/thin ice; ores remain in denominator. Air or fluid-free partial non-ice decorations beside a face count as open space. High wall requires three such open blocks below its adjacent space. This is a complete block-face area approximation, not pixel-exact occlusion by icicles/crystal clusters. These partial decorations are not surface blocks. Full-cube glowstone crystal remains a non-ice solid. isSolid/legacySolid is not a full-cube test. Before surfaces retain strict air-only adjacency at CARVERS, covered if original block or face-adjacent block is ice after FEATURES. Surface and lake columns stop at the original WORLD_SURFACE_WG height minus 6; ore volume retains the full reported Y range.",
+      "primary_coverage_metric": "The original_area_covered_fraction fields; final_ice_fraction fields describe the final block-face approximation separately.",
+      "lake_definition": "Ordinary source-water top faces at CARVERS, before added traps; both same-cell freeze and cap-above count. Uncovered/changed positions are retained in denominator. Springs are not ordinary water.",
+      "counts": {
+        "ice_crystal": 0,
+        "large_ice_crystal": 0,
+        "large_ice_crystal_exposed_to_air": 0,
+        "glowstone_crystal": 0,
+        "ice_crystal_exposed_to_air": 0,
+        "glowstone_crystal_exposed_to_air": 0,
+        "sampled_blocks": 786432,
+        "final_wall_faces": 22983,
+        "final_floor_faces": 6507,
+        "final_ceiling_faces": 8429,
+        "final_high_wall_faces": 4779,
+        "final_wall_ore_faces_in_denominator": 1075,
+        "exposed_ore_faces": 1644,
+        "final_faces_adjacent_to_partial_decoration": 179,
+        "final_ceiling_ore_faces_in_denominator": 346,
+        "final_floor_ore_faces_in_denominator": 223,
+        "final_high_wall_ore_faces_in_denominator": 306,
+        "final_wall_ice": 5,
+        "final_high_wall_ice": 5,
+        "excluded_legacy_partial_floor_faces": 2,
+        "excluded_legacy_partial_wall_faces": 6,
+        "before_wall_faces": 22103,
+        "before_floor_faces": 7544,
+        "before_ceiling_faces": 8095,
+        "before_high_wall_faces": 4728,
+        "before_wall_covered_after": 5,
+        "before_high_wall_covered_after": 5,
+        "lake_uncovered_or_changed": 144
+      },
+      "legacy_solid_partial_blocks_excluded": {
+        "minecraft:chest": 2
+      },
+      "surface_ratios": {
+        "floor_final_ice_fraction": 0.0,
+        "floor_original_area_covered_fraction": 0.0,
+        "wall_final_ice_fraction": 2.1755210372884307E-4,
+        "wall_original_area_covered_fraction": 2.262136361579876E-4,
+        "high_wall_final_ice_fraction": 0.0010462439840970914,
+        "high_wall_original_area_covered_fraction": 0.0010575296108291032,
+        "ceiling_final_ice_fraction": 0.0,
+        "ceiling_original_area_covered_fraction": 0.0
+      },
+      "lakes": {
+        "original_water_top_faces": 144,
+        "covered_fraction": 0.0,
+        "thin_fraction_of_original_top": 0.0,
+        "stable_fraction_of_original_top": 0.0
+      },
+      "crystals": {
+        "ice_crystal": 0,
+        "ice_crystal_exposed_to_air": 0,
+        "glowstone_crystal": 0,
+        "large_ice_crystal_exposed_to_air": 0,
+        "large_ice_crystal": 0,
+        "glowstone_crystal_exposed_to_air": 0
+      },
+      "crystal_definition": "All final crystal blocks in the same included sample Y/volume as ore totals. Exposed means at least one of six adjacent blocks is air; each crystal counts once. This confirms open-air inlays, not camera line of sight or visibility through transparent ice.",
+      "traps": {
+        "definition": "Final thin-ice lids at original CARVERS solid floor faces or one block above them (ice shells over ore); ordinary natural water tops are excluded. Lids group by horizontal face adjacency at identical Y. Depth counts consecutive air or ordinary water cells immediately below each lid, observing at most 13 to distinguish the allowed 3..12 range. Fully observed groups require in-sample boundaries, observed solid floors and no adjacent unknown-baseline lids. Unmodified solid retaining floors may belong to another 3D biome and are observed within the sampled chunk/Y bounds even when excluded from biome counts; this is recorded separately rather than called a vertical sample cut. Cavity cells still require inclusion. This cannot identify lids raised more than one block above the original solid floor. Wet frequency uses only fully observed, valid-depth, consistently dry or source-water-filled groups; an empty denominator is unavailable, not a pass.",
+        "candidate_lid_blocks_on_original_solid_floor": 0,
+        "connected_lid_groups": 0,
+        "fully_observed_groups": 0,
+        "sample_clipped_groups": 0,
+        "fully_observed_valid_depth_groups": 0,
+        "fully_observed_consistent_dry_groups": 0,
+        "fully_observed_consistent_source_water_groups": 0,
+        "mixed_fill_groups_including_clipped": 0,
+        "groups": []
+      },
+      "ores": {
+        "pyrite": {
+          "all_final_blocks": 13443,
+          "largest_coplanar_exposed_face_patch_clipped_to_sample": 19,
+          "exposed_faces": 888
+        },
+        "pyrolusite": {
+          "all_final_blocks": 0,
+          "largest_coplanar_exposed_face_patch_clipped_to_sample": 0,
+          "exposed_faces": 0
+        },
+        "zinc": {
+          "all_final_blocks": 3680,
+          "largest_coplanar_exposed_face_patch_clipped_to_sample": 7,
+          "exposed_faces": 354
+        },
+        "lead": {
+          "all_final_blocks": 4204,
+          "largest_coplanar_exposed_face_patch_clipped_to_sample": 11,
+          "exposed_faces": 152
+        },
+        "silver": {
+          "all_final_blocks": 4248,
+          "largest_coplanar_exposed_face_patch_clipped_to_sample": 6,
+          "exposed_faces": 250
+        }
+      },
+      "suggested_views": [
+        {
+          "kind": "medium",
+          "x": 18441.5,
+          "y": -3,
+          "z": 18485.5,
+          "clear_height": 7,
+          "horizontal_cardinal_clearance_sum": 38,
+          "look_clearance": 12,
+          "alternate_clearance": 11,
+          "yaw": 90.0,
+          "alternate_yaw": 0.0,
+          "pitch": -8
+        },
+        {
+          "kind": "passage",
+          "x": 18443.5,
+          "y": -2,
+          "z": 18482.5,
+          "clear_height": 5,
+          "horizontal_cardinal_clearance_sum": 36,
+          "look_clearance": 16,
+          "alternate_clearance": 14,
+          "yaw": 90.0,
+          "alternate_yaw": 0.0,
+          "pitch": -8
+        },
+        {
+          "kind": "hall",
+          "x": 18443.5,
+          "y": -7,
+          "z": 18488.5,
+          "clear_height": 10,
+          "horizontal_cardinal_clearance_sum": 30,
+          "look_clearance": 16,
+          "alternate_clearance": 9,
+          "yaw": 0.0,
+          "alternate_yaw": 270.0,
+          "pitch": -8
+        }
+      ],
+      "suggested_view_availability": {
+        "hall": true,
+        "passage": true,
+        "medium": true,
+        "lake": false,
+        "ice_crystal": false,
+        "trap": false
+      },
+      "spring_status": "Natural generation and survival warming remain unaccepted; telemetry is not a pass requirement."
+    },
+    "timing_ms": {
+      "baseline_and_basin_scan": 505,
+      "features_to_full_requests": 8014,
+      "carvers_requests": 4941,
+      "final_count_scan": 1509,
+      "elapsed_wall": 17601
+    }
+  },
+  {
+    "seed": 333,
+    "fixed_biome": "ice",
+    "scope": "Actual TWR noise/carver/feature terrain with fixed biome; not normal preset biome occurrence",
+    "world_directory": "ice-cave-sample-20261022-194031-824-57d192b1",
+    "runtime_directory": "D:\\games\\minecraft\\Project TWR\\FrostedHeart\\build\\ice-cave-sample-runtime",
+    "interior_chunk_start_xz": 1280,
+    "interior_chunks": 16,
+    "generated_border_chunks": 20,
+    "min_y_inclusive": -64,
+    "max_y_exclusive": 320,
+    "spring_source_components_clipped_to_interior": 0,
+    "distinct_viable_basins_before_features": 4,
+    "viable_basin_positions_before_features": [
+      [
+        20520,
+        -22,
+        20503
+      ],
+      [
+        20520,
+        -22,
+        20504
+      ],
+      [
+        20521,
+        -22,
+        20503
+      ],
+      [
+        20521,
+        -22,
+        20504
+      ]
+    ],
+    "counts": {
+      "sampled_volume": 1572864,
+      "air": 1059654,
+      "air_at_or_below_40": 8182,
+      "stone_deepslate_tuff": 400124,
+      "vanilla_ice": 8387,
+      "pyrite": 17832,
+      "pyrolusite": 3243,
+      "zinc": 4835,
+      "lead": 4936,
+      "silver": 2800,
+      "ice_crystal": 6,
+      "large_ice_crystal": 0,
+      "glowstone_crystal": 0,
+      "hydrothermal_rock": 0,
+      "spring_source": 0,
+      "spring_flowing": 0,
+      "deep_floor_with_two_air_after_decoration": 1038,
+      "wide_deep_floor_after_decoration": 36,
+      "valid_basin_origins_before_features": 68
+    },
+    "landscape": {
+      "min_y_inclusive": -63,
+      "max_y_exclusive": 129,
+      "surface_definition": "Final exposed full-collision-cube block faces, plus stable/thin ice; ores remain in denominator. Air or fluid-free partial non-ice decorations beside a face count as open space. High wall requires three such open blocks below its adjacent space. This is a complete block-face area approximation, not pixel-exact occlusion by icicles/crystal clusters. These partial decorations are not surface blocks. Full-cube glowstone crystal remains a non-ice solid. isSolid/legacySolid is not a full-cube test. Before surfaces retain strict air-only adjacency at CARVERS, covered if original block or face-adjacent block is ice after FEATURES. Surface and lake columns stop at the original WORLD_SURFACE_WG height minus 6; ore volume retains the full reported Y range.",
+      "primary_coverage_metric": "The original_area_covered_fraction fields; final_ice_fraction fields describe the final block-face approximation separately.",
+      "lake_definition": "Ordinary source-water top faces at CARVERS, before added traps; both same-cell freeze and cap-above count. Uncovered/changed positions are retained in denominator. Springs are not ordinary water.",
+      "counts": {
+        "ice_crystal": 6,
+        "large_ice_crystal": 0,
+        "large_ice_crystal_exposed_to_air": 0,
+        "glowstone_crystal": 0,
+        "ice_crystal_exposed_to_air": 6,
+        "glowstone_crystal_exposed_to_air": 0,
+        "sampled_blocks": 786432,
+        "final_floor_faces": 2466,
+        "final_floor_ice": 1799,
+        "excluded_legacy_partial_wall_faces": 1994,
+        "excluded_legacy_partial_high_wall_faces": 617,
+        "final_faces_adjacent_to_partial_decoration": 2524,
+        "final_ceiling_faces": 2500,
+        "final_ceiling_ice": 1718,
+        "final_wall_faces": 8451,
+        "final_wall_ice": 5717,
+        "final_high_wall_faces": 2022,
+        "final_high_wall_ice": 1484,
+        "final_wall_ore_faces_in_denominator": 314,
+        "exposed_ore_faces": 518,
+        "excluded_legacy_partial_ceiling_faces": 30,
+        "final_ceiling_ore_faces_in_denominator": 135,
+        "final_high_wall_ore_faces_in_denominator": 67,
+        "final_floor_ore_faces_in_denominator": 69,
+        "before_floor_faces": 1346,
+        "before_floor_covered_after": 1044,
+        "before_ceiling_faces": 1455,
+        "before_ceiling_covered_after": 1059,
+        "before_wall_faces": 5051,
+        "before_wall_covered_after": 3825,
+        "before_high_wall_faces": 1873,
+        "before_high_wall_covered_after": 1393,
+        "lake_thin_ice": 55,
+        "lake_stable_ice": 20
+      },
+      "legacy_solid_partial_blocks_excluded": {
+        "frostedheart:icicle": 532,
+        "minecraft:oak_fence": 172,
+        "minecraft:cobweb": 28
+      },
+      "surface_ratios": {
+        "floor_final_ice_fraction": 0.7295214922952149,
+        "floor_original_area_covered_fraction": 0.7756315007429421,
+        "wall_final_ice_fraction": 0.6764879895870312,
+        "wall_original_area_covered_fraction": 0.7572757869728767,
+        "high_wall_final_ice_fraction": 0.7339268051434223,
+        "high_wall_original_area_covered_fraction": 0.7437266417512013,
+        "ceiling_final_ice_fraction": 0.6872,
+        "ceiling_original_area_covered_fraction": 0.7278350515463917
+      },
+      "lakes": {
+        "original_water_top_faces": 75,
+        "covered_fraction": 1.0,
+        "thin_fraction_of_original_top": 0.7333333333333333,
+        "stable_fraction_of_original_top": 0.26666666666666666
+      },
+      "crystals": {
+        "ice_crystal": 6,
+        "ice_crystal_exposed_to_air": 6,
+        "glowstone_crystal": 0,
+        "large_ice_crystal_exposed_to_air": 0,
+        "large_ice_crystal": 0,
+        "glowstone_crystal_exposed_to_air": 0
+      },
+      "crystal_definition": "All final crystal blocks in the same included sample Y/volume as ore totals. Exposed means at least one of six adjacent blocks is air; each crystal counts once. This confirms open-air inlays, not camera line of sight or visibility through transparent ice.",
+      "traps": {
+        "definition": "Final thin-ice lids at original CARVERS solid floor faces or one block above them (ice shells over ore); ordinary natural water tops are excluded. Lids group by horizontal face adjacency at identical Y. Depth counts consecutive air or ordinary water cells immediately below each lid, observing at most 13 to distinguish the allowed 3..12 range. Fully observed groups require in-sample boundaries, observed solid floors and no adjacent unknown-baseline lids. Unmodified solid retaining floors may belong to another 3D biome and are observed within the sampled chunk/Y bounds even when excluded from biome counts; this is recorded separately rather than called a vertical sample cut. Cavity cells still require inclusion. This cannot identify lids raised more than one block above the original solid floor. Wet frequency uses only fully observed, valid-depth, consistently dry or source-water-filled groups; an empty denominator is unavailable, not a pass.",
+        "candidate_lid_blocks_on_original_solid_floor": 16,
+        "connected_lid_groups": 4,
+        "fully_observed_groups": 1,
+        "sample_clipped_groups": 3,
+        "fully_observed_valid_depth_groups": 0,
+        "fully_observed_consistent_dry_groups": 0,
+        "fully_observed_consistent_source_water_groups": 0,
+        "mixed_fill_groups_including_clipped": 0,
+        "groups": [
+          {
+            "lid_anchor_xyz": [
+              20490,
+              -46,
+              20532
+            ],
+            "lid_blocks": 7,
+            "sample_clipped_horizontal": false,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": false,
+            "fully_observed": true,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              20481,
+              -36,
+              20541
+            ],
+            "lid_blocks": 5,
+            "sample_clipped_horizontal": true,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": false,
+            "fully_observed": false,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              20480,
+              -35,
+              20542
+            ],
+            "lid_blocks": 2,
+            "sample_clipped_horizontal": true,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": false,
+            "fully_observed": false,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          },
+          {
+            "lid_anchor_xyz": [
+              20480,
+              -34,
+              20542
+            ],
+            "lid_blocks": 2,
+            "sample_clipped_horizontal": true,
+            "sample_clipped_vertical": false,
+            "adjacent_thin_lid_without_original_solid_floor_baseline": false,
+            "fully_observed": false,
+            "min_observed_depth": 0,
+            "max_observed_depth": 0,
+            "depth_within_3_to_12": false,
+            "all_column_floors_observed": true,
+            "floor_columns_outside_included_biome": 0,
+            "extends_to_thirteenth_cavity_cell": false,
+            "fill": "no_observed_cavity",
+            "fill_consistent": false,
+            "observed_air_cells": 0,
+            "observed_water_cells": 0
+          }
+        ]
+      },
+      "ores": {
+        "pyrite": {
+          "all_final_blocks": 17832,
+          "largest_coplanar_exposed_face_patch_clipped_to_sample": 14,
+          "exposed_faces": 244
+        },
+        "pyrolusite": {
+          "all_final_blocks": 3243,
+          "largest_coplanar_exposed_face_patch_clipped_to_sample": 6,
+          "exposed_faces": 57
+        },
+        "zinc": {
+          "all_final_blocks": 4835,
+          "largest_coplanar_exposed_face_patch_clipped_to_sample": 8,
+          "exposed_faces": 69
+        },
+        "lead": {
+          "all_final_blocks": 4936,
+          "largest_coplanar_exposed_face_patch_clipped_to_sample": 11,
+          "exposed_faces": 84
+        },
+        "silver": {
+          "all_final_blocks": 2800,
+          "largest_coplanar_exposed_face_patch_clipped_to_sample": 5,
+          "exposed_faces": 64
+        }
+      },
+      "suggested_views": [
+        {
+          "kind": "medium",
+          "x": 20522.5,
+          "y": -21,
+          "z": 20511.5,
+          "clear_height": 6,
+          "horizontal_cardinal_clearance_sum": 32,
+          "look_clearance": 14,
+          "alternate_clearance": 13,
+          "yaw": 180.0,
+          "alternate_yaw": 270.0,
+          "pitch": -8
+        },
+        {
+          "kind": "passage",
+          "x": 20524.5,
+          "y": -21,
+          "z": 20513.5,
+          "clear_height": 5,
+          "horizontal_cardinal_clearance_sum": 28,
+          "look_clearance": 16,
+          "alternate_clearance": 10,
+          "yaw": 180.0,
+          "alternate_yaw": 270.0,
+          "pitch": -8
+        },
+        {
+          "kind": "hall",
+          "x": 20487.5,
+          "y": -39,
+          "z": 20542.5,
+          "clear_height": 9,
+          "horizontal_cardinal_clearance_sum": 27,
+          "look_clearance": 14,
+          "alternate_clearance": 7,
+          "yaw": 180.0,
+          "alternate_yaw": 0.0,
+          "pitch": -8
+        },
+        {
+          "kind": "lake",
+          "x": 20488.5,
+          "y": 17.53,
+          "z": 20491.5,
+          "yaw": -0.0,
+          "pitch": 36.253838,
+          "target_xyz": [
+            20488.5,
+            17.0,
+            20494.5
+          ],
+          "feature_block_xyz": [
+            20488,
+            16,
+            20494
+          ],
+          "camera_body_in_air": true,
+          "sampled_line_to_target_clear": true
+        },
+        {
+          "kind": "ice_crystal",
+          "x": 20533.5,
+          "y": -2.92,
+          "z": 20479.5,
+          "yaw": -0.0,
+          "pitch": 4.763642,
+          "target_xyz": [
+            20533.5,
+            -1.5,
+            20482.5
+          ],
+          "feature_block_xyz": [
+            20533,
+            -2,
+            20482
+          ],
+          "camera_body_in_air": true,
+          "sampled_line_to_target_clear": true
+        },
+        {
+          "kind": "trap",
+          "x": 20493.5,
+          "y": -44.47,
+          "z": 20532.5,
+          "yaw": 90.0,
+          "pitch": 36.253838,
+          "target_xyz": [
+            20490.5,
+            -45.0,
+            20532.5
+          ],
+          "feature_block_xyz": [
+            20490,
+            -46,
+            20532
+          ],
+          "camera_body_in_air": true,
+          "sampled_line_to_target_clear": true
+        }
+      ],
+      "suggested_view_availability": {
+        "hall": true,
+        "passage": true,
+        "medium": true,
+        "lake": true,
+        "ice_crystal": true,
+        "trap": true
+      },
+      "spring_status": "Natural generation and survival warming remain unaccepted; telemetry is not a pass requirement."
+    },
+    "timing_ms": {
+      "baseline_and_basin_scan": 472,
+      "features_to_full_requests": 9023,
+      "carvers_requests": 4630,
+      "final_count_scan": 1438,
+      "elapsed_wall": 19083
+    }
+  },
+  {
+    "seed": 333,
+    "fixed_biome": "hydrothermal",
+    "scope": "Actual TWR noise/carver/feature terrain with fixed biome; not normal preset biome occurrence",
+    "world_directory": "ice-cave-sample-20261022-194031-824-57d192b1",
+    "runtime_directory": "D:\\games\\minecraft\\Project TWR\\FrostedHeart\\build\\ice-cave-sample-runtime",
+    "interior_chunk_start_xz": 1280,
+    "interior_chunks": 16,
+    "generated_border_chunks": 20,
+    "min_y_inclusive": -64,
+    "max_y_exclusive": 320,
+    "spring_source_components_clipped_to_interior": 0,
+    "distinct_viable_basins_before_features": 5,
+    "viable_basin_positions_before_features": [
+      [
+        20520,
+        -22,
+        20503
+      ],
+      [
+        20520,
+        -22,
+        20504
+      ],
+      [
+        20521,
+        -22,
+        20503
+      ],
+      [
+        20521,
+        -22,
+        20504
+      ],
+      [
+        20538,
+        -21,
+        20501
+      ]
+    ],
+    "counts": {
+      "sampled_volume": 1572864,
+      "air": 1084144,
+      "air_at_or_below_40": 32669,
+      "stone_deepslate_tuff": 213387,
+      "vanilla_ice": 0,
+      "pyrite": 14094,
+      "pyrolusite": 0,
+      "zinc": 3693,
+      "lead": 5003,
+      "silver": 5150,
+      "ice_crystal": 0,
+      "large_ice_crystal": 0,
+      "glowstone_crystal": 0,
+      "hydrothermal_rock": 0,
+      "spring_source": 0,
+      "spring_flowing": 0,
+      "deep_floor_with_two_air_after_decoration": 3213,
+      "wide_deep_floor_after_decoration": 145,
+      "valid_basin_origins_before_features": 82
+    },
+    "landscape": {
+      "min_y_inclusive": -63,
+      "max_y_exclusive": 129,
+      "surface_definition": "Final exposed full-collision-cube block faces, plus stable/thin ice; ores remain in denominator. Air or fluid-free partial non-ice decorations beside a face count as open space. High wall requires three such open blocks below its adjacent space. This is a complete block-face area approximation, not pixel-exact occlusion by icicles/crystal clusters. These partial decorations are not surface blocks. Full-cube glowstone crystal remains a non-ice solid. isSolid/legacySolid is not a full-cube test. Before surfaces retain strict air-only adjacency at CARVERS, covered if original block or face-adjacent block is ice after FEATURES. Surface and lake columns stop at the original WORLD_SURFACE_WG height minus 6; ore volume retains the full reported Y range.",
+      "primary_coverage_metric": "The original_area_covered_fraction fields; final_ice_fraction fields describe the final block-face approximation separately.",
+      "lake_definition": "Ordinary source-water top faces at CARVERS, before added traps; both same-cell freeze and cap-above count. Uncovered/changed positions are retained in denominator. Springs are not ordinary water.",
+      "counts": {
+        "ice_crystal": 0,
+        "large_ice_crystal": 0,
+        "large_ice_crystal_exposed_to_air": 0,
+        "glowstone_crystal": 0,
+        "ice_crystal_exposed_to_air": 0,
+        "glowstone_crystal_exposed_to_air": 0,
+        "sampled_blocks": 786432,
+        "final_floor_faces": 5859,
+        "final_ceiling_faces": 7338,
+        "final_wall_faces": 21091,
+        "final_high_wall_faces": 5398,
+        "final_wall_ore_faces_in_denominator": 1294,
+        "final_high_wall_ore_faces_in_denominator": 382,
+        "exposed_ore_faces": 1961,
+        "final_ceiling_ore_faces_in_denominator": 359,
+        "final_faces_adjacent_to_partial_decoration": 732,
+        "excluded_legacy_partial_wall_faces": 565,
+        "excluded_legacy_partial_ceiling_faces": 30,
+        "final_floor_ore_faces_in_denominator": 308,
+        "excluded_legacy_partial_high_wall_faces": 9,
+        "before_floor_faces": 5881,
+        "before_ceiling_faces": 6073,
+        "before_wall_faces": 16574,
+        "before_high_wall_faces": 4956,
+        "lake_uncovered_or_changed": 158
+      },
+      "legacy_solid_partial_blocks_excluded": {
+        "minecraft:oak_fence": 172,
+        "minecraft:cobweb": 28
+      },
+      "surface_ratios": {
+        "floor_final_ice_fraction": 0.0,
+        "floor_original_area_covered_fraction": 0.0,
+        "wall_final_ice_fraction": 0.0,
+        "wall_original_area_covered_fraction": 0.0,
+        "high_wall_final_ice_fraction": 0.0,
+        "high_wall_original_area_covered_fraction": 0.0,
+        "ceiling_final_ice_fraction": 0.0,
+        "ceiling_original_area_covered_fraction": 0.0
+      },
+      "lakes": {
+        "original_water_top_faces": 158,
+        "covered_fraction": 0.0,
+        "thin_fraction_of_original_top": 0.0,
+        "stable_fraction_of_original_top": 0.0
+      },
+      "crystals": {
+        "ice_crystal": 0,
+        "ice_crystal_exposed_to_air": 0,
+        "glowstone_crystal": 0,
+        "large_ice_crystal_exposed_to_air": 0,
+        "large_ice_crystal": 0,
+        "glowstone_crystal_exposed_to_air": 0
+      },
+      "crystal_definition": "All final crystal blocks in the same included sample Y/volume as ore totals. Exposed means at least one of six adjacent blocks is air; each crystal counts once. This confirms open-air inlays, not camera line of sight or visibility through transparent ice.",
+      "traps": {
+        "definition": "Final thin-ice lids at original CARVERS solid floor faces or one block above them (ice shells over ore); ordinary natural water tops are excluded. Lids group by horizontal face adjacency at identical Y. Depth counts consecutive air or ordinary water cells immediately below each lid, observing at most 13 to distinguish the allowed 3..12 range. Fully observed groups require in-sample boundaries, observed solid floors and no adjacent unknown-baseline lids. Unmodified solid retaining floors may belong to another 3D biome and are observed within the sampled chunk/Y bounds even when excluded from biome counts; this is recorded separately rather than called a vertical sample cut. Cavity cells still require inclusion. This cannot identify lids raised more than one block above the original solid floor. Wet frequency uses only fully observed, valid-depth, consistently dry or source-water-filled groups; an empty denominator is unavailable, not a pass.",
+        "candidate_lid_blocks_on_original_solid_floor": 0,
+        "connected_lid_groups": 0,
+        "fully_observed_groups": 0,
+        "sample_clipped_groups": 0,
+        "fully_observed_valid_depth_groups": 0,
+        "fully_observed_consistent_dry_groups": 0,
+        "fully_observed_consistent_source_water_groups": 0,
+        "mixed_fill_groups_including_clipped": 0,
+        "groups": []
+      },
+      "ores": {
+        "pyrite": {
+          "all_final_blocks": 14094,
+          "largest_coplanar_exposed_face_patch_clipped_to_sample": 12,
+          "exposed_faces": 1220
+        },
+        "pyrolusite": {
+          "all_final_blocks": 0,
+          "largest_coplanar_exposed_face_patch_clipped_to_sample": 0,
+          "exposed_faces": 0
+        },
+        "zinc": {
+          "all_final_blocks": 3693,
+          "largest_coplanar_exposed_face_patch_clipped_to_sample": 10,
+          "exposed_faces": 234
+        },
+        "lead": {
+          "all_final_blocks": 5003,
+          "largest_coplanar_exposed_face_patch_clipped_to_sample": 5,
+          "exposed_faces": 172
+        },
+        "silver": {
+          "all_final_blocks": 5150,
+          "largest_coplanar_exposed_face_patch_clipped_to_sample": 6,
+          "exposed_faces": 335
+        }
+      },
+      "suggested_views": [
+        {
+          "kind": "passage",
+          "x": 20532.5,
+          "y": -14,
+          "z": 20508.5,
+          "clear_height": 2,
+          "horizontal_cardinal_clearance_sum": 51,
+          "look_clearance": 16,
+          "alternate_clearance": 13,
+          "yaw": 270.0,
+          "alternate_yaw": 0.0,
+          "pitch": -8
+        },
+        {
+          "kind": "medium",
+          "x": 20533.5,
+          "y": -15,
+          "z": 20509.5,
+          "clear_height": 6,
+          "horizontal_cardinal_clearance_sum": 52,
+          "look_clearance": 16,
+          "alternate_clearance": 14,
+          "yaw": 270.0,
+          "alternate_yaw": 180.0,
+          "pitch": -8
+        },
+        {
+          "kind": "hall",
+          "x": 20536.5,
+          "y": -19,
+          "z": 20511.5,
+          "clear_height": 13,
+          "horizontal_cardinal_clearance_sum": 56,
+          "look_clearance": 16,
+          "alternate_clearance": 16,
+          "yaw": 180.0,
+          "alternate_yaw": 90.0,
+          "pitch": -8
+        }
+      ],
+      "suggested_view_availability": {
+        "hall": true,
+        "passage": true,
+        "medium": true,
+        "lake": false,
+        "ice_crystal": false,
+        "trap": false
+      },
+      "spring_status": "Natural generation and survival warming remain unaccepted; telemetry is not a pass requirement."
+    },
+    "timing_ms": {
+      "baseline_and_basin_scan": 522,
+      "features_to_full_requests": 7854,
+      "carvers_requests": 5070,
+      "final_count_scan": 1309,
+      "elapsed_wall": 15979
+    }
+  }
+]

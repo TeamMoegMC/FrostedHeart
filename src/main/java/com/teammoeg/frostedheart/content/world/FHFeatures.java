@@ -37,6 +37,7 @@ import com.teammoeg.frostedheart.content.world.features.IceCaveSpikeFeature;
 import com.teammoeg.frostedheart.content.world.features.IceCaveIceBlobFeature;
 import com.teammoeg.frostedheart.content.world.features.IceCaveTrapFeature;
 import com.teammoeg.frostedheart.content.world.features.IceCaveDecorationFeature;
+import com.teammoeg.frostedheart.content.world.features.IceCaveSmallCrystalFeature;
 import com.teammoeg.frostedheart.content.world.features.FallenLogConfig;
 import com.teammoeg.frostedheart.content.world.features.FallenLogFeature;
 import com.teammoeg.frostedheart.content.world.features.HotdogFoliagePlacer;
@@ -98,6 +99,7 @@ public class FHFeatures {
     public static final RegistryObject<IceCaveIceBlobFeature> ICE_CAVE_ICE_BLOB = register("ice_cave_ice_blob", IceCaveIceBlobFeature::new, NoneFeatureConfiguration.CODEC);
     public static final RegistryObject<IceCaveTrapFeature> ICE_CAVE_TRAP = register("ice_cave_trap", IceCaveTrapFeature::new, NoneFeatureConfiguration.CODEC);
     public static final RegistryObject<IceCaveDecorationFeature> ICE_CAVE_DECORATION = register("ice_cave_decoration", IceCaveDecorationFeature::new, NoneFeatureConfiguration.CODEC);
+    public static final RegistryObject<IceCaveSmallCrystalFeature> ICE_CAVE_SMALL_CRYSTAL = register("ice_cave_small_crystal", IceCaveSmallCrystalFeature::new, NoneFeatureConfiguration.CODEC);
     public static final RegistryObject<IceCaveSpringFeature> ICE_CAVE_SPRING = register("ice_cave_spring", IceCaveSpringFeature::new, NoneFeatureConfiguration.CODEC);
     public static final RegistryObject<CavePyrolusiteFeature> CAVE_PYROLUSITE = register("cave_pyrolusite", CavePyrolusiteFeature::new, OreConfiguration.CODEC);
     public static final RegistryObject<com.teammoeg.frostedheart.content.world.features.IcicleFeature> ICICLE =

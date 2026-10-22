@@ -5,7 +5,7 @@ import net.minecraft.world.level.levelgen.feature.Feature;
 import net.minecraft.world.level.levelgen.feature.FeaturePlaceContext;
 import net.minecraft.world.level.levelgen.feature.configurations.OreConfiguration;
 
-/** Same ore algorithm and vein size as local pyrite, with terrain-based attempt thinning. */
+/** Vanilla ore algorithm with independently configured vein size and terrain-based attempt thinning. */
 public final class CavePyrolusiteFeature extends Feature<OreConfiguration> {
     public CavePyrolusiteFeature(Codec<OreConfiguration> codec) { super(codec); }
 

@@ -90,7 +90,7 @@ public final class IceCaveNaturalSampleGameTests {
             counts = new LinkedHashMap<>();
             landscape = new IceCaveLandscapeMetrics();
             for (String key : List.of("sampled_volume", "air", "air_at_or_below_40", "stone_deepslate_tuff",
-                    "vanilla_ice", "pyrite", "pyrolusite", "zinc", "lead", "silver", "ice_crystal",
+                    "vanilla_ice", "pyrite", "pyrolusite", "zinc", "lead", "silver", "ice_crystal", "large_ice_crystal",
                     "glowstone_crystal", "hydrothermal_rock", "spring_source", "spring_flowing",
                     "deep_floor_with_two_air_after_decoration", "wide_deep_floor_after_decoration",
                     "valid_basin_origins_before_features")) counts.put(key, 0L);
@@ -204,6 +204,7 @@ public final class IceCaveNaturalSampleGameTests {
                     if (id.endsWith("ore_lead")) add("lead");
                     if (id.endsWith("ore_silver")) add("silver");
                     if (id.equals("frostedheart:ice_crystal")) add("ice_crystal");
+                    if (id.equals("frostedheart:large_ice_crystal")) add("large_ice_crystal");
                     if (id.equals("frostedheart:glowstone_crystal")) add("glowstone_crystal");
                     if (id.equals("frostedheart:hydrothermal_rock")) add("hydrothermal_rock");
                     if (state.getFluidState().getType().isSame(FHFluids.HOT_SPRING.get())) {

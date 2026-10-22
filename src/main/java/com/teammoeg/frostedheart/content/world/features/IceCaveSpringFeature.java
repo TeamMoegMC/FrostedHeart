@@ -70,7 +70,7 @@ public final class IceCaveSpringFeature extends Feature<NoneFeatureConfiguration
                 BlockPos ice = air.relative(side);
                 if (level.getBlockState(ice).is(Blocks.ICE)) {
                     level.setBlock(ice, FHBlocks.GLOWSTONE_CRYSTAL.get().defaultBlockState(), 2);
-                    var crystal = FHBlocks.ICE_CRYSTAL.get().defaultBlockState()
+                    var crystal = FHBlocks.LARGE_ICE_CRYSTAL.get().defaultBlockState()
                             .setValue(AmethystClusterBlock.FACING, side.getOpposite());
                     if (crystal.canSurvive(level, air)) {
                         level.setBlock(air, crystal, 2);
@@ -81,7 +81,7 @@ public final class IceCaveSpringFeature extends Feature<NoneFeatureConfiguration
             }
             if (level.getBlockState(air).isAir() && level.getBlockState(base).is(Blocks.ICE)) {
                 level.setBlock(base, FHBlocks.GLOWSTONE_CRYSTAL.get().defaultBlockState(), 2);
-                var crystal = FHBlocks.ICE_CRYSTAL.get().defaultBlockState()
+                var crystal = FHBlocks.LARGE_ICE_CRYSTAL.get().defaultBlockState()
                         .setValue(AmethystClusterBlock.FACING, Direction.UP);
                 if (crystal.canSurvive(level, air)) level.setBlock(air, crystal, 2);
                 else level.setBlock(base, Blocks.ICE.defaultBlockState(), 2);

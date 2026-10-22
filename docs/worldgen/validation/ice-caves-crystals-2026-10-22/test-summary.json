@@ -1,0 +1,29 @@
+{
+  "initial_suite": {
+    "tests": 32,
+    "passed": 31,
+    "failed": "blobsReceiveTheirOwnSupportedCrystalPockets: endpoint seed coverage only"
+  },
+  "focused_retest": {
+    "tests": 5,
+    "passed": 5,
+    "production_changes_for_retest": false
+  },
+  "unique_tests_passed_after_repair": 32,
+  "blob_fixture": {
+    "attempts": 288,
+    "successful": 288,
+    "containing_glowstone": 252,
+    "fraction": 0.875,
+    "measured_diameters": [
+      5,
+      6,
+      7,
+      8,
+      9,
+      10
+    ],
+    "source_output": "ICE_CAVE_BLOB glowing=252 successful=288 attempts=288 diameters=[5, 6, 7, 8, 9, 10] ratio=0.875",
+    "scope": "Controlled geometry, three mineral patterns including all-ore, not a natural-world proportion"
+  }
+}

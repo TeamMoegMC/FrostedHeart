@@ -209,8 +209,19 @@ public class FHBlocks {
     public static final BlockEntry<AmethystClusterBlock> ICE_CRYSTAL = REGISTRATE.block("ice_crystal", p -> new AmethystClusterBlock(7, 3, p))
             .properties(p -> p.mapColor(MapColor.ICE).strength(0.5F).sound(SoundType.GLASS)
                     .noOcclusion().lightLevel(state -> 1))
+            .tag(BlockTags.MINEABLE_WITH_PICKAXE)
             .blockstate(FHBlockStateGen.existed())
             .lang("Ice Crystal")
+            .loot((lt, block) -> lt.add(block, RegistrateBlockLootTables.createSilkTouchOnlyTable(block)))
+            .item().model(FHBlockStateGen.existingItemModel())
+            .build().register();
+
+    public static final BlockEntry<AmethystClusterBlock> LARGE_ICE_CRYSTAL = REGISTRATE.block("large_ice_crystal", p -> new AmethystClusterBlock(14, 1, p))
+            .properties(p -> p.mapColor(MapColor.ICE).strength(0.5F).sound(SoundType.GLASS)
+                    .noOcclusion().lightLevel(state -> 3))
+            .tag(BlockTags.MINEABLE_WITH_PICKAXE)
+            .blockstate(FHBlockStateGen.existed())
+            .lang("Large Ice Crystal")
             .loot((lt, block) -> lt.add(block, RegistrateBlockLootTables.createSilkTouchOnlyTable(block)))
             .item().model(FHBlockStateGen.existingItemModel())
             .build().register();

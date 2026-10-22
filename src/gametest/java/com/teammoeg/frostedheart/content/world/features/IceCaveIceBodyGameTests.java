@@ -4,6 +4,7 @@ import java.lang.reflect.Proxy;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.bootstrap.common.FHFluids;
@@ -67,7 +68,8 @@ public final class IceCaveIceBodyGameTests {
     public static void protectedCellsAndBiomeBoundariesRejectWholeBodies(GameTestHelper helper) {
         Feature<LargeDripstoneConfiguration> feature = new IceCaveLargeIceFeature(LargeDripstoneConfiguration.CODEC);
         for (BlockState protectedState : new BlockState[] {Blocks.WATER.defaultBlockState(),
-                Blocks.OAK_PLANKS.defaultBlockState(), FHBlocks.ICE_CRYSTAL.get().defaultBlockState()}) {
+                Blocks.OAK_PLANKS.defaultBlockState(), FHBlocks.ICE_CRYSTAL.get().defaultBlockState(),
+                FHBlocks.LARGE_ICE_CRYSTAL.get().defaultBlockState()}) {
             Terrain terrain = new Terrain(helper, new BlockPos(15, -12, 0), 20, 12);
             terrain.states.put(new BlockPos(15, -21, 0), protectedState);
             helper.assertTrue(!terrain.place(feature, LARGE, 12), "protected volume rejects the ice body");
@@ -139,24 +141,58 @@ public final class IceCaveIceBodyGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "phase0a_empty", batch = "ice_cave", timeoutTicks = 80)
+    @GameTest(template = "phase0a_empty", batch = "ice_cave", timeoutTicks = 160)
     public static void blobsReceiveTheirOwnSupportedCrystalPockets(GameTestHelper helper) {
         var blob = new IceCaveIceBlobFeature(NoneFeatureConfiguration.CODEC);
         int glowing = 0;
-        for (int seed = 0; seed < 60; seed++) {
-            Terrain wall = new Terrain(helper, new BlockPos(11, -12, 0), 20, 12);
-            for (int x = 13; x <= 25; x++) for (int y = -18; y <= -6; y++) for (int z = -6; z <= 6; z++) {
-                wall.states.put(new BlockPos(x, y, z), Blocks.STONE.defaultBlockState());
-            }
-            wall.place(blob, FeatureConfiguration.NONE, seed);
-            for (var entry : wall.writes.entrySet()) {
-                if (entry.getValue().is(FHBlocks.GLOWSTONE_CRYSTAL.get())) glowing++;
-                if (entry.getValue().is(FHBlocks.ICE_CRYSTAL.get())) {
-                    helper.assertTrue(entry.getValue().canSurvive(wall.level, entry.getKey()), "blob crystal has valid support");
+        int successful = 0;
+        Set<Integer> diameters = new java.util.TreeSet<>();
+        // Consecutive LegacyRandomSource seeds 0..23 sample only odd diameters after
+        // the initial direction draw. Keep a fixed replay set including seed 2 (5)
+        // and seed 34 (10), then measure the actual committed body's vertical span.
+        long[] seeds = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
+                12, 13, 14, 15, 16, 17, 32, 33, 34, 35, 36, 37};
+        for (int originX : new int[] {11, 15, -1, -16}) for (int mineralPattern = 0; mineralPattern < 3; mineralPattern++) {
+            for (long seed : seeds) {
+                Terrain wall = new Terrain(helper, new BlockPos(originX, -12, 0), 20, 12);
+                Map<BlockPos, BlockState> minerals = new HashMap<>();
+                for (int x = originX + 2; x <= originX + 14; x++) for (int y = -18; y <= -6; y++) for (int z = -6; z <= 6; z++) {
+                    BlockPos pos = new BlockPos(x, y, z);
+                    BlockState state = mineralPattern == 2 || mineralPattern == 1 && Math.floorMod(x + y + z, 2) == 0
+                            ? FHBlocks.PYRITE_ORE.get().defaultBlockState() : Blocks.STONE.defaultBlockState();
+                    wall.states.put(pos, state);
+                    if (state.is(FHBlocks.PYRITE_ORE.get())) minerals.put(pos, state);
+                }
+                if (!wall.place(blob, FeatureConfiguration.NONE, seed)) continue;
+                successful++;
+                int minY = wall.writes.keySet().stream().mapToInt(BlockPos::getY).min().orElseThrow();
+                int maxY = wall.writes.keySet().stream().mapToInt(BlockPos::getY).max().orElseThrow();
+                if (mineralPattern == 0) diameters.add(maxY - minY + 1);
+                long inclusions = wall.writes.values().stream().filter(state -> state.is(FHBlocks.GLOWSTONE_CRYSTAL.get())).count();
+                if (inclusions > 0) glowing++;
+                helper.assertTrue(inclusions <= 1, "the blob pass adds at most one glowstone inclusion");
+                if (mineralPattern < 2) helper.assertTrue(inclusions == 1,
+                        "every ordinary or mineral-mixed lobe has an inclusion, including five-block lobes and chunk edges");
+                minerals.forEach((pos, state) -> helper.assertTrue(wall.get(pos) == state, "every mineral inclusion remains intact"));
+                for (var entry : wall.writes.entrySet()) {
+                    if (entry.getValue().is(FHBlocks.GLOWSTONE_CRYSTAL.get())) {
+                        for (var side : net.minecraft.core.Direction.values()) helper.assertTrue(!wall.get(entry.getKey().relative(side)).isAir(),
+                                "the guaranteed glowstone stays inside the lobe rather than on its exposed skin");
+                    }
+                    if (entry.getValue().is(FHBlocks.LARGE_ICE_CRYSTAL.get())) {
+                        helper.assertTrue(entry.getValue().canSurvive(wall.level, entry.getKey()), "blob large crystal has valid support");
+                    }
+                    helper.assertTrue(!entry.getValue().is(FHBlocks.ICE_CRYSTAL.get()), "blob pockets use large crystals exclusively");
                 }
             }
         }
-        helper.assertTrue(glowing > 0, "blob pass creates crystals before generic decoration, without a persistent marker");
+        System.out.println("ICE_CAVE_BLOB glowing=" + glowing + " successful=" + successful
+                + " attempts=" + (4 * 3 * seeds.length) + " diameters=" + diameters
+                + " ratio=" + (successful == 0 ? 0 : (double)glowing / successful));
+        helper.assertTrue(successful > 0 && glowing * 2 >= successful,
+                "at least half of all successful lobes contain glowstone, including ore-filled lobes in the denominator: " + glowing + "/" + successful);
+        helper.assertTrue(diameters.contains(5) && diameters.contains(10),
+                "the ratio checks both five- and ten-block lobe endpoints; measured diameters=" + diameters);
         helper.succeed();
     }
 

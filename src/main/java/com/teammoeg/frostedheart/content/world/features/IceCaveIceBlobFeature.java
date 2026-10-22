@@ -3,6 +3,8 @@ package com.teammoeg.frostedheart.content.world.features;
 import com.mojang.serialization.Codec;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -52,6 +54,7 @@ public final class IceCaveIceBlobFeature extends Feature<NoneFeatureConfiguratio
         BlockState material = chooseMaterial(random);
         IceCaveIceBody body = new IceCaveIceBody(level, origin);
         List<BlockPos> iceCells = new ArrayList<>();
+        Set<BlockPos> volume = new HashSet<>();
         int embedded = 0;
         int exposed = 0;
         for (int dx = -extent; dx <= extent; dx++) for (int dy = -extent; dy <= extent; dy++) for (int dz = -extent; dz <= extent; dz++) {
@@ -60,6 +63,7 @@ public final class IceCaveIceBlobFeature extends Feature<NoneFeatureConfiguratio
             double y = pos.getY() - cy;
             double z = pos.getZ() - cz;
             if (x * x + y * y + z * z > radius * radius) continue;
+            volume.add(pos);
             if (!IceCaveIceBody.canRead(level, pos)) return false;
             BlockState old = level.getBlockState(pos);
             if (old.isAir()) exposed++;
@@ -74,11 +78,28 @@ public final class IceCaveIceBlobFeature extends Feature<NoneFeatureConfiguratio
         }
         // Reject buried balls and freestanding or nearly unsupported spheres.
         if (exposed == 0 || embedded < exposed || !body.place()) return false;
-        // Only real wall blobs receive this extra pass. Combined with the reduced 1/360
-        // background, their eligible interiors have about 1.5x the former 1/180 attempts.
+        // Try every usable interior for one inclusion in each committed lobe, rather than merely
+        // rolling a chance whose later geometric failure silently lowers the lobe ratio.
+        int start = random.nextInt(iceCells.size());
+        Set<BlockPos> interior = new HashSet<>();
         for (BlockPos pos : iceCells) {
-            if (random.nextInt(180) == 0) IceCaveDecorationFeature.placeCrystalPocket(level, pos);
+            boolean internal = true;
+            for (Direction side : Direction.values()) {
+                if (!volume.contains(pos.relative(side))) { internal = false; break; }
+            }
+            if (internal) interior.add(pos);
         }
+        BlockPos fallback = null;
+        for (int i = 0; i < iceCells.size(); i++) {
+            BlockPos pos = iceCells.get((start + i) % iceCells.size());
+            if (!interior.contains(pos)) continue;
+            if (fallback == null) fallback = pos;
+            if (IceCaveDecorationFeature.placeCrystalPocket(level, pos, interior::contains)) return true;
+        }
+        // Mineral inclusions can prevent a six-ice-cell pocket. Retain every ore and put a
+        // solid glowstone crystal in an interior ice cell instead; never reject a valid lobe.
+        // If all geometric interior cells are preserved ore, there is no replaceable interior.
+        if (fallback != null) level.setBlock(fallback, FHBlocks.GLOWSTONE_CRYSTAL.get().defaultBlockState(), 2);
         return true;
     }
 

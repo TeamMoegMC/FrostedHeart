@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.function.Predicate;
 
 import com.google.gson.GsonBuilder;
+import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Screenshot;
 import net.minecraft.client.gui.screens.AccessibilityOnboardingScreen;
@@ -27,6 +28,7 @@ import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.LevelSettings;
 import net.minecraft.world.level.WorldDataConfiguration;
 import net.minecraft.world.level.chunk.ChunkStatus;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.levelgen.WorldOptions;
 import net.minecraft.world.level.levelgen.presets.WorldPresets;
 import net.minecraftforge.api.distmarker.Dist;
@@ -198,8 +200,25 @@ public final class IceCaveClientValidation {
             }
         }
         if (cameras.isEmpty()) throw new IllegalStateException("Normal-preset candidates contained no walkable cave observation point");
+        if (Boolean.getBoolean("frostedheart.iceCaveCrystalDisplay")) addCrystalDisplay(level);
         result.put("screenshots", cameras);
         cameraIndex = 0; teleport();
+    }
+
+    /** Separate model fixture above the measured cave; built only after all natural metrics are saved. */
+    private static void addCrystalDisplay(ServerLevel level) {
+        BlockPos base = new BlockPos(startX * 16 + 8, 180, startZ * 16 + 8);
+        for (BlockPos pos : BlockPos.betweenClosed(base.offset(-5, 0, -5), base.offset(5, 5, 2))) {
+            boolean shell = pos.getY() == base.getY() || pos.getZ() == base.getZ() + 2;
+            level.setBlock(pos, (shell ? Blocks.GRAY_CONCRETE : Blocks.AIR).defaultBlockState(), 2);
+        }
+        level.setBlock(base.offset(-2, 1, 0), FHBlocks.ICE_CRYSTAL.get().defaultBlockState(), 2);
+        level.setBlock(base.offset(0, 1, 0), FHBlocks.LARGE_ICE_CRYSTAL.get().defaultBlockState(), 2);
+        level.setBlock(base.offset(2, 1, 0), Blocks.AMETHYST_CLUSTER.defaultBlockState(), 2);
+        cameras.add(new LinkedHashMap<>(Map.of("kind", "crystal_model_fixture", "x", base.getX() + .5,
+                "y", base.getY() + .5, "z", base.getZ() - 4.5, "yaw", 0F, "pitch", 8F,
+                "scope", "Synthetic model comparison: small ice, large ice, vanilla amethyst; excluded from natural metrics")));
+        result.put("synthetic_fixture", "Optional crystal display at Y=180, after natural measurement; not naturally generated");
     }
 
     private static void teleport() {

@@ -966,6 +966,7 @@
   "gui.frostedheart.town_manager.policy.workforce_first": "Workforce protection",
   "gui.frostedheart.town_manager.policy.workforce_first.description": "Residents capable of work receive the first care tier.",
   "block.frostedheart.ice_crystal": "Ice Crystal",
+  "block.frostedheart.large_ice_crystal": "Large Ice Crystal",
   "block.frostedheart.glowstone_crystal": "Glowstone Crystal",
   "block.frostedheart.hydrothermal_rock": "Hydrothermal Rock",
   "block.frostedheart.pyrolusite_ore": "Pyrolusite Ore",

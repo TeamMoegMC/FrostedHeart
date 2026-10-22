@@ -125,6 +125,7 @@ public final class IceCaveSurfaceFeature extends Feature<NoneFeatureConfiguratio
         double n = noise.getValue(x * .018, z * .018);
         if (n > .35 && n < .55) return Blocks.PACKED_ICE.defaultBlockState();
         if (n > -.65 && n < -.50) return Blocks.BLUE_ICE.defaultBlockState();
+        if (n > -.15 && n < .05) return FHBlocks.THIN_ICE_BLOCK.get().defaultBlockState();
         return Blocks.ICE.defaultBlockState();
     }
 }
