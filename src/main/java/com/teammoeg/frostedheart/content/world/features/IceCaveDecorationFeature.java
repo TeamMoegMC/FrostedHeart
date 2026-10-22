@@ -28,30 +28,10 @@ public final class IceCaveDecorationFeature extends Feature<NoneFeatureConfigura
                 BlockPos pos = new BlockPos(x, y, z);
                 var state = level.getBlockState(pos);
                 if (!IceCaveTerrain.inBiome(level, pos)) continue;
-                if (IceCaveTerrain.ice(state) && random.nextInt(180) == 0 && inThickIce(level, pos)
-                        && !IceCaveTerrain.springNearby(level, pos)) {
-                    // An internal air cell and an adjacent solid luminous support, both inside the ice body.
-                    for (Direction side : Direction.values()) {
-                        BlockPos support = pos.relative(side);
-                        if ((support.getX() & ~15) != minX || (support.getZ() & ~15) != minZ
-                                || !IceCaveTerrain.ice(level.getBlockState(support))
-                                || !IceCaveTerrain.inBiome(level, support)) continue;
-                        var crystal = FHBlocks.ICE_CRYSTAL.get().defaultBlockState()
-                                .setValue(AmethystClusterBlock.FACING, side.getOpposite());
-                        var oldSupport = level.getBlockState(support);
-                        level.setBlock(support, FHBlocks.GLOWSTONE_CRYSTAL.get().defaultBlockState(), 2);
-                        level.setBlock(pos, Blocks.CAVE_AIR.defaultBlockState(), 2);
-                        if (crystal.canSurvive(level, pos)) {
-                            level.setBlock(pos, crystal, 2);
-                            changed = true;
-                        } else {
-                            level.setBlock(pos, state, 2);
-                            level.setBlock(support, oldSupport, 2);
-                        }
-                        break;
-                    }
+                if (IceCaveTerrain.ice(state) && random.nextInt(360) == 0) {
+                    changed |= placeCrystalPocket(level, pos);
                 } else if (state.isAir()) {
-                    if (random.nextInt(120) == 0 && IceCaveSpace.isWide(level, pos)
+                    if (random.nextInt(360) == 0 && IceCaveSpace.isWide(level, pos)
                             && !IceCaveTerrain.springNearby(level, pos)) {
                         // Exposed inlays keep some crystals visible even when their parent body is opaque ice.
                         boolean placed = false;
@@ -82,10 +62,35 @@ public final class IceCaveDecorationFeature extends Feature<NoneFeatureConfigura
         return changed;
     }
 
+    static boolean placeCrystalPocket(WorldGenLevel level, BlockPos pos) {
+        var state = level.getBlockState(pos);
+        if (!IceCaveTerrain.ice(state) || !level.ensureCanWrite(pos) || !IceCaveTerrain.inBiome(level, pos)
+                || !inThickIce(level, pos) || IceCaveTerrain.springNearby(level, pos)) return false;
+        for (Direction side : Direction.values()) {
+            BlockPos support = pos.relative(side);
+            if ((support.getX() >> 4) != (pos.getX() >> 4) || (support.getZ() >> 4) != (pos.getZ() >> 4)
+                    || !level.ensureCanWrite(support) || !IceCaveTerrain.inBiome(level, support)
+                    || IceCaveTerrain.springNearby(level, support)) continue;
+            var crystal = FHBlocks.ICE_CRYSTAL.get().defaultBlockState()
+                    .setValue(AmethystClusterBlock.FACING, side.getOpposite());
+            var oldSupport = level.getBlockState(support);
+            level.setBlock(support, FHBlocks.GLOWSTONE_CRYSTAL.get().defaultBlockState(), 2);
+            level.setBlock(pos, Blocks.CAVE_AIR.defaultBlockState(), 2);
+            if (crystal.canSurvive(level, pos)) {
+                level.setBlock(pos, crystal, 2);
+                return true;
+            }
+            level.setBlock(pos, state, 2);
+            level.setBlock(support, oldSupport, 2);
+        }
+        return false;
+    }
+
     private static boolean inThickIce(WorldGenLevel level, BlockPos pos) {
         // Do not puncture thin lake lids, floor ice, or the retaining skin of a dry trap.
         for (Direction direction : Direction.values()) {
-            if (!IceCaveTerrain.ice(level.getBlockState(pos.relative(direction)))) return false;
+            BlockPos neighbor = pos.relative(direction);
+            if (!IceCaveIceBody.canRead(level, neighbor) || !IceCaveTerrain.ice(level.getBlockState(neighbor))) return false;
         }
         return true;
     }

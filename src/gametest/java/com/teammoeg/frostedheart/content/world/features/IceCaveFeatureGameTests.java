@@ -320,6 +320,41 @@ public final class IceCaveFeatureGameTests {
         helper.succeed();
     }
 
+    @GameTest(template = "phase0a_empty", batch = "ice_cave", timeoutTicks = 100)
+    public static void surfaceBandsHaveNoTinyFragmentsAndCanSpanHighWalls(GameTestHelper helper) {
+        int largest = 0;
+        int groups = 0;
+        for (int seed = 0; seed < 48; seed++) {
+            Terrain room = new Terrain(helper, CENTER, false);
+            room.worldSeed = seed * 7919L + 17;
+            room.shape = pos -> pos.getX() >= 2 && pos.getX() <= 13 && pos.getZ() >= 2 && pos.getZ() <= 13
+                    && pos.getY() >= -32 && pos.getY() <= 15 ? Blocks.AIR.defaultBlockState() : Blocks.STONE.defaultBlockState();
+            room.place(FHFeatures.ICE_CAVE_SURFACE.get(), seed);
+            java.util.Set<BlockPos> remaining = new java.util.HashSet<>();
+            room.states.forEach((pos, state) -> {
+                if (state.is(Blocks.PACKED_ICE) || state.is(Blocks.BLUE_ICE)) remaining.add(pos);
+            });
+            while (!remaining.isEmpty()) {
+                BlockPos start = remaining.iterator().next();
+                remaining.remove(start);
+                List<BlockPos> group = new ArrayList<>();
+                group.add(start);
+                for (int i = 0; i < group.size(); i++) for (Direction side : Direction.values()) {
+                    BlockPos neighbor = group.get(i).relative(side);
+                    if (remaining.contains(neighbor) && room.get(neighbor).is(room.get(start).getBlock())) {
+                        remaining.remove(neighbor);
+                        group.add(neighbor);
+                    }
+                }
+                helper.assertTrue(group.size() >= 4, "every material ribbon contains at least four connected exposed-shell cells");
+                largest = Math.max(largest, group.size());
+                groups++;
+            }
+        }
+        helper.assertTrue(groups > 0 && largest >= 100, "coarse sparse bands can form hundred-block continuous regions, largest=" + largest);
+        helper.succeed();
+    }
+
     private static final class Terrain {
         private final GameTestHelper helper;
         private final BlockPos origin;

@@ -1,6 +1,8 @@
 package com.teammoeg.frostedheart.content.world.features;
 
 import com.mojang.serialization.Codec;
+import java.util.ArrayList;
+import java.util.List;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -49,6 +51,7 @@ public final class IceCaveIceBlobFeature extends Feature<NoneFeatureConfiguratio
         int extent = diameter / 2;
         BlockState material = chooseMaterial(random);
         IceCaveIceBody body = new IceCaveIceBody(level, origin);
+        List<BlockPos> iceCells = new ArrayList<>();
         int embedded = 0;
         int exposed = 0;
         for (int dx = -extent; dx <= extent; dx++) for (int dy = -extent; dy <= extent; dy++) for (int dz = -extent; dz <= extent; dz++) {
@@ -67,9 +70,16 @@ public final class IceCaveIceBlobFeature extends Feature<NoneFeatureConfiguratio
             }
             else if (IceCaveIceBody.isBase(old)) embedded++;
             if (!body.add(pos, material)) return false;
+            iceCells.add(pos);
         }
         // Reject buried balls and freestanding or nearly unsupported spheres.
-        return exposed > 0 && embedded >= exposed && body.place();
+        if (exposed == 0 || embedded < exposed || !body.place()) return false;
+        // Only real wall blobs receive this extra pass. Combined with the reduced 1/360
+        // background, their eligible interiors have about 1.5x the former 1/180 attempts.
+        for (BlockPos pos : iceCells) {
+            if (random.nextInt(180) == 0) IceCaveDecorationFeature.placeCrystalPocket(level, pos);
+        }
+        return true;
     }
 
     private static BlockState chooseMaterial(RandomSource random) {

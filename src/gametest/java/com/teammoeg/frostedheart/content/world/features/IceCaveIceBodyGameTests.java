@@ -108,11 +108,55 @@ public final class IceCaveIceBodyGameTests {
                 successfulBlobs++;
                 helper.assertTrue(wall.writes.keySet().stream().anyMatch(pos -> pos.getX() >= 13), "blob extends into the wall");
                 helper.assertTrue(wall.writes.keySet().stream().anyMatch(pos -> pos.getX() <= 12), "blob has a visible cave-facing cap");
-                helper.assertTrue(wall.writes.values().stream().map(BlockState::getBlock).distinct().count() == 1,
+                helper.assertTrue(wall.writes.values().stream().filter(IceCaveIceBody::isIce).map(BlockState::getBlock).distinct().count() == 1,
                         "each blob has one coherent ice material");
             }
         }
         helper.assertTrue(successfulBlobs > 0, "wall-embedded blob candidates actually place");
+        helper.succeed();
+    }
+
+    @GameTest(template = "phase0a_empty", batch = "ice_cave", timeoutTicks = 80)
+    public static void spikesFindUnevenMineralFloorsWithoutGrowingLarger(GameTestHelper helper) {
+        var spike = new IceCaveSpikeFeature(NoneFeatureConfiguration.CODEC);
+        BlockPos floor = new BlockPos(15, -21, 0);
+        BlockPos mineral = floor.below();
+        for (int seed = 0; seed < 40; seed++) {
+            Terrain room = new Terrain(helper, floor.above(16), 24, 12);
+            room.states.put(mineral, FHBlocks.PYRITE_ORE.get().defaultBlockState());
+            room.states.put(floor.north(), Blocks.STONE.defaultBlockState());
+            room.states.put(floor.east().below(), Blocks.AIR.defaultBlockState());
+            helper.assertTrue(room.place(spike, FeatureConfiguration.NONE, seed),
+                    "a candidate above an uneven mineral floor can find and root one small spike");
+            helper.assertTrue(room.get(mineral).is(FHBlocks.PYRITE_ORE.get()), "root mineral remains intact");
+            int top = room.writes.keySet().stream().mapToInt(BlockPos::getY).max().orElseThrow();
+            helper.assertTrue(top >= floor.getY() + 2 && top <= floor.getY() + 5, "spike stays three-to-six blocks tall");
+            Terrain water = new Terrain(helper, floor, 24, 12);
+            water.states.put(mineral, Blocks.WATER.defaultBlockState());
+            helper.assertTrue(!IceCaveSpikeFeature.tryPlace(water.level, floor, floor, RandomSource.create(seed))
+                            && water.writes.isEmpty(), "a flooded central root rejects the entire candidate");
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "phase0a_empty", batch = "ice_cave", timeoutTicks = 80)
+    public static void blobsReceiveTheirOwnSupportedCrystalPockets(GameTestHelper helper) {
+        var blob = new IceCaveIceBlobFeature(NoneFeatureConfiguration.CODEC);
+        int glowing = 0;
+        for (int seed = 0; seed < 60; seed++) {
+            Terrain wall = new Terrain(helper, new BlockPos(11, -12, 0), 20, 12);
+            for (int x = 13; x <= 25; x++) for (int y = -18; y <= -6; y++) for (int z = -6; z <= 6; z++) {
+                wall.states.put(new BlockPos(x, y, z), Blocks.STONE.defaultBlockState());
+            }
+            wall.place(blob, FeatureConfiguration.NONE, seed);
+            for (var entry : wall.writes.entrySet()) {
+                if (entry.getValue().is(FHBlocks.GLOWSTONE_CRYSTAL.get())) glowing++;
+                if (entry.getValue().is(FHBlocks.ICE_CRYSTAL.get())) {
+                    helper.assertTrue(entry.getValue().canSurvive(wall.level, entry.getKey()), "blob crystal has valid support");
+                }
+            }
+        }
+        helper.assertTrue(glowing > 0, "blob pass creates crystals before generic decoration, without a persistent marker");
         helper.succeed();
     }
 

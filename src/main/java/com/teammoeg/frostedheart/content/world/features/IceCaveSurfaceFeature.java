@@ -3,6 +3,9 @@ package com.teammoeg.frostedheart.content.world.features;
 import com.mojang.serialization.Codec;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
+import java.util.ArrayList;
+import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
@@ -28,6 +31,7 @@ public final class IceCaveSurfaceFeature extends Feature<NoneFeatureConfiguratio
         SimplexNoise material = new SimplexNoise(RandomSource.create(level.getSeed() ^ 0x57a1beL));
         SimplexNoise lake = new SimplexNoise(RandomSource.create(level.getSeed() ^ 0x1a4e1ceL));
         Long2ObjectOpenHashMap<BlockState> changes = new Long2ObjectOpenHashMap<>();
+        LongOpenHashSet surfaces = new LongOpenHashSet();
         BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
         for (int x = minX; x < minX + 16; x++) for (int z = minZ; z < minZ + 16; z++) {
             int top = Math.min(IceCaveTerrain.MAX_Y, level.getHeight(Heightmap.Types.WORLD_SURFACE_WG, x, z) - 6);
@@ -54,8 +58,9 @@ public final class IceCaveSurfaceFeature extends Feature<NoneFeatureConfiguratio
                         if (level.getBlockState(pos.relative(side)).isAir()) { exposed = true; break; }
                     }
                     if (!exposed || IceCaveTerrain.springNearby(level, pos)) continue;
-                    BlockState ice = material(material, x, z);
+                    BlockState ice = Blocks.ICE.defaultBlockState();
                     changes.put(pos.asLong(), ice);
+                    surfaces.add(pos.asLong());
                     // A second inward layer varies shell depth without filling narrow passage air or consuming ore.
                     if (n < -.35) for (Direction side : Direction.values()) {
                         BlockPos inner = pos.relative(side);
@@ -73,23 +78,53 @@ public final class IceCaveSurfaceFeature extends Feature<NoneFeatureConfiguratio
                                 && level.getBlockState(pos.relative(side.getOpposite(), 2)).isAir()
                                 && level.getBlockState(pos.relative(side.getOpposite(), 3)).isAir()
                                 && !IceCaveTerrain.springNearby(level, pos)) {
-                            changes.put(pos.asLong(), material(material, x, z));
+                            changes.put(pos.asLong(), Blocks.ICE.defaultBlockState());
+                            surfaces.add(pos.asLong());
                             break;
                         }
                     }
                 }
             }
         }
+        applyBands(material, surfaces, changes);
         // Read the original surface before writing, so the scan cannot grow its own next layer recursively.
         changes.long2ObjectEntrySet().forEach(entry -> level.setBlock(BlockPos.of(entry.getLongKey()), entry.getValue(), 2));
         return !changes.isEmpty();
     }
 
-    private static BlockState material(SimplexNoise noise, int x, int z) {
-        // A narrow 2-D noise interval makes sparse, generally vertical colour bands on all heights.
-        double n = noise.getValue(x * .065, z * .065);
-        if (n > .035 && n < .095) return Blocks.PACKED_ICE.defaultBlockState();
-        if (n > -.095 && n < -.075) return Blocks.BLUE_ICE.defaultBlockState();
+    private static void applyBands(SimplexNoise noise, LongOpenHashSet surfaces,
+            Long2ObjectOpenHashMap<BlockState> changes) {
+        Long2ObjectOpenHashMap<BlockState> candidates = new Long2ObjectOpenHashMap<>();
+        for (long packed : surfaces) {
+            BlockPos pos = BlockPos.of(packed);
+            BlockState material = bandMaterial(noise, pos.getX(), pos.getZ());
+            if (!material.is(Blocks.ICE)) candidates.put(packed, material);
+        }
+        // Count only actual exposed shell blocks, never the buried second layer. A candidate
+        // clipped by terrain or this chunk must still contain at least four connected cells.
+        while (!candidates.isEmpty()) {
+            long start = candidates.keySet().iterator().nextLong();
+            BlockState material = candidates.remove(start);
+            List<BlockPos> group = new ArrayList<>();
+            group.add(BlockPos.of(start));
+            for (int i = 0; i < group.size(); i++) for (Direction direction : Direction.values()) {
+                BlockPos neighbor = group.get(i).relative(direction);
+                if (candidates.get(neighbor.asLong()) == material) {
+                    candidates.remove(neighbor.asLong());
+                    group.add(neighbor);
+                }
+            }
+            if (group.size() >= 4) for (BlockPos pos : group) changes.put(pos.asLong(), material);
+        }
+    }
+
+    private static BlockState bandMaterial(SimplexNoise noise, int x, int z) {
+        // Broad, slowly varying ribbons, restricted to fewer regions. Absolute coordinates
+        // keep their material mask continuous across chunks and vertical along high walls.
+        if (noise.getValue(x * .008 + 417, z * .008 - 831) < .25) return Blocks.ICE.defaultBlockState();
+        double n = noise.getValue(x * .018, z * .018);
+        if (n > .35 && n < .55) return Blocks.PACKED_ICE.defaultBlockState();
+        if (n > -.65 && n < -.50) return Blocks.BLUE_ICE.defaultBlockState();
         return Blocks.ICE.defaultBlockState();
     }
 }
