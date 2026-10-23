@@ -92,7 +92,7 @@ public final class EaveIcicleGameTests {
         var level = helper.getLevel();
         var roof = roof(helper);
         level.setBlockAndUpdate(roof.below(), FHBlocks.EAVE_ICICLES.get().withEdges(1));
-        IcicleEvents.vibrate(level, Vec3.atCenterOf(roof.below()), 12, YES);
+        IcicleEvents.vibrate(level, Vec3.atCenterOf(roof.below()), IcicleEvents.BELL, YES);
         helper.assertTrue(level.getBlockState(roof.below()).isAir(), "no warning phase before falling");
         var falling = level.getEntitiesOfClass(FallingBlockEntity.class, new AABB(roof.below(2)).inflate(2)).stream()
                 .filter(e -> EaveIcicleBlock.isEaveIce(e.getBlockState())).findFirst().orElseThrow();

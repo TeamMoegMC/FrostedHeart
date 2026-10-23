@@ -112,13 +112,13 @@ public final class IcicleGameTests {
         chain(level, root, 2);
         chain(level, far, 1);
         Vec3 center = Vec3.atCenterOf(root);
-        IcicleEvents.vibrate(level, center, 12, YES);
+        IcicleEvents.vibrate(level, center, IcicleEvents.BELL, YES);
         helper.assertTrue(level.getBlockState(root).getValue(IcicleBlock.CRACKED)
                 && level.getBlockState(root.below()).getValue(IcicleBlock.CRACKED), "one event warns intact segments and never double-rolls them");
         helper.assertTrue(!level.getBlockState(far).getValue(IcicleBlock.CRACKED), "diagonal outside sphere stays intact");
-        IcicleEvents.vibrate(level, center, 12, YES);
+        IcicleEvents.vibrate(level, center, IcicleEvents.BELL, YES);
         helper.assertTrue(level.getBlockState(root).isAir(), "subsequent vibration can shatter a warned segment immediately");
-        IcicleEvents.vibrate(level, center, 32, YES);
+        IcicleEvents.vibrate(level, center, IcicleEvents.EXPLOSION, YES);
         helper.assertTrue(level.getBlockState(far).getValue(IcicleBlock.CRACKED), "explosion radius reaches farther segments");
         helper.succeed();
     }
@@ -368,7 +368,7 @@ public final class IcicleGameTests {
             FHBlocks.ICICLE.get().warn(level, root, YES);
         }
         long begin = System.nanoTime();
-        IcicleEvents.vibrate(level, Vec3.atCenterOf(start.offset(4, -2, 4)), 32, YES);
+        IcicleEvents.vibrate(level, Vec3.atCenterOf(start.offset(4, -2, 4)), IcicleEvents.EXPLOSION, YES);
         long vibrationNanos = System.nanoTime() - begin;
         var bounds = new AABB(start.offset(-1, -10, -1)).expandTowards(13, 13, 13);
         var falling = level.getEntitiesOfClass(FallingBlockEntity.class, bounds);

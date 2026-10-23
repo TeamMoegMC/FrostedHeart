@@ -1,11 +1,13 @@
 # 冰锥
 
 - Status: `Partial`（2026-10-22 按贴图轮廓裁剪模型，修复透明空白面片对邻近普通冰的遮挡；资源与模拟通过，客户端修复效果待确认，玩法回归记录见文末）
-- Last verified: `2026-10-22`（第二版世界生成入口及冰锥渲染资源；玩法运行时验证沿用下文各次记录）
+- Last verified: `2026-10-23`（多种振动事件与距离衰减；世界生成与渲染核对为 2026-10-22，各次运行时验证见文末）
 - Scope: `frostedheart:icicle`、同名 feature、第二版冰洞装饰、TWR `cave/icicle`、随机生长、材料相变与坠落
-- Primary code anchors: `IcicleBlock`、`IcicleEvents`、`IcicleFalling`、`IcicleFeature`、`FallingBlockEntityMixin_Icicle`、`MinecraftPhaseController.meltIcicle`、`MaterialChanges.GAMEPLAY_TRANSITION`、`IcicleGameTests`、`IcicleThermalGameTests`
+- Primary code anchors: `IcicleBlock`、`IcicleEvents`、`ServerLevelMixin_IcicleVibrations`、`IcicleFalling`、`IcicleFeature`、`FallingBlockEntityMixin_Icicle`、`MinecraftPhaseController.meltIcicle`、`MaterialChanges.GAMEPLAY_TRANSITION`、`IcicleGameTests`、`IcicleVibrationGameTests`、`IcicleThermalGameTests`
 
 源码和数据为最终权威。设计演变见[讨论](../../discussion/2026-10-17_23-27-52_ice-caves-and-thin-ice.md)；本文解释向下悬挂的冰锥，房檐单格小锥见[冰溜子](eave-icicles.md)。数值是源码默认，尚无玩家平衡反馈。
+
+2026-10-23 多种振动来源调整后，`runGameTestServer -PgameTestNamespaces=frostedheart_icicle_vibration,frostedheart_icicle` 全部 25/25 required tests 通过，包括六项新增事件／距离衰减测试和 19 项既有冰锥／冰溜子回归。结果与运行边界见[开发日记](../../diary/2026-10-23_12-34-33_icicle-vibration-source-profiles.md)；没有客户端试玩或打包 JAR。
 
 ## 方块与连接
 
@@ -67,7 +69,24 @@ n 是下方连续冰锥段数，只数到五段。温度增加 5°C 使门槛概
 
 进入预警时 `cracked=true`，播放 `FHSoundEvents.ICE_CRACKING`、音量 0.9、音调 1.0，与薄冰最后一级相同；客户端 animateTick 持续生成 `FALLING_DUST` 冰屑。冰屑从本段底部 y+0.05、x/z 各取 0.14 或 0.86 的位置落下，比原外圈 0.06/0.94 更靠近中心。原版冰屑碰撞宽度为 0.2 格，这些位置连同粒子半宽仍在最宽根部碰撞范围 0.25..0.75 之外，最小间隙约 0.01 格；保留普通粒子的地形碰撞，不把预警表现迁到整根末端。均匀抽取 80..640 game ticks（20 TPS 下 4–32 秒），到期本段变空气、下段坠落；降温不撤销。热裂/振动预警不再延长链，末端仍可先融化。
 
-只有爆炸和实际铃铛位置的 `SoundEvents.BELL_BLOCK` 触发振动，三维半径分别 32/12 格，暂不做遮挡/衰减。遍历范围内已加载 chunk 的 section，palette 不含冰锥则跳过，候选按球形距离筛选；不加载范围外区块，也不维护世界声学网。每事件先保存候选的原预警状态：完整段 5% 进入预警，原已预警段 90% 立即破碎。一次事件不会对刚预警的段再次补抽 90%，后续敲钟可以继续排险。冰自身裂纹音效不触发此机制。
+振动由 `IcicleEvents.Vibration` 分别定义半径与两种中心概率，源码默认如下：
+
+| 事件 | 半径 R（格） | 完整段开裂概率 | 已预警段立即破碎概率 | 参数锚点 |
+|---|---:|---:|---:|---|
+| 爆炸 | 32 | 10% | 100% | `EXPLOSION` |
+| 敲钟 | 12 | 1% | 50% | `BELL` |
+| 冰块破碎 | 16 | 1% | 50% | `ICE_BREAK` |
+| 普通石质方块／矿石破碎 | 8 | 0.5% | 50% | `STONE_BREAK` |
+| 铁砧使用、落地、损坏及挖掉 | 12 | 1% | 50% | 共用 `BELL` |
+| 带烟火之星的烟花爆裂 | 24 | 2% | 100% | `FIREWORK` |
+
+所有概率按距离线性衰减：`p=p0*max(0,1-d/R)`。`d` 为事件位置到候选方块中心的三维距离（格），`R` 为影响半径（格），`p0` 为表中中心基准概率（换算为 0..1）；中心保留原概率，半径一半为原概率的 50%，边界为 0，范围外不触发。不检测遮挡。
+
+爆炸入口为 `ExplosionEvent.Detonate`；敲钟入口为实际铃铛位置的 `PlayLevelSoundEvent.AtPosition` / `SoundEvents.BELL_BLOCK`。`ServerLevelMixin_IcicleVibrations` 转发原版服务端 `levelEvent`：2001 的 data 携带被破坏方块状态，`minecraft:ice` 标签识别冰块（包括薄冰），`forge:ores` 标签或 `STONE_SOUNDS` 识别石头／矿石；后者含普通石头、深板岩及其砖瓦、下界岩／矿石、镶金黑石、玄武岩、凝灰岩、方解石和滴水石块的 SoundType，使用相同音效类型的石质建筑块也会响应。普通玻璃、木头不触发。铁砧的 1029/1030/1031 分别对应损坏／使用／落地，挖掉铁砧由 2001 + `SoundType.ANVIL` 识别。方块位置事件以方块中心为振动源。
+
+烟花由同一 mixin 转发 `broadcastEntityEvent` 中火箭的 byte=17 爆裂消息；要求物品 `Fireworks.Explosions` 非空，以火箭位置为中心，每枚火箭爆裂只处理一次，不随客户端烟花子音效重复。无烟火之星的助推火箭不触发；烟花不套用普通爆炸参数。
+
+遍历范围内已加载 chunk 的 section，palette 不含悬冰则跳过，候选按球形距离筛选；不主动加载区块，也不维护世界声学网。每事件先保存候选的原预警状态，一次事件不会对刚预警的段再次补抽立即破碎。冰锥／冰溜子自身的 2001 破碎效果显式排除，裂纹音效也不触发，避免递归连锁；相连下段因支撑丢失而坠落的规则保留。冰溜子共用表中完整段概率，成功直接坠落。
 
 ## 材料相变与预算结算
 

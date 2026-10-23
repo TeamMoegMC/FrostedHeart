@@ -1,7 +1,7 @@
 # 房檐冰溜子与融化滴水
 
 - Status: `Partial`（玩法源码与此前 130 项回归已验证；2026-10-21 改为半透明并拆分交叉面，客户端外观及整合包性能待试玩）
-- Last verified: `2026-10-21`
+- Last verified: `2026-10-23`（多种振动事件与距离衰减；渲染核对为 2026-10-21，运行时回归见下文记录）
 - Scope: `frostedheart:eave_icicles`、房檐自然生长、坠落，以及与冰锥共用的滴水潮湿
 - Primary code anchors: `EaveIcicleBlock`、`IceDripping`、`IcicleEvents.vibrate`、`IcicleFalling.tick`、`EaveIcicleGameTests`、`ServerLevelMixin_TemperatureUpdate.addTemperatureSection`
 
@@ -28,7 +28,7 @@ p_growth = p_surface*min(2,1-0.1*T), T≤0°C
 
 ## 热裂、相变、坠落与掉落
 
-冰溜子每次随机刻先以 1/8 读取局部环境温度，再复用 `IcicleBlock.fractureChance(T,0,true)`：5°C 开始，10°C 为门槛概率两倍，按无下段的根部倍率处理。成功立即坠落，没有预警状态和倒计时。爆炸/敲钟三维半径为 32/12 格，完整冰溜子每事件 5% 直接坠落，不使用冰锥预警段的 90% 分支。
+冰溜子每次随机刻先以 1/8 读取局部环境温度，再复用 `IcicleBlock.fractureChance(T,0,true)`：5°C 开始，10°C 为门槛概率两倍，按无下段的根部倍率处理。成功立即坠落，没有预警状态和倒计时。振动共用[冰锥事件参数表](icicle.md)：爆炸半径 32 格／中心 10%，敲钟及铁砧 12 格／1%，冰块破碎 16 格／1%，石头／矿石破碎 8 格／0.5%，烟花爆裂 24 格／2%。这些是直接坠落的中心基准概率 `p0`，实际为 `p=p0*max(0,1-d/R)`，边界为 0，不检测遮挡。`d` 为事件到方块中心的三维距离（格），`R` 为对应半径（格）。冰溜子不使用已预警冰锥的立即破碎分支，自身破碎效果不会再次触发振动。
 
 顶部支撑移除后下一个 scheduled tick 坠落；普通挖掘、爆炸和投射物规则与冰锥相同。`FallingBlockEntityMixin_Icicle` 分流两种冰，复用原版实体同步、渲染、NBT 和已有灭火/落水/落地碎裂规则，不落地放置或掉物。冰溜子扫过存活目标时仅命中一次，造成固定 **0.5 生命点**原始伤害，随后破碎；不随高度增加、不额外施加击退，创造/旁观被排除，正常伤害减免/无敌帧继续生效。普通打碎无掉落，精准采集收取一格冰溜子。
 
@@ -47,6 +47,8 @@ p_growth = p_surface*min(2,1-0.1*T), T≤0°C
 任意 `ArmorItem` 头盔（包括无防水属性的皮革头盔），或实际佩戴头部衣物的 `ArmorTempData.getFluidResistance()>0` 可免疫此滴水。检查原版头槽和 FH 头部衣物槽，不以其他部位防水或任意头槽物品代替；不会清除已有潮湿，也不免疫其他潮湿来源。玩家温度/衣物数据仅通过现有接口读取。
 
 ## 验证与边界
+
+2026-10-23 振动参数与事件入口调整后，`runGameTestServer -PgameTestNamespaces=frostedheart_icicle_vibration,frostedheart_icicle` 全部 25/25 required tests 通过，包含原有冰溜子测试及新增冰溜子使用完整段概率直接掉落测试。各事件参数和衰减见上文，本轮未进行客户端试玩或打包 JAR；见[开发日记](../../diary/2026-10-23_12-34-33_icicle-vibration-source-profiles.md)。
 
 2026-10-20 18:01:37，`runGameTestServer -PgameTestNamespaces=frostedheart,frostedheart_thin_ice,frostedheart_icicle` 完整 130/130 required tests 通过，Gradle 退出成功；包含新增 6 项 `EaveIcicleGameTests` 和原有 124 项回归。覆盖实际房檐底面、雨停时积雪供水、非冰洞生长、材料冷/暖门槛、振动立即坠落、支撑丢失、一次固定 0.5 点伤害、精准采集、普通相变删除自身、上段受热末端滴水、射线 16 格/平台遮挡、五秒潮湿/较长效果保留、任意头盔及微量防水帽免疫。资源 JSON、模型坐标、四方向 multipart 和相变预算一致性检查通过。
 

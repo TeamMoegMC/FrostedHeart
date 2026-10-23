@@ -58,6 +58,7 @@
     "minecraft.misc.PortalSizeMixin_DisableNether",
     "minecraft.misc.PowderSnowBlockMixin",
     "minecraft.misc.ServerLevelMixin_Seed",
+    "minecraft.misc.ServerLevelMixin_IcicleVibrations",
     "minecraft.misc.ServerPlayerGameModeMixin_BlockUseComplete",
     "minecraft.temperature.AbstractTopPlantBlockMixin",
     "minecraft.temperature.AnimalEntityMixin",
