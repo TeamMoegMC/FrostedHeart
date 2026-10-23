@@ -30,8 +30,8 @@ public final class IcicleEvents {
     public record Vibration(int radius, double crackChance, double shatterChance) {}
     public static final Vibration EXPLOSION = new Vibration(32, .10, 1);
     public static final Vibration BELL = new Vibration(12, .01, .50);
-    public static final Vibration ICE_BREAK = new Vibration(16, .01, .50);
-    public static final Vibration STONE_BREAK = new Vibration(8, .005, .50);
+    public static final Vibration ICE_BREAK = new Vibration(16, .004, .50);
+    public static final Vibration STONE_BREAK = new Vibration(8, .002, .50);
     public static final Vibration FIREWORK = new Vibration(24, .02, 1);
     private static final Set<SoundType> STONE_SOUNDS = Set.of(SoundType.STONE, SoundType.DEEPSLATE,
             SoundType.DEEPSLATE_BRICKS, SoundType.DEEPSLATE_TILES, SoundType.POLISHED_DEEPSLATE,

@@ -74,16 +74,16 @@ public final class IcicleVibrationGameTests {
         var source = root.offset(2, 0, 0);
         for (var block : new Block[]{Blocks.ICE, Blocks.PACKED_ICE, Blocks.BLUE_ICE, FHBlocks.THIN_ICE_BLOCK.get()}) {
             intact(level, root);
-            level.random.setSeed(seedFor(.006, .007));
+            level.random.setSeed(seedFor(.002, .003));
             level.levelEvent(2001, source, Block.getId(block.defaultBlockState()));
             helper.assertTrue(cracked(level, root), "ice break effect reaches the server vibration hook: " + block);
         }
         for (var block : new Block[]{Blocks.STONE, Blocks.DEEPSLATE, Blocks.DIAMOND_ORE, Blocks.DEEPSLATE_DIAMOND_ORE}) {
             intact(level, root);
-            level.random.setSeed(seedFor(.006, .007));
+            level.random.setSeed(seedFor(.002, .003));
             level.levelEvent(2001, source, Block.getId(block.defaultBlockState()));
             helper.assertTrue(!cracked(level, root), "stone does not use the stronger ice chance");
-            level.random.setSeed(seedFor(.001, .002));
+            level.random.setSeed(seedFor(.0005, .001));
             level.levelEvent(2001, source, Block.getId(block.defaultBlockState()));
             helper.assertTrue(cracked(level, root), "stone/ore break effect triggers: " + block);
         }
