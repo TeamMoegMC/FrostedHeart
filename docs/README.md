@@ -12,6 +12,7 @@ This directory explains implemented, player-facing game systems. Source, configu
 | Climate and temperature       | [climate/README.md](climate/README.md)                   | Transitional      |
 | Space station                 | [space/README.md](space/README.md)                       | Current      |
 | Scenario font rendering       | [scenario-font-rendering.md](scenario-font-rendering.md) | Current      |
+| Ice cave world generation     | [worldgen/README.md](worldgen/README.md)                   | Partial      |
 
 `Current` means verified against implementation. `Partial` omits known areas. `Transitional` mixes verified material with legacy, experimental, or proposed content. [`deprecated/`](deprecated/) is historical only.
 

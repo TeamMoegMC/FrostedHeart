@@ -1,7 +1,7 @@
 # Heat Production And Network
 
 - Status: `Transitional; material-body replacement is under integration validation`
-- Last verified: `2026-09-16`
+- Last verified: `2026-10-18`（冰锥相变接入；其余条目沿用原验证范围）
 - Scope: physical Minecraft sources, worker energy integration, material/phase sinks, and the separate heat-network model
 - Primary code anchors: `MinecraftPhysicalSourceProfile`, `PhysicalSourceSpatialIndex`, `WorkerPhysicalSourceBindings`, `AirMixingRegion`, `ThermalSourceBatch`, `ThermalSourceLedger`, `NodePowerAccumulatorArena`, `HeatEndpoint`, `HeatNetwork`
 
@@ -201,6 +201,13 @@ Dormant heating forced by an explicit analytic floor supplies the required endpo
 H through the same scoped mutation; additive fields alone do not supply latent heat.
 
 ## Material Transition Data
+
+冰锥另有手写 `src/main/resources/data/frostedheart/recipes/state_transition/frostedheart/icicle.json`，
+不属于下面的 74 行表格。配方定义 2°C 平台及约 126666.67 J 潜热，约为当前完整薄冰
+heating 能量端点差的 1/3；比例由数据维护，编译器没有冰锥专用分支。其非原位相变缩短连续链末端，并以不可见
+`melt_cycle` 状态和现有 `GAMEPLAY_TRANSITION` 材料迁移复位存活源段；ACK 本身仍不扣能量。
+缺失记录回退、休眠投影与保证温度场均沿用通用流程，没有冰锥专用材料补建或存档逻辑。
+被删除末端的部分潜热不转交源段。详细的生长、热裂与生命周期规则见 [icicle.md](icicle.md)。
 
 Authoring input: `src/datagen/resources/data/frostedheart/data/state_transition.xlsx`.
 `FHRecipeProvider` emits 74 `frostedheart:state_transition` recipes under the existing

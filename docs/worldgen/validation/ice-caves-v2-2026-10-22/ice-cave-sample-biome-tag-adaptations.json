@@ -1,0 +1,74 @@
+{
+  "source": "D:\\games\\minecraft\\Project TWR\\TheWinterRescue\\kubejs\\server_scripts\\src\\tags\\biome_tags.js",
+  "scope": "Literal event.add biome tags projected to the two fixed sample biomes; original additions and static replace semantics retained",
+  "selected_biomes": [
+    "the_winter_rescue:hydrothermal_deposits",
+    "the_winter_rescue:ice_caves"
+  ],
+  "materialized": [
+    {
+      "tag": "frostedheart:is_ore_vein",
+      "file": "build/resources/gameTest/data/frostedheart/tags/worldgen/biome/is_ore_vein.json",
+      "result": {
+        "replace": false,
+        "values": [
+          "the_winter_rescue:hydrothermal_deposits"
+        ]
+      },
+      "original_script_member_count": 4
+    },
+    {
+      "tag": "frostedheart:is_cave",
+      "file": "build/resources/gameTest/data/frostedheart/tags/worldgen/biome/is_cave.json",
+      "result": {
+        "replace": false,
+        "values": [
+          "the_winter_rescue:ice_caves"
+        ]
+      },
+      "original_script_member_count": 9
+    },
+    {
+      "tag": "frostedheart:not_improved_winter",
+      "file": "build/resources/gameTest/data/frostedheart/tags/worldgen/biome/not_improved_winter.json",
+      "result": {
+        "replace": false,
+        "values": [
+          "the_winter_rescue:hydrothermal_deposits"
+        ]
+      },
+      "original_script_member_count": 12
+    },
+    {
+      "tag": "frostedheart:transform_winter_features",
+      "file": "build/resources/gameTest/data/frostedheart/tags/worldgen/biome/transform_winter_features.json",
+      "result": {
+        "replace": false,
+        "values": [
+          "the_winter_rescue:ice_caves"
+        ]
+      },
+      "original_script_member_count": 26
+    },
+    {
+      "tag": "frostedheart:water_do_not_freeze",
+      "file": "build/resources/gameTest/data/frostedheart/tags/worldgen/biome/water_do_not_freeze.json",
+      "result": {
+        "replace": false,
+        "values": [
+          "the_winter_rescue:hydrothermal_deposits"
+        ]
+      },
+      "original_script_member_count": 6
+    },
+    {
+      "tag": "stone_age:fishing_net_works",
+      "file": "build/resources/gameTest/data/stone_age/tags/worldgen/biome/fishing_net_works.json",
+      "result": {
+        "replace": false,
+        "values": []
+      },
+      "original_script_member_count": 3
+    }
+  ]
+}

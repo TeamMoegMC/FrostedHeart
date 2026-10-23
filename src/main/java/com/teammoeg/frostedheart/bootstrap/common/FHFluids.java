@@ -26,9 +26,15 @@ import com.teammoeg.chorda.block.CFluid;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
+import com.teammoeg.frostedheart.content.climate.block.HotSpringBlock;
+import com.teammoeg.frostedheart.infrastructure.gen.FHRegistrate;
 import com.tterrag.registrate.util.entry.FluidEntry;
 
+import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.FluidTags;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraftforge.fluids.FluidType;
 import net.minecraftforge.fluids.ForgeFlowingFluid;
@@ -38,6 +44,9 @@ import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.ForgeRegistries.Keys;
 
 public class FHFluids {
+
+	public static final TagKey<Fluid> HOT_SPRING_TAG = TagKey.create(
+		Registries.FLUID, new ResourceLocation(FHMain.MODID, "hot_spring"));
 
 	public static final ResourceLocation DEFAULT_STILL_TEXTURE = new ResourceLocation("block/water_still");
 	public static final ResourceLocation DEFAULT_FLOWING_TEXTURE = new ResourceLocation("block/water_flow");
@@ -50,6 +59,19 @@ public class FHFluids {
 	public static final FluidEntry<Flowing> TEST = REGISTRATE.standardColoredWater(
 		"test", 0xFF00FF00, FluidType.Properties.create()
 			.density(-1000).viscosity(10).temperature(300).canConvertToSource(false))
+		.register();
+
+	public static final FluidEntry<Flowing> HOT_SPRING = REGISTRATE.fluid(
+		"hot_spring", DEFAULT_STILL_TEXTURE, DEFAULT_FLOWING_TEXTURE,
+		(properties, still, flowing) -> FHRegistrate.simpleFluidType(properties, still, flowing, 0xFF89BED1))
+		.properties(p -> p.temperature(311).canConvertToSource(false)
+			.canExtinguish(true).canHydrate(true).supportsBoating(true))
+		.source(ForgeFlowingFluid.Source::new)
+		.lang("Hot Spring")
+		.tag(FluidTags.WATER, HOT_SPRING_TAG)
+		.block(HotSpringBlock::new).lang("Hot Spring").build()
+		.noBucket()
+		.fluidProperties(p -> p.bucket(() -> Items.AIR))
 		.register();
 
 	public static final FluidEntry<CFluid> TEST3 = REGISTRATE.virtualColoredFluid(

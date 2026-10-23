@@ -1,0 +1,100 @@
+{
+  "method": "User-authorized pixel drawing with an independently authored small sprite; no image generation output used",
+  "visible_pixel_alpha": 204,
+  "opacity": 0.8,
+  "transparency": 0.2,
+  "horizontal_model_units_per_texel": 0.9,
+  "vertical_model_units_per_texel": 1.0,
+  "textures": {
+    "ice_crystal": {
+      "texture": "small_ice_crystal",
+      "canvas_size": [
+        16,
+        16
+      ],
+      "visible_bounds_exclusive": [
+        3,
+        9,
+        13,
+        16
+      ],
+      "visible_pixels": 39,
+      "visible_rgb": [
+        [
+          190,
+          201,
+          209
+        ],
+        [
+          210,
+          219,
+          224
+        ],
+        [
+          229,
+          234,
+          238
+        ],
+        [
+          242,
+          245,
+          247
+        ],
+        [
+          252,
+          253,
+          254
+        ]
+      ],
+      "model_elements": 36,
+      "model_faces": 40,
+      "render_type": "minecraft:translucent",
+      "texel_face_checks_passed": 1024
+    },
+    "large_ice_crystal": {
+      "texture": "ice_crystal",
+      "canvas_size": [
+        16,
+        16
+      ],
+      "visible_bounds_exclusive": [
+        1,
+        1,
+        16,
+        16
+      ],
+      "visible_pixels": 122,
+      "visible_rgb": [
+        [
+          190,
+          201,
+          209
+        ],
+        [
+          210,
+          219,
+          224
+        ],
+        [
+          229,
+          234,
+          238
+        ],
+        [
+          242,
+          245,
+          247
+        ],
+        [
+          252,
+          253,
+          254
+        ]
+      ],
+      "model_elements": 60,
+      "model_faces": 60,
+      "render_type": "minecraft:translucent",
+      "texel_face_checks_passed": 1024
+    }
+  }
+}

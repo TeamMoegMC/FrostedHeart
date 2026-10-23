@@ -1,0 +1,37 @@
+// Opt-in development run; does not alter build.gradle or normal run/ saves.
+allprojects {
+    afterEvaluate {
+        def clientRuntime = project.file('build/ice-cave-client-runtime')
+        minecraft.runs.client {
+            workingDirectory clientRuntime
+            args '--width', '1280', '--height', '720'
+            mods { frostedheart { source sourceSets.gameTest } }
+            property 'frostedheart.iceCaveClientValidation', 'true'
+            property 'frostedheart.validationRoot', rootProject.projectDir.absolutePath
+            property 'frostedheart.iceCaveClientSeeds', providers.gradleProperty('iceCaveClientSeeds').getOrElse('111,222,333')
+            property 'frostedheart.iceCaveSampleChunks', providers.gradleProperty('iceCaveSampleChunks').getOrElse('4')
+            property 'frostedheart.iceCaveClientTimeoutSeconds', '1800'
+            property 'frostedheart.iceCaveCrystalDisplay', providers.gradleProperty('iceCaveCrystalDisplay').getOrElse('false')
+        }
+        def cleanupAssets = tasks.register('cleanupIceCaveClientAssets', Exec) {
+            workingDir rootProject.projectDir
+            commandLine 'python', 'Scripts/ice_cave_sample_assets.py', 'cleanup'
+        }
+        tasks.matching { it.name == 'runClient' }.configureEach {
+            dependsOn tasks.named('compileGameTestJava')
+            maxHeapSize = '3g'
+            finalizedBy cleanupAssets
+            doFirst {
+                def prepareArgs = ['python', 'Scripts/ice_cave_sample_assets.py', 'prepare',
+                                   '--normal-preset', '--client', '--keep-stone-age-spawns',
+                                   '--runtime', clientRuntime.absolutePath]
+                def extraMod = providers.gradleProperty('iceCaveClientMod').orNull
+                if (extraMod != null) prepareArgs.addAll(['--client-mod', extraMod])
+                project.exec {
+                    workingDir rootProject.projectDir
+                    commandLine prepareArgs
+                }
+            }
+        }
+    }
+}

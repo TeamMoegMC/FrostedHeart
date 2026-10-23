@@ -38,6 +38,8 @@ Inside `TeamTownData#buildingsWork`, service reconstruction has a stricter neste
 
 ## Transport Reservations
 
+Companion-pack acquisition (source verified 2026-10-18): TWR `kubejs/server_scripts/src/recipes/shaped/new.js` crafts one `frostedheart:transport_station` with pattern `BAB / ACA / BAB`, where `A = #minecraft:planks`, `B = minecraft:stone_bricks`, and `C = minecraft:minecart`. The recipe belongs to TWR rather than FH's standalone data. After construction and staffing, the station provides `TRANSPORT_CAPACITY` through daily settlement as described above.
+
 `TransportEndpointId.endpointPos` is the physical consumer position. For a warehouse interface this is the interface block's `GlobalPos` and the only positional identity in its reservation. Interfaces are town-owned devices and do not select or persist one supplying warehouse core.
 
 All warehouse-interface player setting changes go through `TeamTown#registerOrUpdateTransportEndpoint` or `#unregisterTransportEndpoint`. `TransportEndpointRequest` contains only endpoint identity, kind, and the proposed integer rate; the server derives the distance metric from the applied town topology. `TransportReservation.rateItemsPerSecond` is the one accepted setting, while effective rate is derived at runtime from the town scale and is not persisted as a second setting. A rejected change to an existing endpoint returns `TransportReservationDecision.INSUFFICIENT_CAPACITY` while leaving the reservation and transport dirty state unchanged. A rejected new warehouse interface records `rateItemsPerSecond = 0`, `reservedTransportCapacity = 0`, and `TransportAdmissionStatus.DISABLED`.

@@ -1,0 +1,30 @@
+{
+  "variants": {
+    "facing=up": {
+      "model": "frostedheart:block/large_ice_crystal"
+    },
+    "facing=down": {
+      "model": "frostedheart:block/large_ice_crystal",
+      "x": 180
+    },
+    "facing=north": {
+      "model": "frostedheart:block/large_ice_crystal",
+      "x": 90
+    },
+    "facing=south": {
+      "model": "frostedheart:block/large_ice_crystal",
+      "x": 90,
+      "y": 180
+    },
+    "facing=west": {
+      "model": "frostedheart:block/large_ice_crystal",
+      "x": 90,
+      "y": 270
+    },
+    "facing=east": {
+      "model": "frostedheart:block/large_ice_crystal",
+      "x": 90,
+      "y": 90
+    }
+  }
+}

@@ -1,140 +1,396 @@
 {
-  "variants": {
-    "layers=1": [
-      {
-        "model": "frostedheart:block/layered_thin_ice_height2_1"
-      },
-      {
-        "model": "frostedheart:block/layered_thin_ice_height2_2"
-      },
-      {
-        "model": "frostedheart:block/layered_thin_ice_height2_3"
-      },
-      {
-        "model": "frostedheart:block/layered_thin_ice_height2_4"
-      },
-      {
-        "model": "frostedheart:block/layered_thin_ice_height2_5"
+  "multipart": [
+    {
+      "apply": [
+        {
+          "model": "frostedheart:block/layered_thin_ice_height2_1"
+        },
+        {
+          "model": "frostedheart:block/layered_thin_ice_height2_2"
+        },
+        {
+          "model": "frostedheart:block/layered_thin_ice_height2_3"
+        },
+        {
+          "model": "frostedheart:block/layered_thin_ice_height2_4"
+        },
+        {
+          "model": "frostedheart:block/layered_thin_ice_height2_5"
+        }
+      ],
+      "when": {
+        "layers": "1"
       }
-    ],
-    "layers=2": [
-      {
-        "model": "frostedheart:block/layered_thin_ice_height4_1"
+    },
+    {
+      "apply": {
+        "model": "frostedheart:block/layered_thin_ice_crack_1_1"
       },
-      {
-        "model": "frostedheart:block/layered_thin_ice_height4_2"
-      },
-      {
-        "model": "frostedheart:block/layered_thin_ice_height4_3"
-      },
-      {
-        "model": "frostedheart:block/layered_thin_ice_height4_4"
-      },
-      {
-        "model": "frostedheart:block/layered_thin_ice_height4_5"
+      "when": {
+        "crack": "1",
+        "layers": "1"
       }
-    ],
-    "layers=3": [
-      {
-        "model": "frostedheart:block/layered_thin_ice_height6_1"
+    },
+    {
+      "apply": {
+        "model": "frostedheart:block/layered_thin_ice_crack_1_2"
       },
-      {
-        "model": "frostedheart:block/layered_thin_ice_height6_2"
-      },
-      {
-        "model": "frostedheart:block/layered_thin_ice_height6_3"
-      },
-      {
-        "model": "frostedheart:block/layered_thin_ice_height6_4"
-      },
-      {
-        "model": "frostedheart:block/layered_thin_ice_height6_5"
+      "when": {
+        "crack": "2",
+        "layers": "1"
       }
-    ],
-    "layers=4": [
-      {
-        "model": "frostedheart:block/layered_thin_ice_height8_1"
+    },
+    {
+      "apply": {
+        "model": "frostedheart:block/layered_thin_ice_crack_1_3"
       },
-      {
-        "model": "frostedheart:block/layered_thin_ice_height8_2"
-      },
-      {
-        "model": "frostedheart:block/layered_thin_ice_height8_3"
-      },
-      {
-        "model": "frostedheart:block/layered_thin_ice_height8_4"
-      },
-      {
-        "model": "frostedheart:block/layered_thin_ice_height8_5"
+      "when": {
+        "crack": "3",
+        "layers": "1"
       }
-    ],
-    "layers=5": [
-      {
-        "model": "frostedheart:block/layered_thin_ice_height10_1"
-      },
-      {
-        "model": "frostedheart:block/layered_thin_ice_height10_2"
-      },
-      {
-        "model": "frostedheart:block/layered_thin_ice_height10_3"
-      },
-      {
-        "model": "frostedheart:block/layered_thin_ice_height10_4"
-      },
-      {
-        "model": "frostedheart:block/layered_thin_ice_height10_5"
+    },
+    {
+      "apply": [
+        {
+          "model": "frostedheart:block/layered_thin_ice_height4_1"
+        },
+        {
+          "model": "frostedheart:block/layered_thin_ice_height4_2"
+        },
+        {
+          "model": "frostedheart:block/layered_thin_ice_height4_3"
+        },
+        {
+          "model": "frostedheart:block/layered_thin_ice_height4_4"
+        },
+        {
+          "model": "frostedheart:block/layered_thin_ice_height4_5"
+        }
+      ],
+      "when": {
+        "layers": "2"
       }
-    ],
-    "layers=6": [
-      {
-        "model": "frostedheart:block/layered_thin_ice_height12_1"
+    },
+    {
+      "apply": {
+        "model": "frostedheart:block/layered_thin_ice_crack_2_1"
       },
-      {
-        "model": "frostedheart:block/layered_thin_ice_height12_2"
-      },
-      {
-        "model": "frostedheart:block/layered_thin_ice_height12_3"
-      },
-      {
-        "model": "frostedheart:block/layered_thin_ice_height12_4"
-      },
-      {
-        "model": "frostedheart:block/layered_thin_ice_height12_5"
+      "when": {
+        "crack": "1",
+        "layers": "2"
       }
-    ],
-    "layers=7": [
-      {
-        "model": "frostedheart:block/layered_thin_ice_height14_1"
+    },
+    {
+      "apply": {
+        "model": "frostedheart:block/layered_thin_ice_crack_2_2"
       },
-      {
-        "model": "frostedheart:block/layered_thin_ice_height14_2"
-      },
-      {
-        "model": "frostedheart:block/layered_thin_ice_height14_3"
-      },
-      {
-        "model": "frostedheart:block/layered_thin_ice_height14_4"
-      },
-      {
-        "model": "frostedheart:block/layered_thin_ice_height14_5"
+      "when": {
+        "crack": "2",
+        "layers": "2"
       }
-    ],
-    "layers=8": [
-      {
-        "model": "frostedheart:block/thin_ice_1"
+    },
+    {
+      "apply": {
+        "model": "frostedheart:block/layered_thin_ice_crack_2_3"
       },
-      {
-        "model": "frostedheart:block/thin_ice_2"
-      },
-      {
-        "model": "frostedheart:block/thin_ice_3"
-      },
-      {
-        "model": "frostedheart:block/thin_ice_4"
-      },
-      {
-        "model": "frostedheart:block/thin_ice_5"
+      "when": {
+        "crack": "3",
+        "layers": "2"
       }
-    ]
-  }
+    },
+    {
+      "apply": [
+        {
+          "model": "frostedheart:block/layered_thin_ice_height6_1"
+        },
+        {
+          "model": "frostedheart:block/layered_thin_ice_height6_2"
+        },
+        {
+          "model": "frostedheart:block/layered_thin_ice_height6_3"
+        },
+        {
+          "model": "frostedheart:block/layered_thin_ice_height6_4"
+        },
+        {
+          "model": "frostedheart:block/layered_thin_ice_height6_5"
+        }
+      ],
+      "when": {
+        "layers": "3"
+      }
+    },
+    {
+      "apply": {
+        "model": "frostedheart:block/layered_thin_ice_crack_3_1"
+      },
+      "when": {
+        "crack": "1",
+        "layers": "3"
+      }
+    },
+    {
+      "apply": {
+        "model": "frostedheart:block/layered_thin_ice_crack_3_2"
+      },
+      "when": {
+        "crack": "2",
+        "layers": "3"
+      }
+    },
+    {
+      "apply": {
+        "model": "frostedheart:block/layered_thin_ice_crack_3_3"
+      },
+      "when": {
+        "crack": "3",
+        "layers": "3"
+      }
+    },
+    {
+      "apply": [
+        {
+          "model": "frostedheart:block/layered_thin_ice_height8_1"
+        },
+        {
+          "model": "frostedheart:block/layered_thin_ice_height8_2"
+        },
+        {
+          "model": "frostedheart:block/layered_thin_ice_height8_3"
+        },
+        {
+          "model": "frostedheart:block/layered_thin_ice_height8_4"
+        },
+        {
+          "model": "frostedheart:block/layered_thin_ice_height8_5"
+        }
+      ],
+      "when": {
+        "layers": "4"
+      }
+    },
+    {
+      "apply": {
+        "model": "frostedheart:block/layered_thin_ice_crack_4_1"
+      },
+      "when": {
+        "crack": "1",
+        "layers": "4"
+      }
+    },
+    {
+      "apply": {
+        "model": "frostedheart:block/layered_thin_ice_crack_4_2"
+      },
+      "when": {
+        "crack": "2",
+        "layers": "4"
+      }
+    },
+    {
+      "apply": {
+        "model": "frostedheart:block/layered_thin_ice_crack_4_3"
+      },
+      "when": {
+        "crack": "3",
+        "layers": "4"
+      }
+    },
+    {
+      "apply": [
+        {
+          "model": "frostedheart:block/layered_thin_ice_height10_1"
+        },
+        {
+          "model": "frostedheart:block/layered_thin_ice_height10_2"
+        },
+        {
+          "model": "frostedheart:block/layered_thin_ice_height10_3"
+        },
+        {
+          "model": "frostedheart:block/layered_thin_ice_height10_4"
+        },
+        {
+          "model": "frostedheart:block/layered_thin_ice_height10_5"
+        }
+      ],
+      "when": {
+        "layers": "5"
+      }
+    },
+    {
+      "apply": {
+        "model": "frostedheart:block/layered_thin_ice_crack_5_1"
+      },
+      "when": {
+        "crack": "1",
+        "layers": "5"
+      }
+    },
+    {
+      "apply": {
+        "model": "frostedheart:block/layered_thin_ice_crack_5_2"
+      },
+      "when": {
+        "crack": "2",
+        "layers": "5"
+      }
+    },
+    {
+      "apply": {
+        "model": "frostedheart:block/layered_thin_ice_crack_5_3"
+      },
+      "when": {
+        "crack": "3",
+        "layers": "5"
+      }
+    },
+    {
+      "apply": [
+        {
+          "model": "frostedheart:block/layered_thin_ice_height12_1"
+        },
+        {
+          "model": "frostedheart:block/layered_thin_ice_height12_2"
+        },
+        {
+          "model": "frostedheart:block/layered_thin_ice_height12_3"
+        },
+        {
+          "model": "frostedheart:block/layered_thin_ice_height12_4"
+        },
+        {
+          "model": "frostedheart:block/layered_thin_ice_height12_5"
+        }
+      ],
+      "when": {
+        "layers": "6"
+      }
+    },
+    {
+      "apply": {
+        "model": "frostedheart:block/layered_thin_ice_crack_6_1"
+      },
+      "when": {
+        "crack": "1",
+        "layers": "6"
+      }
+    },
+    {
+      "apply": {
+        "model": "frostedheart:block/layered_thin_ice_crack_6_2"
+      },
+      "when": {
+        "crack": "2",
+        "layers": "6"
+      }
+    },
+    {
+      "apply": {
+        "model": "frostedheart:block/layered_thin_ice_crack_6_3"
+      },
+      "when": {
+        "crack": "3",
+        "layers": "6"
+      }
+    },
+    {
+      "apply": [
+        {
+          "model": "frostedheart:block/layered_thin_ice_height14_1"
+        },
+        {
+          "model": "frostedheart:block/layered_thin_ice_height14_2"
+        },
+        {
+          "model": "frostedheart:block/layered_thin_ice_height14_3"
+        },
+        {
+          "model": "frostedheart:block/layered_thin_ice_height14_4"
+        },
+        {
+          "model": "frostedheart:block/layered_thin_ice_height14_5"
+        }
+      ],
+      "when": {
+        "layers": "7"
+      }
+    },
+    {
+      "apply": {
+        "model": "frostedheart:block/layered_thin_ice_crack_7_1"
+      },
+      "when": {
+        "crack": "1",
+        "layers": "7"
+      }
+    },
+    {
+      "apply": {
+        "model": "frostedheart:block/layered_thin_ice_crack_7_2"
+      },
+      "when": {
+        "crack": "2",
+        "layers": "7"
+      }
+    },
+    {
+      "apply": {
+        "model": "frostedheart:block/layered_thin_ice_crack_7_3"
+      },
+      "when": {
+        "crack": "3",
+        "layers": "7"
+      }
+    },
+    {
+      "apply": [
+        {
+          "model": "frostedheart:block/thin_ice_1"
+        },
+        {
+          "model": "frostedheart:block/thin_ice_2"
+        },
+        {
+          "model": "frostedheart:block/thin_ice_3"
+        },
+        {
+          "model": "frostedheart:block/thin_ice_4"
+        },
+        {
+          "model": "frostedheart:block/thin_ice_5"
+        }
+      ],
+      "when": {
+        "layers": "8"
+      }
+    },
+    {
+      "apply": {
+        "model": "frostedheart:block/layered_thin_ice_crack_8_1"
+      },
+      "when": {
+        "crack": "1",
+        "layers": "8"
+      }
+    },
+    {
+      "apply": {
+        "model": "frostedheart:block/layered_thin_ice_crack_8_2"
+      },
+      "when": {
+        "crack": "2",
+        "layers": "8"
+      }
+    },
+    {
+      "apply": {
+        "model": "frostedheart:block/layered_thin_ice_crack_8_3"
+      },
+      "when": {
+        "crack": "3",
+        "layers": "8"
+      }
+    }
+  ]
 }

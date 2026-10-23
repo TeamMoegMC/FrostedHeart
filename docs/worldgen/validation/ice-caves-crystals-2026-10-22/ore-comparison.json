@@ -1,0 +1,143 @@
+{
+  "scope": "Paired same-volume, same-height fixed-biome final blocks; includes global veins and hydrothermal geodes. Not normal-world biome occurrence. Pyrolusite has no hydrothermal counterpart.",
+  "paired_seeds": 3,
+  "per_seed": [
+    {
+      "seed": 111,
+      "ores": {
+        "pyrite": {
+          "ice_final_blocks": 15659,
+          "hydrothermal_final_blocks": 10694,
+          "ratio": 1.464279034972882,
+          "within_two_times": true
+        },
+        "pyrolusite": {
+          "ice_final_blocks": 2595,
+          "hydrothermal_final_blocks": 0,
+          "ratio": null,
+          "within_two_times": null
+        },
+        "zinc": {
+          "ice_final_blocks": 4483,
+          "hydrothermal_final_blocks": 3413,
+          "ratio": 1.313507178435394,
+          "within_two_times": true
+        },
+        "lead": {
+          "ice_final_blocks": 4597,
+          "hydrothermal_final_blocks": 2984,
+          "ratio": 1.540549597855228,
+          "within_two_times": true
+        },
+        "silver": {
+          "ice_final_blocks": 2550,
+          "hydrothermal_final_blocks": 2921,
+          "ratio": 0.8729887024991442,
+          "within_two_times": true
+        }
+      }
+    },
+    {
+      "seed": 222,
+      "ores": {
+        "pyrite": {
+          "ice_final_blocks": 17576,
+          "hydrothermal_final_blocks": 13443,
+          "ratio": 1.3074462545562746,
+          "within_two_times": true
+        },
+        "pyrolusite": {
+          "ice_final_blocks": 2764,
+          "hydrothermal_final_blocks": 0,
+          "ratio": null,
+          "within_two_times": null
+        },
+        "zinc": {
+          "ice_final_blocks": 4930,
+          "hydrothermal_final_blocks": 3680,
+          "ratio": 1.3396739130434783,
+          "within_two_times": true
+        },
+        "lead": {
+          "ice_final_blocks": 5136,
+          "hydrothermal_final_blocks": 4204,
+          "ratio": 1.2216936251189343,
+          "within_two_times": true
+        },
+        "silver": {
+          "ice_final_blocks": 3024,
+          "hydrothermal_final_blocks": 4248,
+          "ratio": 0.711864406779661,
+          "within_two_times": true
+        }
+      }
+    },
+    {
+      "seed": 333,
+      "ores": {
+        "pyrite": {
+          "ice_final_blocks": 17832,
+          "hydrothermal_final_blocks": 14094,
+          "ratio": 1.2652192422307365,
+          "within_two_times": true
+        },
+        "pyrolusite": {
+          "ice_final_blocks": 3243,
+          "hydrothermal_final_blocks": 0,
+          "ratio": null,
+          "within_two_times": null
+        },
+        "zinc": {
+          "ice_final_blocks": 4835,
+          "hydrothermal_final_blocks": 3693,
+          "ratio": 1.3092336853506634,
+          "within_two_times": true
+        },
+        "lead": {
+          "ice_final_blocks": 4936,
+          "hydrothermal_final_blocks": 5003,
+          "ratio": 0.9866080351788926,
+          "within_two_times": true
+        },
+        "silver": {
+          "ice_final_blocks": 2800,
+          "hydrothermal_final_blocks": 5150,
+          "ratio": 0.5436893203883495,
+          "within_two_times": true
+        }
+      }
+    }
+  ],
+  "aggregate": {
+    "pyrite": {
+      "ice_final_blocks": 51067,
+      "hydrothermal_final_blocks": 38231,
+      "ratio": 1.335748476367346,
+      "within_two_times": true
+    },
+    "pyrolusite": {
+      "ice_final_blocks": 8602,
+      "hydrothermal_final_blocks": 0,
+      "ratio": null,
+      "within_two_times": null
+    },
+    "zinc": {
+      "ice_final_blocks": 14248,
+      "hydrothermal_final_blocks": 10786,
+      "ratio": 1.320971629890599,
+      "within_two_times": true
+    },
+    "lead": {
+      "ice_final_blocks": 14669,
+      "hydrothermal_final_blocks": 12191,
+      "ratio": 1.2032647034697728,
+      "within_two_times": true
+    },
+    "silver": {
+      "ice_final_blocks": 8374,
+      "hydrothermal_final_blocks": 12319,
+      "ratio": 0.6797629677733582,
+      "within_two_times": true
+    }
+  }
+}

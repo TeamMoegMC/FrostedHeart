@@ -45,6 +45,10 @@ public abstract class BlockStateBaseMixin_RandomTick extends StateHolder<Block, 
 	@Inject(at = @At("RETURN"), method = "isRandomlyTicking",cancellable=true)
 	public void fh$isRandomlyTicking(CallbackInfoReturnable<Boolean> bool) {
 		if(((Object)this) instanceof BlockState bs) {
+			if (com.teammoeg.frostedheart.content.climate.block.IcicleBlock.canGrowRootFrom(bs)) {
+				bool.setReturnValue(true);
+				return;
+			}
 			StateTransitionData std=StateTransitionData.getData(bs);
 			if(std!=null)
 				bool.setReturnValue(std.hasRandomTransitions()||bool.getReturnValueZ());

@@ -41,6 +41,8 @@ import com.teammoeg.frostedheart.content.agriculture.WildRubberDandelionBlock;
 import com.teammoeg.frostedheart.content.climate.block.CooledMagmaBlock;
 import com.teammoeg.frostedheart.content.climate.block.LayeredThinIceBlock;
 import com.teammoeg.frostedheart.content.climate.block.ThinIceBlock;
+import com.teammoeg.frostedheart.content.climate.block.IcicleBlock;
+import com.teammoeg.frostedheart.content.climate.block.EaveIcicleBlock;
 import com.teammoeg.frostedheart.content.climate.block.wardrobe.WardrobeBlock;
 import com.teammoeg.frostedheart.content.climate.player.thermalitem.ThermalReservoirBlock;
 import com.teammoeg.frostedheart.content.climate.player.thermalitem.WarmStoneItem;
@@ -185,6 +187,67 @@ public class FHBlocks {
         REGISTRATE.setCreativeTab(FHTabs.NATURAL_BLOCKS);
     }
 
+    public static final BlockEntry<IcicleBlock> ICICLE = REGISTRATE.block("icicle", IcicleBlock::new)
+            .properties(p -> p.mapColor(MapColor.ICE).randomTicks().strength(.25F).sound(SoundType.GLASS)
+                    .noOcclusion().pushReaction(PushReaction.DESTROY)
+                    .isRedstoneConductor(FHBlocks::never).isValidSpawn((state, level, pos, type) -> false))
+            .blockstate(FHBlockStateGen.icicle())
+            .lang("Icicle")
+            .loot((lt, block) -> lt.add(block, RegistrateBlockLootTables.createSilkTouchOnlyTable(block)))
+            .item().model((c, p) -> p.withExistingParent(c.getName(), p.modLoc("block/icicle_tip")))
+            .build().register();
+
+    public static final BlockEntry<EaveIcicleBlock> EAVE_ICICLES = REGISTRATE.block("eave_icicles", EaveIcicleBlock::new)
+            .initialProperties(ICICLE::get)
+            .properties(p -> p.randomTicks())
+            .blockstate(FHBlockStateGen.eaveIcicles())
+            .lang("Eave Icicles")
+            .loot((lt, block) -> lt.add(block, RegistrateBlockLootTables.createSilkTouchOnlyTable(block)))
+            .item().model((c, p) -> p.withExistingParent(c.getName(), p.modLoc("block/eave_icicles")))
+            .build().register();
+
+    public static final BlockEntry<AmethystClusterBlock> ICE_CRYSTAL = REGISTRATE.block("ice_crystal", p -> new AmethystClusterBlock(7, 3, p))
+            .properties(p -> p.mapColor(MapColor.ICE).strength(0.5F).sound(SoundType.GLASS)
+                    .noOcclusion().lightLevel(state -> 1))
+            .tag(BlockTags.MINEABLE_WITH_PICKAXE)
+            .blockstate(FHBlockStateGen.existed())
+            .lang("Ice Crystal")
+            .loot((lt, block) -> lt.add(block, RegistrateBlockLootTables.createSilkTouchOnlyTable(block)))
+            .item().model(FHBlockStateGen.existingItemModel())
+            .build().register();
+
+    public static final BlockEntry<AmethystClusterBlock> LARGE_ICE_CRYSTAL = REGISTRATE.block("large_ice_crystal", p -> new AmethystClusterBlock(14, 1, p))
+            .properties(p -> p.mapColor(MapColor.ICE).strength(0.5F).sound(SoundType.GLASS)
+                    .noOcclusion().lightLevel(state -> 3))
+            .tag(BlockTags.MINEABLE_WITH_PICKAXE)
+            .blockstate(FHBlockStateGen.existed())
+            .lang("Large Ice Crystal")
+            .loot((lt, block) -> lt.add(block, RegistrateBlockLootTables.createSilkTouchOnlyTable(block)))
+            .item().model(FHBlockStateGen.existingItemModel())
+            .build().register();
+
+    public static final BlockEntry<Block> GLOWSTONE_CRYSTAL = REGISTRATE.block("glowstone_crystal", Block::new)
+            .properties(p -> p.mapColor(MapColor.COLOR_YELLOW).strength(0.5F).sound(SoundType.GLASS)
+                    .noOcclusion().lightLevel(state -> 12))
+            .color(() -> () -> (state, level, pos, tintIndex) -> 0xE9D78A)
+            .blockstate(FHBlockStateGen.existed())
+            .lang("Glowstone Crystal")
+            .loot((lt, block) -> lt.add(block, LootTable.lootTable().withPool(
+                    LootPool.lootPool().setRolls(ConstantValue.exactly(1)).add(
+                            LootItem.lootTableItem(FHItems.GLOWSTONE_SHARD.get())
+                                    .apply(SetItemCountFunction.setCount(ConstantValue.exactly(2)))))))
+            .item().model(FHBlockStateGen.existingItemModel())
+            .color(() -> () -> (stack, tintIndex) -> 0xE9D78A)
+            .build().register();
+
+    public static final BlockEntry<Block> HYDROTHERMAL_ROCK = REGISTRATE.block("hydrothermal_rock", Block::new)
+            .properties(p -> p.mapColor(MapColor.COLOR_GRAY).strength(1.5F).sound(SoundType.STONE))
+            .blockstate(FHBlockStateGen.existed())
+            .lang("Hydrothermal Rock")
+            .loot(RegistrateBlockLootTables::dropSelf)
+            .item().model(FHBlockStateGen.existingItemModel())
+            .build().register();
+
     // thin_ice
     public static final BlockEntry<ThinIceBlock> THIN_ICE_BLOCK = REGISTRATE.block("thin_ice", ThinIceBlock::new)
             .properties(p -> p.mapColor(MapColor.ICE).friction(0.98F).randomTicks()
@@ -193,7 +256,7 @@ public class FHBlocks {
                     .isRedstoneConductor(FHBlocks::never))
             .tag(BlockTags.ICE, BlockTags.SNOW_LAYER_CANNOT_SURVIVE_ON)
             .tag(BlockTags.MINEABLE_WITH_PICKAXE)
-            .blockstate(FHBlockStateGen.simpleCubeAllRandom("thin_ice", 5, true))
+            .blockstate(FHBlockStateGen.thinIce(false))
             .lang("Thin Ice Block")
             .loot((lt, block) -> lt.add(block, lt.createSingleItemTableWithSilkTouch(block, FHItems.ICE_CHIP.get(), ConstantValue.exactly(4))))
             .item()
@@ -385,8 +448,7 @@ public class FHBlocks {
             .tag(BlockTags.ICE)
             .tag(BlockTags.OVERWORLD_CARVER_REPLACEABLES)
             .loot((lt, block) -> lt.add(block, FHLootGen.buildSnowLootTable(block, THIN_ICE_BLOCK.get(), FHItems.ICE_CHIP.get())))
-            .blockstate(FHBlockStateGen.layeredRandom("layered_thin_ice", "thin_ice",
-                    "thin_ice", 5, 8, true))
+            .blockstate(FHBlockStateGen.thinIce(true))
             .item()
             .model(FHBlockStateGen.itemModelLayeredTranslucent("layered_thin_ice", "thin_ice_1"))
             .build()
@@ -700,6 +762,23 @@ public class FHBlocks {
             .build()
             .register();
 
+    public static final BlockEntry<DropExperienceBlock> PYROLUSITE_ORE = REGISTRATE.block("pyrolusite_ore", DropExperienceBlock::new)
+            .initialProperties(() -> Blocks.IRON_ORE)
+            .lang("Pyrolusite Ore")
+            .properties(p -> p.mapColor(MapColor.COLOR_GRAY).requiresCorrectToolForDrops().sound(SoundType.STONE))
+            .transform(pickaxeOnly())
+            .blockstate(FHBlockStateGen.existed())
+            .loot((lt, b) -> lt.add(b,
+                    RegistrateBlockLootTables.createSilkTouchDispatchTable(b,
+                            lt.applyExplosionDecay(b, LootItem.lootTableItem(FHItems.RAW_PYROLUSITE.get())
+                                    .apply(ApplyBonusCount.addOreBonusCount(Enchantments.BLOCK_FORTUNE))))))
+            .tag(BlockTags.NEEDS_STONE_TOOL)
+            .tag(Tags.Blocks.ORES)
+            .transform(tagBlockAndItem("ores/pyrolusite", "ores_in_ground/stone"))
+            .tag(Tags.Items.ORES)
+            .model(FHBlockStateGen.existingItemModel())
+            .build().register();
+
     // Deepslate ores
 
     public static final BlockEntry<DropExperienceBlock> DEEPSLATE_TIN_ORE = REGISTRATE.block("deepslate_tin_ore", DropExperienceBlock::new)
@@ -791,6 +870,23 @@ public class FHBlocks {
             .tag(Tags.Items.ORES)
             .build()
             .register();
+
+    public static final BlockEntry<DropExperienceBlock> DEEPSLATE_PYROLUSITE_ORE = REGISTRATE.block("deepslate_pyrolusite_ore", DropExperienceBlock::new)
+            .initialProperties(() -> Blocks.DEEPSLATE_IRON_ORE)
+            .lang("Deepslate Pyrolusite Ore")
+            .properties(p -> p.mapColor(MapColor.COLOR_GRAY).requiresCorrectToolForDrops().sound(SoundType.DEEPSLATE))
+            .transform(pickaxeOnly())
+            .blockstate(FHBlockStateGen.existed())
+            .loot((lt, b) -> lt.add(b,
+                    RegistrateBlockLootTables.createSilkTouchDispatchTable(b,
+                            lt.applyExplosionDecay(b, LootItem.lootTableItem(FHItems.RAW_PYROLUSITE.get())
+                                    .apply(ApplyBonusCount.addOreBonusCount(Enchantments.BLOCK_FORTUNE))))))
+            .tag(BlockTags.NEEDS_STONE_TOOL)
+            .tag(Tags.Blocks.ORES)
+            .transform(tagBlockAndItem("ores/pyrolusite", "ores_in_ground/deepslate"))
+            .tag(Tags.Items.ORES)
+            .model(FHBlockStateGen.existingItemModel())
+            .build().register();
 
     // Additional soil, registrate
     public static final BlockEntry<Block> PEAT = REGISTRATE.block("peat_block", Block::new)

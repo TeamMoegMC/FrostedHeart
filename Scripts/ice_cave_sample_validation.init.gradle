@@ -1,0 +1,32 @@
+// Conditional ore/landscape sample in a new world for EVERY invocation.
+// Pair with: python Scripts/ice_cave_sample_assets.py prepare --runtime build/ice-cave-sample-runtime
+allprojects {
+    afterEvaluate {
+        def sampleRuntime = project.file(providers.gradleProperty('iceCaveSampleRuntime').getOrElse('build/ice-cave-sample-runtime'))
+        def sampleWorld = 'ice-cave-sample-' + new Date().format('yyyyMMdd-HHmmss-SSS') + '-' + UUID.randomUUID().toString().substring(0, 8)
+        minecraft.runs.gameTestServer {
+            workingDirectory sampleRuntime
+            property 'forge.enabledGameTestNamespaces', providers.gradleProperty('gameTestNamespaces').getOrElse('frostedheart_ice_cave_sample')
+            property 'frostedheart.validationRoot', rootProject.projectDir.absolutePath
+            property 'frostedheart.iceCaveSampleWorld', sampleWorld
+            property 'frostedheart.iceCaveSampleChunks', providers.gradleProperty('iceCaveSampleChunks').getOrElse('4')
+            args '--world', sampleWorld
+        }
+        def cleanupAssets = tasks.register('cleanupIceCaveSampleAssets', Exec) {
+            workingDir rootProject.projectDir
+            commandLine 'python', 'Scripts/ice_cave_sample_assets.py', 'cleanup'
+        }
+        tasks.matching { it.name == 'runGameTestServer' }.configureEach {
+            maxHeapSize = '3g'
+            finalizedBy cleanupAssets
+            // Resource processing may restore the empty GameTest biome fixture. Prepare the real
+            // pack resources after dependencies finish, immediately before launching the JVM.
+            doFirst {
+                project.exec {
+                    workingDir rootProject.projectDir
+                    commandLine 'python', 'Scripts/ice_cave_sample_assets.py', 'prepare', '--runtime', sampleRuntime.absolutePath
+                }
+            }
+        }
+    }
+}

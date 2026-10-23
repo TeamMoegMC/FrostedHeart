@@ -1,0 +1,116 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "rock": "minecraft:block/smooth_basalt",
+    "deposit": "minecraft:block/calcite",
+    "particle": "minecraft:block/smooth_basalt"
+  },
+  "elements": [
+    {
+      "from": [
+        0,
+        0,
+        0
+      ],
+      "to": [
+        16,
+        16,
+        16
+      ],
+      "faces": {
+        "down": {
+          "texture": "#rock",
+          "cullface": "down"
+        },
+        "up": {
+          "texture": "#rock",
+          "cullface": "up"
+        },
+        "north": {
+          "texture": "#rock",
+          "cullface": "north"
+        },
+        "south": {
+          "texture": "#rock",
+          "cullface": "south"
+        },
+        "west": {
+          "texture": "#rock",
+          "cullface": "west"
+        },
+        "east": {
+          "texture": "#rock",
+          "cullface": "east"
+        }
+      }
+    },
+    {
+      "from": [
+        1,
+        16,
+        2
+      ],
+      "to": [
+        5,
+        16.01,
+        6
+      ],
+      "faces": {
+        "up": {
+          "texture": "#deposit"
+        }
+      }
+    },
+    {
+      "from": [
+        8,
+        16,
+        1
+      ],
+      "to": [
+        11,
+        16.01,
+        4
+      ],
+      "faces": {
+        "up": {
+          "texture": "#deposit"
+        }
+      }
+    },
+    {
+      "from": [
+        11,
+        16,
+        9
+      ],
+      "to": [
+        15,
+        16.01,
+        14
+      ],
+      "faces": {
+        "up": {
+          "texture": "#deposit"
+        }
+      }
+    },
+    {
+      "from": [
+        4,
+        16,
+        11
+      ],
+      "to": [
+        7,
+        16.01,
+        15
+      ],
+      "faces": {
+        "up": {
+          "texture": "#deposit"
+        }
+      }
+    }
+  ]
+}

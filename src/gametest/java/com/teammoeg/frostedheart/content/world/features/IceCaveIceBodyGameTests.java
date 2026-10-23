@@ -1,0 +1,332 @@
+package com.teammoeg.frostedheart.content.world.features;
+
+import java.lang.reflect.Proxy;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+
+import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
+import com.teammoeg.frostedheart.bootstrap.common.FHFluids;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.Holder;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.gametest.framework.GameTest;
+import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.RandomSource;
+import net.minecraft.util.valueproviders.ConstantFloat;
+import net.minecraft.util.valueproviders.ConstantInt;
+import net.minecraft.world.level.WorldGenLevel;
+import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.biome.Biomes;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.levelgen.LegacyRandomSource;
+import net.minecraft.world.level.levelgen.WorldgenRandom;
+import net.minecraft.world.level.levelgen.XoroshiroRandomSource;
+import net.minecraft.world.level.levelgen.feature.Feature;
+import net.minecraft.world.level.levelgen.feature.FeaturePlaceContext;
+import net.minecraft.world.level.levelgen.feature.configurations.FeatureConfiguration;
+import net.minecraft.world.level.levelgen.feature.configurations.LargeDripstoneConfiguration;
+import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
+import net.minecraftforge.gametest.GameTestHolder;
+import net.minecraftforge.gametest.PrefixGameTestTemplate;
+
+/** Real feature placement on controlled cave geometry; no separate copy of the shape algorithm. */
+@GameTestHolder("frostedheart_ice_cave_body")
+@PrefixGameTestTemplate(false)
+public final class IceCaveIceBodyGameTests {
+    private static final ResourceKey<Biome> ICE_CAVES = ResourceKey.create(Registries.BIOME,
+            new ResourceLocation("the_winter_rescue", "ice_caves"));
+    private static final LargeDripstoneConfiguration LARGE = new LargeDripstoneConfiguration(40,
+            ConstantInt.of(4), ConstantFloat.of(1), 0.25F, ConstantFloat.of(0.7F),
+            ConstantFloat.of(0.7F), ConstantFloat.of(0), 6, 0.5F);
+
+    @GameTest(template = "phase0a_empty", batch = "ice_cave", timeoutTicks = 40)
+    public static void pairedIceBodiesUseActualFloorAndCeilingAcrossChunkEdges(GameTestHelper helper) {
+        Feature<LargeDripstoneConfiguration> feature = new IceCaveLargeIceFeature(LargeDripstoneConfiguration.CODEC);
+        for (int x : new int[] {0, 15, -1, -16}) {
+            Terrain terrain = new Terrain(helper, new BlockPos(x, -12, -1), 20, 12);
+            helper.assertTrue(terrain.place(feature, LARGE, 12), "large ice fits a dry broad hall");
+            boolean floorIce = false;
+            boolean ceilingIce = false;
+            for (var entry : terrain.writes.entrySet()) {
+                floorIce |= entry.getKey().getY() <= -20;
+                ceilingIce |= entry.getKey().getY() >= -1;
+                helper.assertTrue(Math.abs(entry.getKey().getX() - x) <= 15
+                        && Math.abs(entry.getKey().getZ() + 1) <= 15, "writes remain in the bounded vanilla neighborhood");
+            }
+            helper.assertTrue(floorIce && ceilingIce, "both ends attach to real terrain");
+            helper.assertTrue(terrain.writes.keySet().stream().anyMatch(pos -> (pos.getX() >> 4) != (x >> 4)),
+                    "edge candidates retain their location and can span the adjacent chunk");
+        }
+        Terrain narrow = new Terrain(helper, new BlockPos(0, -12, 0), 20, 1);
+        helper.assertTrue(!narrow.place(feature, LARGE, 12) && narrow.writes.isEmpty(), "large bodies leave narrow passages intact");
+        helper.succeed();
+    }
+
+    @GameTest(template = "phase0a_empty", batch = "ice_cave", timeoutTicks = 40)
+    public static void protectedCellsAndBiomeBoundariesRejectWholeBodies(GameTestHelper helper) {
+        Feature<LargeDripstoneConfiguration> feature = new IceCaveLargeIceFeature(LargeDripstoneConfiguration.CODEC);
+        for (BlockState protectedState : new BlockState[] {Blocks.WATER.defaultBlockState(),
+                Blocks.OAK_PLANKS.defaultBlockState(), FHBlocks.ICE_CRYSTAL.get().defaultBlockState(),
+                FHBlocks.LARGE_ICE_CRYSTAL.get().defaultBlockState()}) {
+            Terrain terrain = new Terrain(helper, new BlockPos(15, -12, 0), 20, 12);
+            terrain.states.put(new BlockPos(15, -21, 0), protectedState);
+            helper.assertTrue(!terrain.place(feature, LARGE, 12), "protected volume rejects the ice body");
+            helper.assertTrue(terrain.writes.isEmpty(), "failed preflight leaves no partial ice");
+        }
+        Terrain mineral = new Terrain(helper, new BlockPos(15, -12, 0), 20, 12);
+        BlockPos mineralPos = new BlockPos(15, -22, 0);
+        mineral.states.put(mineralPos, FHBlocks.PYRITE_ORE.get().defaultBlockState());
+        helper.assertTrue(mineral.place(feature, LARGE, 12) && mineral.get(mineralPos).is(FHBlocks.PYRITE_ORE.get()),
+                "ore inclusions support embedded roots and remain intact");
+        Terrain boundary = new Terrain(helper, new BlockPos(15, -12, 0), 20, 12);
+        boundary.boundaryX = 16;
+        helper.assertTrue(!boundary.place(feature, LARGE, 12) && boundary.writes.isEmpty(),
+                "the actual body cannot cross into a different three-dimensional biome");
+        Terrain spring = new Terrain(helper, new BlockPos(15, -12, 0), 20, 12);
+        spring.states.put(new BlockPos(16, -22, 0), FHFluids.HOT_SPRING.get().getSource().defaultFluidState().createLegacyBlock());
+        helper.assertTrue(!spring.place(feature, LARGE, 12) && spring.writes.isEmpty(), "spring and its dry shore survive");
+        helper.succeed();
+    }
+
+    @GameTest(template = "phase0a_empty", batch = "ice_cave", timeoutTicks = 40)
+    public static void smallSpikesStaySmallAndBlobsRemainWallEmbedded(GameTestHelper helper) {
+        Feature<NoneFeatureConfiguration> spike = new IceCaveSpikeFeature(NoneFeatureConfiguration.CODEC);
+        Feature<NoneFeatureConfiguration> blob = new IceCaveIceBlobFeature(NoneFeatureConfiguration.CODEC);
+        int successfulBlobs = 0;
+        for (int seed = 0; seed < 20; seed++) {
+            Terrain floor = new Terrain(helper, new BlockPos(15, -21, 0), 20, 12);
+            helper.assertTrue(floor.place(spike, FeatureConfiguration.NONE, seed), "small spike fits a broad hall");
+            int tip = floor.writes.keySet().stream().mapToInt(BlockPos::getY).max().orElseThrow();
+            helper.assertTrue(tip >= -19 && tip <= -16, "spike body has three-to-six-block height");
+            helper.assertTrue(floor.writes.values().stream().filter(state -> state.is(Blocks.SNOW_BLOCK)).count() <= 4,
+                    "snow stays a small foot rather than a carpet");
+            Terrain wall = new Terrain(helper, new BlockPos(11, -12, 0), 20, 12);
+            for (int x = 13; x <= 25; x++) for (int y = -18; y <= -6; y++) for (int z = -6; z <= 6; z++) {
+                wall.states.put(new BlockPos(x, y, z), Blocks.STONE.defaultBlockState());
+            }
+            if (wall.place(blob, FeatureConfiguration.NONE, seed)) {
+                successfulBlobs++;
+                helper.assertTrue(wall.writes.keySet().stream().anyMatch(pos -> pos.getX() >= 13), "blob extends into the wall");
+                helper.assertTrue(wall.writes.keySet().stream().anyMatch(pos -> pos.getX() <= 12), "blob has a visible cave-facing cap");
+                helper.assertTrue(wall.writes.values().stream().filter(IceCaveIceBody::isIce).map(BlockState::getBlock).distinct().count() == 1,
+                        "each blob has one coherent ice material");
+            }
+        }
+        helper.assertTrue(successfulBlobs > 0, "wall-embedded blob candidates actually place");
+        helper.succeed();
+    }
+
+    @GameTest(template = "phase0a_empty", batch = "ice_cave", timeoutTicks = 80)
+    public static void spikesFindUnevenMineralFloorsWithoutGrowingLarger(GameTestHelper helper) {
+        var spike = new IceCaveSpikeFeature(NoneFeatureConfiguration.CODEC);
+        BlockPos floor = new BlockPos(15, -21, 0);
+        BlockPos mineral = floor.below();
+        for (int seed = 0; seed < 40; seed++) {
+            Terrain room = new Terrain(helper, floor.above(16), 24, 12);
+            room.states.put(mineral, FHBlocks.PYRITE_ORE.get().defaultBlockState());
+            room.states.put(floor.north(), Blocks.STONE.defaultBlockState());
+            room.states.put(floor.east().below(), Blocks.AIR.defaultBlockState());
+            helper.assertTrue(room.place(spike, FeatureConfiguration.NONE, seed),
+                    "a candidate above an uneven mineral floor can find and root one small spike");
+            helper.assertTrue(room.get(mineral).is(FHBlocks.PYRITE_ORE.get()), "root mineral remains intact");
+            int top = room.writes.keySet().stream().mapToInt(BlockPos::getY).max().orElseThrow();
+            helper.assertTrue(top >= floor.getY() + 2 && top <= floor.getY() + 5, "spike stays three-to-six blocks tall");
+            Terrain water = new Terrain(helper, floor, 24, 12);
+            water.states.put(mineral, Blocks.WATER.defaultBlockState());
+            helper.assertTrue(!IceCaveSpikeFeature.tryPlace(water.level, floor, floor, RandomSource.create(seed))
+                            && water.writes.isEmpty(), "a flooded central root rejects the entire candidate");
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "phase0a_empty", batch = "ice_cave", timeoutTicks = 160)
+    public static void blobsReceiveTheirOwnSupportedCrystalPockets(GameTestHelper helper) {
+        var blob = new IceCaveIceBlobFeature(NoneFeatureConfiguration.CODEC);
+        int glowing = 0;
+        int successful = 0;
+        Set<Integer> diameters = new java.util.TreeSet<>();
+        // Consecutive LegacyRandomSource seeds 0..23 sample only odd diameters after
+        // the initial direction draw. Keep a fixed replay set including seed 2 (5)
+        // and seed 34 (10), then measure the actual committed body's vertical span.
+        long[] seeds = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
+                12, 13, 14, 15, 16, 17, 32, 33, 34, 35, 36, 37};
+        for (int originX : new int[] {11, 15, -1, -16}) for (int mineralPattern = 0; mineralPattern < 3; mineralPattern++) {
+            for (long seed : seeds) {
+                Terrain wall = new Terrain(helper, new BlockPos(originX, -12, 0), 20, 12);
+                Map<BlockPos, BlockState> minerals = new HashMap<>();
+                for (int x = originX + 2; x <= originX + 14; x++) for (int y = -18; y <= -6; y++) for (int z = -6; z <= 6; z++) {
+                    BlockPos pos = new BlockPos(x, y, z);
+                    BlockState state = mineralPattern == 2 || mineralPattern == 1 && Math.floorMod(x + y + z, 2) == 0
+                            ? FHBlocks.PYRITE_ORE.get().defaultBlockState() : Blocks.STONE.defaultBlockState();
+                    wall.states.put(pos, state);
+                    if (state.is(FHBlocks.PYRITE_ORE.get())) minerals.put(pos, state);
+                }
+                if (!wall.place(blob, FeatureConfiguration.NONE, seed)) continue;
+                successful++;
+                int minY = wall.writes.keySet().stream().mapToInt(BlockPos::getY).min().orElseThrow();
+                int maxY = wall.writes.keySet().stream().mapToInt(BlockPos::getY).max().orElseThrow();
+                if (mineralPattern == 0) diameters.add(maxY - minY + 1);
+                long inclusions = wall.writes.values().stream().filter(state -> state.is(FHBlocks.GLOWSTONE_CRYSTAL.get())).count();
+                if (inclusions > 0) glowing++;
+                helper.assertTrue(inclusions <= 1, "the blob pass adds at most one glowstone inclusion");
+                if (mineralPattern < 2) helper.assertTrue(inclusions == 1,
+                        "every ordinary or mineral-mixed lobe has an inclusion, including five-block lobes and chunk edges");
+                minerals.forEach((pos, state) -> helper.assertTrue(wall.get(pos) == state, "every mineral inclusion remains intact"));
+                for (var entry : wall.writes.entrySet()) {
+                    if (entry.getValue().is(FHBlocks.GLOWSTONE_CRYSTAL.get())) {
+                        for (var side : net.minecraft.core.Direction.values()) helper.assertTrue(!wall.get(entry.getKey().relative(side)).isAir(),
+                                "the guaranteed glowstone stays inside the lobe rather than on its exposed skin");
+                    }
+                    if (entry.getValue().is(FHBlocks.LARGE_ICE_CRYSTAL.get())) {
+                        helper.assertTrue(entry.getValue().canSurvive(wall.level, entry.getKey()), "blob large crystal has valid support");
+                    }
+                    helper.assertTrue(!entry.getValue().is(FHBlocks.ICE_CRYSTAL.get()), "blob pockets use large crystals exclusively");
+                }
+            }
+        }
+        System.out.println("ICE_CAVE_BLOB glowing=" + glowing + " successful=" + successful
+                + " attempts=" + (4 * 3 * seeds.length) + " diameters=" + diameters
+                + " ratio=" + (successful == 0 ? 0 : (double)glowing / successful));
+        helper.assertTrue(successful > 0 && glowing * 2 >= successful,
+                "at least half of all successful lobes contain glowstone, including ore-filled lobes in the denominator: " + glowing + "/" + successful);
+        helper.assertTrue(diameters.contains(5) && diameters.contains(10),
+                "the ratio checks both five- and ten-block lobe endpoints; measured diameters=" + diameters);
+        helper.succeed();
+    }
+
+    @GameTest(template = "phase0a_empty", batch = "ice_cave", timeoutTicks = 80)
+    public static void pyrolusiteQuartileGatePreservesRandomStateAndSkipsUnneededProbes(GameTestHelper helper) {
+        int checks = 0;
+        int probes = 0;
+        for (int type = 0; type < 4; type++) for (int seed = 0; seed < 16; seed++) for (boolean wide : new boolean[] {false, true}) {
+            Terrain room = new Terrain(helper, new BlockPos(8, -20, 8), 20, wide ? 12 : 1);
+            helper.assertTrue(IceCaveSpace.nearWideAir(room.level, room.origin) == wide, "the fixture has the requested cave clearance");
+            long initialSeed = seed * 7919L - 104729;
+            RandomSource reference = randomSource(type, initialSeed);
+            RandomSource optimized = randomSource(type, initialSeed);
+            RandomSource quartiles = randomSource(type, initialSeed);
+            for (int sample = 0; sample < 32; sample++) {
+                boolean expected = reference.nextInt(wide ? 2 : 4) == 0;
+                int roll = quartiles.nextInt(4);
+                room.blockReads = 0;
+                boolean actual = CavePyrolusiteFeature.passesAttempt(room.level, room.origin, optimized);
+                helper.assertTrue(actual == expected, "quartile gating retains the old wide/narrow decision for random source " + type);
+                helper.assertTrue(roll == 1 ? room.blockReads > 0 : room.blockReads == 0,
+                        "only quartile one performs actual cave probes");
+                if (room.blockReads > 0) probes++;
+                long after = reference.nextLong();
+                helper.assertTrue(optimized.nextLong() == after && quartiles.nextLong() == after,
+                        "ore generation receives the identical following random state");
+                if (reference instanceof WorldgenRandom oldWorldgen && optimized instanceof WorldgenRandom newWorldgen) {
+                    helper.assertTrue(oldWorldgen.getCount() == newWorldgen.getCount(), "worldgen random draw counts remain identical");
+                }
+                checks++;
+            }
+        }
+        helper.assertTrue(probes > 0 && probes < checks / 2, "the mixed sample actually reduces spatial probes");
+        System.out.println("ICE_CAVE_PYROLUSITE_GATE equivalent=" + checks + " spatialProbes=" + probes);
+        helper.succeed();
+    }
+
+    private static RandomSource randomSource(int type, long seed) {
+        return switch (type) {
+            case 0 -> new LegacyRandomSource(seed);
+            case 1 -> new XoroshiroRandomSource(seed);
+            case 2 -> new WorldgenRandom(new LegacyRandomSource(seed));
+            default -> new WorldgenRandom(new XoroshiroRandomSource(seed));
+        };
+    }
+
+    @GameTest(template = "phase0a_empty", batch = "ice_cave", timeoutTicks = 40)
+    public static void mathematicalBlobInteriorMatchesEnumeratedVolumeAtEveryBoundary(GameTestHelper helper) {
+        int checked = 0;
+        for (int diameter = 5; diameter <= 10; diameter++) for (int coordinate : new int[] {-30000000, -1, 0, 1, 30000000}) {
+            BlockPos center = new BlockPos(coordinate, -12, coordinate);
+            double halfCell = diameter % 2 == 0 ? 0.5 : 0;
+            double cx = center.getX() + halfCell, cy = center.getY() + halfCell, cz = center.getZ() + halfCell;
+            double radiusSquared = diameter / 2.0 * (diameter / 2.0);
+            int extent = diameter / 2;
+            Set<BlockPos> oldVolume = new java.util.HashSet<>();
+            // Reference the removed bounded enumeration, including even-diameter half-cell centers.
+            for (int dx = -extent; dx <= extent; dx++) for (int dy = -extent; dy <= extent; dy++) for (int dz = -extent; dz <= extent; dz++) {
+                BlockPos pos = center.offset(dx, dy, dz);
+                double x = pos.getX() - cx, y = pos.getY() - cy, z = pos.getZ() - cz;
+                if (x * x + y * y + z * z <= radiusSquared) oldVolume.add(pos);
+            }
+            for (int dx = -extent - 1; dx <= extent + 1; dx++) for (int dy = -extent - 1; dy <= extent + 1; dy++) for (int dz = -extent - 1; dz <= extent + 1; dz++) {
+                BlockPos pos = center.offset(dx, dy, dz);
+                helper.assertTrue(IceCaveIceBlobFeature.inSphere(pos, cx, cy, cz, radiusSquared) == oldVolume.contains(pos),
+                        "sphere membership matches the previous bounded set, including the outer neighbor layer");
+                checked++;
+            }
+            for (BlockPos pos : oldVolume) for (Direction side : Direction.values()) {
+                BlockPos neighbor = pos.relative(side);
+                helper.assertTrue(IceCaveIceBlobFeature.inSphere(neighbor, cx, cy, cz, radiusSquared) == oldVolume.contains(neighbor),
+                        "all six interior tests retain the exact old boundary");
+            }
+        }
+        System.out.println("ICE_CAVE_BLOB_GEOMETRY equivalentBoundaryCells=" + checked);
+        helper.succeed();
+    }
+
+    private static final class Terrain {
+        private final GameTestHelper helper;
+        private final BlockPos origin;
+        private final int height;
+        private final int width;
+        private final Map<BlockPos, BlockState> states = new HashMap<>();
+        private final Map<BlockPos, BlockState> writes = new HashMap<>();
+        private final WorldGenLevel level;
+        private final Holder.Reference<Biome> cave;
+        private int boundaryX = Integer.MAX_VALUE;
+        private int blockReads;
+
+        Terrain(GameTestHelper helper, BlockPos origin, int height, int width) {
+            this.helper = helper;
+            this.origin = origin;
+            this.height = height;
+            this.width = width;
+            cave = helper.getLevel().registryAccess().registryOrThrow(Registries.BIOME).getHolderOrThrow(ICE_CAVES);
+            level = (WorldGenLevel)Proxy.newProxyInstance(WorldGenLevel.class.getClassLoader(), new Class<?>[] {WorldGenLevel.class},
+                    (proxy, method, args) -> switch (method.getName()) {
+                        case "getBlockState" -> get((BlockPos)args[0]);
+                        case "getFluidState" -> get((BlockPos)args[0]).getFluidState();
+                        case "getBiome" -> ((BlockPos)args[0]).getX() < boundaryX ? cave
+                                : helper.getLevel().registryAccess().registryOrThrow(Registries.BIOME).getHolderOrThrow(Biomes.PLAINS);
+                        case "hasChunk", "ensureCanWrite" -> true;
+                        case "isOutsideBuildHeight" -> (args[0] instanceof BlockPos pos ? pos.getY() : (int)args[0]) < -64
+                                || (args[0] instanceof BlockPos pos ? pos.getY() : (int)args[0]) >= 320;
+                        case "setBlock" -> {
+                            BlockPos pos = ((BlockPos)args[0]).immutable();
+                            BlockState state = (BlockState)args[1];
+                            writes.put(pos, state);
+                            states.put(pos, state);
+                            yield true;
+                        }
+                        default -> method.invoke(helper.getLevel(), args);
+                    });
+        }
+
+        private BlockState get(BlockPos pos) {
+            blockReads++;
+            BlockState explicit = states.get(pos);
+            if (explicit != null) return explicit;
+            // Fixed actual cave elevations, independent of the feature's origin height and chunk.
+            return pos.getY() >= -21 && pos.getY() < -21 + height
+                    && Math.abs(pos.getX() - origin.getX()) <= width
+                    && Math.abs(pos.getZ() - origin.getZ()) <= width
+                    ? Blocks.AIR.defaultBlockState() : Blocks.STONE.defaultBlockState();
+        }
+
+        private <C extends FeatureConfiguration> boolean place(Feature<C> feature, C config, long seed) {
+            return feature.place(new FeaturePlaceContext<>(Optional.empty(), level,
+                    helper.getLevel().getChunkSource().getGenerator(), RandomSource.create(seed), origin, config));
+        }
+    }
+}

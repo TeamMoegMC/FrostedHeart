@@ -22,6 +22,8 @@ package com.teammoeg.frostedheart.content.climate.block;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.context.BlockPlaceContext;
@@ -30,7 +32,6 @@ import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.IceBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
@@ -42,7 +43,7 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 
 import javax.annotation.Nullable;
 
-public class LayeredThinIceBlock extends IceBlock {
+public class LayeredThinIceBlock extends ThinIceBlock {
     public static final int MAX_HEIGHT = 8;
     public static final IntegerProperty LAYERS = BlockStateProperties.LAYERS;
     protected static final VoxelShape[] SHAPE_BY_LAYER = new VoxelShape[]{Shapes.empty(), Block.box(0.0D, 0.0D, 0.0D, 16.0D, 2.0D, 16.0D), Block.box(0.0D, 0.0D, 0.0D, 16.0D, 4.0D, 16.0D), Block.box(0.0D, 0.0D, 0.0D, 16.0D, 6.0D, 16.0D), Block.box(0.0D, 0.0D, 0.0D, 16.0D, 8.0D, 16.0D), Block.box(0.0D, 0.0D, 0.0D, 16.0D, 10.0D, 16.0D), Block.box(0.0D, 0.0D, 0.0D, 16.0D, 12.0D, 16.0D), Block.box(0.0D, 0.0D, 0.0D, 16.0D, 14.0D, 16.0D), Block.box(0.0D, 0.0D, 0.0D, 16.0D, 16.0D, 16.0D)};
@@ -50,12 +51,26 @@ public class LayeredThinIceBlock extends IceBlock {
 
     public LayeredThinIceBlock(Properties pProperties) {
         super(pProperties);
-        this.registerDefaultState(this.stateDefinition.any().setValue(LAYERS, Integer.valueOf(1)));
+        this.registerDefaultState(this.stateDefinition.any().setValue(LAYERS, Integer.valueOf(1)).setValue(CRACK, 0));
     }
 
-    // no random tick
+    @Override
+    public int fractureStages(BlockState state) {
+        return (state.getValue(LAYERS) + 1) / 2;
+    }
+
+    @Override
+    public void entityInside(BlockState state, Level level, BlockPos pos, Entity entity) {
+        // At 1/8 block height vanilla stepOn may address the block below the ice.
+        double surface = pos.getY() + state.getValue(LAYERS) / 8.0;
+        if (entity.onGround() && Math.abs(entity.getY() - surface) < 0.05)
+            stepOn(level, pos, state, entity);
+        super.entityInside(state, level, pos, entity);
+    }
+
     @Override
     public void randomTick(BlockState pState, ServerLevel pLevel, BlockPos pPos, RandomSource pRandom) {
+        super.randomTick(pState, pLevel, pPos, pRandom);
     }
 
     /**
@@ -93,7 +108,7 @@ public class LayeredThinIceBlock extends IceBlock {
     }
 
     public VoxelShape getCollisionShape(BlockState pState, BlockGetter pLevel, BlockPos pPos, CollisionContext pContext) {
-        return SHAPE_BY_LAYER[pState.getValue(LAYERS) - 1];
+        return SHAPE_BY_LAYER[pState.getValue(LAYERS)];
     }
 
     public VoxelShape getBlockSupportShape(BlockState pState, BlockGetter pReader, BlockPos pPos) {
@@ -134,13 +149,21 @@ public class LayeredThinIceBlock extends IceBlock {
         BlockState blockstate = pContext.getLevel().getBlockState(pContext.getClickedPos());
         if (blockstate.is(this)) {
             int i = blockstate.getValue(LAYERS);
-            return blockstate.setValue(LAYERS, Integer.valueOf(Math.min(MAX_HEIGHT, i + 1)));
+            int nextLayers = Math.min(MAX_HEIGHT, i + 1);
+            return blockstate.setValue(LAYERS, nextLayers).setValue(CRACK,
+                    inheritedCrack(blockstate.getValue(CRACK), i, nextLayers));
         } else {
             return super.getStateForPlacement(pContext);
         }
     }
 
+    public static int inheritedCrack(int crack, int oldLayers, int newLayers) {
+        int oldStages = (oldLayers + 1) / 2, newStages = (newLayers + 1) / 2;
+        return Math.min(newStages - 1, (crack * newStages + oldStages - 1) / oldStages);
+    }
+
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> pBuilder) {
+        super.createBlockStateDefinition(pBuilder);
         pBuilder.add(LAYERS);
     }
 

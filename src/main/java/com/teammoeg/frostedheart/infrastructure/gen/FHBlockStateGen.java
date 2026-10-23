@@ -55,6 +55,28 @@ import net.minecraftforge.client.model.generators.loaders.ObjModelBuilder;
 import java.util.NoSuchElementException;
 
 public class FHBlockStateGen {
+    public static <T extends Block> NonNullBiConsumer<DataGenContext<Block, T>, RegistrateBlockstateProvider> eaveIcicles() {
+        return (c, p) -> {
+            var builder = p.getMultipartBuilder(c.get());
+            for (Direction edge : com.teammoeg.frostedheart.content.climate.block.EaveIcicleBlock.EDGES)
+                builder.part().modelFile(p.models().getExistingFile(p.modLoc("block/eave_icicles")))
+                        .rotationY(((int) edge.toYRot() + 180) % 360).addModel()
+                        .condition(com.teammoeg.frostedheart.content.climate.block.EaveIcicleBlock.property(edge), true).end();
+        };
+    }
+
+    public static <T extends Block> NonNullBiConsumer<DataGenContext<Block, T>, RegistrateBlockstateProvider> icicle() {
+        return (c, p) -> p.getVariantBuilder(c.get()).forAllStatesExcept(state -> {
+            int shape = state.getValue(com.teammoeg.frostedheart.content.climate.block.IcicleBlock.SHAPE);
+            String name = switch (shape) { case 3 -> "top"; case 2 -> "middle_1"; case 1 -> "tail"; default -> "tip"; };
+            var first = p.models().getExistingFile(p.modLoc("block/icicle_" + name));
+            return shape == 2 ? new ConfiguredModel[]{new ConfiguredModel(first),
+                    new ConfiguredModel(p.models().getExistingFile(p.modLoc("block/icicle_middle_2")))}
+                    : new ConfiguredModel[]{new ConfiguredModel(first)};
+        }, com.teammoeg.frostedheart.content.climate.block.IcicleBlock.CRACKED,
+                com.teammoeg.frostedheart.content.climate.block.IcicleBlock.MELT_CYCLE);
+    }
+
 	public static <E,T extends E> NonNullBiConsumer<DataGenContext<E, T>, RegistrateLangProvider> noLang(){
 		return (ctx,prov)->{};
 	}
@@ -115,6 +137,43 @@ public class FHBlockStateGen {
 			builder.partialState().addModels(models);
 		};
 	}
+
+
+    /** Thin-ice-only multipart overlay; the random base remains stable across cracks. */
+    public static <T extends Block> NonNullBiConsumer<DataGenContext<Block, T>, RegistrateBlockstateProvider> thinIce(boolean layered) {
+        return (c, p) -> {
+            var builder = p.getMultipartBuilder(c.get());
+            for (int layer = layered ? 1 : 8; layer <= 8; layer++) {
+                var base = builder.part();
+                for (int t = 1; t <= 5; t++) {
+                    String name = layered && layer < 8 ? "layered_thin_ice_height" + layer * 2 + "_" + t : "thin_ice_" + t;
+                    var model = p.models().withExistingParent(name, p.mcLoc(layer == 8 ? "block/cube_all" : "block/snow_height" + layer * 2))
+                            .texture(layer == 8 ? "all" : "texture", p.modLoc("block/thin_ice_" + t))
+                            .texture("particle", p.modLoc("block/thin_ice_" + t)).renderType("translucent");
+                    base.modelFile(model);
+                    if (t < 5) base = base.nextModel();
+                }
+                var basePart = base.addModel();
+                if (layered) basePart.condition(BlockStateProperties.LAYERS, layer);
+                basePart.end();
+                for (int crack = 1; crack <= 3; crack++) {
+                    int stages = layered ? (layer + 1) / 2 : 4;
+                    int texture = Math.min(8, (int) Math.ceil(crack * 9.0 / Math.max(1, stages - 1)) - 1);
+                    var overlay = p.models().getBuilder(c.getName() + "_crack_" + layer + "_" + crack)
+                            .texture("particle", p.modLoc("block/thin_ice_1"))
+                            .texture("crack", p.mcLoc("block/destroy_stage_" + texture))
+                            .renderType("translucent");
+                    overlay.element().from(0, layer * 2 + 0.01F, 0).to(16, layer * 2 + 0.01F, 16)
+                            .face(Direction.UP).texture("#crack").uvs(0, 0, 16, 16).color(0x66FFFFFF).end().end();
+                    var part = builder.part().modelFile(overlay).addModel()
+                            .condition(com.teammoeg.frostedheart.content.climate.block.ThinIceBlock.CRACK, crack);
+                    if (layered) part.condition(BlockStateProperties.LAYERS, layer);
+                    part.end();
+                }
+            }
+        };
+    }
+
 
 	// snow layered block state
 	public static <T extends Block> NonNullBiConsumer<DataGenContext<Block, T>, RegistrateBlockstateProvider> snowLayered(

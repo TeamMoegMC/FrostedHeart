@@ -964,5 +964,15 @@
   "gui.frostedheart.town_manager.policy.dependent_first": "Dependents first",
   "gui.frostedheart.town_manager.policy.dependent_first.description": "Children and residents unable to work receive the first care tier.",
   "gui.frostedheart.town_manager.policy.workforce_first": "Workforce protection",
-  "gui.frostedheart.town_manager.policy.workforce_first.description": "Residents capable of work receive the first care tier."
+  "gui.frostedheart.town_manager.policy.workforce_first.description": "Residents capable of work receive the first care tier.",
+  "block.frostedheart.ice_crystal": "Ice Crystal",
+  "block.frostedheart.large_ice_crystal": "Large Ice Crystal",
+  "block.frostedheart.glowstone_crystal": "Glowstone Crystal",
+  "block.frostedheart.hydrothermal_rock": "Hydrothermal Rock",
+  "block.frostedheart.pyrolusite_ore": "Pyrolusite Ore",
+  "block.frostedheart.deepslate_pyrolusite_ore": "Deepslate Pyrolusite Ore",
+  "item.frostedheart.glowstone_shard": "Glowstone Crystal Shard",
+  "item.frostedheart.raw_pyrolusite": "Raw Pyrolusite",
+  "fluid.frostedheart.hot_spring": "Hot Spring",
+  "block.frostedheart.hot_spring": "Hot Spring"
 }

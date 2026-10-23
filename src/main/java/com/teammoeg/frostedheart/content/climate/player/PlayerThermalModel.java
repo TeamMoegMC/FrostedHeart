@@ -34,6 +34,8 @@ public class PlayerThermalModel {
     static final double GAMEPLAY_TIME_SCALE = 8.0D;
     private static final double AIR_EXCHANGE_MULTIPLIER = 0.0824D;
     private static final double WATER_EXCHANGE_MULTIPLIER = 0.51D;
+    // Provisional spring-only gameplay gain; boundary temperature stays 38 C.
+    static final double HOT_SPRING_EXCHANGE_GAIN = 64.0D;
     private static final double POWDER_SNOW_EXCHANGE_MULTIPLIER = 0.116D;
     private static final double WET_EXCHANGE_MULTIPLIER = 0.03D;
     private static final double LAVA_EXCHANGE_MULTIPLIER = 2.0D;
@@ -76,6 +78,7 @@ public class PlayerThermalModel {
     private static final double LONG_WAVE_COEFFICIENT_W_PER_M2_K = 4.7D;
     private static final double RADIATION_ABSORPTIVITY = 0.8D;
     private static final double WATER_COEFFICIENT_W_PER_M2_K = 100.0D;
+    static final double HOT_SPRING_TEMPERATURE_C = 38.0D;
     private static final double LAVA_TEMPERATURE_C = 1_000.0D;
     private static final double LAVA_COEFFICIENT_W_PER_M2_K = 150.0D;
     private static final double POWDER_SNOW_TEMPERATURE_C = -30.0D;
@@ -84,22 +87,37 @@ public class PlayerThermalModel {
     /**
      * Builds passive conductance paths for one body part.
      * <p>
-     * Contact precedence is lava, water, powder snow, then remaining air.
+     * Contact precedence is lava, hot spring, ordinary water, powder snow,
+     * then remaining air.
      * Legacy insulation scales environmental exchange; wind proof affects
      * forced convection, water resistance affects contact and Wet, and
      * radiant proof affects absorbed source/fire heat.
      */
     static void preparePart(PlayerTemperatureData data, HeatingDeviceContext context, BodyPart part,
                             double airTemperatureC, double hNatural, double radiantFluxWPerM2, double localWindMPerS,
-                            double waterTemperatureC, double waterHeightRatio, double lavaHeightRatio,
+                            double waterTemperatureC, double waterHeightRatio, double hotSpringHeightRatio,
+                            double lavaHeightRatio,
                             boolean powderSnow, boolean wet) {
+        preparePart(data, context, part, airTemperatureC, hNatural, radiantFluxWPerM2,
+                localWindMPerS, waterTemperatureC, waterHeightRatio, hotSpringHeightRatio,
+                lavaHeightRatio, powderSnow, wet, HOT_SPRING_EXCHANGE_GAIN);
+    }
+
+    /** Explicit gain also supports deterministic balance measurements without global mutation. */
+    static void preparePart(PlayerTemperatureData data, HeatingDeviceContext context, BodyPart part,
+                            double airTemperatureC, double hNatural, double radiantFluxWPerM2, double localWindMPerS,
+                            double waterTemperatureC, double waterHeightRatio, double hotSpringHeightRatio,
+                            double lavaHeightRatio, boolean powderSnow, boolean wet, double hotSpringExchangeGain) {
         // Fractions are exclusive and sum to one for this body part.
         double lava = bandFraction(part, lavaHeightRatio);
+        double hotSpring = (1.0D - lava)
+                * bandFraction(part, hotSpringHeightRatio);
         double water = (1.0D - lava)
-                * bandFraction(part, waterHeightRatio);
-        double powder = (1.0D - lava - water)
+                * Math.max(0.0D, bandFraction(part, waterHeightRatio)
+                        - bandFraction(part, hotSpringHeightRatio));
+        double powder = (1.0D - lava - hotSpring - water)
                 * (powderSnow ? 1.0D : 0.0D);
-        double air = 1.0D - lava - water - powder;
+        double air = 1.0D - lava - hotSpring - water - powder;
 
         PartClothData clothing = context.clothing();
         data.fillClothDataByPart(context.getPlayer(), part, clothing);
@@ -124,6 +142,10 @@ public class PlayerThermalModel {
         double waterConductanceWPerK = WATER_EXCHANGE_MULTIPLIER
                 * insulationFactor * mediumConductanceWPerK(
                         areaM2, water, WATER_COEFFICIENT_W_PER_M2_K * contactProtection, tissueResistanceM2KPerW);
+        double hotSpringConductanceWPerK = WATER_EXCHANGE_MULTIPLIER * hotSpringExchangeGain
+                * insulationFactor * mediumConductanceWPerK(
+                        areaM2, hotSpring, WATER_COEFFICIENT_W_PER_M2_K * contactProtection,
+                        tissueResistanceM2KPerW);
         double powderConductanceWPerK = POWDER_SNOW_EXCHANGE_MULTIPLIER
                 * insulationFactor * mediumConductanceWPerK(
                         areaM2, powder, POWDER_SNOW_COEFFICIENT_W_PER_M2_K * contactProtection, tissueResistanceM2KPerW);
@@ -137,11 +159,12 @@ public class PlayerThermalModel {
                 * contactProtection : 0.0D;
         // Copy primitive results into the reusable context for integration.
         context.setPartEnvironment(part,
-                airConductanceWPerK + waterConductanceWPerK
+                airConductanceWPerK + waterConductanceWPerK + hotSpringConductanceWPerK
                         + powderConductanceWPerK
                         + lavaConductanceWPerK,
                 airConductanceWPerK * airTemperatureC + directRadiationW
                         + waterConductanceWPerK * waterTemperatureC
+                        + hotSpringConductanceWPerK * HOT_SPRING_TEMPERATURE_C
                         + powderConductanceWPerK
                         * POWDER_SNOW_TEMPERATURE_C
                         + lavaConductanceWPerK * LAVA_TEMPERATURE_C,
@@ -340,7 +363,8 @@ public class PlayerThermalModel {
      */
     static double environmentalEquivalentTemperatureC(
             double airTemperatureC, double hNatural, double radiantFluxWPerM2, double localWindMPerS,
-            double waterTemperatureC, double waterHeightRatio, double lavaHeightRatio,
+            double waterTemperatureC, double waterHeightRatio, double hotSpringHeightRatio,
+            double lavaHeightRatio,
             boolean powderSnow, boolean onFire) {
         double hConvection = Math.max(hNatural,
                 forcedConvectionCoefficientWPerM2K(localWindMPerS));
@@ -348,7 +372,8 @@ public class PlayerThermalModel {
         double lossFluxWPerM2 = 0.0D;
         for (BodyPart part : BodyPart.VALUES) {
             lossFluxWPerM2 += part.area * partLossFluxWPerM2(
-                    part, airLossFlux, waterTemperatureC, waterHeightRatio, lavaHeightRatio, powderSnow);
+                    part, airLossFlux, waterTemperatureC, waterHeightRatio,
+                    hotSpringHeightRatio, lavaHeightRatio, powderSnow);
         }
         if (onFire && lavaHeightRatio <= 0.0D) {
             lossFluxWPerM2 -= ON_FIRE_HEAT_POWER_W
@@ -370,16 +395,22 @@ public class PlayerThermalModel {
 
     private static double partLossFluxWPerM2(BodyPart part, double airLossFluxWPerM2,
                                              double waterTemperatureC, double waterHeightRatio,
-                                             double lavaHeightRatio, boolean powderSnow) {
+                                             double hotSpringHeightRatio, double lavaHeightRatio,
+                                             boolean powderSnow) {
         double lava = bandFraction(part, lavaHeightRatio);
+        double hotSpring = (1.0D - lava)
+                * bandFraction(part, hotSpringHeightRatio);
         double water = (1.0D - lava)
-                * bandFraction(part, waterHeightRatio);
-        double powder = (1.0D - lava - water)
+                * Math.max(0.0D, bandFraction(part, waterHeightRatio)
+                        - bandFraction(part, hotSpringHeightRatio));
+        double powder = (1.0D - lava - hotSpring - water)
                 * (powderSnow ? 1.0D : 0.0D);
-        double air = 1.0D - lava - water - powder;
+        double air = 1.0D - lava - hotSpring - water - powder;
         return air * airLossFluxWPerM2
                 + water * WATER_COEFFICIENT_W_PER_M2_K
                 * (REFERENCE_SKIN_TEMPERATURE_C - waterTemperatureC)
+                + hotSpring * WATER_COEFFICIENT_W_PER_M2_K
+                * (REFERENCE_SKIN_TEMPERATURE_C - HOT_SPRING_TEMPERATURE_C)
                 + lava * LAVA_COEFFICIENT_W_PER_M2_K
                 * (REFERENCE_SKIN_TEMPERATURE_C - LAVA_TEMPERATURE_C)
                 + powder * POWDER_SNOW_COEFFICIENT_W_PER_M2_K

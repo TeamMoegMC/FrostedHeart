@@ -1,7 +1,7 @@
 # Player Temperature
 
 - Status: `Current`
-- Last verified: `2026-10-09` (reservoir block registration, language, and loot generation)
+- Last verified: `2026-10-21` (hot spring contact path; reservoir block registration last checked `2026-10-09`)
 - Scope: player environment sampling, five-part body energy, wearable thermal reservoirs, clothing, Wet, heating equipment, thermometers, HUD, effects, persistence, and synchronization
 - Primary code anchors: `PlayerTemperatureUpdate.updateTemperature`, `PlayerTemperatureComputation.updatePlayer`, `PlayerThermalEnvironment`, `PlayerEquipmentHeating`, `PlayerThermoregulation`, `PlayerThermalModel`, `PlayerThermalInjury`, `PlayerTemperatureData`, `ThermometerItem`, `CreativeThermometerItem`, `FHTemperatureDisplayPacket`, `WearableThermalExchangeHandler`, `ThreeNodeWearableHeatExchange`, `ThermalReservoirBlock`, `ThermalReservoirBlockEntity.serverTick`, `FHBodyDataSyncPacket`, `FrostedHud.renderTemperature`
 
@@ -113,10 +113,20 @@ body exchange multipliers.
 
 ## Contact, Wet, And Clothing
 
-Water and lava use `player.getFluidHeight(tag) / player.getBbHeight()`.
+Ordinary water and lava use `player.getFluidHeight(tag) / player.getBbHeight()`.
+The [hot spring](hot-spring.md) uses Forge's
+`player.getFluidTypeHeight(FHFluids.HOT_SPRING.get().getFluidType()) /
+player.getBbHeight()` because Forge tracks modded fluid contact by `FluidType`.
 Each `BodyPart` owns a fixed vertical immersion band, so contact engages feet,
 legs, torso/hands, and head progressively. Water uses a `0..35 C` boundary
 derived from local air instead of the old fixed `x6` Celsius multiplier.
+Hot spring contact uses `38 C` with the same water conductance, tissue,
+clothing, and water-resistance paths; overlapping water/spring height is
+counted once with spring precedence. Its dedicated
+`PlayerThermalModel.HOT_SPRING_EXCHANGE_GAIN` (provisional `64`) multiplies
+spring conductance only, preserving the 38 C boundary and normal body energy
+integration. The spring temperature does not alter
+ordinary water's formula or write a world heat source.
 Powder snow and on-fire state remain local body inputs.
 
 These local entity contacts do not write Thermal Air or register a world source.
@@ -129,6 +139,15 @@ The existing Wet effect remains the only post-exit wetness state. Leaving water
 removes the water-contact conductance on the next player update; Wet continues
 its reduced extra exchange until the existing effect expires. Wet heat loss and
 sweating share one low-cost evaporation ceiling.
+`PlayerTemperatureUpdate.isSoaked` includes the spring's Forge `FluidType`
+height explicitly, since `isInWater()` alone excludes that modded fluid.
+Spring soaking refreshes the same Wet duration and armored-clothing multiplier
+as ordinary water. A single source block with air above has surface height
+`8/9` block: a standing 1.8-block player has immersion ratio about `0.494`,
+which reaches feet, most of the legs, and part of the hands, but does not
+directly immerse the torso. See [hot-spring.md](hot-spring.md) for the recovery
+fixture and its validation limits; 38 C is the contact boundary, not a core
+temperature assignment or a guaranteed recovery time.
 
 `BodyPartData.fillClothData` reads existing equipment attributes and
 `ArmorTempData` layers directly into one reusable `PartClothData`. It creates

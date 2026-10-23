@@ -1,0 +1,965 @@
+[
+  {
+    "seed": 111,
+    "save_directory": "build/ice-cave-client-runtime/saves/ice-cave-v2-normal-111-1792641858698",
+    "preset": "minecraft:normal, unmodified TWR multi_noise biome source and terrain/features",
+    "resource_adaptations": "D:\\games\\minecraft\\Project TWR\\FrostedHeart\\build\\ice-cave-normal-assets-adaptations.json",
+    "runtime": "Spectator + night vision; randomTickSpeed\u003d0 and weather/mobs disabled for fresh-generation visual capture; no terrain edit commands",
+    "biome_search_candidates": [
+      [
+        896,
+        0,
+        896
+      ],
+      [
+        896,
+        0,
+        1152
+      ],
+      [
+        1152,
+        0,
+        1152
+      ],
+      [
+        1280,
+        0,
+        768
+      ],
+      [
+        640,
+        0,
+        640
+      ],
+      [
+        640,
+        -16,
+        896
+      ],
+      [
+        640,
+        24,
+        1152
+      ],
+      [
+        640,
+        0,
+        1408
+      ]
+    ],
+    "generated_patch_attempts": 1,
+    "hall_observation_found": true,
+    "interior_chunk_min_x": 54,
+    "interior_chunk_min_z": 54,
+    "interior_chunks": 16,
+    "generated_border_chunks": 20,
+    "landscape": {
+      "min_y_inclusive": -63,
+      "max_y_exclusive": 129,
+      "surface_definition": "Final exposed full-collision-cube block faces, plus stable/thin ice; ores remain in denominator. Air or fluid-free partial non-ice decorations beside a face count as open space. High wall requires three such open blocks below its adjacent space. This is a complete block-face area approximation, not pixel-exact occlusion by icicles/crystal clusters. These partial decorations are not surface blocks. Full-cube glowstone crystal remains a non-ice solid. isSolid/legacySolid is not a full-cube test. Before surfaces retain strict air-only adjacency at CARVERS, covered if original block or face-adjacent block is ice after FEATURES. Surface and lake columns stop at the original WORLD_SURFACE_WG height minus 6; ore volume retains the full reported Y range.",
+      "primary_coverage_metric": "The original_area_covered_fraction fields; final_ice_fraction fields describe the final block-face approximation separately.",
+      "lake_definition": "Ordinary source-water top faces at CARVERS, before added traps; both same-cell freeze and cap-above count. Uncovered/changed positions are retained in denominator. Springs are not ordinary water.",
+      "counts": {
+        "ice_crystal": 2,
+        "glowstone_crystal": 2,
+        "ice_crystal_exposed_to_air": 2,
+        "glowstone_crystal_exposed_to_air": 2,
+        "sampled_blocks": 163044,
+        "final_floor_faces": 4808,
+        "final_floor_ice": 4029,
+        "final_ceiling_faces": 3783,
+        "final_ceiling_ice": 2833,
+        "final_wall_faces": 11813,
+        "final_wall_ice": 9353,
+        "excluded_legacy_partial_wall_faces": 4232,
+        "excluded_legacy_partial_high_wall_faces": 3387,
+        "final_faces_adjacent_to_partial_decoration": 2541,
+        "final_high_wall_faces": 5016,
+        "final_high_wall_ice": 3836,
+        "final_floor_ore_faces_in_denominator": 35,
+        "exposed_ore_faces": 166,
+        "final_wall_ore_faces_in_denominator": 101,
+        "final_high_wall_ore_faces_in_denominator": 29,
+        "final_ceiling_ore_faces_in_denominator": 30,
+        "excluded_legacy_partial_ceiling_faces": 3,
+        "excluded_legacy_partial_floor_faces": 1,
+        "before_floor_faces": 4560,
+        "before_floor_covered_after": 3785,
+        "before_ceiling_faces": 3721,
+        "before_ceiling_covered_after": 2767,
+        "before_wall_faces": 11038,
+        "before_wall_covered_after": 8729,
+        "before_high_wall_faces": 4798,
+        "before_high_wall_covered_after": 3698,
+        "lake_stable_ice": 58,
+        "lake_thin_ice": 129
+      },
+      "legacy_solid_partial_blocks_excluded": {
+        "frostedheart:icicle": 1230,
+        "minecraft:small_amethyst_bud": 1,
+        "minecraft:amethyst_cluster": 1,
+        "minecraft:large_amethyst_bud": 1
+      },
+      "surface_ratios": {
+        "floor_final_ice_fraction": 0.8379783693843594,
+        "floor_original_area_covered_fraction": 0.8300438596491229,
+        "wall_final_ice_fraction": 0.7917548463557098,
+        "wall_original_area_covered_fraction": 0.7908135531799239,
+        "high_wall_final_ice_fraction": 0.7647527910685805,
+        "high_wall_original_area_covered_fraction": 0.7707378074197583,
+        "ceiling_final_ice_fraction": 0.7488765530002643,
+        "ceiling_original_area_covered_fraction": 0.7436173071754905
+      },
+      "lakes": {
+        "original_water_top_faces": 187,
+        "covered_fraction": 1.0,
+        "thin_fraction_of_original_top": 0.6898395721925134,
+        "stable_fraction_of_original_top": 0.31016042780748665
+      },
+      "crystals": {
+        "glowstone_crystal": 2,
+        "glowstone_crystal_exposed_to_air": 2,
+        "ice_crystal_exposed_to_air": 2,
+        "ice_crystal": 2
+      },
+      "crystal_definition": "All final crystal blocks in the same included sample Y/volume as ore totals. Exposed means at least one of six adjacent blocks is air; each crystal counts once. This confirms open-air inlays, not camera line of sight or visibility through transparent ice.",
+      "traps": {
+        "definition": "Final thin-ice lids at original CARVERS solid floor faces adjacent to air above; ordinary natural water tops are excluded. Lids group by horizontal face adjacency at identical Y. Depth counts consecutive air or ordinary water cells immediately below each lid, observing at most 13 to distinguish the allowed 3..12 range. Fully observed groups require in-sample boundaries, observed solid floors and no adjacent unknown-baseline lids. Unmodified solid retaining floors may belong to another 3D biome and are observed within the sampled chunk/Y bounds even when excluded from biome counts; this is recorded separately rather than called a vertical sample cut. Cavity cells still require inclusion. This cannot identify lids raised above the original solid floor. Wet frequency uses only fully observed, valid-depth, consistently dry or source-water-filled groups; an empty denominator is unavailable, not a pass.",
+        "candidate_lid_blocks_on_original_solid_floor": 0,
+        "connected_lid_groups": 0,
+        "fully_observed_groups": 0,
+        "sample_clipped_groups": 0,
+        "fully_observed_valid_depth_groups": 0,
+        "fully_observed_consistent_dry_groups": 0,
+        "fully_observed_consistent_source_water_groups": 0,
+        "mixed_fill_groups_including_clipped": 0,
+        "wet_fraction_of_complete_consistent_valid_groups": null,
+        "groups": []
+      },
+      "ores": {
+        "pyrite": {
+          "exposed_faces": 63,
+          "all_final_blocks": 1713,
+          "largest_coplanar_exposed_face_patch_clipped_to_sample": 7
+        },
+        "pyrolusite": {
+          "exposed_faces": 44,
+          "all_final_blocks": 556,
+          "largest_coplanar_exposed_face_patch_clipped_to_sample": 6
+        },
+        "zinc": {
+          "exposed_faces": 59,
+          "all_final_blocks": 1305,
+          "largest_coplanar_exposed_face_patch_clipped_to_sample": 5
+        },
+        "lead": {
+          "exposed_faces": 0,
+          "all_final_blocks": 41,
+          "largest_coplanar_exposed_face_patch_clipped_to_sample": 0
+        },
+        "silver": {
+          "exposed_faces": 0,
+          "all_final_blocks": 58,
+          "largest_coplanar_exposed_face_patch_clipped_to_sample": 0
+        }
+      },
+      "suggested_views": [
+        {
+          "kind": "medium",
+          "x": 879.5,
+          "y": 11,
+          "z": 877.5,
+          "clear_height": 6,
+          "horizontal_cardinal_clearance_sum": 54,
+          "look_clearance": 16,
+          "alternate_clearance": 15,
+          "yaw": 0.0,
+          "alternate_yaw": 90.0,
+          "pitch": -8
+        },
+        {
+          "kind": "passage",
+          "x": 885.5,
+          "y": 12,
+          "z": 888.5,
+          "clear_height": 4,
+          "horizontal_cardinal_clearance_sum": 50,
+          "look_clearance": 16,
+          "alternate_clearance": 16,
+          "yaw": 180.0,
+          "alternate_yaw": 0.0,
+          "pitch": -8
+        },
+        {
+          "kind": "hall",
+          "x": 869.5,
+          "y": 11,
+          "z": 901.5,
+          "clear_height": 24,
+          "horizontal_cardinal_clearance_sum": 64,
+          "look_clearance": 16,
+          "alternate_clearance": 16,
+          "yaw": 180.0,
+          "alternate_yaw": 270.0,
+          "pitch": -8
+        },
+        {
+          "kind": "lake",
+          "x": 920.5,
+          "y": 17.53,
+          "z": 912.5,
+          "yaw": 90.0,
+          "pitch": 36.253838,
+          "target_xyz": [
+            917.5,
+            17.0,
+            912.5
+          ],
+          "feature_block_xyz": [
+            917,
+            16,
+            912
+          ],
+          "camera_body_in_air": true,
+          "sampled_line_to_target_clear": true
+        },
+        {
+          "kind": "ice_crystal",
+          "x": 869.5,
+          "y": 7.08,
+          "z": 895.5,
+          "yaw": -0.0,
+          "pitch": 4.763642,
+          "target_xyz": [
+            869.5,
+            8.5,
+            898.5
+          ],
+          "feature_block_xyz": [
+            869,
+            8,
+            898
+          ],
+          "camera_body_in_air": true,
+          "sampled_line_to_target_clear": true
+        }
+      ],
+      "suggested_view_availability": {
+        "hall": true,
+        "passage": true,
+        "medium": true,
+        "lake": true,
+        "ice_crystal": true,
+        "trap": false
+      },
+      "spring_status": "Natural generation and survival warming remain unaccepted; telemetry is not a pass requirement."
+    },
+    "screenshots": [
+      {
+        "kind": "medium",
+        "x": 879.5,
+        "y": 11,
+        "z": 877.5,
+        "clear_height": 6,
+        "horizontal_cardinal_clearance_sum": 54,
+        "look_clearance": 16,
+        "alternate_clearance": 15,
+        "yaw": 0.0,
+        "alternate_yaw": 90.0,
+        "pitch": -8,
+        "image": "D:\\games\\minecraft\\Project TWR\\FrostedHeart\\build\\ice-cave-client\\seed-111-medium.png",
+        "image_width": 1280,
+        "image_height": 720
+      },
+      {
+        "kind": "passage",
+        "x": 885.5,
+        "y": 12,
+        "z": 888.5,
+        "clear_height": 4,
+        "horizontal_cardinal_clearance_sum": 50,
+        "look_clearance": 16,
+        "alternate_clearance": 16,
+        "yaw": 180.0,
+        "alternate_yaw": 0.0,
+        "pitch": -8,
+        "image": "D:\\games\\minecraft\\Project TWR\\FrostedHeart\\build\\ice-cave-client\\seed-111-passage.png",
+        "image_width": 1280,
+        "image_height": 720
+      },
+      {
+        "kind": "hall",
+        "x": 869.5,
+        "y": 11,
+        "z": 901.5,
+        "clear_height": 24,
+        "horizontal_cardinal_clearance_sum": 64,
+        "look_clearance": 16,
+        "alternate_clearance": 16,
+        "yaw": 180.0,
+        "alternate_yaw": 270.0,
+        "pitch": -8,
+        "image": "D:\\games\\minecraft\\Project TWR\\FrostedHeart\\build\\ice-cave-client\\seed-111-hall.png",
+        "image_width": 1280,
+        "image_height": 720
+      },
+      {
+        "kind": "hall_alternate",
+        "x": 869.5,
+        "y": 11,
+        "z": 901.5,
+        "clear_height": 24,
+        "horizontal_cardinal_clearance_sum": 64,
+        "look_clearance": 16,
+        "alternate_clearance": 16,
+        "yaw": 270.0,
+        "alternate_yaw": 270.0,
+        "pitch": -8,
+        "image": "D:\\games\\minecraft\\Project TWR\\FrostedHeart\\build\\ice-cave-client\\seed-111-hall_alternate.png",
+        "image_width": 1280,
+        "image_height": 720
+      },
+      {
+        "kind": "lake",
+        "x": 920.5,
+        "y": 17.53,
+        "z": 912.5,
+        "yaw": 90.0,
+        "pitch": 36.253838,
+        "target_xyz": [
+          917.5,
+          17.0,
+          912.5
+        ],
+        "feature_block_xyz": [
+          917,
+          16,
+          912
+        ],
+        "camera_body_in_air": true,
+        "sampled_line_to_target_clear": true,
+        "image": "D:\\games\\minecraft\\Project TWR\\FrostedHeart\\build\\ice-cave-client\\seed-111-lake.png",
+        "image_width": 1280,
+        "image_height": 720
+      },
+      {
+        "kind": "ice_crystal",
+        "x": 869.5,
+        "y": 7.08,
+        "z": 895.5,
+        "yaw": -0.0,
+        "pitch": 4.763642,
+        "target_xyz": [
+          869.5,
+          8.5,
+          898.5
+        ],
+        "feature_block_xyz": [
+          869,
+          8,
+          898
+        ],
+        "camera_body_in_air": true,
+        "sampled_line_to_target_clear": true,
+        "image": "D:\\games\\minecraft\\Project TWR\\FrostedHeart\\build\\ice-cave-client\\seed-111-ice_crystal.png",
+        "image_width": 1280,
+        "image_height": 720
+      }
+    ]
+  },
+  {
+    "seed": 222,
+    "save_directory": "build/ice-cave-client-runtime/saves/ice-cave-v2-normal-222-1792642066353",
+    "preset": "minecraft:normal, unmodified TWR multi_noise biome source and terrain/features",
+    "resource_adaptations": "D:\\games\\minecraft\\Project TWR\\FrostedHeart\\build\\ice-cave-normal-assets-adaptations.json",
+    "runtime": "Spectator + night vision; randomTickSpeed\u003d0 and weather/mobs disabled for fresh-generation visual capture; no terrain edit commands",
+    "biome_search_candidates": [
+      [
+        1024,
+        0,
+        1024
+      ],
+      [
+        768,
+        24,
+        1024
+      ],
+      [
+        768,
+        0,
+        1280
+      ],
+      [
+        1024,
+        24,
+        768
+      ],
+      [
+        1024,
+        0,
+        1280
+      ],
+      [
+        1280,
+        0,
+        896
+      ],
+      [
+        1280,
+        24,
+        1280
+      ],
+      [
+        640,
+        24,
+        640
+      ]
+    ],
+    "generated_patch_attempts": 2,
+    "hall_observation_found": true,
+    "interior_chunk_min_x": 46,
+    "interior_chunk_min_z": 62,
+    "interior_chunks": 16,
+    "generated_border_chunks": 20,
+    "landscape": {
+      "min_y_inclusive": -63,
+      "max_y_exclusive": 129,
+      "surface_definition": "Final exposed full-collision-cube block faces, plus stable/thin ice; ores remain in denominator. Air or fluid-free partial non-ice decorations beside a face count as open space. High wall requires three such open blocks below its adjacent space. This is a complete block-face area approximation, not pixel-exact occlusion by icicles/crystal clusters. These partial decorations are not surface blocks. Full-cube glowstone crystal remains a non-ice solid. isSolid/legacySolid is not a full-cube test. Before surfaces retain strict air-only adjacency at CARVERS, covered if original block or face-adjacent block is ice after FEATURES. Surface and lake columns stop at the original WORLD_SURFACE_WG height minus 6; ore volume retains the full reported Y range.",
+      "primary_coverage_metric": "The original_area_covered_fraction fields; final_ice_fraction fields describe the final block-face approximation separately.",
+      "lake_definition": "Ordinary source-water top faces at CARVERS, before added traps; both same-cell freeze and cap-above count. Uncovered/changed positions are retained in denominator. Springs are not ordinary water.",
+      "counts": {
+        "ice_crystal": 4,
+        "glowstone_crystal": 4,
+        "ice_crystal_exposed_to_air": 1,
+        "glowstone_crystal_exposed_to_air": 2,
+        "sampled_blocks": 219856,
+        "final_wall_faces": 9757,
+        "final_wall_ice": 7895,
+        "final_floor_faces": 1261,
+        "final_floor_ice": 1061,
+        "final_ceiling_faces": 3450,
+        "final_ceiling_ice": 2863,
+        "final_high_wall_faces": 6688,
+        "final_high_wall_ice": 5427,
+        "final_faces_adjacent_to_partial_decoration": 2184,
+        "excluded_legacy_partial_wall_faces": 4859,
+        "excluded_legacy_partial_high_wall_faces": 4703,
+        "final_ceiling_ore_faces_in_denominator": 21,
+        "exposed_ore_faces": 87,
+        "final_wall_ore_faces_in_denominator": 61,
+        "final_high_wall_ore_faces_in_denominator": 47,
+        "final_floor_ore_faces_in_denominator": 5,
+        "before_wall_faces": 9593,
+        "before_wall_covered_after": 7728,
+        "before_floor_faces": 1203,
+        "before_floor_covered_after": 1006,
+        "before_ceiling_faces": 3393,
+        "before_ceiling_covered_after": 2806,
+        "before_high_wall_faces": 6694,
+        "before_high_wall_covered_after": 5415
+      },
+      "legacy_solid_partial_blocks_excluded": {
+        "frostedheart:icicle": 1409
+      },
+      "surface_ratios": {
+        "floor_final_ice_fraction": 0.8413957176843775,
+        "floor_original_area_covered_fraction": 0.8362427265170407,
+        "wall_final_ice_fraction": 0.8091626524546479,
+        "wall_original_area_covered_fraction": 0.8055874074846242,
+        "high_wall_final_ice_fraction": 0.8114533492822966,
+        "high_wall_original_area_covered_fraction": 0.808933373170003,
+        "ceiling_final_ice_fraction": 0.8298550724637681,
+        "ceiling_original_area_covered_fraction": 0.8269967580312408
+      },
+      "lakes": {
+        "original_water_top_faces": 0,
+        "covered_fraction": null,
+        "thin_fraction_of_original_top": null,
+        "stable_fraction_of_original_top": null
+      },
+      "crystals": {
+        "glowstone_crystal": 4,
+        "glowstone_crystal_exposed_to_air": 2,
+        "ice_crystal_exposed_to_air": 1,
+        "ice_crystal": 4
+      },
+      "crystal_definition": "All final crystal blocks in the same included sample Y/volume as ore totals. Exposed means at least one of six adjacent blocks is air; each crystal counts once. This confirms open-air inlays, not camera line of sight or visibility through transparent ice.",
+      "traps": {
+        "definition": "Final thin-ice lids at original CARVERS solid floor faces adjacent to air above; ordinary natural water tops are excluded. Lids group by horizontal face adjacency at identical Y. Depth counts consecutive air or ordinary water cells immediately below each lid, observing at most 13 to distinguish the allowed 3..12 range. Fully observed groups require in-sample boundaries, observed solid floors and no adjacent unknown-baseline lids. Unmodified solid retaining floors may belong to another 3D biome and are observed within the sampled chunk/Y bounds even when excluded from biome counts; this is recorded separately rather than called a vertical sample cut. Cavity cells still require inclusion. This cannot identify lids raised above the original solid floor. Wet frequency uses only fully observed, valid-depth, consistently dry or source-water-filled groups; an empty denominator is unavailable, not a pass.",
+        "candidate_lid_blocks_on_original_solid_floor": 0,
+        "connected_lid_groups": 0,
+        "fully_observed_groups": 0,
+        "sample_clipped_groups": 0,
+        "fully_observed_valid_depth_groups": 0,
+        "fully_observed_consistent_dry_groups": 0,
+        "fully_observed_consistent_source_water_groups": 0,
+        "mixed_fill_groups_including_clipped": 0,
+        "wet_fraction_of_complete_consistent_valid_groups": null,
+        "groups": []
+      },
+      "ores": {
+        "pyrite": {
+          "exposed_faces": 21,
+          "all_final_blocks": 1550,
+          "largest_coplanar_exposed_face_patch_clipped_to_sample": 2
+        },
+        "pyrolusite": {
+          "exposed_faces": 22,
+          "all_final_blocks": 299,
+          "largest_coplanar_exposed_face_patch_clipped_to_sample": 6
+        },
+        "zinc": {
+          "exposed_faces": 27,
+          "all_final_blocks": 1111,
+          "largest_coplanar_exposed_face_patch_clipped_to_sample": 2
+        },
+        "lead": {
+          "exposed_faces": 17,
+          "all_final_blocks": 10,
+          "largest_coplanar_exposed_face_patch_clipped_to_sample": 4
+        },
+        "silver": {
+          "exposed_faces": 0,
+          "all_final_blocks": 16,
+          "largest_coplanar_exposed_face_patch_clipped_to_sample": 0
+        }
+      },
+      "suggested_views": [
+        {
+          "kind": "passage",
+          "x": 772.5,
+          "y": 0,
+          "z": 998.5,
+          "clear_height": 5,
+          "horizontal_cardinal_clearance_sum": 48,
+          "look_clearance": 16,
+          "alternate_clearance": 16,
+          "yaw": 270.0,
+          "alternate_yaw": 0.0,
+          "pitch": -8
+        },
+        {
+          "kind": "medium",
+          "x": 773.5,
+          "y": 0,
+          "z": 998.5,
+          "clear_height": 6,
+          "horizontal_cardinal_clearance_sum": 48,
+          "look_clearance": 16,
+          "alternate_clearance": 16,
+          "yaw": 270.0,
+          "alternate_yaw": 0.0,
+          "pitch": -8
+        },
+        {
+          "kind": "hall",
+          "x": 742.5,
+          "y": 33,
+          "z": 1028.5,
+          "clear_height": 24,
+          "horizontal_cardinal_clearance_sum": 59,
+          "look_clearance": 16,
+          "alternate_clearance": 16,
+          "yaw": 180.0,
+          "alternate_yaw": 0.0,
+          "pitch": -8
+        },
+        {
+          "kind": "ice_crystal",
+          "x": 741.5,
+          "y": 32.08,
+          "z": 1023.5,
+          "yaw": -0.0,
+          "pitch": 90.0,
+          "target_xyz": [
+            741.5,
+            30.5,
+            1023.5
+          ],
+          "feature_block_xyz": [
+            741,
+            30,
+            1023
+          ],
+          "camera_body_in_air": true,
+          "sampled_line_to_target_clear": true
+        }
+      ],
+      "suggested_view_availability": {
+        "hall": true,
+        "passage": true,
+        "medium": true,
+        "lake": false,
+        "ice_crystal": true,
+        "trap": false
+      },
+      "spring_status": "Natural generation and survival warming remain unaccepted; telemetry is not a pass requirement."
+    },
+    "screenshots": [
+      {
+        "kind": "passage",
+        "x": 772.5,
+        "y": 0,
+        "z": 998.5,
+        "clear_height": 5,
+        "horizontal_cardinal_clearance_sum": 48,
+        "look_clearance": 16,
+        "alternate_clearance": 16,
+        "yaw": 270.0,
+        "alternate_yaw": 0.0,
+        "pitch": -8,
+        "image": "D:\\games\\minecraft\\Project TWR\\FrostedHeart\\build\\ice-cave-client\\seed-222-passage.png",
+        "image_width": 1280,
+        "image_height": 720
+      },
+      {
+        "kind": "medium",
+        "x": 773.5,
+        "y": 0,
+        "z": 998.5,
+        "clear_height": 6,
+        "horizontal_cardinal_clearance_sum": 48,
+        "look_clearance": 16,
+        "alternate_clearance": 16,
+        "yaw": 270.0,
+        "alternate_yaw": 0.0,
+        "pitch": -8,
+        "image": "D:\\games\\minecraft\\Project TWR\\FrostedHeart\\build\\ice-cave-client\\seed-222-medium.png",
+        "image_width": 1280,
+        "image_height": 720
+      },
+      {
+        "kind": "hall",
+        "x": 742.5,
+        "y": 33,
+        "z": 1028.5,
+        "clear_height": 24,
+        "horizontal_cardinal_clearance_sum": 59,
+        "look_clearance": 16,
+        "alternate_clearance": 16,
+        "yaw": 180.0,
+        "alternate_yaw": 0.0,
+        "pitch": -8,
+        "image": "D:\\games\\minecraft\\Project TWR\\FrostedHeart\\build\\ice-cave-client\\seed-222-hall.png",
+        "image_width": 1280,
+        "image_height": 720
+      },
+      {
+        "kind": "hall_alternate",
+        "x": 742.5,
+        "y": 33,
+        "z": 1028.5,
+        "clear_height": 24,
+        "horizontal_cardinal_clearance_sum": 59,
+        "look_clearance": 16,
+        "alternate_clearance": 16,
+        "yaw": 0.0,
+        "alternate_yaw": 0.0,
+        "pitch": -8,
+        "image": "D:\\games\\minecraft\\Project TWR\\FrostedHeart\\build\\ice-cave-client\\seed-222-hall_alternate.png",
+        "image_width": 1280,
+        "image_height": 720
+      },
+      {
+        "kind": "ice_crystal",
+        "x": 741.5,
+        "y": 32.08,
+        "z": 1023.5,
+        "yaw": -0.0,
+        "pitch": 90.0,
+        "target_xyz": [
+          741.5,
+          30.5,
+          1023.5
+        ],
+        "feature_block_xyz": [
+          741,
+          30,
+          1023
+        ],
+        "camera_body_in_air": true,
+        "sampled_line_to_target_clear": true,
+        "image": "D:\\games\\minecraft\\Project TWR\\FrostedHeart\\build\\ice-cave-client\\seed-222-ice_crystal.png",
+        "image_width": 1280,
+        "image_height": 720
+      }
+    ]
+  },
+  {
+    "seed": 333,
+    "save_directory": "build/ice-cave-client-runtime/saves/ice-cave-v2-normal-333-1792642237984",
+    "preset": "minecraft:normal, unmodified TWR multi_noise biome source and terrain/features",
+    "resource_adaptations": "D:\\games\\minecraft\\Project TWR\\FrostedHeart\\build\\ice-cave-normal-assets-adaptations.json",
+    "runtime": "Spectator + night vision; randomTickSpeed\u003d0 and weather/mobs disabled for fresh-generation visual capture; no terrain edit commands",
+    "biome_search_candidates": [
+      [
+        1024,
+        24,
+        1024
+      ],
+      [
+        896,
+        24,
+        768
+      ],
+      [
+        1024,
+        24,
+        1280
+      ],
+      [
+        896,
+        24,
+        512
+      ],
+      [
+        1024,
+        24,
+        1664
+      ],
+      [
+        1280,
+        -32,
+        384
+      ],
+      [
+        1664,
+        0,
+        384
+      ],
+      [
+        896,
+        24,
+        256
+      ]
+    ],
+    "generated_patch_attempts": 1,
+    "hall_observation_found": true,
+    "interior_chunk_min_x": 62,
+    "interior_chunk_min_z": 62,
+    "interior_chunks": 16,
+    "generated_border_chunks": 20,
+    "landscape": {
+      "min_y_inclusive": -63,
+      "max_y_exclusive": 129,
+      "surface_definition": "Final exposed full-collision-cube block faces, plus stable/thin ice; ores remain in denominator. Air or fluid-free partial non-ice decorations beside a face count as open space. High wall requires three such open blocks below its adjacent space. This is a complete block-face area approximation, not pixel-exact occlusion by icicles/crystal clusters. These partial decorations are not surface blocks. Full-cube glowstone crystal remains a non-ice solid. isSolid/legacySolid is not a full-cube test. Before surfaces retain strict air-only adjacency at CARVERS, covered if original block or face-adjacent block is ice after FEATURES. Surface and lake columns stop at the original WORLD_SURFACE_WG height minus 6; ore volume retains the full reported Y range.",
+      "primary_coverage_metric": "The original_area_covered_fraction fields; final_ice_fraction fields describe the final block-face approximation separately.",
+      "lake_definition": "Ordinary source-water top faces at CARVERS, before added traps; both same-cell freeze and cap-above count. Uncovered/changed positions are retained in denominator. Springs are not ordinary water.",
+      "counts": {
+        "ice_crystal": 1,
+        "glowstone_crystal": 1,
+        "ice_crystal_exposed_to_air": 0,
+        "glowstone_crystal_exposed_to_air": 0,
+        "sampled_blocks": 64443,
+        "final_faces_adjacent_to_partial_decoration": 644,
+        "final_wall_faces": 4428,
+        "final_wall_ice": 3489,
+        "final_high_wall_faces": 2408,
+        "final_high_wall_ice": 1933,
+        "final_floor_faces": 793,
+        "final_floor_ice": 597,
+        "excluded_legacy_partial_wall_faces": 499,
+        "excluded_legacy_partial_high_wall_faces": 335,
+        "final_ceiling_faces": 642,
+        "final_ceiling_ice": 528,
+        "final_wall_ore_faces_in_denominator": 16,
+        "exposed_ore_faces": 24,
+        "excluded_legacy_partial_floor_faces": 1,
+        "excluded_legacy_partial_ceiling_faces": 1,
+        "final_ceiling_ore_faces_in_denominator": 5,
+        "final_floor_ore_faces_in_denominator": 3,
+        "before_wall_faces": 4374,
+        "before_wall_covered_after": 3435,
+        "before_high_wall_faces": 2534,
+        "before_high_wall_covered_after": 2040,
+        "before_floor_faces": 738,
+        "before_floor_covered_after": 543,
+        "before_ceiling_faces": 588,
+        "before_ceiling_covered_after": 474
+      },
+      "legacy_solid_partial_blocks_excluded": {
+        "frostedheart:icicle": 172,
+        "minecraft:pointed_dripstone": 2
+      },
+      "surface_ratios": {
+        "floor_final_ice_fraction": 0.7528373266078184,
+        "floor_original_area_covered_fraction": 0.7357723577235772,
+        "wall_final_ice_fraction": 0.787940379403794,
+        "wall_original_area_covered_fraction": 0.7853223593964335,
+        "high_wall_final_ice_fraction": 0.8027408637873754,
+        "high_wall_original_area_covered_fraction": 0.8050513022888713,
+        "ceiling_final_ice_fraction": 0.822429906542056,
+        "ceiling_original_area_covered_fraction": 0.8061224489795918
+      },
+      "lakes": {
+        "original_water_top_faces": 0,
+        "covered_fraction": null,
+        "thin_fraction_of_original_top": null,
+        "stable_fraction_of_original_top": null
+      },
+      "crystals": {
+        "glowstone_crystal": 1,
+        "glowstone_crystal_exposed_to_air": 0,
+        "ice_crystal_exposed_to_air": 0,
+        "ice_crystal": 1
+      },
+      "crystal_definition": "All final crystal blocks in the same included sample Y/volume as ore totals. Exposed means at least one of six adjacent blocks is air; each crystal counts once. This confirms open-air inlays, not camera line of sight or visibility through transparent ice.",
+      "traps": {
+        "definition": "Final thin-ice lids at original CARVERS solid floor faces adjacent to air above; ordinary natural water tops are excluded. Lids group by horizontal face adjacency at identical Y. Depth counts consecutive air or ordinary water cells immediately below each lid, observing at most 13 to distinguish the allowed 3..12 range. Fully observed groups require in-sample boundaries, observed solid floors and no adjacent unknown-baseline lids. Unmodified solid retaining floors may belong to another 3D biome and are observed within the sampled chunk/Y bounds even when excluded from biome counts; this is recorded separately rather than called a vertical sample cut. Cavity cells still require inclusion. This cannot identify lids raised above the original solid floor. Wet frequency uses only fully observed, valid-depth, consistently dry or source-water-filled groups; an empty denominator is unavailable, not a pass.",
+        "candidate_lid_blocks_on_original_solid_floor": 0,
+        "connected_lid_groups": 0,
+        "fully_observed_groups": 0,
+        "sample_clipped_groups": 0,
+        "fully_observed_valid_depth_groups": 0,
+        "fully_observed_consistent_dry_groups": 0,
+        "fully_observed_consistent_source_water_groups": 0,
+        "mixed_fill_groups_including_clipped": 0,
+        "wet_fraction_of_complete_consistent_valid_groups": null,
+        "groups": []
+      },
+      "ores": {
+        "pyrite": {
+          "exposed_faces": 7,
+          "all_final_blocks": 638,
+          "largest_coplanar_exposed_face_patch_clipped_to_sample": 4
+        },
+        "pyrolusite": {
+          "exposed_faces": 0,
+          "all_final_blocks": 366,
+          "largest_coplanar_exposed_face_patch_clipped_to_sample": 0
+        },
+        "zinc": {
+          "exposed_faces": 17,
+          "all_final_blocks": 552,
+          "largest_coplanar_exposed_face_patch_clipped_to_sample": 4
+        },
+        "lead": {
+          "exposed_faces": 0,
+          "all_final_blocks": 0,
+          "largest_coplanar_exposed_face_patch_clipped_to_sample": 0
+        },
+        "silver": {
+          "exposed_faces": 0,
+          "all_final_blocks": 0,
+          "largest_coplanar_exposed_face_patch_clipped_to_sample": 0
+        }
+      },
+      "suggested_views": [
+        {
+          "kind": "hall",
+          "x": 1010.5,
+          "y": 24,
+          "z": 1001.5,
+          "clear_height": 24,
+          "horizontal_cardinal_clearance_sum": 21,
+          "look_clearance": 10,
+          "alternate_clearance": 5,
+          "yaw": 0.0,
+          "alternate_yaw": 270.0,
+          "pitch": -8
+        },
+        {
+          "kind": "passage",
+          "x": 1000.5,
+          "y": 30,
+          "z": 1015.5,
+          "clear_height": 3,
+          "horizontal_cardinal_clearance_sum": 24,
+          "look_clearance": 16,
+          "alternate_clearance": 8,
+          "yaw": 0.0,
+          "alternate_yaw": 270.0,
+          "pitch": -8
+        },
+        {
+          "kind": "medium",
+          "x": 1004.5,
+          "y": 26,
+          "z": 1008.5,
+          "clear_height": 24,
+          "horizontal_cardinal_clearance_sum": 24,
+          "look_clearance": 16,
+          "alternate_clearance": 8,
+          "yaw": 0.0,
+          "alternate_yaw": 270.0,
+          "pitch": -8
+        }
+      ],
+      "suggested_view_availability": {
+        "hall": true,
+        "passage": true,
+        "medium": true,
+        "lake": false,
+        "ice_crystal": false,
+        "trap": false
+      },
+      "spring_status": "Natural generation and survival warming remain unaccepted; telemetry is not a pass requirement."
+    },
+    "screenshots": [
+      {
+        "kind": "hall",
+        "x": 1010.5,
+        "y": 24,
+        "z": 1001.5,
+        "clear_height": 24,
+        "horizontal_cardinal_clearance_sum": 21,
+        "look_clearance": 10,
+        "alternate_clearance": 5,
+        "yaw": 0.0,
+        "alternate_yaw": 270.0,
+        "pitch": -8,
+        "image": "D:\\games\\minecraft\\Project TWR\\FrostedHeart\\build\\ice-cave-client\\seed-333-hall.png",
+        "image_width": 1280,
+        "image_height": 720
+      },
+      {
+        "kind": "hall_alternate",
+        "x": 1010.5,
+        "y": 24,
+        "z": 1001.5,
+        "clear_height": 24,
+        "horizontal_cardinal_clearance_sum": 21,
+        "look_clearance": 10,
+        "alternate_clearance": 5,
+        "yaw": 270.0,
+        "alternate_yaw": 270.0,
+        "pitch": -8,
+        "image": "D:\\games\\minecraft\\Project TWR\\FrostedHeart\\build\\ice-cave-client\\seed-333-hall_alternate.png",
+        "image_width": 1280,
+        "image_height": 720
+      },
+      {
+        "kind": "passage",
+        "x": 1000.5,
+        "y": 30,
+        "z": 1015.5,
+        "clear_height": 3,
+        "horizontal_cardinal_clearance_sum": 24,
+        "look_clearance": 16,
+        "alternate_clearance": 8,
+        "yaw": 0.0,
+        "alternate_yaw": 270.0,
+        "pitch": -8,
+        "image": "D:\\games\\minecraft\\Project TWR\\FrostedHeart\\build\\ice-cave-client\\seed-333-passage.png",
+        "image_width": 1280,
+        "image_height": 720
+      },
+      {
+        "kind": "medium",
+        "x": 1004.5,
+        "y": 26,
+        "z": 1008.5,
+        "clear_height": 24,
+        "horizontal_cardinal_clearance_sum": 24,
+        "look_clearance": 16,
+        "alternate_clearance": 8,
+        "yaw": 0.0,
+        "alternate_yaw": 270.0,
+        "pitch": -8,
+        "image": "D:\\games\\minecraft\\Project TWR\\FrostedHeart\\build\\ice-cave-client\\seed-333-medium.png",
+        "image_width": 1280,
+        "image_height": 720
+      }
+    ]
+  }
+]

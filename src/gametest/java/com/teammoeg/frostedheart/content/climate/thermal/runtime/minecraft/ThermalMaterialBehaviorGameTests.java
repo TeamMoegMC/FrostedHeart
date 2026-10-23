@@ -423,7 +423,7 @@ public final class ThermalMaterialBehaviorGameTests {
         helper.succeed();
     }
 
-    static MaterialSectionState storedBrick(GameTestHelper helper, BlockPos material, double temperatureC) {
+    public static MaterialSectionState storedBrick(GameTestHelper helper, BlockPos material, double temperatureC) {
         BlockPos start = new BlockPos(material.getX() & ~3, material.getY() & ~3, material.getZ() & ~3);
         try (Simulation simulation = new Simulation(helper, start, 4, 4, 4, 0)) {
             int slot = simulation.slot(material);
@@ -488,7 +488,7 @@ public final class ThermalMaterialBehaviorGameTests {
         } finally { attachment.frostedheart$setDormantThermalState(previous); }
     }
 
-    private static final class Simulation implements AutoCloseable {
+    static final class Simulation implements AutoCloseable {
         final GameTestHelper helper;
         final ServerLevel level;
         final MinecraftThermalProfiles.Snapshot profiles = MinecraftThermalProfiles.prepare();

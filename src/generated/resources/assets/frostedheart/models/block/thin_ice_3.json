@@ -2,6 +2,7 @@
   "parent": "minecraft:block/cube_all",
   "render_type": "minecraft:translucent",
   "textures": {
-    "all": "frostedheart:block/thin_ice_3"
+    "all": "frostedheart:block/thin_ice_3",
+    "particle": "frostedheart:block/thin_ice_3"
   }
 }

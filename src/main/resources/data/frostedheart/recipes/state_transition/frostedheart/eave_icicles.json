@@ -1,0 +1,17 @@
+{
+  "type": "frostedheart:state_transition",
+  "block": {
+    "Name": "frostedheart:eave_icicles"
+  },
+  "all_states": true,
+  "capacity_j_per_k": 1800.0,
+  "enthalpy_offset_j": 506666.6666666667,
+  "heating": {
+    "target": {
+      "Name": "minecraft:air"
+    },
+    "temperature_c": 2.0,
+    "latent_heat_j": 126666.6666666667,
+    "effect": "melting"
+  }
+}

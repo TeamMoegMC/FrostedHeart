@@ -21,6 +21,7 @@
 package com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.input;
 
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
+import com.teammoeg.frostedheart.content.climate.block.IcicleBlock;
 import com.teammoeg.frostedheart.content.climate.data.StateTransitionData;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialBoundaryRegistry;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialSample;
@@ -52,7 +53,7 @@ import java.util.ArrayDeque;
 
 /** Main-thread application and acknowledgement of worker phase requests. */
 public final class MinecraftPhaseController {
-    // Both callers run on the main thread and finish reading before modifying the world.
+    // Phase readers run on the main thread and finish reading before modifying the world.
     private static final MaterialSample MATERIAL_SAMPLE = new MaterialSample();
 
     public enum PhaseAttempt {
@@ -94,6 +95,32 @@ public final class MinecraftPhaseController {
 
     private static final ThreadLocal<Mutation> APPLYING = new ThreadLocal<>();
 
+    /**
+     * Temperature used by material phase gameplay. A live or dormant body wins over
+     * its environment. Only a genuinely missing body uses the random-phase fallback;
+     * an unpublished owner or a mismatched checkpoint waits for the next observation.
+     */
+    public static double temperature(ServerLevel level, BlockPos position) {
+        if (MinecraftThermalInput.sampleMaterial(level, position, MATERIAL_SAMPLE))
+            return MATERIAL_SAMPLE.temperatureC();
+        var chunk = level.getChunkSource().getChunkNow(position.getX() >> 4, position.getZ() >> 4);
+        if (chunk == null || level.isOutsideBuildHeight(position)) return Double.NaN;
+        var section = chunk.getSection(chunk.getSectionIndex(position.getY()));
+        int block = (position.getX() & 15) | (position.getZ() & 15) << 4 | (position.getY() & 15) << 8;
+        var owner = ((MinecraftThermalSectionAttachment) (Object) section).frostedheart$getThermalInputOwner();
+        if (owner != null && owner.ownsMaterialPosition(block)) return Double.NaN;
+        var stored = ((MinecraftThermalChunkAttachment) (Object) chunk).frostedheart$getDormantThermalState();
+        if (stored != null && stored.readMaterial(position.getY() >> 4, block,
+                Block.BLOCK_STATE_REGISTRY.getId(level.getBlockState(position)), MATERIAL_SAMPLE)
+                != DormantChunkThermalState.MaterialRead.MISSING) return Double.NaN;
+        return environmentTemperature(level, position);
+    }
+
+    private static double environmentTemperature(ServerLevel level, BlockPos position) {
+        return MinecraftThermalInput.gameplayPassiveEnvironment(
+                level, position, WorldTemperature.naturalBlock(level, position));
+    }
+
     /** Main-thread random updates share the same ownership and phase rules as worker commits. */
     public static PhaseAttempt tryAtRandomTick(
             ServerLevel level, LevelChunk chunk, BlockPos position, BlockState state) {
@@ -131,9 +158,7 @@ public final class MinecraftPhaseController {
                         : stored.readMaterial(
                                 sectionY, block, Block.BLOCK_STATE_REGISTRY.getId(state), sample);
         if (read == DormantChunkThermalState.MaterialRead.MISSING) {
-            double natural = WorldTemperature.naturalBlock(level, position);
-            double temperature =
-                    MinecraftThermalInput.gameplayPassiveEnvironment(level, position, natural);
+            double temperature = environmentTemperature(level, position);
             var edge =
                     law.heating() != null && temperature >= law.heating().transitionTemperatureC()
                             ? law.heating()
@@ -146,12 +171,14 @@ public final class MinecraftPhaseController {
             if (!canTransition(level, position, state, edge, definition))
                 return PhaseAttempt.GAMEPLAY;
             boolean changed =
-                    setMaterialBlock(
-                            level,
-                            position,
-                            state,
-                            definition.target(),
-                            MaterialChanges.GAMEPLAY_TRANSITION);
+                    IcicleBlock.isIcicle(state) && edge.heating()
+                            ? meltIcicle(level, position)
+                            : setMaterialBlock(
+                                    level,
+                                    position,
+                                    state,
+                                    definition.target(),
+                                    MaterialChanges.GAMEPLAY_TRANSITION);
             if (changed) playEffect(level, position, definition.effect());
             return changed ? PhaseAttempt.CHANGED : PhaseAttempt.GAMEPLAY;
         }
@@ -181,6 +208,15 @@ public final class MinecraftPhaseController {
         }
         if (before.getBlock() != after.getBlock()) return MaterialChanges.REPLACE;
         return before.getFluidState() != after.getFluidState() ? MaterialChanges.MASS_CHANGE : 0;
+    }
+
+    /** Only the world result differs; energy migration and persistence stay generic. */
+    private static boolean meltIcicle(ServerLevel level, BlockPos position) {
+        if (!IcicleBlock.meltTip(level, position)) return false;
+        BlockState remaining = level.getBlockState(position);
+        return !IcicleBlock.isIcicle(remaining)
+                || setMaterialBlock(level, position, remaining, remaining.cycle(IcicleBlock.MELT_CYCLE),
+                        MaterialChanges.GAMEPLAY_TRANSITION);
     }
 
     private static boolean setMaterialBlock(
@@ -239,6 +275,7 @@ public final class MinecraftPhaseController {
         if (!canTransition(
                 level, position, state, edge, profiles.transitionData(profileId, edge.heating())))
             return false;
+        if (IcicleBlock.isIcicle(state) && edge.heating()) return meltIcicle(level, position);
         BlockState target =
                 net.minecraft.world.level.block.Block.BLOCK_STATE_REGISTRY.byId(
                         edge.targetStateId());
@@ -349,6 +386,8 @@ public final class MinecraftPhaseController {
                 state,
                 transition,
                 profiles.transitionData(profile.id(), transition.heating()))) return Outcome.RETRY;
+        if (IcicleBlock.isIcicle(state) && transition.heating())
+            return meltIcicle(level, position) ? Outcome.APPLIED : Outcome.RETRY;
         BlockState target =
                 net.minecraft.world.level.block.Block.BLOCK_STATE_REGISTRY.byId(
                         transition.targetStateId());

@@ -9,7 +9,10 @@
   "heating": {
     "effect": "evaporation",
     "target": {
-      "Name": "frostedheart:thin_ice"
+      "Name": "frostedheart:thin_ice",
+      "Properties": {
+        "crack": "0"
+      }
     },
     "temperature_c": 9.0,
     "world_conditions": {
