@@ -65,7 +65,7 @@ public class TeamCommand {
         			if(type==null)
         				ct.getSource().sendFailure(Components.literal("Invalid data type"));
         			else {
-        				SpecialData data=CTeamDataManager.get(EntityArgument.getPlayer(ct, "player")).getData(type);
+                                SpecialData data=CTeamDataManager.get(EntityArgument.getPlayer(ct, "player")).getOptional(type).orElse(null);
         				if(data==null) {
         					ct.getSource().sendFailure(Components.literal("Team does not contains specific data"));
         				}else {
@@ -91,7 +91,7 @@ public class TeamCommand {
         			if(type==null)
         				ct.getSource().sendFailure(Components.literal("Invalid data type"));
         			else {
-        				SpecialData data=CTeamDataManager.get(EntityArgument.getPlayer(ct, "player")).getData(type);
+                                SpecialData data=CTeamDataManager.get(EntityArgument.getPlayer(ct, "player")).getOptional(type).orElse(null);
         				if(data==null) {
         					ct.getSource().sendFailure(Components.literal("Team does not contains specific data"));
         				}else {
@@ -117,12 +117,12 @@ public class TeamCommand {
         			if(type==null)
         				ct.getSource().sendFailure(Components.literal("Invalid data type"));
         			else {
-        				SpecialData data=CTeamDataManager.get(EntityArgument.getPlayer(ct, "player")).getData(type);
+                                SpecialData data=CTeamDataManager.get(EntityArgument.getPlayer(ct, "player")).getOptional(type).orElse(null);
         				if(data==null) {
         					ct.getSource().sendFailure(Components.literal("Team does not contains specific data"));
         				}else {
         					try {
-								type.loadData(NbtOps.INSTANCE, NbtTagArgument.getNbtTag(ct, "data"));
+								CTeamDataManager.get(EntityArgument.getPlayer(ct, "player")).setData(type, type.loadData(NbtOps.INSTANCE, NbtTagArgument.getNbtTag(ct, "data")));
 									ct.getSource().sendSuccess(()->Components.literal("Modified."),false);
 							} catch(CommandSyntaxException cse) {
 								throw cse;
@@ -139,15 +139,15 @@ public class TeamCommand {
         			if(type==null)
         				ct.getSource().sendFailure(Components.literal("Invalid data type"));
         			else {
-        				SpecialData data=CTeamDataManager.get(EntityArgument.getPlayer(ct, "player")).getData(type);
+                                SpecialData data=CTeamDataManager.get(EntityArgument.getPlayer(ct, "player")).getOptional(type).orElse(null);
         				if(data==null) {
         					ct.getSource().sendFailure(Components.literal("Team does not contains specific data"));
         				}else {
         					try {
 								
-								Tag datax=type.saveData(NbtOps.INSTANCE, data);
+								Tag datax=type.saveData(NbtOps.INSTANCE, data).copy();
 								int value=NbtPathArgument.getPath(ct, "path").set(datax, NbtTagArgument.getNbtTag(ct, "data"));
-								type.loadData(NbtOps.INSTANCE, datax);
+								if (value > 0) CTeamDataManager.get(EntityArgument.getPlayer(ct, "player")).setData(type, type.loadData(NbtOps.INSTANCE, datax));
 								if(value>0) {
 									ct.getSource().sendSuccess(()->Components.literal("Modified "+value+"."),false);
 								}else {

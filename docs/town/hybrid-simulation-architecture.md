@@ -47,35 +47,26 @@
 ```
 frostedheart/content/town/citizen/
 ├── sim/            服务端模拟：CitizenSim, CitizenContainer(统一容器接口),
-│                   TownSimData(镇容器,存全局文件), UnmanagedCitizenData(未托管容器),
+│                   TownSimData(镇容器,按玩家/AI所有者保存), UnmanagedCitizenData(未托管容器),
 │                   CitizenSimScheduler(per-level 调度器), BehaviorSystem
 ├── AITownData      独立 AI 镇（无队伍，居民+模拟自包含，implements ITownWithResidents）
-├── AITownManager   AI 镇注册表 + 全局模拟存储（overworld SavedData "fh_ai_towns"）
+├── AITownManager   当前会话的 AI 镇与玩家模拟注册表；文件由 TownPersistenceAdapter 管理
 ├── nav/            寻路：TownRoadGraph, FlowField, NavJobExecutor
 ├── sync/           同步：SyncEngine 与各 S2C/C2S 包
 ├── client/         客户端：ClientCitizenCache, ClientCitizenRenderer, FakeCitizenEntity
 └── data/           定义：CitizenType(Codec), JobDef 等 datapack 数据
 ```
 
-> **挂靠语义（2026-08-12 重构）**：模拟完全挂靠 town、与队伍零关联——`TownSimData`
-> 是共用模拟类，玩家镇与 AI 镇各持一份实例，统一存**全局单文件**
-> （`AITownManager`，overworld SavedData "fh_ai_towns"：AI 镇列表 + 玩家镇模拟表
-> key=队伍 holder id），不挂 TeamDataHolder（CITIZEN_SIM_DATA SpecialData 已删除）。
-> 居民增删直接驱动模拟出生/移除（事件驱动，**门面事件单订阅**：
-> `ObservableTownMap` 是 DataSyncCache 增量更新的专用组件（三个单回调钩子，职责
-> 不扩张）；玩家镇居民生命周期事件由 `TeamTownData` 门面承载——单引用监听器
-> （`ITownResidentListener`，模拟是唯一订阅者，adopt 时 `setResidentListener`），
-> fire 点全在 `TeamTown`：`addResident` 成功路径/`debugAddResident` 在房屋分配
-> 完成后 fire 一次 `onResidentAdded`（锚点必已就绪、无双触发）、`removeResident`
-> 集合移除后 fire `onResidentRemoved`、tickMorning 末尾 `fireMorningDone`），
-> 每日结算刷新锚点，调度器首次接管时一次性恢复（rebindAll）。
-> **AI 镇是独立 Town**（`AITownData` implements ITownWithResidents）：不伪造
-> AbstractTeam、不建队伍 holder、不参与每日结算（调试镇稳定不演化）；居民增删
-> 直调 sim 事件回调 + 结构变更 dirty 标记。落盘遵循标准 SavedData 语义——
-> 位置、朝向、行为状态、目标、锚点等权威字段变化也只设置 dirty 内存标志
-> （不立即写盘），由 Minecraft 内建 6000t 自动保存/停服统一写盘，并在正常
-> 停服前做一次兜底标记。不再有 1Hz 全局对账同步器；
-> `/fhcitizen clear` 只清未托管命令居民。
+> **挂靠与持久化（2026-10-19）**：玩家经营事实由 TeamTownData 持有，TownSimData
+> 是玩家镇和 AI 镇共用的模拟容器，通过居民 UUID 关联。玩家模拟现在位于
+> chorda_data/<holderId>.nbt 的 townSim 字段，与该队伍的经营数据一起捕获；
+> AI 独立保存，AITownManager 不再注册全局大文件 SavedData 写入者。
+> 居民增删仍在住房/岗位关系自洽后通知 ITownResidentListener；日结算先提交
+> 历史、townDay 和自动完成进度，再发布模拟和设备通知。ObservableTownMap
+> 与对象变更监听同时支持独立的网络变化集合和持久化版本。
+> AI 镇不创建队伍 holder、不执行每日经济。未托管居民和分配器继续由每维度
+> fh_citizen_sim SavedData 保存；/fhcitizen clear 仍只清未托管命令居民。
+> 文件格式、迁移、关闭和调度的当前合同见 [保存与运行边界](persistence-and-runtime.md)。
 
 ---
 
@@ -357,7 +348,7 @@ public final class ClientCitizen {
 
 ## 10. 持久化
 
-- 镇容器 `TownSimData` 与队伍零关联，统一存**全局单文件**（`AITownManager`，overworld SavedData "fh_ai_towns"：AI 镇列表 + 玩家镇模拟表 key=队伍 holder id）；所有落盘字段变化（位置/朝向/行为状态/目标/锚点/出生/移除）经 dirty 回调 `setDirty()`，只设置内存标志，不产生逐 tick 磁盘 I/O；Minecraft 内建 6000t 自动保存/停服负责真正写盘。除 `CitizenSim` 外还保存最近所属维度，确保跨重启换维度时重建 per-level 会话 id；tradeData/nameCache 等运行期状态不落盘。
+- TownSimData 保留独立模拟职责，玩家模拟由所属 TEAM 记录保存，AI 模拟由独立 AI 记录保存。实际变化推进所属记录版本，保存时捕获冻结数组；后台压缩和替换文件。最近所属维度同时持久化，tradeData/nameCache 等运行期状态不落盘。详细格式、旧全局文件迁移及停服边界见 [persistence-and-runtime.md](persistence-and-runtime.md)。
 - 未托管容器 `UnmanagedCitizenData extends SavedData`（per-level，沿用旧文件名 `fh_citizen_sim`），采用同样的变更标脏语义；同时承载本维度稳定 id 分配器（nextId 持久化、永不复用）。首次接管会以本维度全部容器的最大现存 id 校准分配器；若坏档或不完整写盘已造成跨容器 id 冲突，只重分配冲突的会话 id，位置/状态/居民 UUID 保持不变。
 - 序列化按 SoA 数组直写 NBT `int[]/byte[]` 数组字段，遵循项目 Codec-first 约定可用 `Codec.INT_STREAM`/`BYTE_BUFFER`；1 万居民落盘 < 1MB，毫秒级。
 - 冷数据档案另存一个 compound。版本号字段预留迁移空间（参考仓库根 `NBT_MIGRATION_GUIDE.md`）。

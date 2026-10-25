@@ -321,6 +321,9 @@ public class P2PTerminalBlockEntity extends CBlockEntity
                 TeamTownData.resolveTownDimension(holder))) {
             return Optional.empty();
         }
+        if (TeamTownData.executionLevel(holder) != serverLevel) {
+            return Optional.empty();
+        }
         return Optional.ofNullable(townProvider.getTown());
     }
 

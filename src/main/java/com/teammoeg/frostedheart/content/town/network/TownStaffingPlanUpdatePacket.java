@@ -32,7 +32,7 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 
 /** Lightweight authoritative replacement of the player-visible staffing plan. */
-public final class TownStaffingPlanUpdatePacket implements CMessage {
+public final class TownStaffingPlanUpdatePacket implements TownViewPacket {
     private static final int MAX_ENTRIES = 1_024;
     private final TownStaffingPlan plan;
 
@@ -68,9 +68,10 @@ public final class TownStaffingPlanUpdatePacket implements CMessage {
 
     @Override
     public void handle(Supplier<NetworkEvent.Context> context) {
-        context.get().enqueueWork(() -> CClientTeamDataManager.INSTANCE.getInstance()
-                .getOptional(FHSpecialDataTypes.TOWN_DATA)
-                .ifPresent(town -> town.applyStaffingPlan(plan)));
+        context.get().enqueueWork(() -> {
+            if (!com.teammoeg.frostedheart.content.town.client.TownClientUpdates.canApply(context.get().getNetworkManager())) return;
+            com.teammoeg.frostedheart.content.town.client.TownClientUpdates.apply(town -> town.applyStaffingPlan(plan));
+        });
         context.get().setPacketHandled(true);
     }
 

@@ -33,7 +33,7 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 
 /** Idempotent history merge; every completed /town tick has a distinct town day. */
-public class TownHistoryUpdatePacket implements CMessage {
+public class TownHistoryUpdatePacket implements TownViewPacket {
     private final TownHistoryEntry entry;
     private final long townDay;
 
@@ -68,12 +68,13 @@ public class TownHistoryUpdatePacket implements CMessage {
 
     @Override
     public void handle(Supplier<NetworkEvent.Context> context) {
-        context.get().enqueueWork(() -> CClientTeamDataManager.INSTANCE.getInstance()
-                .getOptional(FHSpecialDataTypes.TOWN_DATA)
-                .ifPresent(town -> {
+        context.get().enqueueWork(() -> {
+            if (!com.teammoeg.frostedheart.content.town.client.TownClientUpdates.canApply(context.get().getNetworkManager())) return;
+            com.teammoeg.frostedheart.content.town.client.TownClientUpdates.apply(town -> {
                     if (townDay >= 0L) town.applyHistoryUpdate(entry, townDay);
                     else town.applyHistoryUpdate(entry);
-                }));
+                });
+        });
         context.get().setPacketHandled(true);
     }
 }

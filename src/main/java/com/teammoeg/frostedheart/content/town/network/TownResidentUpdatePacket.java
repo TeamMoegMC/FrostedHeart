@@ -40,20 +40,21 @@ import net.minecraftforge.network.NetworkEvent;
  * 服务端 → 客户端：增量同步居民数据。
  * 包含需要更新（新增/修改）的居民和需要移除的居民UUID。
  */
-public class TownResidentUpdatePacket implements CMessage {
-    private final Map<UUID, Resident> changed;
+public class TownResidentUpdatePacket implements TownViewPacket {
+    private final Map<UUID, Object> changed;
     private final Set<UUID> removed;
 
     public TownResidentUpdatePacket(Map<UUID, Resident> changed, Set<UUID> removed) {
-        this.changed = changed;
-        this.removed = removed;
+        this.changed = new java.util.LinkedHashMap<>();
+        changed.forEach((key, value) -> this.changed.put(key, CodecUtil.encodeOrThrow(Resident.CODEC.encodeStart(DataOps.COMPRESSED, value))));
+        this.removed = Set.copyOf(removed);
     }
 
     public TownResidentUpdatePacket(FriendlyByteBuf buffer) {
         // Read changed residents: key via native UUID, value via Resident.CODEC
         this.changed = buffer.readMap(
             FriendlyByteBuf::readUUID,
-            buf -> { Object o = ObjectWriter.readObject(buf); return CodecUtil.decodeOrThrow(Resident.CODEC.decode(DataOps.COMPRESSED, o)); });
+            ObjectWriter::readObject);
         // Read removed UUIDs
         int removedSize = buffer.readVarInt();
         this.removed = new HashSet<>(removedSize);
@@ -67,7 +68,7 @@ public class TownResidentUpdatePacket implements CMessage {
         // Write changed residents: key via native UUID, value via Resident.CODEC
         buffer.writeMap(changed,
             FriendlyByteBuf::writeUUID,
-            (buf, resident) -> CodecUtil.writeCodec(buf, Resident.CODEC, resident));
+            ObjectWriter::writeObject);
         // Write removed UUIDs
         buffer.writeVarInt(removed.size());
         for (UUID uuid : removed) {
@@ -78,9 +79,12 @@ public class TownResidentUpdatePacket implements CMessage {
     @Override
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
-            CClientTeamDataManager.INSTANCE.getInstance()
-                .getOptional(FHSpecialDataTypes.TOWN_DATA)
-                .ifPresent(townData -> townData.applyResidentUpdate(changed, removed));
+            if (!com.teammoeg.frostedheart.content.town.client.TownClientUpdates.canApply(context.get().getNetworkManager())) return;
+            com.teammoeg.frostedheart.content.town.client.TownClientUpdates.apply(townData -> {
+                    Map<UUID, Resident> decoded = new java.util.LinkedHashMap<>();
+                    changed.forEach((key, value) -> decoded.put(key, CodecUtil.decodeOrThrow(Resident.CODEC.decode(DataOps.COMPRESSED, value))));
+                    townData.applyResidentUpdate(decoded, removed);
+                });
         });
         context.get().setPacketHandled(true);
     }

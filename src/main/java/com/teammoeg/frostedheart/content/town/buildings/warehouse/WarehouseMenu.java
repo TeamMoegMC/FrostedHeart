@@ -66,7 +66,7 @@ public class WarehouseMenu extends CBlockEntityMenu<WarehouseBlockEntity> {
 		if (this.player instanceof ServerPlayer serverPlayer) {
 			this.serverSource = () -> {
 				if (!canAccessWarehouse()) return Collections.emptyMap();
-				TeamTown town = TeamTown.from(serverPlayer);
+				TeamTown town = TeamTown.find(serverPlayer).orElse(null);
 				if (town == null) return Collections.emptyMap();
 				return town.getResourceHolder().getVirtualItemMap();
 			};
@@ -235,7 +235,7 @@ public class WarehouseMenu extends CBlockEntityMenu<WarehouseBlockEntity> {
 			originalStack = slotStack.copy();
 
 			if (!player.level().isClientSide) {
-				TeamTown town = TeamTown.from(player);
+				TeamTown town = TeamTown.find(player).orElse(null);
 				if (town == null) return ItemStack.EMPTY;
 				IActionExecutorHandler executor = town.getActionExecutorHandler();
 				//构建存入 Action

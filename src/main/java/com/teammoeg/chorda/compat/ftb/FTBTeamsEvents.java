@@ -136,7 +136,13 @@ public class FTBTeamsEvents {
     public static void syncDataWhenTeamTransfer(PlayerTransferredTeamOwnershipEvent event) {
     	 if (FTBTeamsAPI.api().isManagerLoaded()&&TeamsAPI.getAPI() instanceof FTBTeamsAPIProvider) {
 
-             CTeamDataManager.INSTANCE.get(event.getTeam().getId()).setOwnerName(event.getFrom().getGameProfile().getName());
+             AbstractTeam team = new FTBTeam(event.getTeam());
+             var holder = CTeamDataManager.INSTANCE.get(team);
+             var server = net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer();
+             if (server != null && server.getProfileCache() != null) {
+                 server.getProfileCache().get(team.getOwner())
+                         .ifPresent(profile -> holder.setOwnerName(profile.getName()));
+             }
          }
     }
    /* public static void syncDataWhenOwnerLeft(PlayerLeftPartyTeamEvent event) {

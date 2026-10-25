@@ -82,7 +82,7 @@ public record SinglePlayerTeam(UUID player) implements AbstractTeam {
 		ServerPlayer s =getPlayer();
 		if(s!=null)
 			return s.getName().getString();
-		return CDistHelper.getServer().getProfileCache().get(player).get().getName();
+		return CDistHelper.getServer().getProfileCache().get(player).map(profile -> profile.getName()).orElse(player.toString());
 	}
 
 	/** {@inheritDoc} */

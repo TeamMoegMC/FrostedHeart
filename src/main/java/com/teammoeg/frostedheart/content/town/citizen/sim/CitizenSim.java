@@ -425,6 +425,15 @@ public final class CitizenSim {
 	 * @return 恢复后的实例 / the restored instance
 	 */
 	public static CitizenSim load(CompoundTag tag) {
+        CitizenSim sim = new CitizenSim(16);
+        sim.loadFrom(tag);
+        return sim;
+    }
+
+    /** Restore directly into this final container, before it is adopted. */
+    public void loadFrom(CompoundTag tag) {
+        clear();
+        CitizenSim sim = this;
 		int[] ids = tag.getIntArray("id");
 		int[] apx = tag.getIntArray("px");
 		int[] apy = tag.getIntArray("py");
@@ -448,7 +457,7 @@ public final class CitizenSim {
 		int n = Math.max(0, tag.getInt("size"));
 		n = Math.min(n, Math.min(Math.min(ids.length, apx.length),
 				Math.min(apy.length, apz.length)));
-		CitizenSim sim = new CitizenSim(n);
+		while (sim.id.length < n) sim.grow();
 		Set<UUID> managedIdentities = new HashSet<>();
 		for (int k = 0; k < n; k++) {
 			if (ids[k] <= 0 || ids[k] == Integer.MAX_VALUE)
@@ -498,6 +507,6 @@ public final class CitizenSim {
 			if (k < atz.length)
 				sim.tz[i] = atz[k];
 		}
-		return sim;
+
 	}
 }

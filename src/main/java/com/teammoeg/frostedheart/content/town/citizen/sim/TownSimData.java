@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.content.town.citizen.sim;
 
 import java.util.Collection;
+import java.util.Map;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -44,6 +45,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.BedBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BedPart;
+import java.util.HashMap;
 
 /**
  * 城镇居民模拟数据（与队伍零关联的纯模拟数据）：玩家镇与 AI 镇共用同一类，
@@ -107,10 +109,29 @@ public class TownSimData implements CitizenContainer, ITownResidentListener {
 	private transient TeamTown activeTown;
 	/** 全量对账期间延迟床位重排，避免逐居民重复排序。 */
 	private transient boolean reconcilingResidents;
+    private transient Map<UUID, Integer> reconcilingIds;
+
+    public void detach() {
+        if (activeSched != null) activeSched.detachContainer(this);
+        if (activeTown != null) activeTown.getTownData().ifPresent(data -> data.setResidentListener(null));
+        activeSched = null;
+        activeLevel = null;
+        activeTown = null;
+        adopted = false;
+    }
+
+    private int findResidentSlot(long hi, long lo) {
+        if (reconcilingIds == null) return sim.findByUuid(hi, lo);
+        Integer id = reconcilingIds.get(new UUID(hi, lo));
+        return id == null ? -1 : sim.indexOf(id);
+    }
 	/** 全量对账期间新增、待统一出口定位的居民 id。 */
 	private transient IntArrayList reconcilingNewResidents;
 	/** 持久化 dirty 回调（transient，玩家镇与 AI 镇均由存储方注入 AITownManager::markDirty）/ Persistence dirty callback (transient, injected as AITownManager::markDirty for both player and AI towns) */
 	private transient Runnable markDirtyCallback;
+    private transient long persistenceRevision = 1;
+    private transient long encodedRevision;
+    private transient CompoundTag frozenPersistence;
 
 	public TownSimData() {
 		super();
@@ -132,6 +153,7 @@ public class TownSimData implements CitizenContainer, ITownResidentListener {
 
 	@Override
 	public void markDirty() {
+        persistenceRevision++;
 		if (markDirtyCallback != null)
 			markDirtyCallback.run();
 	}
@@ -146,7 +168,16 @@ public class TownSimData implements CitizenContainer, ITownResidentListener {
 	 * remain runtime-only. Public for the store (AITownManager's global save)
 	 * and the CODEC.
 	 */
-	public static CompoundTag toNbt(TownSimData data) {
+	/** Persistence-only frozen tree; callers may attach it but must never edit it. */
+    public CompoundTag capturePersistencePart() {
+        if (frozenPersistence == null || encodedRevision != persistenceRevision) {
+            frozenPersistence = toNbt(this);
+            encodedRevision = persistenceRevision;
+        }
+        return frozenPersistence;
+    }
+
+    public static CompoundTag toNbt(TownSimData data) {
 		CompoundTag tag = new CompoundTag();
 		tag.put("sim", data.sim.save(new CompoundTag()));
 		if (data.lastActiveDimension != null)
@@ -162,6 +193,9 @@ public class TownSimData implements CitizenContainer, ITownResidentListener {
 	 * @param tag 源标签 / source tag
 	 */
 	public void loadFromNbt(CompoundTag tag) {
+        sim.clear();
+        lastActiveDimension = null;
+        markDirty();
 		if (tag.contains("dimension")) {
 			String encodedDimension = tag.getString("dimension");
 			if (!encodedDimension.isBlank()) {
@@ -177,24 +211,11 @@ public class TownSimData implements CitizenContainer, ITownResidentListener {
 		CompoundTag simTag = nested.isEmpty() ? tag : nested;
 		if (simTag.isEmpty())
 			return;
-		CitizenSim loaded = CitizenSim.load(simTag);
-		for (int k = 0; k < loaded.size(); k++) {
-			int i = sim.add(loaded.id[k], loaded.px[k], loaded.py[k], loaded.pz[k]);
-			sim.dir[i] = loaded.dir[k];
-            sim.sdir[i] = loaded.sdir[k];
-			sim.state[i] = loaded.state[k];
-			sim.homeX[i] = loaded.homeX[k];
-			sim.homeZ[i] = loaded.homeZ[k];
-			sim.wx[i] = loaded.wx[k];
-			sim.wz[i] = loaded.wz[k];
-			sim.uuidHi[i] = loaded.uuidHi[k];
-			sim.uuidLo[i] = loaded.uuidLo[k];
-			sim.tx[i] = loaded.tx[k];
-			sim.tz[i] = loaded.tz[k];
-		}
-	}
+		sim.loadFrom(simTag);
+        markDirty();
+    }
 
-	/* ===================== 事件入口（TeamTownData 门面单订阅回调） ===================== */
+    /* ===================== 事件入口（TeamTownData 门面单订阅回调） ===================== */
 
 	/**
 	 * 居民加入城镇 → 立即出生模拟条目（事件驱动）。
@@ -223,7 +244,7 @@ public class TownSimData implements CitizenContainer, ITownResidentListener {
 		BlockPos anchor = house != null ? house : work;
 		if (anchor == null)
 			return; // 无家无业：不建条目（与每日无家移除一致）
-		int idx = sim.findByUuid(hi, lo);
+		int idx = findResidentSlot(hi, lo);
 		if (idx >= 0) {
 			// 幂等：重复事件只更新锚点/工作/名字（房屋与工作每日由城镇重分配）
 			long previousHome = sim.homePos[idx];
@@ -267,6 +288,7 @@ public class TownSimData implements CitizenContainer, ITownResidentListener {
 		sim.wx[i] = work != null ? work.getX() : -1;
 		sim.wz[i] = work != null ? work.getZ() : -1;
 		resident.setSimId(id);
+        if (reconcilingIds != null) reconcilingIds.put(u, id);
 		nameCache.put(id, resident.getFirstName() + " " + resident.getLastName());
 		activeSched.register(this, id);
 		boolean night = BehaviorSystem.isNight(activeLevel);
@@ -304,7 +326,7 @@ public class TownSimData implements CitizenContainer, ITownResidentListener {
 		if (activeSched == null || activeLevel == null)
 			return;
 		UUID u = resident.getUUID();
-		int idx = sim.findByUuid(u.getMostSignificantBits(), u.getLeastSignificantBits());
+		int idx = findResidentSlot(u.getMostSignificantBits(), u.getLeastSignificantBits());
 		if (idx < 0)
 			return;
 		long previousHome = sim.homePos[idx];
@@ -510,6 +532,10 @@ public class TownSimData implements CitizenContainer, ITownResidentListener {
 	private void syncTownResidents(ServerLevel level, Collection<Resident> residents) {
 		IntArrayList pendingPlacements = new IntArrayList();
 		reconcilingResidents = true;
+        reconcilingIds = new HashMap<>();
+        for (int index = 0; index < sim.size(); index++) {
+            reconcilingIds.put(new UUID(sim.uuidHi[index], sim.uuidLo[index]), sim.id[index]);
+        }
 		reconcilingNewResidents = pendingPlacements;
 		try {
 			Set<UUID> liveIds = new HashSet<>();
@@ -521,7 +547,7 @@ public class TownSimData implements CitizenContainer, ITownResidentListener {
 				BlockPos house = r.getHousePos();
 				BlockPos work = r.getWorkPos();
 				BlockPos anchor = house != null ? house : work;
-				int idx = sim.findByUuid(hi, lo);
+				int idx = findResidentSlot(hi, lo);
 				if (anchor == null) {
 					// 无家无业：城镇每日也让它掉血至死，模拟里不保留幽灵
 					if (idx >= 0) {
@@ -569,6 +595,7 @@ public class TownSimData implements CitizenContainer, ITownResidentListener {
 				activeSched.remove(this, stale.getInt(k));
 		} finally {
 			reconcilingResidents = false;
+            reconcilingIds = null;
 			reconcilingNewResidents = null;
 		}
 		rebuildAllBedAssignments();

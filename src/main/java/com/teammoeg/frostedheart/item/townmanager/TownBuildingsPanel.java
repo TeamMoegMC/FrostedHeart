@@ -159,6 +159,27 @@ public class TownBuildingsPanel extends UIElement {
     }
 
     private List<Line> detailLines(@Nullable AbstractTownBuilding building) {
+        List<Line> lines = new ArrayList<>(buildingDetails(building));
+        TeamTown town = townSource.get();
+        if (town != null) {
+            town.getTownData().ifPresent(data -> {
+                var issues = data.getBuildingStore().issues();
+                if (!issues.isEmpty()) {
+                    lines.add(new Line(Component.empty(), 0xFFFFFFFF));
+                    lines.add(new Line(Component.translatable("gui.frostedheart.town_manager.building_recovery", issues.size()), 0xFFFFAA00));
+                    for (var issue : issues) {
+                        Component position = issue.pos() == null
+                                ? Component.translatable("gui.frostedheart.town_manager.recovery_position_unknown")
+                                : Component.literal(issue.pos().toShortString());
+                        lines.add(new Line(position, 0xFFAAAAAA));
+                    }
+                }
+            });
+        }
+        return lines;
+    }
+
+    private List<Line> buildingDetails(@Nullable AbstractTownBuilding building) {
         if (building == null) {
             return List.of(new Line(
                     Component.translatable("gui.frostedheart.town_manager.no_buildings"), 0xFFAAAAAA));

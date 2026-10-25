@@ -96,7 +96,7 @@ public class FHServerEvents {
 	 */
 	@SubscribeEvent
 	public static void serverStopped(final ServerStoppedEvent event) {
-		CTeamDataManager.INSTANCE = null;
+		// Chorda closes persistence and clears the manager after draining frozen work.
 			// TemperatureThreadingPool has no active lifecycle hook.
 	}
 }

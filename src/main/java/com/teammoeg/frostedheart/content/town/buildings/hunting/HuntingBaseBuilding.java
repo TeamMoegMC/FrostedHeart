@@ -30,6 +30,8 @@ import java.util.Objects;
 import java.util.UUID;
 
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
+import static com.teammoeg.frostedheart.content.town.building.BuildingRecordsCodec.strict;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.town.ITownWithBuildings;
@@ -58,6 +60,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.storage.loot.LootParams;
 import net.minecraft.world.level.storage.loot.LootTable;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
+import java.util.HashSet;
 
 public class HuntingBaseBuilding extends AbstractTownResidentWorkBuilding implements ITownTemperatureBuilding {
     public record HuntingDailyReport(
@@ -70,11 +73,11 @@ public class HuntingBaseBuilding extends AbstractTownResidentWorkBuilding implem
         public static final HuntingDailyReport EMPTY =
                 new HuntingDailyReport(false, 0, 0, List.of(), TownProductionStopReason.NONE);
         public static final Codec<HuntingDailyReport> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-                Codec.BOOL.optionalFieldOf("hasData", false).forGetter(HuntingDailyReport::hasData),
-                Codec.INT.optionalFieldOf("plannedRolls", 0).forGetter(HuntingDailyReport::plannedRolls),
-                Codec.INT.optionalFieldOf("executedRolls", 0).forGetter(HuntingDailyReport::executedRolls),
-                TownProductionReportItem.CODEC.listOf().optionalFieldOf("items", List.of()).forGetter(HuntingDailyReport::items),
-                TownProductionStopReason.CODEC.optionalFieldOf("stopReason", TownProductionStopReason.NONE)
+                strict(Codec.BOOL).optionalFieldOf("hasData", false).forGetter(HuntingDailyReport::hasData),
+                strict(Codec.INT).optionalFieldOf("plannedRolls", 0).forGetter(HuntingDailyReport::plannedRolls),
+                strict(Codec.INT).optionalFieldOf("executedRolls", 0).forGetter(HuntingDailyReport::executedRolls),
+                strict(TownProductionReportItem.CODEC.listOf()).optionalFieldOf("items", List.of()).forGetter(HuntingDailyReport::items),
+                strict(TownProductionStopReason.CODEC).optionalFieldOf("stopReason", TownProductionStopReason.NONE)
                         .forGetter(HuntingDailyReport::stopReason)
         ).apply(instance, HuntingDailyReport::new));
 
@@ -107,23 +110,25 @@ public class HuntingBaseBuilding extends AbstractTownResidentWorkBuilding implem
             TownProductionStopReason stopReason
     ) {}
 
-	public static final Codec<HuntingBaseBuilding> CODEC = RecordCodecBuilder.create(t -> t.group(
-					BlockPos.CODEC.optionalFieldOf("pos",BlockPos.ZERO).forGetter(o -> o.pos),
-					Codec.BOOL.optionalFieldOf("initialized", false).forGetter(o -> o.isInitialized()),
-					Codec.BOOL.optionalFieldOf("isStructureValid",false).forGetter(o -> o.isStructureValid()),
-					OccupiedZoneInfo.CODEC.optionalFieldOf("occupiedVolume",OccupiedZoneInfo.EMPTY).forGetter(o -> o.getOccupiedVolume()),
-					Codec.list(UUIDUtil.CODEC).optionalFieldOf("residentsID",List.of()).forGetter(o -> new ArrayList<>(o.getResidentsID())),
-					Codec.INT.optionalFieldOf("area",0).forGetter(o -> o.getArea()),
-					Codec.INT.optionalFieldOf("volume",0).forGetter(o -> o.getVolume()),
-					Codec.DOUBLE.optionalFieldOf("temperature",0D).forGetter(o -> o.getTemperature()),
-					Codec.INT.optionalFieldOf("maxResidents",0).forGetter(o -> o.getMaxResidents()),
-					Codec.INT.optionalFieldOf("tanningRackNum",0).forGetter(o -> o.getTanningRackNum()),
-					Codec.DOUBLE.optionalFieldOf("temperatureModifier",0D).forGetter(o -> o.getTemperatureModifier()),
-					Codec.DOUBLE.optionalFieldOf("rating",0D).forGetter(o -> o.getRating()),
-					Codec.DOUBLE.optionalFieldOf("lootRollCarry",0D).forGetter(o -> o.getLootRollCarry()),
-                    HuntingDailyReport.CODEC.optionalFieldOf("dailyReport", HuntingDailyReport.EMPTY)
+	public static final MapCodec<HuntingBaseBuilding> MAP_CODEC = RecordCodecBuilder.mapCodec(t -> t.group(
+					strict(BlockPos.CODEC).optionalFieldOf("pos",BlockPos.ZERO).forGetter(o -> o.pos),
+					strict(Codec.BOOL).optionalFieldOf("initialized", false).forGetter(o -> o.isInitialized()),
+					strict(Codec.BOOL).optionalFieldOf("isStructureValid",false).forGetter(o -> o.isStructureValid()),
+					strict(OccupiedZoneInfo.CODEC).optionalFieldOf("occupiedVolume",OccupiedZoneInfo.EMPTY).forGetter(o -> o.getOccupiedVolume()),
+					strict(Codec.list(UUIDUtil.CODEC)).optionalFieldOf("residentsID",List.of()).forGetter(o -> new ArrayList<>(o.getResidentsID())),
+					strict(Codec.INT).optionalFieldOf("area",0).forGetter(o -> o.getArea()),
+					strict(Codec.INT).optionalFieldOf("volume",0).forGetter(o -> o.getVolume()),
+					strict(Codec.DOUBLE).optionalFieldOf("temperature",0D).forGetter(o -> o.getTemperature()),
+					strict(Codec.INT).optionalFieldOf("maxResidents",0).forGetter(o -> o.getMaxResidents()),
+					strict(Codec.INT).optionalFieldOf("tanningRackNum",0).forGetter(o -> o.getTanningRackNum()),
+					strict(Codec.DOUBLE).optionalFieldOf("temperatureModifier",0D).forGetter(o -> o.getTemperatureModifier()),
+					strict(Codec.DOUBLE).optionalFieldOf("rating",0D).forGetter(o -> o.getRating()),
+					strict(Codec.DOUBLE).optionalFieldOf("lootRollCarry",0D).forGetter(o -> o.getLootRollCarry()),
+                    strict(HuntingDailyReport.CODEC).optionalFieldOf("dailyReport", HuntingDailyReport.EMPTY)
                             .forGetter(HuntingBaseBuilding::getDailyReport))
 			.apply(t, HuntingBaseBuilding::new));
+        public static final Codec<HuntingBaseBuilding> CODEC = MAP_CODEC.codec();
+
 	@Getter
 	private int area;
 	@Getter
@@ -141,12 +146,48 @@ public class HuntingBaseBuilding extends AbstractTownResidentWorkBuilding implem
     @Getter
     private HuntingDailyReport dailyReport = HuntingDailyReport.EMPTY;
 
-	public void setArea(int area) { this.area = area; fireChange(); }
-	public void setVolume(int volume) { this.volume = volume; fireChange(); }
-	public void setTanningRackNum(int tanningRackNum) { this.tanningRackNum = tanningRackNum; fireChange(); }
-	public void setTemperature(double temperature) { this.temperature = temperature; fireChange(); }
-	public void setTemperatureModifier(double temperatureModifier) { this.temperatureModifier = temperatureModifier; fireChange(); }
-	public void setRating(double rating) { this.rating = rating; fireChange(); }
+	public void setArea(int area) {
+	    if (this.area == area) {
+	        return;
+	    }
+	    this.area = area;
+	    fireChange();
+	}
+	public void setVolume(int volume) {
+	    if (this.volume == volume) {
+	        return;
+	    }
+	    this.volume = volume;
+	    fireChange();
+	}
+	public void setTanningRackNum(int tanningRackNum) {
+	    if (this.tanningRackNum == tanningRackNum) {
+	        return;
+	    }
+	    this.tanningRackNum = tanningRackNum;
+	    fireChange();
+	}
+	public void setTemperature(double temperature) {
+	    if (Double.compare(this.temperature, temperature) == 0) {
+	        return;
+	    }
+	    this.temperature = temperature;
+	    fireChange();
+	}
+	public void setTemperatureModifier(double temperatureModifier) {
+	    if (Double.compare(this.temperatureModifier, temperatureModifier) == 0) {
+	        return;
+	    }
+	    this.temperatureModifier = temperatureModifier;
+	    fireChange();
+	}
+	public void setRating(double rating) {
+	    if (Double.compare(this.rating, rating) == 0) {
+	        return;
+	    }
+	    this.rating = rating;
+	    fireChange();
+	}
 	public void setLootRollCarry(double lootRollCarry) {
 		double safeCarry = Double.isFinite(lootRollCarry)
 				? Math.max(0.0, Math.min(Math.nextDown(1.0), lootRollCarry))
@@ -186,7 +227,7 @@ public class HuntingBaseBuilding extends AbstractTownResidentWorkBuilding implem
         this.setInitialized(initialized);
 		this.setIsStructureValid(isStructureValid);
 		this.internalSetOccupiedVolume(occupiedVolume);
-		this.residentsID = new java.util.HashSet<>(residentsID);
+		this.residentsID = new HashSet<>(residentsID);
 		this.setArea(area);
 		this.setVolume(volume);
 		this.setTemperature(temperature);

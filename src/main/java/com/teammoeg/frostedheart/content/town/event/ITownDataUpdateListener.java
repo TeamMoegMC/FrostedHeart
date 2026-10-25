@@ -20,12 +20,13 @@
 package com.teammoeg.frostedheart.content.town.event;
 
 import java.util.EventListener;
+import com.teammoeg.frostedheart.content.town.TeamTown;
 
 /**
  * 客户端 GUI 用于监听城镇数据增量变化的监听器。
  * <p>
- * GUI 在打开时通过 {@link com.teammoeg.frostedheart.content.town.TeamTownData#addClientListener}
- * 注册自身，在关闭时通过 {@link com.teammoeg.frostedheart.content.town.TeamTownData#removeClientListener}
+ * GUI 在打开时通过 {@link TeamTownData#addClientListener}
+ * 注册自身，在关闭时通过 {@link TeamTownData#removeClientListener}
  * 移除。增量同步包（TownBuildingUpdatePacket / TownResidentUpdatePacket / TownResourceUpdatePacket）
  * 在 {@code applyXxxUpdate} 中按类别触发对应回调，全量同步包（TeamTownDataS2CPacket）在替换实例后
  * 触发全部类别回调，GUI 在回调中刷新界面即可。

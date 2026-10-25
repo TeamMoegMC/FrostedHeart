@@ -30,7 +30,7 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 
 /** Lightweight authoritative town-name update. */
-public class TownNameUpdatePacket implements CMessage {
+public class TownNameUpdatePacket implements TownViewPacket {
     private final String name;
 
     public TownNameUpdatePacket(String name) {
@@ -48,9 +48,10 @@ public class TownNameUpdatePacket implements CMessage {
 
     @Override
     public void handle(Supplier<NetworkEvent.Context> context) {
-        context.get().enqueueWork(() -> CClientTeamDataManager.INSTANCE.getInstance()
-                .getOptional(FHSpecialDataTypes.TOWN_DATA)
-                .ifPresent(town -> town.applyNameUpdate(name)));
+        context.get().enqueueWork(() -> {
+            if (!com.teammoeg.frostedheart.content.town.client.TownClientUpdates.canApply(context.get().getNetworkManager())) return;
+            com.teammoeg.frostedheart.content.town.client.TownClientUpdates.apply(town -> town.applyNameUpdate(name));
+        });
         context.get().setPacketHandled(true);
     }
 }

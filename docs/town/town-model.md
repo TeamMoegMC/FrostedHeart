@@ -95,17 +95,17 @@ HUNT 地形资源首版也不作为瓶颈。当前默认总量约为数百万次
 - `20 game ticks = 1 real second`
 - `1000 game ticks = 1 game hour`
 - `24000 game ticks = 1 game day`
-- 城镇早晨结算发生在 `dayTime % 24000 == 1000` 附近，而不是一天结束时。
+- 自动晨间机会使用主世界气候逻辑时钟，在第 1000–1019 tick 按 holderId 稳定错峰；只处理新观察到的最新窗口，不补离线历史。手动推进不消耗自动机会。完整时钟、旧档初始化与保存合同见 [persistence-and-runtime.md](persistence-and-runtime.md)。
 
 ### 3.2 能量塔、建筑扫描与城镇结算不是同一种频率
 
 | 系统 | 当前频率 | 当前行为 |
 |---|---:|---|
 | 能量塔城镇接管 | 默认每 20 tick | 调度间隔读取 `FHConfig.SERVER.TOWN.townUpdateIntervalGameTicks`；`TeamTownData.tickSecond` 调用 `GeneratorData.townTick` 批量处理同样数量的 tick |
-| 方块实体普通 tick | 每 tick | 住宅/狩猎基地只更新旧热网温度修正，并把自己登记进全局扫描队列 |
-| 建筑结构与温度扫描 | 默认整个维度每 tick 执行 1 个已登记任务 | `SchedulerQueue` 轮询建筑；每栋建筑的实际扫描间隔约为“登记建筑数 / 每 tick 任务数” |
+| 方块实体普通 tick | 每 tick | 住宅/狩猎基地更新供热温度修正；核心在加载时登记扫描任务 |
+| 建筑环境与结构刷新 | 环境目标 20、结构目标 200 game ticks | `SchedulerQueue` 按世界轮询；实际到达时间还受登记数量与 `ChordaConfig.SERVER.taskPerTick` 预算影响 |
 | 气候缓存 | 每秒检查，数据按小时生成 | 气候温度在一个游戏小时内保持同一小时值 |
-| 城镇生产与居民结算 | 每游戏日一次 | 早晨读取建筑最近一次扫描保存的温度，随后生产、吃饭和更新居民 |
+| 城镇生产与居民结算 | 每个新自动窗口最多一次；手动可另行推进 | 自动需在线成员和可用执行维度；读取建筑最近扫描温度，随后生产、吃饭和更新居民 |
 
 住宅和狩猎基地不会对一天内的温度积分，也不会在早晨计算 24 小时平均温度。扫描器每次扫描时对当前内部空气体素求一次空间平均，并覆盖建筑保存的温度；早晨结算读到的是最近一次扫描的快照。
 
@@ -219,7 +219,9 @@ T_{building,b,h}=\frac{1}{|V_b|}\sum_{v\in V_b}T_{block,v,h}
 
 这里的 \(|V_b|\) 就是扫描器记录的内部体积。它是离散空气方块数量，不是连续几何球体积。
 
-当前游戏调用关系（2026-10-18 按源码复核）：`HouseBlockEntity.scanStructure` 与 `HuntingBaseBlockEntity.scanStructure` 调用 `BlockScanner.scanRoomDataFromBlock`，再用 `RoomData.calculateTemperature` 对各 `OccupiedCell.reachableIterable()` 位置的 `WorldTemperature.block` 结果取平均。`WorldTemperature.block` 经 `MinecraftThermalInput.gameplayPassiveEnvironment` 合成可用空气状态、自然温度回退和解析场；它不使用上式旧热场曲线。`TownThermalProjection` / `gameplayTownEnvironment` 仍有实现及直接 API 测试，但当前城镇建筑扫描没有调用它们，不能把那些测试等同于住宅/狩猎基地生产路径验收。`TownStageFourModel.evaluateHour` 明确保留 legacy heat-chunk 模型，尚未模拟 live analytic floor 或 physical Air；矿井基地当前没有温度工作条件。
+当前建筑读取由 `BlockScanner` / `LoadedTownWorld` 完成。结构复核保留不可变的 `OccupiedZoneInfo`，住宅与狩猎基地的环境刷新在这份几何上遍历可达内部位置；对每个位置计算当前自然背景，再调用 `MinecraftThermalInput.gameplayPassiveEnvironment` 读取已有环境。温度单位为 °C，结果是本次有效采样的算术平均。生物群系查询使用非加载数据源；遇到缺区块、零采样或非有限结果时保留最后已知温度，供热 modifier 仍按真实端点状态更新。
+
+这条实现路径没有使用旧 `TownThermalProjection` 分组描述；该类在热力 API 中是否另有用途应由热系统文档说明。建筑周期目标、任务预算和更新等待见 [building-data.md](building-data.md)。
 
 ## 5. 能量塔、燃料过程 tick 与 T2 热网
 

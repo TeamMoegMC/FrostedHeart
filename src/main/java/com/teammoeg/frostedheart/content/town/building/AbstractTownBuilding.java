@@ -23,6 +23,8 @@ import com.teammoeg.frostedheart.content.town.ITownWithBuildings;
 import com.teammoeg.frostedheart.content.town.block.OccupiedZoneInfo;
 import com.teammoeg.frostedheart.content.town.event.ITownBuildingChangeEventListener;
 import com.teammoeg.frostedheart.content.town.event.TownBuildingChangeEvent;
+import com.teammoeg.frostedheart.content.town.event.TownBuildingChangeEvent.ChangeKind;
+import java.util.EnumSet;
 import com.teammoeg.frostedheart.content.town.render.ITownSpaceOccupiedBuilding;
 
 import com.mojang.serialization.Codec;
@@ -61,7 +63,7 @@ public abstract class AbstractTownBuilding implements ITownBuilding,ITownSpaceOc
 		return occupiedVolume.isOverlapped();
 	}
     /**
-     * 变化监听。由 TeamTownData 在 building 装入 Map 后注入；
+     * 变化监听。由 TownBuildingStore 在安装建筑记录时注入；
      * 各字段 setter 通过该监听 fire 事件，从而进入增量同步的脏标记。
      * 解码阶段此值为 null，因此 setter 不会误触发脏标记。
      */
@@ -76,45 +78,90 @@ public abstract class AbstractTownBuilding implements ITownBuilding,ITownSpaceOc
      * 字段发生变化时调用，向监听者 fire 一个建筑变更事件。
      * 若监听尚未注入（如解码阶段）则不产生任何效果。
      */
+    @Getter(AccessLevel.NONE)
+    private int updateDepth;
+    @Getter(AccessLevel.NONE)
+    private final EnumSet<ChangeKind> pendingChanges = EnumSet.noneOf(ChangeKind.class);
+
     protected void fireChange() {
-        if (this.changeListener != null) {
-            this.changeListener.onBuildingChange(new TownBuildingChangeEvent(this, this.pos));
+        recordChange(ChangeKind.DATA);
+    }
+
+    protected void fireAvailabilityChange() {
+        recordChange(ChangeKind.AVAILABILITY);
+    }
+
+    private void recordChange(ChangeKind change) {
+        if (changeListener == null) {
+            return;
+        }
+        pendingChanges.add(change);
+        if (updateDepth == 0) {
+            publishPendingChanges();
+        }
+    }
+
+    private void publishPendingChanges() {
+        if (pendingChanges.isEmpty()) {
+            return;
+        }
+        TownBuildingChangeEvent event = new TownBuildingChangeEvent(this, pos, pendingChanges);
+        pendingChanges.clear();
+        if (changeListener != null) {
+            changeListener.onBuildingChange(event);
+        }
+    }
+
+    /** Apply related fields first, then report their combined changes once. */
+    public void updateBatch(Runnable update) {
+        updateDepth++;
+        try {
+            update.run();
+        } finally {
+            updateDepth--;
+            if (updateDepth == 0) {
+                publishPendingChanges();
+            }
         }
     }
 
     public void setInitialized(boolean initialized) {
-        if (this.initialized == initialized) return;
+        if (this.initialized == initialized) {
+            return;
+        }
         this.initialized = initialized;
-        fireChange();
+        fireAvailabilityChange();
     }
 
     public void setIsStructureValid(boolean isStructureValid) {
-        if (this.isStructureValid == isStructureValid) return;
+        if (this.isStructureValid == isStructureValid) {
+            return;
+        }
         this.isStructureValid = isStructureValid;
-        fireChange();
+        fireAvailabilityChange();
     }
     protected void internalSetOccupiedVolume(OccupiedZoneInfo occupiedVolume) {
     	this.occupiedVolume = occupiedVolume;
     }
-    public void setOccupiedVolume(OccupiedZoneInfo occupiedVolume) {
-        if (java.util.Objects.equals(this.occupiedVolume, occupiedVolume)) return;
-        this.occupiedVolume = occupiedVolume;
-        
-	    if (this.changeListener != null) {
-	    	TownBuildingChangeEvent event=new TownBuildingChangeEvent(this, this.pos);
-	        this.changeListener.onBuildingZoneChange(event);
-	        this.changeListener.onBuildingChange(event);
+    public void setOccupiedVolume(OccupiedZoneInfo value) {
+        // Overlap belongs to the town's geometry batch, not to the scanner.
+        value = value.withOverlapped(occupiedVolume.isOverlapped());
+        if (java.util.Objects.equals(occupiedVolume, value)) {
+            return;
         }
+        occupiedVolume = value;
+        recordChange(ChangeKind.STRUCTURE);
     }
-    public void setOverlapped(boolean overlapped) {
-    	if(overlapped!=occupiedVolume.isOverlapped()) {
-    		occupiedVolume.setOverlapped(overlapped);
-    		fireChange();
-    	}
+    public void setOverlapped(boolean value) {
+        if (occupiedVolume.isOverlapped() == value) {
+            return;
+        }
+        occupiedVolume = occupiedVolume.withOverlapped(value);
+        fireAvailabilityChange();
     }
 
     protected AbstractTownBuilding(BlockPos pos) {
-        this.pos = pos;
+        this.pos = pos.immutable();
     }
 
     @Override

@@ -36,6 +36,7 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
+import java.util.Collections;
 
 /**
  * AI 城镇数据（独立 Town，无队伍）：“AI城镇自己就是一个town”——不伪造
@@ -65,6 +66,33 @@ public class AITownData implements ITownWithResidents {
 	private final Map<UUID, Resident> residents = new LinkedHashMap<>();
 	/** 居民模拟（共用类，随本数据落盘）/ Resident simulation (shared class, persisted with this data) */
 	private final TownSimData simData = new TownSimData();
+    private transient Runnable persistenceListener = () -> {};
+    private transient long profileRevision = 1;
+    private transient long encodedProfileRevision;
+    private transient CompoundTag frozenProfile;
+
+    public void setPersistenceListener(Runnable listener) {
+        persistenceListener = listener == null ? () -> {} : listener;
+        residents.values().forEach(resident -> resident.setChangeEventListener(
+                listener == null ? null : event -> profileChanged()));
+        simData.setMarkDirty(listener);
+    }
+
+    private void profileChanged() {
+        profileRevision++;
+        persistenceListener.run();
+    }
+
+    public CompoundTag capturePersistenceData() {
+        if (frozenProfile == null || encodedProfileRevision != profileRevision) {
+            frozenProfile = saveProfile();
+            encodedProfileRevision = profileRevision;
+        }
+        CompoundTag result = new CompoundTag();
+        for (String key : frozenProfile.getAllKeys()) result.put(key, frozenProfile.get(key));
+        result.put("sim", simData.capturePersistencePart());
+        return result;
+    }
 
 	public AITownData(UUID id, String name, ResourceKey<Level> dimension) {
 		this.id = id;
@@ -94,6 +122,7 @@ public class AITownData implements ITownWithResidents {
 			try {
 				UUID storedKey = UUID.fromString(key);
 				Resident resident = new Resident(residentsTag.getCompound(key));
+                resident.initializeServerData();
 				UUID residentId = resident.getUUID();
 				if (!storedKey.equals(residentId))
 					FHMain.LOGGER.warn("AITownData: resident key {} disagrees with payload {} in town {}; using payload UUID",
@@ -121,6 +150,12 @@ public class AITownData implements ITownWithResidents {
 	 * @return 标签 / the tag
 	 */
 	public CompoundTag save() {
+        CompoundTag tag = saveProfile();
+        tag.put("sim", TownSimData.toNbt(simData));
+        return tag;
+    }
+
+    private CompoundTag saveProfile() {
 		CompoundTag tag = new CompoundTag();
 		tag.putString("id", id.toString());
 		tag.putString("name", name);
@@ -128,7 +163,6 @@ public class AITownData implements ITownWithResidents {
 		CompoundTag residentsTag = new CompoundTag();
 		residents.forEach((uuid, resident) -> residentsTag.put(uuid.toString(), resident.serialize()));
 		tag.put("residents", residentsTag);
-		tag.put("sim", TownSimData.toNbt(simData));
 		return tag;
 	}
 
@@ -169,7 +203,7 @@ public class AITownData implements ITownWithResidents {
 
 	@Override
 	public Collection<Resident> getAllResidents() {
-		return residents.values();
+		return Collections.unmodifiableCollection(residents.values());
 	}
 
 	@Override
@@ -192,9 +226,12 @@ public class AITownData implements ITownWithResidents {
 	 */
 	@Override
 	public boolean addResident(Resident resident) {
+        resident.initializeServerData();
+        if (residents.containsKey(resident.getUUID())) return false;
 		residents.put(resident.getUUID(), resident);
+        resident.setChangeEventListener(event -> profileChanged());
+        profileChanged();
 		simData.onResidentAdded(resident);
-		AITownManager.markDirty();
 		return true;
 	}
 
@@ -212,8 +249,9 @@ public class AITownData implements ITownWithResidents {
 		Resident resident = residents.remove(uuid);
 		if (resident == null)
 			return false;
+        resident.setChangeEventListener(null);
+        profileChanged();
 		simData.onResidentRemoved(resident);
-		AITownManager.markDirty();
 		return true;
 	}
 }

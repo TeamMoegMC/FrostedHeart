@@ -41,7 +41,7 @@ import net.minecraftforge.network.NetworkEvent;
  * 服务端 → 客户端：增量同步资源数据。
  * 包含发生变化的资源key及其当前数量，以及最新的已占用容量。
  */
-public class TownResourceUpdatePacket implements CMessage {
+public class TownResourceUpdatePacket implements TownViewPacket {
     private final Map<ITownResourceKey, Double> changes;
     private final double occupiedCapacity;
     private final TownTransportSnapshot transportSnapshot;
@@ -94,9 +94,8 @@ public class TownResourceUpdatePacket implements CMessage {
     @Override
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
-            CClientTeamDataManager.INSTANCE.getInstance()
-                .getOptional(FHSpecialDataTypes.TOWN_DATA)
-                .ifPresent(this::applyTo);
+            if (!com.teammoeg.frostedheart.content.town.client.TownClientUpdates.canApply(context.get().getNetworkManager())) return;
+            com.teammoeg.frostedheart.content.town.client.TownClientUpdates.apply(this::applyTo);
         });
         context.get().setPacketHandled(true);
     }

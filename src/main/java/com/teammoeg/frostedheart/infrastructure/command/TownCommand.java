@@ -30,6 +30,7 @@ import com.teammoeg.chorda.math.CMath;
 import com.teammoeg.chorda.text.Components;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.town.TeamTown;
+import com.teammoeg.frostedheart.content.town.TeamTownData;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 import com.teammoeg.frostedheart.content.town.resident.WanderingRefugee;
 import com.teammoeg.frostedheart.content.town.resource.ITownResourceType;
@@ -71,9 +72,16 @@ public class TownCommand {
                         .executes(ct -> {
                             var player = ct.getSource().getPlayer();
                             if (player != null) {
-                                var data = TeamTown.from(player).getTownData();
+                                var data = TeamTown.find(player).flatMap(TeamTown::getTownData);
                                 if (data.isPresent()) {
-                                    data.get().debugSpawnRefugeeBatch(ct.getSource().getLevel(), CTeamDataManager.get(player));
+                                    var holder = CTeamDataManager.get(player);
+                                    var executionLevel = TeamTownData.executionLevel(holder);
+                                    if (executionLevel == null) {
+                                        ct.getSource().sendFailure(Component.literal(
+                                                "The town is waiting for its energy tower in its building dimension"));
+                                        return 0;
+                                    }
+                                    data.get().debugSpawnRefugeeBatch(executionLevel, holder);
                                     ct.getSource().sendSuccess(() -> Component.literal("Refugee batch spawned"), false);
                                     return Command.SINGLE_SUCCESS;
                                 }
@@ -517,11 +525,20 @@ public class TownCommand {
     private static int advanceTown(CommandSourceStack source, int repeats) {
         var player = source.getPlayer();
         if (player != null) {
-            var data = TeamTown.from(player).getTownData();
+            var data = TeamTown.find(player).flatMap(TeamTown::getTownData);
             if (data.isPresent()) {
                 var teamData = CTeamDataManager.get(player);
+                var executionLevel = TeamTownData.executionLevel(teamData);
+                if (executionLevel == null) {
+                    source.sendFailure(Component.literal("The town is waiting for its energy tower in its building dimension"));
+                    return 0;
+                }
                 for (int index = 0; index < repeats; index++) {
-                    data.get().tickMorning(source.getLevel(), teamData);
+                    var result = data.get().tickMorning(executionLevel, teamData);
+                    if (result != com.teammoeg.frostedheart.content.town.TownSettlement.Result.COMMITTED) {
+                        source.sendFailure(Component.literal("Town settlement " + result + "; completed " + index + " day(s)"));
+                        return 0;
+                    }
                 }
                 source.sendSuccess(() -> Component.literal(
                         "Advanced the town by " + repeats + (repeats == 1 ? " settlement day" : " settlement days")),

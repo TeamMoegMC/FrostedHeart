@@ -36,7 +36,7 @@ import net.minecraftforge.network.NetworkEvent;
 public record TownTransportShortageNotificationPacket(
         long notificationId,
         List<TownTransportShortageNotice> notices
-) implements CMessage {
+) implements TownViewPacket {
     public static final int MAX_NOTICES = 8;
 
     public TownTransportShortageNotificationPacket {
@@ -67,8 +67,11 @@ public record TownTransportShortageNotificationPacket(
     public void handle(Supplier<NetworkEvent.Context> context) {
         NetworkEvent.Context packetContext = context.get();
         if (isClientbound(packetContext.getDirection())) {
-            packetContext.enqueueWork(() -> TownTransportShortageTipPresentation.display(
-                    notificationId, notices));
+            packetContext.enqueueWork(() -> {
+                if (!com.teammoeg.frostedheart.content.town.client.TownClientUpdates.canApply(packetContext.getNetworkManager())) return;
+                TownTransportShortageTipPresentation.display(
+                    notificationId, notices);
+            });
         }
         packetContext.setPacketHandled(true);
     }

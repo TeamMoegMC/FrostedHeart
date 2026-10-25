@@ -72,10 +72,23 @@ import com.teammoeg.frostedheart.item.snowsack.network.ToggleAutoPickupMessage;
 import com.teammoeg.frostedheart.item.snowsack.network.ToggleDeleteOverflowMessage;
 
 public class FHNetwork extends CBaseNetwork {
+    @Override
+    protected String protocolVersion(String modVersion) { return modVersion + ":town-view-1:building-data-1"; }
 	private FHNetwork() {
 		super(FHMain.MODID);
 	}
 	public static final FHNetwork INSTANCE=new FHNetwork();
+    @Override
+    public void sendPlayer(net.minecraft.server.level.ServerPlayer player, com.teammoeg.chorda.network.CMessage message) {
+        if (message instanceof com.teammoeg.frostedheart.content.town.network.TownViewPacket) {
+            if (!com.teammoeg.frostedheart.content.town.TownSync.allowDelta(player)) return;
+            try { super.sendPlayer(player, message); }
+            catch (RuntimeException failure) {
+                com.teammoeg.frostedheart.content.town.TownSync.sendFailed(player, failure);
+            }
+        } else super.sendPlayer(player, message);
+    }
+
     @Override
 	public void registerMessages() {
         // CHANNEL.registerMessage(id++, ChunkWatchPacket.class,
@@ -190,5 +203,6 @@ public class FHNetwork extends CBaseNetwork {
         registerMessage("toggle_auto_pickup", ToggleAutoPickupMessage.class);
         registerMessage("toggle_delete_overflow", ToggleDeleteOverflowMessage.class);
         registerMessage("open_snow_sack", C2SOpenSnowSackScreenMessage.class);
+        registerMessage("town_snapshot_request", com.teammoeg.frostedheart.content.town.network.TownSnapshotRequestPacket.class);
     }
 }

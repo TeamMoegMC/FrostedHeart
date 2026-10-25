@@ -35,7 +35,7 @@ import net.minecraftforge.network.NetworkEvent;
 
 /** Transient S2C notice subset; intentionally excludes detail and episode identifiers. */
 public record TownSignalNotificationPacket(long notificationId, List<TownSignalNotice> notices)
-        implements CMessage {
+        implements TownViewPacket {
     private static final int MAX_PACKET_EVENTS = 64;
 
     public TownSignalNotificationPacket {
@@ -61,7 +61,10 @@ public record TownSignalNotificationPacket(long notificationId, List<TownSignalN
     public void handle(Supplier<NetworkEvent.Context> context) {
         NetworkEvent.Context packetContext = context.get();
         if (packetContext.getDirection() == NetworkDirection.PLAY_TO_CLIENT) {
-            packetContext.enqueueWork(() -> TownSignalTipPresentation.display(notificationId, notices));
+            packetContext.enqueueWork(() -> {
+                if (!com.teammoeg.frostedheart.content.town.client.TownClientUpdates.canApply(packetContext.getNetworkManager())) return;
+                TownSignalTipPresentation.display(notificationId, notices);
+            });
         }
         packetContext.setPacketHandled(true);
     }

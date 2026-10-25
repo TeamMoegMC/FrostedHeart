@@ -232,6 +232,9 @@ public class FHMain {
 	 */
 	private void setup(final FMLCommonSetupEvent event) {
 
+        event.enqueueWork(() -> com.teammoeg.chorda.dataholders.team.CTeamDataManager.registerExtension(
+                com.teammoeg.frostedheart.content.town.persistence.TownPersistenceAdapter::new));
+
 		FHNetwork.INSTANCE.register();
 		
 		// modify default value

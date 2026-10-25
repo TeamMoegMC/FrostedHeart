@@ -813,6 +813,13 @@ public class TeamResearchData implements SpecialData {
 		MinecraftForge.EVENT_BUS.post(new ResearchDataLoadedEvent(team,this));
 	}
 
+    /** Detach active clue subscriptions without changing the saved research facts. */
+    public void detachResearch(TeamDataHolder team) {
+        if (activeResearchId == null) return;
+        Research research = FHResearch.getResearch(activeResearchId);
+        if (research != null) for (Clue clue : research.getClues()) clue.end(team, research);
+    }
+
 	/** Applies explicit definition aliases without deleting unknown/orphaned records. */
 	public void reconcileDefinitions() {
 		for (Research research : FHResearch.getAllResearch()) {

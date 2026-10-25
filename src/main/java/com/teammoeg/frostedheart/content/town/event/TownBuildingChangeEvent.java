@@ -20,19 +20,48 @@
 package com.teammoeg.frostedheart.content.town.event;
 
 import java.util.EventObject;
-
+import java.util.Set;
 import net.minecraft.core.BlockPos;
 
-public class TownBuildingChangeEvent extends EventObject {
+/** Describes what changed; the town decides which derived data needs rebuilding. */
+public final class TownBuildingChangeEvent extends EventObject {
+    public enum ChangeKind {
+        /** Business values or environment inputs; save and synchronize the building. */
+        DATA,
+        /** Occupied space changed; also recompute room overlap. */
+        STRUCTURE,
+        /** Working status or capacity changed; refresh affected services. */
+        AVAILABILITY,
+        /** A building was added, removed or replaced. */
+        REGISTRATION
+    }
+
     public final BlockPos changedBuildingPos;
-    /**
-     * Constructs a prototypical Event.
-     *
-     * @param source the object on which the Event initially occurred
-     * @throws IllegalArgumentException if source is null
-     */
-    public TownBuildingChangeEvent(Object source, BlockPos changedBuildingPos) {
+    private final Set<ChangeKind> changes;
+
+    public TownBuildingChangeEvent(Object source, BlockPos position) {
+        this(source, position, ChangeKind.DATA);
+    }
+
+    public TownBuildingChangeEvent(Object source, BlockPos position, ChangeKind change) {
+        this(source, position, Set.of(change));
+    }
+
+    public TownBuildingChangeEvent(Object source, BlockPos position, Set<ChangeKind> changes) {
         super(source);
-        this.changedBuildingPos = changedBuildingPos;
+        this.changedBuildingPos = position;
+        this.changes = Set.copyOf(changes);
+    }
+
+    public boolean includes(ChangeKind change) {
+        return changes.contains(change);
+    }
+
+    public boolean requiresSpaceRecheck() {
+        return includes(ChangeKind.STRUCTURE) || includes(ChangeKind.REGISTRATION);
+    }
+
+    public boolean affectsAvailability() {
+        return requiresSpaceRecheck() || includes(ChangeKind.AVAILABILITY);
     }
 }

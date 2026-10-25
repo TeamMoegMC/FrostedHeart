@@ -28,7 +28,7 @@ import com.teammoeg.frostedheart.content.town.observation.TownOperationalStatusC
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 
-public class TownOperationalStatusResponsePacket implements CMessage {
+public class TownOperationalStatusResponsePacket implements TownViewPacket {
     private final TownOperationalStatus status;
 
     public TownOperationalStatusResponsePacket(TownOperationalStatus status) {
@@ -46,7 +46,10 @@ public class TownOperationalStatusResponsePacket implements CMessage {
 
     @Override
     public void handle(Supplier<NetworkEvent.Context> context) {
-        context.get().enqueueWork(() -> TownOperationalStatusClientCache.accept(status));
+        context.get().enqueueWork(() -> {
+            if (!com.teammoeg.frostedheart.content.town.client.TownClientUpdates.canApply(context.get().getNetworkManager())) return;
+            TownOperationalStatusClientCache.accept(status);
+        });
         context.get().setPacketHandled(true);
     }
 }

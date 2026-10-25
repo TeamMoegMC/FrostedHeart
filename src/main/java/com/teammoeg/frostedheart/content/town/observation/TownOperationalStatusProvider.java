@@ -58,7 +58,8 @@ public final class TownOperationalStatusProvider {
     public static TownOperationalStatus capture(ServerPlayer player) {
         ServerLevel world = player.serverLevel();
         var teamData = CTeamDataManager.get(player);
-        TeamTown town = TeamTown.from(player);
+        TeamTown town = TeamTown.find(player).orElse(null);
+        if (town == null) return null;
         return capture(world, teamData, town, player.blockPosition());
     }
 
@@ -123,7 +124,10 @@ public final class TownOperationalStatusProvider {
         GeneratorData generator = teamData.getOptional(FHSpecialDataTypes.GENERATOR_DATA).orElse(null);
         ServerLevel towerWorld = generator != null && generator.dimension != null
                 ? world.getServer().getLevel(generator.dimension) : world;
-        if (towerWorld == null) towerWorld = world;
+        if (towerWorld == null) {
+            generator = null;
+            towerWorld = world;
+        }
         TownOperationalStatus.TowerStatus tower = captureTower(towerWorld, generator);
         TownOperationalStatus.Metric fuelReserve = tower.kind() == TownOperationalStatus.TowerKind.T1
                 ? captureT1FuelReserve(towerWorld, teamData, town, generator)

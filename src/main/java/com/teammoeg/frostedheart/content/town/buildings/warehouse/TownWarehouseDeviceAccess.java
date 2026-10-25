@@ -101,7 +101,7 @@ final class TownWarehouseDeviceAccess {
         if (town == null) {
             return Optional.empty();
         }
-        town.prepareWarehouseTopology(serverLevel.dimension());
+        town.prepareWarehouseTopology(TeamTownData.executionDimension(holder));
         return Optional.of(town);
     }
 

@@ -31,8 +31,10 @@ import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
 
-import com.teammoeg.chorda.util.CachedLevel;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
+import com.teammoeg.frostedheart.content.climate.BlockTemperatureModel;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.content.town.block.OccupiedVolume;
 import com.teammoeg.frostedheart.content.town.block.OccupiedZoneInfo;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.RoomPathfinder.OccupiedCell;
@@ -51,6 +53,7 @@ import net.minecraft.world.level.block.DoorBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.server.level.ServerLevel;
 
 public class BlockScanner {
     public static class RoomData {
@@ -85,6 +88,11 @@ public class BlockScanner {
 			area=occupiedCells.getOccupiedCells().size();
 			volume=occupiedCells.getOccupiedCells().stream().mapToInt(OccupiedCell::height).sum();
 		}
+        public RoomData withValidity(boolean valid) {
+            return new RoomData(occupiedCells.withValid(valid), neighborCells, insideBlockIndex,
+                    insideBlocks, neighborBlocks, doors);
+        }
+
 		public boolean isValid() {
 			return occupiedCells.isValid();
 		}
@@ -152,16 +160,10 @@ public class BlockScanner {
 			}
 			return result;
 		}
-		public float calculateTemperature(Level world) {
-			int volume=0;
-			double temperature=0;
-			for(OccupiedCell cell:occupiedCells.getOccupiedCells())
-				for(BlockPos pos:cell.reachableIterable()) {
-					temperature+=WorldTemperature.block(world, pos);
-					volume++;
-				}
-			return (float) (temperature/volume);
-		}
+        public float calculateTemperature(Level world) {
+            return sampleTemperature(world, occupiedCells);
+        }
+
 		public OccupiedVolume calculateOccupiedVolume() {
 			OccupiedVolume ou=new OccupiedVolume();
 			for(OccupiedCell cell:occupiedCells.getOccupiedCells()) {
@@ -173,12 +175,51 @@ public class BlockScanner {
 			return insideBlockIndex.entrySet().stream().filter(t->predicate.test(t.getValue())).map(t->t.getKey());
 		}
     }
+    public static float sampleTemperature(Level world, OccupiedZoneInfo geometry) {
+        if (!(world instanceof ServerLevel serverLevel)) {
+            return Float.NaN;
+        }
+        LoadedTownWorld loadedWorld = new LoadedTownWorld(serverLevel);
+        long samples = 0;
+        double total = 0.0;
+        for (OccupiedCell cell : geometry.getOccupiedCells()) {
+            for (BlockPos position : cell.reachableIterable()) {
+                if (!world.hasChunkAt(position) || position.getY() < world.getMinBuildHeight()
+                        || position.getY() >= world.getMaxBuildHeight()) {
+                    return Float.NaN;
+                }
+                float natural = sampleNaturalTemperature(serverLevel, loadedWorld, position);
+                double temperature = MinecraftThermalInput.gameplayPassiveEnvironment(serverLevel, position, natural);
+                if (!loadedWorld.hasCompleteData() || !Double.isFinite(temperature)) {
+                    return Float.NaN;
+                }
+                total += temperature;
+                samples++;
+            }
+        }
+        return samples == 0 ? Float.NaN : (float) (total / samples);
+    }
+
+    private static float sampleNaturalTemperature(ServerLevel level, LoadedTownWorld loadedWorld, BlockPos pos) {
+        // Keep the real dimension and climate while reading biome data without loading terrain.
+        float climateAffection = BlockTemperatureModel.climateBlockAffection(
+                pos.getY(), FHConfig.SERVER.CLIMATE.climateStoneInterfaceLevel.get(),
+                FHConfig.SERVER.CLIMATE.climateSeaLevel.get(),
+                FHConfig.SERVER.CLIMATE.blockMaximumClimateAffection.get().floatValue());
+        float natural = BlockTemperatureModel.naturalTemperature(
+                WorldTemperature.dimension(level), WorldTemperature.biome(loadedWorld, pos),
+                WorldTemperature.altitude(level, pos), WorldTemperature.climate(level, pos), climateAffection);
+        return Math.max(FHConfig.SERVER.CLIMATE.absoluteZeroCelsius.get().floatValue(), natural);
+    }
+
     @Nullable
     public static RoomData scanRoomDataFromBlock(Level l,BlockPos roomBlockPos) {
-    	LevelReader lr=CachedLevel.getCachedLevelReader(l, new AABB(roomBlockPos).inflate(17, 33, 17), false);
-    	RoomData rd=scanRoomData(lr, new TownLevelWorld(lr),roomBlockPos.above());
-    	return rd;
-    	
+        if (!(l instanceof ServerLevel level)) {
+            return null;
+        }
+        LoadedTownWorld world = new LoadedTownWorld(level);
+        RoomData result = scanRoomData(world, world, roomBlockPos.above());
+        return world.hasCompleteData() ? result : null;
     }
     @Nullable
     public static RoomData scanRoomData(LevelReader r,AbstractWorld world,BlockPos start) {
@@ -212,7 +253,7 @@ public class BlockScanner {
 	        		insideBlocks.addTo(block, 1);
 	        	}
 	        }
-	        rd =  new RoomData(new OccupiedZoneInfo(positions.occupiedCells),positions.neighborCells,insideBlockIndex,insideBlocks,neighborBlocks,new ArrayList<>(doors));
+	        rd =  new RoomData(new OccupiedZoneInfo(positions.occupiedCells),positions.neighborCells,insideBlockIndex,insideBlocks,neighborBlocks,doors.stream().sorted().toList());
 	        
     	}else {
     		rd =  new RoomData(new OccupiedZoneInfo(positions.occupiedCells,Set.of(positions.error),false,false));

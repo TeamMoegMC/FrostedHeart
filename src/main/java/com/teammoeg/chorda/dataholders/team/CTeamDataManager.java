@@ -19,365 +19,311 @@
 
 package com.teammoeg.chorda.dataholders.team;
 
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.zip.GZIPOutputStream;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.BiConsumer;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
 
 import com.teammoeg.chorda.Chorda;
-import com.teammoeg.chorda.dataholders.DataLoadException;
 import com.teammoeg.chorda.dataholders.SpecialData;
 import com.teammoeg.chorda.dataholders.SpecialDataType;
+import com.teammoeg.chorda.dataholders.persistence.NbtRecordWriter;
+import com.teammoeg.chorda.dataholders.persistence.PersistenceCoordinator;
+import com.teammoeg.chorda.dataholders.persistence.PersistenceCoordinator.CommitFacts;
+import com.teammoeg.chorda.dataholders.persistence.PersistenceCoordinator.Kind;
+import com.teammoeg.chorda.dataholders.persistence.PersistenceCoordinator.RecordKey;
+import com.teammoeg.chorda.dataholders.persistence.PersistenceCoordinator.RecordSource;
 import com.teammoeg.chorda.events.TeamCreatedEvent;
 import com.teammoeg.chorda.util.CDistHelper;
-import com.mojang.authlib.GameProfile;
 
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.Util;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtIo;
-import net.minecraft.server.players.GameProfileCache;
+import net.minecraft.nbt.NbtUtils;
+import net.minecraft.nbt.Tag;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.storage.LevelResource;
 import net.minecraftforge.common.MinecraftForge;
 
-/**
- * 所有团队数据的服务端数据管理器。负责团队数据的加载、保存、传输和生命周期管理。
- * 客户端应使用 {@link CClientTeamDataManager} 获取数据。
- * 通常使用 {@link #get(Player)} 获取玩家所在团队的数据，或使用 {@link #get(AbstractTeam)} 获取指定团队的数据。
- * <p>
- * Server-side data manager for all team data. Handles loading, saving, transferring, and lifecycle management of team data.
- * Use {@link CClientTeamDataManager} for client-side data access.
- * Typically use {@link #get(Player)} to get data for a player's team, or {@link #get(AbstractTeam)} to get data for a specific team.
- */
+/** Server-session owner of team identities, component records and save completion. */
 public class CTeamDataManager {
-
     public static CTeamDataManager INSTANCE;
+    private static Function<CTeamDataManager, TeamRecordExtension> extensionFactory = manager -> TeamRecordExtension.NONE;
 
-    private static final LevelResource dataFolder = new LevelResource("chorda_data");
-    private Map<UUID, UUID> dataByFTBId = new HashMap<>();
-    private Map<UUID, TeamDataHolder> dataByOwnId = new HashMap<>();
-    private Map<UUID, UUID> playerOwnedTeam;
-    private Map<String,UUID> playerNameOwnedTeam;
-    
-    /**
-     * 构造一个新的团队数据管理器并将自身设置为全局实例。
-     * <p>
-     * Constructs a new team data manager and sets itself as the global instance.
-     */
+    private final MinecraftServer server;
+    private final Path root;
+    private final PersistenceCoordinator persistence;
+    private final TeamRecordExtension extension;
+    private final Map<UUID, UUID> dataByFTBId = new HashMap<>();
+    private final Map<UUID, TeamDataHolder> dataByOwnId = new LinkedHashMap<>();
+    private final Map<UUID, List<Path>> legacyAliases = new HashMap<>();
+    private boolean stopping;
+
     public CTeamDataManager() {
+        this(CDistHelper.getServer());
+    }
+
+    public CTeamDataManager(MinecraftServer server) {
+        this.server = server;
+        root = server.getWorldPath(LevelResource.ROOT);
+        persistence = new PersistenceCoordinator(Util.ioPool(), new NbtRecordWriter());
+        extension = extensionFactory.apply(this);
+        persistence.setCommitListener(this::committed);
         INSTANCE = this;
     }
 
-    /**
-     * 获取所有团队的数据。
-     * <p>
-     * Gets data for all teams.
-     *
-     * @return 所有团队数据的集合 / the collection of all team data
-     */
+    public static void registerExtension(Function<CTeamDataManager, TeamRecordExtension> factory) {
+        extensionFactory = factory;
+    }
+
+    public MinecraftServer server() { return server; }
+    public Path root() { return root; }
+    public PersistenceCoordinator persistence() { return persistence; }
+    public boolean isStopping() { return stopping; }
+
     public Collection<TeamDataHolder> getAllData() {
-        return dataByOwnId.values();
+        return Collections.unmodifiableCollection(dataByOwnId.values());
     }
 
-    /**
-     * 获取所有团队中指定类型的数据组件流。
-     * <p>
-     * Gets a stream of data components of the specified type from all teams.
-     *
-     * @param <T> 数据组件类型 / the data component type
-     * @param type 数据组件的类型定义 / the data component type definition
-     * @return 数据组件的流 / a stream of data components
-     */
     public <T extends SpecialData> Stream<T> getAllData(SpecialDataType<T> type) {
-        return dataByOwnId.values().stream().map(t->t.getOptional(type)).filter(Optional::isPresent).map(Optional::get);
-    }
-    /**
-     * 遍历所有团队中指定类型的数据组件，对每个存在的数据执行消费操作。
-     * <p>
-     * Iterates over data components of the specified type across all teams, applying the consumer to each present data.
-     *
-     * @param <T> 数据组件类型 / the data component type
-     * @param type 数据组件的类型定义 / the data component type definition
-     * @param consumer 对数据组件和团队数据持有者的消费操作 / the consumer for the data component and team data holder
-     */
-    public <T extends SpecialData> void forAllData(SpecialDataType<T> type,BiConsumer<T,TeamDataHolder> consumer) {
-        dataByOwnId.values().stream().forEach(t->{
-        	Optional<T> opt=t.getOptional(type);
-        	if(opt.isPresent()) {
-        		consumer.accept( opt.get(),t);
-        	}
-        	
-        });
+        return dataByOwnId.values().stream().flatMap(holder -> holder.getOptional(type).stream());
     }
 
+    public <T extends SpecialData> void forAllData(SpecialDataType<T> type, BiConsumer<T, TeamDataHolder> consumer) {
+        for (TeamDataHolder holder : new ArrayList<>(dataByOwnId.values())) {
+            holder.getOptional(type).ifPresent(data -> consumer.accept(data, holder));
+        }
+    }
 
-
-    /**
-     * 根据 Frosted Heart 团队 ID 获取团队数据的辅助方法。
-     * 在客户端调用时会返回空数据作为回退。
-     * <p>
-     * Helper method to get team data by Frosted Heart team ID.
-     * Returns empty data as a fallback when called on the client.
-     *
-     * @apiNote 请勿在客户端调用，否则会返回空数据 / DO NOT CALL IN CLIENT, or it would return empty data
-     * @param id 研究团队 ID / the research team ID
-     * @return 团队数据，或在客户端为空数据 / the team data, or empty data on client
-     */
     @Nullable
     public static TeamDataHolder getDataByResearchID(UUID id) {
-    	//Note: this method should only be called in server, but create ponder make things wrost
-    	//So this is a fallback mechanic returning an empty data when called in client
-    	if(INSTANCE==null) {
-    		return new TeamDataHolder(UUID.randomUUID(),new ClientTeam());
-    	}
-    	return INSTANCE.get(id);
+        if (INSTANCE == null) return new TeamDataHolder(UUID.randomUUID(), new ClientTeam());
+        return INSTANCE.get(id);
     }
 
-    /**
-     * 获取玩家所在团队的数据，不应在客户端调用。
-     * <p>
-     * Gets the data for a player's team. Should not be called on the client.
-     *
-     * @param player 玩家 / the player
-     * @return 团队数据 / the team data
-     */
-	public static TeamDataHolder get(Player player) {
-		AbstractTeam team=TeamsAPI.getAPI().getTeamByPlayer((ServerPlayer)player);
-		if(team==null)return null;
-		return INSTANCE.get(team);
-		
-	}
-	/**
-	 * 尝试加载团队数据（如果尚未加载）。
-	 * <p>
-	 * Attempts to load team data if it has not been loaded yet.
-	 *
-	 * @param team 团队数据持有者 / the team data holder
-	 * @return 已加载的团队数据持有者，如果输入为 null 则返回 null / the loaded team data holder, or null if input is null
-	 */
-	public TeamDataHolder tryLoad(TeamDataHolder team) {
-		if(team==null)return null;
-		team.loadIfNeeded();
-		return team;
-	}
-    /**
-     * 获取团队的数据，同时检查所有权并在必要时进行转移。
-     * 如果团队尚未关联数据，则创建新的数据持有者并触发 {@link TeamCreatedEvent} 事件。
-     * <p>
-     * Gets data for a team, checking ownership and transferring if necessary.
-     * If the team has no associated data, creates a new data holder and fires a {@link TeamCreatedEvent}.
-     *
-     * @param team 团队 / the team
-     * @return 团队数据 / the team data
-     */
+    public static TeamDataHolder get(Player player) {
+        if (!(player instanceof ServerPlayer serverPlayer) || INSTANCE == null) return null;
+        AbstractTeam team = TeamsAPI.getAPI().getTeamByPlayer(serverPlayer);
+        return team == null ? null : INSTANCE.get(team);
+    }
+
+    public TeamDataHolder tryLoad(TeamDataHolder holder) {
+        if (holder != null) holder.loadIfNeeded();
+        return holder;
+    }
+
     public TeamDataHolder get(AbstractTeam team) {
-        UUID cn = dataByFTBId.get(team.getId());
-        if (cn == null) {
-            cn=UUID.randomUUID();
-            dataByFTBId.put(team.getId(), cn);
-            /*
-            GameProfile owner = CDistHelper.getServer().getProfileCache().get(team.getOwner()).orElse(null);
-            //System.out.println(owner);
-            if (owner != null&&(!CDistHelper.getServer().usesAuthentication()||CDistHelper.getServer().isSingleplayer()))
-                for (Entry<UUID, TeamDataHolder> dat : dataByOwnId.entrySet()) {
-                    if (owner.getName().equals(dat.getValue().getOwnerName())) {
-                        this.transferByRid(dat.getKey(), team);
-                        cn=dat.getKey();
-                        break;
-                    }
-                }*/
+        TeamDataHolder holder = findByExternalTeamId(team.getId());
+        if (holder == null) {
+            holder = new TeamDataHolder(UUID.randomUUID(), team);
+            register(holder);
+            dataByOwnId.put(holder.getId(), holder);
+            dataByFTBId.put(team.getId(), holder.getId());
+            extension.created(holder);
+            MinecraftForge.EVENT_BUS.post(new TeamCreatedEvent(holder));
+        } else {
+            holder.setTeam(team);
+            tryLoad(holder);
         }
-        TeamDataHolder data= tryLoad(dataByOwnId.get(cn));
-        if(data==null) {
-        	data=new TeamDataHolder(cn, team);
-        	
-        	dataByOwnId.put(cn, data);
-        	MinecraftForge.EVENT_BUS.post(new TeamCreatedEvent(data));
-        }
-        if (data.getOwnerName() == null) {
-        	//System.out.println("filling owner name");
-            GameProfileCache cache = CDistHelper.getServer().getProfileCache();
-           
-            if (cache != null) {
-                GameProfile gp = cache.get(team.getOwner()).orElse(null);
-                if (gp != null) {
-                	//System.out.println("filled owner name");
-                	data.setOwnerName(gp.getName());
-                }
-            }
-        }
-        return data;
-
+        if (holder.getOwnerName() == null) updateOwnerName(holder, team);
+        return holder;
     }
 
-    /**
-     * 根据 Frosted Heart 团队 ID 获取团队数据。
-     * <p>
-     * Gets team data by its Frosted Heart team ID.
-     *
-     * @param id Frosted Heart 团队 ID / the Frosted Heart team ID
-     * @return 团队数据，如果未找到则返回 null / the team data, or null if not found
-     */
     @Nullable
-    public TeamDataHolder get(UUID id) {
-        return tryLoad(dataByOwnId.get(id));
+    public TeamDataHolder get(UUID id) { return tryLoad(findByHolderId(id)); }
+
+    /** Pure lookups never create components or post loading events. */
+    @Nullable
+    public TeamDataHolder findByHolderId(UUID holderId) { return dataByOwnId.get(holderId); }
+
+    @Nullable
+    public TeamDataHolder findByExternalTeamId(UUID externalTeamId) {
+        return dataByOwnId.get(dataByFTBId.get(externalTeamId));
     }
 
-    /**
-     * 从磁盘加载所有团队数据。读取数据目录下的所有 .nbt 文件并反序列化为团队数据。
-     * <p>
-     * Loads all team data from disk. Reads all .nbt files in the data directory and deserializes them into team data.
-     */
+    private void register(TeamDataHolder holder) {
+        var state = persistence.registerRecord(new RecordKey(Kind.TEAM, holder.getId()),
+                root.resolve("chorda_data").resolve(holder.getId() + ".nbt"), new RecordSource() {
+                    @Override public void prepareCheckpoint() { holder.prepareCheckpoint(); }
+                    @Override public CompoundTag capture() { return holder.captureRecord(); }
+                });
+        holder.bindServer(state, extension);
+    }
+
+    private record StoredTeam(Path path, UUID id, UUID externalId, CompoundTag root, boolean canonical) {}
+
+    /** Read all durable exclusion facts before constructing any external-team map. */
     public void load() {
-        
-        Path local=CDistHelper.getServer().getWorldPath(dataFolder);
-        local.toFile().mkdirs();
-        Stream<File> strm1=null,strm2=null;
-        //Compatible migration from old data folder
-        if(local.toFile().exists())
-        	strm1=Arrays.stream(local.toFile().listFiles((f) -> f.getName().endsWith(".nbt")));
-        if(strm1!=null) {
-        	dataByFTBId.clear();
-        	dataByOwnId.clear();
-	        strm1.forEach(f->{
-	            UUID tud;
-	            try {
-	                try {
-	                    tud = UUID.fromString(f.getName().split("\\.")[0]);
-	                } catch (IllegalArgumentException ex) {
-	                    Chorda.LOGGER.error("Unexpected data file " + f.getName() + ", ignoring...");
-	                    return;
-	                }
-	                
-	                CompoundTag nbt = NbtIo.readCompressed(f);
-	                if(nbt.contains("teamId"))
-	                	tud=nbt.getUUID("teamId");
-	                final UUID ftbid=tud;
-	                TeamDataHolder trd = new TeamDataHolder(nbt.getUUID("uuid"),TeamsAPI.getAPI().getTeamByUuid(ftbid));
-	                trd.deserialize(nbt, false);
-	                dataByFTBId.put(ftbid, trd.getId());
-	                dataByOwnId.put(trd.getId(), trd);
-                    
-	                Chorda.LOGGER.debug("Data file for team " + trd.getId().toString() + " loaded.");
-	            } catch(DataLoadException dle) {
-	            	dle.printStackTrace();
-	                Chorda.LOGGER.error("data file " + f.getName() + " contains unexpected data, ignoring...");
-	            } catch (IllegalArgumentException ex) {
-	                ex.printStackTrace();
-	                Chorda.LOGGER.error("Unexpected data file " + f.getName() + ", ignoring...");
-                } catch (IOException e) {
-	                e.printStackTrace();
-	                Chorda.LOGGER.error("Unable to read data file " + f.getName() + ", ignoring...");
-	            }
-	        });
-        }
-    }
-
-    /**
-     * 将所有团队数据保存到磁盘。序列化后写入 .nbt 文件，并删除不再存在的团队数据文件。
-     * <p>
-     * Saves all team data to disk. Serializes and writes to .nbt files, and deletes data files for teams that no longer exist.
-     */
-    public void save() {
-    	Path local=CDistHelper.getServer().getWorldPath(dataFolder);
-        Set<String> files = new HashSet<>(Arrays.asList(local.toFile().list((d, s) -> s.endsWith(".nbt"))));
-        for (Entry<UUID, TeamDataHolder> entry : dataByOwnId.entrySet()) {
-            String fn = entry.getKey().toString() + ".nbt";
-            File f = local.resolve(fn).toFile();
-            files.remove(fn);
-            try {
-                CompoundTag serialized = entry.getValue().serialize(false);
-                CompoundTag serializedData = serialized.getCompound("data");
-                boolean hasMissingData = entry.getValue().getTypes().stream()
-                        .anyMatch(type -> !serializedData.contains(type.getId()));
-                if (hasMissingData) {
-                    Chorda.LOGGER.error("Refusing to overwrite data file for team {} because serialization was incomplete",
-                            entry.getKey());
-                    continue;
-                }
-                // 快速压缩：holder 全量重写时主线程 gzip 是主要开销（万级居民
-                // sim raw ~1MB，Deflater level 6 压缩 10-30ms/次，每次自动存档一次）。
-                // level 1 快 3-5x、体积仅增 ~10%；gzip 任意 level 均可解压，向后兼容。
-                // Fast compression: the main-thread gzip is the dominant cost when
-                // holders are fully rewritten (~1MB raw sim at 10k citizens;
-                // level-6 deflate costs 10-30 ms per autosave). Level 1 is 3-5x
-                // faster at ~10% larger files; gzip decompresses at any level.
-                GZIPOutputStream gz = new GZIPOutputStream(new FileOutputStream(f), 1 << 20) {
-                    {
-                        def.setLevel(1);
+        extension.prepareLoad(this);
+        Path folder = root.resolve("chorda_data");
+        List<StoredTeam> stored = new ArrayList<>();
+        Set<UUID> excluded = new HashSet<>();
+        try {
+            Files.createDirectories(folder);
+            try (var files = Files.newDirectoryStream(folder, "*.nbt")) {
+                for (Path path : files) {
+                    try {
+                        CompoundTag tag = NbtIo.readCompressed(path.toFile());
+                        UUID id = tag.getUUID("uuid");
+                        UUID externalId = tag.hasUUID("teamId") ? tag.getUUID("teamId")
+                                : UUID.fromString(path.getFileName().toString().replaceFirst("\\.nbt$", ""));
+                        boolean canonical = path.getFileName().toString().equals(id + ".nbt");
+                        stored.add(new StoredTeam(path, id, externalId, tag, canonical));
+                        if (canonical && tag.getInt("storageVersion") >= 1) {
+                            CommitFacts facts = facts(tag);
+                            persistence.confirmLoaded(facts);
+                            excluded.addAll(facts.supersededHolderIds());
+                            if (facts.deleted()) excluded.add(id);
+                        }
+                    } catch (Exception ex) {
+                        Chorda.LOGGER.error("Unable to read team record {}", path, ex);
                     }
-                };
-                try (DataOutputStream out = new DataOutputStream(gz)) {
-                    NbtIo.write(serialized, out);
                 }
-                Chorda.LOGGER.debug("Data file for team " + entry.getKey().toString() + " saved.");
-            } catch (IOException e) {
-                Chorda.LOGGER.error("Unable to save data file for team " + entry.getKey().toString() + ", ignoring...");
-                e.printStackTrace();
+            }
+        } catch (IOException ex) {
+            Chorda.LOGGER.error("Unable to enumerate team records {}", folder, ex);
+        }
+        stored.sort(Comparator.comparing(StoredTeam::canonical).reversed()
+                .thenComparing(record -> record.path().toString()));
+        for (StoredTeam record : stored) {
+            if (!record.canonical()) legacyAliases.computeIfAbsent(record.id(), ignored -> new ArrayList<>()).add(record.path());
+            if (excluded.contains(record.id()) || dataByOwnId.containsKey(record.id())) continue;
+            TeamDataHolder holder = new TeamDataHolder(record.id(), resolveExternalTeam(record.externalId()));
+            holder.rememberExternalTeamId(record.externalId());
+            try {
+                register(holder);
+                holder.deserialize(record.root(), false);
+                dataByOwnId.put(holder.getId(), holder);
+                dataByFTBId.put(record.externalId(), holder.getId());
+                extension.loaded(holder, record.root(), record.root().getInt("storageVersion") < 1);
+            } catch (Exception ex) {
+                persistence.discardUnloaded(new RecordKey(Kind.TEAM, holder.getId()));
+                holder.unbindServer();
+                dataByOwnId.remove(holder.getId());
+                dataByFTBId.remove(record.externalId(), holder.getId());
+                Chorda.LOGGER.error("Unable to restore team record {}", record.path(), ex);
             }
         }
-        for (String todel : files) {
-            local.resolve(todel).toFile().delete();
+        extension.afterLoad();
+    }
+
+    private static CommitFacts facts(CompoundTag root) {
+        Set<UUID> superseded = new HashSet<>();
+        for (Tag tag : root.getList("supersededHolderIds", Tag.TAG_INT_ARRAY)) superseded.add(NbtUtils.loadUUID(tag));
+        return new CommitFacts(root.getInt("storageVersion"), root.getBoolean("deleted"), superseded);
+    }
+
+    private AbstractTeam resolveExternalTeam(UUID externalId) {
+        try { return TeamsAPI.getAPI().getTeamByUuid(externalId); }
+        catch (RuntimeException failure) {
+            Chorda.LOGGER.warn("External team {} is temporarily unavailable; preserving its internal record", externalId, failure);
+            return null;
         }
     }
 
-    /**
-     * 将数据从一个团队转移到另一个团队。更新所有者信息和团队关联。
-     * <p>
-     * Transfers data from one team to another. Updates ownership information and team association.
-     *
-     * @param orig 原始团队 ID / the original team ID
-     * @param team 新的目标团队 / the new target team
-     */
-    public void transfer(UUID orig, AbstractTeam team) {
-    	UUID rid=dataByFTBId.remove(orig);
-    	UUID orid=dataByFTBId.get(team.getId());
-        TeamDataHolder odata = dataByOwnId.get(rid);
-        System.out.println("rid:"+rid+",orid:"+orid+",odata"+odata);
-        if (odata != null) {
-            odata.setTeam(team);
-            odata.setOwnerName(CDistHelper.getServer().getProfileCache().get(team.getOwner()).map(GameProfile::getName).orElse(null));
-            
-            TeamDataHolder otdh=dataByOwnId.remove(orid);
-            dataByFTBId.put(team.getId(), rid);
-           
-        }else {
-        	this.get(team);
+    private void committed(RecordKey key, CommitFacts facts) {
+        extension.committed(key, facts);
+        if (key.kind() != Kind.TEAM || facts.storageVersion() < 1) return;
+        List<Path> aliases = legacyAliases.get(key.id());
+        if (aliases == null) return;
+        for (var iterator = aliases.iterator(); iterator.hasNext();) {
+            Path alias = iterator.next();
+            try {
+                Files.deleteIfExists(alias);
+                iterator.remove();
+            } catch (IOException ex) {
+                Chorda.LOGGER.warn("Could not remove migrated team alias {}", alias, ex);
+            }
         }
-
-
-    }
-    /**
-     * 根据 Frosted Heart 内部团队 ID 将数据转移到新团队。
-     * <p>
-     * Transfers data to a new team by Frosted Heart internal team ID.
-     *
-     * @param rid Frosted Heart 内部团队 ID / the Frosted Heart internal team ID
-     * @param team 新的目标团队 / the new target team
-     */
-    public void transferByRid(UUID rid, AbstractTeam team) {
-        TeamDataHolder odata = dataByOwnId.get(rid);
-        if (odata != null) {
-            odata.setTeam(team);
-            odata.setOwnerName(CDistHelper.getServer().getProfileCache().get(team.getOwner()).map(GameProfile::getName).orElse(null));
-            dataByFTBId.put(team.getId(), rid);
-        }
+        if (aliases.isEmpty()) legacyAliases.remove(key.id());
     }
 
+    public void checkpoint() { persistence.checkpoint(server.getTickCount()); }
 
+    /** Compatibility entry for explicit saves; completion means actual writes. */
+    public void save() { saveAndAwait(); }
+
+    public boolean saveAndAwait() {
+        var report = persistence.checkpointAndAwait(server.getTickCount());
+        if (!report.successful()) Chorda.LOGGER.error("Team/town save incomplete: {}", report.failures());
+        return report.successful();
+    }
+
+    public void applyCompleted() {
+        persistence.applyCompleted();
+        persistence.applyCommitEffects();
+    }
+
+    public void prepareStopping() {
+        stopping = true;
+        extension.stopping();
+        checkpoint();
+    }
+
+    public void close() {
+        var report = persistence.close();
+        if (!report.successful()) Chorda.LOGGER.error("Team/town stop checkpoint incomplete: {}", report.failures());
+        extension.reset();
+        for (TeamDataHolder holder : dataByOwnId.values()) holder.unbindServer();
+        dataByOwnId.clear();
+        dataByFTBId.clear();
+    }
+
+    public void transfer(UUID originalExternalId, AbstractTeam team) {
+        UUID holderId = dataByFTBId.get(originalExternalId);
+        if (holderId != null && dataByOwnId.containsKey(holderId)) transferByRid(holderId, team);
+        else get(team);
+    }
+
+    public void transferByRid(UUID holderId, AbstractTeam team) {
+        TeamDataHolder kept = dataByOwnId.get(holderId);
+        if (kept == null) return;
+        if (extension.deferIfBusy(kept, () -> transferByRid(holderId, team))) return;
+        TeamDataHolder replaced = findByExternalTeamId(team.getId());
+        if (replaced != null && replaced != kept) {
+            kept.supersede(replaced);
+            retire(replaced, true);
+        }
+        dataByFTBId.values().removeIf(holderId::equals);
+        dataByFTBId.put(team.getId(), holderId);
+        kept.setTeam(team);
+        updateOwnerName(kept, team);
+        extension.teamChanged(kept);
+    }
+
+    private void updateOwnerName(TeamDataHolder holder, AbstractTeam team) {
+        if (server.getProfileCache() != null) {
+            server.getProfileCache().get(team.getOwner()).ifPresent(profile -> holder.setOwnerName(profile.getName()));
+        }
+    }
+
+    public void retire(TeamDataHolder holder, boolean needsReplacementConfirmation) {
+        CompoundTag deletion = holder.deletionRecord();
+        persistence.retire(holder.recordState(), new RecordSource() {
+            @Override public void prepareCheckpoint() {}
+            @Override public CompoundTag capture() { return deletion.copy(); }
+        }, needsReplacementConfirmation);
+        dataByOwnId.remove(holder.getId(), holder);
+        dataByFTBId.values().removeIf(holder.getId()::equals);
+        extension.retired(holder);
+        holder.unbindServer();
+    }
 }

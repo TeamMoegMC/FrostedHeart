@@ -34,6 +34,8 @@ import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.event.server.ServerStoppedEvent;
+import net.minecraftforge.event.level.LevelEvent;
 
 /**
  * Chorda通用Forge事件监听器，处理服务端Tick和数据包重载事件。
@@ -42,6 +44,17 @@ import net.minecraftforge.fml.common.Mod;
  */
 @Mod.EventBusSubscriber(modid = Chorda.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class ChordaCommonEvents {
+    @SubscribeEvent
+    public static void onLevelUnload(LevelEvent.Unload event) {
+        if (event.getLevel() instanceof ServerLevel level) {
+            SchedulerQueue.closeWorld(level);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onServerStopped(ServerStoppedEvent event) {
+        SchedulerQueue.reset();
+    }
     /**
      * 处理服务端世界Tick事件，执行调度队列中的定时任务。
      * <p>

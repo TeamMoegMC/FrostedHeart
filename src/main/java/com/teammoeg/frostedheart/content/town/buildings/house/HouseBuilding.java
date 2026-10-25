@@ -37,6 +37,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
+import static com.teammoeg.frostedheart.content.town.building.BuildingRecordsCodec.strict;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.chorda.util.CRegistryHelper;
 import com.teammoeg.frostedheart.content.town.ITownWithBuildings;
@@ -55,6 +57,7 @@ import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import lombok.Getter;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.UUIDUtil;
+import java.util.Collections;
 
 /**
  * 城镇住宅。
@@ -84,9 +87,9 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
     public record DailyMeal(boolean hasData, long settlementDay, List<MealEntry> entries) {
         public static final DailyMeal EMPTY = new DailyMeal(false, -1L, List.of());
         public static final Codec<DailyMeal> CODEC = RecordCodecBuilder.create(t -> t.group(
-                Codec.BOOL.optionalFieldOf("hasData", false).forGetter(DailyMeal::hasData),
-                Codec.LONG.optionalFieldOf("settlementDay", -1L).forGetter(DailyMeal::settlementDay),
-                MealEntry.CODEC.listOf().optionalFieldOf("entries", List.of())
+                strict(Codec.BOOL).optionalFieldOf("hasData", false).forGetter(DailyMeal::hasData),
+                strict(Codec.LONG).optionalFieldOf("settlementDay", -1L).forGetter(DailyMeal::settlementDay),
+                strict(MealEntry.CODEC.listOf()).optionalFieldOf("entries", List.of())
                         .forGetter(DailyMeal::entries)
         ).apply(t, DailyMeal::new));
 
@@ -133,19 +136,19 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
                 0.0, 0.0, 0.0, 0.0, 0.0);
 
         public static final Codec<DailyReport> CODEC = RecordCodecBuilder.create(t -> t.group(
-                Codec.BOOL.optionalFieldOf("hasData", false).forGetter(DailyReport::hasData),
-                Codec.INT.optionalFieldOf("residentCount", 0).forGetter(DailyReport::residentCount),
-                Codec.DOUBLE.optionalFieldOf("foodRequired", 0.0).forGetter(DailyReport::foodRequired),
-                Codec.DOUBLE.optionalFieldOf("foodConsumed", 0.0).forGetter(DailyReport::foodConsumed),
-                Codec.DOUBLE.optionalFieldOf("foodSatisfaction", 1.0).forGetter(DailyReport::foodSatisfaction),
-                DailyMeal.CODEC.optionalFieldOf("meal", DailyMeal.EMPTY).forGetter(DailyReport::meal),
-                Codec.DOUBLE.optionalFieldOf("nutritionQuality", 0.0).forGetter(report -> 0.0),
-                Codec.DOUBLE.optionalFieldOf("nutritionRecoveryMultiplier", 1.0).forGetter(report -> 1.0),
-                Codec.DOUBLE.optionalFieldOf("effectiveTemperature", 0.0).forGetter(DailyReport::effectiveTemperature),
-                Codec.DOUBLE.optionalFieldOf("temperatureRating", 0.0).forGetter(DailyReport::temperatureRating),
-                Codec.DOUBLE.optionalFieldOf("spaceRating", 0.0).forGetter(DailyReport::spaceRating),
-                Codec.DOUBLE.optionalFieldOf("decorationRating", 0.0).forGetter(DailyReport::decorationRating),
-                Codec.DOUBLE.optionalFieldOf("comfortRating", 0.0).forGetter(DailyReport::comfortRating)
+                strict(Codec.BOOL).optionalFieldOf("hasData", false).forGetter(DailyReport::hasData),
+                strict(Codec.INT).optionalFieldOf("residentCount", 0).forGetter(DailyReport::residentCount),
+                strict(Codec.DOUBLE).optionalFieldOf("foodRequired", 0.0).forGetter(DailyReport::foodRequired),
+                strict(Codec.DOUBLE).optionalFieldOf("foodConsumed", 0.0).forGetter(DailyReport::foodConsumed),
+                strict(Codec.DOUBLE).optionalFieldOf("foodSatisfaction", 1.0).forGetter(DailyReport::foodSatisfaction),
+                strict(DailyMeal.CODEC).optionalFieldOf("meal", DailyMeal.EMPTY).forGetter(DailyReport::meal),
+                strict(Codec.DOUBLE).optionalFieldOf("nutritionQuality", 0.0).forGetter(report -> 0.0),
+                strict(Codec.DOUBLE).optionalFieldOf("nutritionRecoveryMultiplier", 1.0).forGetter(report -> 1.0),
+                strict(Codec.DOUBLE).optionalFieldOf("effectiveTemperature", 0.0).forGetter(DailyReport::effectiveTemperature),
+                strict(Codec.DOUBLE).optionalFieldOf("temperatureRating", 0.0).forGetter(DailyReport::temperatureRating),
+                strict(Codec.DOUBLE).optionalFieldOf("spaceRating", 0.0).forGetter(DailyReport::spaceRating),
+                strict(Codec.DOUBLE).optionalFieldOf("decorationRating", 0.0).forGetter(DailyReport::decorationRating),
+                strict(Codec.DOUBLE).optionalFieldOf("comfortRating", 0.0).forGetter(DailyReport::comfortRating)
         ).apply(t, (hasData, residentCount, foodRequired, foodConsumed, foodSatisfaction, meal,
                     ignoredNutritionQuality, ignoredNutritionMultiplier, effectiveTemperature,
                     temperatureRating, spaceRating, decorationRating, comfortRating) ->
@@ -158,23 +161,25 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
         }
     }
 
-    public static final Codec<HouseBuilding> CODEC = RecordCodecBuilder.create(t -> t.group(
-            BlockPos.CODEC.optionalFieldOf("pos",BlockPos.ZERO).forGetter(o -> o.pos),
-            Codec.BOOL.optionalFieldOf("isStructureValid",false).forGetter(o -> o.isStructureValid()),
-            OccupiedZoneInfo.CODEC.optionalFieldOf("occupiedVolume",OccupiedZoneInfo.EMPTY).forGetter(o -> o.getOccupiedVolume()),
-            Codec.BOOL.optionalFieldOf("initialized", false).forGetter(o -> o.isInitialized()),
-            Codec.INT.optionalFieldOf("area",0).forGetter(o -> o.getArea()),
-            Codec.INT.optionalFieldOf("volume",0).forGetter(o -> o.getVolume()),
-            Codec.DOUBLE.optionalFieldOf("temperature",0D).forGetter(o -> o.getTemperature()),
-            Codec.DOUBLE.optionalFieldOf("decorationRating",0D).forGetter(o -> o.getDecorationRating()),
-            Codec.INT.optionalFieldOf("maxResident",0).forGetter(o -> o.getMaxResidents()),
-            Codec.list(UUIDUtil.CODEC).optionalFieldOf("residentsUUID",List.of()).forGetter(o -> new ArrayList<>(o.residentsUUID)),
-            Codec.DOUBLE.optionalFieldOf("temperatureModifier",0D).forGetter(o -> o.getTemperatureModifier()),
-            DailyReport.CODEC.optionalFieldOf("dailyReport", DailyReport.EMPTY).forGetter(o -> o.getDailyReport()),
-            BED_POSITIONS_CODEC.optionalFieldOf("bedPositions", NO_BED_POSITIONS).forGetter(o -> o.bedPositions),
-            Codec.LONG.optionalFieldOf("entrancePosition").forGetter(o ->
+    public static final MapCodec<HouseBuilding> MAP_CODEC = RecordCodecBuilder.mapCodec(t -> t.group(
+            strict(BlockPos.CODEC).optionalFieldOf("pos",BlockPos.ZERO).forGetter(o -> o.pos),
+            strict(Codec.BOOL).optionalFieldOf("isStructureValid",false).forGetter(o -> o.isStructureValid()),
+            strict(OccupiedZoneInfo.CODEC).optionalFieldOf("occupiedVolume",OccupiedZoneInfo.EMPTY).forGetter(o -> o.getOccupiedVolume()),
+            strict(Codec.BOOL).optionalFieldOf("initialized", false).forGetter(o -> o.isInitialized()),
+            strict(Codec.INT).optionalFieldOf("area",0).forGetter(o -> o.getArea()),
+            strict(Codec.INT).optionalFieldOf("volume",0).forGetter(o -> o.getVolume()),
+            strict(Codec.DOUBLE).optionalFieldOf("temperature",0D).forGetter(o -> o.getTemperature()),
+            strict(Codec.DOUBLE).optionalFieldOf("decorationRating",0D).forGetter(o -> o.getDecorationRating()),
+            strict(Codec.INT).optionalFieldOf("maxResident",0).forGetter(o -> o.getMaxResidents()),
+            strict(Codec.list(UUIDUtil.CODEC)).optionalFieldOf("residentsUUID",List.of()).forGetter(o -> new ArrayList<>(o.residentsUUID)),
+            strict(Codec.DOUBLE).optionalFieldOf("temperatureModifier",0D).forGetter(o -> o.getTemperatureModifier()),
+            strict(DailyReport.CODEC).optionalFieldOf("dailyReport", DailyReport.EMPTY).forGetter(o -> o.getDailyReport()),
+            strict(BED_POSITIONS_CODEC).optionalFieldOf("bedPositions", NO_BED_POSITIONS).forGetter(o -> o.bedPositions),
+            strict(Codec.LONG).optionalFieldOf("entrancePosition").forGetter(o ->
                     o.hasEntrance ? Optional.of(o.entrancePosition) : Optional.empty()))
             .apply(t, HouseBuilding::new));
+        public static final Codec<HouseBuilding> CODEC = MAP_CODEC.codec();
+
 
     private final Set<UUID> residentsUUID = new HashSet<>();
 
@@ -213,12 +218,54 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
     private long entrancePosition;
     private boolean hasEntrance;
 
-    public void setArea(int area) { if (this.area == area) return; this.area = area; fireChange(); }
-    public void setVolume(int volume) { if (this.volume == volume) return; this.volume = volume; fireChange(); }
-    public void setTemperature(double temperature) { if (Double.compare(this.temperature, temperature) == 0) return; this.temperature = temperature; fireChange(); }
-    public void setDecorationRating(double decorationRating) { if (Double.compare(this.decorationRating, decorationRating) == 0) return; this.decorationRating = decorationRating; fireChange(); }
-    public void setMaxResidents(int maxResidents) { if (this.maxResidents == maxResidents) return; this.maxResidents = maxResidents; fireChange(); }
-    public void setTemperatureModifier(double temperatureModifier) { if (Double.compare(this.temperatureModifier, temperatureModifier) == 0) return; this.temperatureModifier = temperatureModifier; fireChange(); }
+    public void setArea(int area) {
+
+        if (this.area == area) {
+
+            return;
+
+        }
+
+        this.area = area;
+
+        fireChange();
+
+    }
+    public void setVolume(int volume) {
+        if (this.volume == volume) {
+            return;
+        }
+        this.volume = volume;
+        fireChange();
+    }
+    public void setTemperature(double temperature) {
+        if (Double.compare(this.temperature, temperature) == 0) {
+            return;
+        }
+        this.temperature = temperature;
+        fireChange();
+    }
+    public void setDecorationRating(double decorationRating) {
+        if (Double.compare(this.decorationRating, decorationRating) == 0) {
+            return;
+        }
+        this.decorationRating = decorationRating;
+        fireChange();
+    }
+    public void setMaxResidents(int maxResidents) {
+        if (this.maxResidents == maxResidents) {
+            return;
+        }
+        this.maxResidents = maxResidents;
+        fireChange();
+    }
+    public void setTemperatureModifier(double temperatureModifier) {
+        if (Double.compare(this.temperatureModifier, temperatureModifier) == 0) {
+            return;
+        }
+        this.temperatureModifier = temperatureModifier;
+        fireChange();
+    }
 
 
     public HouseBuilding(BlockPos pos) {
@@ -390,8 +437,17 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
     }
 
     @Override
+    public void replaceResidents(Collection<UUID> residents) {
+        Set<UUID> next = new HashSet<>(residents);
+        if (residentsUUID.equals(next)) return;
+        residentsUUID.clear();
+        residentsUUID.addAll(next);
+        fireChange();
+    }
+
+    @Override
     public Collection<UUID> getResidentsID() {
-        return residentsUUID;
+        return Collections.unmodifiableSet(residentsUUID);
     }
 
     @Override

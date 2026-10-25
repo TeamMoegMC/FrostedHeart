@@ -33,7 +33,7 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 
 /** Full bounded wire representation of the extensible town policy state. */
-public final class TownPolicyStateUpdatePacket implements CMessage {
+public final class TownPolicyStateUpdatePacket implements TownViewPacket {
     private static final int MAX_DOMAINS = 64;
     private static final int MAX_ID_LENGTH = 64;
     private final TownPolicyState state;
@@ -55,9 +55,10 @@ public final class TownPolicyStateUpdatePacket implements CMessage {
 
     @Override
     public void handle(Supplier<NetworkEvent.Context> context) {
-        context.get().enqueueWork(() -> CClientTeamDataManager.INSTANCE.getInstance()
-                .getOptional(FHSpecialDataTypes.TOWN_DATA)
-                .ifPresent(town -> town.applyPolicyState(state)));
+        context.get().enqueueWork(() -> {
+            if (!com.teammoeg.frostedheart.content.town.client.TownClientUpdates.canApply(context.get().getNetworkManager())) return;
+            com.teammoeg.frostedheart.content.town.client.TownClientUpdates.apply(town -> town.applyPolicyState(state));
+        });
         context.get().setPacketHandled(true);
     }
 

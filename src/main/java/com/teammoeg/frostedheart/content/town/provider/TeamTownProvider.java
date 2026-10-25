@@ -47,12 +47,11 @@ public class TeamTownProvider implements ITownProviderSerializable<TeamTown>{
 
     @Override
     public @Nullable TeamTown getTown() {
-        TeamDataHolder datatype= CTeamDataManager.getDataByResearchID(ownerUUID);
+        TeamDataHolder datatype = CTeamDataManager.INSTANCE == null ? null : CTeamDataManager.INSTANCE.findByHolderId(ownerUUID);
         if(datatype==null){
             return null;
         }
-        TeamTownData townData = datatype.getData(FHSpecialDataTypes.TOWN_DATA);
-        return townData.createTeamTown();
+        return datatype.getOptional(FHSpecialDataTypes.TOWN_DATA).map(TeamTownData::createTeamTown).orElse(null);
     }
 
     /** Server-side membership check used by bound town devices. */

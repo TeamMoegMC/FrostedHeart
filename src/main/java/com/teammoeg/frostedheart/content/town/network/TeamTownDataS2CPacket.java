@@ -19,76 +19,101 @@
 
 package com.teammoeg.frostedheart.content.town.network;
 
+import java.util.UUID;
 import java.util.function.Supplier;
-
-import com.teammoeg.chorda.dataholders.team.CClientTeamDataManager;
-import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.chorda.io.codec.DataOps;
 import com.teammoeg.chorda.io.codec.ObjectWriter;
 import com.teammoeg.chorda.network.CMessage;
-import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.frostedheart.content.town.TeamTownData;
+import com.teammoeg.frostedheart.content.town.client.TownClientUpdates;
 import com.teammoeg.frostedheart.content.town.transport.TownTransportSnapshot;
-
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.network.NetworkEvent;
 
-public class TeamTownDataS2CPacket implements CMessage {
+/** Frozen full view with explicit unavailable/absent semantics. */
+public final class TeamTownDataS2CPacket implements CMessage {
+    public enum State { PENDING, PRESENT, ABSENT }
+    private final State state;
+    private final UUID holderId;
     private final Object data;
-    private final TownTransportSnapshot transportSnapshot;
+    private final Object transport;
 
-    public TeamTownDataS2CPacket(Player player) {
-        this(CTeamDataManager.get(player).getData(FHSpecialDataTypes.TOWN_DATA));
+    private TeamTownDataS2CPacket(State state, UUID holderId, Object data, Object transport) {
+        this.state = state;
+        this.holderId = holderId;
+        this.data = data;
+        this.transport = transport;
+    }
+
+    public static TeamTownDataS2CPacket pending(UUID holderId) {
+        return new TeamTownDataS2CPacket(State.PENDING, holderId, null, null);
+    }
+
+    public static TeamTownDataS2CPacket absent(UUID holderId) {
+        return new TeamTownDataS2CPacket(State.ABSENT, holderId, null, null);
+    }
+
+    public static TeamTownDataS2CPacket present(UUID holderId, TeamTownData town) throws Exception {
+        Object data = CodecUtil.encodeOrThrow(TeamTownData.MANAGEMENT_CODEC.encodeStart(DataOps.COMPRESSED, town));
+        Object transport = CodecUtil.encodeOrThrow(TownTransportSnapshot.CODEC.encodeStart(
+                DataOps.COMPRESSED, town.createTeamTown().getTransportSnapshot()));
+        return new TeamTownDataS2CPacket(State.PRESENT, java.util.Objects.requireNonNull(holderId), data, transport);
+    }
+
+    /** Compatibility for codec tests; production sends use TownSync and the real holder ID. */
+    public TeamTownDataS2CPacket(TeamTownData town) {
+        this(captureForTest(town));
+    }
+
+    private TeamTownDataS2CPacket(TeamTownDataS2CPacket captured) {
+        this(captured.state, captured.holderId, captured.data, captured.transport);
+    }
+
+    private static TeamTownDataS2CPacket captureForTest(TeamTownData town) {
+        try { return present(new UUID(0, 0), town); }
+        catch (Exception failure) { throw new IllegalStateException("Unable to capture town view", failure); }
     }
 
     public TeamTownDataS2CPacket(FriendlyByteBuf buffer) {
-        data = ObjectWriter.readObject(buffer);
-        transportSnapshot = CodecUtil.decodeOrThrow(TownTransportSnapshot.CODEC.decode(
-                DataOps.COMPRESSED, ObjectWriter.readObject(buffer)));
-    }
-
-    public TeamTownDataS2CPacket(TeamTownData townData) {
-        Object encodedData = null;
-        TownTransportSnapshot snapshot = TownTransportSnapshot.EMPTY;
-        try {
-            snapshot = townData.createTeamTown().getTransportSnapshot();
-            encodedData = FHSpecialDataTypes.TOWN_DATA.saveData(DataOps.COMPRESSED, townData);
-            // A full sync is unicast, but the dirty-resource baseline is team-wide. Clearing it
-            // forces the next flush to retain changes that were marked before this packet.
-            townData.markFullSynced();
-        } catch (Exception exception) {
-            FHMain.LOGGER.error("Failed to save town data when syncing town data", exception);
-        }
-        data = encodedData;
-        transportSnapshot = snapshot;
+        state = buffer.readEnum(State.class);
+        holderId = buffer.readBoolean() ? buffer.readUUID() : null;
+        data = state == State.PRESENT ? ObjectWriter.readObject(buffer) : null;
+        transport = state == State.PRESENT ? ObjectWriter.readObject(buffer) : null;
     }
 
     TeamTownData decodeTownData() throws Exception {
-        TeamTownData townData = FHSpecialDataTypes.TOWN_DATA.loadData(DataOps.COMPRESSED, data);
-        townData.applyTransportSnapshot(transportSnapshot);
-        return townData;
+        TeamTownData town = CodecUtil.decodeOrThrow(TeamTownData.MANAGEMENT_CODEC.decode(DataOps.COMPRESSED, data));
+        TownTransportSnapshot snapshot = CodecUtil.decodeOrThrow(
+                TownTransportSnapshot.CODEC.decode(DataOps.COMPRESSED, transport));
+        town.applyTransportSnapshot(snapshot);
+        return town;
     }
 
     @Override
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
+            if (!com.teammoeg.frostedheart.content.town.client.TownClientUpdates.isCurrentConnection(context.get().getNetworkManager())) return;
             try {
-                CClientTeamDataManager.INSTANCE.getInstance().setData(
-                        FHSpecialDataTypes.TOWN_DATA, decodeTownData());
-                TeamTownData.fireClientDataChanged();
-            } catch (Exception exception) {
-                FHMain.LOGGER.error("Failed to load data when syncing town data", exception);
-            }
+                switch (state) {
+                    case PENDING -> TownClientUpdates.pending(holderId);
+                    case ABSENT -> TownClientUpdates.install(holderId, null);
+                    case PRESENT -> TownClientUpdates.install(holderId, decodeTownData());
+                }
+            } catch (Exception failure) { TownClientUpdates.failed(failure); }
         });
         context.get().setPacketHandled(true);
     }
 
     @Override
     public void encode(FriendlyByteBuf buffer) {
-        ObjectWriter.writeObject(buffer, data);
-        CodecUtil.writeCodec(buffer, TownTransportSnapshot.CODEC, transportSnapshot);
+        buffer.writeEnum(state);
+        buffer.writeBoolean(holderId != null);
+        if (holderId != null) buffer.writeUUID(holderId);
+        if (state == State.PRESENT) {
+            ObjectWriter.writeObject(buffer, data);
+            ObjectWriter.writeObject(buffer, transport);
+        }
     }
 }

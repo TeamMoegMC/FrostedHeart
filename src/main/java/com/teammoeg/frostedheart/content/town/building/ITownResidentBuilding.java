@@ -55,5 +55,8 @@ public interface ITownResidentBuilding {
      */
     Collection<UUID> getResidentsID();
 
+    /** Installs the final roster once; resident position mirrors are committed by TownAssignments. */
+    void replaceResidents(Collection<UUID> residents);
+
     Collection<Resident> getResidents(ITownWithResidents townOfBuilding);
 }

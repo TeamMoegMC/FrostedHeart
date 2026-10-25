@@ -40,20 +40,21 @@ import net.minecraftforge.network.NetworkEvent;
  * 服务端 → 客户端：增量同步建筑数据。
  * 包含需要更新（新增/修改）的建筑和需要移除的建筑位置。
  */
-public class TownBuildingUpdatePacket implements CMessage {
-    private final Map<BlockPos, ITownBuilding> changed;
+public class TownBuildingUpdatePacket implements TownViewPacket {
+    private final Map<BlockPos, Object> changed;
     private final Set<BlockPos> removed;
 
     public TownBuildingUpdatePacket(Map<BlockPos, ITownBuilding> changed, Set<BlockPos> removed) {
-        this.changed = changed;
-        this.removed = removed;
+        this.changed = new java.util.LinkedHashMap<>();
+        changed.forEach((key, value) -> this.changed.put(key, CodecUtil.encodeOrThrow(ITownBuilding.CODEC.encodeStart(DataOps.COMPRESSED, value))));
+        this.removed = Set.copyOf(removed);
     }
 
     public TownBuildingUpdatePacket(FriendlyByteBuf buffer) {
         // Read changed buildings: key via native BlockPos, value via ITownBuilding.CODEC
         this.changed = buffer.readMap(
             FriendlyByteBuf::readBlockPos,
-            buf -> { Object o = ObjectWriter.readObject(buf); return CodecUtil.decodeOrThrow(ITownBuilding.CODEC.decode(DataOps.COMPRESSED, o)); });
+            ObjectWriter::readObject);
         // Read removed positions
         int removedSize = buffer.readVarInt();
         this.removed = new HashSet<>(removedSize);
@@ -67,7 +68,7 @@ public class TownBuildingUpdatePacket implements CMessage {
         // Write changed buildings: key via native BlockPos, value via ITownBuilding.CODEC
         buffer.writeMap(changed,
             FriendlyByteBuf::writeBlockPos,
-            (buf, building) -> CodecUtil.writeCodec(buf, ITownBuilding.CODEC, building));
+            ObjectWriter::writeObject);
         // Write removed positions
         buffer.writeVarInt(removed.size());
         for (BlockPos pos : removed) {
@@ -78,9 +79,12 @@ public class TownBuildingUpdatePacket implements CMessage {
     @Override
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
-            CClientTeamDataManager.INSTANCE.getInstance()
-                .getOptional(FHSpecialDataTypes.TOWN_DATA)
-                .ifPresent(townData -> townData.applyBuildingUpdate(changed, removed));
+            if (!com.teammoeg.frostedheart.content.town.client.TownClientUpdates.canApply(context.get().getNetworkManager())) return;
+            com.teammoeg.frostedheart.content.town.client.TownClientUpdates.apply(townData -> {
+                    Map<BlockPos, ITownBuilding> decoded = new java.util.LinkedHashMap<>();
+                    changed.forEach((key, value) -> decoded.put(key, CodecUtil.decodeOrThrow(ITownBuilding.CODEC.decode(DataOps.COMPRESSED, value))));
+                    townData.applyBuildingUpdate(decoded, removed);
+                });
         });
         context.get().setPacketHandled(true);
     }

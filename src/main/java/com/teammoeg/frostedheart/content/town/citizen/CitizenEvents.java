@@ -82,13 +82,6 @@ public final class CitizenEvents {
 		sched.tick(level);
 	}
 
-	/** Applies the cross-dimension citizen presentation budget after level ticks. */
-	@SubscribeEvent
-	public static void onServerTick(TickEvent.ServerTickEvent event) {
-		if (event.phase == TickEvent.Phase.END)
-			SyncEngine.refreshServerVisibility(event.getServer());
-	}
-
 	/**
 	 * 服务器停止时关闭寻路线程池并清空调度器注册表（不持久化，运行期状态）。
 	 * <p>
@@ -119,7 +112,7 @@ public final class CitizenEvents {
 	 */
 	@SubscribeEvent
 	public static void onServerStopped(ServerStoppedEvent event) {
-		AITownManager.reset();
+		// The team record adapter releases stored simulations after save completion.
 	}
 
 	/**

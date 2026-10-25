@@ -42,12 +42,35 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import com.teammoeg.frostedheart.content.town.TeamTown;
+import com.teammoeg.frostedheart.content.town.building.TownBuildingTypes;
 
 public abstract class AbstractTownBuildingBlockEntity<T extends AbstractTownBuilding> extends CBlockEntity implements
         TownBlockEntity<T>, ScheduledTaskTileEntity, CBlockInterfaces.IActiveState, CTickableBlockEntity {
     
-    protected boolean addedToSchedulerQueue = false;
+    public enum StructureScanResult {
+        VALID,
+        INVALID,
+        DATA_UNAVAILABLE
+    }
+
+    private static final int ENVIRONMENT_REFRESH_TICKS = 20;
+    private static final int STRUCTURE_REFRESH_TICKS = 200;
+    private SchedulerQueue.Registration scanRegistration;
+    private long nextStructureRefresh;
+    private long nextEnvironmentRefresh;
+    private long observedResourceGeneration = -1;
+    private boolean lastScanCompleted;
+    private AbstractTownBuilding placedBuilding;
     public ITownProviderSerializable<? extends ITownWithBuildings> townProvider;
+
+    public boolean hasRegisteredPlacement(AbstractTownBuilding building) {
+        return building != null && placedBuilding == building;
+    }
+
+    public void rememberPlacement(AbstractTownBuilding building) {
+        placedBuilding = building;
+    }
 
     public AbstractTownBuildingBlockEntity(BlockEntityType<? extends BlockEntity> type, BlockPos pos, BlockState state)  {
         super(type,pos,state);
@@ -56,22 +79,61 @@ public abstract class AbstractTownBuildingBlockEntity<T extends AbstractTownBuil
 	/**
      * 重新进行结构的扫描、温度的检测等工作，并刷新城镇中的建筑状态
      */
-    public void refresh(@NotNull T building){
-        building.setInitialized(true);
-        building.setIsStructureValid(scanStructure(building));
+    public void refresh(@NotNull T building) {
+        lastScanCompleted = false;
+        building.updateBatch(() -> {
+            StructureScanResult result = scanStructure(building);
+            if (result == StructureScanResult.DATA_UNAVAILABLE) {
+                return;
+            }
+            lastScanCompleted = true;
+            building.setInitialized(true);
+            building.setIsStructureValid(result == StructureScanResult.VALID);
+            refreshEnvironment(building);
+        });
     }
 
-    /**
-     * 和refresh差不多，但是进行了一些检查
-     */
-    public void refresh_safe(T building){
-        if(level != null && level.isLoaded(worldPosition) && building != null){
-            this.refresh(building);
+    protected void refreshEnvironment(T building) {
+    }
+
+    public void refresh_safe(T building) {
+        if (!(level instanceof ServerLevel) || !isStillValid() || building == null) {
+            return;
         }
+        try {
+            refresh(building);
+        } catch (RuntimeException failure) {
+            lastScanCompleted = false;
+            FHMain.LOGGER.error("Town building refresh failed at {}", worldPosition, failure);
+        }
+        long now = level.getGameTime();
+        nextStructureRefresh = now + (lastScanCompleted ? STRUCTURE_REFRESH_TICKS : ENVIRONMENT_REFRESH_TICKS);
+        nextEnvironmentRefresh = now + ENVIRONMENT_REFRESH_TICKS;
     }
 
-    public void executeTask(){
-        this.getBuilding().ifPresent(this::refresh_safe);
+    @Override
+    public void executeTask() {
+        if (!(level instanceof ServerLevel serverLevel) || !isStillValid()) {
+            return;
+        }
+        ITownWithBuildings town = getTown();
+        if (town instanceof TeamTown playerTown) {
+            playerTown.ensureCoreBound(serverLevel, worldPosition, this);
+        }
+        long resourceGeneration = TownBuildingTypes.resourceGeneration();
+        if (resourceGeneration != observedResourceGeneration) {
+            observedResourceGeneration = resourceGeneration;
+            nextStructureRefresh = 0;
+        }
+        getBuilding().ifPresent(building -> {
+            long now = level.getGameTime();
+            if (now >= nextStructureRefresh) {
+                refresh_safe(building);
+            } else if (now >= nextEnvironmentRefresh) {
+                building.updateBatch(() -> refreshEnvironment(building));
+                nextEnvironmentRefresh = now + ENVIRONMENT_REFRESH_TICKS;
+            }
+        });
     }
 
     public boolean isStillValid(){
@@ -81,76 +143,53 @@ public abstract class AbstractTownBuildingBlockEntity<T extends AbstractTownBuil
                 && level.getBlockEntity(worldPosition) == this;
     }
 
-    public Optional<T> getBuilding(){
-        if(this.townProvider == null){
-            if (level == null || !level.isClientSide) {
-                FHMain.LOGGER.warn("AbstractTownBuildingBlockEntity: ITown provider is null");
-            }
+    /** Lookup is pure. Registration belongs to onLoad and explicit lifecycle work. */
+    public Optional<T> getBuilding() {
+        if (!isStillValid()) {
             return Optional.empty();
         }
         ITownWithBuildings town = getTown();
-        if(town == null){
-            if (level == null || !level.isClientSide) {
-                FHMain.LOGGER.warn("AbstractTownBuildingBlockEntity: TownProvider didn't get town");
-            }
+        if (town == null) {
             return Optional.empty();
         }
-        Optional<AbstractTownBuilding> buildingOptional = town.getTownBuilding(this.worldPosition);
-        if(buildingOptional.isPresent()){
-            AbstractTownBuilding building = buildingOptional.get();
-            return Optional.ofNullable(getBuilding(building));
+        if (town instanceof TeamTown playerTown && level instanceof ServerLevel serverLevel
+                && !playerTown.isBuildingDimension(serverLevel)) {
+            return Optional.empty();
         }
-        if (canRecoverMissingBuilding()) {
-            town.addTownBlock(worldPosition, this);
-            Optional<T> recoveredBuilding = town.getTownBuilding(worldPosition).map(this::getBuilding);
-            if (recoveredBuilding.isPresent()) {
-                FHMain.LOGGER.info("AbstractTownBuildingBlockEntity: Recovered missing town building at {}", worldPosition);
-                return recoveredBuilding;
-            }
-        }
-        if (level == null || !level.isClientSide) {
-            FHMain.LOGGER.warn("AbstractTownBuildingBlockEntity: Building doesn't exist in town");
-        }
-        return Optional.empty();
+        return town.getTownBuilding(worldPosition).map(this::getBuilding);
     }
 
-    /**
-     * Missing-building recovery is only valid while this exact block entity is
-     * still installed in the world. A removed menu may retain the old Java
-     * object briefly; allowing that object to recover would recreate a building
-     * after its core block was already destroyed.
-     */
-    private boolean canRecoverMissingBuilding() {
-        return level != null
-                && !level.isClientSide
-                && !isRemoved()
-                && level.isLoaded(worldPosition)
-                && level.getBlockEntity(worldPosition) == this;
+    @Override
+    public void onLoad() {
+        super.onLoad();
+        nextStructureRefresh = 0;
+        nextEnvironmentRefresh = 0;
+        addToSchedulerQueue();
     }
 
-    /**
-     * Active block removal unregisters the logical building immediately.
-     * {@link com.teammoeg.chorda.block.entity.CBlockEntity} does not invoke this
-     * callback for chunk unloads, so unloaded buildings remain registered.
-     */
+    @Override
+    public void onUnloaded() {
+        cancelScheduledScan();
+        super.onUnloaded();
+    }
+
     @Override
     public void onRemoved() {
+        cancelScheduledScan();
         if (level instanceof ServerLevel serverLevel && townProvider != null) {
-            // LevelChunk normally detaches this block entity from its map before
-            // setRemoved(), so null is expected here. A different live instance
-            // means this is a stale callback and must not remove its replacement.
-            BlockEntity currentBlockEntity = level.getBlockEntity(worldPosition);
-            if (currentBlockEntity == null || currentBlockEntity == this) {
-                ITownWithBuildings town = townProvider.getTown();
-                if (town != null) {
-                    Optional<T> mappedBuilding = town.getTownBuilding(worldPosition).map(this::getBuilding);
-                    if (mappedBuilding.isPresent()) {
-                        town.removeTownBlock(serverLevel, worldPosition);
-                    }
-                }
+            ITownWithBuildings town = townProvider.getTown();
+            if (town instanceof TeamTown playerTown) {
+                playerTown.onCoreRemoved(serverLevel, worldPosition, this);
             }
         }
         super.onRemoved();
+    }
+
+    private void cancelScheduledScan() {
+        if (scanRegistration != null) {
+            scanRegistration.close();
+            scanRegistration = null;
+        }
     }
 
     @Nullable
@@ -165,31 +204,28 @@ public abstract class AbstractTownBuildingBlockEntity<T extends AbstractTownBuil
     }
 
 
-    public abstract boolean scanStructure(T building);
+    public abstract StructureScanResult scanStructure(T building);
 
 
-	public void addToSchedulerQueue(){
-        if(!this.addedToSchedulerQueue){
-            this.addedToSchedulerQueue = true;
-            SchedulerQueue.add(this);
+    public void addToSchedulerQueue() {
+        if (level instanceof ServerLevel && scanRegistration == null) {
+            scanRegistration = SchedulerQueue.register(this);
         }
     }
 
-    public void tick(){
-        this.addToSchedulerQueue();
+    public void tick() {
+        // World registration is performed by onLoad, never by the client tick.
     }
 
     @Override
-    public void readCustomNBT(CompoundTag compoundNBT, boolean b) {
-    	if(compoundNBT.contains("townProvider")){
-            ITownProviderSerializable<? extends ITown> providerRaw = ITownProviderSerializable.fromNBT(compoundNBT.getCompound("townProvider"));
-            if(providerRaw != null){
-                if(ITownWithBuildings.class.isAssignableFrom(providerRaw.getTownType())){
-                    //这里经过getTownType判断类型之后，townProvider的类型一定为ITownWithBuildings，所以应该不会有问题了
-                    townProvider = (ITownProviderSerializable<? extends ITownWithBuildings>) providerRaw;
-                } else{
-                }
-            }
+    public void readCustomNBT(CompoundTag compoundNBT, boolean isPacket) {
+        if (!compoundNBT.contains("townProvider")) {
+            return;
+        }
+        ITownProviderSerializable<? extends ITown> provider =
+                ITownProviderSerializable.fromNBT(compoundNBT.getCompound("townProvider"));
+        if (provider != null && ITownWithBuildings.class.isAssignableFrom(provider.getTownType())) {
+            townProvider = (ITownProviderSerializable<? extends ITownWithBuildings>) provider;
         }
     }
 

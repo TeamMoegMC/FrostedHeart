@@ -46,36 +46,29 @@ public class WarehouseBlockEntity extends AbstractTownBuildingBlockEntity<Wareho
         super(FHBlockEntityTypes.WAREHOUSE.get(),pos,state);
     }
 
-    @Override
-    public void refresh(@NotNull WarehouseBuilding building) {
-        super.refresh(building);
-        ITownWithBuildings buildingTown = this.getTown();
-        if(buildingTown instanceof TeamTown teamTown){
-            teamTown.getTownData().ifPresent(TeamTownData::reloadMaxCapacity);
+
+
+    public StructureScanResult scanStructure(WarehouseBuilding building) {
+        RoomData room = BlockScanner.scanRoomDataFromBlock(level, worldPosition);
+        if (room == null) {
+            return StructureScanResult.DATA_UNAVAILABLE;
         }
-
-    }
-
-    public boolean scanStructure(WarehouseBuilding building){
-		BlockPos housePos = this.getBlockPos();
-		RoomData rd=BlockScanner.scanRoomDataFromBlock(level,housePos);
-
-		building.setOccupiedVolume(rd.occupiedCells);
-		//prerequisition
-		if(rd.doors.size()<=0) {
-			rd.occupiedCells.setValid(false);
-		}
-		if (rd.isValid()) {
-        	building.setArea(rd.area);
-        	building.setVolume(rd.volume);
-            //容量与体积相似，但是在随着房间高度增高略有衰减
-            building.setDecorationAmount(rd.countInsideBlock(t->t.getBlock() instanceof WarehouseStorageRackBlock));
-
-            building.setCapacity(building.getArea() * Math.pow(building.getVolume() * 0.02 / building.getArea(), 0.9) * 1980 + building.getDecorationAmount() * 512);
-            return true;
-            
+        if (room.doors.isEmpty()) {
+            room = room.withValidity(false);
         }
-        return false;
+        if (!room.isValid()) {
+            building.setOccupiedVolume(room.occupiedCells);
+            return StructureScanResult.INVALID;
+        }
+        int storageRacks = room.countInsideBlock(state -> state.getBlock() instanceof WarehouseStorageRackBlock);
+        double capacity = room.area <= 0 ? 0.0
+                : room.area * Math.pow(room.volume * 0.02 / room.area, 0.9) * 1980 + storageRacks * 512;
+        building.setOccupiedVolume(room.occupiedCells);
+        building.setArea(room.area);
+        building.setVolume(room.volume);
+        building.setDecorationAmount(storageRacks);
+        building.setCapacity(capacity);
+        return StructureScanResult.VALID;
     }
 
 

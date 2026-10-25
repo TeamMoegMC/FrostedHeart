@@ -23,4 +23,8 @@ package com.teammoeg.frostedheart.content.town.transport;
 @FunctionalInterface
 public interface WarehouseTopologyListener {
     void onWarehouseTopologyChanged(WarehouseTopologySnapshot snapshot);
+
+    default void onTownRebound(com.teammoeg.frostedheart.content.town.TeamTown town) {
+        onWarehouseTopologyChanged(WarehouseTopologySnapshot.UNAVAILABLE);
+    }
 }

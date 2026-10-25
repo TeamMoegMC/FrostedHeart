@@ -10,6 +10,8 @@
 P2P 物流是城镇运力的同维度点对点物品传输设备。连接、设置速率、两端红石事实和过滤摘要由城镇状态持有；终端方块实体
 只持有本地库存、过滤器和运行时预算。它不复用 `content.robotics.logistics` 的频道或机器人网络。
 
+2026-10-19 的职责整理将运输准入、配对和预约算法收拢到城镇核心包的 `TownTransportService`，既有 `TeamTown` 公共方法继续作为调用入口。查询方法只读取当前事实，需要参数或拓扑协调的修改和视图入口显式准备；保存与组件替换合同见 [persistence-and-runtime.md](persistence-and-runtime.md)。
+
 ## 设备与注册 ID
 
 | 设备 | 注册 ID | 行为 |

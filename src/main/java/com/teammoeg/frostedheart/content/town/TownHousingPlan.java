@@ -33,6 +33,7 @@ import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.house.HouseBuilding;
 
 import net.minecraft.core.BlockPos;
+import java.util.function.Predicate;
 
 /** Ordered residential-care queue plus guaranteed-ration targets. */
 public final class TownHousingPlan {
@@ -71,10 +72,14 @@ public final class TownHousingPlan {
     }
 
     public TownHousingPlan normalize(Map<BlockPos, AbstractTownBuilding> buildings) {
+        return normalize(buildings, pos -> false);
+    }
+
+    public TownHousingPlan normalize(Map<BlockPos, AbstractTownBuilding> buildings, Predicate<BlockPos> preserve) {
         List<Entry> result = new ArrayList<>();
         Set<BlockPos> present = new HashSet<>();
         for (Entry entry : entries) {
-            if (buildings.get(entry.building()) instanceof HouseBuilding
+            if ((buildings.get(entry.building()) instanceof HouseBuilding || preserve.test(entry.building()))
                     && present.add(entry.building())) {
                 result.add(entry);
             }
@@ -104,7 +109,7 @@ public final class TownHousingPlan {
             return Optional.empty();
         }
         int bounded = Math.max(0, Math.min(target, Math.max(0, house.getMaxResidents())));
-        List<Entry> changed = new ArrayList<>(normalize(buildings).entries);
+        List<Entry> changed = new ArrayList<>(normalize(buildings, pos -> true).entries);
         for (int index = 0; index < changed.size(); index++) {
             if (changed.get(index).building().equals(building)) {
                 changed.set(index, new Entry(building, bounded));
@@ -120,7 +125,7 @@ public final class TownHousingPlan {
             Map<BlockPos, AbstractTownBuilding> buildings
     ) {
         if (!(buildings.get(building) instanceof HouseBuilding)) return Optional.empty();
-        List<Entry> changed = new ArrayList<>(normalize(buildings).entries);
+        List<Entry> changed = new ArrayList<>(normalize(buildings, pos -> true).entries);
         Entry moved = null;
         for (int index = 0; index < changed.size(); index++) {
             if (changed.get(index).building().equals(building)) {
@@ -149,6 +154,10 @@ public final class TownHousingPlan {
         if (x != 0) return x;
         int y = Integer.compare(first.getY(), second.getY());
         return y != 0 ? y : Integer.compare(first.getZ(), second.getZ());
+    }
+
+    public TownHousingPlan withoutBuilding(BlockPos pos) {
+        return new TownHousingPlan(entries.stream().filter(entry -> !entry.building().equals(pos)).toList());
     }
 
     @Override

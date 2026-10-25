@@ -58,6 +58,12 @@ sourceSets {
     }
 }
 
+def gameTestRunDirectory = file(providers.gradleProperty('gameTestDirectory').getOrElse('run-gametest'))
+
+tasks.named('compileGameTestJava') {
+    options.encoding = 'UTF-8'
+}
+
 minecraft {
     mappings channel: 'parchment', version: "${parchment_version}-${minecraft_version}"
     accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
@@ -127,7 +133,8 @@ minecraft {
         }
 
         gameTestServer {
-            workingDirectory project.file('run-gametest')
+            workingDirectory gameTestRunDirectory
+            property 'frostedheart.persistenceTestPhase', providers.gradleProperty('teamTownPersistencePhase').getOrElse('read')
             property 'mixin.env.remapRefMap', 'true'
             property 'mixin.env.refMapRemappingFile', "${buildDir}/createSrgToMcp/output.srg"
             property 'forge.enabledGameTestNamespaces',
@@ -180,16 +187,16 @@ tasks.register('validateResearchCatalog', JavaExec) {
 
 tasks.register('prepareResearchGameTestStructures', Copy) {
     from file('src/gametest/resources')
-    into file('run-gametest/gameteststructures')
+    into new File(gameTestRunDirectory, 'gameteststructures')
 }
 
 tasks.register('prepareResearchGameTestCatalog', Sync) {
     from file('src/gametest/catalog')
-    into file('run-gametest/config/fhresearches')
+    into new File(gameTestRunDirectory, 'config/fhresearches')
 }
 
 tasks.register('cleanResearchGameTestWorld', Delete) {
-    delete file('run-gametest/world')
+    delete new File(gameTestRunDirectory, 'world')
 }
 
 tasks.matching { it.name == 'runGameTestServer' }.configureEach {

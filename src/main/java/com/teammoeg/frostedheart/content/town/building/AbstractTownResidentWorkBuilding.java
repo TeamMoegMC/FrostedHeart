@@ -28,6 +28,8 @@ import net.minecraft.core.BlockPos;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
+import java.util.Collections;
+import java.util.Collection;
 
 public abstract class AbstractTownResidentWorkBuilding extends AbstractTownBuilding implements ITownResidentWorkBuilding{
     protected Set<UUID> residentsID = new HashSet<>();
@@ -35,7 +37,9 @@ public abstract class AbstractTownResidentWorkBuilding extends AbstractTownBuild
     private int maxResidents;
 
     public void setMaxResidents(int maxResidents) {
-        if (this.maxResidents == maxResidents) return;
+        if (this.maxResidents == maxResidents) {
+            return;
+        }
         this.maxResidents = maxResidents;
         fireChange();
     }
@@ -59,27 +63,43 @@ public abstract class AbstractTownResidentWorkBuilding extends AbstractTownBuild
     public boolean addResident(Resident resident){
         resident.setWorkPos(this.getPos());
         boolean added = this.residentsID.add(resident.getUUID());
-        if (added) fireChange();
+        if (added) {
+            fireChange();
+        }
         return added;
     }
 
     public boolean removeResident(Resident resident){
         resident.setWorkPos(null);
         boolean removed = this.residentsID.remove(resident.getUUID());
-        if (removed) fireChange();
+        if (removed) {
+            fireChange();
+        }
         return removed;
     }
 
     /** Clears the authoritative daily roster without mutating resident fields. */
     public void clearResidents() {
-        if (this.residentsID.isEmpty()) return;
+        if (this.residentsID.isEmpty()) {
+            return;
+        }
         this.residentsID.clear();
         fireChange();
     }
 
     @Override
+    public void replaceResidents(Collection<UUID> residents) {
+        Set<UUID> next = new HashSet<>(residents);
+        if (residentsID.equals(next)) {
+            return;
+        }
+        residentsID = next;
+        fireChange();
+    }
+
+    @Override
     public Set<UUID> getResidentsID(){
-        return residentsID;
+        return Collections.unmodifiableSet(residentsID);
     }
 
 }

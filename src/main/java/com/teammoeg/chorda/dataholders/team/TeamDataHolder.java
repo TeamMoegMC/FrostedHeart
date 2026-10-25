@@ -25,10 +25,15 @@ package com.teammoeg.chorda.dataholders.team;
 import com.teammoeg.chorda.dataholders.DataHolderMap;
 import com.teammoeg.chorda.dataholders.SpecialData;
 import com.teammoeg.chorda.dataholders.SpecialDataType;
+import com.teammoeg.chorda.dataholders.PersistentComponent;
+import com.teammoeg.chorda.dataholders.persistence.PersistenceCoordinator;
 import com.teammoeg.chorda.events.TeamLoadedEvent;
 import com.teammoeg.chorda.network.CBaseNetwork;
 import com.teammoeg.chorda.network.CMessage;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NbtUtils;
+import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.common.MinecraftForge;
 
@@ -52,6 +57,20 @@ public class TeamDataHolder extends DataHolderMap<TeamDataHolder> {
     
     /** 关联的模组团队实例。 / The associated modded team instance. */
     private AbstractTeam team;
+
+    // Kept even while the external provider cannot resolve this team.
+    private UUID externalTeamId;
+    private CompoundTag unknownRoot = new CompoundTag();
+    private final Set<UUID> supersededHolderIds = new LinkedHashSet<>();
+    private PersistenceCoordinator.RecordState recordState;
+    private TeamRecordExtension extension = TeamRecordExtension.NONE;
+    private final Map<SpecialDataType<?>, ComponentSlot> componentSlots = new IdentityHashMap<>();
+
+    private static final class ComponentSlot {
+        long revision = 1;
+        long encodedRevision;
+        Tag frozen;
+    }
 	
     /** 标记此团队是否已正确加载。 / Flag indicating whether this team has been correctly loaded. */
     private boolean isLoaded;
@@ -67,6 +86,7 @@ public class TeamDataHolder extends DataHolderMap<TeamDataHolder> {
 		super("TeamData");
 		this.team=team;
 		this.id=id;
+		this.externalTeamId = team == null ? null : team.getId();
 	}
 	
 	/**
@@ -77,13 +97,15 @@ public class TeamDataHolder extends DataHolderMap<TeamDataHolder> {
 	 */
 	@Override
 	public void save(CompoundTag nbt, boolean isPacket) {
-
+		for (String key : unknownRoot.getAllKeys()) nbt.put(key, unknownRoot.get(key).copy());
 		super.save(nbt, isPacket);
-        if (ownerName != null)
-            nbt.putString("owner", ownerName);
-        nbt.putUUID("uuid", id);
-        if(team!=null)
-        	nbt.putUUID("teamId", team.getId());//team id
+        saveIdentity(nbt);
+        if (recordState != null) {
+            extension.capturePart(this, nbt);
+            for (String key : extension.ownedRootKeys()) {
+                if (nbt.contains(key)) nbt.put(key, nbt.get(key).copy());
+            }
+        }
 	}
 	
 	/**
@@ -94,12 +116,22 @@ public class TeamDataHolder extends DataHolderMap<TeamDataHolder> {
 	 */
 	@Override
 	public void load(CompoundTag nbt, boolean isPacket) {
-		super.load(nbt, isPacket);
+        unknownRoot = new CompoundTag();
+        Set<String> known = Set.of("data", "uuid", "owner", "teamId", "supersededHolderIds", "storageVersion", "deleted", "captureTick");
+        for (String key : nbt.getAllKeys()) {
+            if (!known.contains(key) && !extension.ownedRootKeys().contains(key)) unknownRoot.put(key, nbt.get(key).copy());
+        }
         if (nbt.contains("owner"))
             ownerName = nbt.getString("owner");
         if (nbt.contains("uuid"))
             id = nbt.getUUID("uuid");
-        //no need to deserialize ftb team
+        if (nbt.hasUUID("teamId")) externalTeamId = nbt.getUUID("teamId");
+        supersededHolderIds.clear();
+        for (Tag tag : nbt.getList("supersededHolderIds", Tag.TAG_INT_ARRAY)) {
+            UUID superseded = NbtUtils.loadUUID(tag);
+            if (!id.equals(superseded)) supersededHolderIds.add(superseded);
+        }
+        super.load(nbt, isPacket);
 	}
 	/**
 	 * 如果尚未加载，则触发加载事件。仅在首次调用时触发 {@link TeamLoadedEvent}。
@@ -108,8 +140,8 @@ public class TeamDataHolder extends DataHolderMap<TeamDataHolder> {
 	 */
 	public void loadIfNeeded() {
 		if(!isLoaded) {
-			MinecraftForge.EVENT_BUS.post(new TeamLoadedEvent(this));
 			isLoaded=true;
+			MinecraftForge.EVENT_BUS.post(new TeamLoadedEvent(this));
 		}
 	}
 	/**
@@ -120,7 +152,7 @@ public class TeamDataHolder extends DataHolderMap<TeamDataHolder> {
 	 * @param consumer 对每个在线玩家执行的操作 / the action to perform on each online player
 	 */
 	public void forEachOnline(Consumer<ServerPlayer> consumer) {
-        for (ServerPlayer spe : team.getOnlineMembers())
+		for (ServerPlayer spe : getOnlineMembers())
         	consumer.accept(spe);
 	}
 	
@@ -133,7 +165,7 @@ public class TeamDataHolder extends DataHolderMap<TeamDataHolder> {
 	 * @param packet 要发送的数据包 / the packet to send
 	 */
 	public void sendToOnline(CBaseNetwork network,CMessage packet) {
-        for (ServerPlayer spe : team.getOnlineMembers())
+        for (ServerPlayer spe : getOnlineMembers())
         	network.sendPlayer(spe, packet);
 	}
     /**
@@ -176,7 +208,9 @@ public class TeamDataHolder extends DataHolderMap<TeamDataHolder> {
      * @param ownerName 所有者名称 / the owner's name
      */
     public void setOwnerName(String ownerName) {
+        if (Objects.equals(this.ownerName, ownerName)) return;
         this.ownerName = ownerName;
+        markPersistentChanged();
     }
 
     /**
@@ -188,6 +222,10 @@ public class TeamDataHolder extends DataHolderMap<TeamDataHolder> {
      */
     public void setTeam(AbstractTeam team) {
         this.team = team;
+        if (team != null && !Objects.equals(externalTeamId, team.getId())) {
+            externalTeamId = team.getId();
+            markPersistentChanged();
+        }
     }
 	
 	/**
@@ -198,7 +236,7 @@ public class TeamDataHolder extends DataHolderMap<TeamDataHolder> {
 	 * @return 在线成员集合 / the collection of online members
 	 */
 	public Collection<ServerPlayer> getOnlineMembers() {
-		return team.getOnlineMembers();
+		return team == null ? List.of() : team.getOnlineMembers();
 	}
 	Map<SpecialDataType,TeamDataClosure> dataHolderCache=new HashMap<>();
 	/**
@@ -213,5 +251,122 @@ public class TeamDataHolder extends DataHolderMap<TeamDataHolder> {
 	public synchronized <U extends SpecialData> TeamDataClosure<U> getDataHolder(SpecialDataType<U> cap){
 		return dataHolderCache.computeIfAbsent(cap, t->new TeamDataClosure<>(this,t));
 	}
+
+    public UUID getExternalTeamId() { return externalTeamId; }
+    void rememberExternalTeamId(UUID id) { externalTeamId = id; }
+    public boolean isServerBound() { return recordState != null; }
+    public PersistenceCoordinator.RecordState recordState() { return recordState; }
+
+    /** Called only by the server manager, before loading or posting creation events. */
+    void bindServer(PersistenceCoordinator.RecordState state, TeamRecordExtension extension) {
+        this.recordState = state;
+        this.extension = extension;
+    }
+
+    public void markPersistentChanged() {
+        if (recordState != null) recordState.markChanged();
+    }
+
+    public void invalidateComponent(SpecialDataType<?> type) {
+        if (recordState == null) return;
+        componentSlots.computeIfAbsent(type, ignored -> new ComponentSlot()).revision++;
+        markPersistentChanged();
+    }
+
+    @Override
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    protected boolean deferComponentInstallation(SpecialDataType<?> type, SpecialData next, InstallReason reason) {
+        return recordState != null && extension.deferIfBusy(this, () -> {
+            if (next == null) removeData(type);
+            else setData((SpecialDataType) type, next);
+        });
+    }
+
+    @Override
+    protected void onComponentInstalled(SpecialDataType<?> type, SpecialData previous,
+                                        SpecialData next, InstallReason reason) {
+        if (recordState == null) return;
+        if (previous instanceof PersistentComponent tracked) tracked.setPersistenceListener(null);
+        componentSlots.remove(type);
+        if (next != null) {
+            componentSlots.put(type, new ComponentSlot());
+            if (next instanceof PersistentComponent tracked) {
+                tracked.setPersistenceListener(() -> {
+                    if (recordState != null && getOptional(type).orElse(null) == next) invalidateComponent(type);
+                });
+            }
+        }
+        markPersistentChanged();
+        // LOAD is bound once the complete holder and extension state are present.
+        if (reason != InstallReason.LOAD) extension.componentInstalled(this, type, previous, next, reason);
+    }
+
+    void prepareCheckpoint() {
+        for (SpecialDataType<?> type : getTypes()) {
+            SpecialData component = getOptional(type).orElse(null);
+            if (!(component instanceof PersistentComponent)) {
+                // Compatibility components may expose mutable nested data. Capture
+                // them each checkpoint, but do not rewrite an equal frozen value.
+                ComponentSlot slot = componentSlots.computeIfAbsent(type, ignored -> new ComponentSlot());
+                Tag encoded = encodeComponent(type, component);
+                if (!encoded.equals(slot.frozen)) {
+                    slot.revision++;
+                    slot.frozen = encoded;
+                    slot.encodedRevision = slot.revision;
+                    markPersistentChanged();
+                }
+            }
+        }
+    }
+
+    CompoundTag captureRecord() {
+        CompoundTag root = unknownRoot.copy();
+        CompoundTag encoded = copyUnknownComponents();
+        for (SpecialDataType<?> type : getTypes()) {
+            ComponentSlot slot = componentSlots.computeIfAbsent(type, ignored -> new ComponentSlot());
+            if (slot.frozen == null || slot.encodedRevision != slot.revision) {
+                slot.frozen = encodeComponent(type, getOptional(type).orElseThrow());
+                slot.encodedRevision = slot.revision;
+            }
+            // Frozen component trees are private to persistence and never edited.
+            encoded.put(type.getId(), slot.frozen);
+        }
+        root.put("data", encoded);
+        saveIdentity(root);
+        extension.capturePart(this, root);
+        return root;
+    }
+
+    private void saveIdentity(CompoundTag root) {
+        root.putUUID("uuid", id);
+        if (externalTeamId != null) root.putUUID("teamId", externalTeamId);
+        if (ownerName != null) root.putString("owner", ownerName);
+        ListTag superseded = new ListTag();
+        for (UUID previous : supersededHolderIds) superseded.add(NbtUtils.createUUID(previous));
+        root.put("supersededHolderIds", superseded);
+    }
+
+    void supersede(TeamDataHolder previous) {
+        supersededHolderIds.add(previous.getId());
+        supersededHolderIds.addAll(previous.supersededHolderIds);
+        supersededHolderIds.remove(id);
+        markPersistentChanged();
+    }
+
+    CompoundTag deletionRecord() {
+        CompoundTag root = new CompoundTag();
+        saveIdentity(root);
+        root.putBoolean("deleted", true);
+        return root;
+    }
+
+    void unbindServer() {
+        for (SpecialDataType<?> type : getTypes()) {
+            if (getOptional(type).orElse(null) instanceof PersistentComponent tracked) tracked.setPersistenceListener(null);
+        }
+        recordState = null;
+        extension = TeamRecordExtension.NONE;
+        componentSlots.clear();
+    }
 
 }

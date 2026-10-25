@@ -63,7 +63,7 @@ public abstract class CBaseNetwork {
 	 * to ensure client-server version matching.
 	 */
 	public void registerChannel() {
-		String VERSION = ModList.get().getModContainerById(modid).get().getModInfo().getVersion().toString();
+		String VERSION = protocolVersion(ModList.get().getModContainerById(modid).get().getModInfo().getVersion().toString());
 		Chorda.LOGGER.info(modid+" Network Version: " + VERSION);
         CHANNEL = NetworkRegistry.newSimpleChannel(new ResourceLocation(modid,"network"), () -> VERSION, VERSION::equals, VERSION::equals);
 	}
@@ -83,6 +83,8 @@ public abstract class CBaseNetwork {
 	 * Registers all message types supported by this network channel. Subclasses must implement this method.
 	 */
 	public abstract void registerMessages();
+
+    protected String protocolVersion(String modVersion) { return modVersion; }
 	/** 消息类到资源标识的映射，用于调试和校验 / Map from message class to resource location, used for debugging and validation */
 	private Map<Class<? extends CMessage>, ResourceLocation> classesId = new IdentityHashMap<>(100);
 	/** 基于 ASM 的高性能构造函数工厂，用于反序列化消息 / ASM-based high-performance constructor factory for message deserialization */

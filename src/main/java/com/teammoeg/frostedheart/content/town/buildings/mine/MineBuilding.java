@@ -23,6 +23,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
+import static com.teammoeg.frostedheart.content.town.building.BuildingRecordsCodec.strict;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.chorda.util.CDistHelper;
 import com.teammoeg.chorda.util.CUtils;
@@ -38,18 +40,21 @@ import net.minecraft.world.item.Items;
 
 public class MineBuilding extends AbstractTownBuilding {
 
-	public static final Codec<MineBuilding> CODEC = RecordCodecBuilder.create(t -> t.group(
-                    BlockPos.CODEC.optionalFieldOf("pos",BlockPos.ZERO).forGetter(o -> o.pos),
-                    Codec.BOOL.optionalFieldOf("initialized", false).forGetter(o -> o.isInitialized()),
-                    Codec.BOOL.optionalFieldOf("isStructureValid",false).forGetter(o -> o.isStructureValid()),
-                    OccupiedZoneInfo.CODEC.optionalFieldOf("occupiedVolume",OccupiedZoneInfo.EMPTY).forGetter(o -> o.getOccupiedVolume()),
-					Codec.DOUBLE.optionalFieldOf("rating",0D).forGetter(o -> o.getRating()),
-					Codec.STRING.optionalFieldOf("biomePath","minecraft:plains")
+	public static final MapCodec<MineBuilding> MAP_CODEC = RecordCodecBuilder.mapCodec(t -> t.group(
+                    strict(BlockPos.CODEC).optionalFieldOf("pos",BlockPos.ZERO).forGetter(o -> o.pos),
+                    strict(Codec.BOOL).optionalFieldOf("initialized", false).forGetter(o -> o.isInitialized()),
+                    strict(Codec.BOOL).optionalFieldOf("isStructureValid",false).forGetter(o -> o.isStructureValid()),
+                    strict(OccupiedZoneInfo.CODEC).optionalFieldOf("occupiedVolume",OccupiedZoneInfo.EMPTY).forGetter(o -> o.getOccupiedVolume()),
+					strict(Codec.DOUBLE).optionalFieldOf("rating",0D).forGetter(o -> o.getRating()),
+					strict(Codec.STRING).optionalFieldOf("biomePath","minecraft:plains")
                             .forGetter(o -> o.getBiomePath().toString())
 					)
 			.apply(t, MineBuilding::new));
+        public static final Codec<MineBuilding> CODEC = MAP_CODEC.codec();
 
-	public static final Map<ResourceLocation, Map<Item,  Integer>> BIOME_RESOURCES = new HashMap<>();
+
+	private static final Map<ResourceLocation, Map<Item,  Integer>> BIOME_RESOURCES = new HashMap<>();
+    private static Object loadedRecipeManager;
     public static final Map<Item, Integer> DEFAULT_RESOURCES = Map.of(
             Items.COBBLESTONE, 1,
             Items.COAL, 1
@@ -60,8 +65,20 @@ public class MineBuilding extends AbstractTownBuilding {
 	@Getter
 	private double rating;//might be removed
 
-	public void setBiomePath(ResourceLocation biomePath) { this.biomePath = biomePath; fireChange(); }
-	public void setRating(double rating) { this.rating = rating; fireChange(); }
+	public void setBiomePath(ResourceLocation biomePath) {
+	    if (java.util.Objects.equals(this.biomePath, biomePath)) {
+	        return;
+	    }
+	    this.biomePath = biomePath;
+	    fireChange();
+	}
+	public void setRating(double rating) {
+	    if (Double.compare(this.rating, rating) == 0) {
+	        return;
+	    }
+	    this.rating = rating;
+	    fireChange();
+	}
 
 	public MineBuilding(BlockPos pos) {
         super(pos);
@@ -91,15 +108,22 @@ public class MineBuilding extends AbstractTownBuilding {
     }
 
 	private static void loadBiomeResources() {
-		for(BiomeMineResourceRecipe recipe : CUtils.filterRecipes(CDistHelper.getRecipeManager(), BiomeMineResourceRecipe.TYPE)){
+        var currentManager = CDistHelper.getRecipeManager();
+        if (currentManager == loadedRecipeManager) {
+            return;
+        }
+        BIOME_RESOURCES.clear();
+		for(BiomeMineResourceRecipe recipe : CUtils.filterRecipes(currentManager, BiomeMineResourceRecipe.TYPE)){
 			ResourceLocation biomeID = recipe.biomeID;
 			Map<Item, Integer> weights = recipe.weights;
-			BIOME_RESOURCES.put(biomeID, weights);
+			BIOME_RESOURCES.put(biomeID, Map.copyOf(weights));
 		}
+        loadedRecipeManager = currentManager;
 	}
 
-	public static Map<Item, Integer> getWeights(ResourceLocation biomeID){
-		if(BIOME_RESOURCES.isEmpty()){
+    // The integrated server and its client share this cache, including reload invalidation.
+	public static synchronized Map<Item, Integer> getWeights(ResourceLocation biomeID){
+		if(loadedRecipeManager != CDistHelper.getRecipeManager()){
 			loadBiomeResources();
 		}
 		if(BIOME_RESOURCES.containsKey(biomeID)){
@@ -108,8 +132,13 @@ public class MineBuilding extends AbstractTownBuilding {
 		return DEFAULT_RESOURCES;
 	}
 
-    public static boolean hasBiomeRecipe(ResourceLocation biomeID) {
-        if (BIOME_RESOURCES.isEmpty()) {
+    public static synchronized void invalidateRecipeCache() {
+        loadedRecipeManager = null;
+        BIOME_RESOURCES.clear();
+    }
+
+    public static synchronized boolean hasBiomeRecipe(ResourceLocation biomeID) {
+        if (loadedRecipeManager != CDistHelper.getRecipeManager()) {
             loadBiomeResources();
         }
         return BIOME_RESOURCES.containsKey(biomeID);

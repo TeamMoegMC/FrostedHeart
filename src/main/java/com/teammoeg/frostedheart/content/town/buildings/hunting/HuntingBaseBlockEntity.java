@@ -65,31 +65,30 @@ public class HuntingBaseBlockEntity extends AbstractTownBuildingBlockEntity<Hunt
 		endpointCap = LazyOptional.of(() -> endpoint);
 	}
 
-	public boolean scanStructure(HuntingBaseBuilding building) {
-		BlockPos housePos = this.getBlockPos();
-		RoomData rd=BlockScanner.scanRoomDataFromBlock(level,housePos);
-		building.setOccupiedVolume(rd.occupiedCells);
-		//prerequisition
-		if(rd.doors.size()<=0) {
-			rd.occupiedCells.setValid(false);
-		}
-		if (rd.isValid()) {
-			building.setVolume(rd.volume);
-			building.setArea(rd.area);
-			building.setTemperature(rd.calculateTemperature(level));
-			building.setTanningRackNum(rd.countInsideBlock(t->t.is(FHTags.Blocks.TANNING_RACK.get())));
-			building.setRating(computeRating(building.getVolume(), building.getArea(), building.getTemperature(), this.getTemperatureModifier()));
-			FHConfig.Server.Town.BuildingScoring scoring = FHConfig.SERVER.TOWN.BUILDING_SCORING;
-			FHConfig.Server.Town.Hunting config = FHConfig.SERVER.TOWN.HUNTING;
-			building.setMaxResidents(HuntingDailyModel.calculateCapacity(
-					calculateSpaceRating(rd.volume, rd.area, scoring),
-					rd.area, config.floorBlocksPerWorkerSlot.get(),
-					config.minimumWorkerSlots.get()));
-			return true;
-			
-		}
-		return false;
-	}
+    public StructureScanResult scanStructure(HuntingBaseBuilding building) {
+        RoomData room = BlockScanner.scanRoomDataFromBlock(level, worldPosition);
+        if (room == null) {
+            return StructureScanResult.DATA_UNAVAILABLE;
+        }
+        if (room.doors.isEmpty()) {
+            room = room.withValidity(false);
+        }
+        if (!room.isValid()) {
+            building.setOccupiedVolume(room.occupiedCells);
+            return StructureScanResult.INVALID;
+        }
+        int tanningRacks = room.countInsideBlock(state -> state.is(FHTags.Blocks.TANNING_RACK.get()));
+        FHConfig.Server.Town.BuildingScoring scoring = FHConfig.SERVER.TOWN.BUILDING_SCORING;
+        FHConfig.Server.Town.Hunting config = FHConfig.SERVER.TOWN.HUNTING;
+        int capacity = HuntingDailyModel.calculateCapacity(calculateSpaceRating(room.volume, room.area, scoring),
+                room.area, config.floorBlocksPerWorkerSlot.get(), config.minimumWorkerSlots.get());
+        building.setOccupiedVolume(room.occupiedCells);
+        building.setVolume(room.volume);
+        building.setArea(room.area);
+        building.setTanningRackNum(tanningRacks);
+        building.setMaxResidents(capacity);
+        return StructureScanResult.VALID;
+    }
 
 	/**
 	 * Static method to compute hunting base rating based on provided parameters.
@@ -101,16 +100,19 @@ public class HuntingBaseBlockEntity extends AbstractTownBuildingBlockEntity<Hunt
 	 * @return computed rating value
 	 */
 	public static double computeRating(int volume, int area,  double temperature, double temperatureModifier) {
+		// A new or invalid core may not have a usable geometry snapshot yet.
+		if (volume <= 0 || area <= 0) return 0.0;
 		FHConfig.Server.Town.Hunting config = FHConfig.SERVER.TOWN.HUNTING;
 		FHConfig.Server.Town.BuildingScoring scoring = FHConfig.SERVER.TOWN.BUILDING_SCORING;
 		double spaceWeight = config.spaceRatingWeight.get();
 		double temperatureWeight = config.temperatureRatingWeight.get();
 		double totalWeight = spaceWeight + temperatureWeight;
 		if (totalWeight <= 0.0) return 0.0;
-		return (spaceWeight * calculateSpaceRating(volume, area, scoring)
+		double rating = (spaceWeight * calculateSpaceRating(volume, area, scoring)
 				+ temperatureWeight * calculateTemperatureRating(
 						temperature + temperatureModifier, scoring))
 				/ totalWeight;
+		return Double.isFinite(rating) ? rating : 0.0;
 	}
 
 	private static double calculateSpaceRating(
@@ -118,7 +120,8 @@ public class HuntingBaseBlockEntity extends AbstractTownBuildingBlockEntity<Hunt
 			int area,
 			FHConfig.Server.Town.BuildingScoring scoring
 	) {
-		return TownMathFunctions.calculateSpaceRating(
+		if (volume <= 0 || area <= 0) return 0.0;
+		double rating = TownMathFunctions.calculateSpaceRating(
 				volume,
 				area,
 				scoring.spaceAreaCoefficient.get(),
@@ -126,6 +129,7 @@ public class HuntingBaseBlockEntity extends AbstractTownBuildingBlockEntity<Hunt
 				scoring.spaceHeightLogOffset.get(),
 				scoring.spaceResponseScale.get(),
 				scoring.spaceResponseExponent.get());
+		return Double.isFinite(rating) ? rating : 0.0;
 	}
 
 	private static double calculateTemperatureRating(
@@ -142,6 +146,7 @@ public class HuntingBaseBlockEntity extends AbstractTownBuildingBlockEntity<Hunt
 
 	@Override
 	public void tick() {
+        double previousModifier = temperatureModifier;
 		assert level != null;
 		if (!level.isClientSide) {
 			FHConfig.Server.Town.Hunting config = FHConfig.SERVER.TOWN.HUNTING;
@@ -163,7 +168,13 @@ public class HuntingBaseBlockEntity extends AbstractTownBuildingBlockEntity<Hunt
 		} else if (getIsActive()) {
 			FHClientUtils.spawnSteamParticles(level, worldPosition);
 		}
-		this.addToSchedulerQueue();
+		if (!level.isClientSide && Double.compare(previousModifier, temperatureModifier) != 0) {
+            getBuilding().ifPresent(building -> building.updateBatch(() -> {
+                building.setTemperatureModifier(temperatureModifier);
+                building.setRating(computeRating(building.getVolume(), building.getArea(),
+                        building.getTemperature(), temperatureModifier));
+            }));
+        }
 	}
 
 	@Nonnull
@@ -175,10 +186,15 @@ public class HuntingBaseBlockEntity extends AbstractTownBuildingBlockEntity<Hunt
 	}
 
 	@Override
-	public void refresh(@NotNull HuntingBaseBuilding building) {
-		super.refresh(building);
-		building.setTemperatureModifier(this.getTemperatureModifier());
-	}
+	protected void refreshEnvironment(HuntingBaseBuilding building) {
+        double temperature = BlockScanner.sampleTemperature(level, building.getOccupiedVolume());
+        if (Double.isFinite(temperature)) {
+            building.setTemperature(temperature);
+        }
+        building.setTemperatureModifier(temperatureModifier);
+        building.setRating(computeRating(building.getVolume(), building.getArea(),
+                building.getTemperature(), building.getTemperatureModifier()));
+    }
 
 	@Override
 	public @Nullable HuntingBaseBuilding getBuilding(AbstractTownBuilding abstractTownBuilding) {

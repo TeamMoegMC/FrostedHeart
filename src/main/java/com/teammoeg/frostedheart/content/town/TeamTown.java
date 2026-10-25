@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
@@ -36,6 +37,7 @@ import java.util.UUID;
 import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.frostedheart.content.town.block.TownBlockEntity;
+import com.teammoeg.frostedheart.content.town.block.AbstractTownBuildingBlockEntity;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownResidentWorkBuilding;
 import com.teammoeg.frostedheart.content.town.building.ITownBuilding;
@@ -79,6 +81,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import java.util.Collections;
 
 /**
  * The town for a player team.
@@ -90,6 +93,12 @@ public class TeamTown implements ITown, ITownWithResidents, ITownWithBuildings {
 
     /** The town data, actual data stored on disk. */
     TeamTownData data;
+    private TownTransportService transport;
+
+    private TownTransportService transport() {
+        if (transport == null) transport = new TownTransportService(data);
+        return transport;
+    }
 
     /**
      * Create a new town based on data.
@@ -111,6 +120,15 @@ public class TeamTown implements ITown, ITownWithResidents, ITownWithBuildings {
         return new TeamTown(data);
     }
 
+    public static Optional<TeamTown> find(Player player) {
+        if (!(player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) || CTeamDataManager.INSTANCE == null) {
+            return Optional.empty();
+        }
+        var team = com.teammoeg.chorda.dataholders.team.TeamsAPI.getAPI().getTeamByPlayer(serverPlayer);
+        TeamDataHolder holder = team == null ? null : CTeamDataManager.INSTANCE.findByExternalTeamId(team.getId());
+        return holder == null ? Optional.empty() : holder.getOptional(FHSpecialDataTypes.TOWN_DATA).map(TeamTown::create);
+    }
+
 
     /**
      * Default constructor links storage to the town data.
@@ -127,7 +145,7 @@ public class TeamTown implements ITown, ITownWithResidents, ITownWithBuildings {
      * Get the blocks and their worker data.
      */
     public Map<BlockPos, AbstractTownBuilding> getTownBuildings() {
-        return data.buildings;
+        return Collections.unmodifiableMap(data.buildings);
     }
 
     /**
@@ -147,15 +165,105 @@ public class TeamTown implements ITown, ITownWithResidents, ITownWithBuildings {
      * @param pos position of the block
      * @param townBlockEntity the townBlockEntity entity associated with the block
      */
-    public void addTownBlock(BlockPos pos, TownBlockEntity<?> townBlockEntity) {
-        ITownBuilding building =townBlockEntity.createBuilding();
-        if(building instanceof AbstractTownBuilding abstractTownBuilding){
-            ServerLevel level = townBlockEntity instanceof BlockEntity blockEntity
-                    && blockEntity.getLevel() instanceof ServerLevel serverLevel ? serverLevel : null;
-            removeTownBlockInternal(level, pos);
-            data.buildings.put(pos, abstractTownBuilding); // put 时由 ObservableTownMap.onAttach 自动接线
-            data.markWarehouseTopologyDirty();
+    public void addTownBlock(BlockPos pos, TownBlockEntity<?> core) {
+        if (core instanceof BlockEntity block && block.getLevel() instanceof ServerLevel level) {
+            onCorePlaced(level, pos, core);
         }
+    }
+
+    public boolean onCorePlaced(ServerLevel level, BlockPos pos, TownBlockEntity<?> core) {
+        if (!acceptsCoreDimension(level)) {
+            return false;
+        }
+        Runnable place = () -> {
+            if (core instanceof BlockEntity block && (block.isRemoved() || !level.hasChunkAt(pos) || level.getBlockEntity(pos) != block)) {
+                return;
+            }
+            if (core instanceof AbstractTownBuildingBlockEntity<?> block
+                    && block.hasRegisteredPlacement(data.buildings.get(pos))) {
+                return;
+            }
+            if (core.createBuilding() instanceof AbstractTownBuilding building) {
+                removeTownBlockInternal(level, pos);
+                data.getBuildingStore().install(building);
+                data.prepareAssignments();
+                if (core instanceof AbstractTownBuildingBlockEntity<?> block) {
+                    block.rememberPlacement(building);
+                }
+            }
+        };
+        TownRuntimeManager runtime = TownRuntimeManager.current();
+        if (runtime == null || !runtime.deferBuildingIfBusy(data.buildingOwner(), pos, data, place)) {
+            place.run();
+        }
+        return true;
+    }
+
+    public void ensureCoreBound(ServerLevel level, BlockPos pos, TownBlockEntity<?> core) {
+        if (!acceptsCoreDimension(level) || data.getBuildingStore().isPending(pos)) {
+            return;
+        }
+        AbstractTownBuilding existing = data.buildings.get(pos);
+        if (existing != null && core.getBuilding(existing) != null) {
+            return;
+        }
+        if (existing != null) {
+            onCorePlaced(level, pos, core);
+            return;
+        }
+        Runnable bind = () -> {
+            if (core instanceof BlockEntity block && (block.isRemoved()
+                    || !level.hasChunkAt(pos) || level.getBlockEntity(pos) != block)) {
+                return;
+            }
+            if (core.createBuilding() instanceof AbstractTownBuilding building
+                    && data.getBuildingStore().installMissing(building)) {
+                data.prepareAssignments();
+            }
+        };
+        TownRuntimeManager runtime = TownRuntimeManager.current();
+        if (runtime == null || !runtime.deferBuildingIfBusy(data.buildingOwner(), pos, data, bind)) {
+            bind.run();
+        }
+    }
+
+    public void onCoreRemoved(ServerLevel level, BlockPos position, BlockEntity removedCore) {
+        if (!isBuildingDimension(level)) {
+            return;
+        }
+        AbstractTownBuilding expectedBuilding = data.buildings.get(position);
+        Runnable remove = () -> {
+            var chunk = level.getChunkSource().getChunkNow(position.getX() >> 4, position.getZ() >> 4);
+            if (chunk == null || data.buildings.get(position) != expectedBuilding) {
+                return;
+            }
+            BlockEntity currentCore = chunk.getBlockEntity(position);
+            if (currentCore != null && currentCore != removedCore) {
+                return;
+            }
+            removeTownBlockInternal(level, position);
+        };
+        TownRuntimeManager runtime = TownRuntimeManager.current();
+        if (runtime == null || !runtime.deferBuildingIfBusy(data.buildingOwner(), position, data, remove)) {
+            remove.run();
+        }
+    }
+
+    /** Called after the morning validation has finished collecting invalid positions. */
+    void removeMissingCore(ServerLevel level, BlockPos position) {
+        removeTownBlockInternal(level, position);
+    }
+
+    private boolean acceptsCoreDimension(ServerLevel level) {
+        if (data.getBuildingStore().dimension() == null && data.getBuildingStore().isTrulyEmpty()
+                && data.residents.isEmpty() && data.getHousingPlan().entries().isEmpty() && data.getStaffingPlan().entries().isEmpty()) {
+            data.getBuildingStore().setDimension(level.dimension());
+        }
+        return level.dimension().equals(data.getBuildingStore().dimension());
+    }
+
+    public boolean isBuildingDimension(ServerLevel level) {
+        return level.dimension().equals(data.getBuildingStore().dimension());
     }
 
     /**
@@ -163,8 +271,20 @@ public class TeamTown implements ITown, ITownWithResidents, ITownWithBuildings {
      *
      * @param pos position of the block
      */
-    public void removeTownBlock(ServerLevel sl,BlockPos pos) {
-        removeTownBlockInternal(sl, pos);
+    public void removeTownBlock(ServerLevel level, BlockPos pos) {
+        if (level != null && data.getBuildingStore().dimension() != null && !level.dimension().equals(data.getBuildingStore().dimension())) {
+            return;
+        }
+        AbstractTownBuilding expected = data.buildings.get(pos);
+        Runnable remove = () -> {
+            if (data.buildings.get(pos) == expected) {
+                removeTownBlockInternal(level, pos);
+            }
+        };
+        TownRuntimeManager runtime = TownRuntimeManager.current();
+        if (runtime == null || !runtime.deferBuildingIfBusy(data.buildingOwner(), pos, data, remove)) {
+            remove.run();
+        }
     }
 
     /**
@@ -174,13 +294,15 @@ public class TeamTown implements ITown, ITownWithResidents, ITownWithBuildings {
     private void removeTownBlockInternal(ServerLevel level, BlockPos pos) {
         AbstractTownBuilding building = data.buildings.get(pos);
         if (building == null) {
+            data.getBuildingStore().removeAt(pos);
+            data.removeBuildingPlans(pos);
             return;
         }
 
-        data.buildings.remove(pos);
+        data.getBuildingStore().removeAt(pos);
+        data.removeBuildingPlans(pos);
         data.markWarehouseTopologyDirty();
         building.onRemoved(this);
-        data.removeOccupiedAreaOverlap(building);
         // Building rosters are normally authoritative, but older or partially
         // repaired saves may disagree with Resident fields. Clear exact
         // position references defensively without reallocating until morning.
@@ -210,15 +332,15 @@ public class TeamTown implements ITown, ITownWithResidents, ITownWithBuildings {
             data.reloadMaxCapacity();
         }
 
-        data.checkOccupiedAreaOverlap();
+        data.prepareBuildingGeometry();
     }
 
     public Map<UUID, Resident> getResidents() {
-        return data.residents;
+        return Collections.unmodifiableMap(data.residents);
     }
 
     public Collection<Resident> getAllResidents(){
-        return data.residents.values();
+        return Collections.unmodifiableCollection(data.residents.values());
     }
 
     public Optional<Resident> getResident(UUID id){
@@ -226,24 +348,24 @@ public class TeamTown implements ITown, ITownWithResidents, ITownWithBuildings {
     }
 
     public boolean addResident(Resident resident) {
-        // 无空房位短路：满员时直接拒绝，跳过 put+全量 allocateHouse+回滚（失败路径从
-        // O(H log H)+每房评分降为 O(R+H)）。短路需双条件：canAddResident()（occupancy
-        // 口径）与 hasFreeHouseSlot()（residentsID 口径，镜像 allocateHouse filter）
-        // 同时判满才成立——正常态两口径一致（一致性由 residentAllocatingCheck 每日重建
-        // 与 addResident/removeResident 双写维护），双条件等价于旧路径必然失败；任一
-        // 不一致窗口不满足双条件 → 不短路，走旧路径与旧代码逐字节一致。不一致窗口：
-        // 建筑同位置替换（setPlacedBy→addTownBlock 的 put 覆盖旧条目不调 onRemoved，
-        // 旧居民 housePos 悬空而新实例 residentsID 为空，至次日结算恢复）、旧存档重载
-        // 至次日结算前。竞争路径（两个 homeless 抢最后槽位）同样不拦截，仍走
-        // put→allocateHouse→无房回滚。
-        if (!canAddResident() && !hasFreeHouseSlot()) return false;
+        resident.initializeServerData();
+        if (data.residents.containsKey(resident.getUUID())) {
+            return false;
+        }
+        // 旧档修复期间，住房占用计数与建筑名册可能暂不一致。
+        // 两者都已满才直接拒绝；其余情况继续分配，以实际房位为准。
+        if (!canAddResident() && !hasFreeHouseSlot()) {
+            return false;
+        }
         data.residents.put(resident.getUUID(), resident);
         // 白天加入的居民只占用一个现有空位；全镇照护排序仍统一留到次日晨间，
         // 避免一次出生/招募立即打乱所有家庭与玩家刚看到的分配结果。
         data.allocateNewResident(resident);
         // 仅在 occupancy 与住宅 UUID 名册暂时不一致时保留旧的全量修复路径。
         // 正常有空床时不会进入这里；正常满员已被上方双条件短路。
-        if (resident.getHousePos() == null) data.allocateHouse();
+        if (resident.getHousePos() == null) {
+            data.allocateHouse();
+        }
         if(resident.getHousePos() == null){
             removeResident(resident);
             return false;
@@ -410,7 +532,11 @@ public class TeamTown implements ITown, ITownWithResidents, ITownWithBuildings {
      * @param name the new name
      */
     public void setName(String name) {
+        if (java.util.Objects.equals(data.name, name)) {
+            return;
+        }
         this.data.name = name;
+        data.persistentChanged();
     }
 
     @Override
@@ -423,26 +549,23 @@ public class TeamTown implements ITown, ITownWithResidents, ITownWithBuildings {
     }
 
     public TownTransportState getTransportState() {
-        return data.getTransportState();
+        return transport().getTransportState();
     }
 
     public TownTransportSummary getTransportSummary() {
-        prepareTransportState();
-        return TownTransportSummary.from(getCurrentTransportCapacity(), data.getTransportState());
+        return transport().getTransportSummary();
     }
 
     public Map<TransportEndpointId, TransportReservation> getTransportReservations() {
-        prepareTransportState();
-        return data.getTransportState().getReservations();
+        return transport().getTransportReservations();
     }
 
     public P2PBindingState getP2PBindingState() {
-        prepareTransportState();
-        return data.getP2PBindingState();
+        return transport().getP2PBindingState();
     }
 
     public P2PFilterSummaryState getP2PFilterSummaryState() {
-        return data.getP2PFilterSummaryState();
+        return transport().getP2PFilterSummaryState();
     }
 
     public void updateP2PFilterSummary(
@@ -450,257 +573,58 @@ public class TeamTown implements ITown, ITownWithResidents, ITownWithBuildings {
             P2PFilterSnapshot sendFilter,
             P2PFilterSnapshot receiveFilter
     ) {
-        if (endpoint == null || sendFilter == null || receiveFilter == null) {
-            return;
-        }
-        P2PFilterSummaryState previous = data.getP2PFilterSummaryState();
-        P2PFilterSummaryState updated;
-        try {
-            updated = previous.with(endpoint, sendFilter, receiveFilter);
-        } catch (IllegalArgumentException exception) {
-            return;
-        }
-        if (updated != previous) {
-            data.setP2PFilterSummaryState(updated);
-            data.getDataSyncCache().markTransportStateChanged();
-        }
+        transport().updateP2PFilterSummary(endpoint, sendFilter, receiveFilter);
     }
 
     public void removeP2PFilterSummary(GlobalPos endpoint) {
-        P2PFilterSummaryState previous = data.getP2PFilterSummaryState();
-        P2PFilterSummaryState updated = previous.without(endpoint);
-        if (updated != previous) {
-            data.setP2PFilterSummaryState(updated);
-            data.getDataSyncCache().markTransportStateChanged();
-        }
+        transport().removeP2PFilterSummary(endpoint);
     }
 
     public Optional<TransportReservation> getTransportReservation(TransportEndpointId endpointId) {
-        prepareTransportState();
-        return Optional.ofNullable(data.getTransportState().getReservation(endpointId));
+        return transport().getTransportReservation(endpointId);
     }
 
     public TownTransportSnapshot getTransportSnapshot() {
-        prepareTransportState();
-        return data.createTransportSnapshot();
+        return transport().getTransportSnapshot();
     }
 
     public WarehouseTopologySnapshot prepareWarehouseTopology(
             ResourceKey<Level> authoritativeTownDimension
     ) {
-        return currentTransportParameters()
-                .map(parameters -> data.refreshWarehouseTopologyIfDirty(
-                        parameters, authoritativeTownDimension))
-                .orElse(data.getAppliedWarehouseTopology());
+        return transport().prepareWarehouseTopology(authoritativeTownDimension);
     }
 
     public WarehouseTopologySnapshot getWarehouseTopology() {
-        return data.getAppliedWarehouseTopology();
+        return transport().getWarehouseTopology();
     }
 
     public void registerWarehouseTopologyListener(
             GlobalPos devicePos,
             WarehouseTopologyListener listener
     ) {
-        data.registerWarehouseTopologyListener(devicePos, listener);
+        transport().registerWarehouseTopologyListener(devicePos, listener);
     }
 
     public void unregisterWarehouseTopologyListener(
             GlobalPos devicePos,
             WarehouseTopologyListener listener
     ) {
-        data.unregisterWarehouseTopologyListener(devicePos, listener);
+        transport().unregisterWarehouseTopologyListener(devicePos, listener);
     }
 
     public TransportReservationResult registerOrUpdateTransportEndpoint(TransportEndpointRequest request) {
-        return registerOrUpdateWarehouseInterface(request);
+        return transport().registerOrUpdateTransportEndpoint(request);
     }
 
     public TransportReservationResult registerOrUpdateWarehouseInterface(TransportEndpointRequest request) {
-        Optional<TransportConsumerParameters> parametersResult = currentTransportParameters();
-        if (request == null || parametersResult.isEmpty()) {
-            return result(TransportReservationDecision.INVALID_REQUEST, null, 0.0);
-        }
-        if (request.endpointKind() != TransportEndpointKind.WAREHOUSE_INTERFACE) {
-            return result(TransportReservationDecision.INVALID_BINDING,
-                    data.getTransportState().getReservation(request.endpointId()), 0.0);
-        }
-        TransportConsumerParameters parameters = parametersResult.get();
-        prepareTransportState(parameters);
-        data.refreshWarehouseTopologyIfDirty(
-                parameters, data.getAppliedWarehouseTopology().townDimension());
-        TransportReservation old = data.getTransportState().getReservation(request.endpointId());
-
-        if (old == null && data.getTransportState().getReservations().size()
-                >= TownTransportSnapshot.MAX_RESERVATIONS) {
-            return result(TransportReservationDecision.INVALID_REQUEST, null, 0.0);
-        }
-
-        if (old != null && old.endpointKind() != request.endpointKind()) {
-            return result(TransportReservationDecision.INVALID_BINDING, old, 0.0);
-        }
-        if (!parameters.isRateValid(request.rateItemsPerSecond())) {
-            return result(TransportReservationDecision.INVALID_REQUEST, old, 0.0);
-        }
-
-        OptionalDouble metricResult = currentWarehouseDistance(request.endpointId());
-        if (metricResult.isEmpty()) {
-            if (old != null && request.rateItemsPerSecond() != 0) {
-                return result(TransportReservationDecision.INVALID_BINDING, old, 0.0);
-            }
-            TransportReservation unavailable = new TransportReservation(
-                    request.endpointKind(), 0, 0.0, 0.0,
-                    TransportAdmissionStatus.UNAVAILABLE);
-            replaceAndMark(request.endpointId(), unavailable);
-            return result(TransportReservationDecision.ACCEPTED, unavailable, 0.0);
-        }
-        double scaleMetric = metricResult.getAsDouble();
-        ResolvedTransportAdmission admission = admitResolvedEndpoint(
-                request.endpointId(), request.endpointKind(), request.rateItemsPerSecond(),
-                scaleMetric, parameters);
-        if (admission.decision() == TransportReservationDecision.ACCEPTED) {
-            TransportReservation accepted = admission.acceptedReservation().orElseThrow();
-            replaceAndMark(request.endpointId(), accepted);
-            return result(admission.decision(), accepted,
-                    admission.requiredAdditionalCapacity());
-        }
-        if (admission.decision() == TransportReservationDecision.INSUFFICIENT_CAPACITY
-                && old == null) {
-            TransportReservation disabled = new TransportReservation(
-                    TransportEndpointKind.WAREHOUSE_INTERFACE, 0, scaleMetric, 0.0,
-                    TransportAdmissionStatus.DISABLED);
-            replaceAndMark(request.endpointId(), disabled);
-            return result(admission.decision(), disabled,
-                    admission.requiredAdditionalCapacity());
-        }
-        return result(admission.decision(), old,
-                admission.requiredAdditionalCapacity());
-    }
-
-    ResolvedTransportAdmission evaluateP2PTransportAdmission(
-            GlobalPos sender,
-            GlobalPos receiver,
-            int rateItemsPerSecond
-    ) {
-        Optional<TransportConsumerParameters> parametersResult = currentTransportParameters();
-        if (sender == null || receiver == null || parametersResult.isEmpty()) {
-            return ResolvedTransportAdmission.invalid(
-                    TransportReservationDecision.INVALID_REQUEST, null);
-        }
-        double scaleMetric = TransportReservationModel.p2pManhattanDistance(sender, receiver);
-        if (!TransportReservationModel.isFiniteNonNegative(scaleMetric)) {
-            return ResolvedTransportAdmission.invalid(
-                    TransportReservationDecision.INVALID_BINDING,
-                    data.getTransportState().getReservation(new TransportEndpointId(sender)));
-        }
-        TransportConsumerParameters parameters = parametersResult.get();
-        prepareTransportState(parameters);
-        return admitResolvedEndpoint(new TransportEndpointId(sender),
-                TransportEndpointKind.P2P_DIRECT_LINK, rateItemsPerSecond,
-                scaleMetric, parameters);
-    }
-
-    private ResolvedTransportAdmission admitResolvedEndpoint(
-            TransportEndpointId endpointId,
-            TransportEndpointKind endpointKind,
-            int rateItemsPerSecond,
-            double scaleMetric,
-            TransportConsumerParameters parameters
-    ) {
-        TransportReservation old = endpointId == null
-                ? null
-                : data.getTransportState().getReservation(endpointId);
-        if (endpointId == null || endpointKind == null || parameters == null
-                || !parameters.isRateValid(rateItemsPerSecond)
-                || !TransportReservationModel.isFiniteNonNegative(scaleMetric)) {
-            return ResolvedTransportAdmission.invalid(
-                    TransportReservationDecision.INVALID_REQUEST, old);
-        }
-        if (old != null && old.endpointKind() != endpointKind) {
-            return ResolvedTransportAdmission.invalid(
-                    TransportReservationDecision.INVALID_BINDING, old);
-        }
-        if (rateItemsPerSecond == 0) {
-            return ResolvedTransportAdmission.accepted(old, new TransportReservation(
-                    endpointKind, 0, scaleMetric, 0.0,
-                    TransportAdmissionStatus.DISABLED), 0.0);
-        }
-
-        double candidateReserved = TransportReservationModel.requiredCapacity(
-                endpointKind, rateItemsPerSecond, scaleMetric, parameters);
-        if (!TransportReservationModel.isFiniteNonNegative(candidateReserved)) {
-            return ResolvedTransportAdmission.invalid(
-                    TransportReservationDecision.INVALID_REQUEST, old);
-        }
-        double oldReserved = old == null ? 0.0 : old.reservedTransportCapacity();
-        TransportReservationModel.AdmissionEvaluation evaluation =
-                TransportReservationModel.evaluateAdmission(
-                        getCurrentTransportCapacity(),
-                        data.getTransportState().getReservedTransportCapacity(),
-                        oldReserved, candidateReserved);
-        if (!evaluation.valid()) {
-            return ResolvedTransportAdmission.invalid(
-                    TransportReservationDecision.INVALID_REQUEST, old);
-        }
-        if (!evaluation.accepted()) {
-            return ResolvedTransportAdmission.rejected(old,
-                    evaluation.requiredAdditionalCapacity());
-        }
-        return ResolvedTransportAdmission.accepted(old, new TransportReservation(
-                endpointKind, rateItemsPerSecond, scaleMetric, candidateReserved,
-                TransportAdmissionStatus.ACTIVE), evaluation.requiredAdditionalCapacity());
-    }
-
-    record ResolvedTransportAdmission(
-            TransportReservationDecision decision,
-            Optional<TransportReservation> previousReservation,
-            Optional<TransportReservation> acceptedReservation,
-            double requiredAdditionalCapacity
-    ) {
-        ResolvedTransportAdmission {
-            Objects.requireNonNull(decision, "decision");
-            previousReservation = previousReservation == null
-                    ? Optional.empty() : previousReservation;
-            acceptedReservation = acceptedReservation == null
-                    ? Optional.empty() : acceptedReservation;
-            requiredAdditionalCapacity = TransportReservationModel.isFiniteNonNegative(
-                    requiredAdditionalCapacity) ? requiredAdditionalCapacity : 0.0;
-        }
-
-        private static ResolvedTransportAdmission invalid(
-                TransportReservationDecision decision,
-                TransportReservation previous
-        ) {
-            return new ResolvedTransportAdmission(decision, Optional.ofNullable(previous),
-                    Optional.empty(), 0.0);
-        }
-
-        private static ResolvedTransportAdmission rejected(
-                TransportReservation previous,
-                double requiredAdditionalCapacity
-        ) {
-            return new ResolvedTransportAdmission(
-                    TransportReservationDecision.INSUFFICIENT_CAPACITY,
-                    Optional.ofNullable(previous), Optional.empty(),
-                    requiredAdditionalCapacity);
-        }
-
-        private static ResolvedTransportAdmission accepted(
-                TransportReservation previous,
-                TransportReservation accepted,
-                double requiredAdditionalCapacity
-        ) {
-            return new ResolvedTransportAdmission(TransportReservationDecision.ACCEPTED,
-                    Optional.ofNullable(previous), Optional.of(accepted),
-                    requiredAdditionalCapacity);
-        }
+        return transport().registerOrUpdateWarehouseInterface(request);
     }
 
     public P2PBindingResult bindOrRebindP2PTerminals(
             P2PTerminalEndpoint first,
             P2PTerminalEndpoint second
     ) {
-        return bindOrRebindP2PTerminals(first, second, false, false);
+        return transport().bindOrRebindP2PTerminals(first, second);
     }
 
     public P2PBindingResult bindOrRebindP2PTerminals(
@@ -709,451 +633,49 @@ public class TeamTown implements ITown, ITownWithResidents, ITownWithBuildings {
             boolean firstRedstonePowered,
             boolean secondRedstonePowered
     ) {
-        if (first == null || second == null) {
-            return p2pResult(P2PBindingDecision.INVALID_REQUEST,
-                    null, Set.of(), 0.0);
-        }
-        if (first.pos().equals(second.pos())) {
-            return p2pResult(P2PBindingDecision.SELF_LINK,
-                    null, Set.of(), 0.0);
-        }
-        if (!first.pos().dimension().equals(second.pos().dimension())) {
-            return p2pResult(P2PBindingDecision.CROSS_DIMENSION,
-                    null, Set.of(), 0.0);
-        }
-        boolean hasDirection = first.role().canSend() && second.role().canReceive()
-                || second.role().canSend() && first.role().canReceive();
-        if (!hasDirection) {
-            return p2pResult(P2PBindingDecision.INCOMPATIBLE_ENDPOINTS,
-                    null, Set.of(), 0.0);
-        }
-        Optional<TransportConsumerParameters> parametersResult = currentTransportParameters();
-        if (parametersResult.isEmpty()) {
-            return p2pResult(P2PBindingDecision.INVALID_REQUEST,
-                    null, Set.of(), 0.0);
-        }
-        TransportConsumerParameters parameters = parametersResult.get();
-        prepareTransportState(parameters);
-
-        P2PBindingState currentBindings = data.getP2PBindingState();
-        UUID connectionId = UUID.randomUUID();
-        P2PBindingState.BindingPlan plan;
-        P2PBindingState candidateBindings;
-        try {
-            plan = currentBindings.planConnection(first, second,
-                    parameters.defaultRateItemsPerSecond(), connectionId);
-            candidateBindings = currentBindings.apply(plan);
-            candidateBindings = candidateBindings.withEndpointRedstonePowered(
-                    first.pos(), firstRedstonePowered);
-            candidateBindings = candidateBindings.withEndpointRedstonePowered(
-                    second.pos(), secondRedstonePowered);
-        } catch (IllegalArgumentException exception) {
-            return p2pResult(P2PBindingDecision.INVALID_ENDPOINT,
-                    null, Set.of(), 0.0);
-        }
-
-        Map<TransportEndpointId, TransportReservation> candidateReservations =
-                new TreeMap<>(TransportEndpointId.STABLE_COMPARATOR);
-        candidateReservations.putAll(data.getTransportState().getReservations());
-        double removedCapacity = 0.0;
-        for (UUID removedConnectionId : plan.removedConnectionIds()) {
-            for (P2PDirectedBinding oldBinding : currentBindings.connection(removedConnectionId)
-                    .orElse(List.of())) {
-                TransportReservation removed = candidateReservations.remove(
-                        oldBinding.sender().transportEndpointId());
-                if (removed != null) {
-                    removedCapacity += removed.reservedTransportCapacity();
-                }
-            }
-        }
-
-        double addedCapacity = 0.0;
-        for (P2PDirectedBinding binding : candidateBindings.connection(connectionId)
-                .orElse(List.of())) {
-            if (!parameters.isRateValid(binding.rateItemsPerSecond())) {
-                return p2pResult(P2PBindingDecision.INVALID_REQUEST,
-                        null, Set.of(), 0.0);
-            }
-            TransportEndpointId senderId = binding.sender().transportEndpointId();
-            TransportReservation collision = candidateReservations.get(senderId);
-            if (collision != null
-                    && collision.endpointKind() != TransportEndpointKind.P2P_DIRECT_LINK) {
-                return p2pResult(P2PBindingDecision.INVALID_ENDPOINT,
-                        null, Set.of(), 0.0);
-            }
-            TransportReservation reservation = reservationForBinding(binding, parameters);
-            if (reservation == null) {
-                return p2pResult(P2PBindingDecision.INVALID_ENDPOINT,
-                        null, Set.of(), 0.0);
-            }
-            candidateReservations.put(senderId, reservation);
-            addedCapacity += reservation.reservedTransportCapacity();
-        }
-        if (candidateReservations.size() > TownTransportSnapshot.MAX_RESERVATIONS) {
-            return p2pResult(P2PBindingDecision.INVALID_REQUEST,
-                    null, Set.of(), 0.0);
-        }
-
-        TransportReservationModel.AdmissionEvaluation admission =
-                TransportReservationModel.evaluateAdmission(
-                        getCurrentTransportCapacity(),
-                        data.getTransportState().getReservedTransportCapacity(),
-                        removedCapacity, addedCapacity);
-        if (!admission.valid()) {
-            return p2pResult(P2PBindingDecision.INVALID_REQUEST,
-                    null, Set.of(), 0.0);
-        }
-        if (!admission.accepted()) {
-            return p2pResult(P2PBindingDecision.INSUFFICIENT_CAPACITY,
-                    null, Set.of(), admission.requiredAdditionalCapacity());
-        }
-
-        data.setP2PBindingState(candidateBindings);
-        boolean reservationsChanged = data.getTransportState().replaceAllReservations(
-                candidateReservations, parameters);
-        data.markP2PTransportReconciled(parameters);
-        if (reservationsChanged || !candidateBindings.bindings().equals(currentBindings.bindings())) {
-            data.getDataSyncCache().markTransportStateChanged();
-        }
-        return p2pResult(P2PBindingDecision.ACCEPTED, connectionId,
-                plan.removedConnectionIds(), admission.requiredAdditionalCapacity());
+        return transport().bindOrRebindP2PTerminals(first, second, firstRedstonePowered, secondRedstonePowered);
     }
 
     public P2PBindingResult unbindP2PConnection(UUID connectionId) {
-        Optional<TransportConsumerParameters> parametersResult = currentTransportParameters();
-        if (connectionId == null || parametersResult.isEmpty()) {
-            return p2pResult(P2PBindingDecision.INVALID_REQUEST,
-                    null, Set.of(), 0.0);
-        }
-        TransportConsumerParameters parameters = parametersResult.get();
-        prepareTransportState(parameters);
-        P2PBindingState currentBindings = data.getP2PBindingState();
-        List<P2PDirectedBinding> removed = currentBindings.connection(connectionId)
-                .orElse(null);
-        if (removed == null) {
-            return p2pResult(P2PBindingDecision.STALE_CONNECTION,
-                    null, Set.of(), 0.0);
-        }
-
-        Map<TransportEndpointId, TransportReservation> candidateReservations =
-                new TreeMap<>(TransportEndpointId.STABLE_COMPARATOR);
-        candidateReservations.putAll(data.getTransportState().getReservations());
-        for (P2PDirectedBinding binding : removed) {
-            TransportEndpointId senderId = binding.sender().transportEndpointId();
-            TransportReservation reservation = candidateReservations.get(senderId);
-            if (reservation != null
-                    && reservation.endpointKind() == TransportEndpointKind.P2P_DIRECT_LINK) {
-                candidateReservations.remove(senderId);
-            }
-        }
-        P2PBindingState candidateBindings = currentBindings.withoutConnection(connectionId);
-        data.setP2PBindingState(candidateBindings);
-        data.getTransportState().replaceAllReservations(candidateReservations, parameters);
-        data.markP2PTransportReconciled(parameters);
-        data.getDataSyncCache().markTransportStateChanged();
-        return p2pResult(P2PBindingDecision.ACCEPTED,
-                connectionId, Set.of(connectionId), 0.0);
+        return transport().unbindP2PConnection(connectionId);
     }
 
     public Optional<UUID> getP2PConnectionIdBetween(
             P2PTerminalEndpoint first,
             P2PTerminalEndpoint second
     ) {
-        return data.getP2PBindingState().connectionIdBetween(first, second);
+        return transport().getP2PConnectionIdBetween(first, second);
     }
 
     public P2PBindingResult setP2PTransportRate(GlobalPos sender, int rateItemsPerSecond) {
-        Optional<TransportConsumerParameters> parametersResult = currentTransportParameters();
-        if (sender == null || parametersResult.isEmpty()) {
-            return p2pResult(P2PBindingDecision.INVALID_REQUEST, null, Set.of(), 0.0);
-        }
-        TransportConsumerParameters parameters = parametersResult.get();
-        prepareTransportState(parameters);
-        P2PBindingState currentBindings = data.getP2PBindingState();
-        P2PDirectedBinding current = currentBindings.outgoing(sender).orElse(null);
-        if (current == null || !parameters.isRateValid(rateItemsPerSecond)) {
-            return p2pResult(P2PBindingDecision.INVALID_REQUEST, null, Set.of(), 0.0);
-        }
-        P2PBindingState candidateBindings;
-        try {
-            candidateBindings = currentBindings.withRate(sender, rateItemsPerSecond);
-        } catch (IllegalArgumentException exception) {
-            return p2pResult(P2PBindingDecision.INVALID_REQUEST, null, Set.of(), 0.0);
-        }
-        P2PDirectedBinding candidate = candidateBindings.outgoing(sender).orElseThrow();
-        TransportReservation reservation = reservationForBinding(candidate, parameters);
-        if (reservation == null) {
-            return p2pResult(P2PBindingDecision.INVALID_REQUEST, null, Set.of(), 0.0);
-        }
-        TransportReservation previous = data.getTransportState().getReservation(
-                candidate.sender().transportEndpointId());
-        double previousCapacity = previous == null ? 0.0
-                : previous.reservedTransportCapacity();
-        TransportReservationModel.AdmissionEvaluation admission =
-                TransportReservationModel.evaluateAdmission(
-                        getCurrentTransportCapacity(),
-                        data.getTransportState().getReservedTransportCapacity(),
-                        previousCapacity, reservation.reservedTransportCapacity());
-        if (!admission.valid()) {
-            return p2pResult(P2PBindingDecision.INVALID_REQUEST, null, Set.of(), 0.0);
-        }
-        if (!admission.accepted()) {
-            return p2pResult(P2PBindingDecision.INSUFFICIENT_CAPACITY,
-                    null, Set.of(), admission.requiredAdditionalCapacity());
-        }
-        data.setP2PBindingState(candidateBindings);
-        replaceAndMark(candidate.sender().transportEndpointId(), reservation);
-        data.markP2PTransportReconciled(parameters);
-        return p2pResult(P2PBindingDecision.ACCEPTED,
-                current.connectionId(), Set.of(), admission.requiredAdditionalCapacity());
+        return transport().setP2PTransportRate(sender, rateItemsPerSecond);
     }
 
-    /** Compatibility facade for sender-side redstone state updates. */
     public P2PBindingResult setP2PRedstonePaused(GlobalPos sender, boolean paused) {
-        return setP2PEndpointRedstonePowered(sender, paused);
+        return transport().setP2PRedstonePaused(sender, paused);
     }
 
-    /** Redstone resumption restores accepted reservations even if it creates town shortage. */
     public P2PBindingResult setP2PEndpointRedstonePowered(
             GlobalPos endpoint,
             boolean powered
     ) {
-        Optional<TransportConsumerParameters> parametersResult = currentTransportParameters();
-        if (endpoint == null || parametersResult.isEmpty()) {
-            return p2pResult(P2PBindingDecision.INVALID_REQUEST, null, Set.of(), 0.0);
-        }
-        TransportConsumerParameters parameters = parametersResult.get();
-        prepareTransportState(parameters);
-        P2PBindingState currentBindings = data.getP2PBindingState();
-        Set<UUID> connectionIds = currentBindings.connectionIdsAt(endpoint);
-        if (connectionIds.isEmpty()) {
-            return p2pResult(P2PBindingDecision.STALE_CONNECTION, null, Set.of(), 0.0);
-        }
-        P2PBindingState candidateBindings = currentBindings.withEndpointRedstonePowered(
-                endpoint, powered);
-        if (candidateBindings != currentBindings) {
-            Map<TransportEndpointId, TransportReservation> candidateReservations =
-                    new TreeMap<>(TransportEndpointId.STABLE_COMPARATOR);
-            candidateReservations.putAll(data.getTransportState().getReservations());
-            for (P2PDirectedBinding binding : candidateBindings.bindings()) {
-                if (!binding.sender().pos().equals(endpoint)
-                        && !binding.receiver().pos().equals(endpoint)) {
-                    continue;
-                }
-                TransportReservation reservation = reservationForBinding(binding, parameters);
-                if (reservation == null) {
-                    return p2pResult(P2PBindingDecision.INVALID_REQUEST, null, Set.of(), 0.0);
-                }
-                candidateReservations.put(binding.sender().transportEndpointId(), reservation);
-            }
-            data.setP2PBindingState(candidateBindings);
-            data.getTransportState().replaceAllReservations(candidateReservations, parameters);
-            data.markP2PTransportReconciled(parameters);
-            data.getDataSyncCache().markTransportStateChanged();
-        }
-        return p2pResult(P2PBindingDecision.ACCEPTED,
-                connectionIds.iterator().next(), Set.of(), 0.0);
-    }
-
-    private TransportReservation reservationForBinding(
-            P2PDirectedBinding binding,
-            TransportConsumerParameters parameters
-    ) {
-        double metric = TransportReservationModel.p2pManhattanDistance(
-                binding.sender().pos(), binding.receiver().pos());
-        if (!TransportReservationModel.isFiniteNonNegative(metric)) {
-            return null;
-        }
-        if (binding.rateItemsPerSecond() == 0) {
-            return new TransportReservation(TransportEndpointKind.P2P_DIRECT_LINK,
-                    0, metric, 0.0, TransportAdmissionStatus.DISABLED);
-        }
-        if (binding.redstonePaused()) {
-            return new TransportReservation(TransportEndpointKind.P2P_DIRECT_LINK,
-                    binding.rateItemsPerSecond(), metric, 0.0,
-                    TransportAdmissionStatus.REDSTONE_PAUSED);
-        }
-        double capacity = TransportReservationModel.requiredCapacity(
-                TransportEndpointKind.P2P_DIRECT_LINK,
-                binding.rateItemsPerSecond(), metric, parameters);
-        if (!TransportReservationModel.isFiniteNonNegative(capacity)) {
-            return null;
-        }
-        return new TransportReservation(TransportEndpointKind.P2P_DIRECT_LINK,
-                binding.rateItemsPerSecond(), metric, capacity,
-                TransportAdmissionStatus.ACTIVE);
-    }
-
-    private P2PBindingResult p2pResult(
-            P2PBindingDecision decision,
-            UUID connectionId,
-            Set<UUID> replacedConnectionIds,
-            double requiredAdditionalCapacity
-    ) {
-        return new P2PBindingResult(decision, Optional.ofNullable(connectionId),
-                replacedConnectionIds, requiredAdditionalCapacity,
-                TownTransportSummary.from(getCurrentTransportCapacity(),
-                        data.getTransportState()));
+        return transport().setP2PEndpointRedstonePowered(endpoint, powered);
     }
 
     public TransportReservationResult refreshTransportEndpointMetric(TransportEndpointId endpointId) {
-        return refreshWarehouseInterfaceMetric(endpointId);
+        return transport().refreshTransportEndpointMetric(endpointId);
     }
 
     public TransportReservationResult refreshWarehouseInterfaceMetric(TransportEndpointId endpointId) {
-        Optional<TransportConsumerParameters> parametersResult = currentTransportParameters();
-        if (endpointId == null || parametersResult.isEmpty()) {
-            return result(TransportReservationDecision.INVALID_REQUEST, null, 0.0);
-        }
-        TransportConsumerParameters parameters = parametersResult.get();
-        prepareTransportState(parameters);
-        TransportReservation old = data.getTransportState().getReservation(endpointId);
-        if (old == null) {
-            return result(TransportReservationDecision.INVALID_BINDING, old, 0.0);
-        }
-        if (old.endpointKind() != TransportEndpointKind.WAREHOUSE_INTERFACE) {
-            return result(TransportReservationDecision.INVALID_BINDING, old, 0.0);
-        }
-        data.refreshWarehouseTopologyIfDirty(
-                parameters, data.getAppliedWarehouseTopology().townDimension());
-        OptionalDouble metricResult = currentWarehouseDistance(endpointId);
-        if (metricResult.isEmpty()) {
-            TransportReservation unavailable = new TransportReservation(
-                    old.endpointKind(), old.rateItemsPerSecond(), 0.0, 0.0,
-                    TransportAdmissionStatus.UNAVAILABLE);
-            replaceAndMark(endpointId, unavailable);
-            return result(TransportReservationDecision.ACCEPTED, unavailable, 0.0);
-        }
-        double scaleMetric = metricResult.getAsDouble();
-        double refreshedCapacity = TransportReservationModel.capacityForStoredRate(
-                old.endpointKind(), old.rateItemsPerSecond(), scaleMetric, parameters);
-        if (!TransportReservationModel.isFiniteNonNegative(refreshedCapacity)) {
-            return result(TransportReservationDecision.INVALID_REQUEST, old, 0.0);
-        }
-        TransportReservation refreshed = new TransportReservation(
-                old.endpointKind(), old.rateItemsPerSecond(), scaleMetric, refreshedCapacity,
-                old.rateItemsPerSecond() == 0
-                        ? TransportAdmissionStatus.DISABLED
-                        : TransportAdmissionStatus.ACTIVE);
-        replaceAndMark(endpointId, refreshed);
-        return result(TransportReservationDecision.ACCEPTED, refreshed, 0.0);
+        return transport().refreshWarehouseInterfaceMetric(endpointId);
     }
 
     public TransportReservationResult unregisterTransportEndpoint(TransportEndpointId endpointId) {
-        prepareTransportState();
-        if (endpointId == null) {
-            return result(TransportReservationDecision.INVALID_REQUEST, null, 0.0);
-        }
-        if (data.getTransportState().removeReservation(endpointId)) {
-            data.getDataSyncCache().markTransportStateChanged();
-        }
-        return result(TransportReservationDecision.ACCEPTED, null, 0.0);
+        return transport().unregisterTransportEndpoint(endpointId);
     }
 
-    private OptionalDouble currentWarehouseDistance(TransportEndpointId endpointId) {
-        if (endpointId == null) {
-            return OptionalDouble.empty();
-        }
-        WarehouseTopologySnapshot topology = data.getAppliedWarehouseTopology();
-        if (!topology.isUsable()
-                || !endpointId.endpointPos().dimension().equals(topology.townDimension())) {
-            return OptionalDouble.empty();
-        }
-        double metric = TransportReservationModel.warehouseWeightedDistance(
-                endpointId.endpointPos().pos(), topology.entries());
-        return TransportReservationModel.isFiniteNonNegative(metric)
-                ? OptionalDouble.of(metric)
-                : OptionalDouble.empty();
-    }
-
-    private void replaceAndMark(TransportEndpointId endpointId, TransportReservation reservation) {
-        if (data.getTransportState().replaceReservation(endpointId, reservation)) {
-            data.getDataSyncCache().markTransportStateChanged();
-        }
-    }
-
-    private TransportReservationResult result(
-            TransportReservationDecision decision,
-            TransportReservation reservation,
-            double requiredAdditionalCapacity
-    ) {
-        return new TransportReservationResult(decision, Optional.ofNullable(reservation),
-                TownTransportSummary.from(getCurrentTransportCapacity(), data.getTransportState()),
-                requiredAdditionalCapacity);
-    }
-
-    private double getCurrentTransportCapacity() {
-        return data.resources.get(VirtualResourceType.TRANSPORT_CAPACITY.generateAttribute(0));
-    }
-
-    private void prepareTransportState() {
-        currentTransportParameters().ifPresent(this::prepareTransportState);
-    }
-
-    private void prepareTransportState(TransportConsumerParameters parameters) {
-        reconcileP2PTransportState(parameters);
-        if (data.getTransportState().recalculateReservedCapacities(parameters)) {
-            data.getDataSyncCache().markTransportStateChanged();
-        }
-    }
-
-    private void reconcileP2PTransportState(TransportConsumerParameters parameters) {
-        if (data.isP2PTransportReconciled(parameters)) {
-            return;
-        }
-        P2PBindingState bindings = data.getP2PBindingState();
-        Map<TransportEndpointId, TransportReservation> reconciled =
-                new TreeMap<>(TransportEndpointId.STABLE_COMPARATOR);
-        data.getTransportState().getReservations().forEach((endpointId, reservation) -> {
-            if (reservation.endpointKind() != TransportEndpointKind.P2P_DIRECT_LINK) {
-                reconciled.put(endpointId, reservation);
-            }
-        });
-
-        Set<UUID> invalidConnections = new TreeSet<>();
-        for (P2PDirectedBinding binding : bindings.bindings()) {
-            TransportEndpointId senderId = binding.sender().transportEndpointId();
-            if (reconciled.containsKey(senderId)
-                    || reconciled.size() >= TownTransportSnapshot.MAX_RESERVATIONS) {
-                invalidConnections.add(binding.connectionId());
-                continue;
-            }
-            TransportReservation reservation = reservationForBinding(binding, parameters);
-            if (reservation == null) {
-                invalidConnections.add(binding.connectionId());
-                continue;
-            }
-            reconciled.put(senderId, reservation);
-        }
-        for (UUID connectionId : invalidConnections) {
-            bindings = bindings.withoutConnection(connectionId);
-        }
-        if (!invalidConnections.isEmpty()) {
-            data.setP2PBindingState(bindings);
-            P2PBindingState validBindings = bindings;
-            reconciled.entrySet().removeIf(entry ->
-                    entry.getValue().endpointKind() == TransportEndpointKind.P2P_DIRECT_LINK
-                            && validBindings.outgoing(entry.getKey().endpointPos()).isEmpty());
-        }
-        boolean changed = data.getTransportState().replaceAllReservations(reconciled, parameters);
-        data.markP2PTransportReconciled(parameters);
-        if (changed || !invalidConnections.isEmpty()) {
-            data.getDataSyncCache().markTransportStateChanged();
-        }
-    }
-
-    private static Optional<TransportConsumerParameters> currentTransportParameters() {
-        FHConfig.Server.Town.TransportConsumers config = FHConfig.SERVER.TOWN.TRANSPORT_CONSUMERS;
-        try {
-            return Optional.of(new TransportConsumerParameters(
-                    config.defaultRateItemsPerSecond.get(),
-                    config.minimumRateItemsPerSecond.get(),
-                    config.maximumRateItemsPerSecond.get(),
-                    config.warehouseDistanceCostPerBlock.get(),
-                    config.p2pDistanceCostPerBlock.get()));
-        } catch (IllegalArgumentException exception) {
-            return Optional.empty();
-        }
+    public void prepareTransportState() {
+        transport().prepareTransportState();
     }
 
     /**

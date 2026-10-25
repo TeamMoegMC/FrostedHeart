@@ -81,10 +81,13 @@ public class HouseBlockEntity extends AbstractTownBuildingBlockEntity<HouseBuild
 	 * Room structure should be valid. Temperature should be within a reasonable
 	 * range.
 	 */
-	public void refresh(@NotNull HouseBuilding building) {
-		super.refresh(building);
-		building.setTemperatureModifier(temperatureModifier);
-	}
+	protected void refreshEnvironment(HouseBuilding building) {
+        double temperature = BlockScanner.sampleTemperature(level, building.getOccupiedVolume());
+        if (Double.isFinite(temperature)) {
+            building.setTemperature(temperature);
+        }
+        building.setTemperatureModifier(temperatureModifier);
+    }
 
 	@Override
 	public @Nullable HouseBuilding getBuilding(AbstractTownBuilding abstractTownBuilding) {
@@ -103,35 +106,38 @@ public class HouseBlockEntity extends AbstractTownBuildingBlockEntity<HouseBuild
 	 *
 	 * @return whether the house structure is valid
 	 */
-	public boolean scanStructure(HouseBuilding building) {
-		BlockPos housePos = this.getBlockPos();
-		RoomData rd=BlockScanner.scanRoomDataFromBlock(level,housePos);
-		building.setOccupiedVolume(rd.occupiedCells);
-		//prerequisition
-		if(rd.doors.size()<=0) {
-			rd.occupiedCells.setValid(false);
-		}
-		if (rd.isValid()) {
-			//FHMain.LOGGER.debug("HouseScanner: scan successful");
-			building.setVolume(rd.volume);
-			building.setArea(rd.area);
-			FHConfig.Server.Town.Housing housing = FHConfig.SERVER.TOWN.HOUSING;
-			building.setDecorationRating(TownMathFunctions.calculateDecorationRating(
-				rd.findAllBlock(t->t.is(FHTags.Blocks.TOWN_DECORATIONS.get())),
-					rd.area,
-					housing.decorationCountLogOffset.get(),
-					housing.decorationCountLogMultiplier.get(),
-					housing.decorationTypeBaseScore.get(),
-					housing.decorationBaseDemand.get(),
-					housing.decorationFloorBlocksPerDemand.get()));
-			building.setTemperature(rd.calculateTemperature(level));
-			building.setMaxResidents(calculateMaxResidents(building.getArea(), building.getVolume(), rd.countInsideBlock(t->t.is(BlockTags.BEDS))));
-			building.setLayout(rd.findBlockPosition(t->t.is(BlockTags.BEDS)&&((!t.hasProperty(BedBlock.PART))||t.getValue(BedBlock.PART)==BedPart.HEAD)), rd.doors.get(0));
-			return true;
-		}
-		building.clearLayout();
-		return false;
-	}
+    public StructureScanResult scanStructure(HouseBuilding building) {
+        RoomData room = BlockScanner.scanRoomDataFromBlock(level, worldPosition);
+        if (room == null) {
+            return StructureScanResult.DATA_UNAVAILABLE;
+        }
+        if (room.doors.isEmpty()) {
+            room = room.withValidity(false);
+        }
+        if (!room.isValid()) {
+            building.setOccupiedVolume(room.occupiedCells);
+            building.clearLayout();
+            return StructureScanResult.INVALID;
+        }
+        FHConfig.Server.Town.Housing housing = FHConfig.SERVER.TOWN.HOUSING;
+        double decorationRating = TownMathFunctions.calculateDecorationRating(
+                room.findAllBlock(state -> state.is(FHTags.Blocks.TOWN_DECORATIONS.get())),
+                room.area, housing.decorationCountLogOffset.get(), housing.decorationCountLogMultiplier.get(),
+                housing.decorationTypeBaseScore.get(), housing.decorationBaseDemand.get(),
+                housing.decorationFloorBlocksPerDemand.get());
+        int capacity = calculateMaxResidents(room.area, room.volume,
+                room.countInsideBlock(state -> state.is(BlockTags.BEDS)));
+        var beds = room.findBlockPosition(state -> state.is(BlockTags.BEDS)
+                && (!state.hasProperty(BedBlock.PART) || state.getValue(BedBlock.PART) == BedPart.HEAD))
+                .sorted().toList();
+        building.setOccupiedVolume(room.occupiedCells);
+        building.setVolume(room.volume);
+        building.setArea(room.area);
+        building.setDecorationRating(decorationRating);
+        building.setMaxResidents(capacity);
+        building.setLayout(beds, room.doors.get(0));
+        return StructureScanResult.VALID;
+    }
 
 
 	public static int calculateMaxResidents(int area, int volume, int bedNum) {
@@ -151,6 +157,7 @@ public class HouseBlockEntity extends AbstractTownBuildingBlockEntity<HouseBuild
 
 	@Override
 	public void tick() {
+        double previousModifier = temperatureModifier;
 		assert level != null;
 		if (!level.isClientSide) {
 			if (endpoint.tryDrainHeat(1)) {
@@ -169,7 +176,11 @@ public class HouseBlockEntity extends AbstractTownBuildingBlockEntity<HouseBuild
 		} else if (getIsActive()) {
 			FHClientUtils.spawnSteamParticles(level, worldPosition);
 		}
-		this.addToSchedulerQueue();
+		if (!level.isClientSide && Double.compare(previousModifier, temperatureModifier) != 0) {
+            getBuilding().ifPresent(building -> building.updateBatch(() -> {
+                building.setTemperatureModifier(temperatureModifier);
+            }));
+        }
 	}
 
 	@Override

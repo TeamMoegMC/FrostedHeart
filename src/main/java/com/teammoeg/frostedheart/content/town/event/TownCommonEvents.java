@@ -39,6 +39,15 @@ import net.minecraftforge.fml.common.Mod;
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class TownCommonEvents {
     @SubscribeEvent
+    public static void syncTownDataOnRespawn(PlayerEvent.PlayerRespawnEvent event) {
+        if (event.getEntity() instanceof ServerPlayer player) com.teammoeg.frostedheart.content.town.TownSync.requestFull(player);
+    }
+
+    @SubscribeEvent
+    public static void syncTownDataOnTeamChange(com.teammoeg.chorda.events.PlayerTeamChangedEvent event) {
+        com.teammoeg.frostedheart.content.town.TownSync.requestFull(event.player);
+    }
+    @SubscribeEvent
     public static void attachToChunk(AttachCapabilitiesEvent<LevelChunk> event) {
         if (!event.getObject().isEmpty()) {
             Level world = event.getObject().getLevel();
@@ -55,7 +64,7 @@ public class TownCommonEvents {
     @SubscribeEvent
     public static void syncTownDataOnLogin(PlayerEvent.PlayerLoggedInEvent event) {
         if (event.getEntity() instanceof ServerPlayer player) {
-            FHNetwork.INSTANCE.sendPlayer(player, new TeamTownDataS2CPacket(player));
+            com.teammoeg.frostedheart.content.town.TownSync.requestFull(player);
         }
     }
 
@@ -65,7 +74,7 @@ public class TownCommonEvents {
     @SubscribeEvent
     public static void syncTownDataOnDimensionChange(PlayerEvent.PlayerChangedDimensionEvent event) {
         if (event.getEntity() instanceof ServerPlayer player) {
-            FHNetwork.INSTANCE.sendPlayer(player, new TeamTownDataS2CPacket(player));
+            com.teammoeg.frostedheart.content.town.TownSync.requestFull(player);
         }
     }
 
@@ -78,7 +87,7 @@ public class TownCommonEvents {
         if (event.getEntity() instanceof ServerPlayer player
                 && event.getContainer() instanceof CBlockEntityMenu<?> menu
                 && menu.getBlock() instanceof AbstractTownBuildingBlockEntity) {
-            FHNetwork.INSTANCE.sendPlayer(player, new TeamTownDataS2CPacket(player));
+            com.teammoeg.frostedheart.content.town.TownSync.requestFull(player);
         }
     }
 }

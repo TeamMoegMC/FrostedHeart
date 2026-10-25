@@ -32,6 +32,7 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.frostedheart.content.town.ITown;
 import com.teammoeg.frostedheart.content.town.TeamTown;
+import com.teammoeg.frostedheart.content.town.TeamTownData;
 import com.teammoeg.frostedheart.content.town.ai_town.AITownData;
 import com.teammoeg.frostedheart.content.town.ai_town.AITownManager;
 import com.teammoeg.frostedheart.content.town.citizen.nav.FlowFieldCache;
@@ -127,6 +128,11 @@ public final class CitizenSimScheduler {
 
 	/** 本维度全部容器 / All containers in this level. */
 	private List<CitizenContainer> containers = new ArrayList<>();
+    private boolean registryDirty = true;
+
+    public static void markRegistriesDirty() {
+        BY_LEVEL.values().forEach(scheduler -> scheduler.registryDirty = true);
+    }
 	/** Reused next-generation container registry, swapped only after a complete rebuild. */
 	private List<CitizenContainer> containerScratch = new ArrayList<>();
 	/** 稳定 id → 容器（C2S 反查与 registry diff） / Stable id → container (C2S lookup & registry diff) */
@@ -201,6 +207,7 @@ public final class CitizenSimScheduler {
 	 * @return 新 id / the new id
 	 */
 	public int allocId(ServerLevel level) {
+		reconcileAllocator(level);
 		return getUnmanaged(level).allocId();
 	}
 
@@ -215,6 +222,7 @@ public final class CitizenSimScheduler {
 	 * @return 新居民的稳定 id / stable id of the new citizen
 	 */
 	public int spawnUnmanaged(ServerLevel level, int blockX, int blockZ) {
+		reconcileAllocator(level);
 		UnmanagedCitizenData data = getUnmanaged(level);
 		int id = data.spawn(level, blockX, blockZ, -1);
 		register(data, id);
@@ -233,6 +241,7 @@ public final class CitizenSimScheduler {
 	 * @return 新居民的稳定 id / stable id of the new citizen
 	 */
 	public int spawnUnmanaged(ServerLevel level, int blockX, int blockZ, int blockY) {
+		reconcileAllocator(level);
 		UnmanagedCitizenData data = getUnmanaged(level);
 		int id = data.spawn(level, blockX, blockZ, blockY);
 		register(data, id);
@@ -347,7 +356,7 @@ public final class CitizenSimScheduler {
 	 */
 	public void tick(ServerLevel level) {
 		long gameTime = level.getGameTime();
-		if (gameTime % 20 == 0) {
+		if (registryDirty || gameTime % 20 == 0) {
 			refreshActivity(level);
 			refreshRegistry(level);
 			rebuildActiveIds();
@@ -475,7 +484,7 @@ public final class CitizenSimScheduler {
 			Collection<Resident> residents = TeamTown.create(townData).getAllResidents();
 			if (!data.isAdopted()) {
 				// 首次接管：注入 dirty 回调 + 一次性恢复（启动加载/旧存档迁移）+ 注册居民变更事件
-				data.setMarkDirty(AITownManager::markDirty);
+				// The record owner installed its persistence callback before adoption.
 				data.adopt(this, level, townData);
 			} else {
 				// 维度变更检测：跨维度全量重生
@@ -491,7 +500,7 @@ public final class CitizenSimScheduler {
 			TownSimData data = aiTown.getSimData();
 			if (!data.isAdopted()) {
 				// 首次接管：注入全局 dirty 回调 + 一次性对账（补建添加时未接管窗口的条目）
-				data.setMarkDirty(AITownManager::markDirty);
+				// The record owner installed its persistence callback before adoption.
 				data.adopt(this, level, aiTown);
 			} else {
 				// 维度变更检测：跨维度全量重生
@@ -517,7 +526,33 @@ public final class CitizenSimScheduler {
 		this.containerScratch = oldContainers;
 		this.byIdScratch = oldById;
 		this.visibilityIndexDirty = true;
+		this.registryDirty = false;
 	}
+
+    public void refreshRegistryNow(ServerLevel level) {
+        allocatorReconciled = false;
+        refreshActivity(level);
+        refreshRegistry(level);
+        rebuildActiveIds();
+        grid.rebuild(containers, this::isSpatialPresent);
+    }
+
+    /** Release runtime indexes and visibility while preserving the stored arrays. */
+    public void detachContainer(TownSimData container) {
+        var ids = byId.int2ObjectEntrySet().iterator();
+        while (ids.hasNext()) {
+            var entry = ids.next();
+            if (entry.getValue() != container) continue;
+            sync.notifyRemoved(entry.getIntKey());
+            ids.remove();
+        }
+        int index = containers.indexOf(container);
+        if (index >= 0) {
+            containers.remove(index);
+            if (index < activeIdsByContainer.size()) activeIdListPool.add(activeIdsByContainer.remove(index));
+        }
+        visibilityIndexDirty = true;
+    }
 
 	/** 将 town 容器加入注册表；跨容器 id 冲突时仅换会话 id，不丢当前位置与状态。 */
 	private void indexTownContainer(TownSimData data, Collection<Resident> residents,
@@ -551,7 +586,8 @@ public final class CitizenSimScheduler {
 		CTeamDataManager.INSTANCE.forAllData(FHSpecialDataTypes.TOWN_DATA, (townData, holder) -> {
 			if (!ITown.DEBUG_MODE && !isTownInLevel(holder, level))
 				return;
-			highestId[0] = Math.max(highestId[0], maxId(AITownManager.getPlayerSim(holder.getId()).sim()));
+            TownSimData restored = AITownManager.peekPlayerSim(holder.getId());
+            if (restored != null) highestId[0] = Math.max(highestId[0], maxId(restored.sim()));
 		});
 		for (AITownData aiTown : AITownManager.all()) {
 			if (aiTown.isInLevel(level))
@@ -598,8 +634,7 @@ public final class CitizenSimScheduler {
 	 * @return 该镇属于此维度返回 true / true if the town belongs to this level
 	 */
 	public static boolean isTownInLevel(TeamDataHolder holder, ServerLevel level) {
-		return holder.getOptional(FHSpecialDataTypes.GENERATOR_DATA)
-				.filter(g -> level.dimension().equals(g.dimension)).isPresent();
+		return TeamTownData.executionLevel(holder) == level;
 	}
 
 	/**

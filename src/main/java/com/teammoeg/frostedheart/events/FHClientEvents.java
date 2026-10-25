@@ -213,6 +213,7 @@ public class FHClientEvents {
         // Integrated servers already own these shared static recipe tables and caches.
         if (!Minecraft.getInstance().hasSingleplayerServer()) {
             FHRecipeCachingReloadListener.buildRecipeLists(event.getRecipeManager());
+            com.teammoeg.frostedheart.content.town.buildings.mine.MineBuilding.invalidateRecipeCache();
         }
     }
 

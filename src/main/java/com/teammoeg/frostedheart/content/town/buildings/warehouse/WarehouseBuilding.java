@@ -20,6 +20,8 @@
 package com.teammoeg.frostedheart.content.town.buildings.warehouse;
 
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
+import static com.teammoeg.frostedheart.content.town.building.BuildingRecordsCodec.strict;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.content.town.ITown;
 import com.teammoeg.frostedheart.content.town.block.OccupiedZoneInfo;
@@ -33,17 +35,19 @@ import lombok.Getter;
 import net.minecraft.core.BlockPos;
 
 public class WarehouseBuilding extends AbstractTownBuilding {
-	public static final Codec<WarehouseBuilding> CODEC = RecordCodecBuilder.create(t -> t.group(
-                    BlockPos.CODEC.optionalFieldOf("pos",BlockPos.ZERO).forGetter(o -> o.pos),
-                    Codec.BOOL.optionalFieldOf("isStructureValid",false).forGetter(o -> o.isStructureValid()),
-                    OccupiedZoneInfo.CODEC.optionalFieldOf("occupiedVolume",OccupiedZoneInfo.EMPTY).forGetter(o -> o.getOccupiedVolume()),
-                    Codec.BOOL.optionalFieldOf("initialized", false).forGetter(o -> o.isInitialized()),
-                    Codec.DOUBLE.optionalFieldOf("capacity",0D).forGetter(o -> o.getCapacity()),
-					Codec.INT.optionalFieldOf("area",0).forGetter(o -> o.getArea()),
-					Codec.INT.optionalFieldOf("volume",0).forGetter(o -> o.getVolume()),
-                    Codec.INT.optionalFieldOf("decorationAmount",0).forGetter(o -> o.getDecorationAmount())
+	public static final MapCodec<WarehouseBuilding> MAP_CODEC = RecordCodecBuilder.mapCodec(t -> t.group(
+                    strict(BlockPos.CODEC).optionalFieldOf("pos",BlockPos.ZERO).forGetter(o -> o.pos),
+                    strict(Codec.BOOL).optionalFieldOf("isStructureValid",false).forGetter(o -> o.isStructureValid()),
+                    strict(OccupiedZoneInfo.CODEC).optionalFieldOf("occupiedVolume",OccupiedZoneInfo.EMPTY).forGetter(o -> o.getOccupiedVolume()),
+                    strict(Codec.BOOL).optionalFieldOf("initialized", false).forGetter(o -> o.isInitialized()),
+                    strict(Codec.DOUBLE).optionalFieldOf("capacity",0D).forGetter(o -> o.getCapacity()),
+					strict(Codec.INT).optionalFieldOf("area",0).forGetter(o -> o.getArea()),
+					strict(Codec.INT).optionalFieldOf("volume",0).forGetter(o -> o.getVolume()),
+                    strict(Codec.INT).optionalFieldOf("decorationAmount",0).forGetter(o -> o.getDecorationAmount())
 			)
 			.apply(t, WarehouseBuilding::new));
+        public static final Codec<WarehouseBuilding> CODEC = MAP_CODEC.codec();
+
 
     private int volume;//有效体积
     private int area;//占地面积
@@ -51,10 +55,40 @@ public class WarehouseBuilding extends AbstractTownBuilding {
     @Getter
     private int decorationAmount;
 
-    public void setVolume(int volume) { if (this.volume == volume) return; this.volume = volume; fireChange(); }
-    public void setArea(int area) { if (this.area == area) return; this.area = area; fireChange(); }
-    public void setCapacity(double capacity) { if (Double.compare(this.capacity, capacity) == 0) return; this.capacity = capacity; fireChange(); }
-    public void setDecorationAmount(int decorationAmount) { if (this.decorationAmount == decorationAmount) return; this.decorationAmount = decorationAmount; fireChange(); }
+    public void setVolume(int volume) {
+
+        if (this.volume == volume) {
+
+            return;
+
+        }
+
+        this.volume = volume;
+
+        fireChange();
+
+    }
+    public void setArea(int area) {
+        if (this.area == area) {
+            return;
+        }
+        this.area = area;
+        fireChange();
+    }
+    public void setCapacity(double capacity) {
+        if (Double.compare(this.capacity, capacity) == 0) {
+            return;
+        }
+        this.capacity = capacity;
+        fireAvailabilityChange();
+    }
+    public void setDecorationAmount(int decorationAmount) {
+        if (this.decorationAmount == decorationAmount) {
+            return;
+        }
+        this.decorationAmount = decorationAmount;
+        fireChange();
+    }
 	public WarehouseBuilding(BlockPos pos) {
         super(pos);
     }

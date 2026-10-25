@@ -34,6 +34,7 @@ import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
 import com.teammoeg.frostedheart.content.town.building.ITownResidentWorkBuilding;
 
 import net.minecraft.core.BlockPos;
+import java.util.function.Predicate;
 
 /**
  * 城镇级岗位队列及每栋工作建筑的保障目标人数。
@@ -78,6 +79,10 @@ public final class TownStaffingPlan {
      * building's current roster becomes its initial guaranteed target.
      */
     public TownStaffingPlan normalize(Map<BlockPos, AbstractTownBuilding> buildings) {
+        return normalize(buildings, pos -> false);
+    }
+
+    public TownStaffingPlan normalize(Map<BlockPos, AbstractTownBuilding> buildings, Predicate<BlockPos> preserve) {
         Map<BlockPos, ITownResidentWorkBuilding> workBuildings = new LinkedHashMap<>();
         buildings.entrySet().stream()
                 .filter(entry -> entry.getValue() instanceof ITownResidentWorkBuilding)
@@ -89,7 +94,7 @@ public final class TownStaffingPlan {
         List<Entry> result = new ArrayList<>();
         Set<BlockPos> present = new HashSet<>();
         for (Entry entry : entries) {
-            if (workBuildings.containsKey(entry.building()) && present.add(entry.building())) {
+            if ((workBuildings.containsKey(entry.building()) || preserve.test(entry.building())) && present.add(entry.building())) {
                 result.add(entry);
             }
         }
@@ -109,7 +114,7 @@ public final class TownStaffingPlan {
         AbstractTownBuilding value = buildings.get(building);
         if (!(value instanceof ITownResidentWorkBuilding workBuilding)) return Optional.empty();
         int bounded = Math.max(0, Math.min(target, Math.max(0, workBuilding.getMaxResidents())));
-        TownStaffingPlan normalized = normalize(buildings);
+        TownStaffingPlan normalized = normalize(buildings, pos -> true);
         List<Entry> changed = new ArrayList<>(normalized.entries);
         for (int index = 0; index < changed.size(); index++) {
             if (changed.get(index).building().equals(building)) {
@@ -128,7 +133,7 @@ public final class TownStaffingPlan {
         if (!(buildings.get(building) instanceof ITownResidentWorkBuilding)) {
             return Optional.empty();
         }
-        TownStaffingPlan normalized = normalize(buildings);
+        TownStaffingPlan normalized = normalize(buildings, pos -> true);
         List<Entry> changed = new ArrayList<>(normalized.entries);
         Entry moved = null;
         for (int index = 0; index < changed.size(); index++) {
@@ -158,6 +163,10 @@ public final class TownStaffingPlan {
         if (x != 0) return x;
         int y = Integer.compare(first.getY(), second.getY());
         return y != 0 ? y : Integer.compare(first.getZ(), second.getZ());
+    }
+
+    public TownStaffingPlan withoutBuilding(BlockPos pos) {
+        return new TownStaffingPlan(entries.stream().filter(entry -> !entry.building().equals(pos)).toList());
     }
 
     @Override

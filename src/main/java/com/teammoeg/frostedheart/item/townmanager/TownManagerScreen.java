@@ -145,7 +145,7 @@ public class TownManagerScreen extends PrimaryLayer implements ITownDataUpdateLi
      */
     @Nullable
     public TeamTownData getTownData() {
-        return CClientTeamDataManager.INSTANCE.getInstance().getData(FHSpecialDataTypes.TOWN_DATA);
+        return com.teammoeg.frostedheart.content.town.client.TownClientUpdates.currentTown().orElse(null);
     }
 
     /**

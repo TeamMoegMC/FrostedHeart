@@ -20,174 +20,175 @@
 package com.teammoeg.chorda.dataholders;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.IdentityHashMap;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
 
-import com.teammoeg.chorda.Chorda;
 import com.teammoeg.chorda.io.NBTSerializable;
-import com.teammoeg.chorda.io.SerializeUtil;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
 
 /**
- * 基于 Map 的数据持有者实现，使用 {@link IdentityHashMap} 存储数据组件。
- * 提供线程安全的数据访问、NBT 序列化/反序列化功能。
- * 这是团队数据、客户端数据和世界数据持有者的基类。
- * <p>
- * Map-based data holder implementation using {@link IdentityHashMap} to store data components.
- * Provides thread-safe data access and NBT serialization/deserialization.
- * This is the base class for team data, client data, and world data holders.
- *
- * @param <T> 数据持有者的具体子类型 / the concrete subtype of the data holder
+ * Component slots keyed by registered type identity. All installation paths share
+ * one lifecycle hook. The lock protects slots, not the mutable component contents;
+ * server gameplay and snapshot capture still belong to the server thread.
  */
 public class DataHolderMap<T extends DataHolderMap<T>> implements SpecialDataHolder<T>, NBTSerializable {
+    public enum InstallReason { LOAD, CREATE, REPLACE, REMOVE, RESTORE }
 
-	public final Marker marker;
-	IdentityHashMap<SpecialDataType,SpecialData> data=new IdentityHashMap<>(SpecialDataType.TYPE_REGISTRY.size());
-	ReentrantLock lock=new ReentrantLock();
-	/**
-	 * 构造一个新的数据持有者映射。
-	 * <p>
-	 * Constructs a new data holder map.
-	 *
-	 * @param markerName 用于日志记录的标记名称 / the marker name used for logging
-	 */
-	public DataHolderMap(String markerName) {
-		marker = MarkerManager.getMarker(markerName);
-	}
+    public final Marker marker;
+    private final Map<SpecialDataType<?>, SpecialData> data = new IdentityHashMap<>();
+    private final ReentrantLock lock = new ReentrantLock();
+    private CompoundTag unknownComponents = new CompoundTag();
 
-	
-	/**
-	 * {@inheritDoc}
-	 * 将所有数据组件序列化为 NBT 格式。使用锁确保线程安全。
-	 * <p>
-	 * Serializes all data components to NBT format. Uses locking for thread safety.
-	 */
-	@Override
-	public void save(CompoundTag nbt, boolean isPacket) {
-		try {
-			lock.lock();
-			nbt.put("data", SerializeUtil.toNBTMap(data.entrySet(), (t,p)-> {
-				try {
-					p.put(t.getKey().getId(),(Tag)t.getKey().saveData(NbtOps.INSTANCE, t.getValue()));
-				} catch (Exception e) {
-					Chorda.LOGGER.error(marker, "Failed to save " + t.getKey(), e);
-				}
-			}));
-		}finally {
-			lock.unlock();
-		}
-	}
+    public DataHolderMap(String markerName) {
+        marker = MarkerManager.getMarker(markerName);
+    }
 
-	/**
-	 * {@inheritDoc}
-	 * 从 NBT 数据中加载所有已注册类型的数据组件。
-	 * <p>
-	 * Loads all registered types of data components from NBT data.
-	 */
-	@Override
-	public void load(CompoundTag data, boolean isPacket) {
-		data = data.getCompound("data");
-		for(SpecialDataType<?> tc: SpecialDataType.TYPE_REGISTRY) {
-        	if(data.contains(tc.getId())) {
-				try {
-					SpecialData raw=tc.loadData(NbtOps.INSTANCE, data.get(tc.getId()));
-					this.data.put(tc, raw);
-				} catch (Exception e) {
-					Chorda.LOGGER.error(marker, "Failed to load " + tc, e);
-					throw new DataLoadException("Failed to load " + tc,e);
-				}
-        	}
+    /** A failed component encoding must never silently produce a partial record. */
+    @Override
+    public void save(CompoundTag nbt, boolean isPacket) {
+        lock.lock();
+        try {
+            CompoundTag encoded = unknownComponents.copy();
+            for (var entry : data.entrySet()) {
+                encoded.put(entry.getKey().getId(), encodeComponent(entry.getKey(), entry.getValue()));
+            }
+            nbt.put("data", encoded);
+        } finally {
+            lock.unlock();
         }
-	}
-	
-	
-	/**
-	 * {@inheritDoc}
-	 * 获取指定类型的数据组件。如果不存在则创建新的，使用双重检查锁定保证线程安全。
-	 * <p>
-	 * Gets the data component of the specified type. Creates a new one if not present, using double-checked locking for thread safety.
-	 */
-	@SuppressWarnings("unchecked")
-	public <U extends SpecialData> U getData(SpecialDataType<U> cap){
-		U ret= (U) data.get(cap);
-		if(ret==null) {
-			try {
-				lock.lock();
-				ret=  (U) data.get(cap);
-				if(ret==null) {
-					ret=cap.create((T) this);
-					data.put(cap, ret);
-				}
-			}finally {
-				lock.unlock();
-			}
-		}
-		return ret;
-	}
-	/**
-	 * 设置指定类型的数据组件。
-	 * <p>
-	 * Sets the data component for the specified type.
-	 *
-	 * @param <U> 数据组件的类型 / the data component type
-	 * @param cap 数据组件的类型定义 / the data component type definition
-	 * @param data 要设置的数据组件 / the data component to set
-	 * @return 被设置的数据组件 / the data component that was set
-	 */
-	public <U extends SpecialData> U setData(SpecialDataType<U> cap, U data){
-		this.data.put(cap, data);
-		return data;
-	}
-	/**
-	 * 以原始类型获取数据组件，不进行泛型类型检查。如果不存在则创建新的。
-	 * <p>
-	 * Gets the data component with raw type without generic type checking. Creates a new one if not present.
-	 *
-	 * @param cap 数据组件的类型定义 / the data component type definition
-	 * @return 数据组件实例 / the data component instance
-	 */
-	public SpecialData getDataRaw(SpecialDataType<?> cap){
-		SpecialData ret=  data.get(cap);
-		if(ret==null) {
-			try {
-				lock.lock();
-				ret=  data.get(cap);
-				if(ret==null) {
-					ret=cap.createRaw(this);
-					data.put(cap, ret);
-				}
-			}finally {
-				lock.unlock();
-			}
-		}
-		return ret;
-	}
-	/**
-	 * 获取当前持有者中已存储的所有数据类型。
-	 * <p>
-	 * Gets all data types currently stored in this holder.
-	 *
-	 * @return 已存储的数据类型集合 / the collection of stored data types
-	 */
-	public Collection<SpecialDataType> getTypes(){
-		return data.keySet();
-	}
-	/**
-	 * {@inheritDoc}
-	 * 获取已存在的数据组件，不会自动创建。
-	 * <p>
-	 * Gets the existing data component without auto-creating it.
-	 */
-	@Override
-	public <U extends SpecialData> Optional<U> getOptional(SpecialDataType<U> cap) {
-		
-		return Optional.ofNullable((U)data.get(cap));
-	}
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    protected final Tag encodeComponent(SpecialDataType<?> type, SpecialData value) {
+        try {
+            return ((Tag) ((SpecialDataType) type).saveData(NbtOps.INSTANCE, value)).copy();
+        } catch (Exception ex) {
+            throw new IllegalStateException("Failed to encode component " + type.getId(), ex);
+        }
+    }
+
+    @Override
+    public void load(CompoundTag root, boolean isPacket) {
+        CompoundTag encoded = root.getCompound("data");
+        // Decode all candidates before exposing any of this input through slots.
+        Map<SpecialDataType<?>, SpecialData> candidates = new IdentityHashMap<>();
+        CompoundTag unknown = new CompoundTag();
+        for (String key : encoded.getAllKeys()) {
+            if (SpecialDataType.getType(key) == null) unknown.put(key, encoded.get(key).copy());
+        }
+        for (SpecialDataType<?> type : SpecialDataType.TYPE_REGISTRY) {
+            if (!encoded.contains(type.getId())) continue;
+            try {
+                candidates.put(type, type.loadData(NbtOps.INSTANCE, encoded.get(type.getId())));
+            } catch (Exception ex) {
+                throw new DataLoadException("Failed to load " + type.getId(), ex);
+            }
+        }
+        lock.lock();
+        try {
+            unknownComponents = unknown;
+            for (var entry : candidates.entrySet()) {
+                installComponent(entry.getKey(), entry.getValue(), InstallReason.LOAD);
+            }
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    @Override
+    public <U extends SpecialData> U getData(SpecialDataType<U> type) {
+        lock.lock();
+        try {
+            U existing = getOptional(type).orElse(null);
+            if (existing != null) return existing;
+            U created = type.create(this);
+            installComponent(type, created, InstallReason.CREATE);
+            return created;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public SpecialData getDataRaw(SpecialDataType<?> type) {
+        return getData(type);
+    }
+
+    public <U extends SpecialData> U setData(SpecialDataType<U> type, U value) {
+        Objects.requireNonNull(value, "component");
+        installComponent(type, value, InstallReason.REPLACE);
+        return value;
+    }
+
+    public <U extends SpecialData> Optional<U> removeData(SpecialDataType<U> type) {
+        lock.lock();
+        try {
+            Optional<U> previous = getOptional(type);
+            installComponent(type, null, InstallReason.REMOVE);
+            return previous;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    private void installComponent(SpecialDataType<?> type, SpecialData next, InstallReason reason) {
+        lock.lock();
+        try {
+            SpecialData previous = data.get(type);
+            if (previous == next) return;
+            if (reason != InstallReason.LOAD && reason != InstallReason.RESTORE && deferComponentInstallation(type, next, reason)) return;
+            if (next == null) data.remove(type);
+            else data.put(type, next);
+            unknownComponents.remove(type.getId());
+            try {
+                onComponentInstalled(type, previous, next, reason);
+            } catch (RuntimeException failure) {
+                // The server hook only throws before its business commit. Restore
+                // the pointer before asking it to reconnect the old consumers.
+                if (previous == null) data.remove(type);
+                else data.put(type, previous);
+                try {
+                    onComponentInstalled(type, next, previous, InstallReason.RESTORE);
+                } catch (RuntimeException restorationFailure) {
+                    failure.addSuppressed(restorationFailure);
+                }
+                throw failure;
+            }
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /** Default/client holders have no server persistence or runtime binding. */
+    protected void onComponentInstalled(SpecialDataType<?> type, SpecialData previous,
+                                        SpecialData next, InstallReason reason) {
+    }
+
+    protected boolean deferComponentInstallation(SpecialDataType<?> type, SpecialData next, InstallReason reason) {
+        return false;
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public Collection<SpecialDataType> getTypes() {
+        return (Collection) Collections.unmodifiableSet(data.keySet());
+    }
+
+    protected final CompoundTag copyUnknownComponents() {
+        return unknownComponents.copy();
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <U extends SpecialData> Optional<U> getOptional(SpecialDataType<U> type) {
+        return Optional.ofNullable((U) data.get(type));
+    }
 }

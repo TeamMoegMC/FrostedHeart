@@ -26,6 +26,8 @@ import java.util.Objects;
 import java.util.UUID;
 
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
+import static com.teammoeg.frostedheart.content.town.building.BuildingRecordsCodec.strict;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.content.town.ITownWithBuildings;
 import com.teammoeg.frostedheart.content.town.TeamTown;
@@ -63,12 +65,12 @@ public class TransportStationBuilding extends AbstractTownResidentWorkBuilding {
         public static final TransportStationDailyReport EMPTY = new TransportStationDailyReport(
                 false, 0, 0.0, 0.0, 0.0, TownProductionStopReason.NONE);
         public static final Codec<TransportStationDailyReport> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-                Codec.BOOL.optionalFieldOf("hasData", false).forGetter(TransportStationDailyReport::hasData),
-                Codec.INT.optionalFieldOf("workerCount", 0).forGetter(TransportStationDailyReport::workerCount),
-                Codec.DOUBLE.optionalFieldOf("totalProductivity", 0.0).forGetter(TransportStationDailyReport::totalProductivity),
-                Codec.DOUBLE.optionalFieldOf("plannedCapacity", 0.0).forGetter(TransportStationDailyReport::plannedCapacity),
-                Codec.DOUBLE.optionalFieldOf("addedCapacity", 0.0).forGetter(TransportStationDailyReport::addedCapacity),
-                TownProductionStopReason.CODEC.optionalFieldOf("stopReason", TownProductionStopReason.NONE)
+                strict(Codec.BOOL).optionalFieldOf("hasData", false).forGetter(TransportStationDailyReport::hasData),
+                strict(Codec.INT).optionalFieldOf("workerCount", 0).forGetter(TransportStationDailyReport::workerCount),
+                strict(Codec.DOUBLE).optionalFieldOf("totalProductivity", 0.0).forGetter(TransportStationDailyReport::totalProductivity),
+                strict(Codec.DOUBLE).optionalFieldOf("plannedCapacity", 0.0).forGetter(TransportStationDailyReport::plannedCapacity),
+                strict(Codec.DOUBLE).optionalFieldOf("addedCapacity", 0.0).forGetter(TransportStationDailyReport::addedCapacity),
+                strict(TownProductionStopReason.CODEC).optionalFieldOf("stopReason", TownProductionStopReason.NONE)
                         .forGetter(TransportStationDailyReport::stopReason)
         ).apply(instance, TransportStationDailyReport::new));
 
@@ -96,21 +98,23 @@ public class TransportStationBuilding extends AbstractTownResidentWorkBuilding {
         }
     }
 
-    public static final Codec<TransportStationBuilding> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-            BlockPos.CODEC.optionalFieldOf("pos", BlockPos.ZERO).forGetter(building -> building.pos),
-            Codec.BOOL.optionalFieldOf("initialized", false).forGetter(TransportStationBuilding::isInitialized),
-            Codec.BOOL.optionalFieldOf("isStructureValid", false)
+    public static final MapCodec<TransportStationBuilding> MAP_CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
+            strict(BlockPos.CODEC).optionalFieldOf("pos", BlockPos.ZERO).forGetter(building -> building.pos),
+            strict(Codec.BOOL).optionalFieldOf("initialized", false).forGetter(TransportStationBuilding::isInitialized),
+            strict(Codec.BOOL).optionalFieldOf("isStructureValid", false)
                     .forGetter(TransportStationBuilding::isStructureValid),
-            OccupiedZoneInfo.CODEC.optionalFieldOf("occupiedVolume",OccupiedZoneInfo.EMPTY)
+            strict(OccupiedZoneInfo.CODEC).optionalFieldOf("occupiedVolume",OccupiedZoneInfo.EMPTY)
                     .forGetter(t->t.getOccupiedVolume()),
-            UUIDUtil.CODEC.listOf().optionalFieldOf("residentsID", List.of())
+            strict(UUIDUtil.CODEC.listOf()).optionalFieldOf("residentsID", List.of())
                     .forGetter(building -> building.getResidentsID().stream().sorted().toList()),
-            Codec.INT.optionalFieldOf("area", 0).forGetter(TransportStationBuilding::getArea),
-            Codec.INT.optionalFieldOf("volume", 0).forGetter(TransportStationBuilding::getVolume),
-            Codec.INT.optionalFieldOf("maxResidents", 0).forGetter(TransportStationBuilding::getMaxResidents),
-            TransportStationDailyReport.CODEC.optionalFieldOf("dailyReport", TransportStationDailyReport.EMPTY)
+            strict(Codec.INT).optionalFieldOf("area", 0).forGetter(TransportStationBuilding::getArea),
+            strict(Codec.INT).optionalFieldOf("volume", 0).forGetter(TransportStationBuilding::getVolume),
+            strict(Codec.INT).optionalFieldOf("maxResidents", 0).forGetter(TransportStationBuilding::getMaxResidents),
+            strict(TransportStationDailyReport.CODEC).optionalFieldOf("dailyReport", TransportStationDailyReport.EMPTY)
                     .forGetter(TransportStationBuilding::getDailyReport)
     ).apply(instance, TransportStationBuilding::new));
+        public static final Codec<TransportStationBuilding> CODEC = MAP_CODEC.codec();
+
 
     @Getter
     private int area;

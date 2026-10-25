@@ -47,31 +47,21 @@ public class TransportStationBlockEntity
     }
 
     @Override
-    public boolean scanStructure(TransportStationBuilding building) {
-		BlockPos housePos = this.getBlockPos();
-		RoomData rd=BlockScanner.scanRoomDataFromBlock(level,housePos);
-
-		building.setOccupiedVolume(rd.occupiedCells);
-		//prerequisition
-		if(rd.doors.size()<=0) {
-			rd.occupiedCells.setValid(false);
-		}
-		if (rd.isValid()) {
-            applyScan(building, rd);
-            return true;
+    public StructureScanResult scanStructure(TransportStationBuilding building) {
+        RoomData room = BlockScanner.scanRoomDataFromBlock(level, worldPosition);
+        if (room == null) {
+            return StructureScanResult.DATA_UNAVAILABLE;
         }
-        
-        return false;
-    }
-
-    private static void applyScan(
-            TransportStationBuilding building,
-            RoomData scanner
-    ) {
-        applyScanResult(
-                building,
-                scanner.area,
-                scanner.volume);
+        if (room.doors.isEmpty()) {
+            room = room.withValidity(false);
+        }
+        if (!room.isValid()) {
+            building.setOccupiedVolume(room.occupiedCells);
+            return StructureScanResult.INVALID;
+        }
+        applyScanResult(building, room.area, room.volume);
+        building.setOccupiedVolume(room.occupiedCells);
+        return StructureScanResult.VALID;
     }
 
     static void applyScanResult(
@@ -79,9 +69,6 @@ public class TransportStationBlockEntity
             int area,
             int volume
     ) {
-        building.setArea(area);
-        building.setVolume(volume);
-
         FHConfig.Server.Town.BuildingScoring scoring = FHConfig.SERVER.TOWN.BUILDING_SCORING;
         FHConfig.Server.Town.TransportStation config = FHConfig.SERVER.TOWN.TRANSPORT_STATION;
         double spaceRating = TownMathFunctions.calculateSpaceRating(
@@ -95,6 +82,8 @@ public class TransportStationBlockEntity
         double effectiveFloorArea = Math.max(0.0, spaceRating * area);
         int calculatedSlots = (int) Math.floor(
                 effectiveFloorArea / config.floorBlocksPerWorkerSlot.get());
+        building.setArea(area);
+        building.setVolume(volume);
         building.setMaxResidents(Math.max(config.minimumWorkerSlots.get(), calculatedSlots));
     }
 

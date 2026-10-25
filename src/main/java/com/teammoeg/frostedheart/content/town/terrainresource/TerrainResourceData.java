@@ -33,6 +33,12 @@ import java.util.Optional;
 import java.util.Set;
 
 public class TerrainResourceData {
+    private transient Runnable onChange = () -> {};
+
+    public void setChangeListener(Runnable listener) {
+        onChange = listener == null ? () -> {} : listener;
+        if (chunkResourceTracker != null) chunkResourceTracker.onChange = onChange;
+    }
     public static final Codec<TerrainResourceData> CODEC = RecordCodecBuilder.create(ins -> ins.group(
     Codec.DOUBLE.optionalFieldOf("extracted", 0.0).forGetter(o -> o.extracted),
 
@@ -79,14 +85,17 @@ public class TerrainResourceData {
         if (chunkResourceTracker != null) {
             return;
         }
+        double previous = extracted;
         extracted -= number;
         if (extracted < 0) {
             extracted = 0;
         }
+        if (Double.compare(previous, extracted) != 0) onChange.run();
     }
 
 	public void costResource(double number) {
 		extracted+=number;
+		if (number != 0) onChange.run();
 	}
 	public double getRemainResource() {
 		return total-extracted;
@@ -123,6 +132,7 @@ public class TerrainResourceData {
             chunkResourceTracker.cost(chunk, amount);
         }
         this.extracted += amount;
+        if (amount != 0) onChange.run();
     }
 
     @Nullable
@@ -131,10 +141,14 @@ public class TerrainResourceData {
     }
 
     public void setChunkTracker(ChunkResourceTracker tracker) {
+        if (chunkResourceTracker == tracker) return;
         this.chunkResourceTracker = tracker;
+        if (tracker != null) tracker.onChange = onChange;
+        onChange.run();
     }
 
     public static class ChunkResourceTracker {
+        private transient Runnable onChange = () -> {};
         private static final Codec<ChunkPos> CHUNK_POS_KEY_CODEC = Codec.STRING.xmap(value -> {
             long packed = Long.parseLong(value);
             return new ChunkPos((int) (packed >> 32), (int) (packed & 0xFFFFFFFFL));
@@ -169,6 +183,7 @@ public class TerrainResourceData {
 
         public void cost(ChunkPos chunk, double amount) {
             extractedResources.addTo(chunk, amount);
+            if (amount != 0) onChange.run();
         }
 
         public void setActiveChunks(Set<ChunkPos> activeChunks) {

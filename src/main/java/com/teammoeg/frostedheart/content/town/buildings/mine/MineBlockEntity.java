@@ -44,55 +44,17 @@ public class MineBlockEntity extends AbstractTownBuildingBlockEntity<MineBuildin
         super(FHBlockEntityTypes.MINE.get(),pos,state);
     }
 
-    public boolean scanStructure(MineBuilding building){
-        return true;
-//        MineBlockScanner scanner = new MineBlockScanner(level, this.getBlockPos().above(), 512);
-//        if(scanner.scan()){
-//            double validStoneOrOre = scanner.getValidStone();
-//            building.setOccupiedVolume(scanner.getOccupiedVolume());
-//            return validStoneOrOre > 16;
-//        }
-//        return false;
-    }
-
-    /*
-    public void computeRating(){
-        double lightRating = 1 - Math.exp(-this.avgLightLevel);
-        double stoneRating = Math.min(this.validStoneOrOre / 255.0F, 1);
-        double temperatureRating = TownMathFunctions.calculateTemperatureRating(this.temperature);
-        this.rating = (lightRating * 0.3 + stoneRating * 0.3 + temperatureRating * 0.4) /* * (1 + 4 * this.linkedBaseRating)*/;
-    //}
-
-
-    /*@Override
-    public CompoundTag getWorkData() {
-        CompoundTag nbt = getBasicWorkData();
-        if(this.isValid()){
-            nbt.putDouble("rating", this.rating);
-            nbt.putDouble("chunkResourceReserves", this.chunkResourceReserves);
-            nbt.putString("biome", this.biome.toString());
+    public StructureScanResult scanStructure(MineBuilding building) {
+        if (!(level instanceof net.minecraft.server.level.ServerLevel serverLevel)) {
+            return StructureScanResult.DATA_UNAVAILABLE;
         }
-        this.updateResourceReserves();
-        nbt.putLong("lastSyncedWorkID", this.lastSyncedWorkID);
-        return nbt;
-    }
-
-    @Override
-    public void setWorkData(CompoundTag data) {
-        this.setBasicWorkData(data);
-        long latestWorkID = data.getLong("latestWorkID");
-        if(this.latestWorkID != latestWorkID){
-            this.latestWorkID = latestWorkID;
-            this.chunkResourceReserves = data.getDouble("chunkResourceReserves");
+        var chunk = serverLevel.getChunkSource().getChunkNow(worldPosition.getX() >> 4, worldPosition.getZ() >> 4);
+        if (chunk == null) {
+            return StructureScanResult.DATA_UNAVAILABLE;
         }
-    }*/
-
-
-    public void refresh(@NotNull MineBuilding building) {
-        assert level != null;
-        super.refresh(building);
-        Holder<Biome> biomeHolder = CUtils.fastGetBiome(level, worldPosition);
-        building.setBiomePath(CRegistryHelper.getBiomeKeyRuntime(level, biomeHolder.value()));
+        Holder<Biome> biome = CUtils.fastGetBiome(chunk, worldPosition);
+        building.setBiomePath(CRegistryHelper.getBiomeKeyRuntime(level, biome.value()));
+        return StructureScanResult.VALID;
     }
 
     @Override

@@ -220,6 +220,11 @@ public class TownResidentsPanel extends UILayer {
         lines.add(new Line(Component.empty(), 0xFFFFFFFF));
         lines.add(assignment("gui.frostedheart.town_manager.house", resident.getHousePos(), town));
         lines.add(assignment("gui.frostedheart.town_manager.work", resident.getWorkPos(), town));
+        resident.getPendingAssignments().housePos().ifPresent(position -> lines.add(new Line(
+                Component.translatable("gui.frostedheart.town_manager.pending_house", position.toShortString()), 0xFFFFAA00)));
+        resident.getPendingAssignments().workPos().ifPresent(position -> lines.add(new Line(
+                Component.translatable("gui.frostedheart.town_manager.pending_work", position.toShortString()), 0xFFFFAA00)));
+
         if (!resident.getWorkProficiency().isEmpty()) {
             lines.add(new Line(Component.empty(), 0xFFFFFFFF));
             lines.add(new Line(Component.translatable("gui.frostedheart.town_manager.proficiency"), 0xFFFFFF55));

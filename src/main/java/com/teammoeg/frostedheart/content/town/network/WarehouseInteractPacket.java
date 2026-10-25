@@ -64,10 +64,12 @@ public class WarehouseInteractPacket implements CMessage {
 		context.get().enqueueWork(() -> {
 			ServerPlayer player = context.get().getSender();
 			if (player == null) return;
+            TeamTown town = TeamTown.find(player).orElse(null);
+            if (town == null) return;
 
 			if (player.containerMenu instanceof WarehouseMenu warehouseMenu
 					&& warehouseMenu.canAccessWarehouse()) {
-				IActionExecutorHandler executor = TeamTown.from(player).getActionExecutorHandler();
+				IActionExecutorHandler executor = town.getActionExecutorHandler();
 				ItemStack carried = player.containerMenu.getCarried();
 
 				// 构建存入 Action
@@ -85,7 +87,7 @@ public class WarehouseInteractPacket implements CMessage {
 					if (targetItem.isEmpty()) return;
 					int amountToTake  = targetItem.getMaxStackSize();
 					if (button==1) {
-						int halfToTake = (int) Math.ceil(TeamTown.from(player).getResourceHolder().get(targetItem) / 2);
+						int halfToTake = (int) Math.ceil(town.getResourceHolder().get(targetItem) / 2);
 						amountToTake  = (amountToTake  + 1) / 2;
 						amountToTake = Math.min(amountToTake, halfToTake);
 					}

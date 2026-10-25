@@ -1,7 +1,7 @@
 # Town Implementation Reference
 
 > Status: Partial
-> Last verified: 2026-08-26
+> Last verified: 2026-10-23 (28 real Forge scenarios and the final independent-process restart read)
 > Scope: State ownership, daily lifecycle, building extension, transport reservations, and town-data synchronization
 > Code anchors: `TeamTownData`, `TeamTown`, `ITownBuilding.CODEC`, `DataSyncCache`, `TownTransportState`, `TownTransportSnapshot`, `TransportReservationModel`, `TransportEndpointKind`, `TransportAdmissionStatus`, `TownResourceUpdatePacket`, `WarehouseInterfaceBlockEntity`, `WarehouseInterfaceTransportView`
 
@@ -11,13 +11,19 @@ This document records invariants that are easy to violate when extending the tow
 
 `TeamTownData` owns persistent town state through team `SpecialData`: buildings, residents, resources, history, plans, policies, transport state, and settlement-day state. `TeamTown` is the `ITown` facade used to mutate that state. Do not create a second persistent owner. `TownTransportState` belongs to the town and holds both endpoint reservations and the aggregate daily transport report; an individual `TransportStationBuilding` owns only its station report.
 
-Town buildings are serialized polymorphically through `ITownBuilding.CODEC`. Their block entities create and register logical building objects. Removal must use `TeamTown.removeTownBlock`; direct map removal bypasses resident assignments, mine links, warehouse capacity, and occupied-area cleanup.
+`TownBuildingStore` owns logical building records and exposes a read-only resolved map. Disk storage uses `BuildingRecordsCodec.DISK`; the management baseline uses `TeamTownData.MANAGEMENT_CODEC`, while known-building deltas retain `ITownBuilding.CODEC`. Physical cores use `TeamTown.onCorePlaced`, `ensureCoreBound`, and `onCoreRemoved`; getters do not create records. Removal must use the facade so assignments, recovery intent, plans, retained records, mine links and derived capacity are cleaned together. See [building-data.md](building-data.md) for the format and lifecycle contract.
 
 Resource mutations use `TeamTownResourceActionExecutorHandler` and `TownResourceActions`. `TownResourceManager` and direct `addUnsafe` or `costUnsafe` calls are not extension APIs.
 
+The current file layout, server binding, migration, automatic scheduling and synchronization recovery are owned by [persistence-and-runtime.md](persistence-and-runtime.md).
+
 ## Daily Lifecycle
 
-`TeamTownData.tickMorning` is the settlement boundary. Its order is behavior:
+`TownSettlement.advanceOneDay` is the settlement boundary; `TeamTownData.tickMorning` is its manual-call entry.
+
+The boundary requires the current registered holder, the current `TOWN_DATA` instance, and its actual `TeamTownData.executionLevel`. A retired instance or a different world returns `SKIPPED` before world reads or economic changes; active reentry returns `IN_PROGRESS`. The debug refugee entry follows the same context rule. Both `/town tick` and `/town spawn_refugees` select the town's execution level.
+
+The settlement order is behavior:
 
 1. Validate buildings and occupied-area overlap.
 2. Activate pending policy, apply daily nutrition loss, allocate housing, and assign work.
@@ -31,10 +37,14 @@ Inside `TeamTownData#buildingsWork`, service reconstruction has a stricter neste
 
 1. `TeamTownResourceHolder#resetAllServices` clears all service resources, including `MAX_CAPACITY` and `TRANSPORT_CAPACITY`.
 2. `TeamTownData#reloadMaxCapacity` rebuilds warehouse capacity.
-3. Every non-house building whose `shouldRunDailySettlement()` is true executes once in work-priority order. A workable `TransportStationBuilding` adds its deterministic output through `TownResourceActions.VirtualResourceAttributeAction`; it never writes the holder directly.
+3. Every non-house building whose `shouldRunDailySettlement()` is true executes once in descending work-priority order, with x/y/z coordinate order breaking ties. A workable `TransportStationBuilding` adds its deterministic output through `TownResourceActions.VirtualResourceAttributeAction`; it never writes the holder directly.
 4. `TeamTownData#finishDailyTransportSettlement` snapshots town total transport capacity and the reservation map's current nominal reserved capacity into `TownTransportState.DailyReport`.
 
 `TRANSPORT_CAPACITY` is a daily service, not a consumable stock. It does not use warehouse capacity, does not carry into the next settlement, and consumers reserve capacity instead of applying a resource `COST` action.
+
+Transport operations remain available through `TeamTown`; their implementation now lives in the package-private `TownTransportService`. Keeping that helper beside `TeamTownData` lets it maintain the existing state through package access without exposing setters as a new public API.
+
+History and town age are prepared before their common commit. Automatic completion joins that commit; post-commit notification failures request rebinding without replaying production.
 
 ## Transport Reservations
 
@@ -73,7 +83,7 @@ P2P bindings use a separate authority path: `TeamTown#bindOrRebindP2PTerminals`,
 
 ## Synchronization Invariants
 
-`ObservableTownMap`, object change listeners, and resource listeners feed the single dirty-state owner, `TeamTownData.DataSyncCache`. Server `tick()` prepares dirty warehouse topology before draining transport state, then flushes dirty keys through `TownBuildingUpdatePacket`, `TownResidentUpdatePacket`, and `TownResourceUpdatePacket`. Full `TeamTownDataS2CPacket` synchronization is a recovery and entry-point mechanism, not the normal per-tick path.
+`ObservableTownMap`, object change listeners, and resource listeners feed independent persistence versions and the network change collection in `TeamTownData.DataSyncCache`. Server `tick()` prepares dirty warehouse topology before draining transport state, then flushes dirty keys through `TownBuildingUpdatePacket`, `TownResidentUpdatePacket`, and `TownResourceUpdatePacket`. Full `TeamTownDataS2CPacket` synchronization uses explicit PENDING/PRESENT/ABSENT states through TownSync; a connection needs a complete baseline before receiving management deltas.
 
 The station report is persisted and incrementally synchronized as part of its building object. The town state is persisted in `TeamTownData.transportState`. Both `TownResourceUpdatePacket` and `TeamTownDataS2CPacket` carry an immutable `TownTransportSnapshot` containing the daily report, stable reservation list, current total capacity, server-derived reservation capacities, effective warehouse count, and server `warehouseDistanceCostPerBlock`. Incremental application updates the resource holder and snapshot before firing one resource callback. Full sync decodes the persistent town data, applies the accompanying snapshot, replaces the client instance, and then fires one existing full-sync callback batch. This is required because `TransportReservation.CODEC` intentionally omits derived capacity while `TransportReservation.SNAPSHOT_CODEC` includes it. Snapshot decoding limits the reservation count and rejects invalid numeric fields.
 
@@ -108,12 +118,21 @@ recovery notice. `TownTransportShortageNotificationPacket` is a bounded S2C-only
 reserved, shortfall, and effective scale values; it never carries arbitrary display text. The shared `sendToOnline` path
 delivers it to current team members, and the localized Tip click action only opens the Mayor's Seal transport page.
 
+
+## Building Extension
+
+A building type declares a typed `MAP_CODEC` and its `CODEC`, registers its stable storage identity in `TownBuildingTypes`, and supplies the known-building wire dispatch in `ITownBuilding.CODEC`. Keep the fixed legacy integer mapping unchanged. New nested payload formats require a higher record version; top-level owned keys come from the MapCodec.
+
+Expose rosters and links as read-only collections. Use value comparisons in setters, `replaceResidents` / `replaceLinkedMines` for final collections, and `updateBatch` for related field commits. Report named `TownBuildingChangeEvent.ChangeKind` values: `DATA`, `STRUCTURE`, `AVAILABILITY`, or `REGISTRATION`. Temperature and reports must not invalidate warehouse topology. Compute scan inputs before applying fields and leave the previous snapshot intact when terrain is unavailable.
+
+Actual resident assignments stay in `housePos` / `workPos`; unavailable building references belong to `PendingAssignments`. Management export is a read path and must not call allocation or daily settlement. Full and incremental views prepare room overlap before warehouse and transport data.
+
 ## Investigation Anchors
 
 | Concern | Start at |
 |---|---|
 | Persistent state and settlement | `TeamTownData`, `TeamTown` |
-| Buildings and codecs | `building/ITownBuilding`, `block/AbstractTownBuildingBlockEntity` |
+| Buildings and codecs | `TownBuildingStore`, `BuildingRecordsCodec`, `TownBuildingTypes`, `AbstractTownBuildingBlockEntity` |
 | Residents and nutrition | `resident/Resident`, `resident/ResidentNutrition` |
 | Resources and storage | `resource/TeamTownResourceHolder`, `resource/action`, `buildings/warehouse` |
 | Citizen presence | `citizen/sim`, `citizen/sync`, `citizen/client` |

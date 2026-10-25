@@ -60,7 +60,20 @@ public class MinecraftServerMixin {
 			ret.setReturnValue(false);
 			return;
 		}
-		MinecraftForge.EVENT_BUS.post(new ServerLevelDataSaveEvent());
+        var manager = com.teammoeg.chorda.dataholders.team.CTeamDataManager.INSTANCE;
+        MinecraftForge.EVENT_BUS.post(new ServerLevelDataSaveEvent(server, pFlush, pForced,
+                manager != null && manager.isStopping()));
 	}
+
+    @Inject(at = @At("RETURN"), method = "saveAllChunks", cancellable = true)
+    private void finishTeamSave(boolean suppressLog, boolean flush, boolean forced, CallbackInfoReturnable<Boolean> result) {
+        MinecraftServer server = (MinecraftServer) (Object) this;
+        var manager = com.teammoeg.chorda.dataholders.team.CTeamDataManager.INSTANCE;
+        if (manager == null || server.overworld() == null) return;
+        boolean allowed = forced || manager.isStopping() || !server.overworld().noSave;
+        if (allowed && (forced || flush || manager.isStopping()) && !manager.saveAndAwait()) {
+            result.setReturnValue(false);
+        }
+    }
 
 }

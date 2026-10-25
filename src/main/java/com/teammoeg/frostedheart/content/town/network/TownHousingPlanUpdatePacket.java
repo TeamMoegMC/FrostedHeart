@@ -33,7 +33,7 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 
 /** Lightweight authoritative replacement of the residential-care plan. */
-public final class TownHousingPlanUpdatePacket implements CMessage {
+public final class TownHousingPlanUpdatePacket implements TownViewPacket {
     private static final int MAX_ENTRIES = 1_024;
     private final TownHousingPlan plan;
 
@@ -61,9 +61,10 @@ public final class TownHousingPlanUpdatePacket implements CMessage {
 
     @Override
     public void handle(Supplier<NetworkEvent.Context> context) {
-        context.get().enqueueWork(() -> CClientTeamDataManager.INSTANCE.getInstance()
-                .getOptional(FHSpecialDataTypes.TOWN_DATA)
-                .ifPresent(town -> town.applyHousingPlan(plan)));
+        context.get().enqueueWork(() -> {
+            if (!com.teammoeg.frostedheart.content.town.client.TownClientUpdates.canApply(context.get().getNetworkManager())) return;
+            com.teammoeg.frostedheart.content.town.client.TownClientUpdates.apply(town -> town.applyHousingPlan(plan));
+        });
         context.get().setPacketHandled(true);
     }
 

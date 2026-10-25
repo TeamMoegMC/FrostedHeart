@@ -974,5 +974,9 @@
   "item.frostedheart.glowstone_shard": "Glowstone Crystal Shard",
   "item.frostedheart.raw_pyrolusite": "Raw Pyrolusite",
   "fluid.frostedheart.hot_spring": "Hot Spring",
-  "block.frostedheart.hot_spring": "Hot Spring"
+  "block.frostedheart.hot_spring": "Hot Spring",
+  "gui.frostedheart.town_manager.pending_work": "Workplace awaiting recovery: %s",
+  "gui.frostedheart.town_manager.building_recovery": "Building records awaiting recovery or retained: %s",
+  "gui.frostedheart.town_manager.pending_house": "Housing awaiting recovery: %s",
+  "gui.frostedheart.town_manager.recovery_position_unknown": "Position unavailable"
 }

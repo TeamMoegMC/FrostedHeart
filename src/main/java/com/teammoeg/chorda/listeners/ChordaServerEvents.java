@@ -29,6 +29,8 @@ import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.event.server.ServerStoppedEvent;
 import net.minecraftforge.event.server.ServerStoppingEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.eventbus.api.EventPriority;
+import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.fml.common.Mod;
 
 /**
@@ -49,8 +51,8 @@ public class ChordaServerEvents {
      */
     @SubscribeEvent
     public static void serverLevelSave(final ServerLevelDataSaveEvent event) {
-        if (CTeamDataManager.INSTANCE != null) {
-            CTeamDataManager.INSTANCE.save();
+        if (CTeamDataManager.INSTANCE != null && event.allowed() && !event.mustAwait()) {
+            CTeamDataManager.INSTANCE.checkpoint();
         }
     }
 
@@ -65,7 +67,7 @@ public class ChordaServerEvents {
      */
     @SubscribeEvent
     public static void serverAboutToStart(final ServerAboutToStartEvent event) {
-        new CTeamDataManager();
+        new CTeamDataManager(event.getServer());
         
     }
 
@@ -100,9 +102,9 @@ public class ChordaServerEvents {
      *
      * @param event 服务器正在停止事件 / The server stopping event
      */
-    @SubscribeEvent
+    @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void serverStopping(final ServerStoppingEvent event) {
-
+        if (CTeamDataManager.INSTANCE != null) CTeamDataManager.INSTANCE.prepareStopping();
     }
 
     /**
@@ -114,6 +116,14 @@ public class ChordaServerEvents {
      */
     @SubscribeEvent
     public static void serverStopped(final ServerStoppedEvent event) {
+        if (CTeamDataManager.INSTANCE != null) CTeamDataManager.INSTANCE.close();
         CTeamDataManager.INSTANCE = null;
+    }
+
+    @SubscribeEvent
+    public static void serverTick(TickEvent.ServerTickEvent event) {
+        if (event.phase == TickEvent.Phase.END && CTeamDataManager.INSTANCE != null) {
+            CTeamDataManager.INSTANCE.applyCompleted();
+        }
     }
 }

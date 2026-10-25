@@ -54,6 +54,10 @@ import net.minecraft.world.item.ItemStack;
  * 此类中提供的方法都有可能产生不应出现的数据(如负数的资源或超过上限的资源)，请使用TownResourceManager来修改资源数量。
  */
 public class TeamTownResourceHolder {
+    private transient java.util.function.Consumer<Runnable> notificationDispatcher = Runnable::run;
+    public void setNotificationDispatcher(java.util.function.Consumer<Runnable> dispatcher) {
+        notificationDispatcher = dispatcher == null ? Runnable::run : dispatcher;
+    }
     /**
      * The collection that saves all the resources of town.
      */
@@ -399,10 +403,10 @@ public class TeamTownResourceHolder {
                 this.occupiedCapacity += amount;
             }
         }
-        notifyStockWatchers(townResourceKey);
         if(amount != 0 && this.changeListener != null){
             this.changeListener.onResourceChange(new TownResourceChangeEvent(this, townResourceKey));
         }
+        notificationDispatcher.accept(() -> notifyStockWatchers(townResourceKey));
         //System.out.println("addSigned: " + townResourceKey + " " + amount);
         //System.out.println("resources: " + resources);
     }
@@ -526,7 +530,13 @@ public class TeamTownResourceHolder {
      * Remove all items and virtual resources with zero amount from map.
      */
     public void removeZeros(){
-        resources.object2DoubleEntrySet().removeIf((entry) -> entry.getDoubleValue() < DELTA);
+        var removed = new java.util.ArrayList<ITownResourceKey>();
+        resources.object2DoubleEntrySet().removeIf(entry -> {
+            if (entry.getDoubleValue() >= DELTA) return false;
+            removed.add(entry.getKey());
+            return true;
+        });
+        if (changeListener != null) removed.forEach(key -> changeListener.onResourceChange(new TownResourceChangeEvent(this, key)));
     }
 
     /**
@@ -614,7 +624,7 @@ public class TeamTownResourceHolder {
         // 精确匹配
         Set<WarehouseStockWatcher> exact = exactIndex.get(simpleKey);
         if (exact != null) {
-            for (WarehouseStockWatcher w : exact) {
+            for (WarehouseStockWatcher w : java.util.List.copyOf(exact)) {
                 w.getNode().onStockChange(simpleKey, newAmount);
             }
         }

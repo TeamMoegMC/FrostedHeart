@@ -30,13 +30,29 @@ import net.minecraftforge.eventbus.api.Event;
  */
 public class ServerLevelDataSaveEvent extends Event {
 
+    private final net.minecraft.server.MinecraftServer server;
+    private final boolean flush;
+    private final boolean forced;
+    private final boolean stopping;
+
+    public ServerLevelDataSaveEvent(net.minecraft.server.MinecraftServer server, boolean flush,
+                                    boolean forced, boolean stopping) {
+        this.server = server;
+        this.flush = flush;
+        this.forced = forced;
+        this.stopping = stopping;
+    }
+
+    public boolean allowed() { return server != null && server.overworld() != null && (forced || stopping || !server.overworld().noSave); }
+    public boolean mustAwait() { return forced || flush || stopping; }
+
 	/**
 	 * 创建服务端世界数据保存事件。
 	 * <p>
 	 * Creates a server level data save event.
 	 */
 	public ServerLevelDataSaveEvent() {
-
+		this(net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer(), false, false, false);
 	}
 
 }

@@ -48,6 +48,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
+import net.minecraft.server.level.ServerLevel;
 
 public abstract class AbstractTownBuildingBlock extends CBlock {
     public static final BooleanProperty LIT = BlockStateProperties.LIT;
@@ -77,14 +78,17 @@ public abstract class AbstractTownBuildingBlock extends CBlock {
             if (entity instanceof ServerPlayer placer) {
                 TeamDataHolder teamDataHolder = CTeamDataManager.get(placer);
                 //if (ITown.DEBUG_MODE) {
-                    TeamTown.from(placer).addTownBlock(pos, townBlockEntity);
                     if(townBlockEntity instanceof AbstractTownBuildingBlockEntity<?> abstractTownBuildingBlockEntity){
 
                         if(teamDataHolder != null){
                             abstractTownBuildingBlockEntity.townProvider = new TeamTownProvider(teamDataHolder.getId());
+                            abstractTownBuildingBlockEntity.setChanged();
                         }
                     }
                 //}
+                if (world instanceof ServerLevel serverLevel) {
+                    TeamTown.from(placer).onCorePlaced(serverLevel, pos, townBlockEntity);
+                }
                 if(teamDataHolder != null){
                     IOwnerTile.trySetOwner((BlockEntity) townBlockEntity, teamDataHolder.getId());
                 }

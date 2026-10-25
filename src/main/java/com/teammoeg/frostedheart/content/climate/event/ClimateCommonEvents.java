@@ -350,28 +350,14 @@ public class ClimateCommonEvents {
                     climateData.updateClock(serverWorld);
                 }
 
-                // ITown logic tick
-                int i = 0;
-                int townUpdateIntervalGameTicks = FHConfig.SERVER.TOWN.townUpdateIntervalGameTicks.get();
+                var townRuntime = com.teammoeg.frostedheart.content.town.TownRuntimeManager.current();
+                if (townRuntime != null) townRuntime.tickLevel(serverWorld);
                 MinecraftGameplayFields.beginProviderRefresh(serverWorld, GeneratorData.HEAT_FIELD_PROVIDER);
                 for (TeamDataHolder trd : CTeamDataManager.INSTANCE.getAllData()) {
                     GeneratorData generator = trd.getOptional(FHSpecialDataTypes.GENERATOR_DATA).orElse(null);
                     if (DEBUG_MODE || generator != null && serverWorld.dimension().equals(generator.dimension)) {
-                        trd.getData(FHSpecialDataTypes.TOWN_DATA).tick(serverWorld,trd);
-                        if (serverWorld.getGameTime() % townUpdateIntervalGameTicks
-                                == i % townUpdateIntervalGameTicks) {// Split town calculations across update intervals
-                            if (!trd.getTeam().getOnlineMembers().isEmpty()) {
-                                trd.getData(FHSpecialDataTypes.TOWN_DATA).tickSecond(serverWorld,trd);
-                            }
-                        }
                         if (generator != null) generator.publishGameplayHeat(serverWorld, trd.getId());
-                        if (serverWorld.getDayTime() % 24000 == i % 20 + 1000) {
-                            if (!trd.getTeam().getOnlineMembers().isEmpty()) {
-                                trd.getData(FHSpecialDataTypes.TOWN_DATA).tickMorning(serverWorld, trd);// execute only once a day
-                            }
-                        }
                     }
-                    i++;
                 }
                 MinecraftGameplayFields.endProviderRefresh(serverWorld, GeneratorData.HEAT_FIELD_PROVIDER);
 

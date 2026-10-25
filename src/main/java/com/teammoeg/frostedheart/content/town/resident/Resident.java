@@ -51,6 +51,7 @@ import net.minecraft.core.UUIDUtil;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
+import java.util.Collections;
 
 /**
  * A resident of the town.
@@ -59,6 +60,34 @@ import net.minecraft.nbt.Tag;
  * For the actual entity, see {@link ResidentEntity}.
  */
 public class Resident {
+    /** Coordinates retained for recovery; they do not provide housing or work. */
+    public record PendingAssignments(Optional<BlockPos> housePos, Optional<BlockPos> workPos) {
+        public static final PendingAssignments EMPTY = new PendingAssignments(Optional.empty(), Optional.empty());
+        public static final Codec<PendingAssignments> CODEC = RecordCodecBuilder.create(t -> t.group(
+                BlockPos.CODEC.optionalFieldOf("housePos").forGetter(PendingAssignments::housePos),
+                BlockPos.CODEC.optionalFieldOf("workPos").forGetter(PendingAssignments::workPos)
+        ).apply(t, PendingAssignments::new));
+    }
+    private PendingAssignments pendingAssignments = PendingAssignments.EMPTY;
+    public PendingAssignments getPendingAssignments() { return pendingAssignments; }
+    public void setPendingAssignments(PendingAssignments next) {
+        if (Objects.equals(pendingAssignments, next)) return;
+        pendingAssignments = next;
+        fireChange();
+    }
+    public void rememberPendingHouse(BlockPos pos) {
+        setPendingAssignments(new PendingAssignments(Optional.of(pos.immutable()), pendingAssignments.workPos()));
+        setHousePos(null);
+    }
+    public void rememberPendingWork(BlockPos pos) {
+        setPendingAssignments(new PendingAssignments(pendingAssignments.housePos(), Optional.of(pos.immutable())));
+        setWorkPos(null);
+    }
+    public void clearPendingAt(BlockPos pos) {
+        setPendingAssignments(new PendingAssignments(pendingAssignments.housePos().filter(value -> !value.equals(pos)),
+                pendingAssignments.workPos().filter(value -> !value.equals(pos))));
+    }
+
     /** 年龄组：0 幼儿（无生产力，不参与劳动） */
     public static final int AGE_INFANT = 0;
     /** 年龄组：1 儿童（可劳动，属性可成长到高于成年难民的上限） */
@@ -85,8 +114,14 @@ public class Resident {
                     .forGetter(o -> o.nutrition),
             ResidentNutritionSnapshot.CODEC.optionalFieldOf(
                     "nutritionSnapshot", ResidentNutritionSnapshot.EMPTY)
-                    .forGetter(o -> o.nutritionSnapshot)
+                    .forGetter(o -> o.nutritionSnapshot),
+            PendingAssignments.CODEC.optionalFieldOf("pendingAssignments", PendingAssignments.EMPTY).forGetter(o -> o.pendingAssignments)
 		).apply(t, Resident::new));
+
+    public Resident(String firstName, String lastName, UUID uuid, double health, double mental, double strength, double intelligence, int educationLevel, Map<String, Double> workProficiency, Optional<BlockPos> housePos, Optional<BlockPos> workPos, int age, int ageDays, ResidentNutrition nutrition, ResidentNutritionSnapshot nutritionSnapshot, PendingAssignments pendingAssignments) {
+        this(firstName, lastName, uuid, health, mental, strength, intelligence, educationLevel, workProficiency, housePos, workPos, age, ageDays, nutrition, nutritionSnapshot);
+        this.pendingAssignments = pendingAssignments;
+    }
 
     public Resident(String firstName, String lastName, UUID uuid, double health, double mental, double strength, double intelligence, int educationLevel, Map<String, Double> workProficiency, Optional<BlockPos> housePos, Optional<BlockPos> workPos, int age, int ageDays, ResidentNutrition nutrition, ResidentNutritionSnapshot nutritionSnapshot) {
         setFirstName(firstName);
@@ -104,7 +139,6 @@ public class Resident {
             workProficiency.forEach((key, value) ->
                     this.workProficiency.put(key, normalizeWorkProficiency(value)));
         }
-        initializeMissingWorkProficiencies();
         setHousePos(housePos.orElse(null));
         setWorkPos(workPos.orElse(null));
         this.nutritionSnapshot = nutritionSnapshot == null
@@ -226,8 +260,11 @@ public class Resident {
      *  must be positive.
      *  Key: clazz.getSimpleName() of Building class
      */
-    @Getter
     private final Object2DoubleOpenHashMap<String> workProficiency = new Object2DoubleOpenHashMap<>();
+
+    public Map<String, Double> getWorkProficiency() {
+        return Collections.unmodifiableMap(workProficiency);
+    }
     private transient final Set<String> proficiencyGainedToday = new HashSet<>();
     private transient ResidentActivity dailyActivity = ResidentActivity.NONE;
     //the pos of the HouseBlock that the resident is living in
@@ -346,7 +383,6 @@ public class Resident {
             workProficiency.forEach((key, value) ->
                     this.workProficiency.put(key, normalizeWorkProficiency(value)));
         }
-        initializeMissingWorkProficiencies();
         setHousePos(housePos);
         setWorkPos(workPos);
         initializeNutrition();
@@ -372,21 +408,7 @@ public class Resident {
     }
 
     public double getWorkProficiency(Class<? extends ITownResidentWorkBuilding> type) {
-        String key = type.getSimpleName();
-        if (!workProficiency.containsKey(key)) {
-            double generatedProficiency = generateRandomProficiencyForAge();
-            workProficiency.put(key, generatedProficiency);
-            fireChange();
-            return generatedProficiency;
-        }
-
-        double storedProficiency = workProficiency.getDouble(key);
-        double proficiency = normalizeWorkProficiency(storedProficiency);
-        if (Double.compare(storedProficiency, proficiency) != 0) {
-            workProficiency.put(key, proficiency);
-            fireChange();
-        }
-        return proficiency;
+        return normalizeWorkProficiency(workProficiency.getOrDefault(type.getSimpleName(), 0.0));
     }
 
     /**
@@ -465,6 +487,7 @@ public class Resident {
     public CompoundTag serialize() {
         CompoundTag data = new CompoundTag();
         data.putString("uuid", uuid.toString());
+        PendingAssignments.CODEC.encodeStart(NbtOps.INSTANCE, pendingAssignments).result().ifPresent(tag -> data.put("pendingAssignments", tag));
         data.putString("firstName", firstName);
         data.putString("lastName", lastName);
         data.putDouble("health", health);
@@ -491,6 +514,9 @@ public class Resident {
     }
 
     public Resident deserialize(CompoundTag data) {
+        pendingAssignments = data.contains("pendingAssignments")
+                ? PendingAssignments.CODEC.parse(NbtOps.INSTANCE, data.get("pendingAssignments")).result().orElse(PendingAssignments.EMPTY)
+                : PendingAssignments.EMPTY;
         setUuid(UUID.fromString(data.getString("uuid")));
         setFirstName(data.getString("firstName"));
         setLastName(data.getString("lastName"));
@@ -529,7 +555,6 @@ public class Resident {
         workProficiency.clear();
         workProficiencyNBT.getAllKeys().forEach(key ->
                 workProficiency.put(key, normalizeWorkProficiency(workProficiencyNBT.getDouble(key))));
-        initializeMissingWorkProficiencies();
 
         if (data.contains("workPos")) {
             setWorkPos(BlockPos.of(data.getLong("workPos")));
@@ -592,12 +617,16 @@ public class Resident {
     }
 
     public void setHousePos(BlockPos pos){
+        if (pos != null && pendingAssignments.housePos().isPresent())
+            setPendingAssignments(new PendingAssignments(Optional.empty(), pendingAssignments.workPos()));
         if (Objects.equals(this.housePos, pos)) return;
         this.housePos = pos;
         fireChange();
     }
 
     public void setWorkPos(BlockPos pos){
+        if (pos != null && pendingAssignments.workPos().isPresent())
+            setPendingAssignments(new PendingAssignments(pendingAssignments.housePos(), Optional.empty()));
         if (Objects.equals(this.workPos, pos)) return;
         this.workPos = pos;
         fireChange();
@@ -793,6 +822,7 @@ public class Resident {
      * 青壮年沿用原有成人属性生成，分布不变。
      */
     private void initializeAttributesForAge(int age) {
+        initializeMissingWorkProficiencies();
         ResidentGenerationModel.Parameters parameters = generationParametersFromConfig();
         ResidentGenerationModel.AttributeCenters centers = parameters.centers(age);
         double spread = age == AGE_ADULT
@@ -807,7 +837,12 @@ public class Resident {
         setIntelligence(ResidentAttributeModel.generateAttribute(
                 CMath.RANDOM::nextDouble, centers.intelligence(), spread,
                 parameters.attributeSampleCount()));
+    }
+
+    public void initializeServerData() {
+        int before = workProficiency.size();
         initializeMissingWorkProficiencies();
+        if (before != workProficiency.size()) fireChange();
     }
 
     private void initializeMissingWorkProficiencies() {

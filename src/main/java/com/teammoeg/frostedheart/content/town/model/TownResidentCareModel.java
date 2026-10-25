@@ -25,6 +25,7 @@ import java.util.UUID;
 
 import com.teammoeg.frostedheart.content.town.TownCareLaw;
 import com.teammoeg.frostedheart.content.town.resident.ResidentNutrition;
+import java.util.function.Predicate;
 
 /** Forge-independent residential triage and stability rules. */
 public final class TownResidentCareModel {
@@ -108,14 +109,14 @@ public final class TownResidentCareModel {
     /** House-specific tie breaker; stable residents win only within one risk band. */
     public static Comparator<Need> comparatorForHouse(
             TownCareLaw law,
-            java.util.function.Predicate<UUID> livedHere
+            Predicate<UUID> livedHere
     ) {
         return comparatorForHouse(law, livedHere, DEFAULT_SCORE_BAND);
     }
 
     public static Comparator<Need> comparatorForHouse(
             TownCareLaw law,
-            java.util.function.Predicate<UUID> livedHere,
+            Predicate<UUID> livedHere,
             double scoreBand
     ) {
         Comparator<Need> base = comparator(law, scoreBand);

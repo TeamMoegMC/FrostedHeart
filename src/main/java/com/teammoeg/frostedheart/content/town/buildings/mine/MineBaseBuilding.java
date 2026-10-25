@@ -30,6 +30,8 @@ import java.util.Set;
 import java.util.UUID;
 
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
+import static com.teammoeg.frostedheart.content.town.building.BuildingRecordsCodec.strict;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.content.town.ITownWithBuildings;
 import com.teammoeg.frostedheart.content.town.TeamTown;
@@ -53,6 +55,8 @@ import net.minecraft.core.UUIDUtil;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ChunkPos;
+import java.util.Collections;
+import java.util.Collection;
 
 public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
     public record MiningDailyReport(
@@ -65,11 +69,11 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
         public static final MiningDailyReport EMPTY =
                 new MiningDailyReport(false, 0.0, 0.0, List.of(), TownProductionStopReason.NONE);
         public static final Codec<MiningDailyReport> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-                Codec.BOOL.optionalFieldOf("hasData", false).forGetter(MiningDailyReport::hasData),
-                Codec.DOUBLE.optionalFieldOf("requested", 0.0).forGetter(MiningDailyReport::requested),
-                Codec.DOUBLE.optionalFieldOf("extracted", 0.0).forGetter(MiningDailyReport::extracted),
-                TownProductionReportItem.CODEC.listOf().optionalFieldOf("items", List.of()).forGetter(MiningDailyReport::items),
-                TownProductionStopReason.CODEC.optionalFieldOf("stopReason", TownProductionStopReason.NONE)
+                strict(Codec.BOOL).optionalFieldOf("hasData", false).forGetter(MiningDailyReport::hasData),
+                strict(Codec.DOUBLE).optionalFieldOf("requested", 0.0).forGetter(MiningDailyReport::requested),
+                strict(Codec.DOUBLE).optionalFieldOf("extracted", 0.0).forGetter(MiningDailyReport::extracted),
+                strict(TownProductionReportItem.CODEC.listOf()).optionalFieldOf("items", List.of()).forGetter(MiningDailyReport::items),
+                strict(TownProductionStopReason.CODEC).optionalFieldOf("stopReason", TownProductionStopReason.NONE)
                         .forGetter(MiningDailyReport::stopReason)
         ).apply(instance, MiningDailyReport::new));
 
@@ -96,35 +100,49 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
             TownProductionStopReason stopReason
     ) {}
 
-	public static final Codec<MineBaseBuilding> CODEC = RecordCodecBuilder.create(t -> t.group(
-                    BlockPos.CODEC.optionalFieldOf("pos",BlockPos.ZERO).forGetter(o -> o.pos),
-                    Codec.BOOL.optionalFieldOf("initialized", false).forGetter(o -> o.isInitialized()),
-                    Codec.BOOL.optionalFieldOf("isStructureValid",false).forGetter(o -> o.isStructureValid()),
-                    OccupiedZoneInfo.CODEC.optionalFieldOf("occupiedVolume",OccupiedZoneInfo.EMPTY).forGetter(o -> o.getOccupiedVolume()),
-                    Codec.list(UUIDUtil.CODEC).optionalFieldOf("residentsID",List.of()).forGetter(o -> new ArrayList<>(o.getResidentsID())),
-                    Codec.INT.optionalFieldOf("area",0).forGetter(o -> o.getArea()),
-                    Codec.INT.optionalFieldOf("volume",0).forGetter(o -> o.getVolume()),
+	public static final MapCodec<MineBaseBuilding> MAP_CODEC = RecordCodecBuilder.mapCodec(t -> t.group(
+                    strict(BlockPos.CODEC).optionalFieldOf("pos",BlockPos.ZERO).forGetter(o -> o.pos),
+                    strict(Codec.BOOL).optionalFieldOf("initialized", false).forGetter(o -> o.isInitialized()),
+                    strict(Codec.BOOL).optionalFieldOf("isStructureValid",false).forGetter(o -> o.isStructureValid()),
+                    strict(OccupiedZoneInfo.CODEC).optionalFieldOf("occupiedVolume",OccupiedZoneInfo.EMPTY).forGetter(o -> o.getOccupiedVolume()),
+                    strict(Codec.list(UUIDUtil.CODEC)).optionalFieldOf("residentsID",List.of()).forGetter(o -> new ArrayList<>(o.getResidentsID())),
+                    strict(Codec.INT).optionalFieldOf("area",0).forGetter(o -> o.getArea()),
+                    strict(Codec.INT).optionalFieldOf("volume",0).forGetter(o -> o.getVolume()),
 
-					Codec.INT.optionalFieldOf("maxResidents",0).forGetter(o -> o.getMaxResidents()),
+					strict(Codec.INT).optionalFieldOf("maxResidents",0).forGetter(o -> o.getMaxResidents()),
 
-                    Codec.list(BlockPos.CODEC).optionalFieldOf("linkedMines", new ArrayList<>())
+                    strict(Codec.list(BlockPos.CODEC)).optionalFieldOf("linkedMines", new ArrayList<>())
                             .forGetter(o -> o.getLinkedMines() == null ? new ArrayList<>() : new ArrayList<>(o.getLinkedMines())),
-                    MiningDailyReport.CODEC.optionalFieldOf("dailyReport", MiningDailyReport.EMPTY)
+                    strict(MiningDailyReport.CODEC).optionalFieldOf("dailyReport", MiningDailyReport.EMPTY)
                             .forGetter(MineBaseBuilding::getDailyReport)
 			)
 			.apply(t, MineBaseBuilding::new));
+        public static final Codec<MineBaseBuilding> CODEC = MAP_CODEC.codec();
+
 
 	@Getter
 	private int area;
 	@Getter
 	private int volume;
 
-    public Set<BlockPos> linkedMines = new HashSet<>();
+    private Set<BlockPos> linkedMines = new HashSet<>();
     @Getter
     private MiningDailyReport dailyReport = MiningDailyReport.EMPTY;
 
-	public void setArea(int area) { this.area = area; fireChange(); }
-	public void setVolume(int volume) { this.volume = volume; fireChange(); }
+	public void setArea(int area) {
+	    if (this.area == area) {
+	        return;
+	    }
+	    this.area = area;
+	    fireChange();
+	}
+	public void setVolume(int volume) {
+	    if (this.volume == volume) {
+	        return;
+	    }
+	    this.volume = volume;
+	    fireChange();
+	}
 
 
 	public MineBaseBuilding(BlockPos pos) {
@@ -370,6 +388,13 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
         );
     }
 
+    public void replaceLinkedMines(Collection<BlockPos> mines) {
+        Set<BlockPos> next = new HashSet<>(mines);
+        if (next.equals(linkedMines)) return;
+        linkedMines = next;
+        fireChange();
+    }
+
     public void clearLinkedMines() {
         if (linkedMines != null && !linkedMines.isEmpty()) {
             linkedMines.clear();
@@ -393,7 +418,7 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
     }
 
     public Set<BlockPos> getLinkedMines() {
-        return linkedMines;
+        return Collections.unmodifiableSet(linkedMines);
     }
 
     public int getConnectionRadius() {

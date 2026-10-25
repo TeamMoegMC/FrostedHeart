@@ -1589,5 +1589,9 @@
   "item.frostedheart.glowstone_shard": "荧石晶体碎片",
   "item.frostedheart.raw_pyrolusite": "粗软锰矿",
   "fluid.frostedheart.hot_spring": "温泉",
-  "block.frostedheart.hot_spring": "温泉"
+  "block.frostedheart.hot_spring": "温泉",
+  "gui.frostedheart.town_manager.pending_work": "待恢复岗位：%s",
+  "gui.frostedheart.town_manager.building_recovery": "待恢复或已保留的建筑记录：%s",
+  "gui.frostedheart.town_manager.pending_house": "待恢复住房：%s",
+  "gui.frostedheart.town_manager.recovery_position_unknown": "位置暂不可用"
 }

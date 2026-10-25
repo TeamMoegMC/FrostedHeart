@@ -68,7 +68,7 @@ public class RoomPathfinder {
 		}
 		public OccupiedCell(BlockPos pos, int height, int reachableHeight) {
 
-			this.pos = pos;
+			this.pos = pos.immutable();
 			this.height = height;
 			this.reachableHeight=reachableHeight;
 		}
@@ -93,7 +93,7 @@ public class RoomPathfinder {
 		}
 		@Override
 		public int hashCode() {
-			return Objects.hash(pos, height);
+			return Objects.hash(pos, height, reachableHeight);
 		}
 		@Override
 		public boolean equals(Object obj) {
@@ -101,7 +101,8 @@ public class RoomPathfinder {
 			if (obj == null) return false;
 			if (getClass() != obj.getClass()) return false;
 			OccupiedCell other = (OccupiedCell) obj;
-			return Objects.equals(pos, other.pos) && height == other.height;
+			return Objects.equals(pos, other.pos) && height == other.height
+                    && reachableHeight == other.reachableHeight;
 		}
 		@Override
 		public Iterator<MutableBlockPos> iterator() {

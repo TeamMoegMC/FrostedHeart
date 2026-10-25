@@ -223,6 +223,17 @@ public class WarehouseLevelEmitterBlockEntity extends CBlockEntity implements IW
     }
 
     @Override
+    public void onTownRebound(TeamTown town) {
+        unregisterTopologyListener();
+        if (watcher != null) { watcher.reset(); watcher = null; }
+        if (town != null && level != null) {
+            topologyListenerTown = town;
+            town.registerWarehouseTopologyListener(GlobalPos.of(level.dimension(), worldPosition), this);
+            ensureWatcherAndRefresh();
+        }
+    }
+
+    @Override
     public void onWarehouseTopologyChanged(WarehouseTopologySnapshot snapshot) {
         if (level == null || level.isClientSide) {
             return;

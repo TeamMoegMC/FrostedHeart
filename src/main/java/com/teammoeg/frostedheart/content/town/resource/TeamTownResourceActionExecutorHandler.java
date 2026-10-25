@@ -28,6 +28,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
 
 public class TeamTownResourceActionExecutorHandler extends AbstractActionExecutorHandler{
     //进行操作的数据本身
@@ -118,7 +119,7 @@ public class TeamTownResourceActionExecutorHandler extends AbstractActionExecuto
                 }
             }
             int startLevel;
-            java.util.function.Predicate<Integer> levelLimit;
+            Predicate<Integer> levelLimit;
             int step;
             if (action.order() == ResourceActionOrder.ASCENDING) {
                 startLevel = action.minLevel();

@@ -33,7 +33,8 @@ public class FHSpecialDataTypes {
 	public static final SpecialDataType<TeamTownData> TOWN_DATA=new SpecialDataType<>("town",TeamTownData::new,TeamTownData.CODEC);
 	public static final SpecialDataType<MachineLevelManager> LABOUR_DATA=new SpecialDataType<>("labour",MachineLevelManager::new,MachineLevelManager.CODEC);
 	public static final SpecialDataType<ClientStoredFlags> SCENARIO_COOKIES=new SpecialDataType<>("scenario",ClientStoredFlags::new,ClientStoredFlags.CODEC);
-	public static final SpecialDataType<ClientStoredFlags> COOKIES=new SpecialDataType<>("scenario",ClientStoredFlags::new,ClientStoredFlags.CODEC);
+	/** Legacy API name for the same component; holders key components by identity. */
+	public static final SpecialDataType<ClientStoredFlags> COOKIES=SCENARIO_COOKIES;
 	public static final SpecialDataType<DimensionalSeed> SEED=new SpecialDataType<>("seed",DimensionalSeed::new,DimensionalSeed.CODEC);
 	
 	public static void init() {}

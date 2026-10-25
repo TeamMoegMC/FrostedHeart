@@ -44,39 +44,30 @@ public class MineBaseBlockEntity extends AbstractTownBuildingBlockEntity<MineBas
         super(FHBlockEntityTypes.MINE_BASE.get(),pos,state);
     }
 
-    public boolean scanStructure(MineBaseBuilding building){
-		BlockPos housePos = this.getBlockPos();
-		RoomData rd=BlockScanner.scanRoomDataFromBlock(level,housePos);
-
-		building.setOccupiedVolume(rd.occupiedCells);
-		//prerequisition
-		if(rd.doors.size()<=0) {
-			rd.occupiedCells.setValid(false);
-		}
-		if (rd.isValid()) {
-            building.setArea(rd.area);
-            building.setVolume(rd.volume);
-            //this.rack = scanner.getRack();
-            //this.chest = scanner.getChest();
-            FHConfig.Server.Town.BuildingScoring scoring = FHConfig.SERVER.TOWN.BUILDING_SCORING;
-            double effectiveFloorBlocks = TownMathFunctions.calculateSpaceRating(
-            	rd.volume,
-                    rd.area,
-                    scoring.spaceAreaCoefficient.get(),
-                    scoring.spaceHeightLogCoefficient.get(),
-                    scoring.spaceHeightLogOffset.get(),
-                    scoring.spaceResponseScale.get(),
-                    scoring.spaceResponseExponent.get())
-                    * rd.area;
-            int calculated = (int) (effectiveFloorBlocks
-                    / FHConfig.SERVER.TOWN.MINING.floorBlocksPerWorkerSlot.get());
-            building.setMaxResidents(Math.max(
-                    FHConfig.SERVER.TOWN.MINING.minimumWorkerSlots.get(),
-                    calculated
-            ));
-            return true;
+    public StructureScanResult scanStructure(MineBaseBuilding building) {
+        RoomData room = BlockScanner.scanRoomDataFromBlock(level, worldPosition);
+        if (room == null) {
+            return StructureScanResult.DATA_UNAVAILABLE;
         }
-        return false;
+        if (room.doors.isEmpty()) {
+            room = room.withValidity(false);
+        }
+        if (!room.isValid()) {
+            building.setOccupiedVolume(room.occupiedCells);
+            return StructureScanResult.INVALID;
+        }
+        FHConfig.Server.Town.BuildingScoring scoring = FHConfig.SERVER.TOWN.BUILDING_SCORING;
+        double effectiveFloorBlocks = TownMathFunctions.calculateSpaceRating(
+                room.volume, room.area, scoring.spaceAreaCoefficient.get(),
+                scoring.spaceHeightLogCoefficient.get(), scoring.spaceHeightLogOffset.get(),
+                scoring.spaceResponseScale.get(), scoring.spaceResponseExponent.get()) * room.area;
+        int capacity = Math.max(FHConfig.SERVER.TOWN.MINING.minimumWorkerSlots.get(),
+                (int) (effectiveFloorBlocks / FHConfig.SERVER.TOWN.MINING.floorBlocksPerWorkerSlot.get()));
+        building.setOccupiedVolume(room.occupiedCells);
+        building.setArea(room.area);
+        building.setVolume(room.volume);
+        building.setMaxResidents(capacity);
+        return StructureScanResult.VALID;
     }
 
 /*

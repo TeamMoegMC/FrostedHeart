@@ -67,7 +67,15 @@ public class FTBTeamsAPIProvider implements TeamsAPIProvider {
 	 */
 	@Override
 	public AbstractTeam getTeamByUuid(UUID uuid) {
-		return FTBTeamsAPI.api().getManager().getTeamByID(uuid).map(FTBTeam::new).orElse(null);
+        var manager = FTBTeamsAPI.api().getManager();
+        // FTB Teams 2001.3.0 wraps a missing map value with Optional.of().
+        // Its public map lookup retains constant-time access and permits absence.
+        if (manager instanceof dev.ftb.mods.ftbteams.data.TeamManagerImpl implementation) {
+            var team = implementation.getTeamMap().get(uuid);
+            return team == null ? null : new FTBTeam(team);
+        }
+        return manager.getTeams().stream().filter(team -> team.getId().equals(uuid))
+                .findFirst().map(FTBTeam::new).orElse(null);
 	}
 
 	/**
