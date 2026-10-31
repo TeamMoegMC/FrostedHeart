@@ -1,0 +1,177 @@
+{
+  "Status": "Passed for the selected integration refactor, 13 focused Forge checks and production-JAR reload/save of an existing v6 world",
+  "VerifiedAt": "2026-10-31T01:55:57.8173134+08:00",
+  "Scope": "11 thermal integration classes consolidated; narrower source/save/ice hooks; climate and campfire gameplay ownership; retained random loop, lava notification and global freeze rules",
+  "ProductionCodeChangedAfterInitialBuild": false,
+  "Build": {
+    "Command": "assemble compileGameTestJava",
+    "Passed": true,
+    "Log": "build/thermal-integration-compile-20261031-r1.log",
+    "TestOnlyRecompile": "build/thermal-integration-test-compile-20261031-r2.log"
+  },
+  "StaticReview": {
+    "ClimateOperations": [
+      {
+        "Original": "addTemperatureSection",
+        "Current": "tickAfterThunder",
+        "OperationsPreserved": true
+      },
+      {
+        "Original": "frostedHeart$shouldSnowCustom",
+        "Current": "shouldSnow",
+        "OperationsPreserved": true
+      },
+      {
+        "Original": "frostedHeart$updatePlantBasedOnTemperature",
+        "Current": "updatePlantBasedOnTemperature",
+        "OperationsPreserved": true
+      }
+    ],
+    "ThermalMixins": 11,
+    "ObsoleteEntrypoints": 0,
+    "TestsRun": 0
+  },
+  "ProductionLineChange": {
+    "ProductionLinesAtHead": 6840,
+    "ProductionLinesNow": 6740,
+    "DeltaFromHead": -100,
+    "PriorPendingProductionDelta": 15,
+    "DeltaThisImplementation": -115
+  },
+  "Package": {
+    "File": "build/libs/frostedheart-1.20.1-0.7.7.jar",
+    "Bytes": 14923432,
+    "BuiltAt": "2026-10-31T01:34:08.9711533+08:00",
+    "ThermalMixinTopLevelClasses": 11,
+    "OldThermalMixinClasses": 0,
+    "GameTestClasses": 0,
+    "ProtectedParticleClasses": 4
+  },
+  "RequiredPassed": 13.0,
+  "FocusedCases": [
+    {
+      "Case": "source",
+      "Attempt": 2,
+      "Started": "2026-10-31T01:44:02.1352089+08:00",
+      "Finished": "2026-10-31T01:45:36.4382885+08:00",
+      "Exit": 0,
+      "RequiredPassed": 5,
+      "RootZero": true,
+      "ThermalErrors": 0,
+      "ExpectedStartupRefusals": 0,
+      "Passed": true,
+      "Log": "build/thermal-integration-source-20261031-r2.log"
+    },
+    {
+      "Case": "integration",
+      "Attempt": 1,
+      "Started": "2026-10-31T01:39:29.1273585+08:00",
+      "Finished": "2026-10-31T01:40:32.8011387+08:00",
+      "Exit": 0,
+      "RequiredPassed": 3,
+      "RootZero": true,
+      "ThermalErrors": 0,
+      "ExpectedStartupRefusals": 0,
+      "Passed": true,
+      "Log": "build/thermal-integration-integration-20261031-r1.log"
+    },
+    {
+      "Case": "fuel",
+      "Attempt": 2,
+      "Started": "2026-10-31T01:45:36.4419065+08:00",
+      "Finished": "2026-10-31T01:47:31.0810732+08:00",
+      "Exit": 0,
+      "RequiredPassed": 2,
+      "RootZero": true,
+      "ThermalErrors": 0,
+      "ExpectedStartupRefusals": 0,
+      "Passed": true,
+      "Log": "build/thermal-integration-fuel-20261031-r2.log"
+    },
+    {
+      "Case": "native",
+      "Attempt": 2,
+      "Started": "2026-10-31T01:47:31.0843403+08:00",
+      "Finished": "2026-10-31T01:48:50.7212446+08:00",
+      "Exit": 0,
+      "RequiredPassed": 3,
+      "RootZero": true,
+      "ThermalErrors": 0,
+      "ExpectedStartupRefusals": 0,
+      "Passed": true,
+      "Log": "build/thermal-integration-native-20261031-r2.log"
+    }
+  ],
+  "EarlierFailure": {
+    "Case": "source",
+    "Attempt": 1,
+    "ActualPassed": 4,
+    "RequiredTotal": 5,
+    "Reason": "Fixture assumed a full soft admission target would refuse bounded startup; startup was allowed, so expected retry intent did not exist",
+    "Resolution": "Establish retained startup-wait state explicitly, then verify the real reservation release, level tick, source discovery and worker admission",
+    "ProductionAdmissionRulesChanged": false,
+    "Log": "build/thermal-integration-source-20261031-r1.log"
+  },
+  "StartupRetryQualification": "Controlled retained-failure precondition with a real budget-release wake; no claim that filling the soft target causes startup allocation refusal",
+  "Standalone": {
+    "Run": {
+      "Phase": "reload",
+      "Attempt": 1,
+      "Exit": 0,
+      "ReadySeconds": 30.1231156,
+      "Saved": true,
+      "StopSent": true,
+      "TimedOut": false,
+      "ThermalErrors": 0,
+      "ElapsedSeconds": 45.5812169,
+      "Log": "build/thermal-integration-server-reload-20261031-r1.log",
+      "Jar": "build/libs/frostedheart-1.20.1-0.7.7.jar",
+      "Forge": "1.20.1-47.3.0",
+      "Java": "17",
+      "HeapGiB": 4,
+      "GameTest": false,
+      "Passed": true
+    },
+    "RealPlayers": 0,
+    "Mods": 9,
+    "ResearchCatalogue": "valid paper-only test catalogue",
+    "AllDimensionsSaved": true,
+    "ThermalRuntimeStarted": true,
+    "PreviousSavedState": {
+      "Passed": true,
+      "Version": 6,
+      "ThermalSections": 1,
+      "AirComponents": 4,
+      "Coefficients": 531,
+      "NonZeroCoefficients": 499,
+      "NonFiniteCoefficients": 0,
+      "MinimumCoefficientC": -9.964910582363855,
+      "MaximumCoefficientC": 0.0,
+      "MinimumSampleTick": 540,
+      "MaximumSampleTick": 540,
+      "CampfireLifeTime": 18643
+    },
+    "CurrentSavedState": {
+      "Passed": true,
+      "Version": 6,
+      "ThermalSections": 1,
+      "AirComponents": 6,
+      "Coefficients": 797,
+      "NonZeroCoefficients": 749,
+      "NonFiniteCoefficients": 0,
+      "MinimumCoefficientC": -9.999997059162554,
+      "MaximumCoefficientC": 0.0,
+      "MinimumSampleTick": 840,
+      "MaximumSampleTick": 840,
+      "CampfireLifeTime": 18359
+    },
+    "RootInventoryMeasured": false
+  },
+  "Limits": [
+    "No new whole-server performance benchmark or speedup percentage",
+    "Not a full modpack or 100 connected-player qualification",
+    "Public pending-NBT discovery may copy a position set",
+    "Maintenance checkpoint preparation can still wait synchronously",
+    "Custom post-thunder random loop and thin lava/direct-snow/global-freeze hooks remain"
+  ]
+}

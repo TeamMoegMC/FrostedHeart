@@ -144,7 +144,7 @@ public final class ThermalDormantCoolingGameTests {
     @GameTest(template = TEMPLATE, batch = "dormant_phase_world", timeoutTicks = 100)
     public static void randomEntryConvertsWithoutPageAndCarriesExactEnthalpy(GameTestHelper helper) {
         var level = helper.getLevel(); MinecraftThermalInput.closeActiveLevel(level);
-        BlockPos position = center(helper);
+        BlockPos position = center(helper).atY(100);
         level.setBlockAndUpdate(position, Blocks.WATER.defaultBlockState());
         level.setBlockAndUpdate(position.west(), Blocks.STONE.defaultBlockState());
         var chunk = level.getChunkAt(position);
@@ -154,6 +154,15 @@ public final class ThermalDormantCoolingGameTests {
         int index = seed.find(block(position));
         var law = seed.law(index); var edge = law.cooling();
         helper.assertTrue(edge != null, "water fixture needs a freezing law");
+        var profiles = MinecraftThermalProfiles.prepare();
+        int profileId = profiles.signatures().materialProfileId(
+                profiles.states().signatureId(level.getBlockState(position)));
+        var definition = profiles.transitionData(profileId, false);
+        helper.assertTrue(definition != null
+                        && (definition.worldConditions().excludedBiome() == null
+                                || !level.getBiome(position).is(definition.worldConditions().excludedBiome())),
+                "water fixture must be in a biome where its real freezing recipe can run: "
+                        + level.getBiome(position));
         int oldSpeed = level.getGameRules().getInt(GameRules.RULE_RANDOMTICKING);
         level.getGameRules().getRule(GameRules.RULE_RANDOMTICKING).set(3, level.getServer());
         var editor = new MaterialSectionState.Editor(seed);
@@ -423,7 +432,7 @@ public final class ThermalDormantCoolingGameTests {
             near(helper, WorldTemperature.naturalAir(level, p), WorldTemperature.material(level, p),
                     "the unrelated nested replacement initializes its own body instead of inheriting outer H");
             // The outer setter returns after the inner mutation and reports its original target.
-            MinecraftThermalInput.onMaterialBlockChanged(chunk, p, Blocks.STONE.defaultBlockState(), Blocks.DIRT.defaultBlockState());
+            MinecraftThermalInput.onMaterialStateWritten(chunk, p, Blocks.STONE.defaultBlockState(), Blocks.DIRT.defaultBlockState());
             near(helper, WorldTemperature.naturalAir(level, p), WorldTemperature.material(level, p),
                     "a late outer callback must not overwrite the nested replacement's material identity");
             var staleSnow = Blocks.SNOW.defaultBlockState();
@@ -432,7 +441,7 @@ public final class ThermalDormantCoolingGameTests {
                             edge.targetEnthalpyJ(), level.getGameTime()) && level.getBlockState(p).is(Blocks.GLASS),
                     "a stale phase submission must not overwrite the replacement body");
             level.setBlockAndUpdate(p, Blocks.DIRT.defaultBlockState());
-            MinecraftThermalInput.onMaterialBlockChanged(chunk, p, Blocks.STONE.defaultBlockState(), Blocks.DIRT.defaultBlockState());
+            MinecraftThermalInput.onMaterialStateWritten(chunk, p, Blocks.STONE.defaultBlockState(), Blocks.DIRT.defaultBlockState());
             near(helper, WorldTemperature.naturalAir(level, p), WorldTemperature.material(level, p),
                     "returning to the outer target state must not revive the superseded phase energy");
         } finally {

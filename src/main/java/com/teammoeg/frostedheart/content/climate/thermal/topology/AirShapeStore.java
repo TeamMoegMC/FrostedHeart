@@ -21,11 +21,12 @@
 package com.teammoeg.frostedheart.content.climate.thermal.topology;
 
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.AirFieldLayout;
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.AirBackingMeter;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.LocalAirShape;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalPageHandle;
 import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureTable;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ThermalInputBatch;
-import com.teammoeg.frostedheart.content.climate.thermal.source.minecraft.WorkerPhysicalSourceBindings;
+import com.teammoeg.frostedheart.content.climate.thermal.source.minecraft.WorkerPhysicalSourceBindings.FrozenSources;
 import it.unimi.dsi.fastutil.longs.Long2LongOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import net.minecraft.core.BlockPos;
@@ -37,10 +38,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.IdentityHashMap;
 
-/** Static local response preparation and footprint lifetime, confined to the thermal worker. */
+/** Shared-grid source support and saved support lifetime, confined to the thermal worker. */
 public final class AirShapeStore {
     private static final int WIDTH = LocalAirShape.WIDTH;
     private static final int CELLS = WIDTH * WIDTH * WIDTH;
@@ -50,15 +50,108 @@ public final class AirShapeStore {
     private final ThermalSignatureTable signatures;
     private final Long2ObjectOpenHashMap<Footprint[]> footprints = new Long2ObjectOpenHashMap<>();
     private final Long2LongOpenHashMap supportRequests = new Long2LongOpenHashMap();
+    private int footprintHighWater;
+    private long supportFinds, supportCacheHits, supportVisitedCells, supportDiscoveryNanos, residualScanNanos;
+
+    public String gridPreparationSummary() {
+        return "supportFinds=" + supportFinds + ",supportCacheHits=" + supportCacheHits
+                + ",supportVisitedCells=" + supportVisitedCells + ",supportDiscoveryUs=" + supportDiscoveryNanos / 1000
+                + ",residualScanUs=" + residualScanNanos / 1000;
+    }
 
     public AirShapeStore(ThermalSignatureTable signatures) { this.signatures = signatures; }
 
-    public void restore(ThermalInputBatch.DormantAirCut cut) {
+    /** Candidate preparation may replace footprint metadata without changing the installed cache. */
+    public AirShapeStore copy() {
+        AirShapeStore candidate = new AirShapeStore(signatures);
+        for (var entry : footprints.long2ObjectEntrySet()) {
+            Footprint[] source = entry.getValue();
+            Footprint[] copies = new Footprint[source.length];
+            for (int index = 0; index < source.length; index++) {
+                Footprint footprint = source[index];
+                if (footprint == null) continue;
+                Footprint next = new Footprint(footprint.position, footprint.face);
+                next.active = footprint.active;
+                next.amplitudeC = footprint.amplitudeC;
+                next.restoredAmplitudeC = footprint.restoredAmplitudeC;
+                next.restorationComplete = footprint.restorationComplete;
+                next.sourceResponsePending = footprint.sourceResponsePending;
+                next.savedPieces.addAll(footprint.savedPieces);
+                next.gridSupport = footprint.gridSupport;
+                next.support.putAll(footprint.support);
+                copies[index] = next;
+            }
+            candidate.footprints.put(entry.getLongKey(), copies);
+        }
+        candidate.footprintHighWater = candidate.footprints.size();
+        return candidate;
+    }
+
+    public void recordBacking(AirBackingMeter meter) {
+        meter.containerEntries(footprintHighWater, 16);
+        meter.containerEntries(supportRequests.size(), 16);
+        for (Footprint[] atBlock : footprints.values()) {
+            meter.array(atBlock);
+            for (Footprint footprint : atBlock) {
+                if (footprint == null) continue;
+                meter.bytes(80);
+                if (footprint.gridSupport != null) {
+                    var cache = footprint.gridSupport;
+                    meter.container(cache, 0, 0);
+                    meter.container(cache.geometry, 0, 1);
+                    meter.array(cache.geometry.handles); meter.array(cache.geometry.revisions);
+                    meter.array(cache.bricks); meter.array(cache.airMasks);
+                }
+                // R6 intersects at most eight sections; include the map's reserved zero-key slot.
+                meter.containerEntries(Math.max(9, footprint.support.size()), 16);
+                meter.containerEntries(footprint.savedPieces.size(), 8);
+                for (LocalAirShape shape : footprint.savedPieces) shape.recordBacking(meter);
+            }
+        }
+    }
+
+    public void appendSupportRequests(Long2LongOpenHashMap requests) {
+        for (var entry : supportRequests.long2LongEntrySet())
+            requests.put(entry.getLongKey(), requests.get(entry.getLongKey()) | entry.getLongValue());
+    }
+
+    /** Copies footprint metadata only for shapes belonging to a new or merged region. */
+    public void inherit(AirShapeStore previous, java.util.function.LongPredicate ownsSource,
+            java.util.function.Predicate<LocalAirShape> ownsShape) {
+        for (var entry : previous.footprints.long2ObjectEntrySet()) {
+            Footprint[] source = entry.getValue();
+            Footprint[] selected = null;
+            for (int face = 0; face < source.length; face++) {
+                Footprint footprint = source[face];
+                if (footprint == null) continue;
+                boolean included = ownsSource.test(footprint.position);
+                if (!included) for (LocalAirShape shape : footprint.savedPieces)
+                    if (ownsShape.test(shape)) { included = true; break; }
+                if (!included) continue;
+                if (selected == null) selected = footprints.computeIfAbsent(entry.getLongKey(), ignored -> new Footprint[6]);
+                if (selected[face] != null) continue;
+                Footprint next = new Footprint(footprint.position, footprint.face);
+                next.active = footprint.active;
+                next.amplitudeC = footprint.amplitudeC;
+                next.restoredAmplitudeC = footprint.restoredAmplitudeC;
+                next.restorationComplete = footprint.restorationComplete;
+                next.sourceResponsePending = footprint.sourceResponsePending;
+                next.savedPieces.addAll(footprint.savedPieces);
+                next.gridSupport = footprint.gridSupport;
+                next.support.putAll(footprint.support);
+                selected[face] = next;
+            }
+        }
+        footprintHighWater = Math.max(footprintHighWater, footprints.size());
+    }
+
+    public void restore(ThermalInputBatch.DormantAirCut cut, java.util.function.Predicate<LocalAirShape> ownsShape) {
         var checkpoint = cut.entry().spatialAir();
         if (checkpoint == null) return;
         Set<Footprint> replaced = Collections.newSetFromMap(new IdentityHashMap<>());
         for (int index = 0; index < checkpoint.shapeCount(); index++) {
             LocalAirShape shape = checkpoint.shape(index).sectionSlice(checkpoint.minX(), checkpoint.minY(), checkpoint.minZ());
+            if (shape == null || !ownsShape.test(shape)) continue;
             Footprint[] atBlock = footprints.computeIfAbsent(shape.sourceBlock, ignored -> new Footprint[6]);
             if (atBlock[shape.sourceFace] == null) atBlock[shape.sourceFace] = new Footprint(shape.sourceBlock, shape.sourceFace);
             Footprint footprint = atBlock[shape.sourceFace];
@@ -68,332 +161,253 @@ public final class AirShapeStore {
                             && old.minZ >= checkpoint.minZ() && old.minZ < checkpoint.minZ() + 16);
             footprint.savedPieces.add(shape);
             footprint.restoredAmplitudeC = Math.max(footprint.restoredAmplitudeC, Math.abs(checkpoint.amplitudeC(index) * cut.decayFactor()));
-            footprint.shapes = null;
+            footprint.restorationComplete = false;
         }
+        footprintHighWater = Math.max(footprintHighWater, footprints.size());
     }
 
-    public List<LocalAirShape> prepare(AirFieldLayout coarse, AirFieldLayout previous, double[] previousC,
-            WorkerPageStore pages, WorkerPhysicalSourceBindings sources) {
-        for (Footprint[] atBlock : footprints.values()) for (Footprint footprint : atBlock) {
-            if (footprint != null) { footprint.active = false; footprint.amplitudeC = 0; }
-        }
-        if (previous != null) {
-            for (int index = 0; index < previous.localShapeCount(); index++) {
-                LocalAirShape shape = previous.localShape(index);
-                Footprint[] atBlock = footprints.get(shape.sourceBlock);
-                if (atBlock != null && atBlock[shape.sourceFace] != null)
-                    atBlock[shape.sourceFace].amplitudeC += Math.abs(previousC[previous.coarseCount() + index]);
+    @FunctionalInterface
+    public interface ResidualSample { double maximumC(AirFieldLayout.Component component, double naturalC); }
+    public GridPreparation beginSharedGrid(AirFieldLayout captured, AirFieldLayout previous, double[] previousC,
+            AirGeometryView geometry, FrozenSources sources, double referenceC, ResidualSample residual) {
+        return new GridPreparation(captured, previous, previousC, geometry, sources, referenceC, residual);
+    }
+
+    /** One source support is bounded by its existing radius; completed sources are never rescanned on yield. */
+    public final class GridPreparation {
+        private final AirFieldLayout captured, previous;
+        private final double[] previousC;
+        private final AirGeometryView geometry;
+        private final double referenceC;
+        private final long[] positions;
+        private final ResidualSample residual;
+        private int cursor;
+        private GridPreparation(AirFieldLayout captured, AirFieldLayout previous, double[] previousC,
+                AirGeometryView geometry, FrozenSources sources, double referenceC, ResidualSample residual) {
+            this.captured = captured; this.previous = previous; this.previousC = previousC;
+            this.geometry = geometry; this.referenceC = referenceC;
+            this.residual = residual;
+            supportFinds = supportCacheHits = supportVisitedCells = supportDiscoveryNanos = residualScanNanos = 0;
+            for (Footprint[] atBlock : footprints.values()) for (Footprint footprint : atBlock)
+                if (footprint != null) { footprint.active = false; footprint.amplitudeC = 0; }
+            sources.collectAirPorts(geometry, (x, y, z, face) -> {
+                long position = BlockPos.asLong(x, y, z);
+                Footprint[] atBlock = footprints.computeIfAbsent(position, ignored -> new Footprint[6]);
+                if (atBlock[face.ordinal()] == null) atBlock[face.ordinal()] = new Footprint(position, (byte) face.ordinal());
+                atBlock[face.ordinal()].active = true;
+            });
+            footprintHighWater = Math.max(footprintHighWater, footprints.size());
+            supportRequests.clear();
+            positions = footprints.keySet().toLongArray(); Arrays.sort(positions);
             }
+        private int faceCursor;
+        private boolean retainedPosition;
+        private SupportDiscovery discovery;
+
+        public boolean run(long deadline) {
+            while (cursor < positions.length) {
+                if (!preparePosition(positions[cursor], deadline)) return false;
+                cursor++;
+                if (System.nanoTime() >= deadline) break;
+            }
+            return cursor == positions.length;
         }
-        sources.collectAirPorts((x, y, z, face) -> {
-            long position = BlockPos.asLong(x, y, z);
-            Footprint[] atBlock = footprints.computeIfAbsent(position, ignored -> new Footprint[6]);
-            if (atBlock[face.ordinal()] == null) atBlock[face.ordinal()] = new Footprint(position, (byte) face.ordinal());
-            atBlock[face.ordinal()].active = true;
-        });
-        supportRequests.clear();
-        ArrayList<LocalAirShape> result = new ArrayList<>();
-        long[] positions = footprints.keySet().toLongArray();
-        Arrays.sort(positions);
-        for (long position : positions) {
+
+        private boolean preparePosition(long position, long deadline) {
             Footprint[] atBlock = footprints.get(position);
-            boolean retained = false;
-            for (int face = 0; face < atBlock.length; face++) {
-                Footprint footprint = atBlock[face];
-                if (footprint == null) continue;
+            while (faceCursor < atBlock.length) {
+                Footprint footprint = atBlock[faceCursor];
+                if (footprint == null) { faceCursor++; continue; }
                 int x = BlockPos.getX(position), y = BlockPos.getY(position), z = BlockPos.getZ(position);
-                if ((!footprint.active && footprint.amplitudeC < 0.01 && footprint.restoredAmplitudeC < 0.01)
-                        || coarse.componentAt(x, y, z) == null && footprint.savedPieces.isEmpty()) {
-                    atBlock[face] = null;
-                    continue;
+                if (discovery == null && !footprint.active && previous != null) {
+                    long residualStarted = System.nanoTime();
+                    for (int bx = (x - 6) & ~3; bx <= x + 6; bx += 4)
+                        for (int by = (y - 6) & ~3; by <= y + 6; by += 4)
+                            for (int bz = (z - 6) & ~3; bz <= z + 6; bz += 4) {
+                                var components = previous.borrowedComponentsAtBrick(BlockPos.asLong(bx, by, bz));
+                                if (components == null) continue;
+                                var page = geometry.pageAt(SectionPos.asLong(bx >> 4, by >> 4, bz >> 4));
+                                double natural = page == null ? referenceC : page.naturalTemperatureC;
+                                for (var component : components) footprint.amplitudeC = Math.max(footprint.amplitudeC, residual != null
+                                        ? residual.maximumC(component, natural) : Math.max(
+                                        Math.abs(referenceC + component.minimumOffsetC(previousC) - natural),
+                                        Math.abs(referenceC + component.maximumOffsetC(previousC) - natural)));
+                            }
+                    residualScanNanos += System.nanoTime() - residualStarted;
                 }
-                retained = true;
-                requestSupport(x, y, z);
-                if (!footprint.savedPieces.isEmpty()) footprint.shapes = restorePieces(footprint, coarse, pages);
-                else if (!current(footprint.shapes, pages)) footprint.shapes = compile(footprint, coarse, pages);
-                if (footprint.shapes != null) {
-                    result.addAll(Arrays.asList(footprint.shapes));
-                    if (footprint.shapes.length > 0) footprint.restoredAmplitudeC = 0;
+                if (!footprint.active && footprint.amplitudeC < .01 && footprint.savedPieces.isEmpty()) { faceCursor++; continue; }
+                retainedPosition = true;
+                long supportStarted = System.nanoTime();
+                SupportGeometry support;
+                if (discovery == null && footprint.gridSupport != null && footprint.savedPieces.isEmpty()
+                        && !footprint.sourceResponsePending && footprint.gridSupport.current(captured, geometry)) {
+                    support = footprint.gridSupport.geometry; supportCacheHits++;
+                } else {
+                    if (discovery == null) discovery = new SupportDiscovery(footprint, captured, geometry);
+                    if (!discovery.run(deadline)) { supportDiscoveryNanos += System.nanoTime() - supportStarted; return false; }
+                    support = discovery.result; discovery = null;
+                    if (support.complete) footprint.gridSupport = cacheGridSupport(footprint, support, captured);
                 }
+                supportDiscoveryNanos += System.nanoTime() - supportStarted;
+                footprint.sourceResponsePending = false; footprint.restorationComplete = true;
+                footprint.savedPieces.clear();
+                for (var request : footprint.support.long2LongEntrySet())
+                    supportRequests.put(request.getLongKey(), supportRequests.get(request.getLongKey()) | request.getLongValue());
+                faceCursor++;
+                if (System.nanoTime() >= deadline && faceCursor < atBlock.length) return false;
             }
-            if (!retained) footprints.remove(position);
+            if (!retainedPosition) footprints.remove(position);
+            faceCursor = 0; retainedPosition = false;
+            return true;
         }
-        pages.setAirSupportRequests(supportRequests);
-        result.sort(Comparator.comparingLong((LocalAirShape shape) -> shape.sourceBlock)
-                .thenComparingInt(shape -> shape.sourceFace).thenComparingLong(shape -> shape.branch).thenComparingInt(shape -> shape.scale));
-        return result;
     }
 
-    private static boolean current(LocalAirShape[] shapes, WorkerPageStore pages) {
-        if (shapes == null || shapes.length == 0) return false;
-        for (LocalAirShape shape : shapes) {
-            for (int index = 0; index < shape.dependencyCount(); index++) {
-                var page = pages.find(shape.dependency(index).sectionKey());
-                if (page == null || page.handle != shape.dependency(index) || page.geometryRevision != shape.revision(index)) return false;
-            }
+    /** Only called after the candidate field has been projected and committed. */
+    public void projected() {
+        for (Footprint[] atBlock : footprints.values()) for (Footprint footprint : atBlock) {
+            if (footprint == null || footprint.savedPieces.isEmpty() || !footprint.restorationComplete) continue;
+            footprint.savedPieces.clear();
+            footprint.restoredAmplitudeC = 0;
+            // The live source response belongs to current geometry, not to saved fragments.
+            footprint.sourceResponsePending = footprint.active;
+        }
+    }
+
+    /** Saved support is consumed only after its representation has been prepared. */
+    public boolean canConsumeRestoration(long section) {
+        int x = net.minecraft.core.SectionPos.x(section) << 4, y = net.minecraft.core.SectionPos.y(section) << 4,
+                z = net.minecraft.core.SectionPos.z(section) << 4;
+        for (var atBlock : footprints.values()) for (var footprint : atBlock) {
+            if (footprint == null || footprint.restorationComplete) continue;
+            for (var piece : footprint.savedPieces)
+                if (piece.minX >= x && piece.minX < x + 16 && piece.minY >= y && piece.minY < y + 16
+                        && piece.minZ >= z && piece.minZ < z + 16) return false;
         }
         return true;
     }
 
-    private void requestSupport(int x, int y, int z) {
-        for (int bx = (x - LocalAirShape.RADIUS) & ~3; bx <= x + LocalAirShape.RADIUS; bx += 4) {
-            for (int by = (y - LocalAirShape.RADIUS) & ~3; by <= y + LocalAirShape.RADIUS; by += 4) {
-                for (int bz = (z - LocalAirShape.RADIUS) & ~3; bz <= z + LocalAirShape.RADIUS; bz += 4) {
-                    long section = SectionPos.asLong(bx >> 4, by >> 4, bz >> 4);
-                    int brick = (bx & 15) >>> 2 | ((bz & 15) >>> 2) << 2 | ((by & 15) >>> 2) << 4;
-                    supportRequests.put(section, supportRequests.get(section) | 1L << brick);
-                }
-            }
-        }
+    public boolean hasPendingSourceResponse() {
+        for (Footprint[] atBlock : footprints.values()) for (Footprint footprint : atBlock)
+            if (footprint != null && footprint.sourceResponsePending) return true;
+        return false;
     }
 
-    private LocalAirShape[] compile(Footprint footprint, AirFieldLayout coarse, WorkerPageStore pages) {
-        int minX = BlockPos.getX(footprint.position) - LocalAirShape.RADIUS;
-        int minY = BlockPos.getY(footprint.position) - LocalAirShape.RADIUS;
-        int minZ = BlockPos.getZ(footprint.position) - LocalAirShape.RADIUS;
-        boolean[] air = new boolean[CELLS];
-        LinkedHashMap<ThermalPageHandle, Long> dependencies = new LinkedHashMap<>();
-        for (int cell = 0; cell < CELLS; cell++) {
-            int x = minX + cell % WIDTH, y = minY + cell / (WIDTH * WIDTH), z = minZ + cell / WIDTH % WIDTH;
-            int signature = pages.capturedSignatureAt(x, y, z);
-            if (!signatures.valid(signature)) return null;
-            var page = pages.find(SectionPos.asLong(x >> 4, y >> 4, z >> 4));
-            if (page == null) return null;
-            dependencies.put(page.handle, page.geometryRevision);
-            air[cell] = signatures.isAir(signature) && signatures.ventilation(signature) > 0;
-            if (air[cell] && coarse.componentAt(x, y, z) == null) return null;
-        }
-        int source = LocalAirShape.RADIUS * (1 + WIDTH + WIDTH * WIDTH);
-        ThermalPageHandle[] handles = dependencies.keySet().toArray(ThermalPageHandle[]::new);
-        long[] revisions = new long[dependencies.size()];
-        int revisionIndex = 0;
-        for (long revision : dependencies.values()) revisions[revisionIndex++] = revision;
-        if (footprint.shapes != null && Arrays.equals(footprint.airGeometry, air)) {
-            LocalAirShape[] retained = new LocalAirShape[footprint.shapes.length];
-            for (int index = 0; index < retained.length; index++) retained[index] = footprint.shapes[index].withDependencies(handles, revisions);
-            return retained;
-        }
-        footprint.airGeometry = air;
-        if (!air[source]) return new LocalAirShape[0];
-        // Retain only the source's direct-Air branch within the finite support.
-        boolean[] connected = new boolean[CELLS];
-        int[] queue = new int[CELLS];
-        int head = 0, tail = 0;
-        queue[tail++] = source;
-        connected[source] = true;
-        while (head < tail) {
-            int cell = queue[head++];
-            for (int face = 0; face < 6; face++) {
-                int neighbor = neighbor(cell, face);
-                if (neighbor >= 0 && air[neighbor] && !connected[neighbor]) {
-                    connected[neighbor] = true;
-                    queue[tail++] = neighbor;
-                }
-            }
-        }
-        if (tail < 8) return new LocalAirShape[0];
-        VertexLayout vertices = vertices(connected);
-        short[] cellCorners = vertices.corners;
-        int vertexCount = vertices.count;
-        ArrayList<LocalAirShape> shapes = new ArrayList<>();
-        float[] firstValues = null;
-        for (int scale : new int[]{1, 3}) {
-            double[] response = response(connected, source, scale);
-            float[] values = new float[vertexCount];
-            int[] samples = new int[vertexCount];
-            boolean[] shell = new boolean[vertexCount];
-            for (int cell = 0; cell < CELLS; cell++) {
-                if (!connected[cell]) continue;
-                int x = cell % WIDTH, y = cell / (WIDTH * WIDTH), z = cell / WIDTH % WIDTH;
-                for (int corner = 0; corner < 8; corner++) {
-                    int vertex = Short.toUnsignedInt(cellCorners[cell * 8 + corner]);
-                    values[vertex] += (float) response[cell];
-                    samples[vertex]++;
-                    int vx = x + (corner & 1), vy = y + (corner >>> 2), vz = z + (corner >>> 1 & 1);
-                    shell[vertex] |= vx == 0 || vy == 0 || vz == 0 || vx == WIDTH || vy == WIDTH || vz == WIDTH;
-                }
-            }
-            double maximum = 0, minimum = Double.POSITIVE_INFINITY;
-            for (int index = 0; index < values.length; index++) {
-                values[index] = shell[index] ? 0 : values[index] / samples[index];
-                maximum = Math.max(maximum, Math.abs(values[index]));
-                minimum = Math.min(minimum, values[index]);
-            }
-            if (!(maximum > 0) || maximum - minimum < maximum * 1e-7) continue;
-            for (int index = 0; index < values.length; index++) values[index] /= (float) maximum;
-            if (firstValues != null) {
-                double firstNorm = 0, secondNorm = 0, product = 0;
-                for (int index = 0; index < values.length; index++) {
-                    firstNorm += firstValues[index] * firstValues[index];
-                    secondNorm += values[index] * values[index];
-                    product += firstValues[index] * values[index];
-                }
-                if (product * product >= 0.999999 * firstNorm * secondNorm) continue;
-            }
-            shapes.add(new LocalAirShape(minX, minY, minZ, footprint.position, footprint.face, scale,
-                    cellCorners, values, handles, revisions));
-            firstValues = values;
-        }
-        return shapes.toArray(LocalAirShape[]::new);
+    /** Uniform fallback keeps captured support/history, without another fine support search. */
+    public void holdUniformSupport() {
+        for (Footprint[] atBlock : footprints.values()) for (Footprint footprint : atBlock)
+            if (footprint != null) { footprint.sourceResponsePending = false; footprint.restorationComplete = true; }
     }
 
-    /** Saved section fragments share current open-face vertices and split at real walls. */
-    private LocalAirShape[] restorePieces(Footprint footprint, AirFieldLayout coarse, WorkerPageStore pages) {
-        int minX = BlockPos.getX(footprint.position) - LocalAirShape.RADIUS;
-        int minY = BlockPos.getY(footprint.position) - LocalAirShape.RADIUS;
-        int minZ = BlockPos.getZ(footprint.position) - LocalAirShape.RADIUS;
-        boolean[] present = new boolean[CELLS], visited = new boolean[CELLS];
-        LinkedHashMap<ThermalPageHandle, Long> dependencies = new LinkedHashMap<>();
-        for (int cell = 0; cell < CELLS; cell++) {
-            int x = minX + cell % WIDTH, y = minY + cell / (WIDTH * WIDTH), z = minZ + cell / WIDTH % WIDTH;
-            var page = pages.find(SectionPos.asLong(x >> 4, y >> 4, z >> 4));
-            if (page != null) dependencies.put(page.handle, page.geometryRevision);
-            present[cell] = coarse.componentAt(x, y, z) != null;
+    /** Source-connected Air traversal. A yielded search keeps both its queue and dependency order. */
+    private final class SupportDiscovery {
+        final Footprint footprint;
+        final AirFieldLayout coarse;
+        final AirGeometryView geometry;
+        final int minX, minY, minZ;
+        final boolean[] air = new boolean[CELLS], visited = new boolean[CELLS];
+        final int[] queue = new int[CELLS];
+        final LinkedHashMap<ThermalPageHandle, Long> dependencies = new LinkedHashMap<>();
+        final List<LocalAirShape> history;
+        int head, tail, connectedCount, historyCursor;
+        boolean complete = true;
+        SupportGeometry result;
+
+        SupportDiscovery(Footprint footprint, AirFieldLayout coarse, AirGeometryView geometry) {
+            supportFinds++; footprint.gridSupport = null;
+            this.footprint = footprint; this.coarse = coarse; this.geometry = geometry;
+            minX = BlockPos.getX(footprint.position) - LocalAirShape.RADIUS;
+            minY = BlockPos.getY(footprint.position) - LocalAirShape.RADIUS;
+            minZ = BlockPos.getZ(footprint.position) - LocalAirShape.RADIUS;
+            footprint.support.clear();
+            int source = LocalAirShape.RADIUS * (1 + WIDTH + WIDTH * WIDTH);
+            queue[tail++] = source; visited[source] = true;
+            history = footprint.savedPieces;
+            if (history.isEmpty()) historyCursor = CELLS;
         }
-        ThermalPageHandle[] handles = dependencies.keySet().toArray(ThermalPageHandle[]::new);
-        long[] revisions = new long[handles.length];
-        int at = 0;
-        for (long revision : dependencies.values()) revisions[at++] = revision;
-        if (footprint.shapes != null && Arrays.equals(footprint.airGeometry, present)) {
-            LocalAirShape[] retained = new LocalAirShape[footprint.shapes.length];
-            for (int index = 0; index < retained.length; index++) retained[index] = footprint.shapes[index].withDependencies(handles, revisions);
-            return retained;
-        }
-        footprint.airGeometry = present;
-        int[] queue = new int[CELLS];
-        ArrayList<LocalAirShape> result = new ArrayList<>();
-        for (int seed = 0; seed < CELLS; seed++) {
-            if (!present[seed] || visited[seed]) continue;
-            boolean[] connected = new boolean[CELLS];
-            int head = 0, tail = 0;
-            queue[tail++] = seed;
-            connected[seed] = visited[seed] = true;
-            while (head < tail) {
-                int cell = queue[head++];
-                for (int face = 0; face < 6; face++) {
-                    int neighbor = neighbor(cell, face);
-                    if (neighbor >= 0 && present[neighbor] && !visited[neighbor]) {
-                        connected[neighbor] = visited[neighbor] = true;
-                        queue[tail++] = neighbor;
+
+        boolean run(long deadline) {
+            do {
+                if (historyCursor < CELLS) {
+                    int end = Math.min(CELLS, historyCursor + 128);
+                    for (; historyCursor < end; historyCursor++) {
+                        int cell = historyCursor;
+                        if (visited[cell]) continue;
+                        int x = minX + cell % WIDTH, y = minY + cell / (WIDTH * WIDTH), z = minZ + cell / WIDTH % WIDTH;
+                        for (LocalAirShape saved : history) if (saved.containsCell(x, y, z)) {
+                            visited[cell] = true; queue[tail++] = cell; break;
+                        }
                     }
-                }
-            }
-            VertexLayout vertices = vertices(connected);
-            long branch = BlockPos.asLong(minX + seed % WIDTH, minY + seed / (WIDTH * WIDTH), minZ + seed / WIDTH % WIDTH);
-            for (int scale : new int[]{1, 3}) {
-                float[] values = new float[vertices.count];
-                int[] counts = new int[vertices.count];
-                for (int item = 0; item < tail; item++) {
-                    int cell = queue[item];
-                    int x = minX + cell % WIDTH, y = minY + cell / (WIDTH * WIDTH), z = minZ + cell / WIDTH % WIDTH;
-                    LocalAirShape piece = null;
-                    for (int savedIndex = footprint.savedPieces.size() - 1; savedIndex >= 0; savedIndex--) {
-                        LocalAirShape saved = footprint.savedPieces.get(savedIndex);
-                        if (saved.scale == scale && saved.containsCell(x, y, z)) { piece = saved; break; }
+                } else if (head < tail) {
+                    int remaining = 128;
+                    while (remaining-- > 0 && head < tail) {
+                        int cell = queue[head++];
+                        int x = minX + cell % WIDTH, y = minY + cell / (WIDTH * WIDTH), z = minZ + cell / WIDTH % WIDTH;
+                        long section = SectionPos.asLong(x >> 4, y >> 4, z >> 4);
+                        int brick = (x & 15) >>> 2 | ((z & 15) >>> 2) << 2 | ((y & 15) >>> 2) << 4;
+                        footprint.support.put(section, footprint.support.get(section) | 1L << brick);
+                        int signature = geometry.signatureAtWorld(x, y, z);
+                        var page = geometry.pageAt(section);
+                        if (!signatures.valid(signature) || page == null) { complete = false; continue; }
+                        dependencies.put(page.handle, geometry.geometryRevision(page));
+                        if (!signatures.isAir(signature) || signatures.ventilation(signature) == 0) continue;
+                        air[cell] = coarse.componentAt(x, y, z) != null;
+                        if (air[cell]) connectedCount++; else complete = false;
+                        for (int face = 0; face < 6; face++) {
+                            int adjacent = neighbor(cell, face);
+                            if (adjacent >= 0 && !visited[adjacent]) { visited[adjacent] = true; queue[tail++] = adjacent; }
+                        }
                     }
-                    if (piece == null) continue;
-                    for (int corner = 0; corner < 8; corner++) {
-                        int vertex = Short.toUnsignedInt(vertices.corners[cell * 8 + corner]);
-                        values[vertex] += (float) piece.value(x, y, z, x + (corner & 1), y + (corner >>> 2), z + (corner >>> 1 & 1));
-                        counts[vertex]++;
-                    }
+                } else {
+                    var handles = dependencies.keySet().toArray(ThermalPageHandle[]::new);
+                    long[] revisions = new long[dependencies.size()]; int index = 0;
+                    for (long revision : dependencies.values()) revisions[index++] = revision;
+                    supportVisitedCells += tail;
+                    result = new SupportGeometry(air, handles, revisions, connectedCount, complete);
+                    return true;
                 }
-                double maximum = 0;
-                for (int vertex = 0; vertex < values.length; vertex++) {
-                    if (counts[vertex] > 0) values[vertex] /= counts[vertex];
-                    maximum = Math.max(maximum, Math.abs(values[vertex]));
-                }
-                if (maximum > 0) result.add(new LocalAirShape(minX, minY, minZ, footprint.position, footprint.face, scale,
-                        vertices.corners, values, handles, revisions).withBranch(branch));
-            }
+            } while (System.nanoTime() < deadline);
+            return false;
         }
-        return result.toArray(LocalAirShape[]::new);
     }
 
-    private static VertexLayout vertices(boolean[] connected) {
-        int[] parents = new int[CELLS * 8];
-        for (int index = 0; index < parents.length; index++) parents[index] = index;
-        for (int cell = 0; cell < CELLS; cell++) {
-            if (!connected[cell]) continue;
-            for (int face = 1; face < 6; face += 2) {
-                int neighbor = neighbor(cell, face);
-                if (neighbor < 0 || !connected[neighbor]) continue;
-                int bit = face == 1 ? 1 : face == 3 ? 4 : 2;
-                for (int corner = 0; corner < 8; corner++) if ((corner & bit) != 0) {
-                    int a = root(parents, cell * 8 + corner), b = root(parents, neighbor * 8 + (corner ^ bit));
-                    parents[Math.max(a, b)] = Math.min(a, b);
-                }
+    private record SupportGeometry(boolean[] air, ThermalPageHandle[] handles, long[] revisions,
+            int connectedCount, boolean complete) {}
+
+    private static GridSupportCache cacheGridSupport(Footprint footprint, SupportGeometry support, AirFieldLayout captured) {
+        int size = 0;
+        for (long mask : footprint.support.values()) size += Long.bitCount(mask);
+        long[] bricks = new long[size], masks = new long[size];
+        int index = 0;
+        for (var entry : footprint.support.long2LongEntrySet()) {
+            long section = entry.getLongKey(), remaining = entry.getLongValue();
+            while (remaining != 0) {
+                int brick = Long.numberOfTrailingZeros(remaining); remaining &= remaining - 1;
+                long origin = BlockPos.asLong((SectionPos.x(section) << 4) + (brick & 3) * 4,
+                        (SectionPos.y(section) << 4) + (brick >>> 4) * 4, (SectionPos.z(section) << 4) + (brick >>> 2 & 3) * 4);
+                bricks[index] = origin; masks[index++] = captured.airBlocksAtBrick(origin);
             }
         }
-        int[] indices = new int[parents.length];
-        Arrays.fill(indices, -1);
-        short[] corners = new short[parents.length];
-        Arrays.fill(corners, (short) -1);
-        int count = 0;
-        for (int cell = 0; cell < CELLS; cell++) if (connected[cell]) {
-            for (int corner = 0; corner < 8; corner++) {
-                int root = root(parents, cell * 8 + corner);
-                if (indices[root] < 0) indices[root] = count++;
-                corners[cell * 8 + corner] = (short) indices[root];
-            }
-        }
-        return new VertexLayout(corners, count);
+        return new GridSupportCache(support, bricks, masks);
     }
 
-    private record VertexLayout(short[] corners, int count) {}
-
-    /** Screened local diffusion prepares a static response; this is not a second running field. */
-    private static double[] response(boolean[] air, int source, int scale) {
-        double screen = 1.0 / (scale * scale);
-        double[] value = new double[CELLS], residual = new double[CELLS], direction = new double[CELLS], applied = new double[CELLS];
-        double[] diagonal = new double[CELLS];
-        for (int cell = 0; cell < CELLS; cell++) {
-            if (!air[cell]) continue;
-            diagonal[cell] = screen;
-            for (int face = 0; face < 6; face++) {
-                int neighbor = neighbor(cell, face);
-                if (neighbor < 0) diagonal[cell] += 2;
-                else if (air[neighbor]) diagonal[cell]++;
+    /** Only complete searches are cached; Page identity and Air membership cover capture/ownership changes. */
+    private record GridSupportCache(SupportGeometry geometry, long[] bricks, long[] airMasks) {
+        boolean current(AirFieldLayout captured, AirGeometryView view) {
+            for (int index = 0; index < geometry.handles.length; index++) {
+                var handle = geometry.handles[index];
+                var page = view.pageAt(handle.sectionKey());
+                if (page == null || page.handle != handle || view.geometryRevision(page) != geometry.revisions[index]) return false;
             }
+            for (int index = 0; index < bricks.length; index++)
+                if (captured.airBlocksAtBrick(bricks[index]) != airMasks[index]) return false;
+            return true;
         }
-        residual[source] = 1;
-        direction[source] = 1 / diagonal[source];
-        double product = direction[source];
-        for (int iteration = 0; iteration < 256; iteration++) {
-            double curvature = 0;
-            for (int cell = 0; cell < CELLS; cell++) {
-                if (!air[cell]) continue;
-                double result = diagonal[cell] * direction[cell];
-                for (int face = 0; face < 6; face++) {
-                    int neighbor = neighbor(cell, face);
-                    if (neighbor >= 0 && air[neighbor]) result -= direction[neighbor];
-                }
-                applied[cell] = result;
-                curvature += direction[cell] * result;
-            }
-            if (!(curvature > 0)) break;
-            double alpha = product / curvature, nextProduct = 0;
-            for (int cell = 0; cell < CELLS; cell++) if (air[cell]) {
-                value[cell] += alpha * direction[cell];
-                residual[cell] -= alpha * applied[cell];
-                nextProduct += residual[cell] * residual[cell] / diagonal[cell];
-            }
-            if (nextProduct < 1e-22) break;
-            double beta = nextProduct / product;
-            for (int cell = 0; cell < CELLS; cell++) if (air[cell]) direction[cell] = residual[cell] / diagonal[cell] + beta * direction[cell];
-            product = nextProduct;
-        }
-        return value;
     }
 
+    /** Local address for one source-support neighbor. */
     private static int neighbor(int cell, int face) {
         int x = cell % WIDTH + DX[face], y = cell / (WIDTH * WIDTH) + DY[face], z = cell / WIDTH % WIDTH + DZ[face];
         return x < 0 || x >= WIDTH || y < 0 || y >= WIDTH || z < 0 || z >= WIDTH ? -1 : x + WIDTH * (z + WIDTH * y);
-    }
-
-    private static int root(int[] parents, int index) {
-        while (parents[index] != index) { parents[index] = parents[parents[index]]; index = parents[index]; }
-        return index;
     }
 
     private static final class Footprint {
@@ -402,9 +416,11 @@ public final class AirShapeStore {
         boolean active;
         double amplitudeC;
         double restoredAmplitudeC;
+        boolean restorationComplete;
+        boolean sourceResponsePending;
         final ArrayList<LocalAirShape> savedPieces = new ArrayList<>();
-        LocalAirShape[] shapes;
-        boolean[] airGeometry;
+        GridSupportCache gridSupport;
+        final Long2LongOpenHashMap support = new Long2LongOpenHashMap(8);
         Footprint(long position, byte face) { this.position = position; this.face = face; }
     }
 }

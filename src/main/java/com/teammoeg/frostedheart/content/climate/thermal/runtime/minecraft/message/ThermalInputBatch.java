@@ -21,11 +21,11 @@
 package com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message;
 
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.PageSignatures;
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.AirBackingMeter;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalPageHandle;
 import com.teammoeg.frostedheart.content.climate.thermal.persistence.minecraft.DormantChunkThermalState;
 import com.teammoeg.frostedheart.content.climate.thermal.persistence.minecraft.MaterialSectionState;
 import com.teammoeg.frostedheart.content.climate.thermal.solver.PhaseTransitionRuntime;
-import com.teammoeg.frostedheart.content.climate.thermal.source.ThermalSourceBatch;
 
 import java.util.Objects;
 
@@ -54,12 +54,10 @@ public final class ThermalInputBatch {
     private final PageRetirement[] retirements;
     private final PageResidencyUpdate[] residencyUpdates;
     private final ResolvedGeometryBatch geometry;
-    private final ThermalSourceBatch sourceEvents;
     private final PageEnvironmentUpdate[] environmentUpdates;
     private final PhaseAck[] phaseAcks;
     private final double farFieldConductanceScale;
     private final PhaseIntent[] phaseIntents;
-
     public ThermalInputBatch(
             long dimensionGeneration,
             long sequence,
@@ -68,18 +66,17 @@ public final class ThermalInputBatch {
             PageRetirement[] retirements,
             PageResidencyUpdate[] residencyUpdates,
             ResolvedGeometryBatch geometry,
-            ThermalSourceBatch sourceEvents,
             PageEnvironmentUpdate[] environmentUpdates,
             PhaseAck[] phaseAcks,
             double farFieldConductanceScale
     ) {
         this(dimensionGeneration, sequence, targetTick, admissions, retirements, residencyUpdates,
-                geometry, sourceEvents, environmentUpdates, phaseAcks, farFieldConductanceScale, NO_PHASE_INTENTS);
+                geometry, environmentUpdates, phaseAcks, farFieldConductanceScale, NO_PHASE_INTENTS);
     }
 
     public ThermalInputBatch(long dimensionGeneration, long sequence, long targetTick,
             PageAdmission[] admissions, PageRetirement[] retirements, PageResidencyUpdate[] residencyUpdates,
-            ResolvedGeometryBatch geometry, ThermalSourceBatch sourceEvents, PageEnvironmentUpdate[] environmentUpdates,
+            ResolvedGeometryBatch geometry, PageEnvironmentUpdate[] environmentUpdates,
             PhaseAck[] phaseAcks, double farFieldConductanceScale, PhaseIntent[] phaseIntents) {
         if (dimensionGeneration < 0L || sequence <= 0L || targetTick < 0L) {
             throw new IllegalArgumentException("batch identity is invalid");
@@ -92,7 +89,6 @@ public final class ThermalInputBatch {
         this.residencyUpdates = Objects.requireNonNull(
                 residencyUpdates, "residencyUpdates");
         this.geometry = Objects.requireNonNull(geometry, "geometry");
-        this.sourceEvents = Objects.requireNonNull(sourceEvents, "sourceEvents");
         this.environmentUpdates = Objects.requireNonNull(
                 environmentUpdates, "environmentUpdates");
         this.phaseAcks = Objects.requireNonNull(phaseAcks, "phaseAcks");
@@ -106,6 +102,31 @@ public final class ThermalInputBatch {
         this.phaseIntents = phaseIntents;
     }
     public PhaseIntent[] phaseIntents() { return phaseIntents; }
+
+    /** Conservative retained payload charge for the bounded input queue, including restored state. */
+    public long queuedPayloadBytes() {
+        long bytes = 1024L + 64L * geometry.size() + 48L * geometry.materialChanges().size()
+                + 96L * retirements.length + 18500L * (admissions.length + residencyUpdates.length)
+                + 128L * (phaseAcks.length + phaseIntents.length);
+        for (int index = 0; index < geometry.size(); index++)
+            if (geometry.fullPageSignatures(index) != null) bytes += 18000L;
+        for (var halo : geometry.halos()) bytes += 128L + 24L * halo.halo().size();
+        for (var environment : environmentUpdates) bytes += 128L + 3L * environment.skyColumns().length;
+        AirBackingMeter restored = null;
+        for (var admission : admissions)
+            restored = recordRestoredBacking(restored, admission.dormantAir(), admission.dormantMaterials());
+        for (var update : residencyUpdates)
+            restored = recordRestoredBacking(restored, update.dormantAir(), update.dormantMaterials());
+        return bytes + (restored == null ? 0L : restored.bytes());
+    }
+
+    private static AirBackingMeter recordRestoredBacking(AirBackingMeter meter, DormantAirCut air, DormantMaterialCut material) {
+        if (air == null && material == null) return meter;
+        if (meter == null) meter = new AirBackingMeter();
+        if (air != null) air.entry().recordBacking(meter);
+        if (material != null && material.state() != null) material.state().recordBacking(meter);
+        return meter;
+    }
 
     public long dimensionGeneration() {
         return dimensionGeneration;
@@ -133,10 +154,6 @@ public final class ThermalInputBatch {
 
     public ResolvedGeometryBatch geometry() {
         return geometry;
-    }
-
-    public ThermalSourceBatch sourceEvents() {
-        return sourceEvents;
     }
 
     public PageEnvironmentUpdate[] environmentUpdates() {
@@ -191,12 +208,9 @@ public final class ThermalInputBatch {
             long residentBrickMask,
             long sourceSeedMask,
             PageSignatures signatures,
+            DormantAirCut dormantAir,
             DormantMaterialCut dormantMaterials
     ) {
-        public PageResidencyUpdate(ThermalPageHandle page, long geometryRevision, long residentBrickMask,
-                long sourceSeedMask, PageSignatures signatures) {
-            this(page, geometryRevision, residentBrickMask, sourceSeedMask, signatures, null);
-        }
         public PageResidencyUpdate {
             Objects.requireNonNull(page, "page");
             Objects.requireNonNull(signatures, "signatures");
@@ -213,8 +227,13 @@ public final class ThermalInputBatch {
     public record DormantAirCut(
             DormantChunkThermalState.SectionEntry entry,
             double naturalTemperatureC,
-            double decayFactor
+            double decayFactor,
+            long targetTick,
+            double coolingRate
     ) {
+        public DormantAirCut(DormantChunkThermalState.SectionEntry entry, double naturalTemperatureC, double decayFactor) {
+            this(entry, naturalTemperatureC, decayFactor, -1, 0);
+        }
         public DormantAirCut {
             Objects.requireNonNull(entry, "entry");
             if (!Double.isFinite(naturalTemperatureC)
@@ -225,12 +244,16 @@ public final class ThermalInputBatch {
         }
 
         public double meanTemperatureC(int brick) {
+            if (targetTick >= 0 && entry.spatialAir() != null) return entry.spatialAir().meanC(
+                    brick, naturalTemperatureC, targetTick, coolingRate, entry.savedGameTick());
             return entry.meanTemperatureC(
                     brick, naturalTemperatureC, decayFactor);
         }
 
         public double temperatureC(double x, double y, double z) {
             if (entry.spatialAir() != null) {
+                if (targetTick >= 0) return entry.spatialAir().sampleC(x, y, z,
+                        naturalTemperatureC, targetTick, coolingRate, entry.savedGameTick());
                 double saved = entry.spatialAir().sampleC(x, y, z);
                 return Double.isFinite(saved)
                         ? naturalTemperatureC + (saved - naturalTemperatureC) * decayFactor : Double.NaN;
@@ -241,6 +264,14 @@ public final class ThermalInputBatch {
         }
 
         public void fillBlockTemperatures(int brick,double[] target) {
+            if (targetTick >= 0 && entry.spatialAir() != null) {
+                for (int block = 0; block < 64; block++) {
+                    double value = entry.spatialAir().blockCenterC(brick, block,
+                            naturalTemperatureC, targetTick, coolingRate, entry.savedGameTick());
+                    target[block] = Double.isFinite(value) ? value : naturalTemperatureC;
+                }
+                return;
+            }
             entry.fillBlockTemperatures(brick,naturalTemperatureC,decayFactor,target);
         }
 
@@ -283,6 +314,7 @@ public final class ThermalInputBatch {
         }
     }
 
+    public record PhaseAckIdentity(long incarnation, long requestSequence) { }
     public record PhaseAck(
             PhaseTransitionRuntime.Request request,
             PhaseTransitionRuntime.AckOutcome outcome
@@ -291,6 +323,7 @@ public final class ThermalInputBatch {
             Objects.requireNonNull(request, "request");
             Objects.requireNonNull(outcome, "outcome");
         }
+        public PhaseAckIdentity identity() { return new PhaseAckIdentity(request.incarnation(), request.requestSequence()); }
     }
 
 }

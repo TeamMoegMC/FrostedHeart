@@ -26,26 +26,26 @@ public final class ThermalEnvironmentSample {
     private double airTemperatureC = Double.NaN;
     private double radiantFluxWPerM2;
     private boolean sharedAirRegion;
-    private long sharedAirRegionBlock;
     private long airSampleTick = -1;
     private int airBasisTerms;
+    private boolean airMinimumQuality;
 
     public boolean airAvailable() { return airAvailable; }
     public double airTemperatureC() { return airTemperatureC; }
     public double radiantFluxWPerM2() { return radiantFluxWPerM2; }
     public boolean sharedAirRegion() { return sharedAirRegion; }
-    public long sharedAirRegionBlock() { return sharedAirRegionBlock; }
     public long airSampleTick() { return airSampleTick; }
     public int airBasisTerms() { return airBasisTerms; }
+    public boolean airMinimumQuality() { return airMinimumQuality; }
 
     public void clear() {
         airAvailable = false;
         airTemperatureC = Double.NaN;
         radiantFluxWPerM2 = 0.0D;
         sharedAirRegion = false;
-        sharedAirRegionBlock = 0;
         airSampleTick = -1;
         airBasisTerms = 0;
+        airMinimumQuality = false;
     }
 
     public void setAir(double temperature) {
@@ -54,18 +54,19 @@ public final class ThermalEnvironmentSample {
         sharedAirRegion = false;
         airSampleTick = -1;
         airBasisTerms = 0;
+        airMinimumQuality = false;
     }
 
-    public void setAir(double temperature, long sampleTick, int basisTerms) {
+    public void setAir(double temperature, long sampleTick, int basisTerms, boolean minimumQuality) {
         setAir(temperature);
         airSampleTick = sampleTick;
         airBasisTerms = basisTerms;
+        airMinimumQuality = minimumQuality;
     }
 
-    public void setAirFromRegion(double temperature, long regionBlock) {
-        setAir(temperature);
+    public void setAirFromRegion(double temperature, long sampleTick, int basisTerms, boolean minimumQuality) {
+        setAir(temperature, sampleTick, basisTerms, minimumQuality);
         sharedAirRegion = true;
-        sharedAirRegionBlock = regionBlock;
     }
 
     public void setRadiation(double flux) {
@@ -82,9 +83,9 @@ public final class ThermalEnvironmentSample {
         airTemperatureC = source.airTemperatureC;
         radiantFluxWPerM2 = source.radiantFluxWPerM2;
         sharedAirRegion = source.sharedAirRegion;
-        sharedAirRegionBlock = source.sharedAirRegionBlock;
         airSampleTick = source.airSampleTick;
         airBasisTerms = source.airBasisTerms;
+        airMinimumQuality = source.airMinimumQuality;
     }
 
 }

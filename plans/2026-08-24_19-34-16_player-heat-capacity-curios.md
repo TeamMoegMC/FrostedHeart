@@ -5,7 +5,7 @@
 - Authors: `Codex; OpenAI; coding agent`
 - Status: `completed`
 - Scope: `Frosted Heart 玩家五部位体温、可穿戴热库、Curios 自定义槽位、新物品与配套整合包进度`
-- Related: [`docs/climate/README.md`](../docs/climate/README.md), [`docs/climate/player-temperature.md`](../docs/climate/player-temperature.md), [`docs/climate/data-lifecycle-and-integration.md`](../docs/climate/data-lifecycle-and-integration.md), [`暖石任务 AI 上下文与公用交接`](../discussion/2026-08-26_23-21-11_warm-stone-ai-context-handoff.md), [`2026-08-22_16-47-30_probe-compiled-sparse-conservative-thermal-graph.md`](2026-08-22_16-47-30_probe-compiled-sparse-conservative-thermal-graph.md), `TemperatureUpdate`, `PlayerTemperatureData`, `CuriosCompat`, `SlotTypeMessage.Builder`
+- Related: [`docs/climate/README.md`](../docs/climate/README.md), [`docs/climate/player-temperature.md`](../docs/climate/player-temperature.md), [`docs/climate/data-lifecycle-and-integration.md`](../docs/climate/data-lifecycle-and-integration.md), [`暖石任务 AI 上下文与公用交接`](../discussion/2026-08-26_23-21-11_warm-stone-ai-context-handoff.md), [`2026-08-22_16-47-30_probe-compiled-sparse-conservative-thermal-graph.md`](../diary/2026-10-29_23-38-00_thermal-development-history.md), `TemperatureUpdate`, `PlayerTemperatureData`, `CuriosCompat`, `SlotTypeMessage.Builder`
 
 > 本计划已完成；当前行为以源码、生成数据、配套整合包内容和 `docs/climate/` living docs 为准。本文保留实施决策、阶段结果和验收记录。
 

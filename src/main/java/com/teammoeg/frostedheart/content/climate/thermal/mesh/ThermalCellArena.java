@@ -20,20 +20,23 @@
 package com.teammoeg.frostedheart.content.climate.thermal.mesh;
 
 import java.util.Arrays;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 
 /**
  * Primitive structure-of-arrays storage for Air cells and whole-block material cells.
  *
  * <p>The arena is owned by one logical thermal writer. Page compilation uses
  * {@link ArenaSpan} allocations to install fixed 4x4x4 Brick fragments while
- * enthalpy and capacity remain authoritative here.</p>
+ * staged initialization and explicit material controls live here. Installed regional
+ * material values belong to their accepted regional snapshot.</p>
  */
-public final class ThermalCellArena {
+public final class ThermalCellArena implements MaterialStateAccess {
     private static final int NO_SLOT = -1;
 
     private static final byte FREE = 0;
     private static final byte LIVE = 1;
     private static final byte RESERVED = 2;
+    private static final byte GEOMETRY_RETAINED = 3;
     private static final byte REGULAR_CELL = 0;
     private static final byte MIXED_COMPONENT = 1;
     private static final byte MATERIAL_CELL = 2;
@@ -43,6 +46,8 @@ public final class ThermalCellArena {
     private double[] inverseCapacityKPerJ;
     private MaterialThermalLaw[] materialLaws;
     private int[] materialProfileIds;
+    private long[] materialIncarnations;
+    private long nextMaterialIncarnation;
     private byte[] materialBranches;
     private long[] pendingMaterialLayouts;
     private int[] pageSlots;
@@ -54,15 +59,31 @@ public final class ThermalCellArena {
     private byte[] cellKinds;
     private BlockBrickLayout[] mixedBrickGeometries;
     private byte[] allocationState;
+    private com.teammoeg.frostedheart.content.climate.thermal.runtime.InstallToken[] activations, retirements;
     private long[] liveSlots;
     private long[] liveWordSummary;
     private final ThermalFreeSpanIndex freeSpans = new ThermalFreeSpanIndex();
     private final ThermalPhaseRequestStore phases;
+    private Int2ObjectOpenHashMap<GeometryPin> geometryPins;
 
     private int highWaterMark;
     private int allocationHighWaterMark;
     private int liveCellCount;
     private double externalMaterialEnergyJ;
+    private com.teammoeg.frostedheart.content.climate.thermal.runtime.ThermalMemoryBudget.Reservation storage;
+
+    public void storageOwner(com.teammoeg.frostedheart.content.climate.thermal.runtime.ThermalMemoryBudget.Reservation owner) {
+        storage = owner;
+    }
+
+    private static long columnBytes(int capacity) {
+        long bytes = 9 * AirBackingMeter.arrayPayloadBytes(capacity, 8)
+                + 7 * AirBackingMeter.arrayPayloadBytes(capacity, 4)
+                + 4 * AirBackingMeter.arrayPayloadBytes(capacity, 1);
+        int words = (capacity + 63) >>> 6;
+        return bytes + 2 * AirBackingMeter.arrayPayloadBytes(words, 8)
+                + AirBackingMeter.arrayPayloadBytes((words + 63) >>> 6, 8);
+    }
 
     public double externalMaterialEnergyJ() {
         return externalMaterialEnergyJ;
@@ -81,6 +102,7 @@ public final class ThermalCellArena {
         inverseCapacityKPerJ = new double[initialCapacity];
         materialLaws = new MaterialThermalLaw[initialCapacity];
         materialProfileIds = new int[initialCapacity];
+        materialIncarnations = new long[initialCapacity];
         materialBranches = new byte[initialCapacity];
         pendingMaterialLayouts = new long[(initialCapacity + 63) >>> 6];
         pageSlots = new int[initialCapacity];
@@ -93,6 +115,8 @@ public final class ThermalCellArena {
         mixedBrickGeometries = new BlockBrickLayout[initialCapacity];
         phases = new ThermalPhaseRequestStore(initialCapacity);
         allocationState = new byte[initialCapacity];
+        activations = new com.teammoeg.frostedheart.content.climate.thermal.runtime.InstallToken[initialCapacity];
+        retirements = new com.teammoeg.frostedheart.content.climate.thermal.runtime.InstallToken[initialCapacity];
         liveSlots = new long[(initialCapacity + 63) >>> 6];
         liveWordSummary = new long[(liveSlots.length + 63) >>> 6];
         Arrays.fill(pageSlots, NO_SLOT);
@@ -112,8 +136,28 @@ public final class ThermalCellArena {
         return allocationHighWaterMark;
     }
 
+    /** Uses allocated capacity, including recycled addresses and pinned geometry. */
+    public void recordBacking(AirBackingMeter meter) {
+        meter.array(enthalpyJ); meter.array(capacityJPerK); meter.array(inverseCapacityKPerJ);
+        meter.array(materialLaws); meter.array(materialProfileIds); meter.array(materialIncarnations); meter.array(materialBranches);
+        meter.array(pendingMaterialLayouts); meter.array(pageSlots); meter.array(lifecycleGenerations);
+        meter.array(supportRefs); meter.array(minimumX); meter.array(minimumY); meter.array(minimumZ);
+        meter.array(cellKinds); meter.array(mixedBrickGeometries); meter.array(allocationState);
+        meter.array(activations); meter.array(retirements);
+        meter.array(liveSlots); meter.array(liveWordSummary); phases.recordBacking(meter); freeSpans.recordBacking(meter);
+        for (var geometry : mixedBrickGeometries) if (geometry != null) geometry.recordBacking(meter);
+        if (geometryPins != null) {
+            meter.container(geometryPins, geometryPins.size(), 16);
+            for (var pin : geometryPins.values()) {
+                meter.objectOnce(pin, 48); meter.objectOnce(pin.span, 24); meter.bytes(32L * pin.readers);
+            }
+        }
+    }
+
     public boolean isLive(int slot) {
-        return slot >= 0 && slot < highWaterMark && allocationState[slot] == LIVE;
+        if (slot < 0 || slot >= highWaterMark) return false;
+        var birth = activations[slot]; var end = retirements[slot];
+        return (allocationState[slot] == LIVE || birth != null && birth.committed()) && (end == null || !end.committed());
     }
 
     public boolean isStagedCell(int slot) {
@@ -122,6 +166,11 @@ public final class ThermalCellArena {
 
     /** Returns the next live slot at or after {@code fromInclusive}, or -1. */
     public int nextLiveSlot(int fromInclusive) {
+        int next = nextPotentialLiveSlot(fromInclusive);
+        while (next >= 0 && !isLive(next)) next = nextPotentialLiveSlot(next + 1);
+        return next;
+    }
+    private int nextPotentialLiveSlot(int fromInclusive) {
         int start = Math.max(0, fromInclusive);
         if (start >= highWaterMark) {
             return NO_SLOT;
@@ -254,12 +303,33 @@ public final class ThermalCellArena {
         int nextLiveCellCount = Math.addExact(liveCellCount, span.count());
         int nextHighWaterMark = Math.max(highWaterMark, span.endSlotExclusive());
         for (int slot = span.firstSlot(); slot < span.endSlotExclusive(); slot++) {
-            allocationState[slot] = LIVE;
+            allocationState[slot] = LIVE; activations[slot] = null;
             liveSlots[slot >>> 6] |= 1L << slot;
         }
         setLiveWordSummary(span.firstSlot(), span.endSlotExclusive());
         highWaterMark = nextHighWaterMark;
         liveCellCount = nextLiveCellCount;
+    }
+
+    /** A Brick has at most its admitted local cells; visibility changes with the shared token. */
+    public void stageVisibility(ArenaSpan span, com.teammoeg.frostedheart.content.climate.thermal.runtime.InstallToken token, boolean activation) {
+        for (int slot = span.firstSlot(); slot < span.endSlotExclusive(); slot++) {
+            if (activation) { activations[slot] = token; liveSlots[slot >>> 6] |= 1L << slot; }
+            else retirements[slot] = token;
+        }
+        if (activation) {
+            highWaterMark = Math.max(highWaterMark, span.endSlotExclusive());
+            setLiveWordSummary(span.firstSlot(), span.endSlotExclusive());
+        }
+    }
+    public void finishVisibility(ArenaSpan span, com.teammoeg.frostedheart.content.climate.thermal.runtime.InstallToken token, boolean activation) {
+        if (activation && token.committed()) { commitStagedCells(span); return; }
+        for (int slot = span.firstSlot(); slot < span.endSlotExclusive(); slot++) {
+            if (activation && activations[slot] == token) {
+                activations[slot] = null; liveSlots[slot >>> 6] &= ~(1L << slot);
+            } else if (!activation && retirements[slot] == token) retirements[slot] = null;
+        }
+        if (activation) { clearEmptyLiveWordSummary(span.firstSlot(), span.endSlotExclusive()); recomputeHighWaterMark(); }
     }
 
     public void discardStagedCells(ArenaSpan span) {
@@ -269,6 +339,7 @@ public final class ThermalCellArena {
         if (!ownsStagedCells(span)) {
             throw new IllegalStateException("Brick staging span is not reserved");
         }
+        if (deferGeometryRelease(span, false)) return;
         clearRange(span.firstSlot(), span.endSlotExclusive());
         addFreeSpan(span.firstSlot(), span.count());
     }
@@ -289,14 +360,20 @@ public final class ThermalCellArena {
         return capacityJPerK[slot];
     }
 
-    public double inverseCapacityKPerJ(int slot) {
-        requireAllocatedSlot(slot);
-        return inverseCapacityKPerJ[slot];
-    }
-
     public double temperatureC(int slot, double referenceTemperatureC) {
         requireFinite("referenceTemperatureC", referenceTemperatureC);
         requireLiveSlot(slot);
+        return temperatureForAllocatedSlot(slot, referenceTemperatureC);
+    }
+
+    /** Candidate projection can read staged cells without publishing them as live. */
+    public double allocatedTemperatureC(int slot, double referenceTemperatureC) {
+        requireFinite("referenceTemperatureC", referenceTemperatureC);
+        requireAllocatedSlot(slot);
+        return temperatureForAllocatedSlot(slot, referenceTemperatureC);
+    }
+
+    private double temperatureForAllocatedSlot(int slot, double referenceTemperatureC) {
         if (materialLaws[slot] != null) {
             return materialLaws[slot].temperatureC(enthalpyJ[slot], materialBranches[slot]);
         }
@@ -309,6 +386,8 @@ public final class ThermalCellArena {
         requireReservedSlot(slot);
         materialLaws[slot] = law;
         materialProfileIds[slot] = profileId;
+        materialIncarnations[slot] = Math.incrementExact(nextMaterialIncarnation);
+        nextMaterialIncarnation = materialIncarnations[slot];
         materialBranches[slot] = MaterialThermalLaw.SENSIBLE;
         capacityJPerK[slot] = law.capacityJPerK();
         inverseCapacityKPerJ[slot] = 1 / law.capacityJPerK();
@@ -330,9 +409,28 @@ public final class ThermalCellArena {
         return materialProfileIds[slot];
     }
 
-    public byte materialBranch(int slot) {
+    /** Object identity survives address migration, but never removal followed by replacement. */
+    public long materialIncarnation(int slot) {
         requireAllocatedSlot(slot);
-        return materialBranches[slot];
+        return materialIncarnations[slot];
+    }
+
+    public void inheritMaterialIncarnation(int oldSlot, int newSlot) {
+        requireAllocatedSlot(oldSlot);
+        requireReservedSlot(newSlot);
+        materialIncarnations[newSlot] = materialIncarnations[oldSlot];
+    }
+
+    @Override
+    public void readMaterial(int slot, MaterialSample target) {
+        requireAllocatedSlot(slot);
+        target.setLive(enthalpyJ[slot], materialLaws[slot], materialBranches[slot], -1,
+                hasMaterialTransition(slot) ? phaseRequestSequence(slot) : 0);
+    }
+
+    @Override
+    public void applyMaterialControl(int slot, double energyJ, byte branch) {
+        commitMaterialState(slot, energyJ, branch);
     }
 
     public void stageMaterialState(int slot, double energyJ, byte branch) {
@@ -346,12 +444,6 @@ public final class ThermalCellArena {
         requireFinite("material enthalpy", energyJ);
         enthalpyJ[slot] = energyJ;
         materialBranches[slot] = branch;
-    }
-
-    public boolean needsMaterialSegments(int slot) {
-        MaterialThermalLaw law = materialLaws[slot];
-        return law != null
-                && (law.offsetJ() != 0 || law.heating() != null || law.cooling() != null);
     }
 
     public boolean materialTransitionWaiting(int slot) {
@@ -375,82 +467,6 @@ public final class ThermalCellArena {
     public boolean hasMaterialTransition(int slot) {
         MaterialThermalLaw law = materialLaws[slot];
         return law != null && (law.heating() != null || law.cooling() != null);
-    }
-
-    public boolean forceMaterialTransition(int slot, byte branch) {
-        MaterialThermalLaw law = materialLaws[slot];
-        var edge = law == null ? null : law.transition(branch);
-        if (edge == null) return false;
-        if (phases.requestOutstanding(slot) && materialBranches[slot] != branch) {
-            phases.completeMaterialRequest(slot, phases.requestSequence(slot), false);
-        }
-        double next =
-                edge.heating()
-                        ? Math.max(enthalpyJ[slot], edge.targetEnthalpyJ())
-                        : Math.min(enthalpyJ[slot], edge.targetEnthalpyJ());
-        externalMaterialEnergyJ += next - enthalpyJ[slot];
-        enthalpyJ[slot] = next;
-        materialBranches[slot] = branch;
-        return true;
-    }
-
-    public MaterialThermalLaw.Transition materialTransition(int slot) {
-        MaterialThermalLaw law = materialLaws[slot];
-        return law == null ? null : law.transition(materialBranches[slot]);
-    }
-
-    /** Chooses the local branch, then returns the energy distance to its boundary. */
-    public double materialEnergyLimitJ(int slot, double direction) {
-        MaterialThermalLaw law = materialLaws[slot];
-        if (law == null) return Double.POSITIVE_INFINITY;
-        if (materialTransitionWaiting(slot)) return 0;
-        double energy = enthalpyJ[slot];
-        byte branch = law.selectBranch(energy, materialBranches[slot], direction);
-        materialBranches[slot] = branch;
-        return law.energyLimitJ(energy, branch, direction);
-    }
-
-    public double energyTemperatureSlope(int slot) {
-        MaterialThermalLaw law = materialLaws[slot];
-        return law == null
-                ? inverseCapacityKPerJ[slot]
-                : law.slopeKPerJ(enthalpyJ[slot], materialBranches[slot]);
-    }
-
-    /** Returns actual source energy accepted; an ACK boundary owns no heat debt. */
-    public double acceptExternalEnergyJ(int slot, double requestedJ) {
-        requireLiveSlot(slot);
-        requireFinite("external energy", requestedJ);
-        if (materialLayoutPending(slot)) return 0;
-        if (requestedJ == 0) return 0;
-        if (materialLaws[slot] == null) {
-            addEnthalpyJ(slot, requestedJ);
-            return requestedJ;
-        }
-        double remaining = Math.abs(requestedJ);
-        double direction = Math.signum(requestedJ);
-        // One state's sensible segment and one latent interval end at an ACK.
-        for (int segment = 0; segment < 3 && remaining > 0; segment++) {
-            double accepted = Math.min(remaining, materialEnergyLimitJ(slot, direction));
-            if (accepted == 0) break;
-            addEnthalpyJ(slot, direction * accepted);
-            remaining -= accepted;
-        }
-        return direction * (Math.abs(requestedJ) - remaining);
-    }
-
-    public void setEnthalpyJ(int slot, double value) {
-        requireFinite("enthalpyJ", value);
-        requireLiveSlot(slot);
-        enthalpyJ[slot] = value;
-    }
-
-    public void addEnthalpyJ(int slot, double deltaJ) {
-        requireFinite("deltaJ", deltaJ);
-        requireLiveSlot(slot);
-        double result = enthalpyJ[slot] + deltaJ;
-        requireFinite("updated enthalpy", result);
-        enthalpyJ[slot] = result;
     }
 
     public int lifecycleGeneration(int slot) {
@@ -477,24 +493,6 @@ public final class ThermalCellArena {
         if (cellKinds[slot] != MIXED_COMPONENT) return 0L;
         int support = supportRefs[slot];
         return mixedGeometry(support).nodeBlockMask(slot - support);
-    }
-
-    /** Adds energy only when the source binding still names this exact cell incarnation. */
-    public double addNodeEnthalpyJ(long nodeId, int lifecycleGeneration, double deltaJ) {
-        int slot = requireNodeTarget(nodeId, lifecycleGeneration);
-        return acceptExternalEnergyJ(slot, deltaJ);
-    }
-
-    private int requireNodeTarget(long nodeId, int lifecycleGeneration) {
-        if (nodeId < 0L || nodeId > Integer.MAX_VALUE) {
-            throw new IllegalStateException("thermal node ID is not an arena slot: " + nodeId);
-        }
-        int slot = (int) nodeId;
-        requireLiveSlot(slot);
-        if (lifecycleGenerations[slot] != lifecycleGeneration) {
-            throw new IllegalStateException("stale thermal node generation for slot " + slot);
-        }
-        return slot;
     }
 
     public int minimum(int slot, int axis) {
@@ -616,6 +614,81 @@ public final class ThermalCellArena {
         return ownsSpan(span, LIVE, expectedPageSlot, expectedLifecycleGeneration, true);
     }
 
+    /**
+     * Coordinator-owned lease of a complete Brick span, including its mixed-Air support.
+     * This pins existing arena addresses; it does not copy cell columns. The arena's
+     * storage owner keeps charging their full allocated capacity until shutdown,
+     * including retired pinned spans, and prepays any replacement arrays on growth.
+     */
+    public GeometryReadLease retainGeometry(int pageSlot, int generation, ArenaSpan span) {
+        if (span.count() == 0) throw new IllegalArgumentException("geometry span is empty");
+        GeometryPin pin = geometryPins == null ? null : geometryPins.get(span.firstSlot());
+        if (pin == null) {
+            if (!ownsSpan(span, LIVE, pageSlot, generation, true)
+                    && !ownsSpan(span, RESERVED, pageSlot, generation, true))
+                throw new IllegalArgumentException("geometry reader does not own the Brick span");
+            if (geometryPins == null) geometryPins = new Int2ObjectOpenHashMap<>();
+            pin = new GeometryPin(pageSlot, generation, span);
+            geometryPins.put(span.firstSlot(), pin);
+        } else if (pin.pageSlot != pageSlot || pin.generation != generation || !pin.span.equals(span)) {
+            throw new IllegalArgumentException("geometry readers name different Brick spans");
+        }
+        pin.readers++;
+        return new GeometryReadLease(pin);
+    }
+
+    /** Retired read-only geometry is never a live source/phase target. */
+    public boolean isRetainedGeometryCell(int slot) {
+        return slot >= 0 && slot < allocationHighWaterMark && allocationState[slot] == GEOMETRY_RETAINED;
+    }
+
+    private boolean deferGeometryRelease(ArenaSpan span, boolean live) {
+        GeometryPin pin = geometryPins == null ? null : geometryPins.get(span.firstSlot());
+        if (pin == null) return false;
+        if (!pin.span.equals(span)) throw new IllegalArgumentException("geometry release changes the Brick span");
+        pin.retired = true;
+        Arrays.fill(allocationState, span.firstSlot(), span.endSlotExclusive(), GEOMETRY_RETAINED);
+        if (live) {
+            for (int slot = span.firstSlot(); slot < span.endSlotExclusive(); slot++)
+                liveSlots[slot >>> 6] &= ~(1L << slot);
+            clearEmptyLiveWordSummary(span.firstSlot(), span.endSlotExclusive());
+            liveCellCount -= span.count();
+            recomputeHighWaterMark();
+        }
+        return true;
+    }
+
+    private static final class GeometryPin {
+        final int pageSlot, generation;
+        final ArenaSpan span;
+        int readers;
+        boolean retired;
+        GeometryPin(int pageSlot, int generation, ArenaSpan span) {
+            this.pageSlot = pageSlot; this.generation = generation; this.span = span;
+        }
+    }
+
+    /** Release on the same logical writer after every helper using this input has finished. */
+    public final class GeometryReadLease implements AutoCloseable {
+        private GeometryPin pin;
+        private GeometryReadLease(GeometryPin pin) { this.pin = pin; }
+        public boolean containsCell(int slot) {
+            return pin != null && slot >= pin.span.firstSlot() && slot < pin.span.endSlotExclusive();
+        }
+        @Override public void close() {
+            GeometryPin held = pin;
+            if (held == null) return;
+            pin = null;
+            if (--held.readers != 0) return;
+            geometryPins.remove(held.span.firstSlot());
+            if (geometryPins.isEmpty()) geometryPins = null;
+            if (held.retired) {
+                clearRange(held.span.firstSlot(), held.span.endSlotExclusive());
+                addFreeSpan(held.span.firstSlot(), held.span.count());
+            }
+        }
+    }
+
     private int findFreeSpan(int count) {
         long fit = freeSpans.takeBestFit(count);
         if (fit == ThermalFreeSpanIndex.NO_SPAN) {
@@ -654,11 +727,13 @@ public final class ThermalCellArena {
         if (grown < requiredCapacity) {
             throw new IllegalStateException("thermal cell arena exceeded int address space");
         }
+        if (storage != null) storage.beforeAllocation(columnBytes(grown));
         enthalpyJ = Arrays.copyOf(enthalpyJ, grown);
         capacityJPerK = Arrays.copyOf(capacityJPerK, grown);
         inverseCapacityKPerJ = Arrays.copyOf(inverseCapacityKPerJ, grown);
         materialLaws = Arrays.copyOf(materialLaws, grown);
         materialProfileIds = Arrays.copyOf(materialProfileIds, grown);
+        materialIncarnations = Arrays.copyOf(materialIncarnations, grown);
         materialBranches = Arrays.copyOf(materialBranches, grown);
         pendingMaterialLayouts = Arrays.copyOf(pendingMaterialLayouts, (grown + 63) >>> 6);
         pageSlots = Arrays.copyOf(pageSlots, grown);
@@ -671,13 +746,16 @@ public final class ThermalCellArena {
         mixedBrickGeometries = Arrays.copyOf(mixedBrickGeometries, grown);
         phases.ensureCapacity(grown);
         allocationState = Arrays.copyOf(allocationState, grown);
+        activations = Arrays.copyOf(activations, grown); retirements = Arrays.copyOf(retirements, grown);
         liveSlots = Arrays.copyOf(liveSlots, (grown + 63) >>> 6);
         liveWordSummary = Arrays.copyOf(liveWordSummary, (liveSlots.length + 63) >>> 6);
         Arrays.fill(pageSlots, oldCapacity, grown, NO_SLOT);
         Arrays.fill(supportRefs, oldCapacity, grown, NO_SLOT);
+        if (storage != null) storage.afterReplacement(columnBytes(oldCapacity));
     }
 
     private void releaseSpan(ArenaSpan span) {
+        if (deferGeometryRelease(span, true)) return;
         for (int slot = span.firstSlot(); slot < span.endSlotExclusive(); slot++) {
             liveSlots[slot >>> 6] &= ~(1L << slot);
         }
@@ -785,12 +863,13 @@ public final class ThermalCellArena {
     private void clearRange(int firstSlot, int endSlotExclusive) {
         int end = Math.min(endSlotExclusive, allocationState.length);
         for (int slot = firstSlot; slot < end; slot++) {
-            allocationState[slot] = FREE;
+            allocationState[slot] = FREE; activations[slot] = retirements[slot] = null;
             enthalpyJ[slot] = 0.0D;
             capacityJPerK[slot] = 0.0D;
             inverseCapacityKPerJ[slot] = 0.0D;
             materialLaws[slot] = null;
             materialProfileIds[slot] = 0;
+            materialIncarnations[slot] = 0;
             materialBranches[slot] = MaterialThermalLaw.SENSIBLE;
             pendingMaterialLayouts[slot >>> 6] &= ~(1L << slot);
             pageSlots[slot] = NO_SLOT;

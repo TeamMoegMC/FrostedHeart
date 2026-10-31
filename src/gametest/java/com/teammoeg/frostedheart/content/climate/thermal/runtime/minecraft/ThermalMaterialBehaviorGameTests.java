@@ -37,6 +37,7 @@ import com.teammoeg.frostedheart.content.climate.thermal.profile.minecraft.Minec
 import com.teammoeg.frostedheart.content.climate.thermal.query.QueryPublication;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.ThermalMemoryBudget;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.engine.ThermalDimensionEngine;
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialStateAccess;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.engine.ThermalDimensionLimits;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ResolvedGeometryBatch;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ThermalCompletion;
@@ -44,7 +45,6 @@ import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.messa
 import com.teammoeg.frostedheart.content.climate.thermal.solver.BuoyancyConductance;
 import com.teammoeg.frostedheart.content.climate.thermal.solver.PhaseTransitionRuntime;
 import com.teammoeg.frostedheart.content.climate.thermal.solver.ThermalSolver;
-import com.teammoeg.frostedheart.content.climate.thermal.source.ThermalSourceBatch;
 import com.teammoeg.frostedheart.content.climate.thermal.topology.FarFieldSettings;
 import com.teammoeg.frostedheart.content.climate.thermal.topology.ThermalTopologyParameters;
 
@@ -60,48 +60,9 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.gametest.GameTestHolder;
 import net.minecraftforge.gametest.PrefixGameTestTemplate;
 
-@GameTestHolder(FHMain.MODID)
+@GameTestHolder("frostedheart_material_runtime")
 @PrefixGameTestTemplate(false)
 public final class ThermalMaterialBehaviorGameTests {
-    @GameTest(template = "phase0a_empty", batch = "thermal_body_two_layers", timeoutTicks = 160)
-    public static void materialHeatingStopsAtThirdLayerInEveryDirection(GameTestHelper helper) {
-        ServerLevel level = helper.getLevel();
-        MinecraftThermalInput.closeActiveLevel(level);
-        for (boolean crossPage : new boolean[]{false, true}) for (int axis = 0; axis < 3; axis++) for (int sign : new int[]{1, -1}) {
-            BlockPos origin = origin(helper);
-            if (crossPage) origin = new BlockPos(axis == 0 ? (origin.getX() & ~15) + 12 : origin.getX(),
-                    axis == 1 ? (origin.getY() & ~15) + 12 : origin.getY(),
-                    axis == 2 ? (origin.getZ() & ~15) + 12 : origin.getZ());
-            int sizeX = crossPage && axis == 0 ? 8 : 4;
-            int sizeY = crossPage && axis == 1 ? 8 : 4;
-            int sizeZ = crossPage && axis == 2 ? 8 : 4;
-            int airCoordinate = sign > 0 ? (crossPage ? 2 : 0) : (crossPage ? 5 : 3);
-            fill(level, origin, sizeX, sizeY, sizeZ, Blocks.STONE.defaultBlockState());
-            for (int first = 0; first < 4; first++) for (int second = 0; second < 4; second++) {
-                level.setBlockAndUpdate(axisPosition(origin, axis, airCoordinate, first, second), Blocks.AIR.defaultBlockState());
-            }
-            try (Simulation simulation = new Simulation(helper, origin, sizeX, sizeY, sizeZ, 0)) {
-                BlockPos air = axisPosition(origin, axis, airCoordinate, 1, 1);
-                BlockPos surface = axisPosition(origin, axis, airCoordinate + sign, 1, 1);
-                BlockPos inner = axisPosition(origin, axis, airCoordinate + 2 * sign, 1, 1);
-                BlockPos deep = axisPosition(origin, axis, airCoordinate + 3 * sign, 1, 1);
-                int airSlot = simulation.slot(air), firstSlot = simulation.slot(surface), secondSlot = simulation.slot(inner), thirdSlot = simulation.slot(deep);
-                simulation.arena.addEnthalpyJ(airSlot, simulation.arena.capacityJPerK(airSlot) * 100);
-                double initialEnergy = simulation.totalEnergy();
-                for (int step = 0; step < 30; step++) simulation.advance();
-                helper.assertTrue(simulation.arena.enthalpyJ(firstSlot) > 0, "surface must receive heat in direction " + axis + "/" + sign);
-                helper.assertTrue(simulation.arena.enthalpyJ(secondSlot) > 0, "second material layer must receive heat");
-                near(helper, 0, simulation.arena.enthalpyJ(thirdSlot), "already-resident third layer must remain disconnected");
-                near(helper, initialEnergy, simulation.totalEnergy(), "internal two-layer exchange conserves energy");
-                double before = simulation.arena.enthalpyJ(firstSlot);
-                simulation.arena.setEnthalpyJ(airSlot, -simulation.arena.capacityJPerK(airSlot) * 100);
-                simulation.advance();
-                helper.assertTrue(simulation.arena.enthalpyJ(firstSlot) < before, "heat must reverse when air becomes colder");
-            }
-        }
-        helper.succeed();
-    }
-
     @GameTest(template = "phase0a_empty", batch = "thermal_body_phase_energy", timeoutTicks = 160)
     public static void coldIceUsesOneEnergyThroughPlateauAckAndWaterHeating(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
@@ -114,18 +75,18 @@ public final class ThermalMaterialBehaviorGameTests {
             int slot = simulation.slot(ice);
             MaterialThermalLaw law = simulation.arena.materialLaw(slot);
             helper.assertTrue(law != null && law.heating() != null, "real ice must have sensible capacity and a physical melting edge");
-            near(helper, -10, simulation.arena.temperatureC(slot, 0), "cold ice is not already at its melting threshold");
+            near(helper, -10, simulation.temperatureC(slot, 0), "cold ice is not already at its melting threshold");
             var edge = law.heating();
-            double warmToThreshold = edge.sourceEnthalpyJ() - simulation.arena.enthalpyJ(slot);
+            double warmToThreshold = edge.sourceEnthalpyJ() - simulation.enthalpyJ(slot);
             double latent = edge.targetEnthalpyJ() - edge.sourceEnthalpyJ();
-            simulation.arena.acceptExternalEnergyJ(slot, warmToThreshold / 2);
-            near(helper, (-10 + edge.transitionTemperatureC()) / 2, simulation.arena.temperatureC(slot, 0), "sensible heating precedes melting");
-            simulation.arena.acceptExternalEnergyJ(slot, warmToThreshold / 2 + latent / 2);
-            near(helper, edge.transitionTemperatureC(), simulation.arena.temperatureC(slot, 0), "latent heat holds the plateau");
-            near(helper, .5, edge.progress(simulation.arena.enthalpyJ(slot)), "half of latent heat means half progress");
-            simulation.arena.acceptExternalEnergyJ(slot, -latent / 4);
-            near(helper, .25, edge.progress(simulation.arena.enthalpyJ(slot)), "cooling returns latent energy on the same branch");
-            double accepted = simulation.arena.acceptExternalEnergyJ(slot, latent);
+            simulation.acceptEnergyJ(slot, warmToThreshold / 2);
+            near(helper, (-10 + edge.transitionTemperatureC()) / 2, simulation.temperatureC(slot, 0), "sensible heating precedes melting");
+            simulation.acceptEnergyJ(slot, warmToThreshold / 2 + latent / 2);
+            near(helper, edge.transitionTemperatureC(), simulation.temperatureC(slot, 0), "latent heat holds the plateau");
+            near(helper, .5, edge.progress(simulation.enthalpyJ(slot)), "half of latent heat means half progress");
+            simulation.acceptEnergyJ(slot, -latent / 4);
+            near(helper, .25, edge.progress(simulation.enthalpyJ(slot)), "cooling returns latent energy on the same branch");
+            double accepted = simulation.acceptEnergyJ(slot, latent);
             near(helper, latent * .75, accepted, "incoming excess is not hidden past the ACK boundary");
             var ready = simulation.publish(ResolvedGeometryBatch.EMPTY, ThermalInputBatch.NO_PHASE_ACKS);
             helper.assertTrue(ready.phaseRequests().length == 1, "one block owns one transition request");
@@ -137,11 +98,11 @@ public final class ThermalMaterialBehaviorGameTests {
             simulation.publish(geometry, new ThermalInputBatch.PhaseAck[]{new ThermalInputBatch.PhaseAck(request, PhaseTransitionRuntime.AckOutcome.APPLIED)});
             slot = simulation.slot(ice);
             near(helper, before, simulation.totalEnergy(), "successful ACK does not subtract latent energy again");
-            near(helper, edge.transitionTemperatureC(), simulation.arena.temperatureC(slot, 0), "next ice stage begins at the completed transition temperature");
+            near(helper, edge.transitionTemperatureC(), simulation.temperatureC(slot, 0), "next ice stage begins at the completed transition temperature");
             for (int stage = 0; stage < 6 && !level.getBlockState(ice).is(Blocks.WATER); stage++) {
                 var nextEdge = simulation.arena.materialLaw(slot).heating();
                 helper.assertTrue(nextEdge != null, "configured ice stages must reach water");
-                simulation.arena.acceptExternalEnergyJ(slot, nextEdge.targetEnthalpyJ() - simulation.arena.enthalpyJ(slot));
+                simulation.acceptEnergyJ(slot, nextEdge.targetEnthalpyJ() - simulation.enthalpyJ(slot));
                 var nextCut = simulation.publish(ResolvedGeometryBatch.EMPTY, ThermalInputBatch.NO_PHASE_ACKS);
                 helper.assertTrue(nextCut.phaseRequests().length == 1, "one request per completed ice stage");
                 var nextRequest = nextCut.phaseRequests()[0];
@@ -153,40 +114,8 @@ public final class ThermalMaterialBehaviorGameTests {
                 slot = simulation.slot(ice);
             }
             helper.assertTrue(level.getBlockState(ice).is(Blocks.WATER), "configured ice chain reaches water");
-            simulation.arena.acceptExternalEnergyJ(slot, simulation.arena.capacityJPerK(slot) * 5);
-            near(helper, edge.transitionTemperatureC() + 5, simulation.arena.temperatureC(slot, 0), "target material heats after conversion");
-        }
-        helper.succeed();
-    }
-
-    @GameTest(template = "phase0a_empty", batch = "thermal_body_routes", timeoutTicks = 160)
-    public static void sharedAirCrossesStairsWithoutGapNodesAndStopsAtClosedWall(GameTestHelper helper) {
-        ServerLevel level = helper.getLevel();
-        MinecraftThermalInput.closeActiveLevel(level);
-        BlockPos start = origin(helper);
-        BlockPos origin = new BlockPos((start.getX() & ~15) + 12, start.getY(), start.getZ());
-        fill(level, origin, 8, 4, 4, Blocks.STONE.defaultBlockState());
-        for (int x = 0; x < 8; x++) level.setBlockAndUpdate(origin.offset(x, 1, 1),
-                x == 0 || x == 7 ? Blocks.AIR.defaultBlockState() : Blocks.OAK_STAIRS.defaultBlockState());
-        try (Simulation simulation = new Simulation(helper, origin, 8, 4, 4, 0)) {
-            int first = simulation.slot(origin.offset(0, 1, 1)), second = simulation.slot(origin.offset(7, 1, 1));
-            int airCount = 0;
-            for (int slot = simulation.arena.nextLiveSlot(0); slot >= 0; slot = simulation.arena.nextLiveSlot(slot + 1)) {
-                if (simulation.arena.isAirCell(slot)) airCount++;
-            }
-            helper.assertTrue(airCount == 2, "six stairs own no gap-air nodes");
-            near(helper, simulation.profiles.tuning().airMixingWPerBlockK() / 9,
-                    simulation.airConductance(first, second), "six stair passages add series resistance across Pages");
-            double initial = simulation.arena.capacityJPerK(first) * 100;
-            simulation.arena.addEnthalpyJ(first, initial);
-            for (int step = 0; step < 20; step++) simulation.advance();
-            helper.assertTrue(simulation.arena.temperatureC(second, 0) > 0, "far air receives heat through the route");
-            helper.assertTrue(simulation.arena.temperatureC(simulation.slot(origin.offset(2, 1, 1)), 0) > 0, "stair body exchanges with shared air");
-            near(helper, initial, simulation.totalEnergy(), "routed air and material exchange conserve total energy");
-            simulation.publish(simulation.change(origin.offset(3, 1, 1), Blocks.STONE.defaultBlockState(),
-                    ResolvedGeometryBatch.MaterialChanges.REPLACE), ThermalInputBatch.NO_PHASE_ACKS);
-            near(helper, 0, simulation.airConductance(simulation.slot(origin.offset(0, 1, 1)), simulation.slot(origin.offset(7, 1, 1))),
-                    "a V0 wall removes the old indirect air connection");
+            simulation.acceptEnergyJ(slot, simulation.arena.capacityJPerK(slot) * 5);
+            near(helper, edge.transitionTemperatureC() + 5, simulation.temperatureC(slot, 0), "target material heats after conversion");
         }
         helper.succeed();
     }
@@ -199,7 +128,7 @@ public final class ThermalMaterialBehaviorGameTests {
         fill(level, origin, 4, 4, 4, Blocks.STONE.defaultBlockState());
         try (Simulation simulation = new Simulation(helper, origin, 4, 4, 4, 0)) {
             int slot = simulation.slot(material);
-            simulation.arena.addEnthalpyJ(slot, 12_345.125);
+            simulation.acceptEnergyJ(slot, 12_345.125);
             simulation.publish(ResolvedGeometryBatch.EMPTY, ThermalInputBatch.NO_PHASE_ACKS);
             var page = simulation.page(material);
             var capture = MaterialSectionState.capture(page.currentPublication(), simulation.query,
@@ -228,57 +157,6 @@ public final class ThermalMaterialBehaviorGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "phase0a_empty", batch = "thermal_route_budget", timeoutTicks = 400)
-    public static void longAirRouteResumesAndStableCutsDoNoRouting(GameTestHelper helper) {
-        ServerLevel level = helper.getLevel();
-        MinecraftThermalInput.closeActiveLevel(level);
-        BlockPos start = origin(helper);
-        int length = 256;
-        fill(level, start, length, 4, 4, Blocks.STONE.defaultBlockState());
-        for (int x = 0; x < length; x++) level.setBlockAndUpdate(start.offset(x, 1, 1),
-                x == 0 || x == length - 1 ? Blocks.AIR.defaultBlockState() : Blocks.OAK_STAIRS.defaultBlockState());
-        try (Simulation simulation = new Simulation(helper, start, length, 4, 4, 0)) {
-            int first = simulation.slot(start.offset(0, 1, 1));
-            int last = simulation.slot(start.offset(length - 1, 1, 1));
-            near(helper, 0, simulation.airConductance(first, last), "unfinished route must not publish a shortcut");
-            int cuts = 0;
-            while (simulation.airConductance(first, last) == 0 && cuts++ < 12) {
-                simulation.advance();
-                helper.assertTrue(simulation.engine.routeVisitsLastCut() <= 4096, "route work stays within its cut budget");
-            }
-            helper.assertTrue(simulation.airConductance(first, last) > 0, "long route must finish over later cuts");
-            simulation.advance();
-            near(helper, 0, simulation.engine.routeVisitsLastCut(), "stable topology performs no route expansion");
-            FHMain.LOGGER.info("Thermal long-route fixture: blocks={}, nodes={}, continuationCuts={}",
-                    length, simulation.arena.liveCellCount(), cuts);
-        }
-        helper.succeed();
-    }
-
-    @GameTest(template = "phase0a_empty", batch = "thermal_route_refused_wall", timeoutTicks = 160)
-    public static void closedWallDisablesOldRouteEvenWhenReplacementCannotFit(GameTestHelper helper) {
-        ServerLevel level = helper.getLevel();
-        MinecraftThermalInput.closeActiveLevel(level);
-        BlockPos start = origin(helper);
-        fill(level, start, 8, 4, 4, Blocks.STONE.defaultBlockState());
-        for (int x = 0; x < 8; x++) level.setBlockAndUpdate(start.offset(x, 1, 1),
-                x == 0 || x == 7 ? Blocks.AIR.defaultBlockState() : Blocks.OAK_STAIRS.defaultBlockState());
-        try (Simulation simulation = new Simulation(helper, start, 8, 4, 4, 0, 128)) {
-            int first = simulation.slot(start.offset(0, 1, 1)), last = simulation.slot(start.offset(7, 1, 1));
-            helper.assertTrue(simulation.airConductance(first, last) > 0, "fixture begins with a valid passage");
-            var geometry = simulation.change(start.offset(3, 1, 1), Blocks.STONE.defaultBlockState(),
-                    ResolvedGeometryBatch.MaterialChanges.REPLACE);
-            simulation.tick += 20;
-            var result = simulation.engine.process(new ThermalInputBatch(1, ++simulation.sequence, simulation.tick,
-                    ThermalInputBatch.NO_ADMISSIONS, ThermalInputBatch.NO_RETIREMENTS, ThermalInputBatch.NO_RESIDENCY_UPDATES,
-                    geometry, ThermalSourceBatch.EMPTY, ThermalInputBatch.NO_ENVIRONMENT_UPDATES,
-                    ThermalInputBatch.NO_PHASE_ACKS, Double.NaN));
-            helper.assertTrue(result.status() == ThermalCompletion.Status.WORK_LIMITED, "replacement needs a staging span beyond the fixture limit");
-            near(helper, 0, simulation.airConductance(first, last), "old route is disabled even without a replacement commit");
-        }
-        helper.succeed();
-    }
-
     @GameTest(template = "phase0a_empty", batch = "thermal_material_identity", timeoutTicks = 160)
     public static void replacementAndBulkResyncDoNotInheritOldMaterialEnergy(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
@@ -286,7 +164,7 @@ public final class ThermalMaterialBehaviorGameTests {
         BlockPos start = origin(helper), block = start.offset(1, 1, 1);
         fill(level, start, 4, 4, 4, Blocks.STONE.defaultBlockState());
         try (Simulation simulation = new Simulation(helper, start, 4, 4, 4, 0)) {
-            simulation.arena.addEnthalpyJ(simulation.slot(block), 12345);
+            simulation.acceptEnergyJ(simulation.slot(block), 12345);
             int stone = simulation.profiles.states().signatureId(Blocks.STONE.defaultBlockState());
             int air = simulation.profiles.states().signatureId(Blocks.AIR.defaultBlockState());
             var page = simulation.page(block);
@@ -297,14 +175,14 @@ public final class ThermalMaterialBehaviorGameTests {
             changes.addMaterialChange(page, pageBlock(block), stone, air, ResolvedGeometryBatch.MaterialChanges.REPLACE);
             changes.addMaterialChange(page, pageBlock(block), air, stone, ResolvedGeometryBatch.MaterialChanges.REPLACE);
             simulation.publish(changes.buildAndReset(), ThermalInputBatch.NO_PHASE_ACKS);
-            near(helper, 0, simulation.arena.enthalpyJ(simulation.slot(block)), "same-cut A-Air-A means a new body");
+            near(helper, 0, simulation.enthalpyJ(simulation.slot(block)), "same-cut A-Air-A means a new body");
             near(helper, -12345, simulation.arena.externalMaterialEnergyJ(), "removed material energy is recorded once");
-            simulation.arena.addEnthalpyJ(simulation.slot(block), 9876);
+            simulation.acceptEnergyJ(simulation.slot(block), 9876);
             var reset = new ResolvedGeometryBatch.Builder();
             reset.addFullResync(page, page.beginGeometryMutation(), ThermalPageHandle.GeometryResyncReason.SECTION_REPLACED,
                     simulation.capture.captureBricks(page.sectionKey(), null, simulation.capture.unresolvedPage(), 1L << brickIndex(start)));
             simulation.publish(reset.buildAndReset(), ThermalInputBatch.NO_PHASE_ACKS);
-            near(helper, 0, simulation.arena.enthalpyJ(simulation.slot(block)), "identical signatures cannot hide a whole-section replacement");
+            near(helper, 0, simulation.enthalpyJ(simulation.slot(block)), "identical signatures cannot hide a whole-section replacement");
             near(helper, -22221, simulation.arena.externalMaterialEnergyJ(), "bulk replacement records discarded energy");
         }
         helper.succeed();
@@ -320,18 +198,52 @@ public final class ThermalMaterialBehaviorGameTests {
         try (Simulation simulation = new Simulation(helper, start, 4, 4, 4, 0)) {
             int slot = simulation.slot(block);
             double capacity = simulation.arena.capacityJPerK(slot);
-            simulation.arena.acceptExternalEnergyJ(slot, capacity * 20);
+            simulation.acceptEnergyJ(slot, capacity * 20);
             simulation.publish(simulation.change(block, level.getBlockState(block)
                     .setValue(net.minecraft.world.level.block.TrapDoorBlock.OPEN, true), (byte) 0), ThermalInputBatch.NO_PHASE_ACKS);
             slot = simulation.slot(block);
-            near(helper, capacity * 20, simulation.arena.enthalpyJ(slot), "opening the same trapdoor preserves H");
+            near(helper, capacity * 20, simulation.enthalpyJ(slot), "opening the same trapdoor preserves H");
             near(helper, capacity, simulation.arena.capacityJPerK(slot), "opening does not alter body capacity");
             double before = simulation.totalEnergy();
             simulation.publish(simulation.change(block, Blocks.DIRT.defaultBlockState(),
                     ResolvedGeometryBatch.MaterialChanges.GAMEPLAY_TRANSITION), ThermalInputBatch.NO_PHASE_ACKS);
-            near(helper, 20, simulation.arena.temperatureC(simulation.slot(block), 0), "gameplay material conversion continues at the existing temperature");
+            near(helper, 20, simulation.temperatureC(simulation.slot(block), 0), "gameplay material conversion continues at the existing temperature");
             near(helper, simulation.totalEnergy() - before, simulation.arena.externalMaterialEnergyJ(),
                     "gameplay conversion records its actual energy change");
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "phase0a_empty", batch = "thermal_residency_signatures", timeoutTicks = 160)
+    public static void residencyUpdatesReplaceSignaturesAndMaterialTogether(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        MinecraftThermalInput.closeActiveLevel(level);
+        BlockPos start = origin(helper), block = start.offset(1, 1, 1);
+        fill(level, start, 4, 4, 4, Blocks.STONE.defaultBlockState());
+        try (Simulation simulation = new Simulation(helper, start, 4, 4, 4, 0)) {
+            var page = simulation.page(block);
+            long mask = 1L << brickIndex(start);
+            for (var state : new BlockState[]{Blocks.AIR.defaultBlockState(), Blocks.STONE.defaultBlockState()}) {
+                level.setBlockAndUpdate(block, state);
+                var cut = simulation.capture.captureBricks(page.sectionKey(), null, simulation.capture.unresolvedPage(), mask);
+                var residency = new ThermalInputBatch.PageResidencyUpdate(page, page.beginGeometryMutation(), mask, mask, cut, null, null);
+                var result = RegionalEngineTestDriver.submit(helper, simulation.engine, new ThermalInputBatch(1, ++simulation.sequence,
+                        simulation.tick, ThermalInputBatch.NO_ADMISSIONS, ThermalInputBatch.NO_RETIREMENTS,
+                        new ThermalInputBatch.PageResidencyUpdate[]{residency}, ResolvedGeometryBatch.EMPTY,
+                        ThermalInputBatch.NO_ENVIRONMENT_UPDATES, ThermalInputBatch.NO_PHASE_ACKS, Double.NaN));
+                helper.assertTrue(result.status() == ThermalCompletion.Status.COMPLETED, "residency signature update completes");
+                helper.assertTrue(simulation.arena.isMaterialCell(simulation.slot(block)) == state.is(Blocks.STONE),
+                        "unchanged resident mask cannot retain a body from the previous signature");
+                var captured = MaterialSectionState.capture(page.currentPublication(), simulation.query,
+                        simulation.profiles.signatures(), new MaterialSectionState.CaptureScratch());
+                helper.assertTrue(captured.valid() && captured.state() != null, "remaining stone bodies must be capturable");
+                int index = captured.state().find(pageBlock(block));
+                helper.assertTrue(state.isAir() ? index < 0 : index >= 0 && captured.state().stateId(index) == Block.getId(state),
+                        "checkpoint material identities follow the same residency signature cut");
+                int sectionY = block.getY() >> 4;
+                var stored = new DormantChunkThermalState(sectionY, 1); stored.replaceMaterials(sectionY, captured.state());
+                stored.encode(new CompoundTag());
+            }
         }
         helper.succeed();
     }
@@ -348,8 +260,8 @@ public final class ThermalMaterialBehaviorGameTests {
             var edge = simulation.arena.materialLaw(slot).cooling();
             helper.assertTrue(edge != null, "source water has a physical freezing edge");
             double middle = (edge.sourceEnthalpyJ() + edge.targetEnthalpyJ()) / 2;
-            simulation.arena.acceptExternalEnergyJ(slot, middle - simulation.arena.enthalpyJ(slot));
-            near(helper, edge.transitionTemperatureC(), simulation.arena.temperatureC(slot, 0), "freezing releases latent heat at the plateau");
+            simulation.acceptEnergyJ(slot, middle - simulation.enthalpyJ(slot));
+            near(helper, edge.transitionTemperatureC(), simulation.temperatureC(slot, 0), "freezing releases latent heat at the plateau");
             simulation.publish(ResolvedGeometryBatch.EMPTY, ThermalInputBatch.NO_PHASE_ACKS);
             var page = simulation.page(water);
             var capture = MaterialSectionState.capture(page.currentPublication(), simulation.query,
@@ -362,7 +274,7 @@ public final class ThermalMaterialBehaviorGameTests {
             restored.read(restored.find(pageBlock(water)), simulation.arena.materialLaw(slot), simulation.tick, 0, 0, sample);
             near(helper, middle, sample.enthalpyJ(), "checkpoint retains the same joules during freezing");
             helper.assertTrue(sample.branch() == MaterialThermalLaw.COOLING, "checkpoint retains the cooling branch");
-            simulation.arena.acceptExternalEnergyJ(slot, edge.targetEnthalpyJ() - middle);
+            simulation.acceptEnergyJ(slot, edge.targetEnthalpyJ() - middle);
             var ready = simulation.publish(ResolvedGeometryBatch.EMPTY, ThermalInputBatch.NO_PHASE_ACKS);
             helper.assertTrue(ready.phaseRequests().length == 1, "one completed freezing request");
             var request = ready.phaseRequests()[0];
@@ -371,7 +283,7 @@ public final class ThermalMaterialBehaviorGameTests {
                             ResolvedGeometryBatch.MaterialChanges.THERMAL_TRANSITION),
                     new ThermalInputBatch.PhaseAck[]{new ThermalInputBatch.PhaseAck(request, PhaseTransitionRuntime.AckOutcome.APPLIED)});
             near(helper, before, simulation.totalEnergy(), "freezing ACK preserves total H");
-            near(helper, edge.transitionTemperatureC(), simulation.arena.temperatureC(simulation.slot(water), 0), "ice stage starts at the completed freezing temperature");
+            near(helper, edge.transitionTemperatureC(), simulation.temperatureC(simulation.slot(water), 0), "ice stage starts at the completed freezing temperature");
         }
         helper.succeed();
     }
@@ -427,8 +339,8 @@ public final class ThermalMaterialBehaviorGameTests {
         BlockPos start = new BlockPos(material.getX() & ~3, material.getY() & ~3, material.getZ() & ~3);
         try (Simulation simulation = new Simulation(helper, start, 4, 4, 4, 0)) {
             int slot = simulation.slot(material);
-            simulation.arena.acceptExternalEnergyJ(slot, simulation.arena.materialLaw(slot).enthalpyAtTemperature(temperatureC)
-                    - simulation.arena.enthalpyJ(slot));
+            simulation.acceptEnergyJ(slot, simulation.arena.materialLaw(slot).enthalpyAtTemperature(temperatureC)
+                    - simulation.enthalpyJ(slot));
             simulation.publish(ResolvedGeometryBatch.EMPTY, ThermalInputBatch.NO_PHASE_ACKS);
             var captured = MaterialSectionState.capture(simulation.page(material).currentPublication(), simulation.query,
                     simulation.profiles.signatures(), new MaterialSectionState.CaptureScratch());
@@ -493,17 +405,15 @@ public final class ThermalMaterialBehaviorGameTests {
         final ServerLevel level;
         final MinecraftThermalProfiles.Snapshot profiles = MinecraftThermalProfiles.prepare();
         final ThermalCellArena arena = new ThermalCellArena(256);
-        final QueryPublication query = QueryPublication.tryCreate(new ThermalMemoryBudget(16L << 20).createDimensionBudget(16L << 20), 256, 64);
+        final ThermalMemoryBudget budget = new ThermalMemoryBudget(64L << 20);
+        final QueryPublication query = QueryPublication.createRegional(budget.createCategory(), 64);
         final ThermalDimensionEngine engine;
+        final MaterialStateAccess material;
         final LinkedHashMap<Long, ThermalPageHandle> pages = new LinkedHashMap<>();
         final MinecraftSignatureCapture capture;
         long sequence, tick;
 
         Simulation(GameTestHelper helper, BlockPos origin, int sizeX, int sizeY, int sizeZ, double natural) {
-            this(helper, origin, sizeX, sizeY, sizeZ, natural, 32768);
-        }
-
-        Simulation(GameTestHelper helper, BlockPos origin, int sizeX, int sizeY, int sizeZ, double natural, int maximumArenaSlots) {
             this.helper = helper;
             level = helper.getLevel();
             capture = new MinecraftSignatureCapture(level, profiles.states(), profiles.signatures());
@@ -511,8 +421,9 @@ public final class ThermalMaterialBehaviorGameTests {
             engine = new ThermalDimensionEngine(1, 0, arena, profiles.signatures(), profiles.materials(),
                     new ThermalTopologyParameters(tuning.airHeatCapacityJPerBlockK(), 0, tuning.airMixingWPerBlockK(),
                             new BuoyancyConductance.Parameters(.25, 4, 10), 1024, 8),
-                    new FarFieldSettings(tuning.farFieldConductanceWPerK(), 32, 16), tuning.campfire(),
-                    new ThermalDimensionLimits(64, 128, 256, maximumArenaSlots, 16384, 131072, 65536, 200, 1e-6), query);
+                    new FarFieldSettings(tuning.farFieldConductanceWPerK(), 32), tuning.campfire(),
+                    ThermalDimensionLimits.sharedGrid(64, 128), query, budget.createCategory(), 1e-5);
+            material = ThermalLoadedWorldGameTests.read(engine, "regional");
             LinkedHashMap<Long, Long> masks = new LinkedHashMap<>();
             for (int x = 0; x < sizeX; x += 4) for (int y = 0; y < sizeY; y += 4) for (int z = 0; z < sizeZ; z += 4) {
                 BlockPos position = origin.offset(x, y, z);
@@ -530,12 +441,11 @@ public final class ThermalMaterialBehaviorGameTests {
             }
             process(admissions, ResolvedGeometryBatch.EMPTY, ThermalInputBatch.NO_PHASE_ACKS);
         }
-        ThermalCompletion advance() { tick += 20; return publish(ResolvedGeometryBatch.EMPTY, ThermalInputBatch.NO_PHASE_ACKS); }
         ThermalCompletion publish(ResolvedGeometryBatch geometry, ThermalInputBatch.PhaseAck[] acks) { return process(ThermalInputBatch.NO_ADMISSIONS, geometry, acks); }
         ThermalCompletion process(ThermalInputBatch.PageAdmission[] admissions, ResolvedGeometryBatch geometry, ThermalInputBatch.PhaseAck[] acks) {
-            var result = engine.process(new ThermalInputBatch(1, ++sequence, tick, admissions,
+            var result = RegionalEngineTestDriver.submit(helper, engine, new ThermalInputBatch(1, ++sequence, tick, admissions,
                     ThermalInputBatch.NO_RETIREMENTS, ThermalInputBatch.NO_RESIDENCY_UPDATES, geometry,
-                    ThermalSourceBatch.EMPTY, ThermalInputBatch.NO_ENVIRONMENT_UPDATES, acks, Double.NaN));
+                    ThermalInputBatch.NO_ENVIRONMENT_UPDATES, acks, Double.NaN));
             helper.assertTrue(result.status() == ThermalCompletion.Status.COMPLETED, "material engine cut: " + result.failure());
             return result;
         }
@@ -557,8 +467,38 @@ public final class ThermalMaterialBehaviorGameTests {
         }
         double totalEnergy() {
             double energy = 0;
-            for (int slot = arena.nextLiveSlot(0); slot >= 0; slot = arena.nextLiveSlot(slot + 1)) energy += arena.enthalpyJ(slot);
+            for (int slot = arena.nextLiveSlot(0); slot >= 0; slot = arena.nextLiveSlot(slot + 1)) energy += enthalpyJ(slot);
             return energy;
+        }
+        double enthalpyJ(int slot) {
+            if (arena.isMaterialCell(slot)) {
+                var sample = new MaterialSample(); material.readMaterial(slot, sample); return sample.enthalpyJ();
+            }
+            var sample = new QueryPublication.MutableSample();
+            helper.assertTrue(query.tryRead(slot, arena.lifecycleGeneration(slot), 0, sample), "committed Air must be readable");
+            return arena.capacityJPerK(slot) * sample.temperatureC();
+        }
+        double temperatureC(int slot, double referenceC) {
+            var sample = new MaterialSample(); material.readMaterial(slot, sample); return sample.temperatureC();
+        }
+        double acceptEnergyJ(int slot, double energy) {
+            if (energy == 0 || arena.materialTransitionWaiting(slot)) return 0;
+            var sample = new MaterialSample(); material.readMaterial(slot, sample);
+            var law = sample.law();
+            double h = sample.enthalpyJ(), direction = Math.signum(energy), remaining = Math.abs(energy);
+            byte branch = sample.branch();
+            // Test setup crosses sensible/latent segments without exceeding the next ACK.
+            for (int segment = 0; segment < 3 && remaining > 0; segment++) {
+                branch = law.selectBranch(h, branch, direction);
+                double accepted = Math.min(remaining, law.energyLimitJ(h, branch, direction));
+                if (accepted == 0) break;
+                h += direction * accepted;
+                remaining -= accepted;
+            }
+            material.applyMaterialControl(slot, h, branch);
+            PhaseTransitionRuntime phases = ThermalLoadedWorldGameTests.read(engine, "phases");
+            phases.markMaterialDirty(slot);
+            return direction * (Math.abs(energy) - remaining);
         }
         double airConductance(int first, int second) {
             ThermalSolver solver = ThermalLoadedWorldGameTests.read(engine, "solver");

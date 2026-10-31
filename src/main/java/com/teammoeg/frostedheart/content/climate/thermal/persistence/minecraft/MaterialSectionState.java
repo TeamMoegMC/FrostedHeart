@@ -23,6 +23,7 @@ package com.teammoeg.frostedheart.content.climate.thermal.persistence.minecraft;
 import static com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ResolvedGeometryBatch.MaterialChanges.*;
 
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialSample;
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.AirBackingMeter;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialThermalLaw;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.PagePublication;
 import com.teammoeg.frostedheart.content.climate.thermal.persistence.DormantThermalCooling;
@@ -84,6 +85,12 @@ public final class MaterialSectionState {
 
     public int size() {
         return positions.length;
+    }
+
+    public void recordBacking(AirBackingMeter meter) {
+        meter.bytes(80L + 128L * laws.length);
+        meter.array(positions); meter.array(enthalpiesJ); meter.array(branches);
+        meter.array(paletteIndexes); meter.array(stateIds); meter.array(laws); meter.array(savedTicks);
     }
 
     public int position(int index) {
@@ -348,11 +355,9 @@ public final class MaterialSectionState {
         }
     }
 
-    private BitSet referencedPalettes(int excludedEntry) {
+    private BitSet referencedPalettes() {
         BitSet used = new BitSet(stateIds.length);
-        for (int entry = 0; entry < paletteIndexes.length; entry++) {
-            if (entry != excludedEntry) used.set(paletteIndexes[entry]);
-        }
+        for (int palette : paletteIndexes) used.set(palette);
         return used;
     }
 
@@ -482,6 +487,10 @@ public final class MaterialSectionState {
         final ArrayList<Integer> states = new ArrayList<>();
         final ArrayList<MaterialThermalLaw> laws = new ArrayList<>();
         final MaterialSample sample = new MaterialSample();
+        private long[] recordTicks;
+
+        public void enableMixedTicks() { if (recordTicks == null) recordTicks = new long[4096]; }
+        public void clearMixedTicks() { recordTicks = null; }
     }
 
     public record Capture(boolean valid, long sampledBricks, MaterialSectionState state) {}
@@ -491,12 +500,15 @@ public final class MaterialSectionState {
             QueryPublication query,
             ThermalSignatureTable signatures,
             CaptureScratch scratch) {
-        Arrays.fill(scratch.presence, 0);
-        scratch.paletteByState.clear();
-        scratch.paletteByState.defaultReturnValue(-1);
-        scratch.states.clear();
-        scratch.laws.clear();
+        return capture(page, query, signatures, scratch, false, null);
+    }
+
+    public static Capture capture(PagePublication page, QueryPublication query,
+            ThermalSignatureTable signatures, CaptureScratch scratch, boolean preserveRecordTimes,
+            QueryPublication.ReadCursor cursor) {
+        resetCapture(scratch);
         long tick = -1, sampledBricks = 0;
+        boolean mixedTicks = false;
         int count = 0;
         for (int brick = 0; brick < 64; brick++) {
             var payload = page.brick(brick);
@@ -507,14 +519,22 @@ public final class MaterialSectionState {
                 int node = payload.blockLayout().nodeAt(block);
                 int stateId = signatures.materialStateId(payload.signatureAtBlock(block));
                 if (node < 0 || stateId < 0) continue;
-                if (!query.tryReadMaterial(
+                boolean read = cursor == null ? query.tryReadMaterial(
                         payload.firstSlot() + node,
                         payload.arenaGeneration(),
-                        page.topologyGeneration(),
-                        scratch.sample)) return new Capture(false, 0, null);
-                if (tick >= 0 && tick != scratch.sample.sampleTick())
+                        stateId, scratch.sample) : cursor.tryReadMaterial(payload.firstSlot() + node,
+                                payload.arenaGeneration(), stateId, scratch.sample);
+                if (!read) {
                     return new Capture(false, 0, null);
-                tick = scratch.sample.sampleTick();
+                }
+                if (tick >= 0 && tick != scratch.sample.sampleTick()) {
+                    if (!preserveRecordTimes || scratch.recordTicks == null) {
+                        return new Capture(false, 0, null);
+                    }
+                    if (!mixedTicks) Arrays.fill(scratch.recordTicks, tick);
+                    mixedTicks = true;
+                }
+                if (tick < 0) tick = scratch.sample.sampleTick();
                 int palette = scratch.paletteByState.get(stateId);
                 if (palette < 0) {
                     palette = scratch.states.size();
@@ -529,14 +549,59 @@ public final class MaterialSectionState {
                 scratch.enthalpies[position] = scratch.sample.enthalpyJ();
                 scratch.branches[position] = scratch.sample.branch();
                 scratch.palettes[position] = palette;
+                if (mixedTicks) scratch.recordTicks[position] = scratch.sample.sampleTick();
                 count++;
             }
         }
+        return finishCapture(scratch, count, sampledBricks, tick, mixedTicks ? scratch.recordTicks : null);
+    }
+
+    /** Saving consumes the checkpoint's immutable bodies, without another query lease or live slot lookup. */
+    public static Capture capture(RegionalCheckpoint.Section section, CaptureScratch scratch) {
+        resetCapture(scratch);
+        long tick = -1;
+        long[] ticks = null;
+        int count = 0;
+        for (var part : section.parts()) {
+            var field = part.field();
+            for (int ordinal = 0; ordinal < part.materialCount(); ordinal++) {
+                int body = part.materialBody(ordinal);
+                long position = field.materialPosition(body);
+                int local = (net.minecraft.core.BlockPos.getX(position) & 15)
+                        | (net.minecraft.core.BlockPos.getZ(position) & 15) << 4
+                        | (net.minecraft.core.BlockPos.getY(position) & 15) << 8;
+                if (tick < 0) tick = field.sampleTick();
+                if (ticks == null && tick != field.sampleTick()) {
+                    ticks = new long[4096]; Arrays.fill(ticks, tick);
+                }
+                int state = field.materialStateId(body), palette = scratch.paletteByState.get(state);
+                if (palette < 0) {
+                    palette = scratch.states.size(); scratch.paletteByState.put(state, palette);
+                    scratch.states.add(state); scratch.laws.add(field.materialLaw(body));
+                }
+                scratch.presence[local >>> 6] |= 1L << (local & 63);
+                scratch.enthalpies[local] = field.materialEnthalpyJ(body);
+                scratch.branches[local] = field.materialBranch(body); scratch.palettes[local] = palette;
+                if (ticks != null) ticks[local] = field.sampleTick();
+                count++;
+            }
+        }
+        return finishCapture(scratch, count, section.sampledBricks(), tick, ticks);
+    }
+
+    private static void resetCapture(CaptureScratch scratch) {
+        Arrays.fill(scratch.presence, 0);
+        scratch.paletteByState.clear(); scratch.paletteByState.defaultReturnValue(-1);
+        scratch.states.clear(); scratch.laws.clear();
+    }
+
+    private static Capture finishCapture(CaptureScratch scratch, int count, long sampledBricks, long tick, long[] ticks) {
         if (count == 0) return new Capture(true, sampledBricks, null);
         short[] positions = new short[count];
         double[] enthalpies = new double[count];
         byte[] branches = new byte[count];
         int[] palettes = new int[count];
+        long[] recordTicks = ticks == null ? null : new long[count];
         int index = 0;
         for (int word = 0; word < 64; word++) {
             long remaining = scratch.presence[word];
@@ -546,7 +611,9 @@ public final class MaterialSectionState {
                 positions[index] = (short) position;
                 enthalpies[index] = scratch.enthalpies[position];
                 branches[index] = scratch.branches[position];
-                palettes[index++] = scratch.palettes[position];
+                palettes[index] = scratch.palettes[position];
+                if (recordTicks != null) recordTicks[index] = ticks[position];
+                index++;
             }
         }
         int[] stateIds = new int[scratch.states.size()];
@@ -562,7 +629,7 @@ public final class MaterialSectionState {
                         stateIds,
                         scratch.laws.toArray(MaterialThermalLaw[]::new),
                         tick,
-                        null));
+                        recordTicks));
     }
 
     CompoundTag encode() {
@@ -579,7 +646,7 @@ public final class MaterialSectionState {
         tag.putByteArray("positions", encodedPositions);
         tag.putLongArray("enthalpy", energies);
         tag.putByteArray("branches", branches);
-        BitSet used = referencedPalettes(-1);
+        BitSet used = referencedPalettes();
         int[] encodedIndexes = paletteIndexes;
         if (used.cardinality() != stateIds.length) {
             int[] remap = new int[stateIds.length];

@@ -1,0 +1,244 @@
+{
+  "Status": "counter failure reproduced with fixed work and genuine thermal threads; historical CPU speed ratio invalid",
+  "VerifiedAt": "2026-10-28T21:01:28.4773894+08:00",
+  "Cause": "Windows GetThreadTimes/ThreadMXBean CPU accounting is unstable and severely undercounts short bursts separated by waits on this machine; not just endpoint rounding",
+  "FixedWorkProbe": [
+    {
+      "Case": "continuous",
+      "units": 100.0,
+      "iterations": 2000000.0,
+      "wallMs": 467.865,
+      "activeMs": 467.068,
+      "javaCpuMs": 390.625,
+      "nativeCpuMs": 390.625,
+      "cycles": 883568632.0,
+      "result": "1978404614574106759"
+    },
+    {
+      "Case": "paced-default-1",
+      "units": 120.0,
+      "iterations": 2000000.0,
+      "wallMs": 6002.215,
+      "activeMs": 577.348,
+      "javaCpuMs": 46.875,
+      "nativeCpuMs": 46.875,
+      "cycles": 1042871458.0,
+      "result": "7578742831391612648"
+    },
+    {
+      "Case": "paced-1ms",
+      "units": 120.0,
+      "iterations": 2000000.0,
+      "wallMs": 6000.65,
+      "activeMs": 1242.608,
+      "javaCpuMs": 15.625,
+      "nativeCpuMs": 15.625,
+      "cycles": 1053777750.0,
+      "result": "7578742831391612648"
+    },
+    {
+      "Case": "paced-default-2",
+      "units": 120.0,
+      "iterations": 2000000.0,
+      "wallMs": 6013.342,
+      "activeMs": 1400.778,
+      "javaCpuMs": 46.875,
+      "nativeCpuMs": 46.875,
+      "cycles": 1066298458.0,
+      "result": "7578742831391612648"
+    }
+  ],
+  "HistoricalCpuMs": [
+    1656,
+    3312
+  ],
+  "SameProductionCodeDiagnosticCpuMs": 1078,
+  "HistoricalCyclesAvailable": false,
+  "Runtime": {
+    "Scene": "two bases with256 sources,100 consumers,2400 ticks",
+    "Workers": 4,
+    "HeapGiB": 5,
+    "ThermalTargetMiB": 128,
+    "NativeObservationEnabled": true,
+    "TotalCycles": 50383881682,
+    "NativePlatformCpuNs": 1062500000,
+    "MxBeanPlatformCpuMs": 1078,
+    "NativeAndMxBeanBoundaryDifference": "15.625ms; native first-observation baselines and the final read endpoints differ",
+    "Windows": [
+      {
+        "elapsedTicks": 200,
+        "workers": 4,
+        "cycles": 11129181456,
+        "platformCpuNs": 171875000,
+        "totalCycles": 11129181456,
+        "totalPlatformCpuNs": 171875000
+      },
+      {
+        "elapsedTicks": 400,
+        "workers": 4,
+        "cycles": 4121978320,
+        "platformCpuNs": 93750000,
+        "totalCycles": 15251159776,
+        "totalPlatformCpuNs": 265625000
+      },
+      {
+        "elapsedTicks": 600,
+        "workers": 4,
+        "cycles": 3845197918,
+        "platformCpuNs": 125000000,
+        "totalCycles": 19096357694,
+        "totalPlatformCpuNs": 390625000
+      },
+      {
+        "elapsedTicks": 800,
+        "workers": 4,
+        "cycles": 4274543848,
+        "platformCpuNs": 125000000,
+        "totalCycles": 23370901542,
+        "totalPlatformCpuNs": 515625000
+      },
+      {
+        "elapsedTicks": 1000,
+        "workers": 4,
+        "cycles": 3191341556,
+        "platformCpuNs": 93750000,
+        "totalCycles": 26562243098,
+        "totalPlatformCpuNs": 609375000
+      },
+      {
+        "elapsedTicks": 1200,
+        "workers": 4,
+        "cycles": 2939711926,
+        "platformCpuNs": 15625000,
+        "totalCycles": 29501955024,
+        "totalPlatformCpuNs": 625000000
+      },
+      {
+        "elapsedTicks": 1400,
+        "workers": 4,
+        "cycles": 3596670808,
+        "platformCpuNs": 125000000,
+        "totalCycles": 33098625832,
+        "totalPlatformCpuNs": 750000000
+      },
+      {
+        "elapsedTicks": 1600,
+        "workers": 4,
+        "cycles": 4060424824,
+        "platformCpuNs": 93750000,
+        "totalCycles": 37159050656,
+        "totalPlatformCpuNs": 843750000
+      },
+      {
+        "elapsedTicks": 1800,
+        "workers": 4,
+        "cycles": 3193942368,
+        "platformCpuNs": 93750000,
+        "totalCycles": 40352993024,
+        "totalPlatformCpuNs": 937500000
+      },
+      {
+        "elapsedTicks": 2000,
+        "workers": 4,
+        "cycles": 4230092982,
+        "platformCpuNs": 46875000,
+        "totalCycles": 44583086006,
+        "totalPlatformCpuNs": 984375000
+      },
+      {
+        "elapsedTicks": 2200,
+        "workers": 4,
+        "cycles": 2730229548,
+        "platformCpuNs": 15625000,
+        "totalCycles": 47313315554,
+        "totalPlatformCpuNs": 1000000000
+      },
+      {
+        "elapsedTicks": 2400,
+        "workers": 4,
+        "cycles": 3070566128,
+        "platformCpuNs": 62500000,
+        "totalCycles": 50383881682,
+        "totalPlatformCpuNs": 1062500000
+      }
+    ],
+    "ZeroTimeWithOverBillionCycles": [
+      {
+        "scene": "two_dense_bases_256",
+        "elapsedTicks": 1000,
+        "thread": "frosted-heart-thermal-2",
+        "cycles": 1011982856,
+        "platformCpuNs": 0,
+        "totalCycles": 7234234342,
+        "totalPlatformCpuNs": 156250000
+      },
+      {
+        "scene": "two_dense_bases_256",
+        "elapsedTicks": 1400,
+        "thread": "Server thread",
+        "cycles": 1612685166,
+        "platformCpuNs": 0,
+        "totalCycles": 23551803684,
+        "totalPlatformCpuNs": 468750000
+      },
+      {
+        "scene": "two_dense_bases_256",
+        "elapsedTicks": 1600,
+        "thread": "Server thread",
+        "cycles": 1548377790,
+        "platformCpuNs": 0,
+        "totalCycles": 25100181474,
+        "totalPlatformCpuNs": 468750000
+      },
+      {
+        "scene": "two_dense_bases_256",
+        "elapsedTicks": 2000,
+        "thread": "frosted-heart-thermal-2",
+        "cycles": 1571385486,
+        "platformCpuNs": 0,
+        "totalCycles": 12338424332,
+        "totalPlatformCpuNs": 203125000
+      },
+      {
+        "scene": "two_dense_bases_256",
+        "elapsedTicks": 2000,
+        "thread": "frosted-heart-thermal-3",
+        "cycles": 1392329772,
+        "platformCpuNs": 0,
+        "totalCycles": 11629436338,
+        "totalPlatformCpuNs": 296875000
+      },
+      {
+        "scene": "two_dense_bases_256",
+        "elapsedTicks": 2400,
+        "thread": "Server thread",
+        "cycles": 1423148440,
+        "platformCpuNs": 0,
+        "totalCycles": 30769596380,
+        "totalPlatformCpuNs": 562500000
+      }
+    ],
+    "RequiredPassed": 1,
+    "RootZero": true,
+    "ThermalErrors": 0,
+    "ServerTickP99Ms": 59.924,
+    "ExtraObservationAndHostLoad": "Diagnostic run has additional native queries/logs; about1.50GiB physical memory available near measurement start; not a speed comparison",
+    "ProductionChanges": 0,
+    "PostRunEdit": "Only CPU counter qualification log and method comment were added after the native recording; compileGameTestJava rechecked, no repeated server run.",
+    "Queries": 12000,
+    "AgeGeometryConsumerViolations": 0
+  },
+  "Limits": [
+    "Cycles are not converted to CPU seconds because clock frequency and processor assignment differ.",
+    "Historical recordings lack cycle totals, so actual old/new CPU ratio cannot be reconstructed.",
+    "The new run does not prove performance improved; it proves current workload can execute billions of cycles while platform time reports zero.",
+    "ThreadCPULoad and CPULoad are not independent validation of the same platform accounting.",
+    "Timer precision change did not fix the probe; no timer or affinity changes were applied to the game."
+  ],
+  "Evidence": [
+    "build/thermal-windows-cpu-probe-20261028.txt",
+    "build/thermal-cpu-native-performance-20261028-r1.log",
+    "build/thermal-cpu-native-performance-20261028-r1.jfr",
+    "build/thermal-cpu-regression-phases-20261028.txt"
+  ]
+}

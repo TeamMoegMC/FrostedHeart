@@ -33,13 +33,8 @@ public final class ThermalExchangeKernel {
 
     /** Caller-owned pair result for allocation-free sweep execution. */
     public static final class MutablePairResult {
-        private Status status = Status.NUMERIC_DEGRADED;
         private double enthalpyAJ;
         private double enthalpyBJ;
-
-        public boolean applied() {
-            return status == Status.APPLIED;
-        }
 
         public double enthalpyAJ() {
             return enthalpyAJ;
@@ -50,11 +45,9 @@ public final class ThermalExchangeKernel {
         }
 
         private void set(
-                Status nextStatus,
                 double nextEnthalpyA,
                 double nextEnthalpyB
         ) {
-            status = nextStatus;
             enthalpyAJ = nextEnthalpyA;
             enthalpyBJ = nextEnthalpyB;
         }
@@ -63,30 +56,16 @@ public final class ThermalExchangeKernel {
 
     /** Caller-owned boundary result for allocation-free sweep execution. */
     public static final class MutableBoundaryResult {
-        private Status status = Status.NUMERIC_DEGRADED;
         private double enthalpyJ;
-        private double energyFromBoundaryJ;
-
-        public boolean applied() {
-            return status == Status.APPLIED;
-        }
 
         public double enthalpyJ() {
             return enthalpyJ;
         }
 
-        public double energyFromBoundaryJ() {
-            return energyFromBoundaryJ;
-        }
-
         private void set(
-                Status nextStatus,
-                double nextEnthalpy,
-                double nextEnergyFromBoundary
+                double nextEnthalpy
         ) {
-            status = nextStatus;
             enthalpyJ = nextEnthalpy;
-            energyFromBoundaryJ = nextEnergyFromBoundary;
         }
 
     }
@@ -121,7 +100,7 @@ public final class ThermalExchangeKernel {
             return degradedPair(enthalpyAJ, enthalpyBJ, result);
         }
         if (conductanceWPerK == 0.0D || dtSeconds == 0.0D) {
-            result.set(Status.APPLIED, enthalpyAJ, enthalpyBJ);
+            result.set(enthalpyAJ, enthalpyBJ);
             return Status.APPLIED;
         }
 
@@ -142,58 +121,7 @@ public final class ThermalExchangeKernel {
         if (!finite(nextA) || !finite(nextB)) {
             return degradedPair(enthalpyAJ, enthalpyBJ, result);
         }
-        result.set(Status.APPLIED, nextA, nextB);
-        return Status.APPLIED;
-    }
-
-    public static double compilePairCoefficientJPerK(
-            double capacityAJPerK,
-            double capacityBJPerK,
-            double conductanceWPerK,
-            double dtSeconds
-    ) {
-        if (!positiveFinite(capacityAJPerK)
-                || !positiveFinite(capacityBJPerK)
-                || !nonNegativeFinite(conductanceWPerK)
-                || !nonNegativeFinite(dtSeconds)) {
-            throw new IllegalArgumentException("pair coefficient inputs are invalid");
-        }
-        return reducedCapacity(capacityAJPerK, capacityBJPerK)
-                * pairApproachFraction(
-                        capacityAJPerK,
-                        capacityBJPerK,
-                        conductanceWPerK,
-                        dtSeconds);
-    }
-
-    public static Status exchangeCompiledPairInto(
-            double enthalpyAJ,
-            double inverseCapacityAKPerJ,
-            double enthalpyBJ,
-            double inverseCapacityBKPerJ,
-            double coefficientJPerK,
-            MutablePairResult result
-    ) {
-        Objects.requireNonNull(result, "result");
-        if (!finite(enthalpyAJ)
-                || !positiveFinite(inverseCapacityAKPerJ)
-                || !finite(enthalpyBJ)
-                || !positiveFinite(inverseCapacityBKPerJ)
-                || !nonNegativeFinite(coefficientJPerK)) {
-            return degradedPair(enthalpyAJ, enthalpyBJ, result);
-        }
-        double temperatureDeltaK = enthalpyAJ * inverseCapacityAKPerJ
-                - enthalpyBJ * inverseCapacityBKPerJ;
-        double energyFromAToB = coefficientJPerK * temperatureDeltaK;
-        double nextA = enthalpyAJ - energyFromAToB;
-        double nextB = enthalpyBJ + energyFromAToB;
-        if (!finite(temperatureDeltaK)
-                || !finite(energyFromAToB)
-                || !finite(nextA)
-                || !finite(nextB)) {
-            return degradedPair(enthalpyAJ, enthalpyBJ, result);
-        }
-        result.set(Status.APPLIED, nextA, nextB);
+        result.set(nextA, nextB);
         return Status.APPLIED;
     }
 
@@ -245,7 +173,7 @@ public final class ThermalExchangeKernel {
             return degradedBoundary(enthalpyJ, result);
         }
         if (conductanceWPerK == 0.0D || dtSeconds == 0.0D) {
-            result.set(Status.APPLIED, enthalpyJ, 0.0D);
+            result.set(enthalpyJ);
             return Status.APPLIED;
         }
 
@@ -258,76 +186,8 @@ public final class ThermalExchangeKernel {
         if (!finite(energyFromBoundary) || !finite(next)) {
             return degradedBoundary(enthalpyJ, result);
         }
-        result.set(Status.APPLIED, next, energyFromBoundary);
+        result.set(next);
         return Status.APPLIED;
-    }
-
-    public static double compileBoundaryCoefficientJPerK(
-            double capacityJPerK,
-            double conductanceWPerK,
-            double dtSeconds
-    ) {
-        if (!positiveFinite(capacityJPerK)
-                || !nonNegativeFinite(conductanceWPerK)
-                || !nonNegativeFinite(dtSeconds)) {
-            throw new IllegalArgumentException("boundary coefficient inputs are invalid");
-        }
-        return capacityJPerK * boundaryApproachFraction(
-                capacityJPerK, conductanceWPerK, dtSeconds);
-    }
-
-    public static Status exchangeCompiledBoundaryInto(
-            double enthalpyJ,
-            double inverseCapacityKPerJ,
-            double referenceTemperatureC,
-            double boundaryTemperatureC,
-            double coefficientJPerK,
-            MutableBoundaryResult result
-    ) {
-        Objects.requireNonNull(result, "result");
-        if (!finite(enthalpyJ)
-                || !positiveFinite(inverseCapacityKPerJ)
-                || !finite(referenceTemperatureC)
-                || !finite(boundaryTemperatureC)
-                || !nonNegativeFinite(coefficientJPerK)) {
-            return degradedBoundary(enthalpyJ, result);
-        }
-        double temperatureDeltaK = boundaryTemperatureC
-                - referenceTemperatureC
-                - enthalpyJ * inverseCapacityKPerJ;
-        double energyFromBoundary = coefficientJPerK * temperatureDeltaK;
-        double next = enthalpyJ + energyFromBoundary;
-        if (!finite(temperatureDeltaK)
-                || !finite(energyFromBoundary)
-                || !finite(next)) {
-            return degradedBoundary(enthalpyJ, result);
-        }
-        result.set(Status.APPLIED, next, energyFromBoundary);
-        return Status.APPLIED;
-    }
-
-    private static double pairApproachFraction(
-            double capacityA,
-            double capacityB,
-            double conductance,
-            double dtSeconds
-    ) {
-        if (conductance == 0.0D || dtSeconds == 0.0D) {
-            return 0.0D;
-        }
-        double rate = conductance / capacityA + conductance / capacityB;
-        return approachFraction(rate * dtSeconds);
-    }
-
-    private static double boundaryApproachFraction(
-            double capacity,
-            double conductance,
-            double dtSeconds
-    ) {
-        if (conductance == 0.0D || dtSeconds == 0.0D) {
-            return 0.0D;
-        }
-        return approachFraction(conductance / capacity * dtSeconds);
     }
 
     private static double approachFraction(double exponent) {
@@ -349,7 +209,7 @@ public final class ThermalExchangeKernel {
             double enthalpyB,
             MutablePairResult result
     ) {
-        result.set(Status.NUMERIC_DEGRADED, enthalpyA, enthalpyB);
+        result.set(enthalpyA, enthalpyB);
         return Status.NUMERIC_DEGRADED;
     }
 
@@ -357,7 +217,7 @@ public final class ThermalExchangeKernel {
             double enthalpy,
             MutableBoundaryResult result
     ) {
-        result.set(Status.NUMERIC_DEGRADED, enthalpy, 0.0D);
+        result.set(enthalpy);
         return Status.NUMERIC_DEGRADED;
     }
 

@@ -1,0 +1,118 @@
+{
+  "status": "passed-after-scene-fixture-correction",
+  "date": "2026-10-26",
+  "author": "Codex; OpenAI GPT-6; redundant-state consumption review and implementation",
+  "source": {
+    "productionFiles": 133,
+    "productionFilesChanged": 3,
+    "productionLinesBefore": 44476,
+    "productionLinesAfter": 44441,
+    "productionRemovedNet": 35,
+    "testFiles": 107,
+    "testFilesChanged": 2,
+    "testLinesBefore": 16272,
+    "testLinesAfter": 16274,
+    "allJavaRemovedNet": 33,
+    "newProductionTypes": 0
+  },
+  "removed": [
+    "Unconsumed material temperature tail in stateC/candidateC/rhsJ and its construction/step/impulse/restoration writes",
+    "Duplicate frozenMaterialLaws array, SolverState copies and accounting",
+    "Exclusive frozenStepInputs selection state and unreachable pre-installed step initialization",
+    "Constant-zero rejectedSteps counter, log, record accessor and test-only cost-event field",
+    "Obsolete copyMaterialsTo wrapper that regenerated the unused tail"
+  ],
+  "preserved": [
+    "powerW covers both Air and material rows; material-only regions execute source power",
+    "Material enthalpy, branches, waiting, actual law, latent boundaries and ACK",
+    "Actual environmental and route freezing through the operator",
+    "Air and material cancellation/control restoration and immutable accepted frames",
+    "Fine/coarse algorithms, time steps, quality/resource policies and v6 format"
+  ],
+  "build": {
+    "full": { "status": "passed", "attempt": 1, "elapsed": "1m46s", "java": 17, "command": "assemble compileGameTestJava --offline --no-daemon --max-workers=1", "log": "build/thermal-material-state-compile-20261026-r1.log" },
+    "fixtureOnly": { "status": "passed", "elapsed": "19s", "mainCompilation": "UP-TO-DATE", "log": "build/thermal-material-state-fixture-compile-20261026-r2.log" }
+  },
+  "verification": {
+    "distinctChecksValidated": 21,
+    "allChecksPassedInOneRun": false,
+    "productionChangedBetweenRuns": false,
+    "runs": [
+      {
+        "run": 1,
+        "status": "failed-one-scene-fixture",
+        "selected": 21,
+        "passed": 20,
+        "failed": 1,
+        "started": "2026-10-26T17:36:38.2189004+08:00",
+        "ended": "2026-10-26T17:42:29.4867526+08:00",
+        "elapsed": "5m50s",
+        "thermalSaveFailures": 0,
+        "rootZero": true,
+        "log": "build/thermal-material-state-focused-20261026-r1.log"
+      },
+      {
+        "run": 2,
+        "status": "passed",
+        "selected": 8,
+        "passed": 8,
+        "failed": 0,
+        "scope": "Only input namespace rerun after fixing its scene; seven cases overlap initial successes",
+        "started": "2026-10-26T17:50:04.0210832+08:00",
+        "ended": "2026-10-26T17:53:04.8683649+08:00",
+        "elapsed": "3m",
+        "thermalSaveFailures": 0,
+        "rootZero": true,
+        "log": "build/thermal-material-state-focused-20261026-r2.log"
+      }
+    ],
+    "groups": { "input": 8, "material": 8, "readerMaterialLifecycle": 3, "sourceCancellationReplay": 1, "gridConversion": 1 },
+    "memoryTargetMiB": 128,
+    "cpuMsPerSecond": 250,
+    "heap": "5g",
+    "junitRuns": 0,
+    "performanceRun": false,
+    "sourceJ": 6400,
+    "deliveredJ": 6400,
+    "cancellations": 2,
+    "publications": 1,
+    "sourceReplayEnergyDeltaJ": 0,
+    "sourceReplayTemperatureDeltaC": 0,
+    "readerRootBeforeRelease": 1321864,
+    "readerRootAfterRelease": 0,
+    "gridCycles": 2,
+    "gridCheckpoints": 2,
+    "gridRecoveryJumpC": 1.7763568394002505e-15,
+    "gridCheckpointErrorC": 0.09677785178269183,
+    "gridCoarseningEnergyErrorJ": 8.195638656616211e-8,
+    "productionOrTestSourceEditsAfterFinalFixtureCompile": false
+  },
+  "sceneCorrection": {
+    "test": "minecraftResidencyHandoffHeatsHalfAirNeighbor",
+    "failure": "neighbor=10, natural=10, source=12.660949943408548",
+    "savedWorldEvidence": "Read-only region/NBT inspection found actual source 192/-57/0 Air, neighbor 196/-57/0 gravel and four gravel blocks along its upper row; blocks above were Air",
+    "oldSetup": "Only lower two stone layers were set; upper two layers inherited terrain",
+    "newSetup": "Both complete Bricks are set to lower two stone layers and upper two Air layers before campfires; precondition asserts both probes are Air",
+    "thresholdsOrTimingRelaxed": false,
+    "warmingThresholdsC": { "sourceAboveNatural": 1, "neighborAboveNatural": 0.25 },
+    "observationTick": 1200,
+    "evidence": "build/thermal-material-state-failed-scene-20261026.txt"
+  },
+  "compiledReview": {
+    "methodsBefore": 4558,
+    "methodsAfter": 4555,
+    "fieldsBefore": 3871,
+    "fieldsAfter": 3865,
+    "retainedUnreachedMethods": ["ClassValue library callback", "Explicit signed impulse contract"],
+    "retainedFieldsWithoutDirectReads": "Three SectionOwner flags read through VarHandle",
+    "confirmedCleanupItemsRemaining": 0,
+    "inventoryPrefix": "build/thermal-material-state-20261026-final"
+  },
+  "package": { "bytes": 14946308, "thermalClasses": 435, "testClassesInProduction": 0, "protectedParticleClasses": 4 },
+  "exclusions": { "townSourceInterfacesOrDocsChanged": false, "protectedParticleFilesChanged": false, "excludedFileMetadataChecked": 350, "excludedFileMetadataChanged": 0 },
+  "limits": [
+    "Scratch capacity retains existing growth margin and workspace reuse; logical row removal is not a measured memory saving ratio",
+    "No new whole-scene CPU comparison or 0.1C approximation qualification",
+    "Prior validations retain their source/build scope"
+  ]
+}

@@ -1,0 +1,202 @@
+{
+  "status": "passed",
+  "verified": "2026-10-24T16:54:22+08:00",
+  "scope": "Fixed production thermal batch; integrated Forge runtime verification and same-context compiled baseline comparison.",
+  "completedGroups": 27,
+  "completedRequiredTests": 66.0,
+  "groups": [
+    {
+      "name": "background",
+      "status": "passed",
+      "requiredPassed": 1,
+      "shutdownRootZero": true
+    },
+    {
+      "name": "cooling",
+      "status": "passed",
+      "requiredPassed": 1,
+      "shutdownRootZero": true
+    },
+    {
+      "name": "dependencies",
+      "status": "passed",
+      "requiredPassed": 1,
+      "shutdownRootZero": true
+    },
+    {
+      "name": "diagnostics",
+      "status": "passed",
+      "requiredPassed": 3,
+      "shutdownRootZero": true
+    },
+    {
+      "name": "distributed-baseline",
+      "status": "passed",
+      "requiredPassed": 1,
+      "shutdownRootZero": true
+    },
+    {
+      "name": "distributed-current",
+      "status": "passed",
+      "requiredPassed": 1,
+      "shutdownRootZero": true
+    },
+    {
+      "name": "endurance",
+      "status": "passed",
+      "requiredPassed": 1,
+      "shutdownRootZero": true
+    },
+    {
+      "name": "final-gameplay",
+      "status": "passed",
+      "requiredPassed": 5,
+      "shutdownRootZero": true
+    },
+    {
+      "name": "final-icicle",
+      "status": "passed",
+      "requiredPassed": 19,
+      "shutdownRootZero": true
+    },
+    {
+      "name": "final-lifecycle",
+      "status": "passed",
+      "requiredPassed": 3,
+      "shutdownRootZero": true
+    },
+    {
+      "name": "gameplay",
+      "status": "passed",
+      "requiredPassed": 5,
+      "shutdownRootZero": true
+    },
+    {
+      "name": "grid",
+      "status": "passed",
+      "requiredPassed": 1,
+      "shutdownRootZero": true
+    },
+    {
+      "name": "grid-single",
+      "status": "passed",
+      "requiredPassed": 1,
+      "shutdownRootZero": true
+    },
+    {
+      "name": "independent-intake",
+      "status": "passed",
+      "requiredPassed": 1,
+      "shutdownRootZero": true
+    },
+    {
+      "name": "ingress",
+      "status": "passed",
+      "requiredPassed": 2,
+      "shutdownRootZero": true
+    },
+    {
+      "name": "lifecycle",
+      "status": "passed",
+      "requiredPassed": 3,
+      "shutdownRootZero": true
+    },
+    {
+      "name": "multi",
+      "status": "passed",
+      "requiredPassed": 1,
+      "shutdownRootZero": true
+    },
+    {
+      "name": "native",
+      "status": "passed",
+      "requiredPassed": 3,
+      "shutdownRootZero": true
+    },
+    {
+      "name": "physical",
+      "status": "passed",
+      "requiredPassed": 1,
+      "shutdownRootZero": true
+    },
+    {
+      "name": "pressure",
+      "status": "passed",
+      "requiredPassed": 1,
+      "shutdownRootZero": true
+    },
+    {
+      "name": "restart-load",
+      "status": "passed",
+      "requiredPassed": 1,
+      "shutdownRootZero": true
+    },
+    {
+      "name": "restart-save",
+      "status": "passed",
+      "requiredPassed": 1,
+      "shutdownRootZero": true
+    },
+    {
+      "name": "source",
+      "status": "passed",
+      "requiredPassed": 1,
+      "shutdownRootZero": true
+    },
+    {
+      "name": "source-single",
+      "status": "passed",
+      "requiredPassed": 1,
+      "shutdownRootZero": true
+    },
+    {
+      "name": "storage",
+      "status": "passed",
+      "requiredPassed": 5,
+      "shutdownRootZero": true
+    },
+    {
+      "name": "structure-isolation",
+      "status": "passed",
+      "requiredPassed": 1,
+      "shutdownRootZero": true
+    },
+    {
+      "name": "worker-recovery",
+      "status": "passed",
+      "requiredPassed": 1,
+      "shutdownRootZero": true
+    }
+  ],
+  "historicalFailedAttempts": [
+    {
+      "name": "grid",
+      "status": "failed",
+      "failure": "Real single-core Forge process failed: stage=grid-switch exit=1"
+    },
+    {
+      "name": "grid",
+      "status": "failed",
+      "failure": "Real single-core Forge process failed: stage=grid-switch exit=1"
+    },
+    {
+      "name": "endurance",
+      "status": "failed",
+      "failure": "Real single-core Forge process failed: stage=normal-auto exit=1"
+    },
+    {
+      "name": "endurance",
+      "status": "failed",
+      "failure": "Required single-core tests did not pass: normal-auto"
+    }
+  ],
+  "historicalInterruptedAttempts": [
+    {
+      "name": "source-single",
+      "status": "interrupted",
+      "failure": "Continuation found no live runner or child JVM; log stops during Forge startup without a GameTest result. Preserved as an interrupted attempt, not a thermal runtime failure."
+    }
+  ],
+  "qualification": "100 temperature consumers; not 100 full network player connections. Each listed configuration retains its recorded scope.",
+  "rawArtifacts": "Raw logs, JFR recordings and compiled experiment artifacts are local validation outputs and are not source repository files."
+}

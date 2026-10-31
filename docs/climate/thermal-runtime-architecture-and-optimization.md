@@ -1,16 +1,38 @@
 # Thermal Runtime Architecture
 
-- Status: `Transitional; current local Air mixing and residency behavior verified by focused regressions; full-load performance validation pending`
-- Last verified: `2026-09-16`
+- Status: `Transitional; current control contract linked below, historical implementation sections retain their dated provenance`
+- Last verified: `2026-10-22; current control contract and final 15-group/24-required qualification verified; dated trials remain historical`
 - Scope: server-side thermal capture, asynchronous dimension workers, Page/Brick topology, source energy, phase requests, query publication, and hot-path cost bounds
-- Primary code anchors: `MinecraftThermalEvents`, `MinecraftThermalInput`, `MinecraftPageManager`, `PhysicalSourceSpatialIndex`, `DimensionInputAccumulator`, `ThermalDimensionMailbox`, `ThermalWorkerPool`, `ThermalDimensionEngine`, `TopologyUpdatePlanner`, `PreparedTopologyChange`, `TopologyCommitter`, `ThermalSolver`, `ThermalSourceLedger`, `QueryPublication`
+- Code anchors: `SpatialSourceIngress`, `SpatialHeatStore`, `TopologyIngress`, `TopologyInbox`, `RegionalQualityControl`, `RegionalWorkQueue`, `ThermalDimensionEngine`, `RegionalAirRuntime`, `ThermalWorkerPool`
+
+当前SHARED_GRID合同由[运行时控制说明](thermal-runtime-control.md)维护：可配置内存目标只约束可选细档工作，已接收更新、输入、粗档、发布和保存按所有者完成并继续记账；没有跨区域额度借还、压力抢占取消和容量重捕获。细粗共用任务协议，普通结构同时开工数按共享工作池线程数限制。查询以区域目录及自身几何为权威，源窗口不阻挡Page运输退休。最终生产r17的15组/24项流程资格通过，各组退出root0；压力空读、冷建40tick未达、峰值超目标和恢复延迟在当前说明中单列。
+
+2026-10-25清理后，正式入口只拥有`ThermalDimensionEngine`与`RegionalAirRuntime`；旧整批引擎、双协议接口、旧运输队列、整维度查询双缓冲及历史Trial选择器已删除。当前配置与数据边界以[运行时控制说明](thermal-runtime-control.md)为准；下文旧默认后端和旧调度方法只属于历史记录。
+
+同日后续内部清理继续删除了旧标量求解、节点源积分器和局部函数构建/筛选。`ThermalSolver`承担当前拓扑存储与安装，数值由区域求解器持有；`ThermalSourceLedger`仅持有源身份、绑定及结算，不再生成第二份节点积分。固定步长材料/远场系数缓存和旧接触合并状态同步退出，详见[本批删除与重点验证](validation/thermal-subsystems-cleanup-2026-10-25.json)。
+
+## 历史实现与试验
+
+以下带日期的旧流程、预算和通过范围只描述其对应批次；其中“当前”“待实施”和失败状态不是新控制协议的现状。
+
+2026-10-21控制层替换以[输入、任务与保存所有权](thermal-runtime-control.md)为当前阅读入口。源窗口已从Page运输退休条件中移出，已接管J统一归Store，粗细计算共享Claim/取消/提交协议，质量意图与在途候选由独立控制者管理。当前已完成源码/删除清单核对及统一编译，真实运行矩阵尚未完成。后文按日期保留前批行为与失败证据，不能将旧入口描述或历史通过结果转用于本批。
 
 ## Source Layout
+
+当前SHARED_GRID区域控制流与资源所有权以[区域运行说明](continuous-air-regional-preparation.md)为准。维度协调者、共享arena/表、每区Accepted/RegionJob、每次GeometryWork的准备scratch和查询读者有不同生命周期；独立区域共用存储不意味着必须等待同一物理cut。2026-10-19修正构建子步全图核算、局部halo复制和安装时接管范围，仍有全维度frontier维护与输入交接预留等剩余耦合，完整隔离尚未资格化。下文旧批次流程只适用于其相应后端或历史阶段。
 
 `continuousAir` defaults to `false`. The scalar Air solver described here remains the default;
 the implemented opt-in spatial backend and its current limits are documented in
 [Continuous Air Runtime](continuous-air-runtime.md). Shared capture, source, phase and publication
-lifecycle still applies to both. Checkpoint root version is now 5 for both backends.
+lifecycle still applies to both. The current checkpoint root is version 6; see [the persistence contract](continuous-air-persistence.md).
+
+The 2026-10-01 continuous-Air change discovers normal source support through connected
+Air and its blocking faces rather than requiring the entire support cube. Shared
+`ThermalDimensionEngine.process` now emits installed-state residency decisions even
+when a candidate is `WORK_LIMITED`, allowing reclamation requests to progress. The
+same-lifecycle shrink implementation and validation boundaries, including saved
+spatial pieces and refusal/retry limitations, are owned by
+[Continuous Air Runtime](continuous-air-runtime.md).
 
 | Package | Responsibility |
 |---|---|
@@ -18,7 +40,7 @@ lifecycle still applies to both. Checkpoint root version is now 5 for both backe
 | `thermal.runtime.minecraft.input` | Page interest, Minecraft state capture, phase ACK, and input accumulation |
 | `thermal.runtime.minecraft.message` | Immutable main-thread/worker ownership-transfer messages |
 | `thermal.runtime.minecraft.engine` | Per-dimension execution engine and runtime limits |
-| `thermal.runtime.async` | Shared worker pool and single-slot dimension mailbox |
+| `thermal.runtime.async` | Shared worker pool, one resumable dimension coordinator and bounded ordered completion mailbox |
 | `thermal.topology` | Brick compilation, Page topology state, migration, and transactional commit |
 | `thermal.persistence.minecraft` | Chunk-owned dormant temperature checkpoints |
 | `thermal.profile` / `thermal.profile.minecraft` | Immutable signature lookup and Minecraft BlockState/profile compilation |
@@ -136,9 +158,10 @@ TopologyUpdatePlanner -> PreparedTopologyChange -> TopologyCommitter
 ThermalSolver / ThermalSourceLedger / PagePublication / QueryPublication
 ```
 
-`TemperatureThreadingPool.java` remains in the repository because it is an
-explicit user requirement. Its initialization, tick polling, and shutdown
-calls remain commented and disabled. It is not used by the new worker pool.
+At this historical stage, `TemperatureThreadingPool.java` was retained with
+initialization, polling, and shutdown disabled. The 2026-10-22 unused-code
+cleanup removed it together with the inactive particle simulator and its
+dedicated cache/configuration; see [player temperature](player-temperature.md).
 
 ## Fixed Cadence
 
@@ -155,20 +178,28 @@ path reads a `ConfigValue`. Values live in
 `config/frostedheart-common.toml` and require a client or dedicated-server
 restart after editing. There is no thermal config hot-reload lifecycle.
 
-`MinecraftThermalInput` drains a completion at the start of a level tick. If a
+`MinecraftThermalInput` drains up to three ordered physical completions at the start of a level tick. If a
 worker completed after an aligned boundary, it submits the latest completed
 boundary before collecting the current tick's new world changes. A sealed batch
 is retained in `pendingSubmission` when the shared queue is full. A dimension
-has at most one queued/running/awaiting-ACK batch, one retained submission, and
-one mutable producer accumulator.
+has one queued/running coordinator round, one retained producer submission, and
+one mutable producer accumulator. The regional continuous backend can admit two
+additional immutable inputs. Completed notifications have a separate fixed bound
+of three: the worker may start the next admitted input before main applies the
+previous completion, while phase/resync/residency/retry effects retain order and
+are applied once. A yielded `processRound` returns no completion and advances no
+physical watermark. Query-capacity reclamation requested by main ACK runs at the
+next worker cut boundary, before new candidate admission. See
+[the current coordination contract](continuous-air-overload.md#协调轮与完成通知)
+for ownership, notification memory, measured scope and remaining input barriers.
 
 The worker validates dimension generation, consecutive sequence, monotonic
-aligned target tick, applies phase/wind input, and then settles source energy
-through the target tick against the currently installed topology. Only after
+aligned target tick and settles source energy through the target tick against
+the currently installed topology before applying the new phase/wind boundary. Only after
 that settlement may it prepare and commit a topology replacement, so migration
 cannot overwrite energy delivered in the same cut. A normal
-20-tick interval executes one one-second transport step. A larger delayed interval
-also executes one step, with `dtSeconds = elapsedTicks / 20.0`, so exchange covers
+20-tick interval executes one one-second transport step. In the legacy Page
+transport path, a larger delayed interval also executes one step, with `dtSeconds = elapsedTicks / 20.0`, so exchange covers
 the same game-time interval as source energy. Air, material and FarField paths
 already support this dt; the ordinary one-second compiled-coefficient fast paths
 remain. Zero-time cuts and unchanged sleeping state do not run transport. There
@@ -187,7 +218,7 @@ In the two-Air-node 600-second regression, the 20-vs-200-tick source-temperature
 difference fell from 8.26 C to about 0.174 C with identical energy. This is one
 controlled network, not a universal error bound. Latent exchange still stops at
 the world-ACK boundary. See the
-[time-step repair](../../diary/2026-09-16_00-00-26_thermal-elapsed-time-fix.md).
+[time-step repair](../../diary/2026-10-29_23-38-00_thermal-development-history.md).
 
 ## Page And Brick Model
 
@@ -486,6 +517,33 @@ the current count plus all possible insertions, covering insertion-before-
 deletion commit order without allocation in `TopologyCommitter`. Preparation
 also reserves the admission-identity list for the exact number of Page
 admissions in that prepared cut, so its commit append cannot grow backing.
+With `continuousAir = true`, `TopologyUpdatePlanner.candidateAirGeometry` exposes
+staged Air cells and Page revisions to `ContinuousAirSolver.prepareRebuild` before
+commit. The candidate spatial layout is compiled and projected while the old
+topology remains authoritative. `QueryPublication.tryEnsureAirCapacity` and
+`ThermalDimensionEngine.reserveAirBacking` then reserve query and retained solver
+backing against the shared `128 MiB` root through the dimension budget. A refusal
+calls `ContinuousAirSolver.abortPreparedRebuild` and
+`TopologyUpdatePlanner.discardPrepared`, retaining the previous topology. This
+reservation counts retained Air layouts, volume/operator arrays, shapes, PCG
+scratch, source tape and query-held old layouts. It is not a bound on all Java
+heap or every transient compilation allocation; source-tape growth after event
+acceptance remains an accounting gap.
+`FHConfig.COMMON.THERMAL_RUNTIME.continuousAirCorrectionToleranceC` is captured
+in the restart-time profile snapshot. Its source default is `1e-5 °C` for powered
+transport and Air projection; unpowered cooling and direct J impulses retain
+`min(configured value, 1e-9 °C)`, and phase endpoint rounding remains `1e-9 °C`.
+Projection uses a normalized Air-only incomplete Cholesky iteration factor while
+acceptance still uses the existing 32-mode/Jacobi correction estimate and a
+recomputed residual. Transport retains the original factor. See
+[continuous Air precision and production evidence](continuous-air-runtime.md)
+for the distinction between a stopping estimate and actual model error.
+At rebuild, `CoupledThermalOperator.sameContactSupport` reuses pair lookup for
+consecutive contacts with exactly equal ordered coefficient addresses. Physical
+contact weights/conductances still accumulate individually in the original order;
+one temporary pair-position scratch replaces repeated hash lookups. No per-contact
+quadratic position backing is retained. Rebuild diagnostics separate material
+indexing, contact compilation and sparse graph assembly in the inclusive operator stage.
 Brick migration uses bounded 64-entry scratch. New Bricks without dormant state
 and regular-to-regular migration take constant-time fast paths. Mixed migration
 visits at most 64 whole blocks, preserving each surviving same-material member's
@@ -513,9 +571,25 @@ write window only for the final metadata exchange. An unexpected exception
 therefore emits one terminal `ENGINE_FAILED` completion with a coherent last cut.
 The main thread checkpoints it, then terminal ACK closes the old engine before
 the replacement generation reuses Page handles. A close exception is logged but
-cannot retain `inFlight` ownership or suppress replacement. A `WORK_LIMITED` cut discards staging; affected
-Pages fall back, existing topology is retired when necessary, and admission is
-backed off for `200` ticks instead of repeating a full rebuild every cut.
+cannot retain `inFlight` ownership or suppress replacement. A `WORK_LIMITED` cut discards
+the refused staging and can prepare installed-state updates without new admissions or
+added Bricks. A successful recovery publishes that smaller atomic cut and returns only
+the deferred topology inputs for retry; source/phase events are not replayed and
+committed Page lifecycles are preserved. If recovery also fails, all original topology
+inputs remain eligible for retry. Growth admission is backed off for `200` ticks.
+Details and production boundaries live in [Continuous Air Runtime](continuous-air-runtime.md).
+
+For continuous Air, `ThermalCompletion.CutTiming` transfers one coherent worker
+solve/topology/publication timing observation with the completed batch. The main
+thread retains it only when draining that completion and clears it on worker restart.
+This read-only diagnostic does not change the simulation, scheduling or capacity limits.
+
+`ThermalMemoryBudget.peakUsedBytes` retains the maximum charged backing at each
+admitted reserve/resize, including short-lived old/new overlap and the shared
+root across dimensions. It complements periodic used-byte sampling; it does
+not measure the whole JVM heap or complete admission of every temporary array.
+Current continuous-Air measurement and remaining admission gaps are documented
+in [Continuous Air Runtime](continuous-air-runtime.md).
 
 ## Solver
 
@@ -525,6 +599,11 @@ inverse capacity `1/C`, identity, and recyclable spans. One arena-owned
 slot; it has no latent or reserved energy arrays. `ThermalBrickCellLayout` is
 the reusable compilation input. Every material body references one shared
 `MaterialThermalLaw`; temperature and phase progress derive from its single H.
+This arena thermal authority describes the scalar/nonregional paths. Installed
+continuous regions now own H/branch/waiting in `ThermalRegion.Accepted` and access
+it for migration and phase controls through `MaterialStateAccess`; only staged
+initialization, geometry and request/ACK metadata remain in arena for that path.
+See the [regional state contract](continuous-air-regional-preparation.md#区域已提交状态与材料边界同步).
 Normal zero-offset fixed-capacity coefficients are compiled once:
 
 ```text
@@ -580,6 +659,11 @@ remain deterministic and are selected directly from the batch sequence.
 `ThermalSolver.maxTemperatureResidualC()` is only the final quiet-sleep gate.
 It is not run while sources or topology changes are active and is not used as a
 per-tick diagnostic.
+The optional continuous backend uses `ContinuousAirSolver.maxTemperatureResidualC()`
+for the same 20-quiet-batch gate, comparing the bounds of every spatial Air component
+and each material temperature against its Page natural temperature. Its transport can
+be skipped only on a cut with no power, source event, topology/environment update,
+wind change or phase input. Residual heat prevents sleep.
 
 ## Sources And Energy
 
@@ -785,8 +869,13 @@ the coherent query cut, excluding changed bodies through the existing mutation j
 `collectMaterialChangesSince` expands the journal once per stale Page into one shared
 64-long (512-byte) scratch; only affected Bricks need an extra delta. Unchanged bodies
 in the same Brick/Page remain readable. Full Section replacement excludes every old
-body. `sampleMaterial` uses the same identity rule; Air queries retain current-geometry
-requirements. No additional temperature history or observer cache is created.
+body. `sampleMaterial` uses the same identity rule; Air normally requires current
+geometry, but can read the last complete captured layout during a bounded live-revision
+gap when the world point is still Air and every dependency matches its last complete Page
+publication. It also retains one previous Page geometry publication while the query
+buffer catches up to a topology replacement. That fallback requires unchanged material,
+matching current BlockState and a query topology older than the replacement; it stores
+no extra temperature history or per-observer cache.
 
 Two complete read attempts handle publication exchange. A concurrent version/slot/Page
 mismatch retries; if both attempts conflict, no response is sent and the client's last
@@ -809,6 +898,14 @@ The previous GPU image remains at its committed origin during staging. Field-onl
 full establishes a valid display baseline. All-Page deltas use the full upload;
 partial deltas reuse one 8 KiB scratch. No background packet, background texture,
 dormant ownership map or second material mirror exists.
+
+The scan radius expands only while the committed material-presence or analytic-field
+footprint contains a Page. An empty window keeps the ordinary scene visible while
+requests continue, instead of rendering the initial all-INVALID texture as blue.
+The first nonempty LAST response starts the original scan from zero; missing blocks
+inside a covered window still use the blue INVALID base, and real cold temperatures
+retain the original color scale. This client gate does not admit thermal Pages or
+change the server snapshot protocol.
 
 `AFTER_LEVEL` directly blends the infrared result into the borrowed main color
 attachment, preserving destination alpha and the original 0.43 tint/scan animation.
@@ -868,7 +965,7 @@ Owner encoding still occurs during ordinary mesh rebuilds while IR is off.
 The strict production-encoder/GLSL test covers 8,640 scenes and 353,123,074 classified
 pixels with zero ownership errors for both layouts and D24/D32F. Real backend integration,
 performance evidence and remaining acceptance work are recorded in the
-[exact surface capture plan](../../plans/2026-09-13_17-18-00_infrared-exact-surface-capture.md).
+[exact surface capture plan](../../diary/2026-10-29_23-38-00_thermal-development-history.md).
 Without fields, unchanged material windows send no S2C and perform no display
 natural queries. With fields, work and wire grow with their previous/current Page
 area; stable fields are recomposed every poll, not promised zero traffic. This is
@@ -1030,7 +1127,7 @@ runs, not additional production bookkeeping.
 
 The latest completed Forge GameTest run passed `102/102`, including topology,
 material/phase lifecycle, local Air mixing and elapsed-time regressions; see the
-[elapsed-time repair](../../diary/2026-09-16_00-00-26_thermal-elapsed-time-fix.md).
+[elapsed-time repair](../../diary/2026-10-29_23-38-00_thermal-development-history.md).
 On 2026-09-16, obsolete JUnit tests and their fixtures were deleted at the user's
 request instead of restoring removed production APIs. Java 17 `compileTestJava`
 and `compileGameTestJava` then passed; the cleanup did not rerun the game tests

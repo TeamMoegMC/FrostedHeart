@@ -47,9 +47,6 @@ public class FHServerEvents {
 	public static void serverLevelSave(final ServerLevelDataSaveEvent event) {
 	}
 
-	// TemperatureThreadingPool.java is retained as commented legacy source;
-	// Page publications own player environment sampling.
-
 	// Server Lifecycle Events
 	/**
 	 * Server about to start, config and datapack is loaded during this phase, fires
@@ -57,7 +54,6 @@ public class FHServerEvents {
 	 */
 	@SubscribeEvent
 	public static void serverAboutToStart(final ServerAboutToStartEvent event) {
-			// TemperatureThreadingPool remains intentionally uninitialized.
 		if(FMLEnvironment.dist==Dist.DEDICATED_SERVER) {
 			TssapProtocolHandler.serverPrepareUpdateReminder();
 			AuthConfig.reload();
@@ -97,6 +93,5 @@ public class FHServerEvents {
 	@SubscribeEvent
 	public static void serverStopped(final ServerStoppedEvent event) {
 		// Chorda closes persistence and clears the manager after draining frozen work.
-			// TemperatureThreadingPool has no active lifecycle hook.
 	}
 }

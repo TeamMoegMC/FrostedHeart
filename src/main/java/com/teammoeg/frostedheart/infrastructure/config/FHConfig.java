@@ -239,7 +239,11 @@ public class FHConfig {
 	public static class Common {
 		public static class ThermalRuntime {
 			public final ForgeConfigSpec.DoubleValue airHeatCapacityJPerBlockK;
-			public final ForgeConfigSpec.BooleanValue continuousAir;
+			public final ForgeConfigSpec.BooleanValue continuousAirNativeCheckpoint;
+			public final ForgeConfigSpec.BooleanValue continuousAirOverloadProtection;
+			public final ForgeConfigSpec.IntValue continuousAirWorkBudgetMsPerSecond;
+			public final ForgeConfigSpec.IntValue thermalMemoryTargetMiB;
+			public final ForgeConfigSpec.DoubleValue continuousAirCorrectionToleranceC;
 			public final ForgeConfigSpec.DoubleValue airMixingWPerBlockK;
 			public final ForgeConfigSpec.DoubleValue farFieldConductanceWPerK;
 			public final ForgeConfigSpec.DoubleValue campfirePowerW;
@@ -255,9 +259,21 @@ public class FHConfig {
 				builder.comment(
 						"Restart the client or dedicated server after changing thermal runtime values.")
 					.push("Thermal Runtime");
-				continuousAir = builder
-					.comment("Use the continuous Air solver. Restart required. Development backend; disabled by default.")
-					.define("continuousAir", false);
+				continuousAirOverloadProtection = builder
+					.comment("Automatically use the whole-region coarse air grid when regional work exceeds its service allowance.")
+					.define("continuousAirOverloadProtection", true);
+				continuousAirWorkBudgetMsPerSecond = builder
+					.comment("Soft allowance for summed active time of thermal tasks, in milliseconds per wall-clock second, shared across dimensions and workers. One period's allowance permits short bursts; idle time cannot accumulate more. Queue waits are excluded; preemption and GC during execution count. Control/cleanup can continue beyond the allowance. This is not a physical CPU-core limit; the legacy configuration key is retained.")
+					.defineInRange("continuousAirCpuBudgetMsPerSecond", 1000, 1, 4000);
+				thermalMemoryTargetMiB = builder
+					.comment("Server-wide target for optional detailed thermal work in MiB, shared across dimensions. Real source recording, accepted world updates, coarse work, saves and result publication can exceed it to complete and remain accounted. Structural concurrency and Page/source counts bound ownership. This is not a JVM heap limit. Restart required.")
+					.defineInRange("thermalMemoryTargetMiB", 128, 16, 16384);
+				continuousAirNativeCheckpoint = builder
+					.comment("Prepare regional thermal checkpoints ahead of chunk unloads through vanilla's queue. Ordinary saves also use regional snapshots when this option is disabled. Restart required.")
+					.define("continuousAirNativeCheckpoint", true);
+				continuousAirCorrectionToleranceC = builder
+					.comment("Maximum normalized residual in degrees Celsius for Air energy projection during a rebuild. This is not a bound on total model or transport error. Restart required.")
+					.defineInRange("continuousAirCorrectionToleranceC", 1.0e-5D, 1.0e-12D, 1.0e-3D);
 				airHeatCapacityJPerBlockK = builder
 					.comment("Effective Air heat capacity per block in J/K.")
 					.defineInRange("airHeatCapacityJPerBlockK", 1_200.0D, 1.0D, 1_000_000.0D);
@@ -651,29 +667,6 @@ public class FHConfig {
 					.defineInRange("stickIgnitionChance", 0.05, 0, 1);
 				consumeChanceWhenIgnited = builder.comment("The chance of consuming the item when ignited.")
 					.defineInRange("consumeChanceWhenIgnited", 0.1, 0, 1);
-				builder.pop();
-
-			}
-		}
-
-		public static class TemperatureSimulation {
-			public final ForgeConfigSpec.ConfigValue<Integer> simulationRange;
-			public final ForgeConfigSpec.ConfigValue<Integer> simulationDivision;
-			public final ForgeConfigSpec.ConfigValue<Double> simulationParticleInitialSpeed;
-
-			TemperatureSimulation(ForgeConfigSpec.Builder builder) {
-				builder.push("Surrounding Temperature Simulation").comment("The simulator is used to simulate the temperature of the surrounding environment. Not recommended to change.");
-				simulationRange = builder.comment("The range of the simulation.")
-					.defineInRange("simulationRange", 8, 1, 8);
-				simulationDivision = builder.comment("The number of divisions of unit square in the simulation.")
-					.comment("Number of particles is cubic of this value.")
-					.comment("If your server lags, you can reduce this value.")
-					.defineInRange("simulationDivision", 10, 1, 100);
-				simulationParticleInitialSpeed = builder.comment("The initial speed of the particles in the simulation.")
-					.defineInRange("simulationParticleInitialSpeed", 0.4f, 0.01f, 1f);
-				// simulationParticleLife = builder.comment("The life ticks of the particles in
-				// the simulation.")
-				// .defineInRange("simulationParticleLife", 20, 1, 100);
 				builder.pop();
 
 			}
@@ -2200,7 +2193,6 @@ public class FHConfig {
 		public final Nutrition NUTRITION;
 		public final WorldGen WORLDGEN;
 		public final FireIgnition FIRE_IGNITION;
-		public final TemperatureSimulation SIMULATION;
 		public final Town TOWN;
 		public final StorageDrawers STORAGE_DRAWERS;
 		public final Misc MISC;
@@ -2214,7 +2206,6 @@ public class FHConfig {
 			NUTRITION = new Nutrition(builder);
 			WORLDGEN = new WorldGen(builder);
 			FIRE_IGNITION = new FireIgnition(builder);
-			SIMULATION = new TemperatureSimulation(builder);
 			TOWN = new Town(builder);
 			STORAGE_DRAWERS = new StorageDrawers(builder);
 			MISC = new Misc(builder);

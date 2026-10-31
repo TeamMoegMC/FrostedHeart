@@ -1,0 +1,101 @@
+{
+  "status": "passed-cleanup-only",
+  "date": "2026-10-26",
+  "author": "Codex; OpenAI GPT-6; construction invariant review and cleanup",
+  "scope": "Seven thermal responsibilities, focusing on reachable code whose producers cannot create the data it handles",
+  "constructionEvidence": [
+    "AirRouteCompiler.appendEdges resolves both endpoints with TopologyView.airSlotAt",
+    "BrickTopologyCompiler adds one material slot and one resolved Air slot",
+    "WorkerBrickTopology.airSlotAt only returns nodes below airNodeCount",
+    "No main or GameTest producer constructs a material/material RoutedContacts edge",
+    "Actual material/material exchange remains in ThermalMaterialExecution"
+  ],
+  "removed": [
+    "Unreachable material/material branch in ContactPreparation.routedEdge",
+    "Four always-empty Contacts localEdge containers and sole writer",
+    "Four empty LocalMaterialBoundary routed arrays and their preparation copies",
+    "Exclusive frozen route array/flag and freeze/release methods",
+    "Dual-path internal material edge access and sweeps",
+    "Empty coarse construction tail and diagnostic partition union loop"
+  ],
+  "source": {
+    "productionThermalFiles": 133,
+    "productionFilesChanged": 5,
+    "productionLinesBefore": 44531,
+    "productionLinesAfter": 44476,
+    "productionLinesRemovedNet": 55,
+    "testFiles": 107,
+    "testLines": 16272,
+    "testFilesChanged": 0,
+    "newProductionTypes": 0
+  },
+  "build": {
+    "java": 17,
+    "command": "assemble compileGameTestJava --offline --no-daemon --max-workers=1",
+    "attempts": 2,
+    "first": {
+      "status": "main-and-assemble-passed-unrelated-test-compilation-failed",
+      "elapsed": "56s",
+      "reason": "Deposit fixtures in shared workspace referenced deleted DepositCoreDensity; no thermal compilation errors",
+      "log": "build/thermal-invariants-compile-20261026-r1.log"
+    },
+    "second": {
+      "status": "passed",
+      "elapsed": "32s",
+      "reason": "Other workspace work removed the unrelated stale references; this task did not edit deposit files or add build isolation",
+      "log": "build/thermal-invariants-compile-20261026-r2.log"
+    }
+  },
+  "verification": {
+    "serverRuns": 1,
+    "attempt": 1,
+    "status": "passed",
+    "requiredPassed": 10,
+    "groups": { "material": 8, "sourceCancellationReplay": 1, "regionalGridConversion": 1 },
+    "started": "2026-10-26T17:16:08.5466832+08:00",
+    "ended": "2026-10-26T17:18:24.5144924+08:00",
+    "elapsed": "2m15s",
+    "rootZero": true,
+    "thermalSaveFailures": 0,
+    "memoryTargetMiB": 128,
+    "cpuMsPerSecond": 250,
+    "heap": "5g",
+    "sourceJ": 6400,
+    "deliveredJ": 6400,
+    "sourceCancellations": 2,
+    "sourcePublications": 1,
+    "sourceReplayEnergyDeltaJ": 0,
+    "sourceReplayTemperatureDeltaC": 0,
+    "gridCycles": 2,
+    "gridCheckpoints": 2,
+    "gridRecoveryJumpC": 0.003652688219061062,
+    "gridCheckpointErrorC": 0.09696030018998947,
+    "gridCoarseningEnergyErrorJ": 7.450580596923828e-9,
+    "productionOrTestSourceEditsAfterCompile": false,
+    "junitRuns": 0,
+    "performanceRun": false,
+    "log": "build/thermal-invariants-focused-20261026-r1.log"
+  },
+  "compiledReview": {
+    "methodsBefore": 4561,
+    "methodsAfter": 4558,
+    "fieldsBefore": 3885,
+    "fieldsAfter": 3871,
+    "retiredMembersRemaining": 0,
+    "confirmedCleanupItemsRemaining": 0,
+    "retainedUnreachedMethods": ["ClassValue library callback", "Explicit signed impulse input contract"],
+    "retainedNoDirectReadFields": "Three flags read through VarHandle",
+    "inventoryPrefix": "build/thermal-invariants-20261026-final",
+    "apiReport": "build/thermal-invariants-compiled-api-20261026.txt"
+  },
+  "package": { "bytes": 14947182, "thermalClasses": 435, "testClassesInProduction": 0, "protectedParticleClasses": 4 },
+  "preserved": [
+    "Actual material/material execution order and symmetric exchange",
+    "Actual Air/Air and material/Air routes, retirement and frozen contact activity",
+    "Material enthalpy, branches, waiting, phase requests and ACK",
+    "Shared workers, regional task ownership, input Claim, cancellation, save and last-release paths",
+    "Fine/coarse algorithms, policies, defaults and v6 format"
+  ],
+  "exclusions": { "townAndInterfacesChanged": false, "protectedParticleFilesChanged": false, "excludedFileMetadataChecked": 350, "excludedFileMetadataChanged": 0 },
+  "limits": ["Earlier 27-test validation belongs to its previous build", "No new performance or 0.1C qualification", "A scoped invariant review does not guarantee all future edits or dynamic consumers remain free of redundancy"]
+}

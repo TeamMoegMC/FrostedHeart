@@ -23,11 +23,10 @@ package com.teammoeg.frostedheart.content.climate.thermal.persistence.minecraft;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialSample;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialThermalLaw;
-import com.teammoeg.frostedheart.content.climate.thermal.mesh.PagePublication;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalPageHandle;
 import com.teammoeg.frostedheart.content.climate.thermal.persistence.DormantThermalCooling;
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.AirBackingMeter;
 import com.teammoeg.frostedheart.content.climate.thermal.profile.minecraft.MinecraftThermalProfiles;
-import com.teammoeg.frostedheart.content.climate.thermal.query.QueryPublication;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ThermalInputBatch;
 
 import net.minecraft.core.BlockPos;
@@ -64,7 +63,7 @@ public final class DormantChunkThermalState {
     }
 
     private static final String ROOT_TAG = "FrostedHeartThermal";
-    private static final int FORMAT_VERSION = 5;
+    private static final int FORMAT_VERSION = 6;
     private static final int BRICKS = ThermalPageHandle.BASE_BRICK_COUNT;
     // Air stores signed temperature excess in sixteenths of a degree, relative to savedNaturalC.
     // All short values are valid here, including MIN_VALUE (unlike infrared's missing marker).
@@ -79,6 +78,23 @@ public final class DormantChunkThermalState {
     private long[] materialRevisions;
     private long[] cachedNaturalTicks;
     private double[] cachedNaturalTemperatures;
+    private PendingHeatCheckpoint pending = PendingHeatCheckpoint.EMPTY;
+    private PendingHeatCheckpoint coldPending = PendingHeatCheckpoint.EMPTY;
+    private long restorationPageFloor;
+
+    public PendingHeatCheckpoint coldPending() { return coldPending; }
+    public long restorationPageFloor() { return restorationPageFloor; }
+    public void restorationPageFloor(long floor) { if (restorationPageFloor == 0) restorationPageFloor = floor; }
+    public void setPending(PendingHeatCheckpoint all, PendingHeatCheckpoint cold, long floor) {
+        pending = java.util.Objects.requireNonNull(all); coldPending = java.util.Objects.requireNonNull(cold);
+        restorationPageFloor = floor;
+    }
+    /** The independent intake now owns this immutable cold payload. */
+    public void acceptedColdPending(PendingHeatCheckpoint expected) {
+        if (coldPending != expected) return;
+        coldPending = PendingHeatCheckpoint.EMPTY;
+        if (pending == expected) pending = PendingHeatCheckpoint.EMPTY;
+    }
 
     public DormantChunkThermalState(int minimumSectionY, int sectionCount) {
         if (sectionCount <= 0) {
@@ -89,58 +105,99 @@ public final class DormantChunkThermalState {
         materialEntries = new MaterialSectionState.Editor[sectionCount];
     }
 
+    /** Isolated capture target; immutable Air and published material arrays are shared until changed. */
+    public DormantChunkThermalState copyForCapture() {
+        DormantChunkThermalState copy = new DormantChunkThermalState(minimumSectionY, entries.length);
+        System.arraycopy(entries, 0, copy.entries, 0, entries.length);
+        for (int index = 0; index < materialEntries.length; index++) {
+            if (materialEntries[index] != null)
+                copy.materialEntries[index] = new MaterialSectionState.Editor(materialEntries[index].snapshot());
+        }
+        if (materialRevisions != null) copy.materialRevisions = materialRevisions.clone();
+        copy.pending = pending; copy.coldPending = coldPending; copy.restorationPageFloor = restorationPageFloor;
+        return copy;
+    }
+
+    public long oldestAirSavedTick() {
+        long oldest = Long.MAX_VALUE;
+        for (SectionEntry entry : entries) if (entry != null) oldest = Math.min(oldest, entry.savedGameTick);
+        return oldest == Long.MAX_VALUE ? -1 : oldest;
+    }
+
     public static DormantChunkThermalState decode(
             CompoundTag chunkTag, int minimumSectionY, int sectionCount) {
-        if (!chunkTag.contains(ROOT_TAG, Tag.TAG_COMPOUND)) {
-            return null;
-        }
-        CompoundTag root = chunkTag.getCompound(ROOT_TAG);
-        if (root.getInt("version") != FORMAT_VERSION) {
-            return null;
-        }
-        DormantChunkThermalState result =
-                new DormantChunkThermalState(minimumSectionY, sectionCount);
-        ListTag sections = root.getList("sections", Tag.TAG_COMPOUND);
-        for (Tag tag : sections) {
-            CompoundTag section = (CompoundTag) tag;
-            int sectionY = section.getInt("y");
-            int index = sectionY - minimumSectionY;
-            if (index < 0 || index >= sectionCount || result.entries[index] != null) {
-                continue;
+        var stageObserver = com.teammoeg.frostedheart.content.climate.thermal.solver.ThermalDiagnostics.observer;
+        boolean observeStage = stageObserver != null;
+        if (observeStage) stageObserver.stage("thermal_decode", true);
+        try {
+            if (!chunkTag.contains(ROOT_TAG, Tag.TAG_COMPOUND)) {
+                return null;
             }
-            SectionEntry entry = SectionEntry.decode(section);
-            if (entry != null) {
-                result.entries[index] = entry;
+            CompoundTag root = chunkTag.getCompound(ROOT_TAG);
+            // Unreleased historical thermal formats are intentionally not migrated.
+            if (root.getInt("version") != FORMAT_VERSION) {
+                return null;
             }
-            if (section.contains("materials", Tag.TAG_COMPOUND)) {
-                result.replaceMaterials(
-                        sectionY, MaterialSectionState.decode(section.getCompound("materials")));
+            DormantChunkThermalState result =
+                    new DormantChunkThermalState(minimumSectionY, sectionCount);
+            if (root.contains("pending", Tag.TAG_COMPOUND)) {
+                result.pending = PendingHeatCheckpoint.decode(root.getCompound("pending")); result.coldPending = result.pending;
             }
-        }
-        return result.isEmpty() ? null : result;
+            ListTag sections = root.getList("sections", Tag.TAG_COMPOUND);
+            for (Tag tag : sections) {
+                CompoundTag section = (CompoundTag) tag;
+                int sectionY = section.getInt("y");
+                int index = sectionY - minimumSectionY;
+                if (index < 0 || index >= sectionCount || result.entries[index] != null) {
+                    continue;
+                }
+                SectionEntry entry = SectionEntry.decode(section);
+                if (entry != null) {
+                    result.entries[index] = entry;
+                }
+                if (section.contains("materials", Tag.TAG_COMPOUND)) {
+                    result.replaceMaterials(
+                            sectionY, MaterialSectionState.decode(section.getCompound("materials")));
+                }
+            }
+            return result.isEmpty() ? null : result;
+        } finally { if (observeStage) stageObserver.stage("thermal_decode", false); }
+
     }
 
     public void encode(CompoundTag chunkTag) {
-        if (isEmpty()) {
-            chunkTag.remove(ROOT_TAG);
-            return;
-        }
-        CompoundTag root = new CompoundTag();
-        root.putInt("version", FORMAT_VERSION);
-        ListTag sections = new ListTag();
-        for (int index = 0; index < entries.length; index++) {
-            SectionEntry entry = entries[index];
-            MaterialSectionState material = materials(minimumSectionY + index);
-            if (entry != null || material != null) {
-                CompoundTag section =
-                        entry == null ? new CompoundTag() : entry.encode(minimumSectionY + index);
-                section.putInt("y", minimumSectionY + index);
-                if (material != null) section.put("materials", material.encode());
-                sections.add(section);
+        var stageObserver = com.teammoeg.frostedheart.content.climate.thermal.solver.ThermalDiagnostics.observer;
+        boolean observeStage = stageObserver != null;
+        if (observeStage) stageObserver.stage("thermal_encode", true);
+        try {
+            if (isEmpty()) {
+                chunkTag.remove(ROOT_TAG);
+                return;
             }
-        }
-        root.put("sections", sections);
-        chunkTag.put(ROOT_TAG, root);
+            CompoundTag root = new CompoundTag();
+            root.putInt("version", FORMAT_VERSION);
+            ListTag sections = new ListTag();
+            for (int index = 0; index < entries.length; index++) {
+                SectionEntry entry = entries[index];
+                MaterialSectionState material = materials(minimumSectionY + index);
+                if (entry != null || material != null) {
+                    CompoundTag section =
+                            entry == null ? new CompoundTag() : entry.encode(minimumSectionY + index);
+                    section.putInt("y", minimumSectionY + index);
+                    if (material != null) section.put("materials", material.encode());
+                    sections.add(section);
+                }
+            }
+            root.put("sections", sections);
+            if (!pending.empty()) root.put("pending", pending.encode());
+            chunkTag.put(ROOT_TAG, root);
+            if (stageObserver != null) stageObserver.checkpointEncoded(
+                    net.minecraft.world.level.ChunkPos.asLong(chunkTag.getInt("xPos"), chunkTag.getInt("zPos")), root.getCompound("pending"));
+            // The next live write recaptures its current owner. Keep only truly cold
+            // data in the chunk cache after vanilla has serialized the disk copy.
+            pending = coldPending;
+        } finally { if (observeStage) stageObserver.stage("thermal_encode", false); }
+
     }
 
     public boolean replace(int sectionY, SectionEntry entry) {
@@ -280,13 +337,6 @@ public final class DormantChunkThermalState {
                 : materialRevisions[index];
     }
 
-    public long storedBrickMask(int sectionY) {
-        int index = sectionY - minimumSectionY;
-        return index < 0 || index >= entries.length || entries[index] == null
-                ? 0L
-                : entries[index].brickMask;
-    }
-
     public double sample(
             int sectionY,
             int brick,
@@ -326,11 +376,8 @@ public final class DormantChunkThermalState {
             int brick = (bx & 15) >>> 2 | ((bz & 15) >>> 2) << 2 | ((by & 15) >>> 2) << 4;
             return sample(sectionY, brick, gameTick, halfLifeSeconds, level, bx >> 4, bz >> 4, naturalPosition);
         }
-        double savedC = entry.spatialAir.sampleC(x, y, z);
-        if (!Double.isFinite(savedC)) return Double.NaN;
         double natural = naturalTemperature(level, bx >> 4, sectionY, bz >> 4, gameTick, naturalPosition);
-        return DormantThermalCooling.temperature(savedC, natural,
-                DormantThermalCooling.factor(entry.savedGameTick, gameTick, DormantThermalCooling.rate(halfLifeSeconds)));
+        return entry.spatialAir.sampleC(x, y, z, natural, gameTick, DormantThermalCooling.rate(halfLifeSeconds), entry.savedGameTick);
     }
 
     public ThermalInputBatch.DormantAirCut admissionCut(
@@ -349,10 +396,11 @@ public final class DormantChunkThermalState {
                 DormantThermalCooling.factor(
                         entry.savedGameTick,
                         gameTick,
-                        DormantThermalCooling.rate(halfLifeSeconds)));
+                        DormantThermalCooling.rate(halfLifeSeconds)), gameTick, DormantThermalCooling.rate(halfLifeSeconds));
     }
 
     public boolean isEmpty() {
+        if (!pending.empty() || !coldPending.empty()) return false;
         for (MaterialSectionState.Editor material : materialEntries) {
             if (material != null && !material.isEmpty()) return false;
         }
@@ -400,69 +448,6 @@ public final class DormantChunkThermalState {
             throw new IllegalArgumentException("sectionY is outside the owning chunk");
         }
         return index;
-    }
-
-    public static CaptureResult capture(
-            PagePublication publication,
-            QueryPublication queries,
-            QueryPublication.MutableSample sample,
-            double naturalTemperatureC,
-            CaptureScratch scratch) {
-        if (!queries.beginRead(scratch.cursor)) return CaptureResult.FAILED;
-        if (scratch.cursor.hasSpatialAir()) {
-            if (!scratch.cursor.matchesAirLayout(publication)) { scratch.cursor.clear(); return CaptureResult.FAILED; }
-            AirFieldCheckpoint checkpoint = scratch.cursor.captureAir(publication, naturalTemperatureC);
-            long tick = scratch.cursor.sampleTick();
-            boolean current = scratch.cursor.isCurrent();
-            scratch.cursor.clear();
-            return current ? new CaptureResult(true, checkpoint == null ? null : new SectionEntry(tick, naturalTemperatureC, checkpoint))
-                    : CaptureResult.FAILED;
-        }
-        scratch.cursor.clear();
-        long brickMask = 0, sampleTick = -1;
-        int exactNodes = 0;
-        for (int brick = 0; brick < 64; brick++) {
-            var payload = publication.brick(brick);
-            int n = payload.airNodeCount();
-            scratch.counts[brick] = 0;
-            if (payload.firstSlot() < 0 || n == 0) continue;
-            double sum = 0;
-            int blocks = 0;
-            boolean different = false, retained = false;
-            short firstResidual = 0;
-            for (int node = 0; node < n; node++) {
-                if (!queries.tryRead(
-                        payload.firstSlot() + node,
-                        payload.arenaGeneration(),
-                        publication.topologyGeneration(),
-                        sample)) return CaptureResult.FAILED;
-                if (sampleTick < 0) sampleTick = sample.sampleTick();
-                else if (sampleTick != sample.sampleTick()) return CaptureResult.FAILED;
-                long mask =
-                        payload.blockLayout() == null
-                                ? -1L
-                                : payload.blockLayout().nodeBlockMask(node);
-                int weight = Long.bitCount(mask);
-                short residual = quantizeResidual(sample.temperatureC() - naturalTemperatureC);
-                int index = brick * 64 + node;
-                scratch.nodeMasks[index] = mask;
-                scratch.nodeResiduals[index] = residual;
-                if (node == 0) firstResidual = residual;
-                else different |= residual != firstResidual;
-                retained |= Math.abs(residual) > PRUNE_RESIDUAL;
-                sum += sample.temperatureC() * weight;
-                blocks += weight;
-            }
-            if (!retained) continue;
-            brickMask |= 1L << brick;
-            scratch.means[brick] = quantizeResidual(sum / blocks - naturalTemperatureC);
-            if (different) {
-                scratch.counts[brick] = (byte) n;
-                exactNodes += n;
-            }
-        }
-        return new CaptureResult(
-                true, fromScratch(sampleTick, naturalTemperatureC, brickMask, exactNodes, scratch));
     }
 
     private static SectionEntry fromScratch(
@@ -517,10 +502,8 @@ public final class DormantChunkThermalState {
         if (current == null && sampledBricks == 0) return false;
         if (previous.spatialAir != null || current != null && current.spatialAir != null) {
             if (current != null && current.spatialAir == null) return replace(sectionY, current);
-            AirFieldCheckpoint merged = AirFieldCheckpoint.merge(previous.spatialAir, naturalC,
-                    DormantThermalCooling.factor(previous.savedGameTick, tick, rate),
-                    current == null ? null : current.spatialAir, naturalC,
-                    current == null ? 1 : DormantThermalCooling.factor(current.savedGameTick, tick, rate), sampledBricks);
+            AirFieldCheckpoint merged = AirFieldCheckpoint.mergeDated(previous.spatialAir, previous.savedGameTick,
+                    current == null ? null : current.spatialAir, current == null ? tick : current.savedGameTick, sampledBricks);
             return replace(sectionY, merged == null ? null : new SectionEntry(tick, naturalC, merged));
         }
         long mask = 0;
@@ -558,14 +541,9 @@ public final class DormantChunkThermalState {
     }
 
     public static final class CaptureScratch {
-        final QueryPublication.ReadCursor cursor = new QueryPublication.ReadCursor();
         final long[] nodeMasks = new long[4096];
         final short[] nodeResiduals = new short[4096], means = new short[64];
         final byte[] counts = new byte[64];
-    }
-
-    public record CaptureResult(boolean valid, SectionEntry entry) {
-        private static final CaptureResult FAILED = new CaptureResult(false, null);
     }
 
     /**
@@ -619,6 +597,14 @@ public final class DormantChunkThermalState {
 
         public AirFieldCheckpoint spatialAir() { return spatialAir; }
 
+        /** Immutable restored payload retained by either its chunk checkpoint or an input cut. */
+        public void recordBacking(AirBackingMeter meter) {
+            meter.bytes(64L);
+            meter.array(exactCounts); meter.array(residuals); meter.array(blockMasks);
+            meter.array(residualOffsets); meter.array(nodeMaskOffsets);
+            if (spatialAir != null) spatialAir.recordBacking(meter);
+        }
+
         private static SectionEntry decode(CompoundTag tag) {
             if (tag.contains("air", Tag.TAG_COMPOUND)) {
                 AirFieldCheckpoint air = AirFieldCheckpoint.decode(tag.getCompound("air"));
@@ -665,6 +651,9 @@ public final class DormantChunkThermalState {
             tag.putLongArray("blocks", blockMasks);
             return tag;
         }
+
+        public long brickMask() { return brickMask; }
+        public long savedGameTick() { return savedGameTick; }
 
         public boolean hasBrick(int brick) {
             return (brickMask & 1L << brick) != 0;

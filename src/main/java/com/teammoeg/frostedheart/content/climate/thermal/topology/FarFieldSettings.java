@@ -23,34 +23,21 @@ package com.teammoeg.frostedheart.content.climate.thermal.topology;
 /** Local exposed-boundary calibration without room/component classification. */
 public record FarFieldSettings(
         double baseConductanceWPerK,
-        double referenceOpeningAreaBlocksSquared,
-        double continuationDistanceBlocks
+        double referenceOpeningAreaBlocksSquared
 ) {
     public FarFieldSettings {
         if (!Double.isFinite(baseConductanceWPerK)
                 || baseConductanceWPerK <= 0.0D
                 || !Double.isFinite(referenceOpeningAreaBlocksSquared)
-                || referenceOpeningAreaBlocksSquared <= 0.0D
-                || !Double.isFinite(continuationDistanceBlocks)
-                || continuationDistanceBlocks <= 0.0D) {
+                || referenceOpeningAreaBlocksSquared <= 0.0D) {
             throw new IllegalArgumentException(
                     "FarField settings are invalid");
         }
     }
 
-    double conductanceForPatches(
-            int openPatchCount,
-            boolean directSkyExposure
-    ) {
-        if (openPatchCount <= 0) {
-            return 0.0D;
-        }
-        double continuation = directSkyExposure
-                ? 1.0D
-                : 1.0D / (1.0D + continuationDistanceBlocks);
+    double skyFaceConductanceWPerK() {
         return baseConductanceWPerK
-                * openPatchCount
-                / (16.0D * referenceOpeningAreaBlocksSquared)
-                * continuation;
+                * 16
+                / (16.0D * referenceOpeningAreaBlocksSquared);
     }
 }

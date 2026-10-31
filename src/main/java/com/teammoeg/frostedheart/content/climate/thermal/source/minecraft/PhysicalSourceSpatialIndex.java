@@ -39,11 +39,12 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CampfireBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
-import net.minecraft.world.level.chunk.LevelChunkSection;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
 
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.Iterator;
 
 /**
  * 主线程物理热源的 SoA 存储与 section-local 反向索引。
@@ -63,12 +64,14 @@ public final class PhysicalSourceSpatialIndex
     private static final byte OFFERED_ENABLED = 1 << 4;
     private static final byte TARGETS_CHANGED = 1 << 5;
     private static final byte DIRTY_QUEUED = 1 << 6;
+    private static final byte STATE_RECHECK = (byte) (1 << 7);
     private static final byte CAMPFIRE_PROFILE_ID =
             (byte) MinecraftPhysicalSourceProfile.CAMPFIRE.profileId();
     private static final byte GENERATOR_PROFILE_ID =
             (byte) MinecraftPhysicalSourceProfile.GENERATOR.profileId();
 
     private DimensionInputAccumulator accumulator;
+    private final ServerLevel level;
     private final MinecraftPageManager pages;
     private final MinecraftPhysicalSourceProfile campfireProfile;
     private final Long2IntOpenHashMap slotsById = new Long2IntOpenHashMap();
@@ -102,6 +105,7 @@ public final class PhysicalSourceSpatialIndex
     private boolean closed;
 
     public PhysicalSourceSpatialIndex(
+            ServerLevel level,
             DimensionInputAccumulator accumulator,
             MinecraftPageManager pages,
             MinecraftPhysicalSourceProfile campfireProfile,
@@ -113,6 +117,7 @@ public final class PhysicalSourceSpatialIndex
             throw new IllegalArgumentException(
                     "source index capacity is negative");
         }
+        this.level = level;
         this.accumulator = accumulator;
         this.pages = pages;
         this.campfireProfile = Objects.requireNonNull(
@@ -155,51 +160,76 @@ public final class PhysicalSourceSpatialIndex
         return true;
     }
 
-    public boolean resyncSection(
-            int sectionX,
-            int sectionY,
-            int sectionZ,
-            LevelChunkSection section
-    ) {
-        IntOpenHashSet indexed = sourcesByOriginSection.get(
-                SectionPos.asLong(sectionX, sectionY, sectionZ));
+    /** A tentative lifecycle change only dirties an already owned source. */
+    public void deferCampfireState(int x, int y, int z) {
+        int slot = slotsById.get(BlockPos.asLong(x, y, z));
+        if (slot != NO_SLOT && flag(slot, PRESENT) && profileIds[slot] == CAMPFIRE_PROFILE_ID) {
+            setFlag(slot, STATE_RECHECK, true);
+            markDirty(slot);
+        }
+    }
+
+    /** Structural dependency invalidation visits registered sources, never Section contents. */
+    public void invalidateSection(long sectionKey) {
+        IntOpenHashSet indexed = sourcesByOriginSection.get(sectionKey);
         if (indexed != null) {
             for (int slot : indexed) {
-                if (isLive(slot) && flag(slot, PRESENT)
-                        && profileIds[slot] == CAMPFIRE_PROFILE_ID) {
-                    setFlag(slot, PRESENT, false);
+                if (isLive(slot) && flag(slot, PRESENT)) {
+                    setFlag(slot, TARGETS_CHANGED, true);
+                    if (profileIds[slot] == CAMPFIRE_PROFILE_ID) setFlag(slot, STATE_RECHECK, true);
                     markDirty(slot);
                 }
             }
         }
-        int minX = SectionPos.sectionToBlockCoord(sectionX);
-        int minY = SectionPos.sectionToBlockCoord(sectionY);
-        int minZ = SectionPos.sectionToBlockCoord(sectionZ);
-        boolean complete = true;
-        for (int localY = 0; localY < 16; localY++) {
-            for (int localZ = 0; localZ < 16; localZ++) {
-                for (int localX = 0; localX < 16; localX++) {
-                    BlockState state = section.getBlockState(
-                            localX, localY, localZ);
-                    if (isCampfire(state)) {
-                        complete &= observeCampfire(
-                                minX + localX, minY + localY, minZ + localZ,
-                                state);
-                    }
-                }
-            }
-        }
-        return complete;
     }
 
-    public boolean discoverChunk(LevelChunk chunk) {
-        boolean complete = true;
-        for (BlockPos position : chunk.getBlockEntitiesPos()) {
-            complete &= resyncBlock(
-                    position.getX(), position.getY(), position.getZ(),
-                    chunk.getBlockState(position));
+    /** Resolve captured changes after confirmation/rollback, before reads or source transport. */
+    public void reconcileCampfireChanges() {
+        if (level.captureBlockSnapshots) return;
+        for (int index = 0; index < dirtyOrder.size(); index++) {
+            int slot = dirtyOrder.getInt(index);
+            if (!flag(slot, STATE_RECHECK)) continue;
+            setFlag(slot, STATE_RECHECK, false);
+            if (!flag(slot, PRESENT)) continue; // Explicit unload owns retirement.
+            long position = sourceIds[slot];
+            int x = BlockPos.getX(position), y = BlockPos.getY(position), z = BlockPos.getZ(position);
+            LevelChunk chunk = level.getChunkSource().getChunkNow(x >> 4, z >> 4);
+            if (chunk == null) remove(x, y, z);
+            else resyncBlock(x, y, z, chunk.getBlockState(BlockPos.of(position)));
         }
-        return complete;
+    }
+
+    /** One bounded discovery pass; includes packed NBT as well as instantiated BEs. */
+    public static final class DiscoveryCursor {
+        public final LevelChunk chunk;
+        private final Iterator<BlockPos> positions;
+        private BlockPos pending;
+
+        public DiscoveryCursor(LevelChunk chunk) {
+            this.chunk = chunk;
+            // Vanilla returns a detached union of live and packed BE keys. At most
+            // eight such snapshots are held by the input, and one starts per tick.
+            positions = chunk.getBlockEntitiesPos().iterator();
+        }
+
+        public boolean complete() { return pending == null && !positions.hasNext(); }
+    }
+
+    public int discoverChunk(DiscoveryCursor cursor, int maximumPositions) {
+        int visited = 0;
+        while (visited < maximumPositions && !cursor.complete()) {
+            if (cursor.pending == null) cursor.pending = cursor.positions.next();
+            BlockPos position = cursor.pending;
+            visited++;
+            if (!resyncBlock(position.getX(), position.getY(), position.getZ(), cursor.chunk.getBlockState(position))) break;
+            cursor.pending = null;
+        }
+        return visited;
+    }
+
+    public boolean hasSourcesInChunk(long chunkKey) {
+        var sources = sourcesByOriginChunk.get(chunkKey);
+        return sources != null && !sources.isEmpty();
     }
 
     public void beforeChunkUnload(LevelChunk chunk, long eventTick) {
@@ -209,6 +239,7 @@ public final class PhysicalSourceSpatialIndex
             for (int slot : indexed) {
                 if (isLive(slot)) {
                     setFlag(slot, PRESENT, false);
+                    setFlag(slot, STATE_RECHECK, false);
                     markDirty(slot);
                 }
             }
@@ -231,13 +262,34 @@ public final class PhysicalSourceSpatialIndex
         flush(eventTick);
     }
 
+    /** Prepare new sources' page interest without registering power or changing event time. */
+    public void prepareNewTargets() {
+        requireOpen();
+        for (int index = 0; index < dirtyOrder.size(); index++) {
+            int slot = dirtyOrder.getInt(index);
+            if (isLive(slot) && flag(slot, PRESENT) && !flag(slot, REGISTERED)
+                    && flag(slot, TARGETS_CHANGED)) {
+                refreshTargets(slot);
+                sourceFlags[slot] &= ~TARGETS_CHANGED;
+            }
+        }
+    }
+
     public void flush(long eventTick) {
+        reconcileCampfireChanges();
         int dirtyCount = dirtyOrder.size();
+        int deferred = 0;
         Arrays.sort(dirtyOrder.elements(), 0, dirtyCount);
         for (int dirtyIndex = 0; dirtyIndex < dirtyCount; dirtyIndex++) {
             int slot = dirtyOrder.getInt(dirtyIndex);
             sourceFlags[slot] &= ~DIRTY_QUEUED;
             if (!isLive(slot)) {
+                continue;
+            }
+            if (flag(slot, STATE_RECHECK)) {
+                // A save during capture must not discard the pending final-state read.
+                setFlag(slot, DIRTY_QUEUED, true);
+                dirtyOrder.set(deferred++, slot);
                 continue;
             }
             if (!flag(slot, PRESENT)) {
@@ -272,7 +324,7 @@ public final class PhysicalSourceSpatialIndex
                 EmissionPort[] ports =
                         WorkerPhysicalSourceBindings.initialPorts(
                                 sourceIds[slot], profile);
-                accumulator.registerSource(
+                boolean admitted = accumulator.registerSource(
                         sourceIds[slot],
                         lifecycleGenerations[slot],
                         ThermalSourceMode.POWER_SOURCE,
@@ -284,6 +336,13 @@ public final class PhysicalSourceSpatialIndex
                         anchorZ[slot],
                         profile.profileId(),
                         ports);
+                if (!admitted) {
+                    if (!flag(slot, DIRTY_QUEUED)) {
+                        setFlag(slot, DIRTY_QUEUED, true);
+                        dirtyOrder.set(deferred++, slot);
+                    }
+                    continue;
+                }
                 setFlag(slot, REGISTERED, true);
                 offeredPowerW[slot] = desiredPowerW[slot];
                 setFlag(
@@ -308,11 +367,21 @@ public final class PhysicalSourceSpatialIndex
                         flag(slot, DESIRED_ENABLED));
             }
         }
-        dirtyOrder.clear();
+        int added = dirtyOrder.size() - dirtyCount;
+        System.arraycopy(dirtyOrder.elements(), dirtyCount, dirtyOrder.elements(), deferred, added);
+        dirtyOrder.size(deferred + added);
     }
 
     public boolean hasAvailableCapacity() {
         return freeHead != NO_SLOT || highWaterMark < maximumSources;
+    }
+
+    /** Read-only production observation of sources actually offered to the worker. */
+    public int enabledSourceCount() {
+        int count = 0;
+        for (int slot = 0; slot < highWaterMark; slot++)
+            if (flag(slot, PRESENT) && flag(slot, REGISTERED) && flag(slot, OFFERED_ENABLED)) count++;
+        return count;
     }
 
     public BlockPos nearestEnabledGenerator(
@@ -479,6 +548,7 @@ public final class PhysicalSourceSpatialIndex
         int slot = slotsById.get(BlockPos.asLong(x, y, z));
         if (slot != NO_SLOT && flag(slot, PRESENT)) {
             setFlag(slot, PRESENT, false);
+            setFlag(slot, STATE_RECHECK, false);
             markDirty(slot);
         }
     }

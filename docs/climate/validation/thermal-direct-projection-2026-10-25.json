@@ -1,0 +1,161 @@
+{
+  "status": "passed",
+  "implementationDate": "2026-10-25",
+  "author": "Codex; OpenAI GPT-6; primary implementation and review",
+  "scope": "Direct nodal energy/mass projection replacing diagonal PCG",
+  "source": {
+    "beforeFiles": 134,
+    "beforeLines": 45153,
+    "afterFiles": 133,
+    "afterLines": 44836,
+    "netRemovedLines": 317,
+    "newTopLevelProductionTypes": 0,
+    "deletedTypes": [
+      "PcgSolver"
+    ]
+  },
+  "behavior": {
+    "formula": "C_i = J_i / massJPerK_i",
+    "temperature": "offset from reference C",
+    "blockRows": 1024,
+    "defaultResidualToleranceC": 1E-05,
+    "residual": "abs((J_i - mass_i * C_i) / mass_i)",
+    "warmGuessPreScan": false,
+    "fineWarmGuessPreparation": false,
+    "minimumParentProjectionRetained": true,
+    "airPrefixOnly": true,
+    "emptySystem": "completes immediately",
+    "partialFailure": "existing candidate restore/cleanup, no partial publish",
+    "rounding": "May differ from old PCG inside prior warm-start tolerance or in low floating-point bits"
+  },
+  "removed": [
+    "Four PCG vectors and iterative state",
+    "Separate projectionDiagonal and diagonalJPerK buffers/copies",
+    "Per-fragment projection mass matrices",
+    "Fine warm guess, contributions and duplicate component scan",
+    "Unused PCG iteration counter chain"
+  ],
+  "memory": {
+    "rawResidentDoubleBytesRemovedPerAirNodeAtLeast": 40,
+    "rawPeakDoubleBytesRemovedPerAirNodeAtLeast": 48,
+    "fineWarmContributionIntBytesRemovedPerAirNode": 4,
+    "arrayHeadersAndGrowthNotIncluded": true,
+    "actualServerMemoryMeasured": false
+  },
+  "compile": {
+    "command": "assemble compileGameTestJava --offline --no-daemon --max-workers=1",
+    "java": 17,
+    "attempts": 1,
+    "status": "passed",
+    "elapsed": "57s",
+    "log": "build/thermal-direct-compile-r1.log"
+  },
+  "package": {
+    "jar": "D:/Frosted-Heart/build/libs/frostedheart-1.20.1-0.7.7.jar",
+    "bytes": 14954112,
+    "thermalClasses": 435,
+    "pcgClasses": 0,
+    "gameTestClassesInProduction": 0,
+    "protectedParticleClasses": 4
+  },
+  "staticReview": {
+    "methods": 4605,
+    "fields": 3915,
+    "rawCandidates": 938,
+    "conservativeCandidates": 387,
+    "candidateCountsAreGarbageCounts": false,
+    "report": "build/thermal-direct-member-review-20261025-summary.txt"
+  },
+  "verification": {
+    "junitRuns": 0,
+    "fullMatrixRerun": false,
+    "performanceComparison": false,
+    "separateProcessSaveReloadRerun": false,
+    "memoryTargetMiB": 128,
+    "cpuMsPerSecond": 250,
+    "heap": "5g",
+    "clock": "realtime20",
+    "newChecks": [
+      "Signed exact nodal solution, empty prefix, yielding, material suffix, sub-tolerance difference and invalid-mass failure",
+      "Real shared-grid mass assembly, affine interpolation, exact 8192 J/K capacity and 81920 J nodal energy"
+    ],
+    "cases": [
+      {
+        "name": "projection",
+        "attempt": 1,
+        "status": "passed",
+        "started": "2026-10-25T23:57:10.2514355+08:00",
+        "ended": "2026-10-25T23:58:12.4722495+08:00",
+        "exit": 0,
+        "requiredPassed": 2,
+        "rootZero": true,
+        "memoryTargetMiB": 128,
+        "cpuMsPerSecond": 250,
+        "log": "build/thermal-direct-projection-20261025-r1.log"
+      },
+      {
+        "name": "source",
+        "attempt": 1,
+        "status": "passed",
+        "started": "2026-10-25T23:58:12.4768979+08:00",
+        "ended": "2026-10-25T23:59:25.0100354+08:00",
+        "exit": 0,
+        "requiredPassed": 1,
+        "rootZero": true,
+        "memoryTargetMiB": 128,
+        "cpuMsPerSecond": 250,
+        "log": "build/thermal-direct-source-20261025-r1.log"
+      },
+      {
+        "name": "grid",
+        "attempt": 1,
+        "status": "passed",
+        "started": "2026-10-25T23:59:25.0121294+08:00",
+        "ended": "2026-10-26T00:01:13.4060079+08:00",
+        "exit": 0,
+        "requiredPassed": 1,
+        "rootZero": true,
+        "memoryTargetMiB": 128,
+        "cpuMsPerSecond": 250,
+        "log": "build/thermal-direct-grid-20261025-r1.log"
+      },
+      {
+        "name": "restored",
+        "attempt": 1,
+        "status": "passed",
+        "started": "2026-10-26T00:01:13.4078559+08:00",
+        "ended": "2026-10-26T00:03:13.4875467+08:00",
+        "exit": 0,
+        "requiredPassed": 1,
+        "rootZero": true,
+        "memoryTargetMiB": 128,
+        "cpuMsPerSecond": 250,
+        "log": "build/thermal-direct-restored-20261025-r1.log"
+      }
+    ],
+    "requiredTestsPassed": 5,
+    "failedAttempts": 0
+  },
+  "limits": [
+    "No whole-server speedup percentage or newly qualified networked hundred-player server",
+    "Previous test matrices retain their build scope"
+  ],
+  "observations": {
+    "sourceJ": 6400,
+    "deliveredJ": 6400,
+    "sourceCancellations": 2,
+    "sourcePublications": 1,
+    "replayEnergyDeltaJ": 0,
+    "replayTemperatureDeltaC": 0,
+    "gridCycles": 2,
+    "gridCheckpoints": 2,
+    "maximumRecoveryJumpC": 0.0036435497085083313,
+    "maximumCheckpointErrorC": 0.09674559860551213,
+    "maximumCoarseningEnergyErrorJ": 2.980232238769531E-08,
+    "restoredHistoryC": "-12.111244213623676",
+    "restoredNaturalC": "-11.9",
+    "restoredGameTick": 1143,
+    "restoredSampleTick": 1140
+  },
+  "completedDate": "2026-10-26"
+}

@@ -38,11 +38,9 @@ import net.minecraftforge.registries.RegistryObject;
 
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Stream;
 
 /** Content declares two independent directions; simulation never infers a material's phase family. */
@@ -222,38 +220,7 @@ public record StateTransitionData(
                 if (data.allStates == broad) data.states().forEach(state -> next.put(state, data));
             }
         }
-        Set<BlockState> changed = new HashSet<>();
-        cache.forEach(
-                (state, old) -> {
-                    var value = next.get(state);
-                    if (old.hasRandomTransitions()
-                            != (value != null && value.hasRandomTransitions())) changed.add(state);
-                });
-        next.forEach(
-                (state, value) -> {
-                    var old = cache.get(state);
-                    if (value.hasRandomTransitions() != (old != null && old.hasRandomTransitions()))
-                        changed.add(state);
-                });
         cache = Map.copyOf(next);
-        var server = net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer();
-        if (server == null || changed.isEmpty()) return;
-        Runnable recount =
-                () -> {
-                    for (var level : server.getAllLevels()) {
-                        for (var holder : level.getChunkSource().chunkMap.getChunks()) {
-                            var pos = holder.getPos();
-                            var chunk = level.getChunkSource().getChunkNow(pos.x, pos.z);
-                            if (chunk == null) continue;
-                            for (var section : chunk.getSections()) {
-                                if (section.getStates().maybeHas(changed::contains))
-                                    section.recalcBlockCounts();
-                            }
-                        }
-                    }
-                };
-        if (server.isSameThread()) recount.run();
-        else server.execute(recount);
     }
 
     public FinishedRecipe toFinished(ResourceLocation name) {

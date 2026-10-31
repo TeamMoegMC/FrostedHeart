@@ -49,16 +49,8 @@ public record SourceBinding(Kind kind, long targetId, int lifecycleGeneration) {
         return new SourceBinding(Kind.DEGRADED_LOSS, sinkId, 0);
     }
 
-    public boolean isThermalNode() {
-        return kind == Kind.THERMAL_NODE;
-    }
-
     public static SourceBinding airStencil(int loadId, int generation) {
         return new SourceBinding(Kind.AIR_STENCIL, loadId, generation);
-    }
-
-    public boolean isThermalTarget() {
-        return kind == Kind.THERMAL_NODE || kind == Kind.AIR_STENCIL;
     }
 
     /** Separate material and Air load address spaces in the primitive accumulator index. */

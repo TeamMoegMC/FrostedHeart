@@ -119,7 +119,7 @@ public final class MinecraftSignatureCapture {
             return ThermalSignatureTable.UNRESOLVED;
         }
         position.set(worldX, worldY, worldZ);
-        return resolveId(chunk.getBlockState(position));
+        return resolveSignatureId(chunk.getBlockState(position));
     }
 
     public PageSignatures withResolvedBlocks(PageSignatures base,
@@ -155,7 +155,7 @@ public final class MinecraftSignatureCapture {
         return pageBuilder.buildBricks();
     }
 
-    private int resolveId(BlockState state) {
+    public int resolveSignatureId(BlockState state) {
         return states.signatureId(state);
     }
 

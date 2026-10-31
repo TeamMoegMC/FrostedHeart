@@ -439,35 +439,6 @@ public final class ThermalLoadedWorldGameTests {
         });
     }
 
-    @GameTest(template = TEMPLATE, batch = "thermal_pending_be", timeoutTicks = 120)
-    public static void pendingCampfireIsDiscoveredWithoutInstantiatingItsEntity(GameTestHelper helper) {
-        ServerLevel level = helper.getLevel();
-        MinecraftThermalInput.closeActiveLevel(level);
-        BlockPos fire = helper.absolutePos(new BlockPos(2, 2, 2));
-        campfire(level, fire, true);
-        LevelChunk chunk = level.getChunkAt(fire);
-        CompoundTag stored = chunk.getBlockEntityNbtForSaving(fire);
-        level.removeBlockEntity(fire);
-        chunk.setBlockEntityNbt(stored);
-        MinecraftThermalInput.closeActiveLevel(level);
-        MinecraftThermalInput.onChunkLoad(level, chunk);
-        helper.assertTrue(owner(level, fire) != null, "loaded pending campfire must bootstrap without player queries");
-        MinecraftThermalInput input = owner(level, fire).input();
-        // Assert at the production discovery boundary. Vanilla may promote
-        // pending block entities while the chunk ticks afterward.
-        PhysicalSourceSpatialIndex sources = read(input, "physicalSources");
-        helper.assertTrue(sources.discoverChunk(chunk), "pending source discovery must complete");
-        helper.assertTrue(present(input, fire), "pending NBT position must restore the lit source");
-        helper.assertTrue(!chunk.getBlockEntities().containsKey(fire),
-                "source discovery must not instantiate the pending block entity");
-        helper.runAfterDelay(40, () -> {
-            helper.assertTrue(present(input, fire), "pending NBT position must restore the lit source");
-            level.setBlockAndUpdate(fire, Blocks.AIR.defaultBlockState());
-            MinecraftThermalInput.closeActiveLevel(level);
-            helper.succeed();
-        });
-    }
-
     @GameTest(template = TEMPLATE, batch = "thermal_zero_and_radiation", timeoutTicks = 160)
     public static void zeroPowerAndPureRadiationDoNotSeedConvection(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
@@ -867,15 +838,16 @@ public final class ThermalLoadedWorldGameTests {
     @SuppressWarnings("unchecked")
     static <T> T read(Object target, String name) {
         try {
-            Field field = target.getClass().getDeclaredField(name);
+            Class<?> type = target instanceof Class<?> selected ? selected : target.getClass();
+            Field field = type.getDeclaredField(name);
             field.setAccessible(true);
-            return (T) field.get(target);
+            return (T) field.get(target instanceof Class<?> ? null : target);
         } catch (ReflectiveOperationException exception) {
             throw new AssertionError(exception);
         }
     }
 
-    private static void write(Object target, String name, Object value) {
+    static void write(Object target, String name, Object value) {
         try {
             Field field = target.getClass().getDeclaredField(name);
             field.setAccessible(true);

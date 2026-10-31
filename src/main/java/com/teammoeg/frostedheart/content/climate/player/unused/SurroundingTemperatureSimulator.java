@@ -85,9 +85,13 @@ public class SurroundingTemperatureSimulator {
     public static final VoxelShape EMPTY = Shapes.empty();
     public static final VoxelShape FULL = Shapes.block();
 
-    public static final int range = FHConfig.SERVER.SIMULATION.simulationRange.get();
+/*    public static final int range = FHConfig.SERVER.SIMULATION.simulationRange.get();
     private static final int rdiff = FHConfig.SERVER.SIMULATION.simulationDivision.get();
-    private static final double v0 = FHConfig.SERVER.SIMULATION.simulationParticleInitialSpeed.get();
+    private static final double v0 = FHConfig.SERVER.SIMULATION.simulationParticleInitialSpeed.get();*/
+
+    public static final int range = 0;
+    private static final int rdiff = 0;
+    private static final double v0 = 0;
     private static final int num_rounds = 20; // 不可配置，影响结果
 
     private static final int n; // 粒子总数，静态块中计算

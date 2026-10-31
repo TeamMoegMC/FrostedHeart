@@ -1,0 +1,79 @@
+{
+  "status": "passed",
+  "verified_at": "2026-10-31T19:55:41+08:00",
+  "scope": "Remove campfire-specific state maintenance from ordinary block writes, move climate random eligibility into its scheduler, replace LiquidBlock notification with radiation dependency invalidation",
+  "final_build": {
+    "log": "build/thermal-public-removal-compile-20261031-r2.log",
+    "tasks": ["assemble", "compileGameTestJava"],
+    "passed": true,
+    "production_changed_after_this_build": false
+  },
+  "final_run": {
+    "log": "build/thermal-public-removal-20261031-r2.log",
+    "record": "build/thermal-public-removal-20261031-r2.json",
+    "required_passed": 15,
+    "required_failed": 0,
+    "thermal_errors": 0,
+    "shutdown_root_bytes": 0,
+    "exit_code": 0,
+    "groups": {"frostedheart_source_input": 7, "frostedheart_thermal_integration": 6, "frostedheart_campfire_fuel": 2},
+    "heap_gib": 4,
+    "thermal_soft_target_mib": 128,
+    "work_allowance_ms_per_second": 1000,
+    "static_block_radiation_enabled": true
+  },
+  "build_history": [
+    {
+      "compile_log": "build/thermal-public-removal-compile-20261031-r1.log",
+      "test_log": "build/thermal-public-removal-20261031-r1.log",
+      "required_passed": 15,
+      "thermal_errors": 0,
+      "shutdown_root_bytes": 0,
+      "qualification": "First batch passed; subsequent caller-contract review found raw-container invalidation also needs a main-thread handoff. Final build adds that handoff and an asynchronous source fixture, then reruns the same 15 cases."
+    },
+    {"compile_log": "build/thermal-public-removal-compile-20261031-r2.log", "test_log": "build/thermal-public-removal-20261031-r2.log", "required_passed": 15}
+  ],
+  "new_behavior_checks": [
+    "Captured new campfire placement does not start before confirmation and can roll back",
+    "Captured removal of an existing campfire can roll back or retire at the actual level tick after confirmation",
+    "A late old block entity does not retire a new source at the same position",
+    "Background raw-container replacement hands registered-source/cache invalidation to the level thread",
+    "Whole Section identity replacement retires an existing removed source without a 4096-cell source scan",
+    "A Section containing only non-vanilla-random packed ice transitions through actual tickChunk sampling after recipe cache reload; zero speed skips it and vanilla state queries stay unchanged",
+    "The real radiation cache responds to a horizontal neighbor's upper block across diagonal Sections, round-trips restored geometry, responds to a wall opening, and updates lava height with the same radiation profile",
+    "Existing frozen-source, capacity-retry, packed-BE, fuel, actual save/reload, maintenance-save, snow and ice cases remain passing"
+  ],
+  "deletion_and_size": {
+    "public_source_flags_and_parameters_removed": true,
+    "page_manager_has_no_physical_source_index_dependency": true,
+    "resyncSection_removed": true,
+    "source_only_nonGeometry_buffers_removed": true,
+    "BlockStateBaseMixin_RandomTick_removed": true,
+    "LiquidBlockMixin_ThermalRadiation_removed": true,
+    "old_lava_neighbor_callback_removed": true,
+    "climate_reload_no_longer_recounts_all_sections": true,
+    "production_java_lines_before": 8203,
+    "production_java_lines_after": 7985,
+    "production_java_delta": -218,
+    "new_production_types": 0,
+    "new_world_event_queues": 0,
+    "source_local_pending_bit": "STATE_RECHECK uses the remaining bit of the existing per-source status byte and reuses dirtyOrder",
+    "dependency_formula_positions_checked": 12288,
+    "dependency_formula_exact_match": true,
+    "max_distinct_radiation_bricks_per_state_change": 6
+  },
+  "artifact": {
+    "path": "build/libs/frostedheart-1.20.1-0.7.7.jar",
+    "bytes": 14918059,
+    "thermal_mixin_classes": 9,
+    "removed_special_mixin_classes": 0,
+    "gametest_classes": 0
+  },
+  "limits_and_tradeoffs": [
+    "Genuine material/geometry/save/load and cache invalidation remain shared; this is not a claim that the whole simulation has no shared paths.",
+    "Climate-only Section admission adds palette checks. Stale palette entries can admit ineffective samples and change the shared random sequence. Vanilla and third-party isRandomlyTicking queries now retain vanilla semantics.",
+    "Native/Forge lifecycle, valid BE creation/load, known registered-source structural invalidation and bounded packed-BE discovery are supported. Arbitrary silent Section edits without BE/lifecycle maintenance cannot promise discovery of unknown sources.",
+    "The source-capacity and startup-retry fixtures retain their documented controlled preconditions; this is not a machine-memory saturation run.",
+    "No JUnit, broad performance matrix, standalone production-JAR restart rerun, new CPU speedup percentage, hundred-player qualification or new global 0.1 C error claim. Numerical kernels, source power, source cut interval, coarse protection and v6 format were not changed."
+  ]
+}

@@ -1,0 +1,483 @@
+{
+  "verifiedAt": "2026-10-25 20:02:43 +08:00",
+  "author": "Codex / OpenAI GPT-6; primary implementation and closure review",
+  "status": "completed",
+  "scope": "Three obsolete internal thermal subsystems and one obsolete contact preparation protocol; player/unused particle simulator excluded.",
+  "source": {
+    "beforeFiles": 141,
+    "afterFiles": 136,
+    "beforePhysicalLines": 49443,
+    "afterPhysicalLines": 46675,
+    "netLines": -2768
+  },
+  "productionTypesAdded": 0,
+  "deletedTypes": [
+    "NodePowerAccumulatorArena",
+    "MaterialEnthalpyExchange",
+    "LocalAirBasisCache",
+    "LocalAirModeRank",
+    "CoarseAirModeSpan"
+  ],
+  "changedFiles": [
+    {
+      "file": "src/main/java/com/teammoeg/frostedheart/content/climate/thermal/mesh/AirFieldLayout.java",
+      "beforePhysicalLines": 593,
+      "afterPhysicalLines": 499,
+      "deleted": false
+    },
+    {
+      "file": "src/main/java/com/teammoeg/frostedheart/content/climate/thermal/mesh/LocalAirShape.java",
+      "beforePhysicalLines": 168,
+      "afterPhysicalLines": 159,
+      "deleted": false
+    },
+    {
+      "file": "src/main/java/com/teammoeg/frostedheart/content/climate/thermal/mesh/ThermalCellArena.java",
+      "beforePhysicalLines": 1099,
+      "afterPhysicalLines": 1068,
+      "deleted": false
+    },
+    {
+      "file": "src/main/java/com/teammoeg/frostedheart/content/climate/thermal/runtime/minecraft/MinecraftThermalInput.java",
+      "beforePhysicalLines": 2605,
+      "afterPhysicalLines": 2604,
+      "deleted": false
+    },
+    {
+      "file": "src/main/java/com/teammoeg/frostedheart/content/climate/thermal/runtime/minecraft/engine/ThermalDimensionEngine.java",
+      "beforePhysicalLines": 1478,
+      "afterPhysicalLines": 1473,
+      "deleted": false
+    },
+    {
+      "file": "src/main/java/com/teammoeg/frostedheart/content/climate/thermal/runtime/minecraft/engine/ThermalDimensionLimits.java",
+      "beforePhysicalLines": 57,
+      "afterPhysicalLines": 55,
+      "deleted": false
+    },
+    {
+      "file": "src/main/java/com/teammoeg/frostedheart/content/climate/thermal/solver/AirOperatorFragment.java",
+      "beforePhysicalLines": 443,
+      "afterPhysicalLines": 271,
+      "deleted": false
+    },
+    {
+      "file": "src/main/java/com/teammoeg/frostedheart/content/climate/thermal/solver/BuoyancyConductance.java",
+      "beforePhysicalLines": 119,
+      "afterPhysicalLines": 46,
+      "deleted": false
+    },
+    {
+      "file": "src/main/java/com/teammoeg/frostedheart/content/climate/thermal/solver/CoarseAirModeSpan.java",
+      "beforePhysicalLines": 122,
+      "afterPhysicalLines": 0,
+      "deleted": true
+    },
+    {
+      "file": "src/main/java/com/teammoeg/frostedheart/content/climate/thermal/solver/ContinuousAirSolver.java",
+      "beforePhysicalLines": 1823,
+      "afterPhysicalLines": 1698,
+      "deleted": false
+    },
+    {
+      "file": "src/main/java/com/teammoeg/frostedheart/content/climate/thermal/solver/CoupledThermalOperator.java",
+      "beforePhysicalLines": 1141,
+      "afterPhysicalLines": 909,
+      "deleted": false
+    },
+    {
+      "file": "src/main/java/com/teammoeg/frostedheart/content/climate/thermal/solver/LocalAirBasisCache.java",
+      "beforePhysicalLines": 151,
+      "afterPhysicalLines": 0,
+      "deleted": true
+    },
+    {
+      "file": "src/main/java/com/teammoeg/frostedheart/content/climate/thermal/solver/LocalAirModeRank.java",
+      "beforePhysicalLines": 118,
+      "afterPhysicalLines": 0,
+      "deleted": true
+    },
+    {
+      "file": "src/main/java/com/teammoeg/frostedheart/content/climate/thermal/solver/MaterialEnthalpyExchange.java",
+      "beforePhysicalLines": 68,
+      "afterPhysicalLines": 0,
+      "deleted": true
+    },
+    {
+      "file": "src/main/java/com/teammoeg/frostedheart/content/climate/thermal/solver/ThermalExchangeKernel.java",
+      "beforePhysicalLines": 368,
+      "afterPhysicalLines": 249,
+      "deleted": false
+    },
+    {
+      "file": "src/main/java/com/teammoeg/frostedheart/content/climate/thermal/solver/ThermalFragment.java",
+      "beforePhysicalLines": 288,
+      "afterPhysicalLines": 273,
+      "deleted": false
+    },
+    {
+      "file": "src/main/java/com/teammoeg/frostedheart/content/climate/thermal/solver/ThermalMaterialEdge.java",
+      "beforePhysicalLines": 96,
+      "afterPhysicalLines": 91,
+      "deleted": false
+    },
+    {
+      "file": "src/main/java/com/teammoeg/frostedheart/content/climate/thermal/solver/ThermalMaterialExecution.java",
+      "beforePhysicalLines": 63,
+      "afterPhysicalLines": 58,
+      "deleted": false
+    },
+    {
+      "file": "src/main/java/com/teammoeg/frostedheart/content/climate/thermal/solver/ThermalSolver.java",
+      "beforePhysicalLines": 938,
+      "afterPhysicalLines": 609,
+      "deleted": false
+    },
+    {
+      "file": "src/main/java/com/teammoeg/frostedheart/content/climate/thermal/source/NodePowerAccumulatorArena.java",
+      "beforePhysicalLines": 420,
+      "afterPhysicalLines": 0,
+      "deleted": true
+    },
+    {
+      "file": "src/main/java/com/teammoeg/frostedheart/content/climate/thermal/source/ThermalSourceBatch.java",
+      "beforePhysicalLines": 324,
+      "afterPhysicalLines": 299,
+      "deleted": false
+    },
+    {
+      "file": "src/main/java/com/teammoeg/frostedheart/content/climate/thermal/source/ThermalSourceLedger.java",
+      "beforePhysicalLines": 970,
+      "afterPhysicalLines": 703,
+      "deleted": false
+    },
+    {
+      "file": "src/main/java/com/teammoeg/frostedheart/content/climate/thermal/topology/AirShapeStore.java",
+      "beforePhysicalLines": 792,
+      "afterPhysicalLines": 430,
+      "deleted": false
+    },
+    {
+      "file": "src/main/java/com/teammoeg/frostedheart/content/climate/thermal/topology/BrickTopologyCompiler.java",
+      "beforePhysicalLines": 602,
+      "afterPhysicalLines": 601,
+      "deleted": false
+    },
+    {
+      "file": "src/main/java/com/teammoeg/frostedheart/content/climate/thermal/topology/MaterialEdgeCompiler.java",
+      "beforePhysicalLines": 579,
+      "afterPhysicalLines": 565,
+      "deleted": false
+    },
+    {
+      "file": "src/main/java/com/teammoeg/frostedheart/content/climate/thermal/topology/RegionalTopologyInstall.java",
+      "beforePhysicalLines": 175,
+      "afterPhysicalLines": 172,
+      "deleted": false
+    }
+  ],
+  "changes": [
+    "ThermalSolver retains current topology/edge/reference storage; old scalar stepping, residual scans, scratch and execution bitmaps removed.",
+    "ThermalSourceLedger retains source identity, port bindings and accepted energy accounting; direct node integration, mode switch, old node limit and reference checks removed.",
+    "ThermalSourceBatch carries membership controls only; signed impulses remain in SpatialSourceTimeline and actual regional input.",
+    "Local function generation, rank caches, empty cache merges, function pins/P32 factors and duplicate synchronous compilation adapters removed; legacy checkpoint decode/evaluation/projection retained.",
+    "ContactPreparation reads fragment and execution in one regional order, with old global merge cursors and unreachable stage removed.",
+    "Unused fixed-one-second material/far exchange coefficients removed from calculation, arrays, copies, sorting and memory accounting; actual conductance and contribution order retained."
+  ],
+  "retained": [
+    "Shared multicore worker pool and regional task ownership",
+    "Fine-grid normal precision and actual MinimumThermalModel/MinimumRegionStep overload protection",
+    "Source cancellation/once-only consumption, signed impulses and loss classifications",
+    "Current material/phase/ACK gameplay",
+    "Version-6 persistence and old LocalAirShape decode/value/recovery projection",
+    "Live AirShapeStore shared-grid support discovery and saved-support lifecycle",
+    "ThermalExchangeKernel used by actual item heat exchange",
+    "All four protected player particle simulator files and their pre-existing edits"
+  ],
+  "validation": {
+    "mainBuild": {
+      "label": "subsystems-r1",
+      "command": "gradlew assemble compileGameTestJava --offline --no-daemon --max-workers=1",
+      "status": "passed",
+      "elapsedSeconds": 115,
+      "rawLocalLog": "build/thermal-subsystems-compile-r1.log"
+    },
+    "fixtureBuild": {
+      "label": "fixture-r2",
+      "command": "gradlew compileGameTestJava --offline --no-daemon --max-workers=1",
+      "status": "passed",
+      "elapsedSeconds": 24,
+      "mainJava": "UP-TO-DATE; no production change after initial unified build",
+      "rawLocalLog": "build/thermal-subsystems-fixture-compile-r2.log"
+    },
+    "passedGroups": 6,
+    "requiredPassed": 17,
+    "rootZeroGroups": 6,
+    "latestGroups": [
+      {
+        "name": "grid",
+        "attempt": 1,
+        "status": "passed",
+        "started": "2026-10-25T19:42:31.0148747+08:00",
+        "ended": "2026-10-25T19:45:14.2535315+08:00",
+        "exit": 0,
+        "requiredPassed": 1,
+        "rootZero": true,
+        "memoryTargetMiB": 128,
+        "cpuMsPerSecond": 250,
+        "log": "build/thermal-subsystems-grid-20261025-r1.log"
+      },
+      {
+        "name": "input",
+        "attempt": 2,
+        "status": "passed",
+        "started": "2026-10-25T19:53:42.8746847+08:00",
+        "ended": "2026-10-25T19:57:06.2443741+08:00",
+        "exit": 0,
+        "requiredPassed": 8,
+        "rootZero": true,
+        "memoryTargetMiB": 128,
+        "cpuMsPerSecond": 250,
+        "log": "build/thermal-subsystems-input-20261025-r2.log"
+      },
+      {
+        "name": "restart-load",
+        "attempt": 1,
+        "status": "passed",
+        "started": "2026-10-25T19:47:35.0520833+08:00",
+        "ended": "2026-10-25T19:49:35.0891069+08:00",
+        "exit": 0,
+        "requiredPassed": 1,
+        "rootZero": true,
+        "memoryTargetMiB": 128,
+        "cpuMsPerSecond": 250,
+        "log": "build/thermal-subsystems-restart-load-20261025-r1.log"
+      },
+      {
+        "name": "restart-save",
+        "attempt": 1,
+        "status": "passed",
+        "started": "2026-10-25T19:45:14.2566055+08:00",
+        "ended": "2026-10-25T19:47:35.0487667+08:00",
+        "exit": 0,
+        "requiredPassed": 1,
+        "rootZero": true,
+        "memoryTargetMiB": 128,
+        "cpuMsPerSecond": 250,
+        "log": "build/thermal-subsystems-restart-save-20261025-r1.log"
+      },
+      {
+        "name": "source",
+        "attempt": 1,
+        "status": "passed",
+        "started": "2026-10-25T19:40:21.6366452+08:00",
+        "ended": "2026-10-25T19:42:31.0125877+08:00",
+        "exit": 0,
+        "requiredPassed": 1,
+        "rootZero": true,
+        "memoryTargetMiB": 128,
+        "cpuMsPerSecond": 250,
+        "log": "build/thermal-subsystems-source-20261025-r1.log"
+      },
+      {
+        "name": "storage",
+        "attempt": 1,
+        "status": "passed",
+        "started": "2026-10-25T19:38:21.9874815+08:00",
+        "ended": "2026-10-25T19:40:21.6327227+08:00",
+        "exit": 0,
+        "requiredPassed": 5,
+        "rootZero": true,
+        "memoryTargetMiB": 128,
+        "cpuMsPerSecond": 250,
+        "log": "build/thermal-subsystems-storage-20261025-r1.log"
+      }
+    ],
+    "attempts": [
+      {
+        "name": "input",
+        "attempt": 1,
+        "status": "failed",
+        "started": "2026-10-25T19:34:57.2757874+08:00",
+        "ended": "2026-10-25T19:38:21.9766277+08:00",
+        "exit": 1,
+        "requiredPassed": 0,
+        "rootZero": true,
+        "memoryTargetMiB": 128,
+        "cpuMsPerSecond": 250,
+        "log": "build/thermal-subsystems-input-20261025-r1.log"
+      },
+      {
+        "name": "storage",
+        "attempt": 1,
+        "status": "passed",
+        "started": "2026-10-25T19:38:21.9874815+08:00",
+        "ended": "2026-10-25T19:40:21.6327227+08:00",
+        "exit": 0,
+        "requiredPassed": 5,
+        "rootZero": true,
+        "memoryTargetMiB": 128,
+        "cpuMsPerSecond": 250,
+        "log": "build/thermal-subsystems-storage-20261025-r1.log"
+      },
+      {
+        "name": "source",
+        "attempt": 1,
+        "status": "passed",
+        "started": "2026-10-25T19:40:21.6366452+08:00",
+        "ended": "2026-10-25T19:42:31.0125877+08:00",
+        "exit": 0,
+        "requiredPassed": 1,
+        "rootZero": true,
+        "memoryTargetMiB": 128,
+        "cpuMsPerSecond": 250,
+        "log": "build/thermal-subsystems-source-20261025-r1.log"
+      },
+      {
+        "name": "grid",
+        "attempt": 1,
+        "status": "passed",
+        "started": "2026-10-25T19:42:31.0148747+08:00",
+        "ended": "2026-10-25T19:45:14.2535315+08:00",
+        "exit": 0,
+        "requiredPassed": 1,
+        "rootZero": true,
+        "memoryTargetMiB": 128,
+        "cpuMsPerSecond": 250,
+        "log": "build/thermal-subsystems-grid-20261025-r1.log"
+      },
+      {
+        "name": "restart-save",
+        "attempt": 1,
+        "status": "passed",
+        "started": "2026-10-25T19:45:14.2566055+08:00",
+        "ended": "2026-10-25T19:47:35.0487667+08:00",
+        "exit": 0,
+        "requiredPassed": 1,
+        "rootZero": true,
+        "memoryTargetMiB": 128,
+        "cpuMsPerSecond": 250,
+        "log": "build/thermal-subsystems-restart-save-20261025-r1.log"
+      },
+      {
+        "name": "restart-load",
+        "attempt": 1,
+        "status": "passed",
+        "started": "2026-10-25T19:47:35.0520833+08:00",
+        "ended": "2026-10-25T19:49:35.0891069+08:00",
+        "exit": 0,
+        "requiredPassed": 1,
+        "rootZero": true,
+        "memoryTargetMiB": 128,
+        "cpuMsPerSecond": 250,
+        "log": "build/thermal-subsystems-restart-load-20261025-r1.log"
+      },
+      {
+        "name": "input",
+        "attempt": 2,
+        "status": "passed",
+        "started": "2026-10-25T19:53:42.8746847+08:00",
+        "ended": "2026-10-25T19:57:06.2443741+08:00",
+        "exit": 0,
+        "requiredPassed": 8,
+        "rootZero": true,
+        "memoryTargetMiB": 128,
+        "cpuMsPerSecond": 250,
+        "log": "build/thermal-subsystems-input-20261025-r2.log"
+      }
+    ],
+    "testConfiguration": {
+      "thermalMemoryTargetMiB": 128,
+      "poolCpuBudgetMsPerSecond": 250,
+      "serverHeapGiB": 5,
+      "gradleHeapMiB": 768,
+      "clock": "realtime20",
+      "detailedProfile": false,
+      "deepInventory": false
+    },
+    "testScope": "Only input, compact storage, source cancellation/replay, fine/coarse switch, and two-process save/reload. No endurance, scattered consumer, icicle matrix, JUnit or performance benchmark."
+  },
+  "fixtureMigration": {
+    "sourcePowerAndImpulse": "20 W for 20 ticks commits 20 J once; same-tick -5 J commits a total of 15 J without replay.",
+    "saturation": "Current producer window, Store binding and actual regional material commits; 100 J input splits into 10 delivered, 40 unaccepted, 30 declared loss and 20 unavailable-geometry loss. Following prefix raises unaccepted total to 90 without changing the waiting body.",
+    "bindingScope": "The component fixture supplies explicit bound material/loss ports; real world source discovery/binding is covered separately by the selected source and grid production scenes.",
+    "preservedFailure": {
+      "rawLocalLog": "build/thermal-subsystems-input-20261025-r1.log",
+      "onlyFailedTest": "spatialSourceAccountsForSaturatedRegionalMaterial",
+      "observed": "output100, delivered45.24160148343071, unaccepted4.758398516569287, declared30, degraded20",
+      "resolution": "Initialize the whole closed fixture at the actual ice phase temperature rather than hardcoded 0 C, so neighbor heat transfer does not invalidate the isolated saturation expectation. Keep original 1e-8 tolerance; production code unchanged."
+    },
+    "finalBalanceLog": "plateauC=9.0,outputJ=200.0,deliveredJ=10.0,unacceptedJ=90.0,declaredLossJ=60.0,degradedLossJ=40.0"
+  },
+  "evidence": {
+    "sourceCandidateScan": {
+      "files": 2319,
+      "thermalDeclarations": 6126,
+      "parseDiagnostics": 0,
+      "retained": [
+        "DimensionInputAccumulator.emitSourceImpulse",
+        "MinecraftPageManager SectionOwner.enqueued/deferredFullResync VarHandles"
+      ],
+      "rawLocalReport": "build/thermal-subsystems-unused-final.txt"
+    },
+    "compiledCallReview": {
+      "productionClasses": 3748,
+      "gameTestClasses": 195,
+      "thermalInvocationReferences": 19658,
+      "obsoleteCalls": 0,
+      "rawLocalReport": "build/thermal-subsystems-calls-summary.txt",
+      "scope": "Actual method owner/name/descriptor and lambda handles, with manual lifecycle/constant-branch review; not a proof of every possible redundancy."
+    },
+    "sourceReplay": {
+      "joules": 6400,
+      "workspaceCancellations": 2,
+      "publications": 1,
+      "maximumReplayEnergyDifferenceJ": 0,
+      "maximumReplayTemperatureDifferenceC": 0,
+      "rawLocalLog": "build/thermal-subsystems-source-20261025-r1.log"
+    },
+    "gridSwitch": {
+      "completedCycles": 2,
+      "checkpoints": 2,
+      "maximumCoarseningEnergyErrorJ": 2.980232238769531E-08,
+      "maximumRecoveryJumpC": 0.0043283980075461415,
+      "maximumCheckpointErrorC": 0.09656309847574995,
+      "rawLocalLog": "build/thermal-subsystems-grid-20261025-r1.log"
+    }
+  },
+  "package": {
+    "path": "build/libs/frostedheart-1.20.1-0.7.7.jar",
+    "bytes": 14999874,
+    "thermalClasses": 444,
+    "obsoleteClasses": [],
+    "testClasses": [],
+    "protectedParticleTypes": [
+      {
+        "type": "TemperatureThreadingPool",
+        "present": true
+      },
+      {
+        "type": "SurroundingTemperatureSimulator",
+        "present": true
+      },
+      {
+        "type": "CachedBlockTempInfo",
+        "present": true
+      },
+      {
+        "type": "BlockInfoCachePolicy",
+        "present": true
+      }
+    ],
+    "obsoleteNestedClasses": []
+  },
+  "limitations": [
+    "No new performance comparison or 100-real-network-player qualification.",
+    "Historical broad matrices retain their original build scope and are not counted as reruns here.",
+    "The source candidate/call reviews do not guarantee that all possible semantic redundancy or defects are absent."
+  ],
+  "investigation": "plans/2026-10-25_18-49-57_thermal-obsolete-subsystems-review.md",
+  "noPythonEdits": true,
+  "noSubagents": true,
+  "noCommitOrPush": true
+}

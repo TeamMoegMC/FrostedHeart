@@ -19,8 +19,6 @@
 
 package com.teammoeg.frostedheart.content.climate.thermal.solver;
 
-import java.util.Objects;
-
 /** Symmetric gameplay-scale buoyancy adjustment for vertical air conductance. */
 public final class BuoyancyConductance {
     private BuoyancyConductance() {
@@ -45,75 +43,4 @@ public final class BuoyancyConductance {
         }
     }
 
-    public enum Status {
-        APPLIED,
-        NUMERIC_DEGRADED
-    }
-
-    /** Caller-owned result for allocation-free pair traversal. */
-    public static final class MutableResult {
-        private Status status = Status.NUMERIC_DEGRADED;
-        private double conductanceWPerK = Double.NaN;
-
-        public boolean applied() {
-            return status == Status.APPLIED;
-        }
-
-        public double conductanceWPerK() {
-            return conductanceWPerK;
-        }
-
-        private void set(Status nextStatus, double nextConductance) {
-            status = nextStatus;
-            conductanceWPerK = nextConductance;
-        }
-
-    }
-
-    /**
-     * Uses the real contact direction after ordering endpoints. Horizontal faces
-     * are neutral regardless of either region's centroid height.
-     */
-    public static Status evaluateInto(
-            double baseConductanceWPerK,
-            double temperatureAC,
-            double temperatureBC,
-            byte direction,
-            Parameters parameters,
-            MutableResult result
-    ) {
-        Objects.requireNonNull(result, "result");
-        if (parameters == null
-                || !nonNegativeFinite(baseConductanceWPerK)
-                || !Double.isFinite(temperatureAC)
-                || !Double.isFinite(temperatureBC)
-                || direction < ThermalFragment.AirPairs.HORIZONTAL
-                || direction > ThermalFragment.AirPairs.SECOND_BELOW) {
-            result.set(Status.NUMERIC_DEGRADED, Double.NaN);
-            return Status.NUMERIC_DEGRADED;
-        }
-
-        if (direction == ThermalFragment.AirPairs.HORIZONTAL) {
-            result.set(Status.APPLIED, baseConductanceWPerK);
-            return Status.APPLIED;
-        }
-        double difference = direction == ThermalFragment.AirPairs.FIRST_BELOW
-                ? temperatureAC - temperatureBC : temperatureBC - temperatureAC;
-        double rawFactor = 1.0D + difference / parameters.temperatureScaleK();
-        double factor = Math.max(
-                parameters.minimumFactor(),
-                Math.min(parameters.maximumFactor(), rawFactor)
-        );
-        double conductance = baseConductanceWPerK * factor;
-        if (!Double.isFinite(factor) || !nonNegativeFinite(conductance)) {
-            result.set(Status.NUMERIC_DEGRADED, Double.NaN);
-            return Status.NUMERIC_DEGRADED;
-        }
-        result.set(Status.APPLIED, conductance);
-        return Status.APPLIED;
-    }
-
-    private static boolean nonNegativeFinite(double value) {
-        return value >= 0.0D && Double.isFinite(value);
-    }
 }

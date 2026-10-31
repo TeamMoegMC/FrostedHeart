@@ -53,7 +53,6 @@ import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureUpdate;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
-import com.teammoeg.frostedheart.mixin.minecraft.temperature.ServerLevelMixin_PlaceExtraSnow;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
@@ -71,17 +70,12 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
-import net.minecraft.world.level.LightLayer;
-import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CropBlock;
 import net.minecraft.world.level.block.FarmBlock;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.dimension.BuiltinDimensionTypes;
-import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
@@ -102,9 +96,7 @@ import net.minecraftforge.items.ItemStackHandler;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.function.Supplier;
 
-import static com.teammoeg.frostedheart.content.climate.WorldTemperature.SNOW_REACHES_GROUND;
 import static com.teammoeg.frostedheart.content.town.ITown.DEBUG_MODE;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
@@ -353,14 +345,13 @@ public class ClimateCommonEvents {
                 var townRuntime = com.teammoeg.frostedheart.content.town.TownRuntimeManager.current();
                 if (townRuntime != null) townRuntime.tickLevel(serverWorld);
                 MinecraftGameplayFields.beginProviderRefresh(serverWorld, GeneratorData.HEAT_FIELD_PROVIDER);
-                for (TeamDataHolder trd : CTeamDataManager.INSTANCE.getAllData()) {
-                    GeneratorData generator = trd.getOptional(FHSpecialDataTypes.GENERATOR_DATA).orElse(null);
-                    if (DEBUG_MODE || generator != null && serverWorld.dimension().equals(generator.dimension)) {
-                        if (generator != null) generator.publishGameplayHeat(serverWorld, trd.getId());
+                for (TeamDataHolder holder : CTeamDataManager.INSTANCE.getAllData()) {
+                    GeneratorData generator = holder.getOptional(FHSpecialDataTypes.GENERATOR_DATA).orElse(null);
+                    if (generator != null && serverWorld.dimension().equals(generator.dimension)) {
+                        generator.publishGameplayHeat(serverWorld, holder.getId());
                     }
                 }
                 MinecraftGameplayFields.endProviderRefresh(serverWorld, GeneratorData.HEAT_FIELD_PROVIDER);
-
                 // Refresh climate caches and check hour data once per second.
                 if (serverWorld.getGameTime() % 20 == 0) {
                     if (climateData != null) {
@@ -434,53 +425,6 @@ public class ClimateCommonEvents {
                     new FHWhiteCurtainSnapshotPacket(WorldClimate.get(serverWorld), serverWorld));
             syncPlayerTemperature(player);
         }
-    }
-
-    /**
-     * Places extra snow layer on top of existing snow blocks during snowfall.
-     * <p>
-     * Entry point is {@link ServerLevelMixin_PlaceExtraSnow#placeExtraSnow}
-     *
-     * @author AlcatrazEscapee
-     */
-    public static void placeExtraSnow(ServerLevel level, ChunkAccess chunk) {
-        // ConfigValue.get() 为 spec 值表查询：同一 tick 内配置恒定，hoist 到局部变量
-        boolean enableSnowAccumulation = FHConfig.SERVER.WORLDGEN.enableSnowAccumulationDuringWeather.get();
-        int snowAccumulationDifficulty = FHConfig.SERVER.WORLDGEN.snowAccumulationDifficulty.get();
-        if (enableSnowAccumulation
-                && level.random.nextInt(snowAccumulationDifficulty) == 0) {
-            int blockX = chunk.getPos().getMinBlockX();
-            int blockZ = chunk.getPos().getMinBlockZ();
-            BlockPos pos = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING,
-                    level.getBlockRandomPos(blockX, 0, blockZ, 15));
-            BlockState state = level.getBlockState(pos);
-            Biome biome = level.getBiome(pos).value();
-            if (level.isRaining() && biome.coldEnoughToSnow(pos)
-                    && WorldTemperature.block(level, pos) <= SNOW_REACHES_GROUND
-                    && level.getBrightness(LightLayer.BLOCK, pos) < 10 && state.getBlock() == Blocks.SNOW) {
-                int layers = state.getValue(BlockStateProperties.LAYERS);
-                if (layers < 5) {
-                    level.setBlockAndUpdate(pos, state.setValue(BlockStateProperties.LAYERS, 1 + layers));
-                }
-
-                // Replacing terrain.
-                BlockPos belowPos = pos.below();
-                BlockState belowState = level.getBlockState(belowPos);
-                Supplier<? extends Block> replacement = FHBlocks.SNOWY_TERRAIN_BLOCKS.get(belowState.getBlock());
-                if (replacement != null) {
-                    BlockState state1 = replacement.get().defaultBlockState();
-                    if (state1.hasProperty(BlockStateProperties.SNOWY)) {
-                        state1.setValue(BlockStateProperties.SNOWY, true);
-                    }
-                    level.setBlockAndUpdate(belowPos, state1);
-                } else {
-                    if (belowState.hasProperty(BlockStateProperties.SNOWY)) {
-                        belowState.setValue(BlockStateProperties.SNOWY, true);
-                    }
-                }
-            }
-        }
-
     }
 
     @SubscribeEvent

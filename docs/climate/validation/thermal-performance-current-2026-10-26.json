@@ -1,0 +1,182 @@
+{
+  "status": "passed-current-measurement",
+  "verified": "2026-10-26",
+  "author": "Codex; OpenAI GPT-6; current performance investigation",
+  "source": "Unchanged production classes from direct projection build; no source edits or compilation for this measurement",
+  "conditions": {
+    "cpu": "Intel Core i7-12800HX",
+    "logicalProcessors": 24,
+    "physicalMemoryGiB": 16,
+    "workers": 4,
+    "heapGiB": 5,
+    "gradleHeapMiB": 768,
+    "thermalMemoryTargetMiB": 128,
+    "thermalCpuMsPerSecond": 250,
+    "clock": "realtime20",
+    "PROFILE": false,
+    "TRACE": false,
+    "deepMemoryProfile": false,
+    "jfr": "profile sampling enabled",
+    "scene": "two_dense_bases_256",
+    "endTick": 2400,
+    "consumers": 100,
+    "baselineComparison": false,
+    "loadedChunkCount": "not recorded by this fixture",
+    "sourceActivity": "Two 128-source bases; the workload intentionally extinguishes and relights sources, including an off interval. Not 256 burning continuously."
+  },
+  "run": {
+    "name": "two-bases",
+    "attempt": 1,
+    "status": "passed",
+    "started": "2026-10-26T00:08:21.0011426+08:00",
+    "ended": "2026-10-26T00:11:24.376927+08:00",
+    "exit": 0,
+    "requiredPassed": 1,
+    "rootZero": true,
+    "memoryTargetMiB": 128,
+    "cpuMsPerSecond": 250,
+    "log": "build/thermal-performance-two-bases-20261026-r1.log"
+  },
+  "resources": {
+    "scene": "two_dense_bases_256",
+    "workerCpuMs": 3718.0,
+    "workerAllocatedBytes": 3582960752.0,
+    "serverCpuMs": 2531.0,
+    "serverAllocatedBytes": 2863784032.0,
+    "gcCollections": 36.0,
+    "gcMillis": 363.0,
+    "mainThermalTickP95Us": 461.0,
+    "mainThermalTickP99Us": 1709.0,
+    "mainThermalTickMaxUs": 48246.0,
+    "serverProcessingTickP95Us": 10117.0,
+    "serverProcessingTickP99Us": 29425.0,
+    "serverProcessingTickMaxUs": 1754453.0,
+    "serverProcessingTickMaxObservedAtElapsedTicks": 1.0,
+    "heapStartBytes": 1069825464.0,
+    "heapEndBytes": 1911289344.0,
+    "heapObservedPeakBytes": 1911289344.0,
+    "saveWaitCalls": 195.0,
+    "saveWaitUs": 467965.0,
+    "saveWaitMaxUs": 46151.0,
+    "saveWaitMaxChunk": 4294967296.0,
+    "unloadWaitCalls": 0.0,
+    "unloadWaitUs": 0.0,
+    "unloadWaitMaxUs": 0.0,
+    "unloadWaitMaxChunk": 0.0,
+    "savesWhilePending": 0.0,
+    "unloadsWhilePending": 0.0,
+    "unrelatedSaveSkips": 0.0,
+    "unrelatedUnloadSkips": 0.0,
+    "unrelatedSavesWhilePending": 0.0,
+    "maintenanceSaveDeferrals": 0.0,
+    "maintenanceSaves": 1575.0,
+    "snapshotCheckpoints": 195.0,
+    "snapshotFallbacks": 0.0,
+    "snapshotSavePending": 0.0,
+    "snapshotUnloadPending": 0.0,
+    "snapshotMaximumAgeTicks": 20.0,
+    "snapshotStoredMaximumAgeTicks": 0.0,
+    "snapshotMaximumUs": 3746.0,
+    "snapshotMaximumOverlapBytes": 1413312.0,
+    "nativeCheckpointRequests": 0.0,
+    "nativeCheckpointDeferred": 0.0,
+    "nativeCheckpointPrepared": 0.0,
+    "nativeCheckpointCancelled": 0.0,
+    "nativeCheckpointFallbacks": 0.0,
+    "nativeCheckpointPending": 0.0,
+    "nativeCheckpointPeakPending": 0.0,
+    "nativeCheckpointMaxAgeTicks": 0.0
+  },
+  "clock": {
+    "scene": "two_dense_bases_256",
+    "mode": "realtime20",
+    "elapsedTicks": 2400.0,
+    "wallMs": 120463.0,
+    "simulatedMs": 120000.0,
+    "barrierWaitMs": 0.0
+  },
+  "scene": {
+    "sources": 256.0,
+    "receivers": 100.0,
+    "queries": 12000.0,
+    "monitoringSince": 62.0,
+    "rootPeakChargedBytes": 99582670.0
+  },
+  "derived": {
+    "workerAverageSingleCorePercent": 3.0864248773482315,
+    "workerAllocatedMiBPerSecond": 28.36537066048516,
+    "peakThermalChargedMiB": 94.96943473815918
+  },
+  "service": {
+    "ageViolations": 0,
+    "geometryDeadlineViolations": 0,
+    "receiverViolations": 0,
+    "liveFloorMaterials": 16,
+    "capacityRefusalsAfterMonitoring": 0,
+    "shutdownRootZero": true,
+    "notes": "Checks start at tick 62; this fixture does not prove identical temperature against a reference variant",
+    "observedDegradedRegions": 0,
+    "finalAirCoefficients": 33807,
+    "finalRegions": 54
+  },
+  "jfr": {
+    "file": "build/thermal-performance-20261026-current.jfr",
+    "report": "build/thermal-performance-20261026-hotspots.txt",
+    "measuredTickEvents": 2399,
+    "workerSamples": 746,
+    "allocationSampleWeight": 3581747440,
+    "categories": [
+      {
+        "category": "structure-coordination",
+        "samples": 250,
+        "percent": 33.51
+      },
+      {
+        "category": "region-build",
+        "samples": 239,
+        "percent": 32.04
+      },
+      {
+        "category": "other",
+        "samples": 85,
+        "percent": 11.39
+      },
+      {
+        "category": "page-maintenance",
+        "samples": 81,
+        "percent": 10.86
+      },
+      {
+        "category": "numerical-step",
+        "samples": 56,
+        "percent": 7.51
+      },
+      {
+        "category": "accounting",
+        "samples": 35,
+        "percent": 4.69
+      }
+    ],
+    "notes": "Recorded measurement window excludes process initialization. Samples estimate hotspot distribution; category priority makes categories disjoint. Not measured CPU fractions or achieved speedups."
+  },
+  "userRequirements": {
+    "normalMaxAbsoluteErrorC": 0.1,
+    "comparison": "same world inputs and tick, relative to reference",
+    "extremeOverload": "performance first; existing coarse protection may exceed 0.1 C",
+    "physicalEnergy": "all input accounted, no silent loss",
+    "cumulativeError": "0.1 C is not a renewed per-step allowance"
+  },
+  "limits": [
+    "One current profiled run, no old/new speedup ratio",
+    "No networked hundred-player qualification",
+    "First complete server tick peaked at 1754.453 ms; temperature save wait peaked at 46.151 ms",
+    "Direct projection may differ in low floating-point bits or old warm tolerance; no unchanged-old-PCG-bitwise claim",
+    "No production or test source edits in this investigation"
+  ],
+  "compiledReference": {
+    "path": "build/thermal-performance-20261026-baseline-deobf.jar",
+    "bytes": 14831099,
+    "purpose": "Existing compiled fine-model reference for the next matched comparison; no historical-source copy/recompilation",
+    "currentTemperatureTrajectoryRecorded": false
+  }
+}

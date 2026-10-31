@@ -36,6 +36,7 @@ import java.util.function.Consumer;
 
 /** Whole-block connectivity compiler with one-node full-Air fast paths. */
 public final class BrickTopologyCompiler {
+    private static final byte HORIZONTAL = 0, FIRST_BELOW = 1, SECOND_BELOW = 2;
     private final ThermalCellArena arena;
     private final ThermalSignatureTable signatures;
     private final MaterialBoundaryRegistry materials;
@@ -57,15 +58,19 @@ public final class BrickTopologyCompiler {
             new ThermalFragment.RoutedContacts.Builder();
     private final PrimitiveTopologyScratch.LongPairDouble materialPairs =
             new PrimitiveTopologyScratch.LongPairDouble();
-    private final PrimitiveTopologyScratch.LongPairDouble farBoundaries =
-            new PrimitiveTopologyScratch.LongPairDouble();
+    private final it.unimi.dsi.fastutil.ints.IntArrayList farBoundaryCells = new it.unimi.dsi.fastutil.ints.IntArrayList();
     private boolean fragmentResolved;
-    private boolean spatialAir;
     private final it.unimi.dsi.fastutil.ints.IntArrayList farPatchCells = new it.unimi.dsi.fastutil.ints.IntArrayList();
     private final it.unimi.dsi.fastutil.longs.LongArrayList farPatchBlocks = new it.unimi.dsi.fastutil.longs.LongArrayList();
     private final it.unimi.dsi.fastutil.doubles.DoubleArrayList farPatchConductances = new it.unimi.dsi.fastutil.doubles.DoubleArrayList();
 
-    public void captureSpatialAirContacts() { spatialAir = true; }
+
+    /** A yielded topology job must see its sealed emitter set, not later intake. */
+    BrickTopologyCompiler forInput(Consumer<AirMixingRegion> capturedSources) {
+        var next = new BrickTopologyCompiler(arena, signatures, materials, parameters, farField,
+                maximumArenaSlots, capturedSources);
+        return next;
+    }
     private static final long[] NEIGHBORS = new long[64];
 
     static {
@@ -243,7 +248,7 @@ public final class BrickTopologyCompiler {
     CompiledFragment compileFragment(WorkerPageStore.PageState page, int brick, TopologyView view) {
         for (var pairs : airPairs) pairs.reset();
         materialPairs.reset();
-        farBoundaries.reset();
+        farBoundaryCells.clear();
         farPatchCells.clear();
         farPatchBlocks.clear();
         farPatchConductances.clear();
@@ -369,14 +374,12 @@ public final class BrickTopologyCompiler {
                 int v =
                         signatures.ventilation(
                                 cut.get(BlockBrickLayout.pageBlock(brick, blockIndex)));
-                double conductance = farField.conductanceForPatches(16, true) * v / 100.0;
-                farBoundaries.add(slot, 0, conductance);
-                if (spatialAir) {
-                    farPatchCells.add(slot);
-                    farPatchBlocks.add(net.minecraft.core.BlockPos.asLong(x + (blockIndex & 3),
-                            y + (blockIndex >>> 4), z + (blockIndex >>> 2 & 3)));
-                    farPatchConductances.add(conductance);
-                }
+                double conductance = farField.skyFaceConductanceWPerK() * v / 100.0;
+                if (!farBoundaryCells.contains(slot)) farBoundaryCells.add(slot);
+                farPatchCells.add(slot);
+                farPatchBlocks.add(net.minecraft.core.BlockPos.asLong(x + (blockIndex & 3),
+                        y + (blockIndex >>> 4), z + (blockIndex >>> 2 & 3)));
+                farPatchConductances.add(conductance);
             }
         }
         long origin = net.minecraft.core.BlockPos.asLong(x, y, z);
@@ -413,7 +416,6 @@ public final class BrickTopologyCompiler {
             routedLayout = routedLayout.withAirContactBlocks(airContactBlocks);
         return new CompiledFragment(
                 new ThermalFragment(
-                        Integer.toUnsignedLong(page.fragmentIndex(brick)),
                         freezeAirPairs(),
                         freezeMaterialPairs(),
                         routedContacts.build(),
@@ -503,10 +505,10 @@ public final class BrickTopologyCompiler {
         double secondDistance = Math.max(0.5, arena.center(second, axis) - plane);
         byte direction =
                 axis != 1
-                        ? ThermalFragment.AirPairs.HORIZONTAL
+                        ? HORIZONTAL
                         : first < second
-                                ? ThermalFragment.AirPairs.FIRST_BELOW
-                                : ThermalFragment.AirPairs.SECOND_BELOW;
+                                ? FIRST_BELOW
+                                : SECOND_BELOW;
         airPairs[direction].add(
                 Math.min(first, second),
                 Math.max(first, second),
@@ -515,9 +517,9 @@ public final class BrickTopologyCompiler {
                                 + secondDistance * 100.0 / secondVentilation));
     }
 
-    private ThermalFragment.MaterialContributions freezeMaterialPairs() {
+    private ThermalFragment.MaterialContacts freezeMaterialPairs() {
         int count = materialPairs.size();
-        if (count == 0) return ThermalFragment.MaterialContributions.EMPTY;
+        if (count == 0) return ThermalFragment.MaterialContacts.EMPTY;
         int[] firstSlots = new int[count];
         int[] secondSlots = new int[count];
         double[] conductancesWPerK = new double[count];
@@ -526,7 +528,7 @@ public final class BrickTopologyCompiler {
             secondSlots[index] = (int) materialPairs.second(index);
             conductancesWPerK[index] = materialPairs.value(index);
         }
-        return new ThermalFragment.MaterialContributions(
+        return new ThermalFragment.MaterialContacts(
                 firstSlots, secondSlots, conductancesWPerK);
     }
 
@@ -539,7 +541,6 @@ public final class BrickTopologyCompiler {
         int[] first = new int[count];
         int[] second = new int[count];
         double[] conductance = new double[count];
-        byte[] directions = new byte[count];
         int index = 0;
         for (byte direction = 0; direction < airPairs.length; direction++) {
             var pairs = airPairs[direction];
@@ -547,28 +548,17 @@ public final class BrickTopologyCompiler {
                 first[index] = (int) pairs.first(i);
                 second[index] = (int) pairs.second(i);
                 conductance[index] = parameters.effectiveMixingWPerBlockK() * pairs.value(i);
-                directions[index] = direction;
             }
         }
-        return new ThermalFragment.AirPairs(first, second, conductance, directions);
+        return new ThermalFragment.AirPairs(first, second, conductance);
     }
 
     private ThermalFragment.FarBoundaries freezeFarBoundaries(int ownerPageSlot) {
-        int count = farBoundaries.size();
-        if (count == 0) {
+        if (farBoundaryCells.isEmpty()) {
             return ThermalFragment.FarBoundaries.EMPTY;
         }
-        int[] cell = new int[count];
-        double[] conductance = new double[count];
-        double[] coefficient = new double[count];
-        for (int index = 0; index < count; index++) {
-            cell[index] = (int) farBoundaries.first(index);
-            conductance[index] = farBoundaries.value(index);
-        }
-        return new ThermalFragment.FarBoundaries(cell, ownerPageSlot, conductance, coefficient,
-                spatialAir ? farPatchCells.toIntArray() : null,
-                spatialAir ? farPatchBlocks.toLongArray() : null,
-                spatialAir ? farPatchConductances.toDoubleArray() : null);
+        return new ThermalFragment.FarBoundaries(farBoundaryCells.toIntArray(), ownerPageSlot,
+                farPatchCells.toIntArray(), farPatchBlocks.toLongArray(), farPatchConductances.toDoubleArray());
     }
 
     private static int brickMinX(WorkerPageStore.PageState page, int brick) {

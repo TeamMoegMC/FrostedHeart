@@ -5,7 +5,7 @@
 - Authors: `Codex; OpenAI GPT-6; primary engineering agent`
 - Status: `completed; 八批整理及验证已完成，保留材料导热修复基线`
 - Scope: `温度代码命名、表达、必要的职责整理；保持热行为与主要性能成本`
-- Related: [当前架构](../docs/climate/thermal-runtime-architecture-and-optimization.md)、[温度语义](../docs/climate/world-climate-and-temperature.md)、[导热修复基线](../diary/2026-09-16_01-03-57_material-conductance-defaults.md)、[调查记录](../diary/2026-09-16_13-29-11_thermal-refactor-plan-review.md)
+- Related: [当前架构](../docs/climate/thermal-runtime-architecture-and-optimization.md)、[温度语义](../docs/climate/world-climate-and-temperature.md)、[导热修复基线](../diary/2026-10-29_23-38-00_thermal-development-history.md)、[调查记录](../diary/2026-10-29_23-38-00_thermal-development-history.md)
 
 ## 1. 目标与范围
 
@@ -334,7 +334,7 @@ pages.awaitChangedMaterials(batch, arena);
 
 ## 9. 实施结果
 
-2026-09-16 已完成。细节与测量见[实施记录](../diary/2026-09-16_15-24-40_thermal-readability-implementation.md)。没有新增运行时节点对象、数组、扫描、锁或渲染 pass；原样本和采集器移动后仍按原生命周期复用。最后一次完整 GameTest 为 102/102，最后的存档索引命名与等值常量整理另经编译通过。
+2026-09-16 已完成。细节与测量见[实施记录](../diary/2026-10-29_23-38-00_thermal-development-history.md)。没有新增运行时节点对象、数组、扫描、锁或渲染 pass；原样本和采集器移动后仍按原生命周期复用。最后一次完整 GameTest 为 102/102，最后的存档索引命名与等值常量整理另经编译通过。
 
 | 覆盖组 | 实际结果 |
 |---|---|
@@ -353,7 +353,7 @@ pages.awaitChangedMaterials(batch, arena);
 
 性能结论限定为结构成本保持及已测路径：求解器同为 2176 节点、零稳态分配；多次耗时有波动。IR 原计时没有预热，本轮补 256 次预热并记录全部结果，不把不同预热方式或不同场景负载算成严格加速比。未对全部硬件、多人大服或 GPU 做新性能承诺。
 
-删除优先补充结果：相变校验不再回调 Input，tick 直接接收当前 publication，复用控制器原材料样本和已解析 Page，无新增对象/通知/缓存。补充修改后完整 GameTest 102/102 通过。详见[删除转发记录](../diary/2026-09-16_15-30-06_thermal-validation-forwarding-removal.md)。
+删除优先补充结果：相变校验不再回调 Input，tick 直接接收当前 publication，复用控制器原材料样本和已解析 Page，无新增对象/通知/缓存。补充修改后完整 GameTest 102/102 通过。详见[删除转发记录](../diary/2026-10-29_23-38-00_thermal-development-history.md)。
 
 后续四处精简已完成：无调用的 resolveAirFaceSlot、Profile.body 构造包装、Input 的两个解析场写转发已删除，TopologyCommitter 不再实例化。编译通过；固定 seed=0 的平坦 plains 测试世界 102/102 GameTest 通过。原随机自然世界两轮出现不同失败，尚未全部查明原因，不能将受控环境结果表述为原环境全通过。临时测试配置已还原，见[无用抽象清理记录](../diary/2026-09-16_16-00-58_thermal-unused-abstractions.md)。
 

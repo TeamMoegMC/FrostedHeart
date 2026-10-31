@@ -1,0 +1,150 @@
+{
+  "status": "passed-cleanup-only",
+  "date": "2026-10-26",
+  "author": "Codex; OpenAI GPT-6; cleanup only, repeated closure review",
+  "source": {
+    "beforeFiles": 133,
+    "beforeLines": 44836,
+    "afterFiles": 133,
+    "afterLines": 44746,
+    "netRemovedLines": 90,
+    "newProductionTypes": 0
+  },
+  "removed": [
+    "Four old material endpoint builder/output columns and their entry scans",
+    "Unused Coupled materialArenaSlots/row count and waiting array",
+    "Unreachable presizeCoarse path and exclusive capacity constructor",
+    "Old material fallback in Air route term compilation",
+    "Constant-zero snapshot waitingOffset in construction/copy/restoration interfaces",
+    "Uncalled sparse-edge counter chain and aggregate contact-description wrapper"
+  ],
+  "preserved": [
+    "LocalMaterialBoundary enthalpy, branch, waiting and physical material transfer",
+    "Minimum material waiting and actual coarse computation",
+    "Same contact insertion/summation and exchange ordering",
+    "Cancellation parent ownership, reader payload references, checkpoint close ordering and v6 saves",
+    "Four protected player/unused files"
+  ],
+  "reviewPasses": [
+    "All formal main/GameTest creators and material-route branches",
+    "Construction/state invariants and exclusive callee/interface closure",
+    "Cancel/restore/phase/quality/save/release data ownership",
+    "Post-build owner/descriptor/lambda/interface and field review"
+  ],
+  "compile": {
+    "command": "assemble compileGameTestJava --offline --no-daemon --max-workers=1",
+    "java": 17,
+    "attempts": 1,
+    "status": "passed",
+    "elapsed": "56s",
+    "log": "build/thermal-material-retirement-compile-r1.log"
+  },
+  "package": {
+    "jar": "D:/Frosted-Heart/build/libs/frostedheart-1.20.1-0.7.7.jar",
+    "bytes": 14952298,
+    "thermalClasses": 435,
+    "gameTestClassesInProduction": 0,
+    "protectedParticleClasses": 4
+  },
+  "staticReview": {
+    "methods": 4597,
+    "fields": 3902,
+    "rawCandidates": 936,
+    "conservativeCandidates": 383,
+    "candidateCountsAreGarbageCounts": false,
+    "retiredNamesRemaining": 0,
+    "report": "build/thermal-material-retirement-member-review-20261026-summary.txt"
+  },
+  "verification": {
+    "junitRuns": 0,
+    "fullMatrixRerun": false,
+    "performanceRun": false,
+    "approximationChanges": false,
+    "sourceOrFixtureEditsAfterCompile": false,
+    "memoryTargetMiB": 128,
+    "cpuMsPerSecond": 250,
+    "heap": "5g",
+    "clock": "realtime20",
+    "cases": [
+      {
+        "name": "storage",
+        "attempt": 1,
+        "status": "passed",
+        "started": "2026-10-26T00:37:34.5401199+08:00",
+        "ended": "2026-10-26T00:38:36.2442863+08:00",
+        "exit": 0,
+        "requiredPassed": 6,
+        "rootZero": true,
+        "memoryTargetMiB": 128,
+        "cpuMsPerSecond": 250,
+        "log": "build/thermal-material-retirement-storage-20261026-r1.log"
+      },
+      {
+        "name": "source",
+        "attempt": 1,
+        "status": "passed",
+        "started": "2026-10-26T00:38:36.2494265+08:00",
+        "ended": "2026-10-26T00:39:46.6258892+08:00",
+        "exit": 0,
+        "requiredPassed": 1,
+        "rootZero": true,
+        "memoryTargetMiB": 128,
+        "cpuMsPerSecond": 250,
+        "log": "build/thermal-material-retirement-source-20261026-r1.log"
+      },
+      {
+        "name": "lifecycle",
+        "attempt": 1,
+        "status": "passed",
+        "started": "2026-10-26T00:39:46.6279663+08:00",
+        "ended": "2026-10-26T00:42:32.3480249+08:00",
+        "exit": 0,
+        "requiredPassed": 3,
+        "rootZero": true,
+        "memoryTargetMiB": 128,
+        "cpuMsPerSecond": 250,
+        "log": "build/thermal-material-retirement-lifecycle-20261026-r1.log"
+      },
+      {
+        "name": "grid",
+        "attempt": 1,
+        "status": "passed",
+        "started": "2026-10-26T00:42:32.3502847+08:00",
+        "ended": "2026-10-26T00:44:17.7673226+08:00",
+        "exit": 0,
+        "requiredPassed": 1,
+        "rootZero": true,
+        "memoryTargetMiB": 128,
+        "cpuMsPerSecond": 250,
+        "log": "build/thermal-material-retirement-grid-20261026-r1.log"
+      }
+    ],
+    "requiredTestsPassed": 11,
+    "failedAttempts": 0
+  },
+  "optimization": "Deferred by explicit user instruction; no cache, preallocation or approximation implementation",
+  "limits": [
+    "Scoped cross-checks do not prove every external/dynamic entry has no future use",
+    "Previous performance measurement belongs to its prior compiled build; no new speedup claim"
+  ],
+  "observations": {
+    "sourceJ": 6400,
+    "sourceDeliveredJ": 6400,
+    "sourceCancellations": 2,
+    "sourcePublications": 1,
+    "sourceReplayEnergyDeltaJ": 0,
+    "sourceReplayTemperatureDeltaC": 0,
+    "retainedReaders": 3,
+    "rootBeforeLastReaderRelease": 1321864,
+    "rootAfterLastReaderRelease": 0,
+    "phaseInitialH": 39000,
+    "phaseMaximumH": 53828.40138766349,
+    "phasePlacedTick": 1025,
+    "phaseConvertedTick": 2001,
+    "gridCycles": 2,
+    "gridCheckpoints": 2,
+    "maximumRecoveryJumpC": 0.004349849747764978,
+    "maximumCheckpointErrorC": 0.09674559860551213,
+    "maximumCoarseningEnergyErrorJ": 2.980232238769531E-08
+  }
+}

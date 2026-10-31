@@ -21,12 +21,13 @@
 package com.teammoeg.frostedheart.content.climate.thermal.topology;
 
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ArenaSpan;
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.AirBackingMeter;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialBoundaryRegistry;
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialStateAccess;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.PageSignatures;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalCellArena;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalPageHandle;
 import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureTable;
-import com.teammoeg.frostedheart.content.climate.thermal.query.QueryPublication;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.engine.ThermalDimensionLimits;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ResolvedGeometryBatch;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ThermalCompletion;
@@ -53,7 +54,7 @@ import java.util.Arrays;
  *
  * <p>它读取当前 {@link WorkerPageStore} 和一个输入 batch，为受影响 Brick
  * 生成完整 replacement 与 solver delta，但不修改任何已提交权威。成功结果
- * 只能交给 {@link TopologyCommitter}。</p>
+ * 由区域安装任务交接给 {@link RegionalTopologyInstall}。</p>
  */
 public final class TopologyUpdatePlanner {
     private static final int BRICKS_PER_PAGE = 64;
@@ -64,10 +65,11 @@ public final class TopologyUpdatePlanner {
     private final PhaseTransitionRuntime phases;
     private final ThermalSignatureTable signatures;
     private final BrickTopologyCompiler compiler;
-    private final MaterialEdgeCompiler materialCompiler;
+    private final MaterialStateAccess materialStates;
+    private final MaterialBoundaryRegistry materials;
+    private final ThermalTopologyParameters parameters;
     private final BrickMigrationKernel migration;
     private final ThermalDimensionLimits limits;
-    private final QueryPublication queries;
     private final PreparedTopologyChange.Builder changeBuilder =
             new PreparedTopologyChange.Builder();
 
@@ -87,37 +89,57 @@ public final class TopologyUpdatePlanner {
     private int stagedCellCount;
     private final TopologyView view;
     private final AirRouteCompiler airRoutes;
+    private boolean routePreparationStarted;
 
     public TopologyUpdatePlanner(
             WorkerPageStore pages,
             ThermalCellArena arena,
+            MaterialStateAccess materialStates,
             ThermalSolver solver,
             PhaseTransitionRuntime phases,
             ThermalSignatureTable signatures,
             MaterialBoundaryRegistry materials,
             BrickTopologyCompiler compiler,
             ThermalTopologyParameters parameters,
-            ThermalDimensionLimits limits,
-            QueryPublication queries) {
+            ThermalDimensionLimits limits) {
+        this(pages, arena, materialStates, solver, phases, signatures, materials, compiler, parameters, limits, null);
+    }
+
+    private TopologyUpdatePlanner(WorkerPageStore pages, ThermalCellArena arena, MaterialStateAccess materialStates,
+            ThermalSolver solver, PhaseTransitionRuntime phases, ThermalSignatureTable signatures,
+            MaterialBoundaryRegistry materials, BrickTopologyCompiler compiler, ThermalTopologyParameters parameters,
+            ThermalDimensionLimits limits, AirRouteCompiler routes) {
+        this.materialStates = materialStates; this.materials = materials; this.parameters = parameters;
         this.pages = pages;
         this.arena = arena;
         this.solver = solver;
         this.phases = phases;
         this.signatures = signatures;
         this.compiler = compiler;
-        this.materialCompiler = new MaterialEdgeCompiler(arena, solver);
-        this.migration = new BrickMigrationKernel(arena, signatures, parameters, materials);
+        this.migration = new BrickMigrationKernel(arena, materialStates, signatures, parameters, materials);
         this.limits = limits;
-        this.queries = queries;
         this.view = new TopologyView(pages, draftsBySection, draftsBySlot);
-        airRoutes = new AirRouteCompiler(signatures, arena, limits.maximumLiveCells());
+        airRoutes = routes == null ? new AirRouteCompiler(signatures, arena, limits.maximumLiveCells()) : routes.forPreparation();
         view.airRoutes(airRoutes);
-        pages.airRoutes(airRoutes);
+        if (routes == null) pages.airRoutes(airRoutes);
         pages.signatures(signatures);
     }
 
-    public boolean hasPendingRoutes() {
-        return airRoutes.hasPendingWork();
+    /** Geometry scratch belongs to a structural job; emitter membership is sealed with its input. */
+    public TopologyUpdatePlanner forInput(
+            com.teammoeg.frostedheart.content.climate.thermal.source.minecraft.WorkerPhysicalSourceBindings.FrozenSources sourceInput,
+            LongSet sections) {
+        var planner = new TopologyUpdatePlanner(pages, arena, materialStates, solver, phases, signatures, materials,
+                compiler.forInput(sourceInput::collectMixingSources), parameters, limits, airRoutes);
+        planner.view.captureSections(sections);
+        return planner;
+    }
+
+    /** Separately admitted immutable inputs; callers transfer ownership to the numerical candidate. */
+    public FrozenAirGeometry freezeAirGeometry(
+            com.teammoeg.frostedheart.content.climate.thermal.source.minecraft.WorkerPhysicalSourceBindings.FrozenSources sources,
+            com.teammoeg.frostedheart.content.climate.thermal.runtime.ThermalMemoryBudget.Reservation scratch) {
+        return FrozenAirGeometry.capture(view, arena, sources, signatures, scratch);
     }
 
     public void beginCut() {
@@ -128,88 +150,318 @@ public final class TopologyUpdatePlanner {
         return airRoutes.lastVisitCount();
     }
 
-    private double externalMaterialEnergyJ;
-
-    public long[] invalidatedRouteSourceSections() {
-        return airRoutes.invalidatedSourceSections();
+    /** Includes set/queue growth and route traversal scratch before any closure is allocated. */
+    public long continuationBoundaryBytes(ThermalInputBatch batch) {
+        boolean pending = airRoutes.hasPendingWork();
+        if (!RegionalContinuationBoundary.hasStructuralInput(batch) && !pending) return 0;
+        long seeds = batch.admissions().length + (long) batch.retirements().length + batch.residencyUpdates().length
+                + batch.geometry().size() + batch.geometry().materialChanges().size()
+                + batch.phaseAcks().length + batch.phaseIntents().length + batch.environmentUpdates().length;
+        for (var halo : batch.geometry().halos()) seeds += 1L + halo.halo().sectionCountBound();
+        // This read-only walk borrows existing route components. Its allocations
+        // are component references and Section sets/queues, never route positions.
+        long sections = 27L * seeds + pages.capturedSectionCountBound() + airRoutes.dependencySectionCount();
+        if (pending) sections += draftsBySection.size() + airRoutes.pendingSectionCountBound();
+        // Includes old/new hash tables during growth and the primitive queue.
+        return 2048L + 64L * airRoutes.componentCountBound() + 128L * sections;
     }
 
+    /** Seed union is exact for inputs at the same physical boundary; no payload is copied. */
+    public static void collectBoundarySeeds(ThermalInputBatch batch, LongSet seeds) {
+        for (var admission : batch.admissions()) seeds.add(admission.page().sectionKey());
+        for (var retirement : batch.retirements()) seeds.add(retirement.page().sectionKey());
+        for (var update : batch.residencyUpdates()) seeds.add(update.page().sectionKey());
+        for (int index = 0; index < batch.geometry().size(); index++) seeds.add(batch.geometry().page(index).sectionKey());
+        var changes = batch.geometry().materialChanges();
+        for (int index = 0; index < changes.size(); index++) seeds.add(changes.page(index).sectionKey());
+        for (var halo : batch.geometry().halos()) {
+            seeds.add(halo.page().sectionKey());
+            for (long position : halo.halo().positions()) seeds.add(SectionPos.asLong(
+                    BlockPos.getX(position) >> 4, BlockPos.getY(position) >> 4, BlockPos.getZ(position) >> 4));
+        }
+        for (var environment : batch.environmentUpdates())
+            if (environment.skyColumns().length != 0) seeds.add(environment.page().sectionKey());
+        for (var ack : batch.phaseAcks()) seeds.add(SectionPos.asLong(
+                ack.request().blockX() >> 4, ack.request().blockY() >> 4, ack.request().blockZ() >> 4));
+        for (var intent : batch.phaseIntents()) seeds.add(intent.page().sectionKey());
+    }
+
+    public RegionalContinuationBoundary continuationBoundary(LongSet seeds, boolean structuralInput) {
+        boolean pending = airRoutes.hasPendingWork();
+        boolean unresolved = airRoutes.discoveryIncomplete();
+        if (!structuralInput && !pending) return RegionalContinuationBoundary.UNCHANGED;
+        var affected = new LongOpenHashSet();
+        var queue = new it.unimi.dsi.fastutil.longs.LongArrayList();
+        for (long seed : seeds) for (int x = -1; x <= 1; x++)
+            for (int y = -1; y <= 1; y++) for (int z = -1; z <= 1; z++) {
+                long section = SectionPos.asLong(SectionPos.x(seed) + x, SectionPos.y(seed) + y, SectionPos.z(seed) + z);
+                if (affected.add(section)) queue.add(section);
+            }
+        if (pending) airRoutes.includePendingSections(affected, queue);
+        airRoutes.expandAffectedSections(affected, queue);
+        {
+            // A passage search only moves to a face-adjacent captured position.
+            // Treat every captured section as fully connected: this deliberately
+            // overestimates reach before discovering any new route as well.
+            // Limiting this closure to already-pending searches omits outlets
+            // reached by the very input whose boundary is being selected.
+            // Include old/candidate/input geometry and actual halos so neither a
+            // new Page nor an old dependency can create an unaccounted shortcut.
+            for (int index = 0; index < queue.size(); index++) {
+                long key = queue.getLong(index);
+                for (int face = 0; face < 6; face++) {
+                    long next = SectionPos.asLong(SectionPos.x(key) + TopologyView.DX[face],
+                            SectionPos.y(key) + TopologyView.DY[face], SectionPos.z(key) + TopologyView.DZ[face]);
+                    // Query the existing indexes instead of copying the whole dimension for this walk.
+                    if (!affected.contains(next) && (pages.hasCapturedSection(next)
+                            || draftsBySection.containsKey(next) || seeds.contains(next)
+                            || airRoutes.hasDependencySection(next))) {
+                        affected.add(next);
+                        queue.add(next);
+                    }
+                }
+            }
+        }
+        return new RegionalContinuationBoundary(affected, unresolved);
+    }
+
+    private double externalMaterialEnergyJ;
+
     public void committed() {
+        view.commitHalos();
         airRoutes.committed();
     }
 
-    public PreparedTopologyChange prepare(ThermalInputBatch batch, LongSet mixingChanges) {
+    public boolean dependenciesCurrent() { return view.dependenciesCurrent() && airRoutes.dependenciesCurrent(); }
+
+    public void recordInstalledRouteBacking(AirBackingMeter meter) { airRoutes.recordInstalledBacking(meter); }
+
+    public void recordBacking(AirBackingMeter meter) {
+        meter.container(draftPool, draftPool.size(), 8); meter.container(draftsBySection, draftsBySection.size(), 16);
+        meter.container(draftsBySlot, draftsBySlot.size(), 12); meter.container(affectedFragments, affectedFragments.size(), 4);
+        meter.container(layoutCandidates, layoutCandidates.size(), 4); meter.container(sourceDirtySections, sourceDirtySections.size(), 8);
+        meter.array(removedPhaseSlots.elements()); meter.array(addedPhaseSlots.elements());
+        meter.container(oldSpans, oldSpans.size(), 8); meter.container(resyncTokens, resyncTokens.size(), 8);
+        for (int index = 0; index < draftCount; index++) {
+            var draft = draftPool.get(index);
+            meter.objectOnce(draft, 256); meter.array(draft.brickSignatureValues); meter.array(draft.replacements);
+            meter.array(draft.materialChangeIndexes); meter.array(draft.skyColumns); meter.array(draft.skyValues);
+            meter.array(draft.nextSkyExposure); draft.nextSignatures.recordBacking(meter);
+            for (var indexes : draft.materialChangeIndexes) if (indexes != null) meter.array(indexes.elements());
+            for (var brick : draft.replacements) if (brick != null) brick.recordBacking(meter);
+        }
+        if (roundFragments != null) {
+            meter.array(roundFragments.indexes); meter.array(roundFragments.fragments);
+            for (var fragment : roundFragments.fragments) if (fragment != null) fragment.recordBacking(meter);
+        }
+        view.recordBacking(meter); airRoutes.recordBacking(meter);
+    }
+
+    /** Local owners report capacities; no yielded batch rescans a growing candidate object graph. */
+    public long preparationScratchBytes(ThermalInputBatch input) {
+        long growth = 1024L * 1024L;
+        if (preparingBatch == null || preparePhase == 0)
+            growth = Math.max(growth, 2 * input.queuedPayloadBytes());
+        if (preparePhase == 3) growth = Math.max(growth, airRoutes.preparationGrowthBytes());
+        return Math.addExact(preparationRetainedBytes(), growth);
+    }
+
+    private long preparationRetainedBytes() {
+        long bytes = AirBackingMeter.containerBackingBytes(draftPool, draftPool.size(), 8)
+                + AirBackingMeter.containerBackingBytes(draftsBySection, draftsBySection.size(), 16)
+                + AirBackingMeter.containerBackingBytes(draftsBySlot, draftsBySlot.size(), 12)
+                + AirBackingMeter.containerBackingBytes(affectedFragments, affectedFragments.size(), 4)
+                + AirBackingMeter.containerBackingBytes(layoutCandidates, layoutCandidates.size(), 4)
+                + AirBackingMeter.containerBackingBytes(sourceDirtySections, sourceDirtySections.size(), 8)
+                + AirBackingMeter.shallowArrayBytes(removedPhaseSlots.elements())
+                + AirBackingMeter.shallowArrayBytes(addedPhaseSlots.elements())
+                + AirBackingMeter.containerBackingBytes(oldSpans, oldSpans.size(), 8)
+                + AirBackingMeter.containerBackingBytes(resyncTokens, resyncTokens.size(), 8);
+        for (int index = 0; index < draftCount; index++) bytes += draftPool.get(index).preparationBackingBytes();
+        if (roundFragments != null) bytes += AirBackingMeter.shallowArrayBytes(roundFragments.indexes)
+                + AirBackingMeter.shallowArrayBytes(roundFragments.fragments) + compiledFragmentBytes;
+        bytes += view.preparationBackingBytes() + airRoutes.preparationBackingBytes();
+        return 65536L + bytes;
+    }
+
+    /** Charge the completed fragment and Page replacement while readers still hold the old geometry. */
+    public long completedPreparationBytes(PreparedTopologyChange change) {
+        var meter = new AirBackingMeter(true);
+        recordBacking(meter);
+        change.recordBacking(meter);
+        long retained = Math.addExact(65536L, meter.bytes());
+        if (jdk.jfr.FlightRecorder.isInitialized()) {
+            var event = new PreparationStorage();
+            event.retainedBytes = retained;
+            event.changedFragments = change.fragmentIndexes.length;
+            event.changedPages = change.pageWrites.length;
+            event.commit();
+        }
+        return retained;
+    }
+
+    @jdk.jfr.Name("frostedheart.ThermalTopologyPreparationStorage")
+    @jdk.jfr.StackTrace(false)
+    private static final class PreparationStorage extends jdk.jfr.Event {
+        public long retainedBytes;
+        public int changedFragments, changedPages;
+    }
+
+    /** Recheck current fragment references before the private replacement is installed. */
+    public void prepareCommit(PreparedTopologyChange change) {
+        preflightLimits(new FragmentChanges(change.fragmentIndexes, change.fragments));
+        reserveBacking();
+    }
+
+    public void discardPrepared() {
+        discardStaging();
+        airRoutes.discardPreparation();
         reset();
+    }
+
+    private ThermalInputBatch preparingBatch;
+    private int preparePhase, prepareCursor;
+    private FragmentChanges roundFragments;
+    private long compiledFragmentBytes;
+
+    public int preparationPhase() { return preparingBatch == null ? -1 : preparePhase; }
+
+    /**
+     * One structural task owns these drafts, routes and read dependencies.
+     * Independent planners may continue between rounds without changing them.
+     * A null result publishes nothing and leaves every installed Page untouched.
+     */
+    public PreparedTopologyChange prepareRound(ThermalInputBatch batch, LongSet mixingChanges, long deadline,
+            com.teammoeg.frostedheart.content.climate.thermal.runtime.ThermalMemoryBudget.Reservation scratch) {
+        do {
+            long bytes = preparationScratchBytes(batch);
+            if (scratch.bytes() < bytes) scratch.completeResize(bytes);
+            PreparedTopologyChange result = advancePreparation(batch, mixingChanges);
+            if (result != null) return result;
+            // Route discovery can await geometry. Its own bounded traversal decides when to yield.
+            if (preparePhase == 3) return null;
+        } while (System.nanoTime() < deadline);
+        return null;
+    }
+
+    private PreparedTopologyChange advancePreparation(ThermalInputBatch batch, LongSet mixingChanges) {
+        if (preparingBatch == null) {
+            reset();
+            preparingBatch = batch;
+            preparePhase = prepareCursor = 0;
+        } else if (preparingBatch != batch) {
+            throw new IllegalStateException("A different input still owns topology preparation");
+        }
         try {
-            airRoutes.invalidate(batch);
-            collectRetirements(batch);
-            collectAdmissions(batch);
-            collectResidency(batch.residencyUpdates());
-            collectGeometry(batch.geometry());
-            collectEnvironment(batch.environmentUpdates());
-            finalizeSignatureCuts();
-            collectLayoutDependencies();
-            compileChangedCells();
-            collectFragmentDependencies();
-            var changedMixing = mixingChanges.iterator();
-            while (changedMixing.hasNext()) {
-                long position = changedMixing.nextLong();
-                markFragment(
-                        BlockPos.getX(position), BlockPos.getY(position), BlockPos.getZ(position));
+            switch (preparePhase) {
+                case 0 -> {
+                    airRoutes.invalidate(batch);
+                    collectRetirements(batch);
+                    collectAdmissions(batch);
+                    collectResidency(batch.residencyUpdates());
+                    collectGeometry(batch.geometry());
+                    collectEnvironment(batch.environmentUpdates());
+                    preparePhase++;
+                }
+                case 1 -> {
+                    finalizeSignatureCuts();
+                    collectLayoutDependencies();
+                    boolean dirty = airRoutes.hasPendingWork() || !mixingChanges.isEmpty();
+                    for (int index = 0; !dirty && index < draftCount; index++) {
+                        PageDraft draft = draftPool.get(index);
+                        dirty = draft.admission || draft.retirement || draft.replacedPage != null
+                                || (draft.topologyDirtyMask | draft.fragmentDirtyMask | draft.materialDirtyMask) != 0L;
+                    }
+                    if (dirty) preparePhase++;
+                    else { roundFragments = FragmentChanges.EMPTY; preparePhase = 6; }
+                }
+                case 2 -> {
+                    // At most one Page (64 small Bricks), with the original order.
+                    while (prepareCursor < draftCount && (draftPool.get(prepareCursor).retirement
+                            || draftPool.get(prepareCursor).topologyDirtyMask == 0L)) prepareCursor++;
+                    if (prepareCursor < draftCount) compileChangedCells(prepareCursor++);
+                    else { prepareCursor = 0; preparePhase++; }
+                }
+                case 3 -> {
+                    if (!routePreparationStarted) {
+                        collectFragmentDependencies();
+                        for (long position : mixingChanges)
+                            markFragment(BlockPos.getX(position), BlockPos.getY(position), BlockPos.getZ(position));
+                        airRoutes.beginPrepare(view, affectedFragments);
+                        routePreparationStarted = true;
+                    }
+                    if (!airRoutes.advancePreparation(view, affectedFragments)) return null;
+                    int[] indexes = affectedFragments.toIntArray();
+                    Arrays.sort(indexes);
+                    roundFragments = new FragmentChanges(indexes, new ThermalFragment[indexes.length]);
+                    preparePhase++;
+                }
+                case 4 -> {
+                    int end = Math.min(roundFragments.indexes.length, prepareCursor + 16);
+                    compileFragments(roundFragments, prepareCursor, end);
+                    prepareCursor = end;
+                    if (end == roundFragments.indexes.length) { prepareCursor = 0; preparePhase++; }
+                }
+                case 5 -> {
+                    while (prepareCursor < draftCount) {
+                        PageDraft draft = draftPool.get(prepareCursor);
+                        if (draft.retirement || draft.replacedPage != null || draft.cellReplacementMask != 0L
+                                || (draft.page.residentBrickMask & ~draft.nextResidentBrickMask) != 0L) break;
+                        prepareCursor++;
+                    }
+                    if (prepareCursor < draftCount) prepareMigrationsAndRetirements(prepareCursor++);
+                    else { prepareCursor = 0; preparePhase++; }
+                }
+                case 6 -> {
+                    preflightLimits(roundFragments);
+                    reserveBacking();
+                    PreparedTopologyChange.PageWrite[] pageWrites =
+                            pages.prepareWrites(draftPool, draftCount, resyncTokens);
+                    long baseVersion = solver.structuralVersion();
+                    boolean structural = roundFragments.indexes.length != 0 || !oldSpans.isEmpty();
+                    long nextVersion = structural ? Math.incrementExact(baseVersion) : baseVersion;
+                    long[] dirtySections =
+                            sourceDirtySections.isEmpty()
+                                    ? PreparedTopologyChange.NO_LONGS
+                                    : sourceDirtySections.toLongArray();
+                    if (dirtySections.length > 1) {
+                        Arrays.sort(dirtySections);
+                    }
+                    PreparedTopologyChange result = changeBuilder
+                            .retiringRoutes(airRoutes.retiringRoutes())
+                            .identity(baseVersion, nextVersion)
+                            .externalMaterialEnergy(externalMaterialEnergyJ)
+                            .fragments(roundFragments.indexes, roundFragments.fragments)
+                            .phaseSlots(
+                                    removedPhaseSlots.isEmpty()
+                                            ? PreparedTopologyChange.NO_INTS
+                                            : removedPhaseSlots.toIntArray(),
+                                    addedPhaseSlots.isEmpty()
+                                            ? PreparedTopologyChange.NO_INTS
+                                            : addedPhaseSlots.toIntArray())
+                            .pages(
+                                    pageWrites,
+                                    oldSpans.isEmpty()
+                                            ? PreparedTopologyChange.NO_OLD_SPANS
+                                            : oldSpans.toArray(PreparedTopologyChange.OldSpan[]::new))
+                            .sourceSections(dirtySections)
+                            .resyncTokens(
+                                    resyncTokens.isEmpty()
+                                            ? ThermalCompletion.NO_RESYNC_TOKENS
+                                            : resyncTokens.toArray(
+                                                    ThermalPageHandle.GeometryResyncToken[]::new))
+                            .build();
+                    preparingBatch = null;
+                    roundFragments = null;
+                    return result;
+                }
+                default -> throw new IllegalStateException("Unknown topology preparation phase");
             }
-            airRoutes.prepare(view, affectedFragments);
-            FragmentChanges fragmentChanges = compileFragments();
-            prepareMigrationsAndRetirements();
-            MaterialEdgeCompiler.Result material =
-                    materialCompiler.compile(fragmentChanges.indexes, fragmentChanges.fragments);
-            preflightLimits(fragmentChanges, material);
-            reserveBacking(fragmentChanges, material);
-            PreparedTopologyChange.PageWrite[] pageWrites =
-                    pages.prepareWrites(draftPool, draftCount, resyncTokens);
-            long baseVersion = solver.structuralVersion();
-            boolean structural = fragmentChanges.indexes.length != 0 || !oldSpans.isEmpty();
-            long nextVersion = structural ? Math.incrementExact(baseVersion) : baseVersion;
-            long[] dirtySections =
-                    sourceDirtySections.isEmpty()
-                            ? PreparedTopologyChange.NO_LONGS
-                            : sourceDirtySections.toLongArray();
-            if (dirtySections.length > 1) {
-                Arrays.sort(dirtySections);
-            }
-            return changeBuilder
-                    .identity(baseVersion, nextVersion)
-                    .externalMaterialEnergy(externalMaterialEnergyJ)
-                    .fragments(fragmentChanges.indexes, fragmentChanges.fragments)
-                    .material(
-                            material.keys(),
-                            material.edges(),
-                            material.executionFragments(),
-                            material.executions())
-                    .phaseSlots(
-                            removedPhaseSlots.isEmpty()
-                                    ? PreparedTopologyChange.NO_INTS
-                                    : removedPhaseSlots.toIntArray(),
-                            addedPhaseSlots.isEmpty()
-                                    ? PreparedTopologyChange.NO_INTS
-                                    : addedPhaseSlots.toIntArray())
-                    .pages(
-                            pageWrites,
-                            oldSpans.isEmpty()
-                                    ? PreparedTopologyChange.NO_OLD_SPANS
-                                    : oldSpans.toArray(PreparedTopologyChange.OldSpan[]::new))
-                    .sourceSections(dirtySections)
-                    .resyncTokens(
-                            resyncTokens.isEmpty()
-                                    ? ThermalCompletion.NO_RESYNC_TOKENS
-                                    : resyncTokens.toArray(
-                                            ThermalPageHandle.GeometryResyncToken[]::new))
-                    .build();
+            return null;
         } catch (RuntimeException | Error failure) {
-            try {
-                discardStaging();
-            } catch (Throwable cleanupFailure) {
-                failure.addSuppressed(cleanupFailure);
-            }
+            try { discardStaging(); }
+            catch (Throwable cleanupFailure) { failure.addSuppressed(cleanupFailure); }
+            airRoutes.discardPreparation();
             reset();
             throw failure;
         }
@@ -222,7 +474,9 @@ public final class TopologyUpdatePlanner {
             while (remaining != 0L) {
                 int brick = Long.numberOfTrailingZeros(remaining);
                 WorkerBrickTopology staged = draft.replacements[brick];
-                if (staged != null && staged.span.count() != 0) {
+                // Teardown may follow a failed authoritative commit. Only the
+                // still-private spans belong to this cancellation operation.
+                if (staged != null && staged.span.count() != 0 && arena.ownsStagedCells(staged.span)) {
                     arena.discardStagedCells(staged.span);
                 }
                 remaining &= remaining - 1L;
@@ -234,7 +488,11 @@ public final class TopologyUpdatePlanner {
     }
 
     private void reset() {
-        view.resetMaterialContacts();
+        routePreparationStarted = false;
+        preparingBatch = null;
+        roundFragments = null;
+        compiledFragmentBytes = 0;
+        view.resetPreparation();
         draftsBySection.clear();
         draftsBySlot.clear();
         affectedFragments.clear();
@@ -250,8 +508,10 @@ public final class TopologyUpdatePlanner {
     }
 
     private PageDraft acquireDraft(WorkerPageStore.PageState page) {
+        view.readPage(page.handle.sectionKey());
         PageDraft existing = draftsBySection.get(page.handle.sectionKey());
         if (existing != null) {
+            existing.backingDirty = true;
             return existing;
         }
         PageDraft draft;
@@ -320,17 +580,21 @@ public final class TopologyUpdatePlanner {
             if (draft.retirement || update.geometryRevision() < draft.geometryRevision) {
                 continue;
             }
-            if ((update.residentBrickMask() & page.residentBrickMask) != page.residentBrickMask) {
-                throw new IllegalArgumentException(
-                        "resident Brick mask cannot shrink within a Page lifecycle");
-            }
             long added = update.residentBrickMask() & ~draft.nextResidentBrickMask;
+            long removed = draft.nextResidentBrickMask & ~update.residentBrickMask();
             draft.nextResidentBrickMask = update.residentBrickMask();
             draft.nextSourceSeedMask = update.sourceSeedMask();
+            compareFullSignatures(draft, update.signatures());
             draft.nextSignatures = update.signatures();
             draft.dormantMaterials = update.dormantMaterials();
             draft.geometryRevision = update.geometryRevision();
-            draft.topologyDirtyMask |= added;
+            draft.topologyDirtyMask |= added | removed;
+            while (removed != 0L) {
+                int brick = Long.numberOfTrailingZeros(removed);
+                draft.replace(brick, WorkerBrickTopology.EMPTY);
+                sourceDirtySections.add(page.handle.sectionKey());
+                removed &= removed - 1L;
+            }
         }
     }
 
@@ -342,7 +606,7 @@ public final class TopologyUpdatePlanner {
             }
             PageDraft draft = acquireDraft(page);
             draft.retirement = true;
-            pages.removeHalo(retirement.page());
+            view.stageHalo(retirement.page(), null);
             draft.topologyDirtyMask = page.residentBrickMask;
             sourceDirtySections.add(page.handle.sectionKey());
         }
@@ -390,7 +654,7 @@ public final class TopologyUpdatePlanner {
             if (page == null) continue;
             PageDraft draft = acquireDraft(page);
             if (draft.retirement || halo.geometryRevision() < draft.geometryRevision) continue;
-            pages.replaceHalo(halo.page(), halo.halo());
+            view.stageHalo(halo.page(), halo.halo());
             draft.geometryRevision = halo.geometryRevision();
             draft.fragmentDirtyMask |= draft.nextResidentBrickMask;
         }
@@ -479,23 +743,23 @@ public final class TopologyUpdatePlanner {
         }
     }
 
-    private void compileChangedCells() {
-        for (int draftIndex = 0; draftIndex < draftCount; draftIndex++) {
-            PageDraft draft = draftPool.get(draftIndex);
-            if (draft.retirement) {
+    private void compileChangedCells(int draftIndex) {
+        PageDraft draft = draftPool.get(draftIndex);
+        if (draft.retirement) return;
+        long remaining = draft.topologyDirtyMask;
+        while (remaining != 0L) {
+            int brick = Long.numberOfTrailingZeros(remaining);
+            if (!view.resident(draft.page, brick)) {
+                remaining &= remaining - 1L;
                 continue;
             }
-            long remaining = draft.topologyDirtyMask;
-            while (remaining != 0L) {
-                int brick = Long.numberOfTrailingZeros(remaining);
-                WorkerBrickTopology next =
-                        compiler.compileCells(draft.page, draft.nextSignatures, brick, view);
-                draft.replace(brick, next);
-                draft.cellReplacementMask |= 1L << brick;
-                stagedCellCount = Math.addExact(stagedCellCount, next.span.count());
-                sourceDirtySections.add(draft.page.handle.sectionKey());
-                remaining &= remaining - 1L;
-            }
+            WorkerBrickTopology next =
+                    compiler.compileCells(draft.page, draft.nextSignatures, brick, view);
+            draft.replace(brick, next);
+            draft.cellReplacementMask |= 1L << brick;
+            stagedCellCount = Math.addExact(stagedCellCount, next.span.count());
+            sourceDirtySections.add(draft.page.handle.sectionKey());
+            remaining &= remaining - 1L;
         }
     }
 
@@ -503,17 +767,23 @@ public final class TopologyUpdatePlanner {
         for (int draftIndex = 0; draftIndex < draftCount; draftIndex++) {
             PageDraft draft = draftPool.get(draftIndex);
             long remaining = draft.topologyDirtyMask | draft.fragmentDirtyMask;
+            long removed = draft.page.residentBrickMask & ~draft.nextResidentBrickMask;
+            while (removed != 0L) {
+                int brick = Long.numberOfTrailingZeros(removed);
+                affectedFragments.add(draft.page.fragmentIndex(brick));
+                removed &= removed - 1L;
+            }
             if (draft.retirement) {
                 remaining = draft.page.residentBrickMask;
             } else if (draft.replacedPage != null) {
                 remaining |= draft.replacedPage.residentBrickMask;
                 // Replacement may admit fewer Bricks. Their old solver fragments still
                 // occupy this Page slot and must be removed along with the old cells.
-                long removed = draft.replacedPage.residentBrickMask & ~draft.nextResidentBrickMask;
-                while (removed != 0L) {
-                    int brick = Long.numberOfTrailingZeros(removed);
+                long replacedRemoved = draft.replacedPage.residentBrickMask & ~draft.nextResidentBrickMask;
+                while (replacedRemoved != 0L) {
+                    int brick = Long.numberOfTrailingZeros(replacedRemoved);
                     affectedFragments.add(draft.page.fragmentIndex(brick));
-                    removed &= removed - 1L;
+                    replacedRemoved &= replacedRemoved - 1L;
                 }
             }
             while (remaining != 0L) {
@@ -561,14 +831,10 @@ public final class TopologyUpdatePlanner {
         affectedFragments.add(page.fragmentIndex(brick));
     }
 
-    private FragmentChanges compileFragments() {
-        if (affectedFragments.isEmpty()) {
-            return FragmentChanges.EMPTY;
-        }
-        int[] indexes = affectedFragments.toIntArray();
-        Arrays.sort(indexes);
-        ThermalFragment[] fragments = new ThermalFragment[indexes.length];
-        for (int index = 0; index < indexes.length; index++) {
+    private void compileFragments(FragmentChanges change, int first, int end) {
+        int[] indexes = change.indexes;
+        ThermalFragment[] fragments = change.fragments;
+        for (int index = first; index < end; index++) {
             int fragmentIndex = indexes[index];
             int pageSlot = fragmentIndex / BRICKS_PER_PAGE;
             int brick = fragmentIndex % BRICKS_PER_PAGE;
@@ -584,6 +850,7 @@ public final class TopologyUpdatePlanner {
             BrickTopologyCompiler.CompiledFragment compiled =
                     compiler.compileFragment(page, brick, view);
             fragments[index] = compiled.fragment();
+            compiledFragmentBytes += compiled.fragment().ownedBackingBytes();
             WorkerBrickTopology base = view.brick(page, brick);
             if (compiled.layout() != null) base = base.withLayout(compiled.layout());
             sourceDirtySections.add(page.handle.sectionKey());
@@ -593,52 +860,59 @@ public final class TopologyUpdatePlanner {
             draft.replace(brick, next);
             draft.fragmentChangedMask |= 1L << brick;
         }
-        return new FragmentChanges(indexes, fragments);
     }
 
-    private void prepareMigrationsAndRetirements() {
-        for (int draftIndex = 0; draftIndex < draftCount; draftIndex++) {
-            PageDraft draft = draftPool.get(draftIndex);
-            if (draft.retirement || draft.replacedPage != null) {
-                WorkerPageStore.PageState retired = draft.retirement ? draft.page : draft.replacedPage;
-                // Recompiled Bricks migrate below. Old-only Bricks retire directly, without
-                // manufacturing new cells or treating residency loss as a world block edit.
-                long remaining = retired.residentBrickMask & (draft.retirement ? -1L : ~draft.cellReplacementMask);
-                while (remaining != 0L) {
-                    int brick = Long.numberOfTrailingZeros(remaining);
-                    WorkerBrickTopology old = retired.brick(brick);
-                    collectOldSpan(retired, old);
-                    for (int slot : old.phaseSlots) {
-                        removedPhaseSlots.add(slot);
-                    }
-                    remaining &= remaining - 1L;
-                }
-                if (draft.retirement) continue;
+    private void prepareMigrationsAndRetirements(int draftIndex) {
+        PageDraft draft = draftPool.get(draftIndex);
+        if (!draft.retirement && draft.replacedPage == null) {
+            long removed = draft.page.residentBrickMask & ~draft.nextResidentBrickMask;
+            while (removed != 0L) {
+                int brick = Long.numberOfTrailingZeros(removed);
+                WorkerBrickTopology old = draft.page.brick(brick);
+                collectOldSpan(draft.page, old);
+                for (int slot : old.phaseSlots) removedPhaseSlots.add(slot);
+                removed &= removed - 1L;
             }
-            WorkerPageStore.PageState previous =
-                    draft.replacedPage == null ? draft.page : draft.replacedPage;
-            long remaining = draft.cellReplacementMask;
+        }
+        if (draft.retirement || draft.replacedPage != null) {
+            WorkerPageStore.PageState retired = draft.retirement ? draft.page : draft.replacedPage;
+            // Recompiled Bricks migrate below. Old-only Bricks retire directly, without
+            // manufacturing new cells or treating residency loss as a world block edit.
+            long remaining = retired.residentBrickMask & (draft.retirement ? -1L : ~draft.cellReplacementMask);
             while (remaining != 0L) {
                 int brick = Long.numberOfTrailingZeros(remaining);
-                WorkerBrickTopology old = previous.brick(brick);
-                WorkerBrickTopology next = draft.replacements[brick];
-                migration.migrate(
-                        previous,
-                        brick,
-                        old,
-                        next,
-                        draft.nextSignatures,
-                        draft.replacedPage == null,
-                        draft.materialChanges,
-                        draft.materialChangeIndexes[brick],
-                        draft.dormantMaterials,
-                        draft.naturalTemperatureC,
-                        draft.resetMaterials);
-                externalMaterialEnergyJ += migration.externalMaterialEnergyJ;
-                collectOldSpan(previous, old);
-                collectPhaseSlotChanges(old, next);
+                WorkerBrickTopology old = retired.brick(brick);
+                collectOldSpan(retired, old);
+                for (int slot : old.phaseSlots) {
+                    removedPhaseSlots.add(slot);
+                }
                 remaining &= remaining - 1L;
             }
+            if (draft.retirement) return;
+        }
+        WorkerPageStore.PageState previous =
+                draft.replacedPage == null ? draft.page : draft.replacedPage;
+        long remaining = draft.cellReplacementMask;
+        while (remaining != 0L) {
+            int brick = Long.numberOfTrailingZeros(remaining);
+            WorkerBrickTopology old = previous.brick(brick);
+            WorkerBrickTopology next = draft.replacements[brick];
+            migration.migrate(
+                    previous,
+                    brick,
+                    old,
+                    next,
+                    draft.nextSignatures,
+                    draft.replacedPage == null,
+                    draft.materialChanges,
+                    draft.materialChangeIndexes[brick],
+                    draft.dormantMaterials,
+                    draft.naturalTemperatureC,
+                    draft.resetMaterials);
+            externalMaterialEnergyJ += migration.externalMaterialEnergyJ;
+            collectOldSpan(previous, old);
+            collectPhaseSlotChanges(old, next);
+            remaining &= remaining - 1L;
         }
     }
 
@@ -659,7 +933,7 @@ public final class TopologyUpdatePlanner {
         }
     }
 
-    private void preflightLimits(FragmentChanges changes, MaterialEdgeCompiler.Result material) {
+    private void preflightLimits(FragmentChanges changes) {
         ArenaSpan[] retiringSpans = new ArenaSpan[oldSpans.size()];
         for (int index = 0; index < oldSpans.size(); index++) {
             retiringSpans[index] = oldSpans.get(index).span();
@@ -668,8 +942,7 @@ public final class TopologyUpdatePlanner {
                 solver.preflightReplacement(
                         changes.indexes,
                         changes.fragments,
-                        retiringSpans,
-                        material.expectedFinalSize());
+                        retiringSpans);
         int finalLiveCells = Math.addExact(arena.liveCellCount(), stagedCellCount);
         for (PreparedTopologyChange.OldSpan old : oldSpans) {
             finalLiveCells -= old.span().count();
@@ -678,20 +951,27 @@ public final class TopologyUpdatePlanner {
                 || finalLiveCells > limits.maximumLiveCells()
                 || work.pairOperations() > limits.maximumPairOperations()
                 || work.boundaryOperations() > limits.maximumBoundaryOperations()) {
-            throw new WorkLimitedException("thermal topology work limit reached");
+            int visibleAir = 0, visibleMaterials = 0, retiringCells = 0;
+            for (int slot = arena.nextLiveSlot(0); slot >= 0; slot = arena.nextLiveSlot(slot + 1)) {
+                if (arena.isAirCell(slot)) visibleAir++; else visibleMaterials++;
+            }
+            for (var old : oldSpans) retiringCells += old.span().count();
+            throw new WorkLimitedException("thermal topology work limit reached: slots="
+                    + arena.requiredSlotCapacity() + "/" + limits.maximumArenaSlots()
+                    + ", liveCells=" + finalLiveCells + "/" + limits.maximumLiveCells()
+                    + ", liveBefore=" + arena.liveCellCount() + ", staged=" + stagedCellCount
+                    + ", retiring=" + retiringCells + ", visibleAir=" + visibleAir
+                    + ", visibleMaterials=" + visibleMaterials
+                    + ", pairs=" + work.pairOperations() + "/" + limits.maximumPairOperations()
+                    + ", boundaries=" + work.boundaryOperations() + "/" + limits.maximumBoundaryOperations());
         }
     }
 
-    private void reserveBacking(FragmentChanges fragments, MaterialEdgeCompiler.Result material) {
+    private void reserveBacking() {
         int fragmentCapacity = Math.multiplyExact(pages.pageSlotCapacity(), BRICKS_PER_PAGE);
         solver.reserveTopologyCapacity(
                 fragmentCapacity, arena.requiredSlotCapacity(), pages.pageSlotCapacity());
-        solver.reserveMaterialEdgeChanges(
-                material.expectedFinalSize(), material.possibleInsertions());
         phases.reserveMaterialChanges(addedPhaseSlots.size());
-        if (!queries.tryEnsureCapacity(arena.requiredSlotCapacity(), limits.maximumArenaSlots())) {
-            throw new WorkLimitedException("thermal query publication memory was refused");
-        }
     }
 
     private void compareFullSignatures(PageDraft draft, PageSignatures next) {
@@ -789,8 +1069,29 @@ public final class TopologyUpdatePlanner {
         long materialDirtyMask;
         boolean resetMaterials;
         ThermalInputBatch.DormantMaterialCut dormantMaterials;
+        private boolean backingDirty = true;
+        private long backingBytes;
+
+        /** A Page is small and fixed at 64 Bricks; refresh only when its draft changes. */
+        private long preparationBackingBytes() {
+            if (!backingDirty) return backingBytes;
+            long bytes = 256L + AirBackingMeter.shallowArrayBytes(brickSignatureValues)
+                    + AirBackingMeter.shallowArrayBytes(replacements) + AirBackingMeter.shallowArrayBytes(materialChangeIndexes)
+                    + AirBackingMeter.shallowArrayBytes(skyColumns) + AirBackingMeter.shallowArrayBytes(skyValues)
+                    + AirBackingMeter.shallowArrayBytes(nextSkyExposure) + AirBackingMeter.arrayPayloadBytes(64, 8);
+            for (int brick = 0; brick < 64; brick++) {
+                bytes += AirBackingMeter.shallowArrayBytes(brickSignatureValues[brick]);
+                Object signature = nextSignatures.brickPayload(brick);
+                if (signature instanceof char[] || signature instanceof int[]) bytes += AirBackingMeter.shallowArrayBytes(signature);
+                if (materialChangeIndexes[brick] != null) bytes += AirBackingMeter.shallowArrayBytes(materialChangeIndexes[brick].elements());
+                if (replacements[brick] != null) bytes += replacements[brick].ownedBackingBytes();
+            }
+            backingDirty = false;
+            return backingBytes = bytes;
+        }
 
         private void reset(WorkerPageStore.PageState page) {
+            backingDirty = true;
             while (materialDirtyMask != 0) {
                 int brick = Long.numberOfTrailingZeros(materialDirtyMask);
                 materialChangeIndexes[brick].clear();
@@ -828,11 +1129,13 @@ public final class TopologyUpdatePlanner {
         }
 
         private void replace(int brick, WorkerBrickTopology replacement) {
+            backingDirty = true;
             replacements[brick] = replacement;
             replacementMask |= 1L << brick;
         }
 
         private void setBlock(int block, int signatureId) {
+            backingDirty = true;
             int brick = brickIndex(block);
             int within = indexWithinBrick(block);
             int[] values = brickSignatureValues[brick];
@@ -862,6 +1165,7 @@ public final class TopologyUpdatePlanner {
         }
 
         private void finishSignatures(ThermalSignatureTable signatures) {
+            backingDirty = true;
             int count = Long.bitCount(signatureScratchMask);
             if (count == 0) {
                 return;
@@ -882,23 +1186,28 @@ public final class TopologyUpdatePlanner {
         }
 
         private void setSkyColumn(int column, byte value) {
+            backingDirty = true;
             if (nextSkyExposure == null) {
                 nextSkyExposure = page.firstExposedLocalY.clone();
             }
             nextSkyExposure[column] = value;
-            for (int index = 0; index < skyCount; index++) {
-                if (Short.toUnsignedInt(skyColumns[index]) == column) {
-                    skyValues[index] = value;
-                    return;
-                }
+            // Separate input batches can reach a lower column after a higher one.
+            // Keep the prepared write ordered while the newest value wins per column.
+            int index = Arrays.binarySearch(skyColumns, 0, skyCount, (short) column);
+            if (index >= 0) {
+                skyValues[index] = value;
+                return;
             }
+            index = -index - 1;
             if (skyCount == skyColumns.length) {
                 int capacity = skyColumns.length + Math.max(8, skyColumns.length >>> 1);
                 skyColumns = Arrays.copyOf(skyColumns, capacity);
                 skyValues = Arrays.copyOf(skyValues, capacity);
             }
-            skyColumns[skyCount] = (short) column;
-            skyValues[skyCount] = value;
+            System.arraycopy(skyColumns, index, skyColumns, index + 1, skyCount - index);
+            System.arraycopy(skyValues, index, skyValues, index + 1, skyCount - index);
+            skyColumns[index] = (short) column;
+            skyValues[index] = value;
             skyCount++;
         }
 

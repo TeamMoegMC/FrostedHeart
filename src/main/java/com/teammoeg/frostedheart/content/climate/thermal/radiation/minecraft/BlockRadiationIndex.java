@@ -170,26 +170,39 @@ public final class BlockRadiationIndex
         }
     }
 
-    public void markBlock(
+    /** Invalidate cached readers of a changed state; no block-type test in the writer. */
+    public void onStateChanged(
             MinecraftPageManager.SectionOwner owner,
             int localX,
             int localY,
             int localZ
     ) {
-        if (owner != null) {
-            markBlock(owner.sectionKey(), localX, localY, localZ);
+        long section = owner.sectionKey();
+        int x = SectionPos.x(section) * 4 + (localX >> 2);
+        int y = SectionPos.y(section) * 4 + (localY >> 2);
+        int z = SectionPos.z(section) * 4 + (localZ >> 2);
+        synchronized (dirtyLock) {
+            if (closed || coveredBySection.isEmpty()) return;
+            markDependentBrick(x, y, z);
+            if (!states.hasRadiationMode(MinecraftStateThermalTable.RADIATION_LAVA_SURFACE)) return;
+            // Eleven position dependencies collapse to at most six different Bricks.
+            int dx = (localX & 3) == 0 ? -1 : (localX & 3) == 3 ? 1 : 0;
+            int dy = (localY & 3) == 0 ? -1 : (localY & 3) == 3 ? 1 : 0;
+            int dz = (localZ & 3) == 0 ? -1 : (localZ & 3) == 3 ? 1 : 0;
+            if (dx != 0) markDependentBrick(x + dx, y, z);
+            if (dy != 0) markDependentBrick(x, y + dy, z);
+            if (dz != 0) markDependentBrick(x, y, z + dz);
+            // Side faces also read above their horizontal neighbor.
+            if (dy < 0) {
+                if (dx != 0) markDependentBrick(x + dx, y - 1, z);
+                if (dz != 0) markDependentBrick(x, y - 1, z + dz);
+            }
         }
     }
 
-    public void markBlock(int blockX, int blockY, int blockZ) {
-        markBlock(
-                SectionPos.asLong(
-                        SectionPos.blockToSectionCoord(blockX),
-                        SectionPos.blockToSectionCoord(blockY),
-                        SectionPos.blockToSectionCoord(blockZ)),
-                SectionPos.sectionRelative(blockX),
-                SectionPos.sectionRelative(blockY),
-                SectionPos.sectionRelative(blockZ));
+    private void markDependentBrick(int x, int y, int z) {
+        int brick = x & 3 | (z & 3) << 2 | (y & 3) << 4;
+        markKnownMaskLocked(SectionPos.asLong(x >> 2, y >> 2, z >> 2), 1L << brick);
     }
 
     public void onChunkLoad(LevelChunk chunk) {
@@ -220,6 +233,7 @@ public final class BlockRadiationIndex
         markBoundary(SectionPos.asLong(x, y + 1, z), NEGATIVE_Y);
         markBoundary(SectionPos.asLong(x, y, z - 1), POSITIVE_Z);
         markBoundary(SectionPos.asLong(x, y, z + 1), NEGATIVE_Z);
+        markLowerHorizontalNeighbors(x, y, z);
     }
 
     @Override
@@ -484,21 +498,6 @@ public final class BlockRadiationIndex
         }
     }
 
-    private void markBlock(
-            long sectionKey,
-            int localX,
-            int localY,
-            int localZ
-    ) {
-        if (closed) {
-            return;
-        }
-        int brick = localX >>> 2
-                | (localZ >>> 2) << 2
-                | (localY >>> 2) << 4;
-        markKnownMask(sectionKey, 1L << brick);
-    }
-
     private void markKnownMask(long sectionKey, long mask) {
         synchronized (dirtyLock) {
             markKnownMaskLocked(sectionKey, mask);
@@ -540,8 +539,20 @@ public final class BlockRadiationIndex
                 markKnownMaskLocked(
                         SectionPos.asLong(x, y, z + 1),
                         boundaryBrickMask(NEGATIVE_Z));
+                markLowerHorizontalNeighborsLocked(x, y, z);
             }
         }
+    }
+
+    private void markLowerHorizontalNeighbors(int x, int y, int z) {
+        synchronized (dirtyLock) { markLowerHorizontalNeighborsLocked(x, y, z); }
+    }
+
+    private void markLowerHorizontalNeighborsLocked(int x, int y, int z) {
+        markKnownMaskLocked(SectionPos.asLong(x - 1, y - 1, z), boundaryBrickMask(POSITIVE_X));
+        markKnownMaskLocked(SectionPos.asLong(x + 1, y - 1, z), boundaryBrickMask(NEGATIVE_X));
+        markKnownMaskLocked(SectionPos.asLong(x, y - 1, z - 1), boundaryBrickMask(POSITIVE_Z));
+        markKnownMaskLocked(SectionPos.asLong(x, y - 1, z + 1), boundaryBrickMask(NEGATIVE_Z));
     }
 
     private void removeSection(long sectionKey) {

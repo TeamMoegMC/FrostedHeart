@@ -1,0 +1,200 @@
+{
+  "Status": "Passed for standalone Forge startup, real source recording, native chunk persistence and new-process restart; targeted source lifecycle checks passed",
+  "VerifiedAt": "2026-10-30T01:15:02.9118802+08:00",
+  "Scope": "Production JAR loaded by forgeserver, without GameTest classes or a development classpath; valid minimal paper-only research catalogue; not full modpack or real networked players",
+  "Configuration": {
+    "Minecraft": "1.20.1",
+    "Forge": "47.3.0",
+    "Java": "17.0.12",
+    "HeapGiB": 4,
+    "Address": "127.0.0.1",
+    "Port": 25578,
+    "World": "new flat world",
+    "RealClients": 0,
+    "ModJars": [
+      "architectury-forge-9.2.14.jar",
+      "caupona-656147-6406685.jar",
+      "create-1.20.1-0.5.1.j-55-slim.jar",
+      "curios-forge-5.9.1+1.20.1.jar",
+      "flywheel-forge-1.20.1-0.6.11-13.jar",
+      "frostedheart-1.20.1-0.7.7.jar",
+      "ImmersiveEngineering-1.20.1-10.1.0-171.2.jar",
+      "ldlib-forge-1.20.1-1.0.33.b.jar",
+      "Registrate-MC1.20-1.3.3.jar"
+    ],
+    "ResearchCatalogue": "src/gametest/catalog/root.json copied as normal config/fhresearches/root.json; minecraft:paper only",
+    "MemoryTargetMiB": 128,
+    "ActivityTargetMsPerSecond": 1000,
+    "GameTestServer": false
+  },
+  "Package": {
+    "File": "build/libs/frostedheart-1.20.1-0.7.7.jar",
+    "Bytes": 14921099,
+    "BuiltAt": "2026-10-30T00:51:16.8422249+08:00",
+    "ThermalClasses": 426,
+    "GameTestClasses": 0,
+    "ProtectedParticleClasses": 4
+  },
+  "Create": {
+    "Phase": "create",
+    "Attempt": 4,
+    "Exit": 0,
+    "ReadySeconds": 31.3018816,
+    "Saved": true,
+    "StopSent": true,
+    "TimedOut": false,
+    "ThermalErrors": 0,
+    "ElapsedSeconds": 47.8203581,
+    "Log": "build/thermal-release-server-create-20261030-r4.log",
+    "Jar": "build/libs/frostedheart-1.20.1-0.7.7.jar",
+    "Forge": "1.20.1-47.3.0",
+    "Java": "17",
+    "HeapGiB": 4,
+    "GameTest": false,
+    "Passed": true
+  },
+  "FirstSavedState": {
+    "Passed": true,
+    "Version": 6,
+    "ThermalSections": 1,
+    "AirComponents": 4,
+    "Coefficients": 531,
+    "NonZeroCoefficients": 499,
+    "NonFiniteCoefficients": 0,
+    "MinimumCoefficientC": -9.998841599584328,
+    "MaximumCoefficientC": 0.0,
+    "MinimumSampleTick": 260,
+    "MaximumSampleTick": 260,
+    "CampfireLifeTime": 18927
+  },
+  "NewProcessReload": {
+    "Phase": "reload",
+    "Attempt": 1,
+    "Exit": 0,
+    "ReadySeconds": 32.2907024,
+    "Saved": true,
+    "StopSent": true,
+    "TimedOut": false,
+    "ThermalErrors": 0,
+    "ElapsedSeconds": 48.0952248,
+    "Log": "build/thermal-release-server-reload-20261030-r1.log",
+    "Jar": "build/libs/frostedheart-1.20.1-0.7.7.jar",
+    "Forge": "1.20.1-47.3.0",
+    "Java": "17",
+    "HeapGiB": 4,
+    "GameTest": false,
+    "Passed": true
+  },
+  "ReloadedSavedState": {
+    "Passed": true,
+    "Version": 6,
+    "ThermalSections": 1,
+    "AirComponents": 4,
+    "Coefficients": 531,
+    "NonZeroCoefficients": 499,
+    "NonFiniteCoefficients": 0,
+    "MinimumCoefficientC": -9.964910582363855,
+    "MaximumCoefficientC": 0.0,
+    "MinimumSampleTick": 540,
+    "MaximumSampleTick": 540,
+    "CampfireLifeTime": 18643
+  },
+  "TargetedSourceRegression": {
+    "Exit": 0,
+    "RequiredPassed": 2,
+    "RootZero": true,
+    "ThermalErrors": 0,
+    "Passed": true,
+    "Log": "build/thermal-release-source-check-20261030-r4.log"
+  },
+  "SourceDiagnostics": [
+    "THERMAL_SOURCE_INPUT_PRODUCTION,freezes=8,retainedChecks=19,checksAcrossEmissionChanges=4,emissionChanges=5,commits=8,futurePendingObserved=0,maxSnapshotBackingBytes=712,failure=null",
+    "THERMAL_DIRECT_IGNITION_PRODUCTION,sampleTick=600,airC=12.912017981724182,enabledSources=1"
+  ],
+  "LogWarnings": [
+    {
+      "Phase": "create",
+      "RecipeParseErrorCount": 20,
+      "MissingOptionalMixinTargetCount": 6,
+      "AllDimensionsSaved": true,
+      "RuntimeStarted": true,
+      "NativeCheckpoint": true
+    },
+    {
+      "Phase": "reload",
+      "RecipeParseErrorCount": 20,
+      "MissingOptionalMixinTargetCount": 6,
+      "AllDimensionsSaved": true,
+      "RuntimeStarted": true,
+      "NativeCheckpoint": true
+    }
+  ],
+  "SourceFix": {
+    "Entry": "MinecraftThermalInput.onCampfireIgnited",
+    "Cause": "onPlace precedes insertion of its new block entity into chunk discovery; the old callback started a runtime but did not announce that source",
+    "Change": "Register the actual BlockState through the existing PhysicalSourceSpatialIndex.resyncBlock for both a new and an already active runtime",
+    "NewQueues": 0,
+    "NewProductionTopLevelTypes": 0,
+    "Regression": "Already-loaded distant chunk, lit placement, actual fuel, passive receiver read and warm/current published Air without manual onChunkLoad notification"
+  },
+  "PreservedAttempts": [
+    {
+      "Attempt": "create-r1",
+      "Outcome": "mod loading failed",
+      "Reason": "Only mods.toml mandatory dependencies were installed; existing loading code also uses LDLib and Caupona, both already declared by the project build",
+      "Log": "build/thermal-release-server-create-20261030-r1.log"
+    },
+    {
+      "Attempt": "create-r2",
+      "Outcome": "research catalogue validation failed",
+      "Reason": "Copied full-pack research configuration referenced absent KubeJS/other optional mod items; the copied catalogue was preserved outside the runtime config before installing a valid minimal catalogue",
+      "Log": "build/thermal-release-server-create-20261030-r2.log"
+    },
+    {
+      "Attempt": "create-r3",
+      "Outcome": "server boot/save/stop completed but thermal data was absent",
+      "State": {
+        "Passed": false,
+        "Version": -1,
+        "ThermalSections": 0,
+        "AirComponents": 0,
+        "Coefficients": 0,
+        "NonZeroCoefficients": 0,
+        "NonFiniteCoefficients": 0,
+        "MinimumCoefficientC": null,
+        "MaximumCoefficientC": null,
+        "MinimumSampleTick": -1,
+        "MaximumSampleTick": -1,
+        "CampfireLifeTime": 18933
+      },
+      "Reason": "Lit-placement source announcement gap; not counted as thermal acceptance",
+      "Log": "build/thermal-release-server-create-20261030-r3.log"
+    },
+    {
+      "Attempt": "source-check-r1",
+      "Outcome": "new assertion used the offered-to-worker counter before a cut",
+      "Reason": "The final regression checks actual publication after ordinary cut processing; original extinction/replacement checks retained",
+      "Log": "build/thermal-release-source-check-20261030-r1.log"
+    },
+    {
+      "Attempt": "source-check-r2",
+      "Outcome": "the distant fixture was inside solid underground terrain and had no air outlet",
+      "Reason": "Saved chunk inspection found material state but no Air components at the new source. The final fixture builds the same air room as the existing production regression and uses its same-height near-minus-far threshold0.05C; it does not assume that point-local natural temperature equals the section initialization baseline",
+      "Log": "build/thermal-release-source-check-20261030-r2.log"
+    },
+    {
+      "Attempt": "source-check-r3",
+      "Outcome": "direct ignition passed but the older single-source snapshot observer saw the still-lit source persisted by the previous failed attempt",
+      "Reason": "The runner had reused the failed world. The final attempt uses a fresh world name; no snapshot assertion or source lifecycle condition was removed",
+      "Log": "build/thermal-release-source-check-20261030-r3.log"
+    }
+  ],
+  "Build": "assemble and compileGameTestJava passed after fixing a LazyOptional test-call signature; final test-only compilation passed after correcting the fixture and using the existing same-height heating assertion",
+  "Limits": [
+    "No100 networked clients, full modpack content, or long endurance qualification is added.",
+    "Optional-mod recipe/mixin warnings remain visible in this dependency-limited installation; no research/gameplay validation was disabled.",
+    "Production process exits and normal saves were observed; a production root-byte inventory was not added. The targeted GameTest shutdown root is0.",
+    "The existing performance and pressure records retain their original build scope; this source-entry fix does not create a new CPU speed or0.1C trajectory comparison.",
+    "The JAR was built from the working directory; the thermal commit excludes unrelated research UI/font and deposit changes."
+  ]
+}

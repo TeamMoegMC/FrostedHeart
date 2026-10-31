@@ -1,11 +1,11 @@
 # Climate Data And Lifecycle
 
 - Status: `Transitional; material lifecycle integration is under validation`
-- Last verified: `2026-10-18`（相变温度入口与冰锥相变收据；其他条目沿用原验证范围）
+- Last verified: `2026-10-29` for current runtime selection and gameplay entry call-chain review; `2026-10-22` for inactive player simulator removal; `2026-10-18` for phase-temperature and icicle receipt integration. Other sections retain their earlier verification scope.
 - Scope: recipe/configuration ownership, capabilities, server lifecycle, thermal runtime integration, and network boundaries
 - Primary code anchors: `FHRecipeCachingReloadListener`, `WorldTemperature`, `MinecraftThermalEvents`, `MinecraftThermalInput`, `MinecraftPhaseController.temperature`, `ThermalWorkerPool`, `LevelChunkSectionMixin_ThermalInput`, `FHCapabilities`, `FHNetwork`
 
-源码、已加载数据包和服务端配置是最终权威；本文只记录当前接入顺序。新 thermal runtime 的 Page、source、solver 和 query 细节见 [thermal-runtime-architecture-and-optimization.md](thermal-runtime-architecture-and-optimization.md)。
+源码、已加载数据包和服务端配置是最终权威；本文只记录接入顺序。当前Page、source、solver和query合同见[运行时控制](thermal-runtime-control.md)。2026-10-29只读核对确认玩家更新/同步、篝火及三类供热设备、作物通用环境、蓄热物品、材料相变和Forge保存生命周期都有实际调用者；城镇房屋/狩猎建筑通过BlockScanner.sampleTemperature调用gameplayPassiveEnvironment。本次未逐项重跑这些玩法，也不将代码接入等同于百人整包资格。
 
 ## Data Ownership
 
@@ -47,8 +47,9 @@ Persistent capabilities remain separate from thermal mesh state:
 Source bindings, analytic fields and worker topology are not serialized.
 `DormantChunkThermalState` writes exact `MaterialSectionState` records and a backend-specific
 Air payload: scalar quantized residuals, or continuous `AirFieldCheckpoint` coefficients/shapes.
-Both use the saved natural baseline. The opt-in `continuousAir` restart setting defaults to false;
-see [Continuous Air Runtime](continuous-air-runtime.md) for ownership and current limits.
+Both use the saved natural baseline. SHARED_GRID is now the sole production runtime;
+the retired `continuousAir` and `continuousAirBackend` selectors are not consulted.
+See the [current runtime contract](thermal-runtime-control.md) for ownership and current limits.
 Admission rebuilds topology from current BlockState and restores matching material
 energy. Transition world conditions/effects live only in the shared profile snapshot;
 they add no fields to each saved material record.
@@ -131,9 +132,12 @@ physical inputs only. Every item query composes the current world-owned
 `MinecraftGameplayFields` at its exact receiver position, including when the
 physical runtime is absent; runtime close does not discard generator floors.
 
-`TemperatureThreadingPool.java` is intentionally retained but never initialized
-or polled. It is not part of the new lifecycle. No synchronous thermal dispatch
-entry remains.
+Player environment sampling uses `MinecraftThermalInput.gameplayPlayerEnvironment`.
+The historical `TemperatureThreadingPool`, `SurroundingTemperatureSimulator`,
+`CachedBlockTempInfo`, and `BlockInfoCachePolicy` remain in source separately
+from the shared-grid thermal runtime. Active player sampling does not dispatch
+to these types. Their old configuration is absent from that sampling path;
+`BlockTempData.updateCache` continues to update its live recipe cache.
 
 ## Thread Boundaries
 

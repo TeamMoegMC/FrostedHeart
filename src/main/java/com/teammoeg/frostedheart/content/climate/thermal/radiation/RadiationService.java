@@ -596,14 +596,6 @@ public final class RadiationService implements AutoCloseable {
         receiverCaches.remove(receiverKey);
     }
 
-    int playerReceiverCacheSize() {
-        return receiverCaches.size();
-    }
-
-    int itemReceiverCacheSize() {
-        return itemReceiverCaches.size();
-    }
-
     @Override
     public void close() {
         requireOwnerThread();

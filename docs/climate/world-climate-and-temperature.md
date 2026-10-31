@@ -1,13 +1,13 @@
 # 世界气候与环境温度
 
 - Status: `Current`
-- Last verified: `2026-09-14`
+- Last verified: `2026-09-25`
 - Scope: 逻辑气候时钟、长期事件、局部白幕、自然/mesh/analytic 温度合成、红外视野、方块状态消费者
 - Primary code anchors: `WorldClockSource`, `WorldClimate`, `ClimateEventModel`, `ClimateEventTrack`, `InterpolationClimateEvent`, `WhiteCurtainDescriptor`, `WhiteCurtainFieldModel`, `WhiteCurtainInfo`, `WorldTemperature`, `BlockTemperatureModel`, `ThermalAnalyticField`, `ThermalAnalyticFieldIndex`, `MinecraftThermalInput.gameplayPassiveEnvironment`, `MinecraftThermalInput.gameplayCropEnvironment`, `MinecraftThermalInput.gameplayInfraredSnapshot`, `BlockScanner.RoomData.calculateTemperature`, `TownThermalProjection`, `MinecraftThermalInput.gameplayTownEnvironment`, `InfraredViewRenderer`
 
 本文只描述当前源码行为。所有温度若无特别说明均为摄氏度；“修正”表示摄氏度增量。
 
-可选 `continuousAir = true` 后端按请求的精确 xyz 求值共享空气场，默认值仍为 false。
+正式运行时按请求的精确xyz求值区域共享空气场。旧`continuousAir`及`continuousAirBackend`选择项已经退役；当前配置、区域粗细档和保存合同见[运行时控制](thermal-runtime-control.md)。
 同 Brick 的空气不再只有一个温度；live/dormant 查询、依赖失效和新版空间存档见
 [连续空气实现](continuous-air-runtime.md)。现有解析场、辐射和材料红外合成规则继续适用。
 
@@ -243,6 +243,8 @@ Generator 的半径/温差来自 `GeneratorData.getRadius/getTempMod` 和 `Gener
 局部几何变化不等于材料温度消失。红外和`sampleMaterial`读取`ThermalPageHandle.lastPublication()`
 这份既有材料发布，并继续检查slot generation及query cut一致性。材料变更日志只排除发布之后
 真正替换、物质量变化或转换的位置；未变化方块在同Brick/同Page重建期间仍可读。
+当Page发布先于查询缓冲完成切换时，`sampleMaterial`可从`previousPublication`读取未改变方块，
+但必须同时匹配当前BlockState，并要求查询拓扑版本早于新Page；旧slot在新拓扑中复用后不能被误读。
 红外通过`collectMaterialChangesSince`一次展开到共用的64个long（512 bytes）临时位图，
 只重发受影响Brick，不为每Page/玩家保存额外温度。被删除或A→Air→A替换的旧物体不会保温串值；
 整段替换仍排除整段旧材料。这不允许空气传输查询复用已失效的几何路线。
@@ -252,9 +254,11 @@ Generator 的半径/温差来自 `GeneratorData.getRadius/getTempMod` 和 `Gener
 协议另带`storedSampleTick`，LAST时一起提交。即使记录未编辑，两个时刻的量化温度不同也会更新
 对应Brick；没有量化变化且没有解析场刷新时不产生重复响应。自然温度变动会使Section显示基准失效。
 
-有材料且无场时显示材料温度；无材料且无场时发送`Short.MIN_VALUE`，客户端使用
-`MIN_TEMP=-20`的蓝色**占位**，不把-20当实测值。全窗口自然背景估计、729值背景包和
-第二张背景纹理已删除。完整扫描覆盖不受材料缺值影响。
+有材料且无场时显示材料温度；无材料且无场时发送`Short.MIN_VALUE`。客户端在已有
+材料或解析场Page覆盖的窗口内使用`MIN_TEMP=-20`的蓝色**占位**，不把-20当实测值。
+若整个窗口尚无任何覆盖，客户端保留原场景并等待后续响应，不把初始化的全INVALID纹理
+渲染为短暂全蓝画面；首次获得覆盖后才从零开始展开扫描。真正不高于色标下限的有效温度
+仍按原色标呈蓝色。全窗口自然背景估计、729值背景包和第二张背景纹理已删除。
 
 命中场的块中心使用`ThermalAnalyticFieldIndex.Sample`合成。能量塔仍是
 `max(base, naturalAir + getTempMod())`保底；有冷材料也执行，较热材料不被降低。
@@ -305,7 +309,7 @@ Embeddium在同一solid调用中依次绘制SOLID/CUTOUT；自有renderer在CUTO
 `InfraredRasterValidation`使用实际encoder、属性和捕获shader，覆盖两种顶点格式、D24/D32F、
 平面、完整块、楼梯及cutout，共8,640场景、353,123,074个分类像素，归属错误0，GL error 0。
 此结果验证精确归属，不能代替真实整合包性能与所有特殊模型验收；实际接入进度见
-[实施plan](../../plans/2026-09-13_17-18-00_infrared-exact-surface-capture.md)。
+[实施plan](../../diary/2026-10-29_23-38-00_thermal-development-history.md)。
 独立开发客户端已通过两种格式的真实接入、resize、资源重载、缩圈释放及重开；原图与红外图
 37,246个热表面像素对照RGB误差≤1色阶、alpha精确相同。Forge AFTER_LEVEL与地形入口的
 PoseStack不是同一个对象；最终显示使用已捕获camera pose和本帧主FBO/terrain访问标志。
@@ -333,7 +337,7 @@ Generator 另外提供上述解析保底；其物理功率和传播范围不受�
 - 动物、蜂巢、村民交易、战利品条件和温度探针；
 - 城镇住宅和狩猎建筑的内部体素温度扫描。`MineBlockScanner` 中的旧温度累积当前没有生产调用者，`MineBaseBlockScanner` 不计算温度。
 
-`WorldTemperature.air` 主要供被动环境查询、降雪判断及显示工具使用。玩家体温路径直接消费 sparse publication、analytic field 和物理辐射；旧 `BlockTempData` 粒子采样当前不再调度，见 [player-temperature.md](player-temperature.md)。
+`WorldTemperature.air` 主要供被动环境查询、降雪判断及显示工具使用。玩家体温路径直接消费 sparse publication、analytic field 和物理辐射；旧玩家周围粒子模拟器及其专用缓存、配置已移除，`BlockTempData` 配方本身保留，见 [player-temperature.md](player-temperature.md)。
 
 `WorldTemperature.checkPlantStatus` 真正需要温度的路径调用 `MinecraftThermalInput.gameplayCropEnvironment`。已有 Air Mesh publication 命中时，返回的空气温度直接进入施肥、生长、生存和死亡阈值；无 active runtime、无 Page、无可解析 Air 点、stale 或超龄 publication 时使用 natural block temperature，再合成 analytic field。天气先行决定植物状态时不发起 thermal query。该 passive 路径不会创建 Page、Brick、Cell 或 Interest。
 

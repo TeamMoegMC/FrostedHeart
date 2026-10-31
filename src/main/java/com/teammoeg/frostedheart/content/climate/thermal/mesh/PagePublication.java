@@ -111,6 +111,13 @@ public final class PagePublication {
         return bricks.clone();
     }
 
+    public void recordBacking(AirBackingMeter meter) {
+        if (!meter.objectOnce(this, 48)) return;
+        meter.array(bricks);
+        for (var brick : bricks) if (meter.objectOnce(brick, 64) && brick.blockLayout() != null)
+            brick.blockLayout().recordBacking(meter);
+    }
+
     public Brick brick(int index) {
         if (index < 0 || index >= bricks.length) {
             throw new IllegalArgumentException("Brick index must be within [0, 63]");

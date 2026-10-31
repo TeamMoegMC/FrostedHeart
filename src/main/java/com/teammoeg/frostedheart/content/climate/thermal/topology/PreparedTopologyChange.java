@@ -21,19 +21,20 @@
 package com.teammoeg.frostedheart.content.climate.thermal.topology;
 
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ArenaSpan;
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.AirBackingMeter;
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.AirRouteValidity;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.PagePublication;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.PageSignatures;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalPageHandle;
 import com.teammoeg.frostedheart.content.climate.thermal.solver.ThermalFragment;
-import com.teammoeg.frostedheart.content.climate.thermal.solver.ThermalMaterialEdge;
-import com.teammoeg.frostedheart.content.climate.thermal.solver.ThermalMaterialExecution;
 
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * 在第一次权威写入前已完全验证并定容的不可变拓扑 delta。
  *
- * <p>它同时携带 Page/Brick replacement、solver fragment/material edge、
+ * <p>它同时携带 Page/Brick replacement、solver fragment、
  * phase 和 publication 写入；commit 不再分配、解析 Minecraft 状态或重新
  * 计算拓扑。</p>
  */
@@ -44,10 +45,6 @@ public final class PreparedTopologyChange {
     static final long[] NO_LONGS = new long[0];
     static final WorkerBrickTopology[] NO_BRICKS = new WorkerBrickTopology[0];
     static final ThermalFragment[] NO_FRAGMENTS = new ThermalFragment[0];
-    static final ThermalMaterialEdge[] NO_MATERIAL_EDGES =
-            new ThermalMaterialEdge[0];
-    static final ThermalMaterialExecution[] NO_MATERIAL_EXECUTIONS =
-            new ThermalMaterialExecution[0];
     static final PageWrite[] NO_PAGE_WRITES = new PageWrite[0];
     static final OldSpan[] NO_OLD_SPANS = new OldSpan[0];
 
@@ -56,10 +53,6 @@ public final class PreparedTopologyChange {
     final double externalMaterialEnergyJ;
     final int[] fragmentIndexes;
     final ThermalFragment[] fragments;
-    final long[] materialEdgeKeys;
-    final ThermalMaterialEdge[] materialEdges;
-    final int[] materialExecutionFragments;
-    final ThermalMaterialExecution[] materialExecutions;
     final int[] removedPhaseSlots;
     final int[] addedPhaseSlots;
     public final PageWrite[] pageWrites;
@@ -67,15 +60,65 @@ public final class PreparedTopologyChange {
     public final long[] sourceDirtySections;
     public final ThermalPageHandle.GeometryResyncToken[] committedResyncTokens;
 
+    private final Set<AirRouteValidity> retiringRoutes;
+
+    /** Candidate assembly excludes removed routes before live validity changes at commit. */
+    public boolean retiresRoute(AirRouteValidity route) {
+        return retiringRoutes.contains(route);
+    }
+
+    public int[] fragmentIndexes() { return fragmentIndexes; }
+    public ThermalFragment[] fragments() { return fragments; }
+
+    public void recordBacking(AirBackingMeter meter) {
+        if (!meter.objectOnce(this, 112)) return;
+        meter.array(fragmentIndexes); meter.array(fragments);
+        meter.array(removedPhaseSlots);
+        meter.array(addedPhaseSlots); meter.array(pageWrites); meter.array(oldSpans); meter.array(sourceDirtySections);
+        meter.array(committedResyncTokens);
+        meter.container(retiringRoutes, retiringRoutes.size(), 16);
+        for (var fragment : fragments) fragment.recordBacking(meter);
+        for (var write : pageWrites) {
+            meter.objectOnce(write, 160); write.signatures.recordBacking(meter); write.publication.recordBacking(meter);
+            write.page.publication.recordBacking(meter); meter.array(write.brickIndexes); meter.array(write.bricks);
+            meter.array(write.skyColumns); meter.array(write.firstExposedLocalY);
+            for (var brick : write.bricks) brick.recordBacking(meter);
+        }
+    }
+
+    /** Payload installed in shared tables/Pages; the delta and rollback bookkeeping stay in scratch. */
+    public void recordInstalledBacking(AirBackingMeter meter) {
+        for (var fragment : fragments) fragment.recordBacking(meter);
+        for (var write : pageWrites) if (!write.retirement) {
+            meter.objectOnce(write.page, 128); meter.array(write.page.bricks); meter.array(write.page.firstExposedLocalY);
+            write.signatures.recordBacking(meter); write.publication.recordBacking(meter);
+            meter.array(write.firstExposedLocalY);
+            for (var brick : write.bricks) brick.recordBacking(meter);
+        }
+    }
+    public long installedVersion(long currentVersion) {
+        return nextStructuralVersion == baseStructuralVersion ? currentVersion : currentVersion + 1;
+    }
+
+    public boolean onlyNaturalTemperatureUpdates() {
+        if (nextStructuralVersion != baseStructuralVersion
+                || externalMaterialEnergyJ != 0.0D || fragmentIndexes.length != 0
+                || removedPhaseSlots.length != 0 || addedPhaseSlots.length != 0
+                || oldSpans.length != 0 || sourceDirtySections.length != 0
+                || committedResyncTokens.length != 0 || !retiringRoutes.isEmpty()) return false;
+        for (PageWrite write : pageWrites) {
+            if (!write.naturalTemperatureChanged || write.admission || write.retirement
+                    || write.replacedPage != null || write.brickIndexes.length != 0
+                    || write.skyColumns.length != 0) return false;
+        }
+        return true;
+    }
+
     private PreparedTopologyChange(Builder builder) {
         long baseStructuralVersion = builder.baseStructuralVersion;
         long nextStructuralVersion = builder.nextStructuralVersion;
         int[] fragmentIndexes = builder.fragmentIndexes;
         ThermalFragment[] fragments = builder.fragments;
-        long[] materialEdgeKeys = builder.materialEdgeKeys;
-        ThermalMaterialEdge[] materialEdges = builder.materialEdges;
-        int[] materialExecutionFragments = builder.materialExecutionFragments;
-        ThermalMaterialExecution[] materialExecutions = builder.materialExecutions;
         int[] removedPhaseSlots = builder.removedPhaseSlots;
         int[] addedPhaseSlots = builder.addedPhaseSlots;
         PageWrite[] pageWrites = builder.pageWrites;
@@ -85,11 +128,6 @@ public final class PreparedTopologyChange {
                 builder.committedResyncTokens;
         Objects.requireNonNull(fragmentIndexes, "fragmentIndexes");
         Objects.requireNonNull(fragments, "fragments");
-        Objects.requireNonNull(materialEdgeKeys, "materialEdgeKeys");
-        Objects.requireNonNull(materialEdges, "materialEdges");
-        Objects.requireNonNull(
-                materialExecutionFragments, "materialExecutionFragments");
-        Objects.requireNonNull(materialExecutions, "materialExecutions");
         Objects.requireNonNull(removedPhaseSlots, "removedPhaseSlots");
         Objects.requireNonNull(addedPhaseSlots, "addedPhaseSlots");
         Objects.requireNonNull(pageWrites, "pageWrites");
@@ -98,16 +136,11 @@ public final class PreparedTopologyChange {
         Objects.requireNonNull(committedResyncTokens, "committedResyncTokens");
         if (baseStructuralVersion < 0L
                 || nextStructuralVersion < baseStructuralVersion
-                || fragmentIndexes.length != fragments.length
-                || materialEdgeKeys.length != materialEdges.length
-                || materialExecutionFragments.length
-                        != materialExecutions.length) {
+                || fragmentIndexes.length != fragments.length) {
             throw new IllegalArgumentException(
                     "prepared topology payload is inconsistent");
         }
         requireOrderedFragments(fragmentIndexes, fragments);
-        requireOrderedExecutions(
-                materialExecutionFragments, materialExecutions);
         for (PageWrite write : pageWrites) {
             Objects.requireNonNull(write, "pageWrites contains null");
         }
@@ -119,28 +152,27 @@ public final class PreparedTopologyChange {
         this.nextStructuralVersion = nextStructuralVersion;
         this.fragmentIndexes = fragmentIndexes;
         this.fragments = fragments;
-        this.materialEdgeKeys = materialEdgeKeys;
-        this.materialEdges = materialEdges;
-        this.materialExecutionFragments = materialExecutionFragments;
-        this.materialExecutions = materialExecutions;
         this.removedPhaseSlots = removedPhaseSlots;
         this.addedPhaseSlots = addedPhaseSlots;
         this.pageWrites = pageWrites;
         this.oldSpans = oldSpans;
         this.sourceDirtySections = sourceDirtySections;
         this.committedResyncTokens = committedResyncTokens;
+        this.retiringRoutes = builder.retiringRoutes;
     }
 
     static final class Builder {
+        private Set<AirRouteValidity> retiringRoutes = Set.of();
+
+        Builder retiringRoutes(Set<AirRouteValidity> routes) {
+            retiringRoutes = routes;
+            return this;
+        }
         private long baseStructuralVersion;
         private long nextStructuralVersion;
         private double externalMaterialEnergyJ;
         private int[] fragmentIndexes;
         private ThermalFragment[] fragments;
-        private long[] materialEdgeKeys;
-        private ThermalMaterialEdge[] materialEdges;
-        private int[] materialExecutionFragments;
-        private ThermalMaterialExecution[] materialExecutions;
         private int[] removedPhaseSlots;
         private int[] addedPhaseSlots;
         private PageWrite[] pageWrites;
@@ -162,19 +194,6 @@ public final class PreparedTopologyChange {
         Builder fragments(int[] indexes, ThermalFragment[] values) {
             fragmentIndexes = indexes;
             fragments = values;
-            return this;
-        }
-
-        Builder material(
-                long[] edgeKeys,
-                ThermalMaterialEdge[] edges,
-                int[] executionFragments,
-                ThermalMaterialExecution[] executions
-        ) {
-            materialEdgeKeys = edgeKeys;
-            materialEdges = edges;
-            materialExecutionFragments = executionFragments;
-            materialExecutions = executions;
             return this;
         }
 
@@ -221,20 +240,6 @@ public final class PreparedTopologyChange {
         }
     }
 
-    private static void requireOrderedExecutions(
-            int[] indexes,
-            ThermalMaterialExecution[] values
-    ) {
-        int previous = -1;
-        for (int index = 0; index < indexes.length; index++) {
-            if (indexes[index] <= previous || values[index] == null) {
-                throw new IllegalArgumentException(
-                        "prepared material executions are not ordered and valid");
-            }
-            previous = indexes[index];
-        }
-    }
-
     public static final class PageWrite {
         public final WorkerPageStore.PageState page;
         final WorkerPageStore.PageState replacedPage;
@@ -245,9 +250,8 @@ public final class PreparedTopologyChange {
         final long residentBrickMask;
         final long sourceSeedMask;
         public final PagePublication publication;
-        final PagePublication rollbackPublication;
+        final PagePublication expectedPublication;
         final long stagedBrickMask;
-        public final long publicationChangedBrickMask;
         final int[] brickIndexes;
         final WorkerBrickTopology[] bricks;
         final boolean naturalTemperatureChanged;
@@ -332,12 +336,8 @@ public final class PreparedTopologyChange {
             this.residentBrickMask = residentBrickMask;
             this.sourceSeedMask = sourceSeedMask;
             this.publication = publication;
-            rollbackPublication = page.publication;
+            expectedPublication = replacedPage == null ? page.publication : replacedPage.publication;
             this.stagedBrickMask = stagedBrickMask;
-            this.publicationChangedBrickMask = retirement
-                    ? 0L
-                    : admission || replacedPage != null
-                            ? -1L : indexedBricks;
             this.brickIndexes = brickIndexes;
             this.bricks = bricks;
             this.naturalTemperatureChanged = naturalTemperatureChanged;

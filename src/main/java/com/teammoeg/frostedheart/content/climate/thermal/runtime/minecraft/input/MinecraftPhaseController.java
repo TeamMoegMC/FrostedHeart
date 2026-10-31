@@ -354,8 +354,7 @@ public final class MinecraftPhaseController {
         BlockPos position = new BlockPos(request.blockX(), request.blockY(), request.blockZ());
         ThermalPageHandle page = pages.handle(sectionKey(position));
         if (page == null
-                || page.lifecycleGeneration() != request.lifecycleGeneration()
-                || !matchesMaterialRequest(page, request, publication)) {
+                || page.lifecycleGeneration() != request.lifecycleGeneration()) {
             return Outcome.REJECTED;
         }
         LevelChunk chunk =
@@ -380,6 +379,7 @@ public final class MinecraftPhaseController {
         var transition = profile.thermalLaw().transition(request.materialBranch());
         if (transition == null || transition.targetStateId() != request.targetStateId())
             return Outcome.REJECTED;
+        if (!matchesMaterialRequest(page, request, publication)) return Outcome.RETRY;
         if (!canTransition(
                 level,
                 position,
@@ -416,7 +416,7 @@ public final class MinecraftPhaseController {
         if (!queries.tryReadMaterial(
                 brick.firstSlot() + nodeIndex,
                 brick.arenaGeneration(),
-                publication.topologyGeneration(),
+                profiles.signatures().materialStateId(brick.signatureAtBlock((x & 3) | (z & 3) << 2 | (y & 3) << 4)),
                 sample)) return false;
         if (sample.requestSequence() != request.requestSequence()
                 || sample.branch() != request.materialBranch()) return false;

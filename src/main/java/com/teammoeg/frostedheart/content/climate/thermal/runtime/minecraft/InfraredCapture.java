@@ -84,6 +84,7 @@ final class InfraredCapture implements AutoCloseable {
     private boolean neighborsReady;
     private ServerLevel level;
     private int originX, originY, originZ;
+    private long captureTick;
 
     InfraredSnapshot capture(
             MinecraftPageManager pages,
@@ -106,6 +107,7 @@ final class InfraredCapture implements AutoCloseable {
         originY = (cy - 4) * 16;
         originZ = (cz - 4) * 16;
         long center = SectionPos.asLong(cx, cy, cz), tick = level.getGameTime();
+        captureTick = tick;
         boolean reactivated =
                 publication != null && publication.noteInfraredRequest(tick, INFRARED_ACTIVE_TICKS);
         try {
@@ -127,8 +129,7 @@ final class InfraredCapture implements AutoCloseable {
                 if (publication != null && !publication.beginRead(cursor)) continue;
                 boolean readable =
                         publication != null
-                                && cursor.valid()
-                                && tick - cursor.sampleTick() <= MAX_PUBLICATION_AGE_TICKS;
+                                && cursor.hasFreshSample(tick, MAX_PUBLICATION_AGE_TICKS);
                 int epoch = readable ? cursor.infraredEpoch() : 0;
                 boolean full =
                         forceFull
@@ -189,7 +190,7 @@ final class InfraredCapture implements AutoCloseable {
                         if (changedMaterialBricks != 0L) {
                             presence[word] &= ~(1L << (local & 63));
                             for (int b = 0; b < 64; b++)
-                                if (readableSurfaceMask(page.brick(b), b) != 0) {
+                                if (readableSurfaceMask(page.brick(b), b, page.topologyGeneration()) != 0) {
                                     presence[word] |= 1L << (local & 63);
                                     break;
                                 }
@@ -244,12 +245,14 @@ final class InfraredCapture implements AutoCloseable {
                                             changed);
                         if (changed == 0) continue;
                         payload.beginPage();
-                        if (!writePage(page, stored, storedMask, local, changed, full)
+                        if (!writePage(page, storedMask, local, changed, full)
                                 || page != null && handle.lastPublication() != page)
                             continue captureAttempt;
                     }
                 }
-                if (publication != null && !cursor.isCurrent()) continue;
+                // Regional values are pinned and each used Page was checked above.
+                // The packet acknowledges the captured epoch, so a newer dirty mask
+                // can only cause an extra resend, never hide the next temperature.
                 boolean changedPresence = !Arrays.equals(presence, knownPresence);
                 if (!full
                         && !changedPresence
@@ -295,7 +298,7 @@ final class InfraredCapture implements AutoCloseable {
                     || page == null
                     || page.topologyGeneration() > cursor.topologyGeneration()) continue;
             for (int b = 0; b < 64; b++) {
-                if (surfaceMask(page.brick(b)) == 0) continue;
+                if (freshSurfaceMask(page.brick(b), page.topologyGeneration()) == 0) continue;
                 presence[local >>> 6] |= 1L << (local & 63);
                 break;
             }
@@ -381,7 +384,6 @@ final class InfraredCapture implements AutoCloseable {
 
     private boolean writePage(
             PagePublication page,
-            MaterialSectionState stored,
             long storedMask,
             int local,
             long changed,
@@ -475,8 +477,19 @@ final class InfraredCapture implements AutoCloseable {
                 : 0L;
     }
 
-    private long readableSurfaceMask(PagePublication.Brick brick, int index) {
-        long mask = surfaceMask(brick);
+    private long freshSurfaceMask(PagePublication.Brick brick, long topology) {
+        long mask = surfaceMask(brick), remaining = mask;
+        while (remaining != 0) {
+            int node = Long.numberOfTrailingZeros(remaining);
+            remaining &= remaining - 1;
+            if (!cursor.freshSlot(brick.firstSlot() + node, brick.arenaGeneration(), topology,
+                    captureTick, MAX_PUBLICATION_AGE_TICKS)) mask &= ~(1L << node);
+        }
+        return mask;
+    }
+
+    private long readableSurfaceMask(PagePublication.Brick brick, int index, long topology) {
+        long mask = freshSurfaceMask(brick, topology);
         if ((changedMaterialBricks & 1L << index) == 0L) return mask;
         long nodes = mask;
         while (nodes != 0L) {
@@ -506,7 +519,7 @@ final class InfraredCapture implements AutoCloseable {
             int y,
             int z) {
         var brick = page == null ? null : page.brick(index);
-        long mask = brick == null ? 0 : readableSurfaceMask(brick, index);
+        long mask = brick == null ? 0 : readableSurfaceMask(brick, index, page.topologyGeneration());
         int address = localPage * 64 + index;
         boolean compose = !brickFields.isEmpty();
         if (mask == 0 && !stored && !compose) {

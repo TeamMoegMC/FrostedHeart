@@ -51,6 +51,12 @@ final class ThermalFreeSpanIndex {
         Arrays.fill(nextFree, NONE);
     }
 
+    void recordBacking(AirBackingMeter meter) {
+        meter.array(start); meter.array(length); meter.array(left); meter.array(right);
+        meter.array(parent); meter.array(height); meter.array(nextFree);
+        meter.container(byStart, highWater, 8); meter.container(byEnd, highWater, 8);
+    }
+
     long takeBestFit(int minimumLength) {
         int current = root;
         int candidate = NONE;

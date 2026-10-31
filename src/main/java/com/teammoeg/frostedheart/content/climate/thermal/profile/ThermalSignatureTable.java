@@ -59,6 +59,13 @@ public final class ThermalSignatureTable {
     public int materialProfileId(int id) { return valid(id) ? materials[id] : 0; }
     public boolean isAir(int id) { return valid(id) && airMatter[id]; }
     public int materialStateId(int id) { return valid(id) ? materialStates[id] : -1; }
+    /** State IDs describe the world/save state; these attributes determine the physical model. */
+    public boolean samePhysicalProperties(int first, int second) {
+        return valid(first) && valid(second) && (first == second
+                || ventilation[first] == ventilation[second] && materials[first] == materials[second]
+                && materialTypes[first] == materialTypes[second] && fullContactFaces[first] == fullContactFaces[second]
+                && airMatter[first] == airMatter[second]);
+    }
     public boolean sameMaterialType(int first, int second) {
         return valid(first) && valid(second) && (materialTypes[first] < 0 || materialTypes[second] < 0
                 || materialTypes[first] == materialTypes[second]);

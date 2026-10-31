@@ -83,6 +83,22 @@ public final class BlockBrickLayout {
         return airContactBlocks;
     }
 
+    public void recordBacking(AirBackingMeter meter) {
+        if (!meter.objectOnce(this, meter.summaries() ? ownedBackingBytes() : 64)) return;
+        if (!meter.summaries()) {
+            meter.array(blockToNode); meter.array(nodeBlockMasks);
+            meter.array(routedAirBlocks); meter.array(routeValidity);
+        }
+        if (routeValidity != null) for (var validity : routeValidity)
+            if (validity != null) validity.recordBacking(meter);
+    }
+
+    /** Route witnesses belong to the routing component, rather than every Brick referring to it. */
+    public long ownedBackingBytes() {
+        return 64L + AirBackingMeter.shallowArrayBytes(blockToNode) + AirBackingMeter.shallowArrayBytes(nodeBlockMasks)
+                + AirBackingMeter.shallowArrayBytes(routedAirBlocks) + AirBackingMeter.shallowArrayBytes(routeValidity);
+    }
+
     public BlockBrickLayout withAirContactBlocks(long blocks) {
         return blocks == airContactBlocks
                 ? this
@@ -99,6 +115,10 @@ public final class BlockBrickLayout {
 
     public boolean hasAirRoute(int block) {
         return (routedAirMask & 1L << block) != 0 && routeValidity[block].valid();
+    }
+
+    public boolean hasCommittedAirRoute(int block) {
+        return (routedAirMask & 1L << block) != 0 && routeValidity[block].activeForSolve();
     }
 
     public long routedAirBlock(int block) {

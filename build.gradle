@@ -134,7 +134,20 @@ minecraft {
 
         gameTestServer {
             workingDirectory gameTestRunDirectory
+            if (providers.gradleProperty('thermalTestHeap').isPresent()) {
+                jvmArg "-Xmx${providers.gradleProperty('thermalTestHeap').get()}"
+            }
+            if (providers.gradleProperty('thermalTestProcessors').isPresent()) {
+                jvmArg "-XX:ActiveProcessorCount=${providers.gradleProperty('thermalTestProcessors').get()}"
+            }
             property 'frostedheart.persistenceTestPhase', providers.gradleProperty('teamTownPersistencePhase').getOrElse('read')
+            arg '-mixin.config=frostedheart.native-ticket-return.mixins.json'
+            if (providers.gradleProperty('geometryInputObservation').isPresent()) {
+                arg '-mixin.config=frostedheart.geometry-input-observation.mixins.json'
+            }
+            if (providers.gradleProperty('thermalJfrFile').isPresent()) {
+                jvmArg "-XX:StartFlightRecording=settings=profile,dumponexit=true,maxsize=${providers.gradleProperty('thermalJfrMaxSize').getOrElse('128m')},filename=${file(providers.gradleProperty('thermalJfrFile').get()).absolutePath}"
+            }
             property 'mixin.env.remapRefMap', 'true'
             property 'mixin.env.refMapRemappingFile', "${buildDir}/createSrgToMcp/output.srg"
             property 'forge.enabledGameTestNamespaces',
@@ -203,10 +216,6 @@ tasks.matching { it.name == 'runGameTestServer' }.configureEach {
     dependsOn tasks.named('cleanResearchGameTestWorld')
     dependsOn tasks.named('prepareResearchGameTestStructures')
     dependsOn tasks.named('prepareResearchGameTestCatalog')
-}
-
-tasks.matching { it.name == 'downloadMcpConfig' }.configureEach {
-    onlyIf { !gradle.startParameter.offline }
 }
 
 mixin {

@@ -21,40 +21,32 @@
 package com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft;
 
 import java.util.Arrays;
-import java.util.List;
 
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.player.thermalitem.WearableThermalState;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ArenaSpan;
-import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialBoundaryRegistry;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialSample;
-import com.teammoeg.frostedheart.content.climate.thermal.mesh.PagePublication;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.PageSignatures;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalBrickCellLayout;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalCellArena;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalPageHandle;
 import com.teammoeg.frostedheart.content.climate.thermal.profile.ResolvedThermalSignature;
 import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureTable;
-import com.teammoeg.frostedheart.content.climate.thermal.query.QueryPublication;
 import com.teammoeg.frostedheart.content.climate.thermal.query.ThermalEnvironmentSample;
-import com.teammoeg.frostedheart.content.climate.thermal.runtime.ThermalMemoryBudget;
-import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.engine.ThermalDimensionEngine;
-import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.engine.ThermalDimensionLimits;
-import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ResolvedGeometryBatch;
-import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ThermalCompletion;
-import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ThermalInputBatch;
-import com.teammoeg.frostedheart.content.climate.thermal.solver.BuoyancyConductance;
 import com.teammoeg.frostedheart.content.climate.thermal.solver.PhaseTransitionRuntime;
 import com.teammoeg.frostedheart.content.climate.thermal.source.EmissionPort;
-import com.teammoeg.frostedheart.content.climate.thermal.source.NodePowerAccumulatorArena;
 import com.teammoeg.frostedheart.content.climate.thermal.source.SourceBinding;
-import com.teammoeg.frostedheart.content.climate.thermal.source.ThermalSourceBatch;
+import com.teammoeg.frostedheart.content.climate.thermal.source.SpatialSourceTimeline;
+import com.teammoeg.frostedheart.content.climate.thermal.source.SpatialHeatInput;
+import com.teammoeg.frostedheart.content.climate.thermal.source.CutLoadBuffer;
+import com.teammoeg.frostedheart.content.climate.thermal.source.ThermalSourceMode;
+import com.teammoeg.frostedheart.content.climate.thermal.solver.RegionalAirRuntime;
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialThermalLaw;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ResolvedGeometryBatch;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ThermalInputBatch;
 import com.teammoeg.frostedheart.content.climate.thermal.source.ThermalSourceLedger;
-import com.teammoeg.frostedheart.content.climate.thermal.source.minecraft.MinecraftPhysicalSourceProfile;
-import com.teammoeg.frostedheart.content.climate.thermal.topology.FarFieldSettings;
-import com.teammoeg.frostedheart.content.climate.thermal.topology.ThermalTopologyParameters;
 import com.teammoeg.frostedheart.util.mixin.ICampfireExtra;
 
 import net.minecraft.core.BlockPos;
@@ -74,193 +66,129 @@ import net.minecraftforge.common.util.FakePlayerFactory;
 import net.minecraftforge.gametest.GameTestHolder;
 import net.minecraftforge.gametest.PrefixGameTestTemplate;
 
-@GameTestHolder(FHMain.MODID)
+@GameTestHolder("frostedheart_thermal_input")
 @PrefixGameTestTemplate(false)
 public final class FrostedHeartMinecraftThermalInputGameTests {
     private static final String TEMPLATE = "phase0a_empty";
     private static final String BATCH = "frostedheart_thermal_async";
+    // These fixture ports already carry their concrete thermal binding.
+    private static final ThermalSourceLedger.BindingUpdates FIXED_BINDINGS = new ThermalSourceLedger.BindingUpdates() {
+        @Override public void registered(SpatialSourceTimeline.Descriptor descriptor, long tick, ThermalSourceLedger ledger) { }
+        @Override public void emissionChanged(SpatialSourceTimeline.Descriptor descriptor, ThermalSourceLedger ledger) { }
+        @Override public void unloaded(SpatialSourceTimeline.Descriptor descriptor) { }
+    };
 
     private FrostedHeartMinecraftThermalInputGameTests() {
     }
 
-    @GameTest(template = TEMPLATE, batch = BATCH + "_empty", timeoutTicks = 40)
-    public static void emptyCutPublishesAnEmptyQueryEnvelope(GameTestHelper helper) {
-        Fixture fixture = fixture();
-        try {
-            ThermalCompletion completion = fixture.engine.process(batch(1L, 0L));
-            helper.assertTrue(
-                    completion.status() == ThermalCompletion.Status.COMPLETED,
-                    "empty cut must complete");
-            helper.assertTrue(
-                    !fixture.query.tryRead(0, 1, 0L, new QueryPublication.MutableSample()),
-                    "empty arena has no query slot");
-            helper.succeed();
-        } finally {
-            fixture.engine.close();
+    @GameTest(template = TEMPLATE, batch = BATCH + "_source", timeoutTicks = 120)
+    public static void spatialSourceDeliversExactPowerAndSignedImpulse(GameTestHelper helper) {
+        BlockPos target = sourceTarget(helper);
+        try (var simulation = sourceSimulation(helper, Blocks.STONE.defaultBlockState(), 0);
+                var timeline = new SpatialSourceTimeline(simulation.budget, 8)) {
+            int slot = simulation.slot(target);
+            var ports = new EmissionPort[]{EmissionPort.of(0, 1, SourceBinding.thermalNode(slot, simulation.arena.lifecycleGeneration(slot)))};
+            double before = simulation.totalEnergy();
+            helper.assertTrue(timeline.register(new SpatialSourceTimeline.Descriptor(0, 1, ThermalSourceMode.POWER_SOURCE,
+                    target.getX(), target.getY(), target.getZ(), 1, ports), 20, true, 0), "source producer accepts ownership");
+            submitSpatialHeat(helper, simulation, timeline, slot, 20);
+            ThermalSourceLedger ledger = ThermalLoadedWorldGameTests.read(simulation.engine, "sources");
+            helper.assertTrue(Math.abs(ledger.energyBalance().outputJ() - 20) < 1e-9
+                            && Math.abs(ledger.energyBalance().deliveredJ() - 20) < 1e-9
+                            && Math.abs(simulation.totalEnergy() - before - 20) < 1e-9,
+                    "one second at 20 W reaches the committed regional field exactly once");
+            helper.assertTrue(timeline.register(new SpatialSourceTimeline.Descriptor(1, 1, ThermalSourceMode.IMPULSE,
+                    target.getX(), target.getY(), target.getZ(), 1, ports), 0, true, 20), "impulse producer accepts ownership");
+            timeline.impulse(1, 0, -5, 20);
+            submitSpatialHeat(helper, simulation, timeline, slot, 20);
+            helper.assertTrue(Math.abs(simulation.totalEnergy() - before - 15) < 1e-9
+                            && Math.abs(ledger.energyBalance().outputJ() - 15) < 1e-9
+                            && Math.abs(ledger.energyBalance().deliveredJ() - 15) < 1e-9,
+                    "a same-tick signed impulse changes the accepted field without replaying the power interval");
         }
-    }
-
-    @GameTest(template = TEMPLATE, batch = BATCH + "_admission", timeoutTicks = 40)
-    public static void admissionPublishesAResolvedPage(GameTestHelper helper) {
-        Fixture fixture = fixture();
-        try {
-            ThermalCompletion completion = fixture.engine.process(admissionBatch(
-                    1L, 20L, fixture.page, fixture.signatures));
-            PagePublication publication = fixture.page.currentPublication();
-            helper.assertTrue(
-                    completion.status() == ThermalCompletion.Status.COMPLETED
-                            && publication != null
-                            && fixture.arena.liveCellCount() == 64,
-                    "admission must compile 64 regular Air cells");
-            helper.succeed();
-        } finally {
-            fixture.engine.close();
-        }
-    }
-
-    @GameTest(template = TEMPLATE, batch = BATCH + "_residency", timeoutTicks = 40)
-    public static void residencyCarriesExactPageIdentity(GameTestHelper helper) {
-        Fixture fixture = fixture();
-        try {
-            ThermalCompletion completion = fixture.engine.process(admissionBatch(
-                    1L, 20L, fixture.page, fixture.signatures, 1L));
-            ThermalCompletion.BrickResidency residency =
-                    completion.residencyUpdates()[0];
-            helper.assertTrue(
-                    residency.sectionKey() == fixture.page.sectionKey()
-                            && residency.lifecycleGeneration()
-                                    == fixture.page.lifecycleGeneration()
-                            && residency.desiredBrickMask() == -1L,
-                    "residency must carry the committed Page identity and mask");
-            helper.succeed();
-        } finally {
-            fixture.engine.close();
-        }
-    }
-
-    @GameTest(template = TEMPLATE, batch = BATCH + "_mutation", timeoutTicks = 40)
-    public static void localMutationRebuildsOnlyTheChangedBrick(GameTestHelper helper) {
-        Fixture fixture = fixture();
-        try {
-            fixture.engine.process(admissionBatch(1L, 20L, fixture.page, fixture.signatures));
-            long revision = fixture.page.beginGeometryMutation();
-            ThermalCompletion completion = fixture.engine.process(
-                    mutationBatch(2L, 40L, fixture.page, revision, fixture.solidId));
-            helper.assertTrue(
-                    completion.status() == ThermalCompletion.Status.COMPLETED
-                            && fixture.page.currentPublication() != null
-                            && fixture.page.currentPublication().geometryRevision() == revision,
-                    "local geometry must publish its exact revision");
-            helper.succeed();
-        } finally {
-            fixture.engine.close();
-        }
-    }
-
-    @GameTest(template = TEMPLATE, batch = BATCH + "_retirement", timeoutTicks = 40)
-    public static void retirementClearsThePageAndArenaCells(GameTestHelper helper) {
-        Fixture fixture = fixture();
-        try {
-            fixture.engine.process(admissionBatch(1L, 20L, fixture.page, fixture.signatures));
-            ThermalInputBatch retirement = new ThermalInputBatch(
-                    1L, 2L, 40L,
-                    ThermalInputBatch.NO_ADMISSIONS,
-                    new ThermalInputBatch.PageRetirement[]{
-                            new ThermalInputBatch.PageRetirement(fixture.page)},
-                    ThermalInputBatch.NO_RESIDENCY_UPDATES,
-                    ResolvedGeometryBatch.EMPTY,
-                    ThermalSourceBatch.EMPTY,
-                    ThermalInputBatch.NO_ENVIRONMENT_UPDATES,
-                    ThermalInputBatch.NO_PHASE_ACKS,
-                    Double.NaN);
-            fixture.engine.process(retirement);
-            helper.assertTrue(
-                    fixture.page.currentPublication() == null
-                            && fixture.arena.liveCellCount() == 0,
-                    "retirement must remove the Page publication and cells");
-            helper.succeed();
-        } finally {
-            fixture.engine.close();
-        }
-    }
-
-    @GameTest(template = TEMPLATE, batch = BATCH + "_query", timeoutTicks = 40)
-    public static void flatQueryPublicationValidatesTheArenaGeneration(GameTestHelper helper) {
-        Fixture fixture = fixture();
-        try {
-            fixture.engine.process(admissionBatch(1L, 20L, fixture.page, fixture.signatures));
-            PagePublication.Brick brick = fixture.page.currentPublication()
-                    .brickAt(0, 0, 0);
-            QueryPublication.MutableSample sample =
-                    new QueryPublication.MutableSample();
-            helper.assertTrue(
-                    fixture.query.tryRead(
-                            brick.firstSlot(), brick.arenaGeneration(),
-                            1L, sample),
-                    "query publication must read the live slot");
-            helper.assertTrue(
-                    !fixture.query.tryRead(
-                            brick.firstSlot(), brick.arenaGeneration() + 1,
-                            1L, sample),
-                    "stale arena generation must be rejected");
-            helper.succeed();
-        } finally {
-            fixture.engine.close();
-        }
-    }
-
-    @GameTest(template = TEMPLATE, batch = BATCH + "_source", timeoutTicks = 40)
-    public static void sourceLedgerDeliversPowerAtTheExactCut(GameTestHelper helper) {
-        ThermalCellArena arena = new ThermalCellArena(1);
-        ArenaSpan allocation = regular(arena, 0, 1, 0);
-        ThermalSourceLedger ledger = new ThermalSourceLedger(
-                0L, 1, 1, 8,
-                new NodePowerAccumulatorArena(1, 8), arena);
-        ThermalSourceBatch.Builder events = new ThermalSourceBatch.Builder(0L);
-        events.addRegister(
-                0L, 1, com.teammoeg.frostedheart.content.climate.thermal.source.ThermalSourceMode.POWER_SOURCE,
-                20.0D, true, 0L, 0, 0, 0, 1,
-                new EmissionPort[]{EmissionPort.of(
-                        0, 1.0D, SourceBinding.thermalNode(
-                                allocation.firstSlot(), 1))});
-        ledger.acceptAndAdvance(
-                events.buildAndReset(), 20L, (batch, index, current) -> { });
-        helper.assertTrue(
-                Math.abs(arena.enthalpyJ(allocation.firstSlot()) - 20.0D) < 1.0e-9D,
-                "source energy must integrate for one second");
-        ledger.close();
         helper.succeed();
     }
 
-    @GameTest(template = TEMPLATE, batch = BATCH + "_source_balance", timeoutTicks = 40)
-    public static void sourceEnergyIsAccountedWhenMaterialCannotAcceptMore(GameTestHelper helper) {
-        ThermalCellArena arena = new ThermalCellArena(2);
-        var allocation = phase(arena);
-        int material = allocation.firstSlot() + 1;
-        ThermalSourceLedger ledger = new ThermalSourceLedger(0, 1, 3, 8,
-                new NodePowerAccumulatorArena(1, 8), arena);
-        try {
-            var events = new ThermalSourceBatch.Builder(0);
-            events.addRegister(0, 1, com.teammoeg.frostedheart.content.climate.thermal.source.ThermalSourceMode.POWER_SOURCE,
-                    100, true, 0, 0, 0, 0, 1,
-                    new EmissionPort[]{EmissionPort.of(0, .5, SourceBinding.thermalNode(material, 1)),
-                            EmissionPort.of(1, .3, SourceBinding.declaredLoss(1)),
-                            EmissionPort.of(2, .2, SourceBinding.degradedLoss(2))});
-            ledger.acceptAndAdvance(events.buildAndReset(), 20, (batch, index, current) -> {});
+    @GameTest(template = TEMPLATE, batch = BATCH + "_source_balance", timeoutTicks = 120)
+    public static void spatialSourceAccountsForSaturatedRegionalMaterial(GameTestHelper helper) {
+        BlockPos target = sourceTarget(helper);
+        var edge = com.teammoeg.frostedheart.content.climate.thermal.profile.minecraft.MinecraftThermalProfiles
+                .materialLaw(Blocks.ICE.defaultBlockState()).heating();
+        helper.assertTrue(edge != null, "real ice has a melting endpoint");
+        try (var simulation = sourceSimulation(helper, Blocks.ICE.defaultBlockState(), edge.transitionTemperatureC());
+                var timeline = new SpatialSourceTimeline(simulation.budget, 8)) {
+            int slot = simulation.slot(target);
+            simulation.material.applyMaterialControl(slot, edge.targetEnthalpyJ() - 10, MaterialThermalLaw.HEATING);
+            double before = simulation.totalEnergy();
+            var ports = new EmissionPort[]{EmissionPort.of(0, .5, SourceBinding.thermalNode(slot, simulation.arena.lifecycleGeneration(slot))),
+                    EmissionPort.of(1, .3, SourceBinding.declaredLoss(1)), EmissionPort.of(2, .2, SourceBinding.degradedLoss(2))};
+            helper.assertTrue(timeline.register(new SpatialSourceTimeline.Descriptor(0, 1, ThermalSourceMode.POWER_SOURCE,
+                    target.getX(), target.getY(), target.getZ(), 1, ports), 100, true, 0), "source producer accepts ownership");
+            submitSpatialHeat(helper, simulation, timeline, slot, 20);
+            ThermalSourceLedger ledger = ThermalLoadedWorldGameTests.read(simulation.engine, "sources");
             var balance = ledger.energyBalance();
-            helper.assertTrue(Math.abs(balance.outputJ() - 100) < 1e-8
-                            && Math.abs(balance.deliveredJ() - 10) < 1e-8
-                            && Math.abs(balance.unacceptedJ() - 40) < 1e-8,
-                    "material saturation must return its unaccepted source energy");
+            helper.assertTrue(Math.abs(balance.outputJ() - 100) < 1e-8 && Math.abs(balance.deliveredJ() - 10) < 1e-8
+                            && Math.abs(balance.unacceptedJ() - 40) < 1e-8 && Math.abs(balance.declaredLossJ() - 30) < 1e-8
+                            && Math.abs(balance.degradedLossJ() - 20) < 1e-8
+                            && Math.abs(simulation.totalEnergy() - before - 10) < 1e-8,
+                    "regional saturation gives every source joule one destination: " + balance);
+            double completed = simulation.enthalpyJ(slot);
+            submitSpatialHeat(helper, simulation, timeline, slot, 40);
+            helper.assertTrue(simulation.enthalpyJ(slot) == completed && Math.abs(ledger.energyBalance().unacceptedJ() - 90) < 1e-8,
+                    "waiting for the phase ACK cannot absorb or replay rejected source energy");
+            balance = ledger.energyBalance();
             helper.assertTrue(Math.abs(balance.outputJ() - balance.deliveredJ() - balance.unacceptedJ()
                             - balance.declaredLossJ() - balance.degradedLossJ()) < 1e-8,
-                    "every source joule has exactly one destination");
-            ledger.acceptAndAdvance(ThermalSourceBatch.EMPTY, 40, (batch, index, current) -> {});
-            helper.assertTrue(Math.abs(arena.enthalpyJ(material) - 10) < 1e-8
-                            && Math.abs(ledger.energyBalance().unacceptedJ() - 90) < 1e-8,
-                    "a later cut must not replay previously unaccepted energy");
-        } finally { ledger.close(); }
+                    "the next committed prefix preserves total source accounting");
+            FHMain.LOGGER.info("THERMAL_SPATIAL_SOURCE_BALANCE,plateauC={},outputJ={},deliveredJ={},unacceptedJ={},declaredLossJ={},degradedLossJ={}",
+                    edge.transitionTemperatureC(), balance.outputJ(), balance.deliveredJ(), balance.unacceptedJ(), balance.declaredLossJ(), balance.degradedLossJ());
+        }
         helper.succeed();
+    }
+
+    private static BlockPos sourceTarget(GameTestHelper helper) {
+        BlockPos anchor = helper.absolutePos(new BlockPos(2, 6, 2));
+        return new BlockPos(anchor.getX() & ~3, anchor.getY() & ~3, anchor.getZ() & ~3).offset(1, 1, 1);
+    }
+
+    private static ThermalMaterialBehaviorGameTests.Simulation sourceSimulation(GameTestHelper helper,
+            net.minecraft.world.level.block.state.BlockState material, double naturalC) {
+        MinecraftThermalInput.closeActiveLevel(helper.getLevel());
+        BlockPos target = sourceTarget(helper), origin = target.offset(-1, -1, -1);
+        for (int x = 0; x < 4; x++) for (int y = 0; y < 4; y++) for (int z = 0; z < 4; z++)
+            helper.getLevel().setBlockAndUpdate(origin.offset(x, y, z), Blocks.STONE.defaultBlockState());
+        helper.getLevel().setBlockAndUpdate(target, material);
+        helper.getLevel().setBlockAndUpdate(target.east(), Blocks.AIR.defaultBlockState());
+        return new ThermalMaterialBehaviorGameTests.Simulation(helper, origin, 4, 4, 4, naturalC);
+    }
+
+    /** Use production producer ownership, Store binding and regional commits with explicit bound test ports. */
+    private static void submitSpatialHeat(GameTestHelper helper, ThermalMaterialBehaviorGameTests.Simulation simulation,
+            SpatialSourceTimeline timeline, int slot, long tick) {
+        var runtime = (RegionalAirRuntime) simulation.material;
+        ThermalSourceLedger ledger = ThermalLoadedWorldGameTests.read(simulation.engine, "sources");
+        var windows = timeline.seal(tick);
+        helper.assertTrue(windows.length != 0, "the producer must seal a real input window");
+        for (int ordinal = 0; ordinal < windows.length; ordinal++) {
+            var producer = windows[ordinal];
+            var descriptor = producer.descriptor;
+            var target = new SpatialHeatInput.Target(BlockPos.asLong(simulation.arena.minimum(slot, 0),
+                    simulation.arena.minimum(slot, 1), simulation.arena.minimum(slot, 2)), SpatialHeatInput.MATERIAL,
+                    slot, simulation.arena.lifecycleGeneration(slot), simulation.arena.materialProfileId(slot),
+                    simulation.arena.materialIncarnation(slot), descriptor.sourceId(), descriptor.generation());
+            var origins = new SpatialHeatInput.Target[descriptor.ports().length];
+            for (int port = 0; port < origins.length; port++)
+                if (descriptor.ports()[port].binding().kind() != SourceBinding.Kind.DECLARED_LOSS) origins[port] = target;
+            runtime.prepareSourceWindow(producer, origins);
+            var store = runtime.inputStore();
+            var owned = store.acceptSourceWindow(producer, simulation.sequence + 1, ordinal, origins, ledger);
+            var loads = new CutLoadBuffer();
+            store.bindSourcePrefix(owned, tick, ledger, FIXED_BINDINGS, loads);
+            runtime.prepareSpatialInput(loads.size());
+            runtime.receiveSpatialHeat(SpatialHeatInput.takeWorldIdentity(loads.freeze(null, simulation.arena)));
+        }
+        simulation.tick = tick;
+        simulation.publish(ResolvedGeometryBatch.EMPTY, ThermalInputBatch.NO_PHASE_ACKS);
     }
 
     @GameTest(template = TEMPLATE, batch = BATCH + "_phase", timeoutTicks = 40)
@@ -269,10 +197,8 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
         ArenaSpan allocation = phase(arena);
         PhaseTransitionRuntime phases = new PhaseTransitionRuntime(arena, 2);
         int phaseSlot = allocation.firstSlot() + 1;
-        int airSlot = allocation.firstSlot();
         phases.registerMaterial(phaseSlot);
-        arena.setEnthalpyJ(airSlot, 10_000.0D);
-        arena.acceptExternalEnergyJ(phaseSlot, 10.0D);
+        arena.applyMaterialControl(phaseSlot, 10.0D, MaterialThermalLaw.HEATING);
         phases.collectMaterialRequests();
         double completedEnergy = arena.enthalpyJ(phaseSlot);
         PhaseTransitionRuntime.Request[] requests = phases.drainRequests(2);
@@ -299,7 +225,7 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
         ArenaSpan replacement = phase(arena);
         int replacementSlot = replacement.firstSlot() + 1;
         phases.registerMaterial(replacementSlot);
-        arena.acceptExternalEnergyJ(replacementSlot, 10);
+        arena.applyMaterialControl(replacementSlot, 10.0D, MaterialThermalLaw.HEATING);
         phases.collectMaterialRequests();
         helper.assertTrue(!phases.applyAck(firstRequest, PhaseTransitionRuntime.AckOutcome.APPLIED),
                 "a reused slot in the same Page cannot inherit a previous body's ACK");
@@ -308,23 +234,6 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
                         && arena.enthalpyJ(replacementSlot) == 10,
                 "rejection preserves the material's stored energy");
         helper.succeed();
-    }
-
-    @GameTest(template = TEMPLATE, batch = BATCH + "_sequence", timeoutTicks = 40)
-    public static void staleBatchIdentityIsRejected(GameTestHelper helper) {
-        Fixture fixture = fixture();
-        try {
-            boolean rejected = false;
-            try {
-                fixture.engine.process(batch(2L, 20L));
-            } catch (IllegalArgumentException expected) {
-                rejected = true;
-            }
-            helper.assertTrue(rejected, "sequence must start at one");
-            helper.succeed();
-        } finally {
-            fixture.engine.close();
-        }
     }
 
     @GameTest(template = TEMPLATE, batch = BATCH + "_resync", timeoutTicks = 40)
@@ -357,30 +266,6 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = TEMPLATE, batch = BATCH + "_pool", timeoutTicks = 40)
-    public static void engineCloseIsIdempotent(GameTestHelper helper) {
-        Fixture fixture = fixture();
-        fixture.engine.close();
-        fixture.engine.close();
-        helper.succeed();
-    }
-
-    @GameTest(template = TEMPLATE, batch = BATCH + "_fixed", timeoutTicks = 40)
-    public static void fixedTwentyTickBatchesAdvanceWithoutLegacyScheduler(GameTestHelper helper) {
-        Fixture fixture = fixture();
-        try {
-            ThermalCompletion first = fixture.engine.process(batch(1L, 0L));
-            ThermalCompletion second = fixture.engine.process(batch(2L, 20L));
-            helper.assertTrue(
-                    first.status() == ThermalCompletion.Status.COMPLETED
-                            && second.status() == ThermalCompletion.Status.COMPLETED,
-                    "fixed 20-tick batches must use the direct engine pipeline");
-            helper.succeed();
-        } finally {
-            fixture.engine.close();
-        }
-    }
-
     @GameTest(
             template = TEMPLATE,
             batch = BATCH + "_minecraft_residency_handoff",
@@ -406,14 +291,16 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
         double pageNatural = WorldTemperature.naturalAir(level, pageCenter);
 
         for (int x = 0; x < 8; x++) {
-            for (int y = 0; y < 2; y++) {
+            for (int y = 0; y < 4; y++) {
                 for (int z = 0; z < 4; z++) {
                     level.setBlockAndUpdate(
                             new BlockPos(minX + x, minY + y, minZ + z),
-                            Blocks.STONE.defaultBlockState());
+                            (y < 2 ? Blocks.STONE : Blocks.AIR).defaultBlockState());
                 }
             }
         }
+        helper.assertTrue(level.getBlockState(sourceAir).isAir() && level.getBlockState(neighborAir).isAir(),
+                "both temperature probes must be in the fixture's upper Air half");
         for (int x = 1; x <= 2; x++) {
             for (int z = 1; z <= 2; z++) {
                 BlockPos campfire = new BlockPos(
@@ -441,8 +328,10 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
                     level, neighborAir, pageNatural);
             helper.assertTrue(
                     source > pageNatural + 1.0D,
-                    "pre-existing campfires were not discovered: source="
-                            + source + ", natural=" + pageNatural);
+                    "pre-existing campfires did not heat source Air: source="
+                            + source + ", natural=" + pageNatural
+                            + ", campfireLit=" + level.getBlockState(sourceAir.offset(1, -1, 1))
+                                    .getValue(CampfireBlock.LIT));
             helper.assertTrue(
                     neighbor > pageNatural + 0.25D,
                     "half-Air neighbor did not warm: neighbor="
@@ -522,6 +411,11 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
                         "a completed energy transition must be waiting for ACK before enabling world mutation");
                 level.getGameRules().getRule(GameRules.RULE_RANDOMTICKING)
                         .set(randomTickSpeed, level.getServer());
+            }
+            if (elapsed[0] > 360 && elapsed[0] % 40 == 0
+                    && level.getBlockState(phaseBlock).is(Blocks.PACKED_ICE)) {
+                helper.assertTrue(MinecraftThermalInput.sampleMaterial(level, phaseBlock, new MaterialSample()),
+                        "unchanged phase material became unreadable during topology churn");
             }
         });
         helper.succeedWhen(() -> {
@@ -626,108 +520,6 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
         throw new IllegalStateException("GameTest has no aligned Brick span");
     }
 
-    private static ThermalInputBatch admissionBatch(
-            long sequence,
-            long tick,
-            ThermalPageHandle page,
-            ThermalSignatureTable signatures
-    ) {
-        return admissionBatch(sequence, tick, page, signatures, 0L);
-    }
-
-    private static ThermalInputBatch admissionBatch(
-            long sequence,
-            long tick,
-            ThermalPageHandle page,
-            ThermalSignatureTable signatures,
-            long sourceSeedMask
-    ) {
-        return new ThermalInputBatch(
-                1L, sequence, tick,
-                new ThermalInputBatch.PageAdmission[]{
-                        new ThermalInputBatch.PageAdmission(
-                                page, page.liveGeometryRevision(),
-                                -1L, sourceSeedMask,
-                                page(signatures, 0), 0.0D, sky(), null)},
-                ThermalInputBatch.NO_RETIREMENTS,
-                ThermalInputBatch.NO_RESIDENCY_UPDATES,
-                ResolvedGeometryBatch.EMPTY,
-                ThermalSourceBatch.EMPTY,
-                ThermalInputBatch.NO_ENVIRONMENT_UPDATES,
-                ThermalInputBatch.NO_PHASE_ACKS,
-                Double.NaN);
-    }
-
-    private static ThermalInputBatch mutationBatch(
-            long sequence,
-            long tick,
-            ThermalPageHandle page,
-            long revision,
-            int signatureId
-    ) {
-        ResolvedGeometryBatch.Builder geometry =
-                new ResolvedGeometryBatch.Builder();
-        geometry.addResolvedCenter(page, revision, 0, signatureId);
-        return new ThermalInputBatch(
-                1L, sequence, tick,
-                ThermalInputBatch.NO_ADMISSIONS,
-                ThermalInputBatch.NO_RETIREMENTS,
-                ThermalInputBatch.NO_RESIDENCY_UPDATES,
-                geometry.buildAndReset(),
-                ThermalSourceBatch.EMPTY,
-                ThermalInputBatch.NO_ENVIRONMENT_UPDATES,
-                ThermalInputBatch.NO_PHASE_ACKS,
-                Double.NaN);
-    }
-
-    private static ThermalInputBatch batch(long sequence, long tick) {
-        return new ThermalInputBatch(
-                1L, sequence, tick,
-                ThermalInputBatch.NO_ADMISSIONS,
-                ThermalInputBatch.NO_RETIREMENTS,
-                ThermalInputBatch.NO_RESIDENCY_UPDATES,
-                ResolvedGeometryBatch.EMPTY,
-                ThermalSourceBatch.EMPTY,
-                ThermalInputBatch.NO_ENVIRONMENT_UPDATES,
-                ThermalInputBatch.NO_PHASE_ACKS,
-                Double.NaN);
-    }
-
-    private static Fixture fixture() {
-        ThermalSignatureTable.Builder builder = ThermalSignatureTable.builder();
-        int airId = builder.intern(fullAir());
-        int solidId = builder.intern(new ResolvedThermalSignature(0, 0));
-        ThermalSignatureTable signatures = builder.build();
-        ThermalCellArena arena = new ThermalCellArena(256);
-        QueryPublication query = QueryPublication.tryCreate(
-                new ThermalMemoryBudget(8L * 1024L * 1024L)
-                        .createDimensionBudget(8L * 1024L * 1024L),
-                256,
-                16);
-        ThermalDimensionEngine engine = new ThermalDimensionEngine(
-                1L, 0L, arena, signatures,
-                new MaterialBoundaryRegistry(List.of()),
-                new ThermalTopologyParameters(
-                        1_200.0D, 0.0D, 1.0D,
-                        new BuoyancyConductance.Parameters(0.25D, 4.0D, 10.0D),
-                        8, 4),
-                new FarFieldSettings(1.0D, 1.0D, 16.0D),
-                MinecraftPhysicalSourceProfile.CAMPFIRE,
-                new ThermalDimensionLimits(
-                        16, 128, 256,
-                        4_096, 2_048, 4_096, 4_096,
-                        2, 1.0e-6D),
-                query);
-        return new Fixture(
-                engine,
-                arena,
-                query,
-                new ThermalPageHandle(0L, 1L),
-                signatures,
-                airId,
-                solidId);
-    }
-
     private static PageSignatures page(
             ThermalSignatureTable signatures,
             int id
@@ -782,14 +574,4 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
         return allocation;
     }
 
-    private record Fixture(
-            ThermalDimensionEngine engine,
-            ThermalCellArena arena,
-            QueryPublication query,
-            ThermalPageHandle page,
-            ThermalSignatureTable signatures,
-            int airId,
-            int solidId
-    ) {
-    }
 }

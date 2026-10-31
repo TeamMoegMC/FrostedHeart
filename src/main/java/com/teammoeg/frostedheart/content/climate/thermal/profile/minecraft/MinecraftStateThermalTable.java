@@ -34,8 +34,6 @@ import java.util.Map;
 /** Dense BlockState-ID lookup with sparse extended thermal semantics. */
 public final class MinecraftStateThermalTable {
     public static final int UNRESOLVED_CODE = Integer.MIN_VALUE;
-    public static final byte CAMPFIRE_PRESENT = 1;
-    public static final byte CAMPFIRE_LIT = 1 << 1;
 
     public static final byte RADIATION_NONE = 0;
     public static final byte RADIATION_FIXED = 1;
@@ -44,7 +42,6 @@ public final class MinecraftStateThermalTable {
     private final int[] thermalStateCodeByStateId;
     private final int[] signatureByExtended;
     private final int[] radiationProfileByExtended;
-    private final byte[] sourceFlagsByExtended;
     private final byte[] occlusionBySignature;
     private final byte[] occlusionByExtended;
     private final byte[] radiationModeByProfile;
@@ -55,10 +52,8 @@ public final class MinecraftStateThermalTable {
         thermalStateCodeByStateId = builder.stateCodes;
         signatureByExtended = builder.extendedSignatures.stream()
                 .mapToInt(Integer::intValue).toArray();
-        sourceFlagsByExtended = new byte[builder.extendedSourceFlags.size()];
         occlusionByExtended = new byte[builder.extendedOcclusion.size()];
-        for (int index = 0; index < sourceFlagsByExtended.length; index++) {
-            sourceFlagsByExtended[index] = builder.extendedSourceFlags.get(index);
+        for (int index = 0; index < occlusionByExtended.length; index++) {
             occlusionByExtended[index] = builder.extendedOcclusion.get(index);
         }
         occlusionBySignature = new byte[builder.directOcclusion.size()];
@@ -138,15 +133,6 @@ public final class MinecraftStateThermalTable {
         return radiationProfileIdFromCode(code(state)) != 0;
     }
 
-    public byte sourceFlagsFromCode(int code) {
-        if (code >= 0 || code == UNRESOLVED_CODE) {
-            return 0;
-        }
-        int extended = ~code;
-        return extended < sourceFlagsByExtended.length
-                ? sourceFlagsByExtended[extended] : 0;
-    }
-
     public boolean blocksRadiationFromCode(int code) {
         if (code >= 0) {
             return code < occlusionBySignature.length
@@ -170,22 +156,13 @@ public final class MinecraftStateThermalTable {
                 ? radiationPowerByProfile[profileId] : 0.0D;
     }
 
-    public int mutationFlags(BlockState oldState, BlockState newState) {
-        int oldCode = code(oldState);
-        int newCode = code(newState);
+    public int mutationFlagsFromCodes(int oldCode, int newCode) {
         int oldSignature = signatureIdFromCode(oldCode);
         int newSignature = signatureIdFromCode(newCode);
         int flags = oldSignature == ThermalSignatureTable.UNRESOLVED
                 || newSignature == ThermalSignatureTable.UNRESOLVED
                 || oldSignature != newSignature
                 ? MinecraftThermalProfiles.TOPOLOGY_MUTATION : 0;
-        if (sourceFlagsFromCode(oldCode) != sourceFlagsFromCode(newCode)) {
-            flags |= MinecraftThermalProfiles.SOURCE_MUTATION;
-        }
-        if (radiationProfileIdFromCode(oldCode)
-                != radiationProfileIdFromCode(newCode)) {
-            flags |= MinecraftThermalProfiles.RADIATION_MUTATION;
-        }
         if (oldSignature == newSignature
                 && blocksRadiationFromCode(oldCode)
                         != blocksRadiationFromCode(newCode)) {
@@ -202,7 +179,6 @@ public final class MinecraftStateThermalTable {
                 new LinkedHashMap<>();
         private final List<Integer> extendedSignatures = new ArrayList<>();
         private final List<Integer> extendedRadiationProfiles = new ArrayList<>();
-        private final List<Byte> extendedSourceFlags = new ArrayList<>();
         private final List<Byte> extendedOcclusion = new ArrayList<>();
         private final List<Byte> directOcclusion = new ArrayList<>();
         private final List<Byte> radiationModes = new ArrayList<>();
@@ -241,7 +217,6 @@ public final class MinecraftStateThermalTable {
                 BlockState state,
                 int signatureId,
                 int radiationProfileId,
-                byte sourceFlags,
                 boolean blocksRadiation
         ) {
             int stateId = Block.BLOCK_STATE_REGISTRY.getId(state);
@@ -252,8 +227,7 @@ public final class MinecraftStateThermalTable {
             maximumStateId = Math.max(maximumStateId, stateId);
             boolean directOcclusionMatches = registerDirectOcclusion(
                     signatureId, blocksRadiation);
-            if (radiationProfileId == 0 && sourceFlags == 0
-                    && directOcclusionMatches) {
+            if (radiationProfileId == 0 && directOcclusionMatches) {
                 stateCodes[stateId] = signatureId >= 0
                         ? signatureId : UNRESOLVED_CODE;
                 return;
@@ -261,7 +235,6 @@ public final class MinecraftStateThermalTable {
             ExtendedSemantics semantics = new ExtendedSemantics(
                     signatureId,
                     radiationProfileId,
-                    sourceFlags,
                     blocksRadiation);
             Integer extended = extendedIds.get(semantics);
             if (extended == null) {
@@ -273,7 +246,6 @@ public final class MinecraftStateThermalTable {
                 extendedIds.put(semantics, extended);
                 extendedSignatures.add(signatureId);
                 extendedRadiationProfiles.add(radiationProfileId);
-                extendedSourceFlags.add(sourceFlags);
                 extendedOcclusion.add((byte) (blocksRadiation ? 1 : 0));
             }
             stateCodes[stateId] = ~extended;
@@ -321,7 +293,6 @@ public final class MinecraftStateThermalTable {
     private record ExtendedSemantics(
             int signatureId,
             int radiationProfileId,
-            byte sourceFlags,
             boolean blocksRadiation
     ) {
     }

@@ -31,9 +31,46 @@ public final class ThermalPageHandle {
     private final long sectionKey;
     private final long lifecycleGeneration;
     private final AtomicLong liveGeometryRevision = new AtomicLong();
+    // A position in the full capture history, not a separate revision sequence.
+    private volatile long lastPhysicalGeometryRevision;
+    private volatile long firstStaleGeometryTick = -1L;
     private final AtomicReference<GeometryResyncToken> resyncRequirement =
             new AtomicReference<>();
     private volatile PagePublication publication = PagePublication.EMPTY;
+    private volatile PagePublication previousPublication = PagePublication.EMPTY;
+    private record StagedPublication(com.teammoeg.frostedheart.content.climate.thermal.runtime.InstallToken token,
+            PagePublication previous, PagePublication next) { }
+    private volatile StagedPublication stagedPublication;
+
+    private PagePublication visiblePublication() {
+        var staged = stagedPublication;
+        return staged == null ? publication : staged.token.committed() ? staged.next : staged.previous;
+    }
+    public void stagePublication(com.teammoeg.frostedheart.content.climate.thermal.runtime.InstallToken token, PagePublication next) {
+        if (stagedPublication != null) throw new IllegalStateException("Page already owns a topology exchange");
+        stagedPublication = new StagedPublication(token, publication, next);
+    }
+    public void finishPublication(com.teammoeg.frostedheart.content.climate.thermal.runtime.InstallToken token) {
+        var staged = stagedPublication;
+        if (staged == null || staged.token != token) return;
+        if (token.committed()) {
+            previousPublication = staged.next == PagePublication.EMPTY ? PagePublication.EMPTY : staged.previous;
+            publication = staged.next;
+        }
+        stagedPublication = null;
+    }
+    private final AtomicReference<com.teammoeg.frostedheart.content.climate.thermal.runtime.ThermalMemoryBudget.Reservation> inputCredit = new AtomicReference<>();
+
+    public void inputCredit(com.teammoeg.frostedheart.content.climate.thermal.runtime.ThermalMemoryBudget.Reservation credit) {
+        if (credit != null && !inputCredit.compareAndSet(null, credit)) credit.close();
+    }
+    public com.teammoeg.frostedheart.content.climate.thermal.runtime.ThermalMemoryBudget.Reservation takeInputCredit() {
+        return inputCredit.getAndSet(null);
+    }
+    public void releaseInputCredit() {
+        var credit = takeInputCredit();
+        if (credit != null) credit.close();
+    }
 
     public ThermalPageHandle(long sectionKey, long lifecycleGeneration) {
         if (lifecycleGeneration < 0L) {
@@ -56,9 +93,24 @@ public final class ThermalPageHandle {
         return liveGeometryRevision.get();
     }
 
+    public long lastPhysicalGeometryRevision() { return lastPhysicalGeometryRevision; }
+
+    public long firstStaleGeometryTick() {
+        return firstStaleGeometryTick;
+    }
+
     /** Makes the current publication stale before deferred final-state capture. */
     public long beginGeometryMutation() {
-        long revision = liveGeometryRevision.incrementAndGet();
+        return beginGeometryMutation(-1L, true);
+    }
+
+    /** Every state capture advances; only actual physical changes invalidate existing Air. */
+    public synchronized long beginGeometryMutation(long gameTick, boolean physicalChange) {
+        long revision = advanceGeometryRevision(physicalChange);
+        var visible = visiblePublication();
+        if (gameTick >= 0L && visible != PagePublication.EMPTY
+                && visible.geometryRevision() == revision - 1L)
+            firstStaleGeometryTick = gameTick;
         GeometryResyncToken existing = resyncRequirement.get();
         if (existing != null) {
             advanceResyncRequirement(existing.reason(), revision);
@@ -66,10 +118,34 @@ public final class ThermalPageHandle {
         return revision;
     }
 
-    public long requireFullGeometryResync(GeometryResyncReason reason) {
+    public boolean capturedFallbackWithin(long gameTick, int maximumAgeTicks) {
+        long firstStale = firstStaleGeometryTick;
+        return firstStale >= 0L && gameTick >= firstStale
+                && gameTick - firstStale <= maximumAgeTicks;
+    }
+
+    /** A new captured geometry may start a new deadline; coefficient-only cuts may not. */
+    public synchronized void notePublishedGeometry(long geometryRevision, long gameTick) {
+        PagePublication current = visiblePublication();
+        PagePublication previous = previousPublication;
+        if (current == PagePublication.EMPTY || current.geometryRevision() != geometryRevision) return;
+        if (previous != PagePublication.EMPTY && previous.geometryRevision() >= geometryRevision) return;
+        firstStaleGeometryTick = liveGeometryRevision.get() == geometryRevision
+                ? -1L : Math.max(firstStaleGeometryTick, gameTick);
+    }
+
+    public synchronized long requireFullGeometryResync(GeometryResyncReason reason) {
         Objects.requireNonNull(reason, "reason");
-        long revision = liveGeometryRevision.incrementAndGet();
+        long revision = advanceGeometryRevision(true);
         advanceResyncRequirement(reason, revision);
+        return revision;
+    }
+
+    /** Writer holds this monitor; readers see physical invalidation before the new capture revision. */
+    private long advanceGeometryRevision(boolean physicalChange) {
+        long revision = liveGeometryRevision.get() + 1;
+        if (physicalChange) lastPhysicalGeometryRevision = revision;
+        liveGeometryRevision.set(revision);
         return revision;
     }
 
@@ -91,14 +167,16 @@ public final class ThermalPageHandle {
 
     /** Worker-only final reference exchange after a prepared topology commit. */
     public void publish(PagePublication next) {
-        publication = Objects.requireNonNull(
-                next, "Page publication is required");
+        Objects.requireNonNull(next, "Page publication is required");
+        if (stagedPublication != null) throw new IllegalStateException("Page publication is staged");
+        previousPublication = next == PagePublication.EMPTY ? PagePublication.EMPTY : publication;
+        publication = next;
     }
 
     /** Returns one stable immutable cut, or {@code null} while capture is stale. */
     public PagePublication currentPublication() {
         long revision = liveGeometryRevision.get();
-        PagePublication current = publication;
+        PagePublication current = visiblePublication();
         return current != PagePublication.EMPTY
                 && resyncRequirement.get() == null
                 && current.geometryRevision() == revision
@@ -106,10 +184,35 @@ public final class ThermalPageHandle {
                 ? current : null;
     }
 
+    /** Complete Air geometry can remain current while only world/save state IDs are being captured. */
+    public PagePublication currentAirPublication() {
+        long physical = lastPhysicalGeometryRevision;
+        PagePublication current = visiblePublication();
+        return current != PagePublication.EMPTY && current.geometryRevision() >= physical
+                && current.geometryRevision() <= liveGeometryRevision.get()
+                && resyncRequirement.get() == null && lastPhysicalGeometryRevision == physical
+                ? current : null;
+    }
+
+    public boolean hasCurrentAirGeometry(long capturedRevision) {
+        PagePublication current = currentAirPublication();
+        return current != null && current.geometryRevision() >= capturedRevision
+                && capturedRevision >= lastPhysicalGeometryRevision;
+    }
+
     /** Last non-empty worker cut for bounded temperature-only fallback/capture. */
     public PagePublication lastPublication() {
-        PagePublication current = publication;
+        PagePublication current = visiblePublication();
         return current == PagePublication.EMPTY ? null : current;
+    }
+
+    /** Previous committed geometry while the query buffer catches up with a new Page cut. */
+    public PagePublication previousPublication() {
+        var staged = stagedPublication;
+        if (staged != null && staged.token.committed())
+            return staged.previous == PagePublication.EMPTY ? null : staged.previous;
+        PagePublication previous = previousPublication;
+        return previous == PagePublication.EMPTY ? null : previous;
     }
 
     private boolean owns(GeometryResyncToken token) {

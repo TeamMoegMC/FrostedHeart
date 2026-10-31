@@ -24,9 +24,11 @@ import com.teammoeg.frostedheart.content.climate.thermal.mesh.PageSignatures;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalPageHandle;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ResolvedGeometryBatch;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ThermalInputBatch;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ThermalInputEnvelope;
 import com.teammoeg.frostedheart.content.climate.thermal.solver.PhaseTransitionRuntime;
 import com.teammoeg.frostedheart.content.climate.thermal.source.EmissionPort;
-import com.teammoeg.frostedheart.content.climate.thermal.source.ThermalSourceBatch;
+import com.teammoeg.frostedheart.content.climate.thermal.source.SpatialSourceTimeline;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.ThermalMemoryBudget;
 import com.teammoeg.frostedheart.content.climate.thermal.source.ThermalSourceMode;
 
 import java.util.ArrayDeque;
@@ -39,10 +41,10 @@ import java.util.Map;
  * 主线程尚未提交的下一份维度输入 cut。
  *
  * <p>同一 20-tick 窗口内的 Page、几何、source、环境和 phase ACK 在这里
- * 合并；{@link #seal(long)} 后所有权转移到不可变 {@link ThermalInputBatch}，
+ * 合并；{@link #seal(long)} 后所有权转移到不可变 {@link ThermalInputEnvelope}，
  * accumulator 随即复用自己的 builder 容量。</p>
  */
-public final class DimensionInputAccumulator {
+public final class DimensionInputAccumulator implements AutoCloseable {
     private final long dimensionGeneration;
     private final List<ThermalInputBatch.PageAdmission> admissions = new ArrayList<>();
     private final List<ThermalInputBatch.PageRetirement> retirements = new ArrayList<>();
@@ -50,7 +52,7 @@ public final class DimensionInputAccumulator {
     private final IdentityHashMap<ThermalPageHandle, EnvironmentBuilder> environments =
             new IdentityHashMap<>();
     private final ArrayDeque<EnvironmentBuilder> recycledEnvironments = new ArrayDeque<>();
-    private final List<ThermalInputBatch.PhaseAck> phaseAcks = new ArrayList<>();
+    private final java.util.LinkedHashMap<ThermalInputBatch.PhaseAckIdentity, ThermalInputBatch.PhaseAck> phaseAcks = new java.util.LinkedHashMap<>();
     private final it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap<ThermalInputBatch.PhaseIntent>
             phaseIntents = new it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap<>();
 
@@ -66,18 +68,41 @@ public final class DimensionInputAccumulator {
     }
 
     private final ResolvedGeometryBatch.Builder geometry;
-    private final ThermalSourceBatch.Builder sourceEvents;
+    private final SpatialSourceTimeline spatialSources;
+    private final ThermalMemoryBudget sourceBudget;
+
+    public long latestSourceTick() { return spatialSources.latestTick(); }
+    public boolean sourcesCapturedThrough(Long chunk, long tick) {
+        return spatialSources.capturedThrough(chunk, tick);
+    }
+    public SpatialSourceTimeline.Capture captureSources(long tick) {
+        return spatialSources.capture(tick);
+    }
+    public ThermalMemoryBudget.Reservation reservePageInputCredit() {
+        return sourceBudget.reserveCompletion(512);
+    }
     private long nextSequence;
     private long lastTargetTick;
     private double farFieldConductanceScale = Double.NaN;
 
-    public DimensionInputAccumulator(long dimensionGeneration, long initialTargetTick) {
+    public boolean hasPendingRetirementInChunk(long chunkKey) {
+        for (var retirement : retirements) {
+            long section = retirement.page().sectionKey();
+            if (net.minecraft.world.level.ChunkPos.asLong(net.minecraft.core.SectionPos.x(section),
+                    net.minecraft.core.SectionPos.z(section)) == chunkKey) return true;
+        }
+        return false;
+    }
+
+    public DimensionInputAccumulator(long dimensionGeneration, long initialTargetTick,
+            ThermalMemoryBudget sourceBudget, int maximumSources) {
         if (dimensionGeneration < 0L || initialTargetTick < 0L) {
             throw new IllegalArgumentException("input accumulator baseline is invalid");
         }
         this.dimensionGeneration = dimensionGeneration;
         this.geometry = new ResolvedGeometryBatch.Builder();
-        this.sourceEvents = new ThermalSourceBatch.Builder(initialTargetTick);
+        this.sourceBudget = sourceBudget;
+        spatialSources = new SpatialSourceTimeline(sourceBudget, maximumSources);
         this.lastTargetTick = initialTargetTick;
     }
 
@@ -110,6 +135,7 @@ public final class DimensionInputAccumulator {
             long residentBrickMask,
             long sourceSeedMask,
             PageSignatures signatures,
+            ThermalInputBatch.DormantAirCut dormantAir,
             ThermalInputBatch.DormantMaterialCut dormantMaterials) {
         for (int index = 0; index < residencyUpdates.size(); index++) {
             if (residencyUpdates.get(index).page() == page) {
@@ -121,6 +147,7 @@ public final class DimensionInputAccumulator {
                                 residentBrickMask,
                                 sourceSeedMask,
                                 signatures,
+                                dormantAir != null ? dormantAir : residencyUpdates.get(index).dormantAir(),
                                 dormantMaterials));
                 return;
             }
@@ -132,6 +159,7 @@ public final class DimensionInputAccumulator {
                         residentBrickMask,
                         sourceSeedMask,
                         signatures,
+                        dormantAir,
                         dormantMaterials));
     }
 
@@ -174,19 +202,7 @@ public final class DimensionInputAccumulator {
         environment(page).putSkyColumn(column, firstExposedLocalY);
     }
 
-    void requeueEnvironment(ThermalInputBatch.PageEnvironmentUpdate update) {
-        if (update.naturalTemperatureChanged()) {
-            updateNaturalTemperature(update.page(), update.naturalTemperatureC());
-        }
-        for (int index = 0; index < update.skyColumns().length; index++) {
-            updateSkyColumn(
-                    update.page(),
-                    Short.toUnsignedInt(update.skyColumns()[index]),
-                    Byte.toUnsignedInt(update.firstExposedLocalY()[index]));
-        }
-    }
-
-    public void registerSource(
+    public boolean registerSource(
             long sourceId,
             int lifecycleGeneration,
             ThermalSourceMode mode,
@@ -198,40 +214,32 @@ public final class DimensionInputAccumulator {
             int anchorZ,
             int profileId,
             EmissionPort[] ports) {
-        sourceEvents.addRegister(
-                sourceId,
-                lifecycleGeneration,
-                mode,
-                powerW,
-                enabled,
-                effectiveTick,
-                anchorX,
-                anchorY,
-                anchorZ,
-                profileId,
-                ports);
+        return spatialSources.register(
+                new SpatialSourceTimeline.Descriptor(
+                        sourceId, lifecycleGeneration, mode, anchorX, anchorY, anchorZ, profileId, ports), powerW, enabled, effectiveTick);
     }
 
     public void changeSourcePower(long sourceId, double powerW, long effectiveTick) {
-        sourceEvents.addPowerChange(sourceId, powerW, effectiveTick);
+        spatialSources.power(sourceId, powerW, effectiveTick);
     }
 
     public void changeSourceEnabled(long sourceId, boolean enabled, long effectiveTick) {
-        sourceEvents.addEnabledChange(sourceId, enabled, effectiveTick);
+        spatialSources.enabled(sourceId, enabled, effectiveTick);
     }
 
     public void emitSourceImpulse(
             long sourceId, int portId, double signedEnergyJ, long effectiveTick) {
-        sourceEvents.addImpulse(sourceId, portId, signedEnergyJ, effectiveTick);
+        spatialSources.impulse(sourceId, portId, signedEnergyJ, effectiveTick);
     }
 
     public void unloadSource(long sourceId, int lifecycleGeneration, long effectiveTick) {
-        sourceEvents.addUnload(sourceId, lifecycleGeneration, effectiveTick);
+        spatialSources.unload(sourceId, lifecycleGeneration, effectiveTick);
     }
 
     void acknowledgePhase(
             PhaseTransitionRuntime.Request request, PhaseTransitionRuntime.AckOutcome outcome) {
-        phaseAcks.add(new ThermalInputBatch.PhaseAck(request, outcome));
+        var ack = new ThermalInputBatch.PhaseAck(request, outcome);
+        phaseAcks.put(ack.identity(), ack);
     }
 
     void updateFarFieldConductanceScale(double scale) {
@@ -241,14 +249,14 @@ public final class DimensionInputAccumulator {
         farFieldConductanceScale = scale;
     }
 
-    public ThermalInputBatch seal(long targetTick) {
+    public ThermalInputEnvelope seal(long targetTick) {
+        targetTick = Math.max(targetTick, latestSourceTick());
         // Transfer immutable payloads before clearing mutable input queues. A retained
         // submission owns these arrays even while the worker queue is full.
         if (targetTick < lastTargetTick) {
             throw new IllegalArgumentException("thermal batch ticks must be monotonic");
         }
         ResolvedGeometryBatch geometryBatch = geometry.buildAndReset();
-        ThermalSourceBatch sourceBatch = sourceEvents.buildAndReset();
         nextSequence = Math.incrementExact(nextSequence);
         ThermalInputBatch batch =
                 new ThermalInputBatch(
@@ -266,11 +274,10 @@ public final class DimensionInputAccumulator {
                                 : residencyUpdates.toArray(
                                         ThermalInputBatch.PageResidencyUpdate[]::new),
                         geometryBatch,
-                        sourceBatch,
                         environmentBatch(),
                         phaseAcks.isEmpty()
                                 ? ThermalInputBatch.NO_PHASE_ACKS
-                                : phaseAcks.toArray(ThermalInputBatch.PhaseAck[]::new),
+                                : phaseAcks.values().toArray(ThermalInputBatch.PhaseAck[]::new),
                         farFieldConductanceScale,
                         phaseIntents.values().toArray(ThermalInputBatch.PhaseIntent[]::new));
         admissions.clear();
@@ -280,8 +287,10 @@ public final class DimensionInputAccumulator {
         phaseIntents.clear();
         farFieldConductanceScale = Double.NaN;
         lastTargetTick = targetTick;
-        return batch;
+        return new ThermalInputEnvelope(batch, spatialSources.seal(targetTick));
     }
+
+    @Override public void close() { spatialSources.close(); }
 
     private ThermalInputBatch.PageEnvironmentUpdate[] environmentBatch() {
         if (environments.isEmpty()) {

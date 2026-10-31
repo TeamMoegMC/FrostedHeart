@@ -25,68 +25,100 @@ import java.util.ArrayList;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.doubles.DoubleArrayList;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.AirRouteValidity;
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.AirBackingMeter;
 
 /** Exact persistent primitive operations owned by one topology Brick. */
 public record ThermalFragment(
-        long spatialRank,
         AirPairs airPairs,
-        MaterialContributions materialContributions,
+        MaterialContacts materialContacts,
         RoutedContacts routedContacts,
         FarBoundaries farBoundaries
 ) {
     public static final ThermalFragment EMPTY = new ThermalFragment(
-            0L, AirPairs.EMPTY, MaterialContributions.EMPTY,
+            AirPairs.EMPTY, MaterialContacts.EMPTY,
             RoutedContacts.EMPTY, FarBoundaries.EMPTY);
 
     public ThermalFragment {
         Objects.requireNonNull(airPairs, "airPairs");
-        Objects.requireNonNull(materialContributions, "materialContributions");
+        Objects.requireNonNull(materialContacts, "materialContacts");
         Objects.requireNonNull(routedContacts, "routedContacts");
         Objects.requireNonNull(farBoundaries, "farBoundaries");
     }
 
     public boolean isEmpty() {
         return airPairs.size() == 0
-                && materialContributions.size() == 0
+                && materialContacts.size() == 0
                 && routedContacts.size() == 0
                 && farBoundaries.size() == 0;
     }
 
+    public void recordBacking(AirBackingMeter meter) {
+        if (meter.summaries()) {
+            if (!meter.objectOnce(this, ownedBackingBytes())) return;
+            for (var route : routedContacts.routes) if (route != null) route.recordBacking(meter);
+            recordTraces(routedContacts.firstTraces, meter); recordTraces(routedContacts.secondTraces, meter);
+            return;
+        }
+        if (!meter.objectOnce(this, 48)) return;
+        meter.array(airPairs.first); meter.array(airPairs.second); meter.array(airPairs.conductance);
+        meter.array(materialContacts.first); meter.array(materialContacts.second); meter.array(materialContacts.conductance);
+        meter.array(routedContacts.first); meter.array(routedContacts.second); meter.array(routedContacts.conductance);
+        meter.array(routedContacts.routes); meter.array(routedContacts.firstTraces); meter.array(routedContacts.secondTraces);
+        for (var route : routedContacts.routes) if (route != null) route.recordBacking(meter);
+        recordTraces(routedContacts.firstTraces, meter); recordTraces(routedContacts.secondTraces, meter);
+        meter.array(farBoundaries.cell);
+        meter.array(farBoundaries.patchCells); meter.array(farBoundaries.patchBlocks); meter.array(farBoundaries.patchConductances);
+    }
+
+    /** Routes and face traces are borrowed from AirRouteCompiler; only the arrays below are ours. */
+    public long ownedBackingBytes() {
+        if (this == EMPTY) return 0;
+        return 48L + AirBackingMeter.shallowArrayBytes(airPairs.first) + AirBackingMeter.shallowArrayBytes(airPairs.second)
+                + AirBackingMeter.shallowArrayBytes(airPairs.conductance)
+                + AirBackingMeter.shallowArrayBytes(materialContacts.first) + AirBackingMeter.shallowArrayBytes(materialContacts.second)
+                + AirBackingMeter.shallowArrayBytes(materialContacts.conductance)
+                + AirBackingMeter.shallowArrayBytes(routedContacts.first) + AirBackingMeter.shallowArrayBytes(routedContacts.second)
+                + AirBackingMeter.shallowArrayBytes(routedContacts.conductance) + AirBackingMeter.shallowArrayBytes(routedContacts.routes)
+                + AirBackingMeter.shallowArrayBytes(routedContacts.firstTraces) + AirBackingMeter.shallowArrayBytes(routedContacts.secondTraces)
+                + AirBackingMeter.shallowArrayBytes(farBoundaries.cell)
+                + AirBackingMeter.shallowArrayBytes(farBoundaries.patchCells)
+                + AirBackingMeter.shallowArrayBytes(farBoundaries.patchBlocks) + AirBackingMeter.shallowArrayBytes(farBoundaries.patchConductances);
+    }
+
+    private static void recordTraces(AirFaceTrace[] traces, AirBackingMeter meter) {
+        if (traces == null) return;
+        for (var trace : traces) if (trace != null && meter.objectOnce(trace, 40)) {
+            meter.array(trace.blocks); meter.array(trace.faces);
+        }
+    }
+
     /** Buoyant Air pairs; arrays transfer ownership to this value. */
     public static final class AirPairs {
-        public static final byte HORIZONTAL = 0;
-        public static final byte FIRST_BELOW = 1;
-        public static final byte SECOND_BELOW = 2;
         public static final AirPairs EMPTY = new AirPairs(
-                new int[0], new int[0], new double[0], new byte[0]);
+                new int[0], new int[0], new double[0]);
 
         private final int[] first;
         private final int[] second;
         private final double[] conductance;
-        private final byte[] direction;
 
         public AirPairs(
                 int[] first,
                 int[] second,
-                double[] conductance,
-                byte[] direction
+                double[] conductance
         ) {
             int size = length(first);
-            if (length(second) != size || length(conductance) != size
-                    || direction.length != size) {
+            if (length(second) != size || length(conductance) != size) {
                 throw new IllegalArgumentException("Air pair arrays differ");
             }
             this.first = first;
             this.second = second;
             this.conductance = conductance;
-            this.direction = direction;
         }
 
         public int size() { return first.length; }
         public int first(int index) { return first[index]; }
         public int second(int index) { return second[index]; }
         public double conductance(int index) { return conductance[index]; }
-        public byte direction(int index) { return direction[index]; }
     }
 
     /** Indirect contacts retain the component that made their route possible. */
@@ -118,9 +150,6 @@ public record ThermalFragment(
             private final ArrayList<AirFaceTrace> firstTraces = new ArrayList<>(), secondTraces = new ArrayList<>();
 
             public void clear() { first.clear(); second.clear(); conductance.clear(); routes.clear(); firstTraces.clear(); secondTraces.clear(); }
-            public void add(int a, int b, double g, AirRouteValidity route) {
-                add(a, b, g, route, null, null);
-            }
             public void add(int a, int b, double g, AirRouteValidity route, AirFaceTrace traceA, AirFaceTrace traceB) {
                 first.add(Math.min(a, b)); second.add(Math.max(a, b)); conductance.add(g); routes.add(route);
                 firstTraces.add(a <= b ? traceA : traceB);
@@ -134,17 +163,21 @@ public record ThermalFragment(
         }
     }
 
-    /** Raw material contributions used only for local edge aggregation. */
-    public static final class MaterialContributions {
-        public static final MaterialContributions EMPTY =
-                new MaterialContributions(
+    /**
+     * Contacts owned by this Brick, in physical enumeration order.
+     * Positive faces have one owner; multiple faces to one Air component
+     * are combined by the local compiler before this immutable array is created.
+     */
+    public static final class MaterialContacts {
+        public static final MaterialContacts EMPTY =
+                new MaterialContacts(
                         new int[0], new int[0], new double[0]);
 
         private final int[] first;
         private final int[] second;
         private final double[] conductance;
 
-        public MaterialContributions(
+        public MaterialContacts(
                 int[] first,
                 int[] second,
                 double[] conductance
@@ -152,7 +185,7 @@ public record ThermalFragment(
             int size = length(first);
             if (length(second) != size || length(conductance) != size) {
                 throw new IllegalArgumentException(
-                        "material contribution arrays differ");
+                        "material contact arrays differ");
             }
             this.first = first;
             this.second = second;
@@ -163,55 +196,27 @@ public record ThermalFragment(
         public int first(int index) { return first[index]; }
         public int second(int index) { return second[index]; }
         public double conductance(int index) { return conductance[index]; }
-        public long edgeKey(int index) {
-            int left = first[index];
-            int right = second[index];
-            if (left > right) {
-                int swap = left;
-                left = right;
-                right = swap;
-            }
-            return (long) left << 32 | right & 0xffff_ffffL;
-        }
     }
 
-
-
-    /** Local exposed Air boundaries with lazy wind-dependent coefficients. */
+    /** Local exposed Air boundaries and captured face patches. */
     public static final class FarBoundaries {
         public static final FarBoundaries EMPTY = new FarBoundaries(
-                new int[0], -1, new double[0], new double[0]);
+                new int[0], -1, null, null, null);
 
         private final int[] cell;
         private final int pageSlot;
-        private final double[] baseConductance;
-        private final double[] coefficient;
         private final int[] patchCells;
         private final long[] patchBlocks;
         private final double[] patchConductances;
-        private long coefficientWindGeneration = -1L;
 
-        public FarBoundaries(
-                int[] cell,
-                int pageSlot,
-                double[] baseConductance,
-                double[] coefficient
-        ) {
-            this(cell, pageSlot, baseConductance, coefficient, null, null, null);
-        }
-
-        public FarBoundaries(int[] cell, int pageSlot, double[] baseConductance, double[] coefficient,
+        public FarBoundaries(int[] cell, int pageSlot,
                 int[] patchCells, long[] patchBlocks, double[] patchConductances) {
             int size = length(cell);
-            if (length(baseConductance) != size
-                    || length(coefficient) != size
-                    || size != 0 && pageSlot < 0) {
+            if (size != 0 && pageSlot < 0) {
                 throw new IllegalArgumentException("FarField arrays differ");
             }
             this.cell = cell;
             this.pageSlot = pageSlot;
-            this.baseConductance = baseConductance;
-            this.coefficient = coefficient;
             this.patchCells = patchCells;
             this.patchBlocks = patchBlocks;
             this.patchConductances = patchConductances;
@@ -224,19 +229,6 @@ public record ThermalFragment(
         public double patchConductance(int index) { return patchConductances[index]; }
         public int cell(int index) { return cell[index]; }
         public int pageSlot() { return pageSlot; }
-        public double baseConductance(int index) {
-            return baseConductance[index];
-        }
-        public double coefficient(int index) { return coefficient[index]; }
-        public long coefficientWindGeneration() {
-            return coefficientWindGeneration;
-        }
-        public void cacheCoefficient(int index, double value) {
-            coefficient[index] = value;
-        }
-        public void finishCoefficientRefresh(long generation) {
-            coefficientWindGeneration = generation;
-        }
     }
 
     private static int length(int[] values) {

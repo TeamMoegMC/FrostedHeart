@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.content.climate.thermal.topology;
 
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ArenaSpan;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.BlockBrickLayout;
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.AirBackingMeter;
 
 final class WorkerBrickTopology {
     static final WorkerBrickTopology EMPTY =
@@ -77,6 +78,18 @@ final class WorkerBrickTopology {
 
     int nodeAt(int block) {
         return blockLayout == null ? (coverageSlot < 0 ? -1 : 0) : blockLayout.nodeAt(block);
+    }
+
+    void recordBacking(AirBackingMeter meter) {
+        if (!meter.objectOnce(this, 64)) return;
+        meter.objectOnce(span, 24);
+        meter.array(phaseSlots);
+        if (blockLayout != null) blockLayout.recordBacking(meter);
+    }
+
+    long ownedBackingBytes() {
+        return this == EMPTY ? 0 : 88L + AirBackingMeter.shallowArrayBytes(phaseSlots)
+                + (blockLayout == null ? 0 : blockLayout.ownedBackingBytes());
     }
 
     int slotAt(int block) {

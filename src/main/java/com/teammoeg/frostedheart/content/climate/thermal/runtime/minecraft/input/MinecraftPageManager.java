@@ -31,7 +31,6 @@ import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.Minec
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.GeometryHalo;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ThermalCompletion;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ThermalInputBatch;
-import com.teammoeg.frostedheart.content.climate.thermal.source.minecraft.PhysicalSourceSpatialIndex;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
@@ -81,7 +80,7 @@ public final class MinecraftPageManager implements AutoCloseable {
     private static final int CENTER_BITMAP_THRESHOLD = 32;
     private static final int INITIAL_CENTER_CAPACITY = 8;
     private static final int UNCAPTURED_SIGNATURE = Integer.MIN_VALUE;
-    private static final long WORK_LIMIT_RETRY_TICKS = 200L;
+    private static final long SHRINK_INTERVAL_TICKS = 20L;
 
     private final ServerLevel level;
     private final MinecraftThermalInput input;
@@ -95,6 +94,7 @@ public final class MinecraftPageManager implements AutoCloseable {
     private final LongLinkedOpenHashSet[] admissionQueues;
     private final LongLinkedOpenHashSet captureQueue = new LongLinkedOpenHashSet();
     private final LongLinkedOpenHashSet readyCaptures = new LongLinkedOpenHashSet();
+    private final LongLinkedOpenHashSet shrinkQueue = new LongLinkedOpenHashSet();
     private final Long2ObjectOpenHashMap<SectionOwner> ownersBySection =
             new Long2ObjectOpenHashMap<>();
     private final ConcurrentLinkedQueue<SectionOwner> dirtyOwners = new ConcurrentLinkedQueue<>();
@@ -103,10 +103,56 @@ public final class MinecraftPageManager implements AutoCloseable {
     private final Long2ObjectOpenHashMap<LongOpenHashSet> haloConsumers =
             new Long2ObjectOpenHashMap<>();
 
-    private PhysicalSourceSpatialIndex physicalSources;
     private MinecraftRadiationOcclusion radiationOcclusion;
     private long nextLifecycleGeneration = 1L;
+    private long sourceRevision;
+    private final LongLinkedOpenHashSet withdrawals = new LongLinkedOpenHashSet();
+    /** Cold input must wait for this load's Page, rather than a retiring previous load. */
+    public long restorationPageFloor(long chunk) {
+        long floor = nextLifecycleGeneration;
+        var indexed = pagesByChunk.get(chunk);
+        if (indexed != null) for (long section : indexed) {
+            var page = pages.get(section);
+            if (page != null && page.handle != null) floor = Math.min(floor, page.handle.lifecycleGeneration());
+        }
+        return floor;
+    }
+    private long directGeometryInvalidations;
+    private long haloGeometryInvalidations;
+    private long irrelevantHaloGeometryChanges;
+    private long haloChunkLoadInvalidations;
+    private long haloChunkUnloadInvalidations;
+    private long lastInvalidatedSection;
+    private long lastInvalidationSource;
+    private long lastInvalidationTick;
+    private long nextShrinkTick;
     private boolean closed;
+
+    private enum HaloCause { GEOMETRY, CHUNK_LOAD, CHUNK_UNLOAD }
+
+    public String describeGeometryInvalidations() {
+        requireMainThread();
+        return "direct=" + directGeometryInvalidations
+                + ",irrelevantHaloGeometry=" + irrelevantHaloGeometryChanges
+                + ",haloGeometry=" + haloGeometryInvalidations
+                + ",haloChunkLoad=" + haloChunkLoadInvalidations
+                + ",haloChunkUnload=" + haloChunkUnloadInvalidations
+                + ",lastSection=" + lastInvalidatedSection
+                + ",lastSource=" + lastInvalidationSource
+                + ",lastTick=" + lastInvalidationTick;
+    }
+
+    public long lastGeometryInvalidationTick() {
+        requireMainThread();
+        return lastInvalidationTick;
+    }
+
+    private void noteDirectGeometryInvalidation(long section) {
+        directGeometryInvalidations++;
+        lastInvalidatedSection = section;
+        lastInvalidationSource = section;
+        lastInvalidationTick = level.getGameTime();
+    }
 
     @SuppressWarnings("unchecked")
     public MinecraftPageManager(
@@ -127,9 +173,7 @@ public final class MinecraftPageManager implements AutoCloseable {
         }
     }
 
-    public void attachMutationConsumers(
-            PhysicalSourceSpatialIndex sources, MinecraftRadiationOcclusion occlusion) {
-        physicalSources = sources;
+    public void attachOcclusion(MinecraftRadiationOcclusion occlusion) {
         radiationOcclusion = occlusion;
     }
 
@@ -142,6 +186,7 @@ public final class MinecraftPageManager implements AutoCloseable {
         if (page == null) {
             return;
         }
+        page.sourceRevision = ++sourceRevision;
         if (page.sourceSeedCounts == null) {
             if (!retained) {
                 return;
@@ -164,6 +209,39 @@ public final class MinecraftPageManager implements AutoCloseable {
             updateInterest(page, true);
         }
     }
+
+    /** Source seed positions already include profile offsets; air-face resolution moves at most one block. */
+    public long sourceRevisionNearChunk(long chunk) {
+        int x = (int) chunk, z = (int) (chunk >>> 32); long revision = 0;
+        for (int dx = -1; dx <= 1; dx++) for (int dz = -1; dz <= 1; dz++) {
+            var sections = pagesByChunk.get(ChunkPos.asLong(x + dx, z + dz));
+            if (sections != null) for (long section : sections) {
+                var page = pages.get(section); if (page != null) revision = Math.max(revision, page.sourceRevision);
+            }
+        }
+        return revision;
+    }
+
+    /** Restoring recorded J creates temporary spatial interest, never a physical emitter. */
+    public void seedRestoration(long position) {
+        requireMainThread();
+        int x = BlockPos.getX(position), y = BlockPos.getY(position), z = BlockPos.getZ(position);
+        var page = entry(SectionPos.asLong(x >> 4, y >> 4, z >> 4));
+        if (page == null) return;
+        long bit = 1L << ((x & 15) >>> 2 | ((z & 15) >>> 2) << 2 | ((y & 15) >>> 2) << 4);
+        if ((page.restoreSeedMask & bit) == 0) { page.restoreSeedMask |= bit; updateInterest(page, true); }
+    }
+    public void clearRestorationSeeds(long chunk) {
+        requireMainThread();
+        var indexed = pagesByChunk.get(chunk);
+        if (indexed == null) return;
+        for (long section : indexed.toLongArray()) {
+            var page = pages.get(section);
+            if (page != null && page.restoreSeedMask != 0) { page.restoreSeedMask = 0; updateInterest(page, true); }
+        }
+    }
+
+    public long capturedMask(long sectionKey) { var page = pages.get(sectionKey); return page == null ? 0 : page.capturedBrickMask; }
 
     public ThermalPageHandle handle(long sectionKey) {
         PageEntry page = pages.get(sectionKey);
@@ -239,6 +317,7 @@ public final class MinecraftPageManager implements AutoCloseable {
             if (handle == null) {
                 continue;
             }
+            handle.inputCredit(accumulator.reservePageInputCredit());
             page.resetCapture();
             MinecraftEnvironmentCapture.Captured captured = environment.current(handle);
             if (captured == null) {
@@ -256,7 +335,7 @@ public final class MinecraftPageManager implements AutoCloseable {
                     handle,
                     handle.liveGeometryRevision(),
                     page.capturedBrickMask,
-                    page.sourceSeedMask & page.capturedBrickMask,
+                    (page.sourceSeedMask | page.restoreSeedMask) & page.capturedBrickMask,
                     snapshot,
                     captured.naturalTemperatureC(),
                     captured.firstExposedLocalY(),
@@ -275,63 +354,6 @@ public final class MinecraftPageManager implements AutoCloseable {
         }
     }
 
-    public void retryWorkLimited(ThermalInputBatch batch, long gameTick) {
-        for (ThermalInputBatch.PageAdmission admission : batch.admissions()) {
-            PageEntry page = pages.get(admission.page().sectionKey());
-            if (page != null && page.handle == admission.page()) {
-                discardLifecycle(page);
-                if (page.interested()) {
-                    page.retryAfterTick = gameTick + WORK_LIMIT_RETRY_TICKS;
-                    enqueue(page);
-                } else {
-                    removeEntry(page);
-                }
-            }
-        }
-        for (ThermalInputBatch.PageRetirement retirement : batch.retirements()) {
-            accumulator.retire(retirement.page());
-        }
-        for (ThermalInputBatch.PageResidencyUpdate update : batch.residencyUpdates()) {
-            PageEntry page = pages.get(update.page().sectionKey());
-            if (page != null && page.handle == update.page()) {
-                page.retryAfterTick = gameTick + WORK_LIMIT_RETRY_TICKS;
-                enqueue(page);
-            }
-        }
-        for (int index = 0; index < batch.geometry().size(); index++) {
-            ThermalPageHandle handle = batch.geometry().page(index);
-            PageEntry page = pages.get(handle.sectionKey());
-            if (page != null && page.handle == handle) {
-                var reason =
-                        batch.geometry().geometryResyncReason(index)
-                                        == ThermalPageHandle.GeometryResyncReason.SECTION_REPLACED
-                                ? ThermalPageHandle.GeometryResyncReason.SECTION_REPLACED
-                                : ThermalPageHandle.GeometryResyncReason.EXPLICIT_INVALIDATION;
-                handle.requireFullGeometryResync(reason);
-                page.requireFullCapture(handle.liveGeometryRevision(), gameTick, reason);
-                readyCaptures.remove(page.sectionKey);
-                captureQueue.add(page.sectionKey);
-            }
-        }
-        accumulator.geometry().prependMaterialChanges(batch.geometry().materialChanges());
-        for (var halo : batch.geometry().halos()) {
-            PageEntry page = pages.get(halo.page().sectionKey());
-            if (page != null && page.handle == halo.page()) {
-                accumulator
-                        .geometry()
-                        .addHalo(
-                                page.handle, page.handle.liveGeometryRevision(), captureHalo(page));
-            }
-        }
-        for (ThermalInputBatch.PageEnvironmentUpdate update : batch.environmentUpdates()) {
-            PageEntry page = pages.get(update.page().sectionKey());
-            if (page == null || page.handle != update.page()) {
-                continue;
-            }
-            accumulator.requeueEnvironment(update);
-        }
-    }
-
     public void applyResidency(ThermalCompletion.BrickResidency update) {
         PageEntry page = pages.get(update.sectionKey());
         if (page == null) {
@@ -346,12 +368,21 @@ public final class MinecraftPageManager implements AutoCloseable {
         }
         page.workerDesiredMask = update.desiredBrickMask();
         updateInterest(page, false);
+        if (page.handle != null && (page.capturedBrickMask & ~page.requestedMask()) != 0L) {
+            shrinkQueue.add(page.sectionKey);
+        }
     }
 
     public void tick(long gameTick) {
         requireMainThread();
         drainMutations(gameTick);
         processCaptures(gameTick);
+        int withdrawalsThisTick = Math.min(8, withdrawals.size());
+        while (withdrawalsThisTick-- > 0 && !withdrawals.isEmpty()) {
+            var page = pages.get(withdrawals.removeFirstLong());
+            if (page != null) updateInterest(page, false);
+        }
+        processShrinks(gameTick);
         processAdmissions(gameTick);
         environment.tick(gameTick, this);
     }
@@ -442,7 +473,7 @@ public final class MinecraftPageManager implements AutoCloseable {
                     SectionPos.asLong(
                             chunk.getPos().x,
                             chunk.getSectionYFromSectionIndex(index),
-                            chunk.getPos().z));
+                            chunk.getPos().z), HaloCause.CHUNK_LOAD);
         }
         LongOpenHashSet indexed = pagesByChunk.get(chunk.getPos().toLong());
         if (indexed != null) {
@@ -455,22 +486,24 @@ public final class MinecraftPageManager implements AutoCloseable {
         }
     }
 
-    public void onChunkUnload(LevelChunk chunk) {
+    public void onChunkUnload(LevelChunk chunk, boolean checkpointCaptured) {
         requireMainThread();
         LongOpenHashSet indexed = pagesByChunk.get(chunk.getPos().toLong());
         if (indexed != null) {
             long[] sections = indexed.toLongArray();
             for (long sectionKey : sections) {
                 PageEntry page = pages.get(sectionKey);
-                if (page != null && page.handle != null) {
-                    retire(page);
+                if (page != null) {
+                    page.restoreSeedMask = 0;
+                    if (page.handle != null) retire(page, !checkpointCaptured);
+                    if (!page.interested()) removeEntry(page);
                 }
             }
         }
         for (LevelChunkSection section : chunk.getSections()) {
             SectionOwner owner = attachment(section).frostedheart$getThermalInputOwner();
             if (owner != null && owner.manager == this && owner.chunk == chunk) {
-                invalidateHaloConsumers(owner.sectionKey);
+                invalidateHaloConsumers(owner.sectionKey, HaloCause.CHUNK_UNLOAD);
                 detachSection(owner);
             }
         }
@@ -503,12 +536,11 @@ public final class MinecraftPageManager implements AutoCloseable {
             int localX,
             int localY,
             int localZ,
-            boolean topologyRelevant,
-            boolean sourceRelevant) {
+            boolean physicalRelevant) {
         if (owner == null || !owner.valid) {
             return;
         }
-        owner.record(localX, localY, localZ, topologyRelevant, sourceRelevant);
+        owner.record(localX, localY, localZ, physicalRelevant);
     }
 
     public boolean materialChangedSince(long sectionKey, int position, long revision) {
@@ -568,15 +600,10 @@ public final class MinecraftPageManager implements AutoCloseable {
                 if (!page.interested()) {
                     continue;
                 }
-                if (page.retryAfterTick > gameTick) {
-                    enqueue(page);
-                    continue;
-                }
                 if (page.handle == null && remainingPages == 0) {
                     enqueue(page);
                     continue;
                 }
-                page.retryAfterTick = 0L;
                 long missing = page.requestedMask() & ~page.capturedBrickMask;
                 if (missing == 0L) {
                     if (page.handle == null) {
@@ -584,7 +611,7 @@ public final class MinecraftPageManager implements AutoCloseable {
                             remainingPages--;
                         }
                     } else {
-                        queueResidency(page);
+                        queueResidency(page, false);
                     }
                     continue;
                 }
@@ -611,7 +638,7 @@ public final class MinecraftPageManager implements AutoCloseable {
         int sectionX = SectionPos.x(page.sectionKey);
         int sectionY = SectionPos.y(page.sectionKey);
         int sectionZ = SectionPos.z(page.sectionKey);
-        LevelChunk chunk = level.getChunkSource().getChunkNow(sectionX, sectionZ);
+        LevelChunk chunk = input.chunkForThermalCapture(sectionX, sectionZ);
         if (chunk == null) {
             return false;
         }
@@ -620,6 +647,7 @@ public final class MinecraftPageManager implements AutoCloseable {
             return false;
         }
         LevelChunkSection section = chunk.getSections()[sectionIndex];
+        var inputCredit = page.handle == null ? accumulator.reservePageInputCredit() : null;
         PageSignatures base =
                 page.signatures == null ? signatures.unresolvedPage() : page.signatures;
         PageSignatures signatureCut =
@@ -628,7 +656,7 @@ public final class MinecraftPageManager implements AutoCloseable {
         page.capturedBrickMask |= addedBrickMask;
         if (page.handle != null) {
             environment.captureNewBricks(page.handle, chunk, addedBrickMask);
-            queueResidency(page);
+            queueResidency(page, addedBrickMask != 0L);
             SectionOwner owner = ownersBySection.get(page.sectionKey);
             if (owner != null) {
                 owner.capturedBrickMask = page.capturedBrickMask;
@@ -638,13 +666,14 @@ public final class MinecraftPageManager implements AutoCloseable {
         long lifecycleGeneration = nextLifecycleGeneration;
         nextLifecycleGeneration = Math.incrementExact(nextLifecycleGeneration);
         ThermalPageHandle handle = new ThermalPageHandle(page.sectionKey, lifecycleGeneration);
+        handle.inputCredit(inputCredit);
         MinecraftEnvironmentCapture.Captured captured =
                 environment.capture(page.sectionKey, chunk, page.capturedBrickMask);
         accumulator.admit(
                 handle,
                 handle.liveGeometryRevision(),
                 page.capturedBrickMask,
-                page.sourceSeedMask & page.capturedBrickMask,
+                (page.sourceSeedMask | page.restoreSeedMask) & page.capturedBrickMask,
                 signatureCut,
                 captured.naturalTemperatureC(),
                 captured.firstExposedLocalY(),
@@ -671,6 +700,33 @@ public final class MinecraftPageManager implements AutoCloseable {
             mask &= ~bit;
         }
         return result;
+    }
+
+    private void processShrinks(long gameTick) {
+        if (gameTick < nextShrinkTick) return;
+        int attempts = shrinkQueue.size();
+        while (attempts-- > 0 && !shrinkQueue.isEmpty()) {
+            PageEntry page = pages.get(shrinkQueue.removeFirstLong());
+            if (page == null || page.handle == null || !page.interested()) continue;
+            // Missing growth must not prevent checkpointing and retiring captured cold Bricks.
+            long desired = page.requestedMask() & page.capturedBrickMask;
+            if (desired == 0L) continue;
+            if ((page.capturedBrickMask & ~desired) == 0L) continue;
+            if (!input.mayWithdrawThermalChunk(chunkKey(page.sectionKey))) { shrinkQueue.add(page.sectionKey); continue; }
+            if (page.handle.currentPublication() == null
+                    || page.handle.pendingFullGeometryResync() != null
+                    || page.fullResync || page.centerCount != 0
+                    || !input.captureDormantPage(page.handle)) {
+                shrinkQueue.add(page.sectionKey);
+                continue;
+            }
+            page.capturedBrickMask = desired;
+            SectionOwner owner = ownersBySection.get(page.sectionKey);
+            if (owner != null) owner.capturedBrickMask = desired;
+            queueResidency(page, false);
+            nextShrinkTick = gameTick + SHRINK_INTERVAL_TICKS;
+            return;
+        }
     }
 
     private void processCaptures(long gameTick) {
@@ -712,13 +768,16 @@ public final class MinecraftPageManager implements AutoCloseable {
             int minX = SectionPos.sectionToBlockCoord(SectionPos.x(sectionKey));
             int minY = SectionPos.sectionToBlockCoord(SectionPos.y(sectionKey));
             int minZ = SectionPos.sectionToBlockCoord(SectionPos.z(sectionKey));
+            SectionOwner owner = ownersBySection.get(sectionKey);
             for (int center = 0; center < page.centerCount && centerRemaining > 0; center++) {
                 if (page.signatureIds[center] != UNCAPTURED_SIGNATURE) continue;
+                int block = Short.toUnsignedInt(page.centers[center]);
+                // A retained section remains readable while its chunk leaves getChunkNow.
                 page.signatureIds[center] =
-                        signatures.resolveSignatureId(
-                                minX + (page.centers[center] & 15),
-                                minY + (page.centers[center] >>> 8 & 15),
-                                minZ + (page.centers[center] >>> 4 & 15));
+                        owner == null ? signatures.resolveSignatureId(
+                                minX + (block & 15), minY + (block >>> 8 & 15), minZ + (block >>> 4 & 15))
+                                : signatures.resolveSignatureId(owner.section.getBlockState(
+                                        block & 15, block >>> 8 & 15, block >>> 4 & 15));
                 centerRemaining--;
             }
             if (page.nextUnresolvedCenter() >= 0) {
@@ -737,7 +796,6 @@ public final class MinecraftPageManager implements AutoCloseable {
         while ((owner = dirtyOwners.poll()) != null) {
             owner.enqueued = false;
             boolean deferredGeometry = owner.takeDirty(mutationScratch);
-            boolean sourceRelevant = mutationScratch.sourceRelevant;
             if (!owner.valid) {
                 mutationScratch.clear();
                 continue;
@@ -769,17 +827,10 @@ public final class MinecraftPageManager implements AutoCloseable {
                         captureQueue.add(page.sectionKey);
                     }
                 }
-                if (physicalSources != null) {
-                    if (!physicalSources.resyncSection(
-                            owner.sectionX, owner.sectionY, owner.sectionZ, owner.section)) {
-                        input.enqueueSourceDiscovery(owner.chunk);
-                    }
-                }
             }
             boolean geometryChanged = false;
             for (int word = 0; word < mutationScratch.changed.length; word++) {
                 long remaining = mutationScratch.changed[word];
-                long geometry = remaining & ~mutationScratch.nonGeometry[word];
                 while (remaining != 0L) {
                     int bit = Long.numberOfTrailingZeros(remaining);
                     int index = word << 6 | bit;
@@ -789,33 +840,22 @@ public final class MinecraftPageManager implements AutoCloseable {
                     int worldX = SectionPos.sectionToBlockCoord(owner.sectionX) + localX;
                     int worldY = SectionPos.sectionToBlockCoord(owner.sectionY) + localY;
                     int worldZ = SectionPos.sectionToBlockCoord(owner.sectionZ) + localZ;
-                    if (deferredGeometry && (geometry & 1L << bit) != 0L) {
-                        owner.invalidatePage();
+                    if (deferredGeometry) {
+                        owner.invalidatePage(mutationScratch.physicalRelevant);
                     }
-                    if (sourceRelevant && physicalSources != null) {
-                        if (!physicalSources.resyncBlock(
-                                worldX,
-                                worldY,
-                                worldZ,
-                                owner.section.getBlockState(localX, localY, localZ))) {
-                            input.enqueueSourceDiscovery(owner.chunk);
-                        }
-                    }
-                    if ((geometry & 1L << bit) != 0L) {
-                        environment.markSkyColumn(worldX, worldZ);
-                        if (!fullResync) collectCenter(owner, index, gameTick);
-                        geometryChanged = true;
-                    }
+                    environment.markSkyColumn(worldX, worldZ);
+                    if (!fullResync) collectCenter(owner, index, gameTick);
+                    geometryChanged = true;
                     remaining &= remaining - 1L;
                 }
-                mutationScratch.changed[word] = 0L;
-                mutationScratch.nonGeometry[word] = 0L;
             }
             if ((geometryChanged || fullResync) && radiationOcclusion != null) {
                 radiationOcclusion.onSectionMutation(
                         owner.sectionX, owner.sectionY, owner.sectionZ);
             }
-            if (geometryChanged || fullResync) invalidateHaloConsumers(owner.sectionKey);
+            if (geometryChanged || fullResync)
+                invalidateHaloConsumers(owner.sectionKey, HaloCause.GEOMETRY, fullResync ? null : mutationScratch);
+            mutationScratch.clear();
         }
     }
 
@@ -867,13 +907,13 @@ public final class MinecraftPageManager implements AutoCloseable {
             haloConsumers
                     .computeIfAbsent(section, ignored -> new LongOpenHashSet())
                     .add(page.sectionKey);
-        if (haloScratch.isEmpty()) return GeometryHalo.EMPTY;
+        if (haloScratch.isEmpty()) return page.capturedHalo = GeometryHalo.EMPTY;
         long[] positions = haloScratch.keySet().toLongArray();
         Arrays.sort(positions);
         int[] values = new int[positions.length];
         for (int index = 0; index < positions.length; index++)
             values[index] = haloScratch.get(positions[index]);
-        return new GeometryHalo(positions, values);
+        return page.capturedHalo = new GeometryHalo(positions, values);
     }
 
     private void forgetHaloConsumers(PageEntry page) {
@@ -886,15 +926,46 @@ public final class MinecraftPageManager implements AutoCloseable {
             }
         }
         page.haloSections.clear();
+        page.capturedHalo = GeometryHalo.EMPTY;
     }
 
-    private void invalidateHaloConsumers(long section) {
+    private void invalidateHaloConsumers(long section, HaloCause cause) {
+        invalidateHaloConsumers(section, cause, null);
+    }
+
+    private void invalidateHaloConsumers(long section, HaloCause cause, MutationScratch changes) {
         var consumers = haloConsumers.get(section);
         if (consumers == null) return;
         for (long parent : consumers) {
             PageEntry page = pages.get(parent);
             if (page == null || page.handle == null) continue;
-            page.captureRevision = page.handle.beginGeometryMutation();
+            if (changes != null) {
+                boolean relevant = false;
+                long[] capturedPositions = page.capturedHalo.positions();
+                int x0 = SectionPos.sectionToBlockCoord(SectionPos.x(section));
+                int y0 = SectionPos.sectionToBlockCoord(SectionPos.y(section));
+                int z0 = SectionPos.sectionToBlockCoord(SectionPos.z(section));
+                for (int word = 0; word < changes.changed.length && !relevant; word++) {
+                    long remaining = changes.changed[word];
+                    while (remaining != 0L && !relevant) {
+                        int index = word * 64 + Long.numberOfTrailingZeros(remaining);
+                        long position = BlockPos.asLong(x0 + (index & 15), y0 + (index >>> 8 & 15), z0 + (index >>> 4 & 15));
+                        relevant = Arrays.binarySearch(capturedPositions, position) >= 0;
+                        remaining &= remaining - 1L;
+                    }
+                }
+                if (!relevant) { irrelevantHaloGeometryChanges++; continue; }
+            }
+            switch (cause) {
+                case GEOMETRY -> haloGeometryInvalidations++;
+                case CHUNK_LOAD -> haloChunkLoadInvalidations++;
+                case CHUNK_UNLOAD -> haloChunkUnloadInvalidations++;
+            }
+            lastInvalidatedSection = parent;
+            lastInvalidationSource = section;
+            lastInvalidationTick = level.getGameTime();
+            page.captureRevision = page.handle.beginGeometryMutation(
+                    level.getGameTime(), changes == null || changes.physicalRelevant);
             page.lastMutationTick = level.getGameTime();
             readyCaptures.remove(parent);
             captureQueue.add(parent);
@@ -922,11 +993,14 @@ public final class MinecraftPageManager implements AutoCloseable {
 
     private void updateInterest(PageEntry page, boolean synchronizeWorker) {
         if (!page.interested()) {
+            if (page.handle != null && !input.mayWithdrawThermalChunk(chunkKey(page.sectionKey))) {
+                withdrawals.add(page.sectionKey); return;
+            }
             dequeueAdmission(page);
             if (page.handle != null) {
                 if (page.handle.lastPublication() == null) {
                     if (!accumulator.cancelAdmission(page.handle)) {
-                        queueResidency(page);
+                        queueResidency(page, false);
                         return;
                     }
                     discardLifecycle(page);
@@ -941,20 +1015,25 @@ public final class MinecraftPageManager implements AutoCloseable {
         if (missing != 0L || page.handle == null) {
             enqueue(page);
         } else if (synchronizeWorker) {
-            queueResidency(page);
+            queueResidency(page, false);
         }
     }
 
-    private void queueResidency(PageEntry page) {
+    private void queueResidency(PageEntry page, boolean restoreAir) {
         if (page.handle == null || page.capturedBrickMask == 0L) {
             return;
         }
+        MinecraftEnvironmentCapture.Captured captured = environment.current(page.handle);
         accumulator.updateResidency(
                 page.handle,
                 page.handle.liveGeometryRevision(),
                 page.capturedBrickMask,
-                page.sourceSeedMask & page.capturedBrickMask,
+                (page.sourceSeedMask | page.restoreSeedMask) & page.capturedBrickMask,
                 page.signatures,
+                restoreAir && captured != null
+                        ? input.dormantAdmissionCut(
+                                page.sectionKey, captured.naturalTemperatureC(), level.getGameTime())
+                        : null,
                 input.dormantMaterialAdmissionCut(page.sectionKey));
         accumulator
                 .geometry()
@@ -969,9 +1048,11 @@ public final class MinecraftPageManager implements AutoCloseable {
     }
 
     private void removeEntry(PageEntry page) {
+        withdrawals.remove(page.sectionKey);
         dequeueAdmission(page);
         captureQueue.remove(page.sectionKey);
         readyCaptures.remove(page.sectionKey);
+        shrinkQueue.remove(page.sectionKey);
         pages.remove(page.sectionKey);
         LongOpenHashSet indexed = pagesByChunk.get(chunkKey(page.sectionKey));
         if (indexed != null) {
@@ -983,12 +1064,17 @@ public final class MinecraftPageManager implements AutoCloseable {
     }
 
     private void retire(PageEntry page) {
-        input.captureDormantPage(page.handle, true);
+        retire(page, true);
+    }
+
+    private void retire(PageEntry page, boolean capture) {
+        if (capture) input.captureDormantPage(page.handle);
         accumulator.retire(page.handle);
         discardLifecycle(page);
     }
 
     private void discardLifecycle(PageEntry page) {
+        if (page.handle != null) page.handle.releaseInputCredit();
         forgetHaloConsumers(page);
         environment.untrack(page.handle);
         captureQueue.remove(page.sectionKey);
@@ -1000,28 +1086,33 @@ public final class MinecraftPageManager implements AutoCloseable {
         publishPageHandle(page.sectionKey, null);
     }
 
-    public void checkpointChunk(LevelChunk chunk, boolean markDirty) {
-        requireMainThread();
-        LongOpenHashSet indexed = pagesByChunk.get(chunk.getPos().toLong());
-        if (indexed != null) {
-            for (long sectionKey : indexed) {
-                PageEntry page = pages.get(sectionKey);
-                if (page != null && page.handle != null) {
-                    input.captureDormantPage(page.handle, chunk, markDirty);
-                }
-            }
-        }
+    public boolean hasTrackedChunk(long chunkKey) {
+        return pagesByChunk.containsKey(chunkKey) || accumulator.hasPendingRetirementInChunk(chunkKey);
     }
 
-    public void checkpointAll(boolean markDirty) {
+    public boolean hasLiveChunk(long chunkKey) {
+        LongOpenHashSet indexed = pagesByChunk.get(chunkKey);
+        if (indexed == null) return false;
+        for (long sectionKey : indexed) {
+            PageEntry page = pages.get(sectionKey);
+            if (page != null && page.handle != null) return true;
+        }
+        return false;
+    }
+
+    public void checkpointChunk(LevelChunk chunk) {
+        requireMainThread();
+        input.captureRegionalCheckpoint(chunk, false);
+    }
+
+    public void checkpointAll(boolean retiringRuntime) {
         requireMainThread();
         long[] chunks = pagesByChunk.keySet().toLongArray();
         for (long chunkKey : chunks) {
-            LevelChunk chunk =
-                    level.getChunkSource()
-                            .getChunkNow((int) chunkKey, (int) (chunkKey >>> Integer.SIZE));
+            LevelChunk chunk = input.chunkForThermalCapture((int) chunkKey, (int) (chunkKey >>> Integer.SIZE));
             if (chunk != null) {
-                checkpointChunk(chunk, markDirty);
+                if (retiringRuntime) input.captureRegionalCheckpoint(chunk, true);
+                else checkpointChunk(chunk);
             }
         }
     }
@@ -1110,9 +1201,7 @@ public final class MinecraftPageManager implements AutoCloseable {
         if (owner != null && owner.valid) {
             return owner;
         }
-        LevelChunk chunk =
-                level.getChunkSource()
-                        .getChunkNow(SectionPos.x(sectionKey), SectionPos.z(sectionKey));
+        LevelChunk chunk = input.chunkForThermalCapture(SectionPos.x(sectionKey), SectionPos.z(sectionKey));
         if (chunk == null) {
             return null;
         }
@@ -1175,8 +1264,10 @@ public final class MinecraftPageManager implements AutoCloseable {
         }
         ownersBySection.clear();
         dirtyOwners.clear();
+        for (PageEntry page : pages.values()) if (page.handle != null) page.handle.releaseInputCredit();
         pages.clear();
         pagesByChunk.clear();
+        withdrawals.clear();
         captureQueue.clear();
         readyCaptures.clear();
         for (LongLinkedOpenHashSet queue : admissionQueues) {
@@ -1220,9 +1311,10 @@ public final class MinecraftPageManager implements AutoCloseable {
         private volatile ThermalPageHandle.GeometryResyncReason fullResyncReason =
                 ThermalPageHandle.GeometryResyncReason.EXPLICIT_INVALIDATION;
         private long[] pending;
-        private long[] pendingNonGeometry;
-        private boolean pendingSourceMutation;
+        private boolean pendingPhysicalMutation;
         private IntArrayList pendingMaterialChanges;
+        private it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap pendingMaterialIndexes;
+        private boolean aggregatingMaterialChanges;
         private IntArrayList checkpointMaterialChanges;
         private LongArrayList checkpointMaterialRevisions;
         private LongArrayList checkpointMaterialTicks;
@@ -1289,10 +1381,38 @@ public final class MinecraftPageManager implements AutoCloseable {
         public synchronized void recordMaterialChange(
                 int block, int previousSignature, int nextSignature, byte cause) {
             if (pendingMaterialChanges == null) pendingMaterialChanges = new IntArrayList();
+            if (!aggregatingMaterialChanges && pendingMaterialChanges.size() >= 64 * MATERIAL_CHANGE_STRIDE) {
+                if (pendingMaterialIndexes == null) {
+                    pendingMaterialIndexes = new it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap();
+                    pendingMaterialIndexes.defaultReturnValue(-1);
+                } else pendingMaterialIndexes.clear();
+                aggregatingMaterialChanges = true;
+                int size = pendingMaterialChanges.size(), into = 0;
+                for (int index = 0; index < size; index += MATERIAL_CHANGE_STRIDE) {
+                    int position = pendingMaterialChanges.getInt(index), existing = pendingMaterialIndexes.get(position);
+                    if (existing < 0) {
+                        pendingMaterialIndexes.put(position, into);
+                        for (int column = 0; column < MATERIAL_CHANGE_STRIDE; column++)
+                            pendingMaterialChanges.set(into++, pendingMaterialChanges.getInt(index + column));
+                    } else mergePendingMaterial(existing, pendingMaterialChanges.getInt(index + 2), (byte) pendingMaterialChanges.getInt(index + 3));
+                }
+                pendingMaterialChanges.size(into);
+            }
+            if (aggregatingMaterialChanges) {
+                int existing = pendingMaterialIndexes.get(block);
+                if (existing >= 0) { mergePendingMaterial(existing, nextSignature, cause); return; }
+                pendingMaterialIndexes.put(block, pendingMaterialChanges.size());
+            }
             pendingMaterialChanges.add(block);
             pendingMaterialChanges.add(previousSignature);
             pendingMaterialChanges.add(nextSignature);
             pendingMaterialChanges.add(cause);
+        }
+        private void mergePendingMaterial(int index, int nextSignature, byte cause) {
+            pendingMaterialChanges.set(index + 2, nextSignature);
+            if (pendingMaterialChanges.getInt(index + 3)
+                    != com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ResolvedGeometryBatch.MaterialChanges.REPLACE)
+                pendingMaterialChanges.set(index + 3, cause);
         }
 
         public void recordMaterialCheckpointChange(int block, int nextState, byte cause) {
@@ -1368,8 +1488,7 @@ public final class MinecraftPageManager implements AutoCloseable {
                 int localX,
                 int localY,
                 int localZ,
-                boolean topologyRelevant,
-                boolean sourceRelevant) {
+                boolean physicalRelevant) {
             if (!valid) {
                 return;
             }
@@ -1385,33 +1504,16 @@ public final class MinecraftPageManager implements AutoCloseable {
                 }
                 boolean firstForPosition = (pending[word] & bit) == 0L;
                 pending[word] |= bit;
-                pendingSourceMutation |= sourceRelevant;
-                if (topologyRelevant) {
-                    boolean geometryPending =
-                            !firstForPosition
-                                    && (pendingNonGeometry == null
-                                            || (pendingNonGeometry[word] & bit) == 0L);
-                    if (!geometryPending) {
-                        if (pendingNonGeometry != null) {
-                            pendingNonGeometry[word] &= ~bit;
-                        }
-                        if (!captured) {
-                            // Sky and occlusion still consume this mutation.
-                        } else if (Thread.currentThread() == manager.mainThread) {
-                            invalidate = true;
-                        } else {
-                            deferredGeometryInvalidation = true;
-                        }
-                    }
-                } else if (firstForPosition) {
-                    if (pendingNonGeometry == null) {
-                        pendingNonGeometry = new long[64];
-                    }
-                    pendingNonGeometry[word] |= bit;
+                pendingPhysicalMutation |= physicalRelevant;
+                // All remaining position notifications describe geometry; source-only
+                // writes now belong to their source's lifecycle, not this buffer.
+                if ((firstForPosition || physicalRelevant) && captured) {
+                    if (Thread.currentThread() == manager.mainThread) invalidate = true;
+                    else deferredGeometryInvalidation = true;
                 }
             }
             if (invalidate) {
-                invalidatePage();
+                invalidatePage(physicalRelevant);
             }
             if (ENQUEUED.compareAndSet(this, false, true)) {
                 manager.dirtyOwners.add(this);
@@ -1454,10 +1556,15 @@ public final class MinecraftPageManager implements AutoCloseable {
             return manager.input;
         }
 
-        private void invalidatePage() {
+        public boolean isValid() {
+            return valid;
+        }
+
+        private void invalidatePage(boolean physicalRelevant) {
             ThermalPageHandle current = page;
             if (current != null) {
-                current.beginGeometryMutation();
+                manager.noteDirectGeometryInvalidation(sectionKey);
+                current.beginGeometryMutation(manager.level.getGameTime(), physicalRelevant);
             }
         }
 
@@ -1468,19 +1575,16 @@ public final class MinecraftPageManager implements AutoCloseable {
                 var previous = scratch.materialChanges;
                 scratch.materialChanges = pendingMaterialChanges;
                 pendingMaterialChanges = previous;
+                aggregatingMaterialChanges = false;
+                if (pendingMaterialIndexes != null) pendingMaterialIndexes.clear();
             }
             if (pending != null) {
                 long[] changed = scratch.changed;
                 scratch.changed = pending;
                 pending = changed;
-                if (pendingNonGeometry != null) {
-                    long[] nonGeometry = scratch.nonGeometry;
-                    scratch.nonGeometry = pendingNonGeometry;
-                    pendingNonGeometry = nonGeometry;
-                }
             }
-            scratch.sourceRelevant = pendingSourceMutation;
-            pendingSourceMutation = false;
+            scratch.physicalRelevant = pendingPhysicalMutation;
+            pendingPhysicalMutation = false;
             boolean deferred = deferredGeometryInvalidation;
             deferredGeometryInvalidation = false;
             return deferred;
@@ -1500,24 +1604,26 @@ public final class MinecraftPageManager implements AutoCloseable {
     private static final class MutationScratch {
         private IntArrayList materialChanges = new IntArrayList();
         private long[] changed = new long[64];
-        private long[] nonGeometry = new long[64];
-        private boolean sourceRelevant;
+        private boolean physicalRelevant;
 
         private void clear() {
             materialChanges.clear();
             Arrays.fill(changed, 0L);
-            Arrays.fill(nonGeometry, 0L);
-            sourceRelevant = false;
+            physicalRelevant = false;
         }
     }
 
     private static final class PageEntry {
+        // Shares the immutable halo already handed to the input/worker; no position copy.
+        private GeometryHalo capturedHalo = GeometryHalo.EMPTY;
         private LongOpenHashSet haloSections;
         private IntArrayList materialChanges;
         private final long sectionKey;
         private ThermalPageHandle handle;
         private int[] sourceSeedCounts;
         private long sourceSeedMask;
+        private long sourceRevision;
+        private long restoreSeedMask;
         private long workerDesiredMask;
         private long capturedBrickMask;
         private PageSignatures signatures;
@@ -1531,7 +1637,6 @@ public final class MinecraftPageManager implements AutoCloseable {
         private ThermalPageHandle.GeometryResyncReason resyncReason;
         private PageSignatures fullSignatureCut;
         private long lastMutationTick = -1L;
-        private long retryAfterTick;
 
         private PageEntry(long sectionKey) {
             this.sectionKey = sectionKey;
@@ -1542,11 +1647,11 @@ public final class MinecraftPageManager implements AutoCloseable {
         }
 
         private int priority() {
-            return sourceSeedMask != 0L ? SOURCE : FRONTIER;
+            return (sourceSeedMask | restoreSeedMask) != 0L ? SOURCE : FRONTIER;
         }
 
         private long requestedMask() {
-            return sourceSeedMask | workerDesiredMask;
+            return sourceSeedMask | restoreSeedMask | workerDesiredMask;
         }
 
         private void markCenter(int blockIndex, long revision, long tick) {

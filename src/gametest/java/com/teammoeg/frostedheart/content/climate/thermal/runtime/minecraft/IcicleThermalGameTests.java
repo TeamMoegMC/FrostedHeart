@@ -32,7 +32,7 @@ public final class IcicleThermalGameTests {
             int slot = simulation.slot(source);
             var edge = simulation.arena.materialLaw(slot).heating();
             double budget = edge.targetEnthalpyJ() - edge.sourceEnthalpyJ();
-            near(helper, budget, simulation.arena.acceptExternalEnergyJ(slot, budget * 2), "heat stops at one latent endpoint");
+            near(helper, budget, simulation.acceptEnergyJ(slot, budget * 2), "heat stops at one latent endpoint");
             var ready = simulation.publish(ResolvedGeometryBatch.EMPTY, ThermalInputBatch.NO_PHASE_ACKS);
             helper.assertTrue(ready.phaseRequests().length == 1, "one completed material request");
             var request = ready.phaseRequests()[0];
@@ -42,17 +42,17 @@ public final class IcicleThermalGameTests {
             simulation.publish(geometry, new ThermalInputBatch.PhaseAck[]{
                     new ThermalInputBatch.PhaseAck(request, PhaseTransitionRuntime.AckOutcome.APPLIED)});
             slot = simulation.slot(source);
-            near(helper, edge.sourceEnthalpyJ(), simulation.arena.enthalpyJ(slot), "existing material migration consumes the paid latent interval");
+            near(helper, edge.sourceEnthalpyJ(), simulation.enthalpyJ(slot), "existing material migration consumes the paid latent interval");
             near(helper, -budget, simulation.arena.externalMaterialEnergyJ() - ledger, "phase work exported through existing energy ledger");
             simulation.publish(ResolvedGeometryBatch.EMPTY, new ThermalInputBatch.PhaseAck[]{
                     new ThermalInputBatch.PhaseAck(request, PhaseTransitionRuntime.AckOutcome.APPLIED)});
-            near(helper, edge.sourceEnthalpyJ(), simulation.arena.enthalpyJ(slot), "duplicate old ACK cannot pay twice");
+            near(helper, edge.sourceEnthalpyJ(), simulation.enthalpyJ(slot), "duplicate old ACK cannot pay twice");
             var saved = MaterialSectionState.capture(simulation.page(source).currentPublication(), simulation.query,
                     simulation.profiles.signatures(), new MaterialSectionState.CaptureScratch());
             helper.assertTrue(saved.valid(), "completed cycle produces a coherent material checkpoint");
             int index = saved.state().find((source.getX() & 15) | (source.getZ() & 15) << 4 | (source.getY() & 15) << 8);
             near(helper, edge.sourceEnthalpyJ(), saved.state().enthalpyJ(index), "checkpoint contains consumed progress");
-            near(helper, budget / 2, simulation.arena.acceptExternalEnergyJ(slot, budget / 2), "source can absorb another interval");
+            near(helper, budget / 2, simulation.acceptEnergyJ(slot, budget / 2), "source can absorb another interval");
             var next = simulation.publish(ResolvedGeometryBatch.EMPTY, ThermalInputBatch.NO_PHASE_ACKS);
             helper.assertTrue(next.phaseRequests().length == 0, "half another budget cannot trigger another shortening");
         }

@@ -21,78 +21,60 @@ package com.teammoeg.frostedheart.content.climate.thermal.solver;
 
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ArenaSpan;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalCellArena;
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.AirBackingMeter;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 
 import java.util.Arrays;
 import java.util.Objects;
 
 /**
- * Worker-owned primitive topology storage and fixed-step thermal solver.
+ * Worker-owned primitive topology storage for regional numerical tasks.
  *
- * <p>Topology preparation reserves every backing array and material-index
- * insertion before calling the allocation-free install methods.</p>
+ * <p>Each Brick owns its contacts. Preparation reserves the columns before
+ * publishing their replacement through the same fragment token.</p>
  */
 public final class ThermalSolver {
-    private final ThermalCellArena arena;
-    private final BuoyancyConductance.Parameters buoyancyParameters;
-    private final double referenceTemperatureC;
-
     private ThermalFragment[] fragments;
-    private ThermalMaterialExecution[] materialExecutions;
     private long[] fragmentPresent;
-    private long[] airPresent;
-    private long[] materialPresent;
-    private long[] farPresent;
     private int[] stateReferences;
     private double[] naturalTemperatureByPage;
-    private final MaterialEdgeTable materialEdges;
     private final Int2IntOpenHashMap replacementReferenceDelta =
             new Int2IntOpenHashMap();
-
-    private int airPairCount;
+    private record StagedFragment(com.teammoeg.frostedheart.content.climate.thermal.runtime.InstallToken token, ThermalFragment next) { }
+    private final it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap<StagedFragment> stagedFragments = new it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap<>();
+    private int pairCount;
     private int farBoundaryCount;
     private long structuralVersion;
     private double windScale = 1.0D;
-    private long windGeneration;
+    private com.teammoeg.frostedheart.content.climate.thermal.runtime.ThermalMemoryBudget.Reservation storage;
 
-    private final ThermalExchangeKernel.MutablePairResult pairScratch =
-            new ThermalExchangeKernel.MutablePairResult();
-    private final ThermalExchangeKernel.MutableBoundaryResult boundaryScratch =
-            new ThermalExchangeKernel.MutableBoundaryResult();
-    private final BuoyancyConductance.MutableResult buoyancyScratch =
-            new BuoyancyConductance.MutableResult();
+    public void storageOwner(com.teammoeg.frostedheart.content.climate.thermal.runtime.ThermalMemoryBudget.Reservation owner) {
+        storage = owner;
+    }
+
+    private static long fragmentColumnBytes(int capacity) {
+        return AirBackingMeter.arrayPayloadBytes(capacity, 8)
+                + AirBackingMeter.arrayPayloadBytes((capacity + 63) >>> 6, 8);
+    }
 
     public ThermalSolver(
             ThermalCellArena arena,
-            BuoyancyConductance.Parameters buoyancyParameters,
-            double referenceTemperatureC,
             int initialFragmentCapacity,
-            int initialPageCapacity,
-            int initialMaterialEdgeCapacity
+            int initialPageCapacity
     ) {
-        if (!Double.isFinite(referenceTemperatureC)
-                || initialFragmentCapacity < 0
-                || initialPageCapacity < 0
-                || initialMaterialEdgeCapacity < 0) {
+        if (initialFragmentCapacity < 0
+                || initialPageCapacity < 0) {
             throw new IllegalArgumentException("solver configuration is invalid");
         }
-        this.arena = Objects.requireNonNull(arena, "arena");
-        this.buoyancyParameters = Objects.requireNonNull(buoyancyParameters, "buoyancyParameters");
-        this.referenceTemperatureC = referenceTemperatureC;
+        Objects.requireNonNull(arena, "arena");
         int fragmentCapacity = Math.max(1, initialFragmentCapacity);
         fragments = new ThermalFragment[fragmentCapacity];
-        materialExecutions = new ThermalMaterialExecution[fragmentCapacity];
         Arrays.fill(fragments, ThermalFragment.EMPTY);
-        Arrays.fill(materialExecutions, ThermalMaterialExecution.EMPTY);
         fragmentPresent = new long[(fragmentCapacity + 63) >>> 6];
-        airPresent = new long[fragmentPresent.length];
-        materialPresent = new long[fragmentPresent.length];
-        farPresent = new long[fragmentPresent.length];
         int stateCapacity = Math.max(1, arena.highWaterMark());
         stateReferences = new int[stateCapacity];
         naturalTemperatureByPage = new double[Math.max(1, initialPageCapacity)];
         Arrays.fill(naturalTemperatureByPage, Double.NaN);
-        materialEdges = new MaterialEdgeTable(initialMaterialEdgeCapacity);
         replacementReferenceDelta.defaultReturnValue(0);
     }
 
@@ -101,15 +83,26 @@ public final class ThermalSolver {
     }
 
     public int nextFragmentIndex(int fromInclusive) {
-        return nextPresent(fragmentPresent, fromInclusive, fragments.length);
+        int index = nextPresent(fragmentPresent, fromInclusive, fragments.length);
+        while (index >= 0 && fragment(index).isEmpty()) index = nextPresent(fragmentPresent, index + 1, fragments.length);
+        return index;
     }
 
     public double naturalTemperatureC(int pageSlot) { return naturalTemperatureByPage[pageSlot]; }
     public double windScale() { return windScale; }
 
-    public int materialEdgeCount() {
-        return materialEdges.size();
+    public void recordBacking(AirBackingMeter meter) {
+        meter.array(fragments); meter.array(fragmentPresent);
+        meter.array(stateReferences); meter.array(naturalTemperatureByPage);
+        // This scratch map can retain its largest replacement until the next plan.
+        meter.container(replacementReferenceDelta, stateReferences.length, 8);
+        if (meter.summaries()) meter.bytes(fragmentBackingBytes);
+        else {
+            for (var fragment : fragments) if (fragment != null) fragment.recordBacking(meter);
+        }
     }
+
+    private long fragmentBackingBytes;
 
     private int stateReferenceCount(int arenaSlot) {
         return arenaSlot >= 0 && arenaSlot < stateReferences.length
@@ -129,21 +122,24 @@ public final class ThermalSolver {
     }
 
     public ThermalFragment fragment(int index) {
+        var staged = stagedFragments.get(index);
+        if (staged != null && staged.token.committed()) return staged.next;
         return index >= 0 && index < fragments.length
                 ? fragments[index]
                 : ThermalFragment.EMPTY;
     }
 
-    public ThermalMaterialExecution materialExecution(int fragmentIndex) {
-        return fragmentIndex >= 0 && fragmentIndex < materialExecutions.length
-                ? materialExecutions[fragmentIndex]
-                : ThermalMaterialExecution.EMPTY;
+    public void stageFragment(int index, ThermalFragment next, com.teammoeg.frostedheart.content.climate.thermal.runtime.InstallToken token) {
+        stagedFragments.put(index, new StagedFragment(token, next));
+        if (!next.isEmpty()) updatePresence(fragmentPresent, index, true);
     }
-
-    public ThermalMaterialEdge materialEdge(long key) {
-        return materialEdges.get(key);
+    public void finishFragment(int index, com.teammoeg.frostedheart.content.climate.thermal.runtime.InstallToken token) {
+        var staged = stagedFragments.get(index);
+        if (staged == null || staged.token != token) return;
+        if (token.committed()) installFragment(index, staged.next);
+        else updatePresence(fragmentPresent, index, !fragments[index].isEmpty());
+        stagedFragments.remove(index);
     }
-
     /** Fallible preparation-time growth; never called after commit begins. */
     public void reserveTopologyCapacity(
             int requiredFragments,
@@ -157,40 +153,31 @@ public final class ThermalSolver {
         if (requiredFragments > fragments.length) {
             int old = fragments.length;
             int capacity = grownCapacity(old, requiredFragments);
+            if (storage != null) storage.beforeAllocation(fragmentColumnBytes(capacity));
             fragments = Arrays.copyOf(fragments, capacity);
-            materialExecutions = Arrays.copyOf(materialExecutions, capacity);
             Arrays.fill(fragments, old, capacity, ThermalFragment.EMPTY);
-            Arrays.fill(
-                    materialExecutions, old, capacity,
-                    ThermalMaterialExecution.EMPTY);
             fragmentPresent = Arrays.copyOf(
                     fragmentPresent, (capacity + 63) >>> 6);
-            airPresent = Arrays.copyOf(airPresent, fragmentPresent.length);
-            materialPresent = Arrays.copyOf(
-                    materialPresent, fragmentPresent.length);
-            farPresent = Arrays.copyOf(farPresent, fragmentPresent.length);
+            if (storage != null) storage.afterReplacement(fragmentColumnBytes(old));
         }
         if (requiredArenaSlots > stateReferences.length) {
+            int old = stateReferences.length;
             int capacity = grownCapacity(
                     stateReferences.length, requiredArenaSlots);
+            if (storage != null) storage.beforeAllocation(AirBackingMeter.arrayPayloadBytes(capacity, 4));
             stateReferences = Arrays.copyOf(stateReferences, capacity);
+            if (storage != null) storage.afterReplacement(AirBackingMeter.arrayPayloadBytes(old, 4));
         }
         if (requiredPageSlots > naturalTemperatureByPage.length) {
             int old = naturalTemperatureByPage.length;
             int capacity = grownCapacity(old, requiredPageSlots);
+            if (storage != null) storage.beforeAllocation(AirBackingMeter.arrayPayloadBytes(capacity, 8));
             naturalTemperatureByPage = Arrays.copyOf(
                     naturalTemperatureByPage, capacity);
             Arrays.fill(
                     naturalTemperatureByPage, old, capacity, Double.NaN);
+            if (storage != null) storage.afterReplacement(AirBackingMeter.arrayPayloadBytes(old, 8));
         }
-    }
-
-    /** Reserves exact edge-table writes before an allocation-free commit. */
-    public void reserveMaterialEdgeChanges(
-            int expectedFinalSize,
-            int possibleInsertions
-    ) {
-        materialEdges.reserve(expectedFinalSize, possibleInsertions);
     }
 
     /**
@@ -200,23 +187,27 @@ public final class ThermalSolver {
     public ProjectedWork preflightReplacement(
             int[] fragmentIndexes,
             ThermalFragment[] replacements,
-            ArenaSpan[] retiringSpans,
-            int finalMaterialEdgeCount
+            ArenaSpan[] retiringSpans
     ) {
-        if (fragmentIndexes.length != replacements.length
-                || finalMaterialEdgeCount < 0) {
+        if (fragmentIndexes.length != replacements.length) {
             throw new IllegalArgumentException("solver replacement is invalid");
         }
         replacementReferenceDelta.clear();
-        int airPairs = airPairCount;
+        int pairs = pairCount;
         int boundaries = farBoundaryCount;
+        // A committed token may still be waiting for fragment cleanup.
+        for (var entry : stagedFragments.int2ObjectEntrySet()) if (entry.getValue().token.committed()) {
+            var old = fragments[entry.getIntKey()];
+            var next = entry.getValue().next;
+            pairs += pairCount(next) - pairCount(old);
+            boundaries += next.farBoundaries().size() - old.farBoundaries().size();
+        }
         for (int index = 0; index < fragmentIndexes.length; index++) {
             ThermalFragment old = fragment(fragmentIndexes[index]);
             ThermalFragment next = replacements[index];
             applyReferences(old, -1, false);
             applyReferences(next, 1, false);
-            airPairs += next.airPairs().size() - old.airPairs().size();
-            airPairs += next.routedContacts().size() - old.routedContacts().size();
+            pairs += pairCount(next) - pairCount(old);
             boundaries += next.farBoundaries().size()
                     - old.farBoundaries().size();
         }
@@ -238,9 +229,7 @@ public final class ThermalSolver {
                 }
             }
         }
-        return new ProjectedWork(
-                Math.addExact(airPairs, finalMaterialEdgeCount),
-                boundaries);
+        return new ProjectedWork(pairs, boundaries);
     }
 
     /**
@@ -252,30 +241,10 @@ public final class ThermalSolver {
         applyReferences(previous, -1, true);
         adjustCounts(previous, -1);
         fragments[index] = next;
+        fragmentBackingBytes += next.ownedBackingBytes() - previous.ownedBackingBytes();
         updatePresence(fragmentPresent, index, !next.isEmpty());
-        updatePresence(airPresent, index, next.airPairs().size() != 0 || next.routedContacts().size() != 0);
-        updatePresence(farPresent, index, next.farBoundaries().size() != 0);
         adjustCounts(next, 1);
         applyReferences(next, 1, true);
-    }
-
-    /** Allocation-free unique-material execution replacement. */
-    public void installMaterialExecution(
-            int fragmentIndex,
-            ThermalMaterialExecution execution
-    ) {
-        materialExecutions[fragmentIndex] = execution;
-        updatePresence(
-                materialPresent, fragmentIndex, execution.size() != 0);
-    }
-
-    /** Allocation-free material edge replacement or deletion. */
-    public void installMaterialEdge(long key, ThermalMaterialEdge edge) {
-        if (edge == null) {
-            materialEdges.removeReserved(key);
-        } else {
-            materialEdges.putReserved(key, edge);
-        }
     }
 
     public void installNaturalTemperature(int pageSlot, double temperatureC) {
@@ -286,290 +255,19 @@ public final class ThermalSolver {
         naturalTemperatureByPage[pageSlot] = Double.NaN;
     }
 
-    public void updateWindScale(double nextScale) {
-        if (!Double.isFinite(nextScale) || nextScale <= 0.0D) {
-            throw new IllegalArgumentException("wind scale must be finite and positive");
-        }
-        if (Double.doubleToLongBits(nextScale)
-                != Double.doubleToLongBits(windScale)) {
-            windScale = nextScale;
-            windGeneration = Math.incrementExact(windGeneration);
-        }
-    }
-
     /** Final primitive write of a prepared structural version. */
     public void finishTopologyCommit(long nextStructuralVersion) {
         structuralVersion = nextStructuralVersion;
     }
 
-    public enum StepStatus {
-        COMPLETED,
-        NUMERIC_DEGRADED
-    }
-
-    /** Allocation-free fixed or abnormal transport step. */
-    public StepStatus step(double dtSeconds, boolean forward) {
-        if (!Double.isFinite(dtSeconds) || dtSeconds < 0.0D) {
-            throw new IllegalArgumentException("dtSeconds must be finite and non-negative");
-        }
-        boolean degraded;
-        if (forward) {
-            degraded = applyAir(false, dtSeconds);
-            degraded |= applyMaterial(false, dtSeconds);
-            degraded |= applyFar(false, dtSeconds);
-        } else {
-            degraded = applyFar(true, dtSeconds);
-            degraded |= applyMaterial(true, dtSeconds);
-            degraded |= applyAir(true, dtSeconds);
-        }
-        return degraded ? StepStatus.NUMERIC_DEGRADED : StepStatus.COMPLETED;
-    }
-
-    private boolean applyAir(boolean reverse, double dtSeconds) {
-        boolean degraded = false;
-        for (int fragment = firstFragment(airPresent, reverse);
-             fragment >= 0;
-             fragment = nextFragment(airPresent, fragment, reverse)) {
-            ThermalFragment.AirPairs pairs = fragments[fragment].airPairs();
-            if (reverse) degraded |= applyRouted(fragments[fragment].routedContacts(), true, dtSeconds);
-            int operation = reverse ? pairs.size() - 1 : 0;
-            int end = reverse ? -1 : pairs.size();
-            int increment = reverse ? -1 : 1;
-            for (; operation != end; operation += increment) {
-                int first = pairs.first(operation);
-                int second = pairs.second(operation);
-                double conductance = pairs.conductance(operation);
-                if (pairs.direction(operation) != ThermalFragment.AirPairs.HORIZONTAL) {
-                    BuoyancyConductance.evaluateInto(conductance, temperatureC(first), temperatureC(second),
-                            pairs.direction(operation), buoyancyParameters, buoyancyScratch);
-                    if (!buoyancyScratch.applied()) {
-                        degraded = true;
-                        continue;
-                    }
-                    conductance = buoyancyScratch.conductanceWPerK();
-                }
-                ThermalExchangeKernel.exchangePairWithInverseInto(
-                        arena.enthalpyJ(first),
-                        arena.capacityJPerK(first),
-                        arena.inverseCapacityKPerJ(first),
-                        arena.enthalpyJ(second),
-                        arena.capacityJPerK(second),
-                        arena.inverseCapacityKPerJ(second),
-                        conductance,
-                        dtSeconds,
-                        pairScratch);
-                if (pairScratch.applied()) {
-                    arena.setEnthalpyJ(first, pairScratch.enthalpyAJ());
-                    arena.setEnthalpyJ(second, pairScratch.enthalpyBJ());
-                } else {
-                    degraded = true;
-                }
-            }
-            if (!reverse) degraded |= applyRouted(fragments[fragment].routedContacts(), false, dtSeconds);
-        }
-        return degraded;
-    }
-
-    private boolean applyRouted(ThermalFragment.RoutedContacts pairs, boolean reverse, double dtSeconds) {
-        boolean degraded = false;
-        for (int operation = reverse ? pairs.size() - 1 : 0;
-                reverse ? operation >= 0 : operation < pairs.size(); operation += reverse ? -1 : 1) {
-            if (!pairs.active(operation)) continue;
-            int first = pairs.first(operation), second = pairs.second(operation);
-            if (arena.materialLayoutPending(first) || arena.materialLayoutPending(second)) continue;
-            if (arena.needsMaterialSegments(first) || arena.needsMaterialSegments(second)) {
-                MaterialEnthalpyExchange.exchange(arena, first, second, pairs.conductance(operation), dtSeconds, referenceTemperatureC);
-                continue;
-            }
-            ThermalExchangeKernel.exchangePairWithInverseInto(
-                    arena.enthalpyJ(first), arena.capacityJPerK(first), arena.inverseCapacityKPerJ(first),
-                    arena.enthalpyJ(second), arena.capacityJPerK(second), arena.inverseCapacityKPerJ(second),
-                    pairs.conductance(operation), dtSeconds, pairScratch);
-            if (pairScratch.applied()) {
-                arena.setEnthalpyJ(first, pairScratch.enthalpyAJ());
-                arena.setEnthalpyJ(second, pairScratch.enthalpyBJ());
-            } else degraded = true;
-        }
-        return degraded;
-    }
-
-    private boolean applyMaterial(boolean reverse, double dtSeconds) {
-        boolean degraded = false;
-        for (int fragment = firstFragment(materialPresent, reverse);
-             fragment >= 0;
-             fragment = nextFragment(materialPresent, fragment, reverse)) {
-            ThermalMaterialExecution pairs = materialExecutions[fragment];
-            int operation = reverse ? pairs.size() - 1 : 0;
-            int end = reverse ? -1 : pairs.size();
-            int increment = reverse ? -1 : 1;
-            for (; operation != end; operation += increment) {
-                int first = pairs.first(operation);
-                int second = pairs.second(operation);
-                if (arena.materialLayoutPending(first) || arena.materialLayoutPending(second)) continue;
-                if (arena.needsMaterialSegments(first) || arena.needsMaterialSegments(second)) {
-                    MaterialEnthalpyExchange.exchange(arena, first, second,
-                            pairs.conductance(operation), dtSeconds, referenceTemperatureC);
-                    continue;
-                }
-                if (dtSeconds == 1.0D) {
-                    ThermalExchangeKernel.exchangeCompiledPairInto(
-                            arena.enthalpyJ(first),
-                            arena.inverseCapacityKPerJ(first),
-                            arena.enthalpyJ(second),
-                            arena.inverseCapacityKPerJ(second),
-                            pairs.coefficient(operation),
-                            pairScratch);
-                } else {
-                    ThermalExchangeKernel.exchangePairWithInverseInto(
-                            arena.enthalpyJ(first),
-                            arena.capacityJPerK(first),
-                            arena.inverseCapacityKPerJ(first),
-                            arena.enthalpyJ(second),
-                            arena.capacityJPerK(second),
-                            arena.inverseCapacityKPerJ(second),
-                            pairs.conductance(operation),
-                            dtSeconds,
-                            pairScratch);
-                }
-                if (pairScratch.applied()) {
-                    arena.setEnthalpyJ(first, pairScratch.enthalpyAJ());
-                    arena.setEnthalpyJ(second, pairScratch.enthalpyBJ());
-                } else {
-                    degraded = true;
-                }
-            }
-        }
-        return degraded;
-    }
-
-    private boolean applyFar(boolean reverse, double dtSeconds) {
-        boolean degraded = false;
-        for (int fragment = firstFragment(farPresent, reverse);
-             fragment >= 0;
-             fragment = nextFragment(farPresent, fragment, reverse)) {
-            ThermalFragment.FarBoundaries boundaries =
-                    fragments[fragment].farBoundaries();
-            int pageSlot = boundaries.pageSlot();
-            double boundaryTemperature = naturalTemperatureByPage[pageSlot];
-            if (dtSeconds == 1.0D
-                    && boundaries.coefficientWindGeneration()
-                    != windGeneration) {
-                for (int index = 0; index < boundaries.size(); index++) {
-                    int cell = boundaries.cell(index);
-                    boundaries.cacheCoefficient(
-                            index,
-                            ThermalExchangeKernel
-                                    .compileBoundaryCoefficientJPerK(
-                                            arena.capacityJPerK(cell),
-                                            boundaries.baseConductance(index)
-                                                    * windScale,
-                                            1.0D));
-                }
-                boundaries.finishCoefficientRefresh(windGeneration);
-            }
-            int operation = reverse ? boundaries.size() - 1 : 0;
-            int end = reverse ? -1 : boundaries.size();
-            int increment = reverse ? -1 : 1;
-            for (; operation != end; operation += increment) {
-                int cell = boundaries.cell(operation);
-                double conductance = boundaries.baseConductance(operation)
-                        * windScale;
-                if (dtSeconds == 1.0D) {
-                    ThermalExchangeKernel.exchangeCompiledBoundaryInto(
-                            arena.enthalpyJ(cell),
-                            arena.inverseCapacityKPerJ(cell),
-                            referenceTemperatureC,
-                            boundaryTemperature,
-                            boundaries.coefficient(operation),
-                            boundaryScratch);
-                } else {
-                    ThermalExchangeKernel.exchangeFixedBoundaryWithInverseInto(
-                            arena.enthalpyJ(cell),
-                            arena.capacityJPerK(cell),
-                            arena.inverseCapacityKPerJ(cell),
-                            referenceTemperatureC,
-                            boundaryTemperature,
-                            conductance,
-                            dtSeconds,
-                            boundaryScratch);
-                }
-                if (boundaryScratch.applied()) {
-                    arena.setEnthalpyJ(cell, boundaryScratch.enthalpyJ());
-                } else {
-                    degraded = true;
-                }
-            }
-        }
-        return degraded;
-    }
-
-
-
-    /** Exact final sleep gate; callers invoke it only after quiet batches. */
-    public double maxTemperatureResidualC() {
-        double residual = 0.0D;
-        for (int fragment = firstFragment(fragmentPresent, false);
-             fragment >= 0;
-             fragment = nextFragment(fragmentPresent, fragment, false)) {
-            ThermalFragment current = fragments[fragment];
-            ThermalFragment.AirPairs air = current.airPairs();
-            for (int index = 0; index < air.size(); index++) {
-                residual = pairResidual(
-                        air.first(index), air.second(index), residual);
-            }
-            ThermalMaterialExecution material = materialExecutions[fragment];
-            ThermalFragment.RoutedContacts routed = current.routedContacts();
-            for (int index = 0; index < routed.size(); index++) {
-                if (routed.active(index)) residual = pairResidual(routed.first(index), routed.second(index), residual);
-            }
-            for (int index = 0; index < material.size(); index++) {
-                residual = pairResidual(
-                        material.first(index), material.second(index), residual);
-            }
-            ThermalFragment.FarBoundaries far = current.farBoundaries();
-            for (int index = 0; index < far.size(); index++) {
-                residual = boundaryResidual(
-                        far.cell(index),
-                        naturalTemperatureByPage[far.pageSlot()],
-                        residual);
-            }
-        }
-        return residual;
-    }
-
-    private double pairResidual(int first, int second, double residual) {
-        double firstTemperature = temperatureC(first);
-        double secondTemperature = temperatureC(second);
-        return Double.isFinite(firstTemperature)
-                && Double.isFinite(secondTemperature)
-                ? Math.max(
-                        residual,
-                        Math.abs(firstTemperature - secondTemperature))
-                : Double.POSITIVE_INFINITY;
-    }
-
-    private double boundaryResidual(
-            int cell,
-            double boundaryTemperature,
-            double residual
-    ) {
-        double cellTemperature = temperatureC(cell);
-        return Double.isFinite(cellTemperature)
-                && Double.isFinite(boundaryTemperature)
-                ? Math.max(
-                        residual,
-                        Math.abs(cellTemperature - boundaryTemperature))
-                : Double.POSITIVE_INFINITY;
-    }
-
-    private double temperatureC(int slot) {
-        return arena.temperatureC(slot, referenceTemperatureC);
-    }
-
     private void adjustCounts(ThermalFragment fragment, int direction) {
-        airPairCount += direction * fragment.airPairs().size();
-        airPairCount += direction * fragment.routedContacts().size();
+        pairCount += direction * pairCount(fragment);
         farBoundaryCount += direction * fragment.farBoundaries().size();
+    }
+
+    private static int pairCount(ThermalFragment fragment) {
+        return Math.addExact(Math.addExact(fragment.airPairs().size(), fragment.routedContacts().size()),
+                fragment.materialContacts().size());
     }
 
     private void applyReferences(
@@ -582,8 +280,8 @@ public final class ThermalSolver {
             applyReference(air.first(index), direction, committed);
             applyReference(air.second(index), direction, committed);
         }
-        ThermalFragment.MaterialContributions material =
-                fragment.materialContributions();
+        ThermalFragment.MaterialContacts material =
+                fragment.materialContacts();
         ThermalFragment.RoutedContacts routed = fragment.routedContacts();
         for (int index = 0; index < routed.size(); index++) {
             applyReference(routed.first(index), direction, committed);
@@ -608,22 +306,6 @@ public final class ThermalSolver {
         stateReferences[slot] += direction;
     }
 
-    private int firstFragment(long[] presence, boolean reverse) {
-        return reverse
-                ? previousPresent(presence, fragments.length - 1)
-                : nextPresent(presence, 0, fragments.length);
-    }
-
-    private int nextFragment(
-            long[] presence,
-            int current,
-            boolean reverse
-    ) {
-        return reverse
-                ? previousPresent(presence, current - 1)
-                : nextPresent(presence, current + 1, fragments.length);
-    }
-
     private static int nextPresent(long[] bits, int start, int limit) {
         if (start < 0) {
             start = 0;
@@ -639,25 +321,6 @@ public final class ThermalSolver {
                 return value < limit ? value : -1;
             }
             if (++wordIndex >= bits.length) {
-                return -1;
-            }
-            word = bits[wordIndex];
-        }
-    }
-
-    private static int previousPresent(long[] bits, int start) {
-        if (start < 0 || bits.length == 0) {
-            return -1;
-        }
-        int wordIndex = Math.min(start >>> 6, bits.length - 1);
-        int bit = Math.min(start & 63, 63);
-        long word = bits[wordIndex] & (-1L >>> (63 - bit));
-        while (true) {
-            if (word != 0L) {
-                return wordIndex << 6
-                        | 63 - Long.numberOfLeadingZeros(word);
-            }
-            if (--wordIndex < 0) {
                 return -1;
             }
             word = bits[wordIndex];
@@ -698,136 +361,4 @@ public final class ThermalSolver {
     ) {
     }
 
-    /** Project-owned deletable table with explicit preparation-time growth. */
-    private static final class MaterialEdgeTable {
-        private static final byte EMPTY = 0;
-        private static final byte OCCUPIED = 1;
-        private static final byte DELETED = 2;
-
-        private long[] keys;
-        private ThermalMaterialEdge[] values;
-        private byte[] states;
-        private int size;
-        private int used;
-        private int resizeThreshold;
-
-        private MaterialEdgeTable(int expected) {
-            allocate(tableCapacity(Math.max(1, expected)));
-        }
-
-        private int size() {
-            return size;
-        }
-
-        private ThermalMaterialEdge get(long key) {
-            int index = findIndex(key);
-            return index < 0 ? null : values[index];
-        }
-
-        private void reserve(int expectedFinalSize, int possibleInsertions) {
-            if (expectedFinalSize < 0 || possibleInsertions < 0) {
-                throw new IllegalArgumentException(
-                        "material edge reserve is invalid");
-            }
-            int insertionPeak = Math.addExact(size, possibleInsertions);
-            int requiredSize = Math.max(expectedFinalSize, insertionPeak);
-            if (requiredSize > resizeThreshold) {
-                rehash(tableCapacity(requiredSize));
-            } else if (Math.addExact(used, possibleInsertions)
-                    > resizeThreshold) {
-                rehash(states.length);
-            }
-        }
-
-        private void putReserved(long key, ThermalMaterialEdge value) {
-            int mask = states.length - 1;
-            int index = hash(key) & mask;
-            int deleted = -1;
-            while (states[index] != EMPTY) {
-                if (states[index] == OCCUPIED && keys[index] == key) {
-                    values[index] = value;
-                    return;
-                }
-                if (states[index] == DELETED && deleted < 0) {
-                    deleted = index;
-                }
-                index = index + 1 & mask;
-            }
-            int destination = deleted >= 0 ? deleted : index;
-            if (states[destination] == EMPTY) {
-                if (used >= resizeThreshold) {
-                    throw new IllegalStateException(
-                            "material edge capacity was not reserved");
-                }
-                used++;
-            }
-            states[destination] = OCCUPIED;
-            keys[destination] = key;
-            values[destination] = value;
-            size++;
-        }
-
-        private void removeReserved(long key) {
-            int index = findIndex(key);
-            if (index < 0) {
-                return;
-            }
-            states[index] = DELETED;
-            values[index] = null;
-            size--;
-        }
-
-        private int findIndex(long key) {
-            int mask = states.length - 1;
-            int index = hash(key) & mask;
-            while (states[index] != EMPTY) {
-                if (states[index] == OCCUPIED && keys[index] == key) {
-                    return index;
-                }
-                index = index + 1 & mask;
-            }
-            return -1;
-        }
-
-        private void allocate(int capacity) {
-            keys = new long[capacity];
-            values = new ThermalMaterialEdge[capacity];
-            states = new byte[capacity];
-            size = 0;
-            used = 0;
-            resizeThreshold = Math.max(1, (int) (capacity * 0.6D));
-        }
-
-        private void rehash(int capacity) {
-            long[] oldKeys = keys;
-            ThermalMaterialEdge[] oldValues = values;
-            byte[] oldStates = states;
-            allocate(capacity);
-            for (int index = 0; index < oldStates.length; index++) {
-                if (oldStates[index] == OCCUPIED) {
-                    putReserved(oldKeys[index], oldValues[index]);
-                }
-            }
-        }
-
-        private static int tableCapacity(int expected) {
-            int required = Math.max(4, (int) Math.ceil(expected / 0.6D));
-            int highest = Integer.highestOneBit(required - 1);
-            if (highest >= 1 << 29) {
-                throw new IllegalArgumentException(
-                        "material edge table is too large");
-            }
-            return highest << 1;
-        }
-
-        private static int hash(long key) {
-            long value = key;
-            value ^= value >>> 33;
-            value *= 0xff51afd7ed558ccdl;
-            value ^= value >>> 33;
-            value *= 0xc4ceb9fe1a85ec53l;
-            value ^= value >>> 33;
-            return (int) value;
-        }
-    }
 }

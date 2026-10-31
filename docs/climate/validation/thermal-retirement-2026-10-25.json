@@ -1,0 +1,537 @@
+{
+  "status": "Completed within the reviewed retirement scope; validation build scopes are separated below.",
+  "verifiedDate": "2026-10-25",
+  "author": "Codex / OpenAI GPT-6; primary implementation and closure review",
+  "scope": "Thermal runtime and necessary Minecraft integration; protected player particle simulator excluded.",
+  "source": {
+    "beforeFiles": 146,
+    "afterFiles": 141,
+    "beforePhysicalLines": 54962,
+    "afterPhysicalLines": 49443,
+    "netLines": -5519
+  },
+  "majorFiles": [
+    {
+      "file": "src/main/java/com/teammoeg/frostedheart/content/climate/thermal/query/QueryPublication.java",
+      "beforePhysicalLines": 1835,
+      "afterPhysicalLines": 1125
+    },
+    {
+      "file": "src/main/java/com/teammoeg/frostedheart/content/climate/thermal/runtime/async/ThermalDimensionMailbox.java",
+      "beforePhysicalLines": 420,
+      "afterPhysicalLines": 226
+    },
+    {
+      "file": "src/main/java/com/teammoeg/frostedheart/content/climate/thermal/runtime/minecraft/MinecraftThermalInput.java",
+      "beforePhysicalLines": 2978,
+      "afterPhysicalLines": 2605
+    },
+    {
+      "file": "src/main/java/com/teammoeg/frostedheart/content/climate/thermal/runtime/minecraft/engine/ThermalDimensionEngine.java",
+      "beforePhysicalLines": 1536,
+      "afterPhysicalLines": 1478
+    },
+    {
+      "file": "src/main/java/com/teammoeg/frostedheart/content/climate/thermal/runtime/minecraft/message/ThermalCompletion.java",
+      "beforePhysicalLines": 144,
+      "afterPhysicalLines": 35
+    },
+    {
+      "file": "src/main/java/com/teammoeg/frostedheart/content/climate/thermal/runtime/minecraft/message/ThermalInputBatch.java",
+      "beforePhysicalLines": 469,
+      "afterPhysicalLines": 329
+    },
+    {
+      "file": "src/main/java/com/teammoeg/frostedheart/content/climate/thermal/solver/ContinuousAirSolver.java",
+      "beforePhysicalLines": 2354,
+      "afterPhysicalLines": 1823
+    },
+    {
+      "file": "src/main/java/com/teammoeg/frostedheart/content/climate/thermal/solver/CoupledThermalOperator.java",
+      "beforePhysicalLines": 2184,
+      "afterPhysicalLines": 1141
+    },
+    {
+      "file": "src/main/java/com/teammoeg/frostedheart/content/climate/thermal/solver/LocalMaterialBoundary.java",
+      "beforePhysicalLines": 521,
+      "afterPhysicalLines": 281
+    },
+    {
+      "file": "src/main/java/com/teammoeg/frostedheart/content/climate/thermal/solver/RegionalAirRuntime.java",
+      "beforePhysicalLines": 2759,
+      "afterPhysicalLines": 2708
+    }
+  ],
+  "deleted": [
+    "LegacyThermalDimensionEngine",
+    "ThermalDimensionProcessor",
+    "ThermalInputStore",
+    "ThermalArchitectureTrial",
+    "ThermalPrecisionTrial",
+    "TopologyCommitter",
+    "HotMaskScratch",
+    "Full-dimension scalar query buffers and legacy scheduling protocol",
+    "Unused recovery adapters, no-op commit and duplicate synchronous solvers",
+    "Fixed-disabled implicit material response, transport factor, graph delta and fragment assembly trials",
+    "Unused backing arrays, allocation/borrow/release accounting and write-only diagnostics"
+  ],
+  "retained": [
+    "Shared multicore worker pool",
+    "Independent regional progress and publication",
+    "Normal fine-grid precision and coarse overload protection",
+    "Material/phase/radiation gameplay",
+    "Version-6 saves and legacy function-layout evaluation/projection",
+    "Explicit signed source impulses",
+    "All four player/unused particle simulator files and pre-existing user edits"
+  ],
+  "sourceCandidateAudit": {
+    "parsedFiles": 2324,
+    "thermalDeclarations": 6362,
+    "parseDiagnostics": 0,
+    "retainedCandidates": [
+      "DimensionInputAccumulator.emitSourceImpulse",
+      "ThermalSourceBatch.Builder.addImpulse",
+      "MinecraftPageManager.SectionOwner.enqueued (VarHandle)",
+      "MinecraftPageManager.SectionOwner.deferredFullResync (VarHandle)"
+    ],
+    "method": "Java AST name-reference candidate discovery plus manual call/contract review; not a proof that every semantic redundancy is absent.",
+    "rawLocalReport": "build/thermal-retire-unused-final.txt"
+  },
+  "finalBuild": {
+    "label": "r6",
+    "command": "gradlew assemble compileGameTestJava --offline --no-daemon --max-workers=1",
+    "jdk": 17,
+    "status": "passed",
+    "elapsedSeconds": 57,
+    "rawLocalLog": "build/thermal-retire-compile-r6.log",
+    "tests": [],
+    "scope": "Final compile/package after removing the write-only contact component list, its writes, and an uncalled int workspace overload. No runtime scenario was repeated after that deletion."
+  },
+  "priorBuild": {
+    "label": "r4",
+    "passedGroups": 26,
+    "requiredPassed": 72,
+    "scope": "Real Forge matrix before the final dead-member/disabled-branch deletion batch. Its block fixture failed and was corrected for r5."
+  },
+  "combinedEvidence": {
+    "groups": 27,
+    "requiredPassed": 75,
+    "rootZeroGroups": 27,
+    "warning": "Combined counts span r4 and r5; they are not a 75-test rerun of the final r5 build.",
+    "groupsByBuild": [
+      {
+        "name": "background",
+        "build": "r4",
+        "requiredPassed": 1,
+        "exit": 0,
+        "rootBytes": 0,
+        "thermalMemoryTargetMiB": 128,
+        "cpuBudgetMsPerSecond": 250,
+        "singleProcessor": false,
+        "rawLocalLog": "build/thermal-retire-background-20261025-r1.log"
+      },
+      {
+        "name": "block",
+        "build": "r5",
+        "requiredPassed": 3,
+        "exit": 0,
+        "rootBytes": 0,
+        "thermalMemoryTargetMiB": 128,
+        "cpuBudgetMsPerSecond": 250,
+        "singleProcessor": false,
+        "rawLocalLog": "build/thermal-retire-block-20261025-r3.log"
+      },
+      {
+        "name": "cooling",
+        "build": "r4",
+        "requiredPassed": 1,
+        "exit": 0,
+        "rootBytes": 0,
+        "thermalMemoryTargetMiB": 128,
+        "cpuBudgetMsPerSecond": 250,
+        "singleProcessor": false,
+        "rawLocalLog": "build/thermal-retire-cooling-20261025-r1.log"
+      },
+      {
+        "name": "debug",
+        "build": "r4",
+        "requiredPassed": 3,
+        "exit": 0,
+        "rootBytes": 0,
+        "thermalMemoryTargetMiB": 128,
+        "cpuBudgetMsPerSecond": 250,
+        "singleProcessor": false,
+        "rawLocalLog": "build/thermal-retire-debug-20261025-r1.log"
+      },
+      {
+        "name": "dependencies",
+        "build": "r4",
+        "requiredPassed": 1,
+        "exit": 0,
+        "rootBytes": 0,
+        "thermalMemoryTargetMiB": 128,
+        "cpuBudgetMsPerSecond": 250,
+        "singleProcessor": false,
+        "rawLocalLog": "build/thermal-retire-dependencies-20261025-r1.log"
+      },
+      {
+        "name": "endurance",
+        "build": "r4",
+        "requiredPassed": 1,
+        "exit": 0,
+        "rootBytes": 0,
+        "thermalMemoryTargetMiB": 128,
+        "cpuBudgetMsPerSecond": 250,
+        "singleProcessor": false,
+        "rawLocalLog": "build/thermal-retire-endurance-20261025-r1.log"
+      },
+      {
+        "name": "gameplay",
+        "build": "r4",
+        "requiredPassed": 5,
+        "exit": 0,
+        "rootBytes": 0,
+        "thermalMemoryTargetMiB": 128,
+        "cpuBudgetMsPerSecond": 250,
+        "singleProcessor": false,
+        "rawLocalLog": "build/thermal-retire-gameplay-20261025-r2.log"
+      },
+      {
+        "name": "grid",
+        "build": "r4",
+        "requiredPassed": 1,
+        "exit": 0,
+        "rootBytes": 0,
+        "thermalMemoryTargetMiB": 128,
+        "cpuBudgetMsPerSecond": 250,
+        "singleProcessor": false,
+        "rawLocalLog": "build/thermal-retire-grid-20261025-r1.log"
+      },
+      {
+        "name": "grid-single",
+        "build": "r4",
+        "requiredPassed": 1,
+        "exit": 0,
+        "rootBytes": 0,
+        "thermalMemoryTargetMiB": 128,
+        "cpuBudgetMsPerSecond": 250,
+        "singleProcessor": true,
+        "rawLocalLog": "build/thermal-retire-grid-single-20261025-r1.log"
+      },
+      {
+        "name": "icicle",
+        "build": "r4",
+        "requiredPassed": 19,
+        "exit": 0,
+        "rootBytes": 0,
+        "thermalMemoryTargetMiB": 128,
+        "cpuBudgetMsPerSecond": 250,
+        "singleProcessor": false,
+        "rawLocalLog": "build/thermal-retire-icicle-20261025-r1.log"
+      },
+      {
+        "name": "ingress",
+        "build": "r4",
+        "requiredPassed": 2,
+        "exit": 0,
+        "rootBytes": 0,
+        "thermalMemoryTargetMiB": 128,
+        "cpuBudgetMsPerSecond": 250,
+        "singleProcessor": false,
+        "rawLocalLog": "build/thermal-retire-ingress-20261025-r1.log"
+      },
+      {
+        "name": "input",
+        "build": "r4",
+        "requiredPassed": 8,
+        "exit": 0,
+        "rootBytes": 0,
+        "thermalMemoryTargetMiB": 128,
+        "cpuBudgetMsPerSecond": 250,
+        "singleProcessor": false,
+        "rawLocalLog": "build/thermal-retire-input-20261025-r2.log"
+      },
+      {
+        "name": "intake",
+        "build": "r4",
+        "requiredPassed": 1,
+        "exit": 0,
+        "rootBytes": 0,
+        "thermalMemoryTargetMiB": 128,
+        "cpuBudgetMsPerSecond": 250,
+        "singleProcessor": false,
+        "rawLocalLog": "build/thermal-retire-intake-20261025-r1.log"
+      },
+      {
+        "name": "isolation",
+        "build": "r4",
+        "requiredPassed": 1,
+        "exit": 0,
+        "rootBytes": 0,
+        "thermalMemoryTargetMiB": 128,
+        "cpuBudgetMsPerSecond": 250,
+        "singleProcessor": false,
+        "rawLocalLog": "build/thermal-retire-isolation-20261025-r1.log"
+      },
+      {
+        "name": "lifecycle",
+        "build": "r4",
+        "requiredPassed": 3,
+        "exit": 0,
+        "rootBytes": 0,
+        "thermalMemoryTargetMiB": 128,
+        "cpuBudgetMsPerSecond": 250,
+        "singleProcessor": false,
+        "rawLocalLog": "build/thermal-retire-lifecycle-20261025-r1.log"
+      },
+      {
+        "name": "material",
+        "build": "r4",
+        "requiredPassed": 7,
+        "exit": 0,
+        "rootBytes": 0,
+        "thermalMemoryTargetMiB": 128,
+        "cpuBudgetMsPerSecond": 250,
+        "singleProcessor": false,
+        "rawLocalLog": "build/thermal-retire-material-20261025-r2.log"
+      },
+      {
+        "name": "multi",
+        "build": "r4",
+        "requiredPassed": 1,
+        "exit": 0,
+        "rootBytes": 0,
+        "thermalMemoryTargetMiB": 128,
+        "cpuBudgetMsPerSecond": 250,
+        "singleProcessor": false,
+        "rawLocalLog": "build/thermal-retire-multi-20261025-r1.log"
+      },
+      {
+        "name": "native",
+        "build": "r4",
+        "requiredPassed": 3,
+        "exit": 0,
+        "rootBytes": 0,
+        "thermalMemoryTargetMiB": 128,
+        "cpuBudgetMsPerSecond": 250,
+        "singleProcessor": false,
+        "rawLocalLog": "build/thermal-retire-native-20261025-r1.log"
+      },
+      {
+        "name": "physical",
+        "build": "r4",
+        "requiredPassed": 1,
+        "exit": 0,
+        "rootBytes": 0,
+        "thermalMemoryTargetMiB": 128,
+        "cpuBudgetMsPerSecond": 250,
+        "singleProcessor": false,
+        "rawLocalLog": "build/thermal-retire-physical-20261025-r1.log"
+      },
+      {
+        "name": "pressure",
+        "build": "r4",
+        "requiredPassed": 1,
+        "exit": 0,
+        "rootBytes": 0,
+        "thermalMemoryTargetMiB": 64,
+        "cpuBudgetMsPerSecond": 250,
+        "singleProcessor": false,
+        "rawLocalLog": "build/thermal-retire-pressure-20261025-r1.log"
+      },
+      {
+        "name": "recovery",
+        "build": "r4",
+        "requiredPassed": 1,
+        "exit": 0,
+        "rootBytes": 0,
+        "thermalMemoryTargetMiB": 128,
+        "cpuBudgetMsPerSecond": 250,
+        "singleProcessor": false,
+        "rawLocalLog": "build/thermal-retire-recovery-20261025-r1.log"
+      },
+      {
+        "name": "restart-load",
+        "build": "r4",
+        "requiredPassed": 1,
+        "exit": 0,
+        "rootBytes": 0,
+        "thermalMemoryTargetMiB": 128,
+        "cpuBudgetMsPerSecond": 250,
+        "singleProcessor": false,
+        "rawLocalLog": "build/thermal-retire-restart-load-20261025-r1.log"
+      },
+      {
+        "name": "restart-save",
+        "build": "r4",
+        "requiredPassed": 1,
+        "exit": 0,
+        "rootBytes": 0,
+        "thermalMemoryTargetMiB": 128,
+        "cpuBudgetMsPerSecond": 250,
+        "singleProcessor": false,
+        "rawLocalLog": "build/thermal-retire-restart-save-20261025-r1.log"
+      },
+      {
+        "name": "scattered",
+        "build": "r4",
+        "requiredPassed": 1,
+        "exit": 0,
+        "rootBytes": 0,
+        "thermalMemoryTargetMiB": 512,
+        "cpuBudgetMsPerSecond": 1000,
+        "singleProcessor": false,
+        "rawLocalLog": "build/thermal-retire-scattered-20261025-r1.log"
+      },
+      {
+        "name": "source",
+        "build": "r4",
+        "requiredPassed": 1,
+        "exit": 0,
+        "rootBytes": 0,
+        "thermalMemoryTargetMiB": 128,
+        "cpuBudgetMsPerSecond": 250,
+        "singleProcessor": false,
+        "rawLocalLog": "build/thermal-retire-source-20261025-r1.log"
+      },
+      {
+        "name": "source-single",
+        "build": "r4",
+        "requiredPassed": 1,
+        "exit": 0,
+        "rootBytes": 0,
+        "thermalMemoryTargetMiB": 128,
+        "cpuBudgetMsPerSecond": 250,
+        "singleProcessor": true,
+        "rawLocalLog": "build/thermal-retire-source-single-20261025-r1.log"
+      },
+      {
+        "name": "storage",
+        "build": "r4",
+        "requiredPassed": 5,
+        "exit": 0,
+        "rootBytes": 0,
+        "thermalMemoryTargetMiB": 128,
+        "cpuBudgetMsPerSecond": 250,
+        "singleProcessor": false,
+        "rawLocalLog": "build/thermal-retire-storage-20261025-r2.log"
+      }
+    ]
+  },
+  "preservedFailures": [
+    {
+      "problem": "Sensible material control read a phase-only request ID",
+      "resolution": "Use phase request ID only for a material with a transition",
+      "validation": "r4 material/input groups",
+      "rawLocalRecord": "build/thermal-retire-20261025-first-sweep.json"
+    },
+    {
+      "problem": "Whole-Page revision gate starved completed unchanged phase material",
+      "resolution": "Remove unrelated Page gate; retain actual material/request/world-condition checks",
+      "validation": "r4 topology churn/input regression",
+      "rawLocalRecord": "build/thermal-retire-20261025-first-sweep.json"
+    },
+    {
+      "problem": "Old block fixture omitted material replacement events and removed material energy",
+      "resolution": "Match real capture events and externalMaterialEnergyJ; retain 1e-6 tolerance",
+      "validation": "r5 block 3 passed",
+      "rawLocalRecord": "build/thermal-retire-block-20261025-r2.log"
+    }
+  ],
+  "performanceEvidence": {
+    "build": "r4",
+    "newComparisonPerformed": false,
+    "endurance": {
+      "ticks": 12000,
+      "sources": 256,
+      "temperatureConsumers": 100,
+      "queries": 59790,
+      "workerCpuSeconds": 15.578,
+      "mainThermalTickP99Ms": 0.626,
+      "fullServerTickP99Ms": 12.426,
+      "initialFullTickMaxMs": 4594.991,
+      "saveWaitMaxMs": 98.234
+    },
+    "pressure": {
+      "thermalTargetMiB": 64,
+      "peakRegisteredBytes": 180497002,
+      "unavailableRunTicks": 0,
+      "saves": 3
+    },
+    "scattered": {
+      "windows": 6,
+      "queries": 72000,
+      "saves": 7,
+      "peakRegisteredBytes": 268879952,
+      "bases32WorkerCpuSeconds": 25.765,
+      "older20261024Bases32WorkerCpuSeconds": 7.625
+    },
+    "limitations": [
+      "No paired final-r6 performance comparison; no CPU improvement claim.",
+      "Temperature consumers are not 100 actual network connections.",
+      "Memory target is a soft admission target, not an absolute heap limit."
+    ]
+  },
+  "package": {
+    "path": "build/libs/frostedheart-1.20.1-0.7.7.jar",
+    "bytes": 15063216,
+    "thermalClasses": 458,
+    "retiredClasses": [],
+    "testClasses": [],
+    "protectedParticleClasses": [
+      {
+        "type": "TemperatureThreadingPool",
+        "present": true
+      },
+      {
+        "type": "SurroundingTemperatureSimulator",
+        "present": true
+      },
+      {
+        "type": "CachedBlockTempInfo",
+        "present": true
+      },
+      {
+        "type": "BlockInfoCachePolicy",
+        "present": true
+      }
+    ]
+  },
+  "particleRestoration": [
+    {
+      "file": "TemperatureThreadingPool.java",
+      "bytes": 6420,
+      "lines": 159,
+      "matchesPreDeletionSource": true
+    },
+    {
+      "file": "SurroundingTemperatureSimulator.java",
+      "bytes": 47215,
+      "lines": 1042,
+      "matchesPreDeletionSource": true
+    },
+    {
+      "file": "CachedBlockTempInfo.java",
+      "bytes": 2154,
+      "lines": 63,
+      "matchesPreDeletionSource": true
+    },
+    {
+      "file": "BlockInfoCachePolicy.java",
+      "bytes": 1414,
+      "lines": 39,
+      "matchesPreDeletionSource": true
+    }
+  ],
+  "resourceConstraint": "After the user restricted test use, only compile and the 3-test block group ran; no JUnit, long matrix restart, Python edits or subagents.",
+  "rawLogs": "Generated raw logs, worlds and recordings remain ignored under build/; this summary is intended for Git.",
+  "focusedRuntime": {
+    "build": "r5",
+    "namespace": "frostedheart_block_runtime",
+    "requiredPassed": 3,
+    "exit": 0,
+    "rootBytes": 0,
+    "rawLocalLog": "build/thermal-retire-block-20261025-r3.log",
+    "scope": "Focused runtime regression after bulk dead-code cleanup; before final write-only metadata deletion."
+  }
+}

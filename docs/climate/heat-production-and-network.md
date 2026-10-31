@@ -1,22 +1,26 @@
 # Heat Production And Network
 
-- Status: `Transitional; material-body replacement is under integration validation`
-- Last verified: `2026-10-18`（冰锥相变接入；其余条目沿用原验证范围）
+- Status: `Transitional; current source and material ownership described below, earlier measurements retain their build scope`
+- Last verified: `2026-10-25` for source ownership and internal subsystem retirement; `2026-10-12` for campfire fuel countdown. Other sections retain their existing provenance.
 - Scope: physical Minecraft sources, worker energy integration, material/phase sinks, and the separate heat-network model
-- Primary code anchors: `MinecraftPhysicalSourceProfile`, `PhysicalSourceSpatialIndex`, `WorkerPhysicalSourceBindings`, `AirMixingRegion`, `ThermalSourceBatch`, `ThermalSourceLedger`, `NodePowerAccumulatorArena`, `HeatEndpoint`, `HeatNetwork`
+- Primary code anchors: `MinecraftPhysicalSourceProfile`, `PhysicalSourceSpatialIndex`, `WorkerPhysicalSourceBindings`, `AirMixingRegion`, `SpatialSourceTimeline`, `SpatialSourceIngress`, `SpatialHeatStore`, `ThermalSourceBatch`, `ThermalSourceLedger`, `LocalMaterialBoundary`, `HeatEndpoint`, `HeatNetwork`
 
 ## Physical Sources
 
-Physical sources are observed on the server thread and coalesced into the next
-20-tick `ThermalSourceBatch`. A source has one packed BlockPos identity, a
+当前SHARED_GRID使用`SpatialSourceTimeline → SpatialSourceIngress → SpatialHeatStore`，producer接管、按结构边界绑定和区域提交消费是三个进度。Page片段不再携带源窗口；`ThermalSourceBatch`保留源控制的有序表达，旧后端已于2026-10-25删除。当前实现、计账、保存与不同编译版本的验证范围见[运行时所有权](thermal-runtime-control.md)。
+
+Physical sources are observed on the server thread and integrated by `SpatialSourceTimeline`.
+For power W and event interval deltaTick, input J is W * deltaTick / 20; signed impulses
+already contain J. The producer normally seals a window every 20 ticks. A source has one packed BlockPos identity, a
 lifecycle generation, an origin, an anchor/target, a profile, and immutable
 ports. `PhysicalSourceSpatialIndex` indexes origin section/chunk and target
 section, so changing one machine or campfire does not scan all sources.
 
-When worker delay combines several normal cuts, the ledger settles the full
-elapsed source energy and transport advances once with the same elapsed game
-time. The normal cut remains one second. Source events keep their timestamps;
-the coarse exchange step does not reconstruct intermediate geometry changes.
+Source windows retain their event times and total signed energy when delayed intervals
+are compacted. `ThermalSourceBatch` only describes registration, power, enabled state
+and unload controls; it no longer transports a second impulse or node-integration path.
+Regional jobs consume claimed J only when the accepted result is published. The coarse
+exchange step does not reconstruct intermediate geometry changes.
 
 Each positive-share `AIR_FACE` port retains its exact target Brick. Its zero/nonzero source
 reference transition updates one main-thread source-seed bit; multiple sources
@@ -31,6 +35,22 @@ players and other queries do not hold Pages open.
 | Generator | `10,000 W * level` | `80%` exhaust convection | `20%` radiation loss |
 | Fountain | `2,000 W * level` | `90%` convection | `10%` radiation loss |
 | Radiator | `4,000 W * level` | `90%` convection | `10%` radiation loss |
+
+`CampfireTileEntityMixin_TimeLimit` still consumes one `lifeTime` unit on every
+actual lit cooking tick. The final decrement to0 leaves that tick lit; the next
+tick extinguishes through the existing block update. Countdown calls vanilla
+`Level.blockEntityChanged` every tick to preserve chunk dirty marking. Ordinary
+campfires have no analog output, so only their countdown skips the additional
+neighbor-output scan; an extended state with `hasAnalogOutputSignal` keeps
+`setChanged`. Fuel insertion, lifetime assignment/load, vanilla cooking/inventory
+updates and extinguishing retain their full notifications. Save serialization
+reads the current lifetime, with the existing item burn-time multiplier and cap.
+
+The real stick/cooking/comparator and save/unload/disk-reload scenes passed before
+and after this change. The same900tick fuel lifecycle and exact saved/loaded
+lifetime were retained;23 matched Air observations differed by at most0.000119C.
+See the [fuel comparison](../../build/checkpoint-hotspots-fuel-comparison-20261012.json)
+and [save hotspot execution plan](../../plans/2026-10-12_checkpoint-save-hotspots-next.md).
 
 Blocked AIR_FACE ports become declared loss; topology-unavailable ports become
 degraded loss until their exact source Brick is compiled. Neither creates a
@@ -92,40 +112,43 @@ hundred-player workloads.
 
 ## Worker Energy
 
-This section's direct arena delivery describes the default scalar backend. With
-`continuousAir = true`, `acceptAndRecord` writes W spans/J impulses into `CutLoadBuffer`,
-and `AIR_STENCIL` binds one physical port to a spatial `AirLoadTable` entry. The coupled
-solver accepts delivery before the ledger confirms it; material H/branch and real phase ACKs
-retain their existing owners. See [Continuous Air Runtime](continuous-air-runtime.md#source-and-material-advancement).
-
-`ThermalSourceLedger` integrates continuous power at authoritative event ticks.
-For each source event it settles only the nodes whose power or binding changes;
-the active accumulator list is drained once through the batch target tick. A
-thermal-node binding is `(arena slot, lifecycle generation)`. Rebind settles the
-old node before moving the port contribution, and unload releases every binding
-before recycling the source and accumulator slots.
-
-The ledger writes joules into the same `ThermalCellArena` used by the solver.
-There is no second source timeline, historical generation table, or cumulative
-diagnostic total. Source event order is the order in the immutable batch and is
-validated against the worker cursor.
+The formal runtime uses `SpatialSourceTimeline` to capture event-time power and signed impulses,
+`SpatialSourceIngress` to transfer source windows, and `SpatialHeatStore` to own accepted,
+unconsumed joules. Regional jobs claim a prefix and consume it only when their result commits;
+cancellation returns the claim. `ThermalSourceLedger` supplies source metadata and the energy
+balance, while `MaterialStateAccess` reads the actual regional material owner. See
+[the current ownership contract](thermal-runtime-control.md). The old node accumulator,
+direct arena delivery and dual recording-mode switch have been deleted. Binding changes
+affect the current port identity; already accepted J keeps the Store's world identity and
+handoff rules. The ledger accounts for committed delivery, unaccepted energy, declared
+loss, unavailable-geometry loss and exported pending heat without integrating power again.
 
 ## Materials And Phase
 
-Each resident material block owns one enthalpy H in `ThermalCellArena` and a
-shared `MaterialThermalLaw`; temperature comes from that law. A partially filled
-block owns no gap-Air temperature. Actual Air regions and material bodies use
-the same arena and conservative pair exchange. `AirRouteCompiler` compiles
+Each resident material block owns one enthalpy H and a shared `MaterialThermalLaw`;
+temperature comes from that law. The regional runtime stores accepted H/branch/waiting in `ThermalRegion.Accepted`;
+`MaterialStateAccess` supplies migration, phase decisions and explicit gameplay controls,
+while arena retains staged initialization, geometry and phase request identity.
+See the [regional ownership contract](continuous-air-regional-preparation.md#区域已提交状态与材料边界同步).
+A partially filled block owns no gap-Air temperature. Air and material exchange
+energy conservatively using the selected backend. `AirRouteCompiler` compiles
 ventilated geometry into region references and finite-conductance connections.
 An ordinary Brick has at most 64 Air-region plus material nodes; full Air uses one.
 
-`MaterialEdgeCompiler` aggregates each undirected contact once. Ordinary zero-offset
-fixed-capacity laws retain the compiled one-second exchange kernel; nonzero-offset
-or phase laws use `MaterialEnthalpyExchange` over bounded sensible/latent segments.
+`MaterialEdgeCompiler` aggregates each undirected contact once in its canonical contribution
+order. Fine material sweeps use `LocalMaterialBoundary` with private enthalpy/branch state;
+coarse work uses `MinimumRegionStep`. Both use the actual interval duration and bounded
+sensible/latent segments. The unused one-second exchange coefficient and its storage
+have been removed; `ThermalExchangeKernel` remains in use by actual item heat exchange.
 The phase plateau is part of H-to-temperature conversion, not a separate reservoir.
-`PhaseTransitionRuntime` owns only completed-transition requests. Main-thread ACK
+`PhaseTransitionRuntime` owns completed-transition requests and applies explicit
+gameplay phase controls through the selected material owner. Main-thread ACK
 requires the matching block, Page lifecycle, profile, branch and request sequence;
 an applied ACK does not subtract latent energy again.
+Production completions hand off at most 160 requests per 20-tick cut so the main
+thread's 8-per-tick mutation limit can be used throughout the cut. A matching body
+whose Page query has not caught up to topology publication is retried with the same
+sequence; a missing Page lifecycle or changed block identity is rejected.
 
 Contact conductance uses the material category whether or not the state has phase
 transitions: earth `1.0 W/K`, masonry `1.4 W/K` per full block face. A recipe's

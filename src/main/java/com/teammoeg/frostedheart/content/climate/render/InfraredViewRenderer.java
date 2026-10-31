@@ -103,6 +103,7 @@ public final class InfraredViewRenderer {
     private static boolean surfacePrepared, terrainVisited, terrainDepthCaptured;
     private static int frameTexture, frameOriginX, frameOriginY, frameOriginZ;
     private static boolean open;
+    private static boolean displayHasCoverage;
     private static boolean deltaBaselineValid;
     private static boolean receivingResponse;
     private static boolean requestCenterValid;
@@ -138,7 +139,7 @@ public final class InfraredViewRenderer {
 
     /** Called by our terrain renderer after the original pass has selected its target. */
     public static boolean visitTerrainPass() {
-        if (radius <= 0 || cameraPose == null || GL11.glGetInteger(GL30.GL_DRAW_FRAMEBUFFER_BINDING)
+        if (!displayHasCoverage || radius <= 0 || cameraPose == null || GL11.glGetInteger(GL30.GL_DRAW_FRAMEBUFFER_BINDING)
                 != Minecraft.getInstance().getMainRenderTarget().frameBufferId) return false;
         terrainVisited = true;
         return true;
@@ -147,8 +148,7 @@ public final class InfraredViewRenderer {
     public static boolean prepareSurfaceCapture() {
         if (surfacePrepared) return true;
         Minecraft minecraft = Minecraft.getInstance();
-        if (minecraft.player == null) return false;
-        if (temperatureTexture == 0 && !receivingResponse) initializeEmptyTemperatureTexture(minecraft);
+        if (minecraft.player == null || !displayHasCoverage || temperatureTexture == 0) return false;
         RenderTarget main = minecraft.getMainRenderTarget();
         if (surfaceTarget == null) surfaceTarget = new InfraredSurfaceTarget();
         if (!surfaceTarget.ensure(main.width, main.height, main.getColorTextureId(), main.getDepthTextureId())) return false;
@@ -180,10 +180,10 @@ public final class InfraredViewRenderer {
     }
 
     public static void clientTick() {
-        if (open && radius < SCAN_RADIUS_BLOCKS) {
+        if (open && displayHasCoverage && radius < SCAN_RADIUS_BLOCKS) {
             radius = Mth.clamp(
                     radius + RADIUS_DUR, 0.0F, SCAN_RADIUS_BLOCKS);
-        } else if (!open && radius > 0.0F) {
+        } else if ((!open || !displayHasCoverage) && radius > 0.0F) {
             radius = Mth.clamp(
                     radius - RADIUS_DUR, 0.0F, SCAN_RADIUS_BLOCKS);
         }
@@ -285,6 +285,12 @@ public final class InfraredViewRenderer {
         deltaBaselineValid = true;
         Arrays.fill(dirtyUploadPages, 0L);
         knownFieldPages = data.fieldPages();
+        displayHasCoverage = hasCoverage(knownPresence) || hasCoverage(knownFieldPages);
+    }
+
+    private static boolean hasCoverage(long[] pages) {
+        for (long word : pages) if (word != 0L) return true;
+        return false;
     }
 
     public static void invalidateDisplay() {
@@ -592,22 +598,11 @@ public final class InfraredViewRenderer {
         }
         return infraredProgram;
     }
-    private static void initializeEmptyTemperatureTexture(
-            Minecraft minecraft
-    ) {
-        if (!ensureTemperatureMirror()) {
-            clearMirror();
-        }
-        textureCenterChunkX = Mth.floor(minecraft.player.getX()) >> 4;
-        textureCenterChunkZ = Mth.floor(minecraft.player.getZ()) >> 4;
-        textureCenterSectionY = Mth.floor(minecraft.player.getEyeY()) >> 4;
-        uploadFullTemperatureTexture();
-    }
-
     public static void reset() {
         invalidateRequests();
         open = false;
         radius = 0.0F;
+        displayHasCoverage = false;
         deltaBaselineValid = false;
         infraredEpoch = 0;
         storedEpoch = 0;

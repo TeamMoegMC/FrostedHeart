@@ -23,6 +23,7 @@ package com.teammoeg.frostedheart.content.climate.thermal.topology;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.BlockBrickLayout;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialBoundaryRegistry;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialSample;
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialStateAccess;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialThermalLaw;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.PageSignatures;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalCellArena;
@@ -35,21 +36,26 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 /** Move whole-block enthalpy to a replacement layout without changing phase request identity. */
 final class BrickMigrationKernel {
     private final ThermalCellArena arena;
+    private final MaterialStateAccess materialStates;
     private final ThermalSignatureTable signatures;
     private final ThermalTopologyParameters parameters;
     private final MaterialBoundaryRegistry materials;
     private final double[] nodeEnthalpiesJ = new double[64], blockTemperaturesC = new double[64];
     private final double[] changedMaterialEnergy = new double[64];
     private final byte[] changedMaterialBranch = new byte[64];
+    private long replacedMaterials;
     double externalMaterialEnergyJ;
     private final MaterialSample restoredMaterial = new MaterialSample();
+    private final MaterialSample previousMaterial = new MaterialSample();
 
     BrickMigrationKernel(
             ThermalCellArena arena,
+            MaterialStateAccess materialStates,
             ThermalSignatureTable signatures,
             ThermalTopologyParameters parameters,
             MaterialBoundaryRegistry materials) {
         this.arena = arena;
+        this.materialStates = materialStates;
         this.signatures = signatures;
         this.parameters = parameters;
         this.materials = materials;
@@ -68,13 +74,14 @@ final class BrickMigrationKernel {
             double initialTemperatureC,
             boolean resetMaterials) {
         externalMaterialEnergyJ = 0;
+        replacedMaterials = 0;
         int nodeCount = newBrick.span.count(), firstSlot = newBrick.span.firstSlot();
         if (nodeCount == 0) {
             for (int slot = oldBrick.span.firstSlot();
                     slot < oldBrick.span.endSlotExclusive();
                     slot++) {
                 if (arena.materialLaw(slot) != null)
-                    externalMaterialEnergyJ -= arena.enthalpyJ(slot);
+                    externalMaterialEnergyJ -= oldEnthalpyJ(slot);
             }
             return;
         }
@@ -97,9 +104,13 @@ final class BrickMigrationKernel {
         if (oldBrick.span.count() > 0) {
             for (int blockIndex = 0; blockIndex < 64; blockIndex++) {
                 int oldSlot = oldBrick.slotAt(blockIndex), newSlot = newBrick.slotAt(blockIndex);
+                if (sameLifecycle && !resetMaterials && (replacedMaterials & 1L << blockIndex) == 0
+                        && oldSlot >= 0 && newSlot >= 0
+                        && arena.materialLaw(oldSlot) != null && arena.materialLaw(newSlot) != null)
+                    arena.inheritMaterialIncarnation(oldSlot, newSlot);
                 if (resetMaterials) {
                     if (oldSlot >= 0 && arena.materialLaw(oldSlot) != null)
-                        externalMaterialEnergyJ -= arena.enthalpyJ(oldSlot);
+                        externalMaterialEnergyJ -= oldEnthalpyJ(oldSlot);
                     if (newSlot >= 0 && arena.materialLaw(newSlot) != null) {
                         externalMaterialEnergyJ += arena.enthalpyJ(newSlot);
                         continue;
@@ -118,13 +129,14 @@ final class BrickMigrationKernel {
                 if (oldSlot < 0 || newSlot < 0) continue;
                 int pageBlockIndex = BlockBrickLayout.pageBlock(brick, blockIndex);
                 if (arena.materialLaw(oldSlot) != null && arena.materialLaw(newSlot) != null) {
-                    var transition = arena.materialTransition(oldSlot);
+                    materialStates.readMaterial(oldSlot, previousMaterial);
+                    var transition = previousMaterial.law().transition(previousMaterial.branch());
                     if (arena.materialTransitionAcknowledged(oldSlot)
                             && transition != null
                             && transition.targetStateId()
                                     == signatures.materialStateId(
                                             nextSignatures.get(pageBlockIndex))) {
-                        nodeEnthalpiesJ[newSlot - firstSlot] = arena.enthalpyJ(oldSlot);
+                        nodeEnthalpiesJ[newSlot - firstSlot] = previousMaterial.enthalpyJ();
                         continue;
                     }
                 }
@@ -135,7 +147,7 @@ final class BrickMigrationKernel {
                         page.signatures.get(pageBlockIndex), nextSignatures.get(pageBlockIndex)))
                     continue;
                 double previousEnergyPerBlockJ =
-                        arena.enthalpyJ(oldSlot)
+                        oldEnthalpyJ(oldSlot)
                                 / Long.bitCount(
                                         oldBrick.nodeMask(oldSlot - oldBrick.span.firstSlot()));
                 double initialEnergyPerBlockJ =
@@ -214,11 +226,9 @@ final class BrickMigrationKernel {
                         && arena.minimum(oldSlot, 1) == arena.minimum(newSlot, 1)
                         && arena.minimum(oldSlot, 2) == arena.minimum(newSlot, 2)) {
                     arena.copyPhaseRequestState(oldSlot, newSlot);
-                    if (arena.materialLaw(newSlot) != null) {
-                        arena.stageMaterialState(
-                                newSlot, arena.enthalpyJ(oldSlot), arena.materialBranch(oldSlot));
-                    }
-                    nodeEnthalpiesJ[newSlot - newBrick.span.firstSlot()] = arena.enthalpyJ(oldSlot);
+                    materialStates.readMaterial(oldSlot, previousMaterial);
+                    arena.stageMaterialState(newSlot, previousMaterial.enthalpyJ(), previousMaterial.branch());
+                    nodeEnthalpiesJ[newSlot - newBrick.span.firstSlot()] = previousMaterial.enthalpyJ();
                     break;
                 }
             }
@@ -237,14 +247,17 @@ final class BrickMigrationKernel {
             int pageBlock = changes.blockIndex(event);
             int block = (pageBlock & 3) | (pageBlock >>> 4 & 3) << 2 | (pageBlock >>> 8 & 3) << 4;
             long bit = 1L << block;
+            if (changes.cause(event) == MaterialChanges.REPLACE) replacedMaterials |= bit;
             if ((changed & bit) == 0) {
                 int oldSlot = oldBrick.slotAt(block);
-                changedMaterialEnergy[block] =
-                        oldSlot >= 0 && arena.materialLaw(oldSlot) != null
-                                ? arena.enthalpyJ(oldSlot)
-                                : 0;
-                changedMaterialBranch[block] =
-                        oldSlot >= 0 ? arena.materialBranch(oldSlot) : MaterialThermalLaw.SENSIBLE;
+                if (oldSlot >= 0 && arena.materialLaw(oldSlot) != null) {
+                    materialStates.readMaterial(oldSlot, previousMaterial);
+                    changedMaterialEnergy[block] = previousMaterial.enthalpyJ();
+                    changedMaterialBranch[block] = previousMaterial.branch();
+                } else {
+                    changedMaterialEnergy[block] = 0;
+                    changedMaterialBranch[block] = MaterialThermalLaw.SENSIBLE;
+                }
                 changed |= bit;
             }
             MaterialThermalLaw before = law(changes.previousSignature(event));
@@ -280,5 +293,11 @@ final class BrickMigrationKernel {
     private MaterialThermalLaw law(int signature) {
         var profile = materials.profileOrNull(signatures.materialProfileId(signature));
         return profile == null ? null : profile.thermalLaw();
+    }
+
+    private double oldEnthalpyJ(int slot) {
+        if (arena.materialLaw(slot) == null) return arena.enthalpyJ(slot);
+        materialStates.readMaterial(slot, previousMaterial);
+        return previousMaterial.enthalpyJ();
     }
 }

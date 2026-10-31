@@ -1,0 +1,169 @@
+{
+  "Status": "verified for stated scenes; no new numerical approximation; CPU attribution remains limited",
+  "VerifiedAt": "2026-10-28T13:34:37.0755143+08:00",
+  "Conditions": {
+    "CPU": "Intel Core i7-12800HX",
+    "LogicalProcessors": 24,
+    "Workers": 4,
+    "HeapGiB": 5,
+    "ThermalMemoryMiB": 128,
+    "PoolCpuMsPerSecond": 250,
+    "Clock": "realtime20",
+    "PerformanceTicks": 2400,
+    "Consumers": 100,
+    "JFR": "profile",
+    "PROFILE": false,
+    "TRACE": false,
+    "DeepMemory": false,
+    "PressureMemoryMiB": 64
+  },
+  "Source": {
+    "ProductionFiles": 6,
+    "ProductionNetLines": 86.0,
+    "NewTopLevelProductionTypes": 0,
+    "NewGameTestMethods": 2,
+    "NumericalFormulasAndStepUnchanged": true
+  },
+  "Functional": {
+    "RequiredPassed": 11,
+    "CompactVsExpandedExchanges": 80,
+    "TemperatureEnthalpyBranchWaitExact": true,
+    "CompactFixtureBackingBytes": 27480,
+    "ExpandedFixtureBackingBytes": 27912,
+    "ComponentDescriptors": 2,
+    "PhysicalCells": 97,
+    "EnhancedCells": 52,
+    "UniqueEdges": 460,
+    "MassAndConductanceExact": true,
+    "GraphReuse": true,
+    "SortBitRangeCases": 752,
+    "PairedEntries": 9001,
+    "GraphFixtures": 6,
+    "SourceCancellations": 2,
+    "SourcePublications": 1,
+    "SourceReplayTemperatureErrorC": 0,
+    "SourceReplayEnergyErrorJ": 0,
+    "ActualPowderSnowConversion": true,
+    "RetainedReaderBytes": 1330560,
+    "ReaderBytesAfterRelease": 0,
+    "GridSwitchCompletions": 2,
+    "Checkpoints": 2,
+    "MaximumRecoveryJumpC": 0.004331000829360221,
+    "MaximumCheckpointErrorC": 0.09677784844758897,
+    "ExistingExtremeCoarseningJumpC": 1.474399509127883
+  },
+  "Pressure": {
+    "RequiredPassed": 1,
+    "Sources": 1024,
+    "ElapsedTicks": 5079,
+    "CommitsPer400Ticks": [
+      21,
+      21,
+      21,
+      19
+    ],
+    "UnavailableTicksPer400Ticks": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "MaximumAgeTicksPerWindow": [
+      22,
+      22,
+      22,
+      23
+    ],
+    "RealSaves": 3,
+    "FineRecoveryStableTicks": 400,
+    "MaximumControlAgeTicks": 25,
+    "OrderingFailures": 0,
+    "MaximumEnergyImbalanceJ": 0,
+    "InitialTargetMiB": 64,
+    "TargetAfterWithdrawalMiB": 128,
+    "PeakRootBytes": 176791546,
+    "PreviousSortPeakRootBytes": 176755082
+  },
+  "Performance": {
+    "RequiredPassed": 1,
+    "Queries": 12000,
+    "MonitoringSinceTick": 58,
+    "AgeViolations": 0,
+    "GeometryViolations": 0,
+    "ConsumerViolations": 0,
+    "ObservedAllFine": true,
+    "WorkLimited": 0,
+    "Baseline": {
+      "WorkerCpuMs": 3062.0,
+      "WorkerAllocatedBytes": 3427250544.0,
+      "ThermalPeakBytes": 97655962,
+      "MainThermalP99Us": 1258.0,
+      "ServerP99Us": 27593.0,
+      "SaveWaitMaximumUs": 60757.0,
+      "HeapSamplePeakBytes": 2000683008.0,
+      "ServerMaximumUs": 1769878.0,
+      "ConstructedRegionEpochs": 455,
+      "WorkerExecutionSamples": 615,
+      "GraphPreparationLeafSamples": 12
+    },
+    "Candidate": {
+      "WorkerCpuMs": 1656.0,
+      "WorkerAllocatedBytes": 2730235024.0,
+      "ThermalPeakBytes": 90316582,
+      "MainThermalP99Us": 1112.0,
+      "ServerP99Us": 24883.0,
+      "SaveWaitMaximumUs": 56829.0,
+      "HeapSamplePeakBytes": 1603661320.0,
+      "ServerMaximumUs": 1387805.0,
+      "ConstructedRegionEpochs": 452,
+      "WorkerExecutionSamples": 648,
+      "GraphPreparationLeafSamples": 25
+    },
+    "ObservedReductionPercent": {
+      "WorkerCPU": 45.917700849118226,
+      "WorkerAllocation": 20.337454500379238,
+      "ThermalPeak": 7.515547284250812,
+      "ThermalMainP99": 11.605723370429255,
+      "WholeServerP99": 9.821331497118834,
+      "MaximumSaveWait": 6.4650986717579855
+    }
+  },
+  "Validation": {
+    "UnifiedCompile": "assemble compileGameTestJava; first attempt;59s",
+    "PassedGroups": 3,
+    "RequiredPassed": 13,
+    "AllFirstAttempt": true,
+    "AllPassedServerRunsRootZero": true,
+    "ThermalErrors": 0,
+    "SourceAndTestsUnchangedAfterCompile": true,
+    "GameTestClassesInProductionJar": 0,
+    "ThermalClasses": 438,
+    "RetiredGridProbeInJar": 0,
+    "ProtectedParticleClassesPresent": 4
+  },
+  "CpuCounterDiagnosis": {
+    "RequalifiedOn": "2026-10-28",
+    "Status": "old platform CPU speed ratio invalidated; original readings retained",
+    "Record": "thermal-cpu-counter-diagnosis-2026-10-28.json",
+    "RealCpuSpeedupEstablished": false,
+    "HistoricalCyclesAvailable": false,
+    "OtherResults": "Numerical equivalence checks, allocation and charged-storage observations retain their original scene scope."
+  },
+  "Limits": [
+    "Prior complete baseline is retained; historical source was not copied or recompiled.",
+    "A single complete window per version is an observed scene comparison, not a stable universal speedup guarantee.",
+    "Thermal charge includes estimates/reservations; allocation and JVM heap are different metrics.",
+    "100 temperature consumers are not100 networked players.",
+    "Memory targets remain soft; the pressure fixture withdraws64MiB pressure to128MiB before requiring fine recovery.",
+    "Worker CPU counter fell45.9%, but later independent diagnosis invalidated its qualification as real CPU savings. JFR execution samples615->648 are not a replacement CPU clock."
+  ],
+  "Evidence": [
+    "build/thermal-compact-final-20261028.json",
+    "build/thermal-compact-matrix-20261028.json",
+    "build/thermal-compact-static-closure-20261028.json",
+    "build/thermal-compact-architecture-profile-20261028.txt",
+    "build/thermal-compact-hotspots-20261028.txt",
+    "build/thermal-compact-gc-review-20261028.txt",
+    "build/thermal-compact-performance-20261028-r1.jfr"
+  ]
+}

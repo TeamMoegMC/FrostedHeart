@@ -25,6 +25,12 @@ __pycache__/
 
 # Log file
 *.log
+*.jfr
+*.hprof
+*.tmp
+*.bak
+*.orig
+*.rej
 
 # BlueJ files
 *.ctxt
@@ -132,6 +138,7 @@ run/config/*
 !run/config/fhresearches/**
 run-gametest/
 run-infrared-validation/
+run-online-latency/
 
 # Avoid ignoring Gradle wrapper jar file (.jar files are usually ignored)
 !gradle-wrapper.jar

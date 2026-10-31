@@ -1,0 +1,107 @@
+{
+  "status": "passed-after-save-handoff-repair",
+  "date": "2026-10-26",
+  "author": "Codex; OpenAI GPT-6; full consumption review and implementation",
+  "coverage": [
+    "Minecraft input, dimension coordination and shared workers",
+    "Regional jobs, fine/coarse calculations and quality control",
+    "Source production, ingress, Store, binding and energy ledger",
+    "Queries, directory, leases and material state ownership",
+    "Topology, capture, material and geometry storage",
+    "Checkpoint, dormant state, restoration and v6 compatibility",
+    "Diagnostics, thermal configuration and consumers excluding Town"
+  ],
+  "source": {
+    "productionThermalFiles": 133,
+    "productionThermalLinesBefore": 44640,
+    "productionThermalLinesAfter": 44531,
+    "productionThermalRemovedNet": 109,
+    "testFiles": 107,
+    "testLinesBefore": 16238,
+    "testLinesAfter": 16272,
+    "testFilesChanged": 1,
+    "testLinesAddedNet": 34,
+    "allJavaRemovedNet": 75,
+    "newProductionTypes": 0,
+    "temporaryObservationTypesRemaining": 0,
+    "thermalConfigChange": "One obsolete PCG description corrected; all values and defaults unchanged"
+  },
+  "removed": [
+    "Unused ContinuousAirSolver MaterialStateAccess forwarding implementation and mutable coefficients alias",
+    "AirPairs direction output column and exclusive production/accounting; existing edge order retained",
+    "FarBoundaries unused aggregate conductance column and hash/sum scratch; real face patches retained",
+    "Duplicate mutable-result status copies; existing Status return values retained",
+    "Unconsumed preparation exception metadata, shrink counter and redundant Page publication reference",
+    "Unconsumed capture failure strings and exclusive diagnostic producer",
+    "Isolated Editor/PendingHeatCheckpoint/SpatialHeatInput backing-report chain",
+    "Uncalled synchronous topology prepare, unconditional shape restore and redundant query setter",
+    "SnapshotRequest outer-instance reference"
+  ],
+  "saveRepair": {
+    "trigger": "Extinguish a real fire and release far chunk tickets after regional fine/coarse recovery",
+    "observedBadData": "Frozen geometry owned slot 53 at 336/-59/8 with resident brick still present but raw signature -1; palette stateId became -1 and encode failed",
+    "captureRepair": "Sparse capture uses the retained SectionOwner.section BlockState instead of requiring getChunkNow during chunk retirement",
+    "topologyRepair": "Residency signature replacement first uses existing compareFullSignatures to rebuild changed retained bricks even when residency mask is unchanged",
+    "newRegression": "residencyUpdatesReplaceSignaturesAndMaterialTogether: same-mask STONE/AIR/STONE, material identity and actual NBT encoding",
+    "saveFallbackAdded": false
+  },
+  "builds": {
+    "firstCleanupBuild": { "status": "passed", "elapsed": "1m2s", "log": "build/thermal-comprehensive-compile-20261026-r1.log" },
+    "observationTestCompiles": [
+      { "status": "passed", "elapsed": "13s", "log": "build/thermal-comprehensive-observation-compile-20261026-r2.log" },
+      { "status": "failed", "elapsed": "15s", "reason": "Temporary test observation accessed non-public field", "log": "build/thermal-comprehensive-observation-compile-20261026-r3.log" },
+      { "status": "passed", "elapsed": "14s", "log": "build/thermal-comprehensive-observation-compile-20261026-r4.log" },
+      { "status": "passed", "elapsed": "13s", "log": "build/thermal-comprehensive-observation-compile-20261026-r5.log" }
+    ],
+    "finalBuild": { "status": "passed", "elapsed": "58s", "java": 17, "command": "assemble compileGameTestJava --offline --no-daemon --max-workers=1", "log": "build/thermal-comprehensive-compile-20261026-final.log" }
+  },
+  "serverRunHistory": [
+    { "run": 1, "status": "failed-thermal-save", "assertionsPassed": 19, "rootZero": true, "thermalSaveFailures": 1, "log": "build/thermal-comprehensive-focused-20261026-r1.log" },
+    { "run": 2, "status": "interrupted-after-save-failure", "assertionsPassed": null, "rootZero": null, "thermalSaveFailures": 1, "log": "build/thermal-comprehensive-focused-20261026-r2.log" },
+    { "run": 3, "status": "failed-thermal-save", "assertionsPassed": 19, "rootZero": true, "thermalSaveFailures": 1, "log": "build/thermal-comprehensive-focused-20261026-r3.log" },
+    { "run": 4, "status": "failed-thermal-save", "assertionsPassed": 19, "rootZero": true, "thermalSaveFailures": 1, "log": "build/thermal-comprehensive-focused-20261026-r4.log" },
+    { "run": 5, "status": "passed", "assertionsPassed": 27, "rootZero": true, "thermalSaveFailures": 0, "log": "build/thermal-comprehensive-focused-20261026-final.log" }
+  ],
+  "finalVerification": {
+    "started": "2026-10-26T16:42:49.5804009+08:00",
+    "ended": "2026-10-26T16:47:49.0636205+08:00",
+    "elapsed": "4m59s",
+    "groups": { "thermalInput": 8, "sourceCancellationReplay": 1, "storage": 6, "materialReaderLifecycle": 3, "gridConversion": 1, "material": 8 },
+    "requiredPassed": 27,
+    "thermalSaveFailures": 0,
+    "rootZero": true,
+    "heap": "5g",
+    "memoryTargetMiB": 128,
+    "cpuMsPerSecond": 250,
+    "sourceJ": 6400,
+    "deliveredJ": 6400,
+    "cancellations": 2,
+    "publications": 1,
+    "sourceReplayEnergyDeltaJ": 0,
+    "sourceReplayTemperatureDeltaC": 0,
+    "readerRootBeforeLastRelease": 1321864,
+    "readerRootAfterLastRelease": 0,
+    "gridCycles": 2,
+    "gridCheckpoints": 2,
+    "gridRecoveryJumpC": 1.7763568394002505e-15,
+    "gridCheckpointErrorC": 0.09677785178269183,
+    "gridCoarseningEnergyErrorJ": 8.195638656616211e-8,
+    "productionOrTestSourceEditsAfterFinalCompile": false,
+    "junitRuns": 0,
+    "performanceRun": false
+  },
+  "finalStaticReview": {
+    "methodsBefore": 4580,
+    "methodsAfter": 4561,
+    "fieldsBefore": 3894,
+    "fieldsAfter": 3885,
+    "resolvedCallReadWriteEdges": 34221,
+    "remainingUnreachedMethods": ["ClassValue.computeValue library callback", "Explicit signed impulse input contract"],
+    "remainingFieldsWithoutDirectReaders": "Three SectionOwner flags read through VarHandle",
+    "confirmedCleanupItemsRemaining": 0,
+    "reportPrefix": "build/thermal-comprehensive-20261026-final"
+  },
+  "package": { "bytes": 14948578, "thermalClasses": 435, "testClassesInProduction": 0, "protectedParticleClasses": 4 },
+  "scope": { "townChanged": false, "protectedParticleFilesChanged": false, "excludedFileMetadataChecked": 350, "excludedFileMetadataChanged": 0, "performanceOptimization": "deferred", "numericalAlgorithmOrQualityPolicyChanges": false },
+  "limits": ["No new performance or 0.1C approximation qualification", "Full scoped review is not a claim that future dynamic consumers or future edits can never introduce redundancy"]
+}

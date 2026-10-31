@@ -1,0 +1,129 @@
+{
+  "status": "passed",
+  "date": "2026-10-25",
+  "author": "Codex; OpenAI GPT-6; primary implementation and review",
+  "scope": "Confirmed thermal tail cleanup; active PCG unchanged",
+  "source": {
+    "beforeFiles": 134,
+    "beforeLines": 45411,
+    "afterFiles": 134,
+    "afterLines": 45153,
+    "netRemovedLines": 258,
+    "newProductionTypes": 0,
+    "deletedProductionTypes": 0
+  },
+  "removed": [
+    "Inherited numerical fragment arrays, parent collection/sort, binary search and impossible coarse cache matches",
+    "Unreachable non-nodal candidate projection/warm-start and exclusive helpers",
+    "Unused preparation/checkpoint/timestamp/global source wrappers",
+    "Empty LocalAirShape page metadata, unused maximum scan, duplicate branch construction and derivative modes",
+    "One constant-true legacy test assertion"
+  ],
+  "retained": [
+    "Actual coarse local volume capacity and transport edges",
+    "Parent temperature maps, frame ownership and selected workspace donor",
+    "Fine graph reuse and bounded PCG tolerance/iteration behavior",
+    "v6 fields and legacy signed shape interpolation, slicing and re-encoding",
+    "Live material-face quadrature and support-search radius constants",
+    "Four protected climate/player/unused files"
+  ],
+  "compile": {
+    "command": "assemble compileGameTestJava --offline --no-daemon --max-workers=1",
+    "java": 17,
+    "attempts": 1,
+    "status": "passed",
+    "elapsed": "1m5s",
+    "log": "build/thermal-tail-compile-r1.log"
+  },
+  "package": {
+    "jar": "D:/Frosted-Heart/build/libs/frostedheart-1.20.1-0.7.7.jar",
+    "bytes": 14962833,
+    "thermalClasses": 439,
+    "gameTestClassesInProduction": 0,
+    "protectedParticleClasses": 4
+  },
+  "staticReview": {
+    "methods": 4633,
+    "fields": 3967,
+    "rawCandidates": 941,
+    "conservativeCandidates": 388,
+    "candidateCountsAreGarbageCounts": false,
+    "diffCheck": "passed with cr-at-eol on Windows",
+    "report": "build/thermal-tail-member-review-20261025-summary.txt"
+  },
+  "verification": {
+    "junitRuns": 0,
+    "fullMatrixRerun": false,
+    "performanceComparison": false,
+    "separateProcessSaveReloadRerun": false,
+    "memoryTargetMiB": 128,
+    "cpuMsPerSecond": 250,
+    "heap": "5g",
+    "clock": "realtime20",
+    "newTest": "Legacy function checkpoint: signed amplitude, two section slices, full 64-bit branch and source metadata, decode/re-encode temperatures -5 and -25 C",
+    "cases": [
+      {
+        "name": "storage",
+        "attempt": 1,
+        "status": "passed",
+        "started": "2026-10-25T23:20:41.0488249+08:00",
+        "ended": "2026-10-25T23:21:54.3036198+08:00",
+        "exit": 0,
+        "requiredPassed": 6,
+        "rootZero": true,
+        "memoryTargetMiB": 128,
+        "cpuMsPerSecond": 250,
+        "log": "build/thermal-tail-storage-20261025-r1.log"
+      },
+      {
+        "name": "grid",
+        "attempt": 1,
+        "status": "passed",
+        "started": "2026-10-25T23:21:54.3207017+08:00",
+        "ended": "2026-10-25T23:23:53.1510454+08:00",
+        "exit": 0,
+        "requiredPassed": 1,
+        "rootZero": true,
+        "memoryTargetMiB": 128,
+        "cpuMsPerSecond": 250,
+        "log": "build/thermal-tail-grid-20261025-r1.log"
+      },
+      {
+        "name": "restored",
+        "attempt": 1,
+        "status": "passed",
+        "started": "2026-10-25T23:23:53.1533949+08:00",
+        "ended": "2026-10-25T23:26:04.5836366+08:00",
+        "exit": 0,
+        "requiredPassed": 1,
+        "rootZero": true,
+        "memoryTargetMiB": 128,
+        "cpuMsPerSecond": 250,
+        "log": "build/thermal-tail-restored-20261025-r1.log"
+      }
+    ],
+    "requiredTestsPassed": 8,
+    "failedAttempts": 0
+  },
+  "limits": [
+    "No measured performance improvement or new fully networked hundred-player qualification",
+    "Previous 21-test matrix retains its earlier source scope",
+    "Active PCG direct-solve replacement is outside this cleanup"
+  ],
+  "observations": {
+    "legacyFirstSectionC": -5,
+    "legacySecondSectionC": -25,
+    "legacyBranch": "0x123456789ABCDEF0",
+    "gridCycles": 2,
+    "gridCheckpoints": 2,
+    "maximumCoarseningJumpC": 1.4745287277342438,
+    "maximumRecoveryJumpC": 0.00433627511793766,
+    "maximumCheckpointErrorC": 0.09674559860551213,
+    "maximumCoarseningEnergyErrorJ": 2.980232238769531E-08,
+    "maximumCells": 1259,
+    "restoredHistoryC": -12.111244213623676,
+    "restoredNaturalC": -11.9,
+    "restoredGameTick": 1143,
+    "restoredSampleTick": 1140
+  }
+}

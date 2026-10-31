@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.content.climate.thermal.mesh;
 
 import java.util.Arrays;
 
-/** Static, dimensionless unit-cell trilinear shape. It owns no dynamic temperature. */
+/** Dimensionless trilinear shape retained for saved-field decoding and evaluation. */
 public final class LocalAirShape {
     public static final int RADIUS = 6;
     public static final int WIDTH = 2 * RADIUS + 1;
@@ -34,25 +34,9 @@ public final class LocalAirShape {
     public final long branch;
     private final short[] cellCorners;
     private final float[] values;
-    private final ThermalPageHandle[] dependencies;
-    private final long[] revisions;
-
-    public LocalAirShape(int minX, int minY, int minZ, long sourceBlock, byte sourceFace, int scale,
-            short[] cellCorners, float[] values, ThermalPageHandle[] dependencies, long[] revisions) {
-        this(minX, minY, minZ, WIDTH, WIDTH, WIDTH, sourceBlock, sourceFace, scale,
-                cellCorners, values, dependencies, revisions);
-    }
 
     public LocalAirShape(int minX, int minY, int minZ, int sizeX, int sizeY, int sizeZ,
-            long sourceBlock, byte sourceFace, int scale, short[] cellCorners, float[] values,
-            ThermalPageHandle[] dependencies, long[] revisions) {
-        this(minX, minY, minZ, sizeX, sizeY, sizeZ, sourceBlock, sourceFace, scale,
-                cellCorners, values, dependencies, revisions, 0);
-    }
-
-    private LocalAirShape(int minX, int minY, int minZ, int sizeX, int sizeY, int sizeZ,
-            long sourceBlock, byte sourceFace, int scale, short[] cellCorners, float[] values,
-            ThermalPageHandle[] dependencies, long[] revisions, long branch) {
+            long sourceBlock, byte sourceFace, int scale, short[] cellCorners, float[] values, long branch) {
         this.minX = minX;
         this.minY = minY;
         this.minZ = minZ;
@@ -65,33 +49,17 @@ public final class LocalAirShape {
         this.branch = branch;
         this.cellCorners = cellCorners;
         this.values = values;
-        this.dependencies = dependencies;
-        this.revisions = revisions;
-    }
-
-    public int dependencyCount() { return dependencies.length; }
-    public ThermalPageHandle dependency(int index) { return dependencies[index]; }
-    public long revision(int index) { return revisions[index]; }
-
-    public boolean sameValues(LocalAirShape other) {
-        return other != null && minX == other.minX && minY == other.minY && minZ == other.minZ
-                && cellCorners == other.cellCorners && values == other.values;
-    }
-
-    public LocalAirShape withDependencies(ThermalPageHandle[] handles, long[] geometryRevisions) {
-        return new LocalAirShape(minX, minY, minZ, sizeX, sizeY, sizeZ, sourceBlock, sourceFace, scale,
-                cellCorners, values, handles, geometryRevisions, branch);
-    }
-
-    public LocalAirShape withBranch(long branch) {
-        return new LocalAirShape(minX, minY, minZ, sizeX, sizeY, sizeZ, sourceBlock, sourceFace, scale,
-                cellCorners, values, dependencies, revisions, branch);
     }
 
     public int cornerCount() { return cellCorners.length; }
     public short cornerIndex(int index) { return cellCorners[index]; }
     public int vertexCount() { return values.length; }
     public float vertexValue(int index) { return values[index]; }
+
+    public void recordBacking(AirBackingMeter meter) {
+        meter.array(cellCorners);
+        meter.array(values);
+    }
 
     /** Copy only this section's static shape fragment, preserving its vertex branches. */
     public LocalAirShape sectionSlice(int sectionX, int sectionY, int sectionZ) {
@@ -118,7 +86,7 @@ public final class LocalAirShape {
         float[] slicedValues = new float[vertices];
         for (int index = 0; index < remap.length; index++) if (remap[index] >= 0) slicedValues[remap[index]] = values[index];
         return new LocalAirShape(x0, y0, z0, nx, ny, nz, sourceBlock, sourceFace, scale,
-                corners, slicedValues, new ThermalPageHandle[0], new long[0], branch);
+                corners, slicedValues, branch);
     }
 
     public boolean containsCell(int x, int y, int z) {
@@ -133,22 +101,14 @@ public final class LocalAirShape {
     }
 
     public double value(int cellX, int cellY, int cellZ, double x, double y, double z) {
-        return evaluate(cellX, cellY, cellZ, x, y, z, -1);
-    }
-
-    public double derivative(int cellX, int cellY, int cellZ, double x, double y, double z, int axis) {
-        return evaluate(cellX, cellY, cellZ, x, y, z, axis);
-    }
-
-    private double evaluate(int cellX, int cellY, int cellZ, double x, double y, double z, int axis) {
         int cell = cellIndex(cellX, cellY, cellZ);
         if (cell < 0 || cellCorners[cell * 8] == (short) -1) return 0;
         double dx = x - cellX, dy = y - cellY, dz = z - cellZ;
         double result = 0;
         for (int corner = 0; corner < 8; corner++) {
-            double wx = axis == 0 ? ((corner & 1) == 0 ? -1 : 1) : ((corner & 1) == 0 ? 1 - dx : dx);
-            double wy = axis == 1 ? ((corner & 4) == 0 ? -1 : 1) : ((corner & 4) == 0 ? 1 - dy : dy);
-            double wz = axis == 2 ? ((corner & 2) == 0 ? -1 : 1) : ((corner & 2) == 0 ? 1 - dz : dz);
+            double wx = (corner & 1) == 0 ? 1 - dx : dx;
+            double wy = (corner & 4) == 0 ? 1 - dy : dy;
+            double wz = (corner & 2) == 0 ? 1 - dz : dz;
             result += wx * wy * wz * values[Short.toUnsignedInt(cellCorners[cell * 8 + corner])];
         }
         return result;

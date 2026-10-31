@@ -1,0 +1,99 @@
+{
+  "status": "passed-cleanup-only",
+  "date": "2026-10-26",
+  "author": "Codex; OpenAI GPT-6; internal cleanup and closure review",
+  "source": {
+    "productionFiles": 133,
+    "productionLinesBefore": 44746,
+    "productionLinesAfter": 44673,
+    "productionLinesRemovedNet": 73,
+    "existingTestFilesChanged": 3,
+    "testLinesAddedNet": 8,
+    "allJavaLinesRemovedNet": 65,
+    "newProductionTypes": 0
+  },
+  "removed": [
+    "PartitionPreparation.parents and its unused constructor parameter",
+    "Retained ThermalSolver.arena field; actual constructor initialization dependency preserved",
+    "MaterialEdgeCompiler.arena and unused constructor dependency",
+    "PageWrite.publicationChangedBrickMask; actual staged-mask validation preserved",
+    "Uncalled WorkerPageStore.installNaturalTemperature entry",
+    "ThermalCellArena.acceptExternalEnergyJ/materialEnergyLimitJ/addEnthalpyJ/setEnthalpyJ",
+    "Uncalled ThermalCellArena.inverseCapacityKPerJ/materialBranch getter wrappers"
+  ],
+  "testMigration": "Existing material Simulation seeds through MaterialStateAccess using the shared law, without copying regional state through arena; ACK fixture directly seeds completed energy and branch; existing assertions retained",
+  "compile": {
+    "command": "assemble compileGameTestJava --offline --no-daemon --max-workers=1",
+    "java": 17,
+    "attempts": 2,
+    "first": {
+      "status": "failed-test-compilation",
+      "mainCompilation": "passed",
+      "elapsed": "1m3s",
+      "reason": "Missed MaterialEdgeCompiler constructor invocation in ThermalCompactStorageGameTests",
+      "log": "build/thermal-internal-cleanup-compile-20261026-r1.log"
+    },
+    "second": {
+      "status": "passed",
+      "mainCompilation": "UP-TO-DATE; only missed test invocation corrected",
+      "elapsed": "29s",
+      "log": "build/thermal-internal-cleanup-compile-20261026-r2.log"
+    }
+  },
+  "verification": {
+    "serverRuns": 1,
+    "status": "passed",
+    "requiredTestsPassed": 22,
+    "groups": { "thermalInput": 8, "material": 7, "storage": 6, "sourceCancellationReplay": 1 },
+    "started": "2026-10-26T01:27:00.0668822+08:00",
+    "ended": "2026-10-26T01:29:53.7661972+08:00",
+    "elapsed": "2m53s",
+    "rootZero": true,
+    "memoryTargetMiB": 128,
+    "cpuMsPerSecond": 250,
+    "heap": "5g",
+    "clock": "realtime20",
+    "sourceJ": 6400,
+    "deliveredJ": 6400,
+    "cancellations": 2,
+    "publications": 1,
+    "sourceReplayEnergyDeltaJ": 0,
+    "sourceReplayTemperatureDeltaC": 0,
+    "productionOrTestSourceEditsAfterSuccessfulCompile": false,
+    "junitRuns": 0,
+    "fullMatrixRerun": false,
+    "performanceRun": false,
+    "log": "build/thermal-internal-cleanup-focused-20261026-r1.log"
+  },
+  "compiledReview": {
+    "methods": 4590,
+    "fields": 3898,
+    "methodsRemoved": 7,
+    "fieldsRemoved": 4,
+    "rawCandidates": 930,
+    "conservativeCandidates": 376,
+    "candidateCountsAreGarbageCounts": false,
+    "retiredNamesRemaining": 0,
+    "report": "build/thermal-internal-cleanup-member-review-20261026-summary.txt",
+    "apiReport": "build/thermal-internal-cleanup-compiled-api-20261026.txt"
+  },
+  "package": {
+    "jar": "D:/Frosted-Heart/build/libs/frostedheart-1.20.1-0.7.7.jar",
+    "bytes": 14951336,
+    "thermalClasses": 435,
+    "gameTestClassesInProduction": 0,
+    "protectedParticleClasses": 4
+  },
+  "scope": {
+    "townSourceInterfacesAndDocsChanged": false,
+    "protectedParticleFilesChanged": false,
+    "protectedFileMetadataChecked": 350,
+    "protectedFileMetadataChanged": 0,
+    "numericalOrQualityPolicyChanges": false,
+    "performanceOptimization": "deferred"
+  },
+  "limits": [
+    "Scoped source and compiled-member checks do not prove every dynamic entry in the repository has no future use",
+    "No new performance, coarse/fine conversion, independent-process restart or 0.1C approximation qualification"
+  ]
+}

@@ -1,7 +1,7 @@
 # 冰锥
 
 - Status: `Partial`（2026-10-22 按贴图轮廓裁剪模型，修复透明空白面片对邻近普通冰的遮挡；资源与模拟通过，客户端修复效果待确认，玩法回归记录见文末）
-- Last verified: `2026-10-23`（多种振动事件与距离衰减；世界生成与渲染核对为 2026-10-22，各次运行时验证见文末）
+- Last verified: `2026-10-31`（随机资格接入改为气候循环内筛选，热接入重点15项通过；未重跑完整冰锥组。多种振动事件与距离衰减核对为2026-10-23，生成与渲染核对为2026-10-22）
 - Scope: `frostedheart:icicle`、同名 feature、第二版冰洞装饰、TWR `cave/icicle`、随机生长、材料相变与坠落
 - Primary code anchors: `IcicleBlock`、`IcicleEvents`、`ServerLevelMixin_IcicleVibrations`、`IcicleFalling`、`IcicleFeature`、`FallingBlockEntityMixin_Icicle`、`MinecraftPhaseController.meltIcicle`、`MaterialChanges.GAMEPLAY_TRANSITION`、`IcicleGameTests`、`IcicleVibrationGameTests`、`IcicleThermalGameTests`
 
@@ -46,7 +46,7 @@ p_root = 0.005*m_cold(T)
 
 温差按连续值加算，0/-5/≤-10°C 的延长概率为每次随机刻 5%/7.5%/10%；根部为 0.5%/0.75%/1%。两者分别先抽最大可能概率 10%/1%，通过空间/群系等便宜条件后读取材料温度、补抽实际比例；热裂的 1/8 抽样不再乘到生长上。
 
-延长读取现尖端材料，要求下方空气、连续链少于八格且没有已预警段。长根读取基底冰块材料：`minecraft:ice` tag 中除 `ThinIceBlock`（含分层薄冰）以外的冰、完整底面、下面空气。`BlockStateBaseMixin_RandomTick` 与共享随机位置抽样补齐浮冰/蓝冰等非 vanilla 随机刻基底。新根水平方向 ±2 格、竖直方向 ±1 格内不得已有根部；邻区块未知则推迟。这些根部密度值为实施时选择的可调初值。
+延长读取现尖端材料，要求下方空气、连续链少于八格且没有已预警段。长根读取基底冰块材料：`minecraft:ice` tag 中除 `ThinIceBlock`（含分层薄冰）以外的冰、完整底面、下面空气。`ClimateBlockUpdates` 在原版随机资格不足时检查Section调色板，并在既有随机位置抽样中通过`IcicleBlock.canGrowRootFrom`补齐浮冰/蓝冰等基底；不再修改所有BlockState的`isRandomlyTicking`结果。调色板残留可能增加无效果样本并改变随机序列，具体取舍见[运行合同](thermal-runtime-control.md)。新根水平方向 ±2 格、竖直方向 ±1 格内不得已有根部；邻区块未知则推迟。这些根部密度值为实施时选择的可调初值。
 
 默认 20 TPS、randomTickSpeed=3、持续处于随机刻范围且空间足够时，延长一格平均约 22.8/15.2/11.4 分钟。不是每游戏 tick 5%；八格从已有一格延长需七次成功，0°C 理想均值约 2.65 小时。
 

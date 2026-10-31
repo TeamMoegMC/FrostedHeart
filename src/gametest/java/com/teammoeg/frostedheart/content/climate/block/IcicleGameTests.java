@@ -266,8 +266,8 @@ public final class IcicleGameTests {
             helper.assertTrue(IcicleBlock.inGrowthBiome(level, root), "root fixture must sample the cave biome");
             IcicleBlock.randomRootTick(level, root.above(), level.getBlockState(root.above()), YES);
             helper.assertTrue(IcicleBlock.isIcicle(level.getBlockState(root)), "existing cave ice can grow a root without world generation or water");
-            helper.assertTrue(Blocks.PACKED_ICE.defaultBlockState().isRandomlyTicking()
-                    && Blocks.BLUE_ICE.defaultBlockState().isRandomlyTicking(), "shared sampler admits non-vanilla-random ice substrates");
+            helper.assertTrue(!Blocks.PACKED_ICE.defaultBlockState().isRandomlyTicking()
+                    && !Blocks.BLUE_ICE.defaultBlockState().isRandomlyTicking(), "ice root eligibility must not alter vanilla state queries");
         }
         helper.succeed();
     }

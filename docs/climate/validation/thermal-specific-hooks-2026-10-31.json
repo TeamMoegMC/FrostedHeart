@@ -1,0 +1,117 @@
+{
+  "status": "passed_with_recorded_fixture_failures",
+  "verified_at": "2026-10-31T14:25:54+08:00",
+  "scope": "Campfire-specific explicit ignition hook, material-only chunk callback, source retry before BE installation, reachable weather snow; shared Section source resync still remains",
+  "production_build": {
+    "command": "gradlew.bat assemble compileGameTestJava -I build/thermal-build-tools-cache.init.gradle --offline --no-daemon --max-workers=1",
+    "log": "build/thermal-specific-hooks-compile-20261031-r1.log",
+    "passed": true,
+    "production_source_unchanged_after_this_build": true,
+    "later_compilation": "compileGameTestJava with compileJava excluded; only fixture source changed"
+  },
+  "final_unique_tests": {
+    "passed": 12,
+    "groups": [
+      {
+        "namespace": "frostedheart_source_input",
+        "passed": 6,
+        "attempt": 2,
+        "log": "build/thermal-specific-hooks-20261031-r2.log",
+        "evidence": "10 tests completed; the sole failure was the integration weather fixture, all six source cases passed",
+        "coverage": "direct lit placement, packed BE discovery, frozen source lifecycle, startup wake, refusal in a different initially empty chunk, captured placement rollback and lifecycle confirmation"
+      },
+      {
+        "namespace": "frostedheart_thermal_integration",
+        "passed": 4,
+        "attempt": 4,
+        "log": "build/thermal-specific-hooks-20261031-r4.log",
+        "coverage": "ice drops and water branch, direct snow/phase eligibility, actual maintenance save, actual tickChunk weather snow"
+      },
+      {
+        "namespace": "frostedheart_campfire_fuel",
+        "passed": 2,
+        "attempt": 1,
+        "log": "build/thermal-specific-hooks-20261031-r1.log",
+        "evidence": "12 tests completed; only the two new fixtures failed",
+        "coverage": "actual fuel countdown/cooking/extinction and save/unload/reload fuel retention"
+      }
+    ],
+    "weather_snow_cases": [
+      "disabled configuration prevents accumulation",
+      "no current rain prevents accumulation",
+      "temperature above WorldTemperature.SNOW_REACHES_GROUND prevents accumulation",
+      "cold rain increases three layers to four",
+      "the extra pass stops at five layers and marks replacement terrain snowy",
+      "existing grass terrain's SNOWY property is actually written at the layer cap"
+    ],
+    "snow_threshold_c": -13,
+    "snow_fixture_cold_c": -23,
+    "snow_fixture_warm_c": -3
+  },
+  "attempts": [
+    {
+      "attempt": 1,
+      "completed": 12,
+      "passed": 10,
+      "failed": 2,
+      "reason": "New fixtures assumed fixed distant coordinates were Air/above terrain; this is a normal-terrain world. Rollback restored real terrain and snow was placed underground.",
+      "record": "build/thermal-specific-hooks-20261031-r1.json",
+      "root_zero": true,
+      "thermal_errors": 0
+    },
+    {
+      "attempt": 2,
+      "completed": 10,
+      "passed": 9,
+      "failed": 1,
+      "reason": "Weather fixture changed scheduled weather flags without setting current rain intensity; it also still used -10 C, above the actual -13 C snow threshold.",
+      "record": "build/thermal-specific-hooks-20261031-r2.json",
+      "root_zero": true,
+      "thermal_errors": 0
+    },
+    {
+      "attempt": 3,
+      "completed": 4,
+      "passed": 3,
+      "failed": 1,
+      "reason": "Rain intensity was fixed, but -10 C correctly remained too warm under the actual -13 C rule. No production rule changed.",
+      "record": "build/thermal-specific-hooks-20261031-r3.json",
+      "root_zero": true,
+      "thermal_errors": 0
+    },
+    {
+      "attempt": 4,
+      "completed": 4,
+      "passed": 4,
+      "failed": 0,
+      "record": "build/thermal-specific-hooks-20261031-r4.json",
+      "root_zero": true,
+      "thermal_errors": 0
+    }
+  ],
+  "static_and_artifact": {
+    "generic_material_callback_has_no_campfire_logic": true,
+    "old_onBlockStateWritten_removed": true,
+    "old_extra_snow_mixin_and_registration_removed": true,
+    "registered_classes_all_resolve": true,
+    "production_java_line_delta": -44,
+    "new_production_types": 0,
+    "new_queues_or_state_flags": 0,
+    "registered_mixin_delta": -1,
+    "jar": "build/libs/frostedheart-1.20.1-0.7.7.jar",
+    "jar_bytes": 14922184,
+    "jar_thermal_mixin_classes": 11,
+    "jar_old_extra_snow_classes": 0,
+    "jar_gametest_classes": 0,
+    "campfire_onPlace_reobfuscated_name": "m_6807_",
+    "static_record": "build/thermal-specific-hooks-static-20261031.json",
+    "line_record": "build/thermal-specific-hooks-lines-20261031.json"
+  },
+  "limits": [
+    "Follow-up source review found public Section writes still compare campfire source flags and resync campfire state through SOURCE_MUTATION/drainMutations/resyncBlock. These gameplay passes do not establish complete removal of specialized source maintenance from public write paths.",
+    "GameTests use the real Forge server with the development classpath; this batch inspects the production JAR but does not repeat a standalone production-JAR restart run.",
+    "Startup wake uses the existing controlled StartupRetry fixture and a real reservation release; it does not prove constructor refusal by filling a soft memory target.",
+    "Source slot refusal is exercised by the fixture's source-limit clamp, not by a full machine-memory stress run.",
+    "No JUnit, broad performance matrix, new CPU speedup claim or hundred-player qualification. Restored extra snow intentionally adds previously bypassed random draws."
+  ]
+}

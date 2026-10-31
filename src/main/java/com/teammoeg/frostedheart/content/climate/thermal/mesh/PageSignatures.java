@@ -35,9 +35,13 @@ public final class PageSignatures {
     private static final int MAX_COMPACT_VALUE = Character.MAX_VALUE - ENCODE_OFFSET;
 
     private final Object[] bricks;
+    private final long backingBytes;
 
     private PageSignatures(Object[] bricks) {
         this.bricks = bricks;
+        long bytes = AirBackingMeter.shallowArrayBytes(bricks);
+        for (Object brick : bricks) if (brick != null && brick.getClass().isArray()) bytes += AirBackingMeter.shallowArrayBytes(brick);
+        backingBytes = bytes;
     }
 
     public static PageSignatures unresolved(ThermalSignatureTable signatures) {
@@ -84,6 +88,11 @@ public final class PageSignatures {
     public Object brickPayload(int baseBrickIndex) {
         requireBrickIndex(baseBrickIndex);
         return bricks[baseBrickIndex];
+    }
+
+    public void recordBacking(AirBackingMeter meter) {
+        if (meter.summaries()) meter.objectOnce(this, backingBytes);
+        else meter.array(bricks);
     }
 
     static int valueAt(Object payload, int index) {

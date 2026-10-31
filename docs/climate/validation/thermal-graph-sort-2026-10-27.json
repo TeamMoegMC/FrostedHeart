@@ -1,0 +1,154 @@
+{
+  "Status": "verified for stated focused and performance scenes; source and numerical order preserved",
+  "VerifiedAt": "2026-10-27T23:07:02.9175548+08:00",
+  "Scope": "Two production files; exact graph ordering optimization; no approximation",
+  "Conditions": {
+    "CPU": "Intel Core i7-12800HX",
+    "LogicalProcessors": 24,
+    "Workers": 4,
+    "HeapGiB": 5,
+    "ThermalMemoryMiB": 128,
+    "PoolCpuMsPerSecond": 250,
+    "Clock": "realtime20",
+    "PerformanceTicks": 2400,
+    "Consumers": 100,
+    "JFR": "profile",
+    "PROFILE": false,
+    "TRACE": false,
+    "DeepMemory": false,
+    "PressureMemoryMiB": 64
+  },
+  "Source": {
+    "ProductionFiles": 2,
+    "ProductionNetLines": 7,
+    "NewTopLevelProductionTypes": 0,
+    "NewGameTestMethods": 2,
+    "NumericalFormulasAndStepUnchanged": true
+  },
+  "Focused": {
+    "RequiredPassed": 4,
+    "PackedBitRangeCases": 752,
+    "PairedEntries": 9001,
+    "RealGraphFixtures": 6,
+    "SourceCancellations": 2,
+    "SourcePublications": 1,
+    "ReplayTemperatureErrorC": 0,
+    "ReplayEnergyErrorJ": 0,
+    "GridSwitchCompletions": 2,
+    "Checkpoints": 2,
+    "MaximumRecoveryJumpC": 0.00366472025535991,
+    "MaximumCheckpointErrorC": 0.09677784844759074,
+    "ExistingExtremeCoarseningJumpC": 1.4743995091278865
+  },
+  "Pressure": {
+    "RequiredPassed": 1,
+    "Sources": 1024,
+    "ElapsedTicks": 5079,
+    "CommitsPer400Ticks": [
+      22,
+      22,
+      21,
+      19
+    ],
+    "UnavailableTicksPer400Ticks": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "MaximumAgeTicksPerWindow": [
+      33,
+      37,
+      30,
+      29
+    ],
+    "RealSaves": 3,
+    "MaximumControlAgeTicks": 25,
+    "OrderingFailures": 0,
+    "MaximumEnergyImbalanceJ": 0,
+    "FineRecoveryStableTicks": 400,
+    "InitialTargetMiB": 64,
+    "TargetAfterWithdrawalMiB": 128,
+    "PeakRootBytes": 176755082
+  },
+  "Performance": {
+    "RequiredPassed": 1,
+    "Queries": 12000,
+    "MonitoringSinceTick": 60,
+    "AgeViolations": 0,
+    "GeometryViolations": 0,
+    "ConsumerViolations": 0,
+    "ObservedAllFine": true,
+    "WorkLimited": 0,
+    "Baseline": {
+      "WorkerCpuMs": 3500.0,
+      "WorkerAllocatedBytes": 3386890280.0,
+      "MainThermalP99Us": 1554.0,
+      "ServerP99Us": 38113.0,
+      "SaveWaitMaximumUs": 64850.0,
+      "MainThermalMaximumUs": 36038.0,
+      "ServerMaximumUs": 1682798.0,
+      "HeapSamplePeakBytes": 1885171200.0,
+      "ThermalPeakBytes": 97573938,
+      "ConstructedRegionEpochs": 445,
+      "WorkerExecutionSamples": 742,
+      "SortLeafSamples": 57
+    },
+    "Candidate": {
+      "WorkerCpuMs": 3062.0,
+      "WorkerAllocatedBytes": 3427250544.0,
+      "MainThermalP99Us": 1258.0,
+      "ServerP99Us": 27593.0,
+      "SaveWaitMaximumUs": 60757.0,
+      "MainThermalMaximumUs": 45503.0,
+      "ServerMaximumUs": 1769878.0,
+      "HeapSamplePeakBytes": 2000683008.0,
+      "ThermalPeakBytes": 97655962,
+      "ConstructedRegionEpochs": 455,
+      "WorkerExecutionSamples": 615,
+      "SortLeafSamples": 12
+    },
+    "ObservedReductionPercent": {
+      "WorkerCPU": 12.51428571428571,
+      "WorkerAllocation": -1.1916613962469347,
+      "ThermalMainP99": 19.047619047619047,
+      "WholeServerP99": 27.602130506651278,
+      "MaximumSaveWait": 6.3114880493446375
+    }
+  },
+  "Validation": {
+    "UnifiedCompile": "assemble compileGameTestJava; first attempt; 1m11s",
+    "PassedGroups": 3,
+    "RequiredPassed": 6,
+    "AllCompletedRunsRootZero": true,
+    "ThermalErrors": 0,
+    "StartupInterruptions": 1,
+    "StartupInterruptionCause": "ForgeGradle TLS connectivity preflight before server launch; retained stack; local offline invocation bypasses only this preflight",
+    "SourceAndTestsUnchangedAfterCompile": true,
+    "GameTestsInProductionJar": 0,
+    "ProtectedParticleClassesPresent": 4
+  },
+  "CpuCounterDiagnosis": {
+    "RequalifiedOn": "2026-10-28",
+    "Status": "old platform CPU speed ratio invalidated; original readings retained",
+    "Record": "thermal-cpu-counter-diagnosis-2026-10-28.json",
+    "RealCpuSpeedupEstablished": false,
+    "HistoricalCyclesAvailable": false,
+    "OtherResults": "Sorting pass counts, numerical checks, allocation and service observations retain their original scene scope."
+  },
+  "Limits": [
+    "Each version has one complete performance window; logical build counts differ445->455, so this is not a fixed-work microbenchmark.",
+    "CPU12.51% is a reduction of raw platform readings only; later independent diagnosis invalidated its qualification as real CPU savings.",
+    "Allocation rose1.19%, heap and maximum tick samples did not uniformly improve.",
+    "Memory targets are soft; pressure peak exceeded64MiB.",
+    "100 temperature consumers do not qualify100 networked players; no new approximation error qualification."
+  ],
+  "Evidence": [
+    "build/thermal-sort-final-20261027.json",
+    "build/thermal-sort-matrix-20261027.json",
+    "build/thermal-sort-architecture-profile-20261027.txt",
+    "build/thermal-sort-hotspots-20261027.txt",
+    "build/thermal-sort-construction-detail-20261027.txt",
+    "build/thermal-sort-performance-20261027-r1.jfr"
+  ]
+}

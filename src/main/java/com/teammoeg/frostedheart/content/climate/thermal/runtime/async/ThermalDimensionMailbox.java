@@ -1,226 +1,227 @@
-/*
- * Copyright (c) 2026 TeamMoeg
- *
- * This file is part of Frosted Heart.
- *
- * Frosted Heart is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, version 3.
- *
- * Frosted Heart is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
- *
- */
-
 /* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedheart.content.climate.thermal.runtime.async;
 
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.engine.ThermalDimensionEngine;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ThermalCompletion;
-import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ThermalInputBatch;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ThermalInputEnvelope;
 
+import java.util.ArrayDeque;
 import java.util.Objects;
 
-/**
- * 一个维度在主线程与共享 worker pool 之间的单槽 mailbox。
- *
- * <p>任意时刻至多有一个 in-flight batch；completion 由主线程显式 ACK，
- * close 也通过同一状态机完成。该类只负责传输，不解释热学载荷。</p>
- */
-public final class ThermalDimensionMailbox implements AutoCloseable,
-        ThermalWorkerPool.LifecycleOwner {
-    private enum State {
-        IDLE,
-        QUEUED,
-        RUNNING,
-        AWAITING_ACK, // The main thread must consume completion before another cut can enter.
-        CLOSE_REQUESTED,
-        CLOSED
-    }
+/** One serial coordinator per dimension; input ownership and world-effect notifications advance independently. */
+public final class ThermalDimensionMailbox implements AutoCloseable, ThermalWorkerPool.LifecycleOwner {
+    private enum State { IDLE, QUEUED, RUNNING, AWAITING_ACK, CLOSE_REQUESTED, CLOSED }
 
     private final ThermalWorkerPool workers;
-    private final ThermalDimensionProcessor processor;
+    private final ThermalDimensionEngine engine;
+    private final ArrayDeque<ThermalCompletion> completions = new ArrayDeque<>();
     private State state = State.IDLE;
-    private ThermalCompletion completion;
-    private boolean processorClosed;
+    private boolean terminalPending, engineClosed, closingEngineRound;
+    private RoundWake waitingRound;
+    private long inputGeneration, lastSubmittedSequence, progressRevision;
 
-    public ThermalDimensionMailbox(
-            ThermalWorkerPool workers,
-            ThermalDimensionProcessor processor
-    ) {
+    public ThermalDimensionMailbox(ThermalWorkerPool workers, ThermalDimensionEngine engine) {
         this.workers = Objects.requireNonNull(workers, "workers");
-        this.processor = Objects.requireNonNull(processor, "processor");
+        this.engine = Objects.requireNonNull(engine, "engine");
         workers.registerLifecycleOwner(this);
     }
 
-    public synchronized boolean submit(ThermalInputBatch batch) {
-        Objects.requireNonNull(batch, "batch");
-        if (state != State.IDLE) {
-            return false;
-        }
-        state = State.QUEUED;
-        if (workers.tryExecute(() -> execute(batch))) {
-            return true;
-        }
-        state = State.IDLE;
-        return false;
+    public synchronized boolean submit(ThermalInputEnvelope batch) {
+        if (!canQueueInput()) return false;
+        engine.offerInput(batch);
+        inputGeneration = batch.dimensionGeneration();
+        lastSubmittedSequence = batch.sequence();
+        if (state == State.IDLE || state == State.AWAITING_ACK) {
+            state = State.QUEUED;
+            schedule();
+        } else if (waitingRound != null) waitingRound.request(false);
+        return true;
     }
 
-    public synchronized ThermalCompletion peekCompletion() {
-        return state == State.AWAITING_ACK ? completion : null;
+    public synchronized boolean canQueueInput() {
+        return !terminalPending && state != State.CLOSE_REQUESTED && state != State.CLOSED;
     }
 
-    /** Save/unload waits for the current immutable cut; ordinary ticks never wait. */
-    public synchronized void awaitCompletion() {
+    public synchronized void controlChanged() {
+        if (state == State.CLOSE_REQUESTED || state == State.CLOSED
+                || terminalPending && !engine.checkpointRecovery()) return;
+        if (state == State.IDLE || state == State.AWAITING_ACK) {
+            state = State.QUEUED;
+            schedule();
+        } else if (waitingRound != null) waitingRound.request(false);
+        workers.wakeControlOwners();
+    }
+
+    public synchronized long progressRevision() { return progressRevision; }
+    public synchronized boolean workPending() {
+        return engine.hasWork() || state == State.RUNNING || state == State.QUEUED;
+    }
+
+    public synchronized void awaitProgress(long observed) {
         boolean interrupted = false;
-        while (state == State.QUEUED || state == State.RUNNING) {
-            try {
-                wait();
-            } catch (InterruptedException interruption) {
-                interrupted = true;
-            }
+        while (progressRevision == observed && workPending() && (!terminalPending || engine.checkpointRecovery())) {
+            try { wait(); } catch (InterruptedException exception) { interrupted = true; }
         }
         if (interrupted) Thread.currentThread().interrupt();
     }
 
-    /** Terminal ACK closes the now-quiescent processor before handle reuse. */
-    public void acknowledgeCompletion(long batchSequence) {
+    public synchronized ThermalCompletion peekCompletion() { return completions.peekFirst(); }
+
+    public void acknowledgeCompletion(long sequence) {
         boolean terminal;
+        RoundWake releasedSlot = null;
         synchronized (this) {
-            if (state != State.AWAITING_ACK || completion == null
-                    || completion.batchSequence() != batchSequence) {
-                throw new IllegalStateException(
-                        "thermal completion ACK does not own the mailbox");
-            }
-            terminal = completion.status()
-                    == ThermalCompletion.Status.ENGINE_FAILED;
-            completion = null;
-            state = terminal ? State.CLOSE_REQUESTED : State.IDLE;
+            var completion = completions.peekFirst();
+            if (completion == null || completion.effectSequence() != sequence)
+                throw new IllegalStateException("thermal completion ACK does not own the mailbox");
+            completions.removeFirst();
+            terminal = completion.status() == ThermalCompletion.Status.ENGINE_FAILED;
+            if (terminal) state = State.CLOSE_REQUESTED;
+            else if (state == State.AWAITING_ACK && engine.hasWork()) {
+                state = State.QUEUED;
+                schedule();
+            } else if (state == State.AWAITING_ACK && completions.isEmpty()) state = State.IDLE;
+            else if (state == State.QUEUED && waitingRound != null) releasedSlot = waitingRound;
         }
-        if (terminal) {
-            closeProcessor();
+        if (terminal) workers.executeLifecycle(this::closeEngine);
+        else if (releasedSlot != null) releasedSlot.request(false);
+    }
+
+    public synchronized void awaitClosed() {
+        boolean interrupted = false;
+        while (state != State.CLOSED) {
+            try { wait(); } catch (InterruptedException exception) { interrupted = true; }
+        }
+        if (interrupted) Thread.currentThread().interrupt();
+    }
+
+    private void schedule() {
+        workers.executeContinuation(new ThermalWorkerPool.RegionalTask() {
+            @Override public void run() { execute(); }
+            @Override public boolean controlPending() { return engine.controlWorkPending(); }
+        });
+    }
+
+    /** Register readiness before arming so an input/helper race schedules exactly one continuation. */
+    private final class RoundWake {
+        private boolean armed, requested, scheduled;
+        void request(boolean arm) {
+            boolean start;
+            synchronized (ThermalDimensionMailbox.this) {
+                if (state == State.CLOSED || state == State.CLOSE_REQUESTED) return;
+                if (arm) armed = true; else requested = true;
+                start = armed && requested && !scheduled;
+                if (start) {
+                    scheduled = true;
+                    if (waitingRound == this) waitingRound = null;
+                }
+            }
+            if (start) schedule();
         }
     }
 
-    @Override
-    public void close() {
-        boolean schedule = false;
+    private void execute() {
+        boolean closing;
         synchronized (this) {
-            switch (state) {
-                case IDLE -> {
-                    state = State.CLOSE_REQUESTED;
-                    schedule = true;
-                }
-                case AWAITING_ACK -> {
-                    completion = null;
-                    state = State.CLOSE_REQUESTED;
-                    schedule = !processorClosed;
-                    if (!schedule) {
-                        state = State.CLOSED;
-                        workers.unregisterLifecycleOwner(this);
-                    }
-                }
-                case QUEUED, RUNNING -> state = State.CLOSE_REQUESTED;
-                case CLOSE_REQUESTED, CLOSED -> {
-                    return;
-                }
-            }
-        }
-        if (schedule) {
-            workers.executeLifecycle(this::closeProcessor);
-        }
-    }
-
-    @Override
-    public void requestWorkerPoolClose() {
-        close();
-    }
-
-    private void execute(ThermalInputBatch batch) {
-        boolean closeBeforeProcess;
-        synchronized (this) {
-            closeBeforeProcess = state == State.CLOSE_REQUESTED;
-            if (!closeBeforeProcess && state != State.QUEUED) {
-                throw new IllegalStateException(
-                        "thermal task does not own the queued mailbox");
-            }
-            if (!closeBeforeProcess) {
+            closing = state == State.CLOSE_REQUESTED;
+            if (!closing) {
+                if (state != State.QUEUED) throw new IllegalStateException("thermal coordinator lost its queued turn");
                 state = State.RUNNING;
             }
         }
-        if (closeBeforeProcess) {
-            closeProcessor();
-            return;
-        }
+        if (closing) { closeEngine(); return; }
 
-        ThermalCompletion result;
+        ThermalCompletion effects = null;
         try {
-            result = processor.process(batch);
-        } catch (Throwable failure) {
-            RuntimeException diagnostic = failure instanceof RuntimeException runtime
-                    ? runtime
-                    : new IllegalStateException(
-                            "thermal dimension engine failed", failure);
-            result = failedCompletion(batch, diagnostic);
-        }
-
-        boolean closeRequested;
-        synchronized (this) {
-            closeRequested = state == State.CLOSE_REQUESTED;
-            if (!closeRequested) {
-                if (state != State.RUNNING) {
-                    throw new IllegalStateException(
-                            "thermal task lost running ownership");
-                }
-                completion = result;
-                state = State.AWAITING_ACK;
-                notifyAll();
-            }
-        }
-        if (!closeRequested) {
-            return;
-        }
-        closeProcessor();
-    }
-
-    private static ThermalCompletion failedCompletion(
-            ThermalInputBatch batch,
-            RuntimeException failure
-    ) {
-        return new ThermalCompletion(
-                batch.dimensionGeneration(),
-                batch.sequence(),
-                ThermalCompletion.Status.ENGINE_FAILED,
-                failure,
-                ThermalCompletion.NO_PHASE_REQUESTS,
-                ThermalCompletion.NO_RESYNC_TOKENS,
-                ThermalCompletion.NO_RESIDENCY_UPDATES);
-    }
-
-    private void closeProcessor() {
-        try {
-            closeProcessorOnce();
-        } finally {
+            engine.processWorkRound();
             synchronized (this) {
-                completion = null;
-                state = State.CLOSED;
+                if (!terminalPending && completions.size() < ThermalCompletion.MAXIMUM_PENDING)
+                    effects = engine.pollWorkCompletion();
+            }
+        } catch (Throwable problem) {
+            engine.beginFailureRecovery();
+            RuntimeException failure = problem instanceof RuntimeException runtime ? runtime
+                    : new IllegalStateException("Regional runtime failed", problem);
+            effects = new ThermalCompletion(inputGeneration, Math.max(1, lastSubmittedSequence),
+                    ThermalCompletion.Status.ENGINE_FAILED, failure, ThermalCompletion.NO_PHASE_REQUESTS,
+                    ThermalCompletion.NO_RESYNC_TOKENS, ThermalCompletion.NO_RESIDENCY_UPDATES);
+        }
+
+        boolean again = false;
+        RoundWake wake = null;
+        synchronized (this) {
+            closing = state == State.CLOSE_REQUESTED;
+            if (!closing) {
+                if (effects != null) {
+                    completions.addLast(effects);
+                    terminalPending = effects.status() == ThermalCompletion.Status.ENGINE_FAILED;
+                }
+                if (terminalPending && !engine.checkpointRecovery()) state = State.AWAITING_ACK;
+                else if (engine.hasReadyWork()) { again = true; state = State.QUEUED; }
+                else if (engine.hasWork()) { wake = waitingRound = new RoundWake(); state = State.QUEUED; }
+                else state = completions.isEmpty() ? State.IDLE : State.AWAITING_ACK;
+                progressRevision++;
                 notifyAll();
             }
-            workers.unregisterLifecycleOwner(this);
+        }
+        if (closing) closeEngine();
+        else if (again) schedule();
+        else if (wake != null) {
+            RoundWake ready = wake;
+            engine.whenRoundReady(() -> ready.request(false));
+            ready.request(true);
         }
     }
 
-    private void closeProcessorOnce() {
+    @Override public void close() {
+        boolean schedule = false;
         synchronized (this) {
-            if (processorClosed) {
-                return;
+            switch (state) {
+                case IDLE -> { state = State.CLOSE_REQUESTED; schedule = true; }
+                case AWAITING_ACK -> {
+                    completions.clear();
+                    state = State.CLOSE_REQUESTED;
+                    schedule = !engineClosed;
+                    if (!schedule) { state = State.CLOSED; workers.unregisterLifecycleOwner(this); }
+                }
+                case QUEUED -> {
+                    state = State.CLOSE_REQUESTED;
+                    schedule = waitingRound != null;
+                    waitingRound = null;
+                }
+                case RUNNING -> state = State.CLOSE_REQUESTED;
+                case CLOSE_REQUESTED, CLOSED -> { return; }
             }
-            processorClosed = true;
         }
-        processor.close();
+        if (schedule) workers.executeLifecycle(this::closeEngine);
+    }
+
+    @Override public void requestWorkerPoolClose() { close(); }
+
+    private void closeEngine() {
+        synchronized (this) {
+            if (engineClosed || closingEngineRound) return;
+            closingEngineRound = true;
+        }
+        final boolean complete;
+        try { complete = engine.closeRound(); }
+        catch (RuntimeException | Error failure) {
+            synchronized (this) { closingEngineRound = false; }
+            com.teammoeg.frostedheart.FHMain.LOGGER.error("Thermal close failed after retaining outstanding ownership", failure);
+            throw failure;
+        }
+        if (!complete) {
+            synchronized (this) { closingEngineRound = false; }
+            engine.whenRoundReady(() -> workers.executeLifecycle(this::closeEngine));
+            return;
+        }
+        synchronized (this) {
+            engineClosed = true;
+            closingEngineRound = false;
+            completions.clear(); waitingRound = null;
+            state = State.CLOSED;
+            notifyAll();
+        }
+        workers.unregisterLifecycleOwner(this);
     }
 }

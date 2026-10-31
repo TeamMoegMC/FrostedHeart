@@ -24,24 +24,31 @@ package com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.engi
 public record ThermalDimensionLimits(
         int maximumPages,
         int maximumSources,
-        int maximumSourceNodes,
         int maximumArenaSlots,
         int maximumLiveCells,
         int maximumPairOperations,
-        int maximumBoundaryOperations,
-        int stableBatchesBeforeSleep,
-        double sleepResidualC
+        int maximumBoundaryOperations
 ) {
+    /**
+     * Shared-grid storage grows lazily. Its representable geometry follows the
+     * Page directory: at most one Air and one material cell per block, with
+     * room for old/new spans during replacement. Fine numerical admission is a
+     * separate memory/quality policy, not a second arbitrary live-cell ceiling.
+     */
+    public static ThermalDimensionLimits sharedGrid(int pages, int sources) {
+        int cells = Math.multiplyExact(pages, 2 * 16 * 16 * 16);
+        int overlap = Math.multiplyExact(2, cells);
+        int slots = Integer.highestOneBit(overlap - 1) << 1;
+        return new ThermalDimensionLimits(pages, sources, slots, cells,
+                Integer.MAX_VALUE - 8, Integer.MAX_VALUE - 8);
+    }
+
     public ThermalDimensionLimits {
         if (maximumPages <= 0 || maximumSources <= 0
-                || maximumSourceNodes < maximumSources
                 || maximumArenaSlots <= 0
                 || maximumLiveCells <= 0
                 || maximumPairOperations <= 0
-                || maximumBoundaryOperations <= 0
-                || stableBatchesBeforeSleep <= 0
-                || !Double.isFinite(sleepResidualC)
-                || sleepResidualC < 0.0D) {
+                || maximumBoundaryOperations <= 0) {
             throw new IllegalArgumentException("thermal dimension limits are invalid");
         }
     }

@@ -35,12 +35,13 @@ public final class AirRouteValidity {
     public boolean valid() {
         if (retired || !committed) return false;
         for (int index = 0; index < pages.length; index++) {
-            if (pages[index].liveGeometryRevision() != revisions[index]) return false;
+            if (!pages[index].hasCurrentAirGeometry(revisions[index])) return false;
         }
         return true;
     }
 
     public void retire() { retired = true; }
+    public boolean retired() { return retired; }
 
     public void commit() {
         if (retired) return;
@@ -53,4 +54,13 @@ public final class AirRouteValidity {
 
     /** Worker cut validity; live world revisions are checked only by queries. */
     public boolean activeForSolve() { return !retired && committed; }
+
+    public void recordBacking(AirBackingMeter meter) {
+        if (!meter.objectOnce(this, 32)) return;
+        meter.array(pages); meter.array(revisions);
+    }
+
+    public long backingBytes() {
+        return 32L + AirBackingMeter.shallowArrayBytes(pages) + AirBackingMeter.shallowArrayBytes(revisions);
+    }
 }

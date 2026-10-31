@@ -2,6 +2,8 @@
 
 This append-only directory records completed development, decisions, validation, and remaining work. Read recent entries for the target system before starting; add one concise entry after development.
 
+Temperature history starts at [the consolidated thermal record](2026-10-29_23-38-00_thermal-development-history.md), with links to current behaviour and validation. The user-authorized cleanup moved repetitive thermal originals outside the Git tree; other systems' chronological entries remain in place.
+
 Name entries `YYYY-MM-DD_HH-mm-ss_<specific-topic>.md`. Identify the contributor and role, link instead of copying logs or code, and add a newer entry when conclusions change.
 
 Use this format:

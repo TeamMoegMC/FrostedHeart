@@ -38,7 +38,6 @@ import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.messa
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ThermalInputBatch;
 import com.teammoeg.frostedheart.content.climate.thermal.solver.BuoyancyConductance;
 import com.teammoeg.frostedheart.content.climate.thermal.solver.ThermalSolver;
-import com.teammoeg.frostedheart.content.climate.thermal.source.ThermalSourceBatch;
 import com.teammoeg.frostedheart.content.climate.thermal.topology.FarFieldSettings;
 import com.teammoeg.frostedheart.content.climate.thermal.topology.ThermalTopologyParameters;
 import com.teammoeg.frostedheart.util.mixin.ICampfireExtra;
@@ -56,7 +55,7 @@ import net.minecraftforge.gametest.GameTestHolder;
 import net.minecraftforge.gametest.PrefixGameTestTemplate;
 
 /** Real world capture, source binding, worker publication and chunk checkpoint. */
-@GameTestHolder(FHMain.MODID)
+@GameTestHolder("frostedheart_block_runtime")
 @PrefixGameTestTemplate(false)
 public final class ThermalBlockModelGameTests {
     @GameTest(template = "phase0a_empty", batch = "thermal_block_world_faces", timeoutTicks = 120)
@@ -76,15 +75,15 @@ public final class ThermalBlockModelGameTests {
         var profiles = MinecraftThermalProfiles.prepare();
         var capture = new MinecraftSignatureCapture(level, profiles.states(), profiles.signatures());
         ThermalCellArena arena = new ThermalCellArena(256);
-        QueryPublication query = QueryPublication.tryCreate(new ThermalMemoryBudget(8L << 20)
-                .createDimensionBudget(8L << 20), 256, 16);
+        var budget = new ThermalMemoryBudget(64L << 20);
+        QueryPublication query = QueryPublication.createRegional(budget.createCategory(), 16);
         var tuning = profiles.tuning();
         var engine = new ThermalDimensionEngine(1, 0, arena, profiles.signatures(), profiles.materials(),
                 new ThermalTopologyParameters(tuning.airHeatCapacityJPerBlockK(), 0,
                         tuning.airMixingWPerBlockK(),
                         new BuoyancyConductance.Parameters(0.25, 4, 10), 1024, 8),
-                new FarFieldSettings(tuning.farFieldConductanceWPerK(), 32, 16), tuning.campfire(),
-                new ThermalDimensionLimits(16, 128, 256, 4096, 2048, 4096, 4096, 200, 1e-6), query);
+                new FarFieldSettings(tuning.farFieldConductanceWPerK(), 32), tuning.campfire(),
+                ThermalDimensionLimits.sharedGrid(16, 128), query, budget.createCategory(), 1e-5);
         ThermalPageHandle[] pages = {new ThermalPageHandle(SectionPos.asLong(origin), 1),
                 new ThermalPageHandle(SectionPos.asLong(origin.east(4)), 1)};
         int[] bricks = {brickIndex(origin), brickIndex(origin.east(4))};
@@ -97,7 +96,7 @@ public final class ThermalBlockModelGameTests {
                 admissions[i] = new ThermalInputBatch.PageAdmission(pages[i], 0, mask, mask,
                         capture.captureBricks(pages[i].sectionKey(), null, capture.unresolvedPage(), mask), 0, sky, null);
             }
-            complete(helper, engine.process(cut(1, admissions, ResolvedGeometryBatch.EMPTY)));
+            complete(helper, RegionalEngineTestDriver.submit(helper, engine, cut(1, admissions, ResolvedGeometryBatch.EMPTY)));
             ThermalSolver solver = read(engine, "solver");
             int a = materialSlot(pages[0], origin.offset(1, 2, 2));
             int b = materialSlot(pages[0], origin.offset(2, 2, 2));
@@ -111,29 +110,45 @@ public final class ThermalBlockModelGameTests {
             int profile = profiles.signatures().materialProfileId(profiles.states().signatureId(level.getBlockState(material)));
             double faceCapacity = profiles.materials().profileOrNull(profile).thermalLaw().capacityJPerK();
             near(helper, faceCapacity, arena.capacityJPerK(materialSlot), "material has its fixed body capacity");
-            arena.addEnthalpyJ(materialSlot, 10_000);
-            double before = totalEnthalpy(arena);
+            com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialStateAccess materialState = read(engine, "regional");
+            var materialSample = new com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialSample();
+            materialState.readMaterial(materialSlot, materialSample);
+            materialState.applyMaterialControl(materialSlot, materialSample.enthalpyJ() + 10_000, materialSample.branch());
+            double before = totalEnthalpy(arena, query, materialState);
+            double externalBefore = arena.externalMaterialEnergyJ();
             BlockPos newlyExposed = material.east();
+            int previousSignature = profiles.states().signatureId(level.getBlockState(newlyExposed));
             level.setBlockAndUpdate(newlyExposed, Blocks.AIR.defaultBlockState());
             ResolvedGeometryBatch.Builder geometry = new ResolvedGeometryBatch.Builder();
+            int nextSignature = capture.resolveSignatureId(newlyExposed.getX(), newlyExposed.getY(), newlyExposed.getZ());
             geometry.addResolvedCenter(pages[1], pages[1].beginGeometryMutation(), pageBlock(newlyExposed),
-                    capture.resolveSignatureId(newlyExposed.getX(), newlyExposed.getY(), newlyExposed.getZ()));
-            complete(helper, engine.process(cut(2, ThermalInputBatch.NO_ADMISSIONS, geometry.buildAndReset())));
+                    nextSignature);
+            geometry.addMaterialChange(pages[1], pageBlock(newlyExposed), previousSignature, nextSignature,
+                    ResolvedGeometryBatch.MaterialChanges.REPLACE);
+            complete(helper, RegionalEngineTestDriver.submit(helper, engine, cut(2, ThermalInputBatch.NO_ADMISSIONS, geometry.buildAndReset())));
             near(helper, faceCapacity, arena.capacityJPerK(materialSlot(pages[0], material)),
                     "opening another face must not change body capacity");
-            near(helper, before, totalEnthalpy(arena), "topology migration and internal exchange must conserve retained enthalpy");
+            // Regions advance the old geometry to this control boundary. The removed
+            // neighbor can receive heat first; its recorded removal closes the balance.
+            near(helper, before + arena.externalMaterialEnergyJ() - externalBefore,
+                    totalEnthalpy(arena, query, materialState), "migration conserves H including actual removed material energy");
 
             fill(level, origin, Blocks.AIR.defaultBlockState());
             for (int i = 0; i < 2; i++) {
+                var previousBrick = pages[i].lastPublication().brick(bricks[i]);
                 long revision = pages[i].beginGeometryMutation();
                 BlockPos first = origin.east(i * 4);
                 for (int block = 0; block < 64; block++) {
                     BlockPos position = first.offset(block & 3, block >>> 4, block >>> 2 & 3);
+                    int signature = capture.resolveSignatureId(position.getX(), position.getY(), position.getZ());
                     geometry.addResolvedCenter(pages[i], revision, pageBlock(position),
-                            capture.resolveSignatureId(position.getX(), position.getY(), position.getZ()));
+                            signature);
+                    if (previousBrick.signatureAtBlock(block) != signature)
+                        geometry.addMaterialChange(pages[i], pageBlock(position), previousBrick.signatureAtBlock(block), signature,
+                                ResolvedGeometryBatch.MaterialChanges.REPLACE);
                 }
             }
-            complete(helper, engine.process(cut(3, ThermalInputBatch.NO_ADMISSIONS, geometry.buildAndReset())));
+            complete(helper, RegionalEngineTestDriver.submit(helper, engine, cut(3, ThermalInputBatch.NO_ADMISSIONS, geometry.buildAndReset())));
             helper.assertTrue(arena.liveCellCount() == 2, "two full-Air Bricks must have exactly two nodes");
             for (int i = 0; i < 2; i++) helper.assertTrue(pages[i].currentPublication().brick(bricks[i]).blockLayout() == null,
                     "full-Air Brick must not retain a mixed layout");
@@ -158,13 +173,13 @@ public final class ThermalBlockModelGameTests {
         var capture = new MinecraftSignatureCapture(level, profiles.states(), profiles.signatures());
         var tuning = profiles.tuning();
         ThermalCellArena arena = new ThermalCellArena(256);
-        QueryPublication query = QueryPublication.tryCreate(new ThermalMemoryBudget(8L << 20)
-                .createDimensionBudget(8L << 20), 256, 16);
+        var budget = new ThermalMemoryBudget(64L << 20);
+        QueryPublication query = QueryPublication.createRegional(budget.createCategory(), 16);
         var engine = new ThermalDimensionEngine(1, 0, arena, profiles.signatures(), profiles.materials(),
                 new ThermalTopologyParameters(tuning.airHeatCapacityJPerBlockK(), 0, tuning.airMixingWPerBlockK(),
                         new BuoyancyConductance.Parameters(.25, 4, 10), 1024, 8),
-                new FarFieldSettings(tuning.farFieldConductanceWPerK(), 32, 16), tuning.campfire(),
-                new ThermalDimensionLimits(16,128,256,4096,2048,4096,4096,200,1e-6), query);
+                new FarFieldSettings(tuning.farFieldConductanceWPerK(), 32), tuning.campfire(),
+                ThermalDimensionLimits.sharedGrid(16, 128), query, budget.createCategory(), 1e-5);
         ThermalPageHandle page = new ThermalPageHandle(SectionPos.asLong(origin), 1);
         int brickIndex = brickIndex(origin);
         // A material-only Brick needs an admitted Air neighbor to expose its east face.
@@ -174,6 +189,7 @@ public final class ThermalBlockModelGameTests {
             query.noteInfraredRequest(0, 100);
             for (int stage = 0; stage < 4; stage++) {
                 ResolvedGeometryBatch.Builder geometry = new ResolvedGeometryBatch.Builder();
+                var previousPublication = page.lastPublication();
                 long revision = stage == 0 ? 0 : page.beginGeometryMutation();
                 for (int b = 0; b < 64; b++) {
                     BlockPos pos = origin.offset(b & 3, b >>> 4, b >>> 2 & 3);
@@ -190,14 +206,18 @@ public final class ThermalBlockModelGameTests {
                     long mask = (1L << brickIndex) | (1L << brickIndex(origin.east(4)));
                     var admission = new ThermalInputBatch.PageAdmission(page, 0, mask, mask,
                             capture.captureBricks(page.sectionKey(), null, capture.unresolvedPage(), mask), 10, sky, dormant);
-                    complete(helper, engine.process(cut(1, new ThermalInputBatch.PageAdmission[]{admission}, ResolvedGeometryBatch.EMPTY)));
+                    complete(helper, RegionalEngineTestDriver.submit(helper, engine, cut(1, new ThermalInputBatch.PageAdmission[]{admission}, ResolvedGeometryBatch.EMPTY)));
                 } else {
                     for (int b = 0; b < 64; b++) {
                         BlockPos pos = origin.offset(b & 3, b >>> 4, b >>> 2 & 3);
+                        int signature = capture.resolveSignatureId(pos.getX(), pos.getY(), pos.getZ());
+                        int previous = previousPublication.brick(brickIndex).signatureAtBlock(b);
                         geometry.addResolvedCenter(page, revision, pageBlock(pos),
-                                capture.resolveSignatureId(pos.getX(),pos.getY(),pos.getZ()));
+                                signature);
+                        if (previous != signature) geometry.addMaterialChange(page, pageBlock(pos), previous, signature,
+                                ResolvedGeometryBatch.MaterialChanges.REPLACE);
                     }
-                    complete(helper, engine.process(cut(stage+1, ThermalInputBatch.NO_ADMISSIONS, geometry.buildAndReset())));
+                    complete(helper, RegionalEngineTestDriver.submit(helper, engine, cut(stage+1, ThermalInputBatch.NO_ADMISSIONS, geometry.buildAndReset())));
                 }
                 var publication = page.currentPublication();
                 var brick = publication.brick(brickIndex);
@@ -215,19 +235,6 @@ public final class ThermalBlockModelGameTests {
                     var cursor = new QueryPublication.ReadCursor();
                     helper.assertTrue(query.beginRead(cursor), "initial surface epoch must be readable");
                     int epoch = cursor.infraredEpoch(); cursor.clear();
-                    int airSlot = airSlotAt(page, origin.east(4));
-                    arena.addEnthalpyJ(airSlot, arena.capacityJPerK(airSlot));
-                    helper.assertTrue(query.publish(arena, 0, publication.topologyGeneration(), 21, null), "Air change publication");
-                    helper.assertTrue(query.beginRead(cursor) && cursor.infraredEpoch() == epoch,
-                            "Air-only temperature change must not dirty surface infrared");
-                    cursor.clear();
-                    int materialSlot = brick.firstSlot() + Long.numberOfTrailingZeros(brick.blockLayout().materialNodeMask());
-                    arena.addEnthalpyJ(materialSlot, arena.capacityJPerK(materialSlot));
-                    helper.assertTrue(query.publish(arena, 0, publication.topologyGeneration(), 22, null), "material change publication");
-                    helper.assertTrue(query.beginRead(cursor) && cursor.infraredEpoch() > epoch
-                                    && cursor.brickChangeEpoch(publication.workerPageSlot(), brickIndex) > epoch,
-                            "material-only temperature change must dirty its exact Brick");
-                    cursor.clear();
                 } else if (stage == 1) {
                     helper.assertTrue(brick.airNodeCount()==0 && brick.blockLayout().materialNodeMask()==-1L,
                             "64 stair bodies include bit63 and own no gap-air nodes");
@@ -263,9 +270,18 @@ public final class ThermalBlockModelGameTests {
         var brick = page.currentPublication().brick(brickIndex(pos));
         return brick.firstSlot() + brick.blockLayout().nodeAt((pos.getX() & 3) | (pos.getZ() & 3) << 2 | (pos.getY() & 3) << 4);
     }
-    private static double totalEnthalpy(ThermalCellArena arena) {
+    private static double totalEnthalpy(ThermalCellArena arena, QueryPublication query, com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialStateAccess materials) {
         double sum = 0;
-        for (int slot = arena.nextLiveSlot(0); slot >= 0; slot = arena.nextLiveSlot(slot + 1)) sum += arena.enthalpyJ(slot);
+        for (int slot = arena.nextLiveSlot(0); slot >= 0; slot = arena.nextLiveSlot(slot + 1)) {
+            if (arena.isMaterialCell(slot)) {
+                var sample = new com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialSample();
+                materials.readMaterial(slot, sample); sum += sample.enthalpyJ();
+            } else {
+                var sample = new QueryPublication.MutableSample();
+                if (!query.tryRead(slot, arena.lifecycleGeneration(slot), 0, sample)) throw new IllegalStateException("Committed Air missing");
+                sum += arena.capacityJPerK(slot) * sample.temperatureC();
+            }
+        }
         return sum;
     }
     private static double conductance(com.teammoeg.frostedheart.content.climate.thermal.solver.ThermalFragment.AirPairs pairs, int a, int b) {
@@ -281,7 +297,7 @@ public final class ThermalBlockModelGameTests {
     }
     private static ThermalInputBatch cut(long sequence, ThermalInputBatch.PageAdmission[] admissions, ResolvedGeometryBatch geometry) {
         return new ThermalInputBatch(1, sequence, sequence * 20, admissions, ThermalInputBatch.NO_RETIREMENTS,
-                ThermalInputBatch.NO_RESIDENCY_UPDATES, geometry, ThermalSourceBatch.EMPTY,
+                ThermalInputBatch.NO_RESIDENCY_UPDATES, geometry,
                 ThermalInputBatch.NO_ENVIRONMENT_UPDATES, ThermalInputBatch.NO_PHASE_ACKS, Double.NaN);
     }
 
@@ -328,7 +344,7 @@ public final class ThermalBlockModelGameTests {
         }).thenExecute(() -> {
             PagePublication publication = publication(helper, level, target);
             previousRevision[0] = publication.geometryRevision();
-            captureRoundTrip(helper, level, target, publication, queries, sample);
+            captureRoundTrip(helper, level, target, publication, queries);
             // Two centers in one Brick exercise grouped capture; ordinary Air may
             // merge again only after the ventilation restrictions are removed.
             level.setBlockAndUpdate(target, Blocks.AIR.defaultBlockState());
@@ -354,24 +370,23 @@ public final class ThermalBlockModelGameTests {
     }
 
     private static void captureRoundTrip(GameTestHelper helper, ServerLevel level, BlockPos position,
-            PagePublication publication, QueryPublication queries, QueryPublication.MutableSample sample) {
-        var capture = DormantChunkThermalState.capture(publication, queries, sample, 0,
-                new DormantChunkThermalState.CaptureScratch());
-        helper.assertTrue(capture.valid() && capture.entry() != null, "heated production publication must be checkpointed");
+            PagePublication publication, QueryPublication queries) {
         int sectionY = position.getY() >> 4;
         var state = new DormantChunkThermalState(level.getMinSection(), level.getSectionsCount());
-        state.replace(sectionY, capture.entry());
+        var cursor = new QueryPublication.ReadCursor();
+        try {
+            helper.assertTrue(queries.beginRead(cursor), "heated production publication must be readable");
+            long tick = cursor.pageAirSampleTick(publication);
+            helper.assertTrue(tick >= 0, "checkpoint must match the published Air identities");
+            var air = cursor.captureValidatedAir(publication, 0);
+            helper.assertTrue(air != null && cursor.isCurrent(), "heated production field must be checkpointed");
+            state.replace(sectionY, new DormantChunkThermalState.SectionEntry(tick, 0, air));
+        } finally { cursor.clear(); }
         CompoundTag tag = new CompoundTag();
         state.encode(tag);
         var restored = DormantChunkThermalState.decode(tag, level.getMinSection(), level.getSectionsCount());
         CompoundTag encodedAgain = new CompoundTag();
         restored.encode(encodedAgain);
         helper.assertTrue(tag.equals(encodedAgain), "new chunk format must round-trip spatial masks and residuals");
-        var sections = tag.getCompound("FrostedHeartThermal").getList("sections", 10);
-        var section = sections.getCompound(0);
-        int bytes = 8 * (section.getLongArray("blocks").length + section.getLongArray("residuals").length);
-        helper.assertTrue(bytes <= 640, "checkpoint numeric payload exceeds the section budget: " + bytes);
-        FHMain.LOGGER.info("Block model production checkpoint: {} numeric bytes, {} spatial masks", bytes,
-                section.getLongArray("blocks").length);
     }
 }

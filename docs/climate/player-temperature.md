@@ -1,7 +1,7 @@
 # Player Temperature
 
 - Status: `Current`
-- Last verified: `2026-10-21` (hot spring contact path; reservoir block registration last checked `2026-10-09`)
+- Last verified: `2026-10-22` for removal of inactive particle simulation/configuration; `2026-10-21` for hot spring contact; `2026-10-09` for reservoir registration.
 - Scope: player environment sampling, five-part body energy, wearable thermal reservoirs, clothing, Wet, heating equipment, thermometers, HUD, effects, persistence, and synchronization
 - Primary code anchors: `PlayerTemperatureUpdate.updateTemperature`, `PlayerTemperatureComputation.updatePlayer`, `PlayerThermalEnvironment`, `PlayerEquipmentHeating`, `PlayerThermoregulation`, `PlayerThermalModel`, `PlayerThermalInjury`, `PlayerTemperatureData`, `ThermometerItem`, `CreativeThermometerItem`, `FHTemperatureDisplayPacket`, `WearableThermalExchangeHandler`, `ThreeNodeWearableHeatExchange`, `ThermalReservoirBlock`, `ThermalReservoirBlockEntity.serverTick`, `FHBodyDataSyncPacket`, `FrostedHud.renderTemperature`
 
@@ -51,6 +51,16 @@ reported in Celsius and is not converted to the client Fahrenheit setting.
 players are distributed across the interval. Each update performs one
 `MinecraftThermalInput.gameplayPlayerEnvironment` query using a reusable
 `ThermalEnvironmentSample`.
+
+The historical `player.unused` particle simulator, `TemperatureThreadingPool`,
+and their block-information cache remain in source separately from the shared-grid
+thermal runtime. Active player environment sampling uses the query above.
+The server configuration no
+longer registers `Surrounding Temperature Simulation` or its `simulationRange`,
+`simulationDivision`, and `simulationParticleInitialSpeed` keys. These keys had
+no effect on the active temperature system; player sampling continues through
+the query above. `BlockTempData` and its recipe reload remain available to their
+current consumers, without clearing the deleted simulator's cache.
 
 The query returns absolute Thermal Air in degrees Celsius and direct radiant
 flux in `W/m2`. `FHAttributes.ENV_TEMPERATURE` modifiers and the existing

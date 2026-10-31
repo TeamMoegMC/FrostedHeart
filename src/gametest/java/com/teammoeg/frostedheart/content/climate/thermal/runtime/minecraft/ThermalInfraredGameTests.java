@@ -39,6 +39,7 @@ import com.teammoeg.frostedheart.content.climate.thermal.field.ThermalAnalyticFi
 import com.teammoeg.frostedheart.content.climate.thermal.field.ThermalAnalyticField.CombineMode;
 import com.teammoeg.frostedheart.content.climate.thermal.field.ThermalAnalyticField.Shape;
 import com.teammoeg.frostedheart.content.climate.thermal.field.ThermalFieldKey;
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialSample;
 import com.teammoeg.frostedheart.content.climate.thermal.persistence.minecraft.DormantChunkThermalState;
 import com.teammoeg.frostedheart.content.climate.thermal.persistence.minecraft.MaterialSectionState;
 import com.teammoeg.frostedheart.content.climate.thermal.persistence.minecraft.MinecraftThermalChunkAttachment;
@@ -200,7 +201,7 @@ public final class ThermalInfraredGameTests {
                 stored.replaceMaterials(section, saved);
                 attachment.frostedheart$setDormantThermalState(stored);
                 InfraredSnapshot full = sample(f.player, null, true, EMPTY);
-                expectTemperature(helper, full, f.wall, material(f.input, f.wall));
+                expectTemperature(helper, full, f.wall, liveMaterial(helper, f.level, f.wall));
                 expectTemperature(helper, full, remote, 45);
                 expectTemperature(helper, full, remote, WorldTemperature.material(f.level, remote));
                 int block = (remote.getX() & 15) | (remote.getZ() & 15) << 4 | (remote.getY() & 15) << 8;
@@ -210,11 +211,11 @@ public final class ThermalInfraredGameTests {
                 InfraredSnapshot removed = sample(f.player, full, false, full.presence());
                 helper.assertTrue(removed != null && !removed.full(), "stored deletion cannot depend on live Page presence changing");
                 expectMissing(helper, removed, remote, true);
-                expectTemperature(helper, removed, f.wall, material(f.input, f.wall));
+                expectTemperature(helper, removed, f.wall, liveMaterial(helper, f.level, f.wall));
                 attachment.frostedheart$setDormantThermalState(null);
                 InfraredSnapshot cleared = sample(f.player, removed, false, full.presence());
                 expectMissing(helper, cleared, remote, true);
-                expectTemperature(helper, cleared, f.wall, material(f.input, f.wall));
+                expectTemperature(helper, cleared, f.wall, liveMaterial(helper, f.level, f.wall));
             } finally {
                 f.close();
                 attachment.frostedheart$setDormantThermalState(previous);
@@ -298,7 +299,10 @@ public final class ThermalInfraredGameTests {
                     "real campfire must produce independently readable warmed material and hotter air");
             InfraredSnapshot result = sample(f.player, null, true, EMPTY);
             helper.assertTrue(result != null && result.readable() && present(result, f.wall) && present(result, f.other.east()),
-                    "both source Pages must be readable");
+                    "both source Pages must be readable: snapshot=" + (result != null)
+                            + ", readable=" + (result != null && result.readable())
+                            + ", near=" + (result != null && present(result, f.wall))
+                            + ", far=" + (result != null && present(result, f.other.east())));
             expectTemperature(helper, result, f.wall, wall);
             helper.assertTrue(temperature(result, f.target) == null
                     || temperature(result, f.target) == InfraredBrickCodec.INVALID_TEMPERATURE, "Air is not a thermal surface");
@@ -617,6 +621,13 @@ public final class ThermalInfraredGameTests {
         h.assertTrue(encoded!=null && encoded!=InfraredBrickCodec.INVALID_TEMPERATURE && Math.abs(encoded*.25-raw)<=.3,
                 "material position must match solver surface: position="+p+", encoded="+encoded+", solver="+raw);
     }
+    private static double liveMaterial(GameTestHelper helper, ServerLevel level, BlockPos position) {
+        var sample = new MaterialSample();
+        helper.assertTrue(MinecraftThermalInput.sampleMaterial(level, position, sample)
+                        && sample.source() == MaterialSample.Source.LIVE,
+                "unchanged material must remain live while another Brick is edited: " + position);
+        return sample.temperatureC();
+    }
     private static double material(MinecraftThermalInput input, BlockPos p) {
         MinecraftPageManager pages=read(input,"pages");
         var owner=pages.loadedSectionOrAttach(SectionPos.asLong(p));
@@ -631,7 +642,6 @@ public final class ThermalInfraredGameTests {
         return queries.tryRead(brick.firstSlot()+node,brick.arenaGeneration(),publication.topologyGeneration(),sample)
                 ? sample.temperatureC() : Double.NaN;
     }
-    private static double rawAir(MinecraftThermalInput input, ServerLevel level, BlockPos p) { return rawAir(input,p); }
     private static double rawAir(MinecraftThermalInput input, BlockPos p) {
         MinecraftPageManager pages=read(input,"pages"); var owner=pages.loadedSectionOrAttach(SectionPos.asLong(p));
         var publication=owner==null||owner.page()==null?null:owner.page().currentPublication();

@@ -1,0 +1,311 @@
+{
+  "status": "passed",
+  "date": "2026-10-25",
+  "author": "Codex; OpenAI GPT-6; primary implementation and review",
+  "scope": "Thermal residual representations, projection, source identities, query leases and page capture",
+  "source": {
+    "beforeFiles": 136,
+    "beforeLines": 46675.0,
+    "afterFiles": 134,
+    "afterLines": 45411.0,
+    "netRemovedLines": 1264,
+    "newProductionTypes": 0,
+    "deletedTypes": [
+      "SparseThermalPreconditioner",
+      "AirGridCoarseningObservation"
+    ]
+  },
+  "removed": [
+    "Empty live local-shape representation, tail warm start and live-shape capture",
+    "Layout-bound AirLoadTable mode and fixed internal construction switches",
+    "Synchronous PCG/rebuild adapters and unused sparse projection branches",
+    "Unreachable live scalar capture and duplicate chunk snapshot adapter",
+    "Unused per-lease reader counter and equivalent cursor mode APIs",
+    "Repeated page validation and separate-reader fallback during maintenance capture",
+    "Old local-weight assertions and candidate stride diagnostics"
+  ],
+  "preserved": [
+    "Fine shared grid and actual Minimum coarse computation",
+    "Regional multicore task, cancellation, commit and release ownership",
+    "Parent layout address maps and frame/payload-family reference lifetimes",
+    "v6 schema and legacy shape/scalar read, merge and recovery evaluation",
+    "Four protected climate/player/unused files"
+  ],
+  "compile": {
+    "command": "assemble compileGameTestJava --offline --no-daemon --max-workers=1",
+    "java": "17",
+    "attempts": 1,
+    "status": "passed",
+    "elapsed": "1m36s",
+    "log": "build/thermal-residual-compile-r1.log"
+  },
+  "package": {
+    "jar": "D:/Frosted-Heart/build/libs/frostedheart-1.20.1-0.7.7.jar",
+    "bytes": 14968030,
+    "thermalClasses": 439,
+    "retired": 0,
+    "testClasses": 0,
+    "protectedParticle": 4
+  },
+  "staticReview": {
+    "methods": 4658,
+    "fields": 3974,
+    "rawCandidates": 953,
+    "conservativeCandidates": 402,
+    "candidateCountsAreGarbageCounts": false,
+    "diffCheck": "passed, with cr-at-eol on Windows",
+    "report": "build/thermal-residual-member-review-20261025-summary.txt",
+    "newAbandonedTopLevelRuntimeConfirmed": false
+  },
+  "verification": {
+    "junitRuns": 0,
+    "historicalSourceRebuilds": 0,
+    "fullMatrixRerun": false,
+    "performanceComparison": false,
+    "separateProcessSaveReloadRerun": false,
+    "memoryTargetMiB": 128,
+    "cpuMsPerSecond": 250,
+    "heap": "5g",
+    "clock": "realtime20",
+    "cases": [
+      {
+        "name": "input",
+        "attempt": 1,
+        "status": "passed",
+        "started": "2026-10-25T21:41:26.8077203+08:00",
+        "ended": "2026-10-25T21:44:35.3404611+08:00",
+        "exit": 0,
+        "requiredPassed": 8,
+        "rootZero": true,
+        "memoryTargetMiB": 128,
+        "cpuMsPerSecond": 250,
+        "log": "build/thermal-residual-input-20261025-r1.log"
+      },
+      {
+        "name": "storage",
+        "attempt": 1,
+        "status": "passed",
+        "started": "2026-10-25T21:44:35.3489622+08:00",
+        "ended": "2026-10-25T21:46:17.8534581+08:00",
+        "exit": 0,
+        "requiredPassed": 5,
+        "rootZero": true,
+        "memoryTargetMiB": 128,
+        "cpuMsPerSecond": 250,
+        "log": "build/thermal-residual-storage-20261025-r1.log"
+      },
+      {
+        "name": "grid",
+        "attempt": 1,
+        "status": "passed",
+        "started": "2026-10-25T21:46:17.8571102+08:00",
+        "ended": "2026-10-25T21:48:46.2639149+08:00",
+        "exit": 0,
+        "requiredPassed": 1,
+        "rootZero": true,
+        "memoryTargetMiB": 128,
+        "cpuMsPerSecond": 250,
+        "log": "build/thermal-residual-grid-20261025-r1.log"
+      },
+      {
+        "name": "block",
+        "attempt": 1,
+        "status": "passed",
+        "started": "2026-10-25T21:48:46.2691527+08:00",
+        "ended": "2026-10-25T21:50:27.62992+08:00",
+        "exit": 0,
+        "requiredPassed": 3,
+        "rootZero": true,
+        "memoryTargetMiB": 128,
+        "cpuMsPerSecond": 250,
+        "log": "build/thermal-residual-block-20261025-r1.log"
+      },
+      {
+        "name": "lifecycle",
+        "attempt": 1,
+        "status": "passed",
+        "started": "2026-10-25T21:50:27.6330903+08:00",
+        "ended": "2026-10-25T21:53:49.8554653+08:00",
+        "exit": 0,
+        "requiredPassed": 3,
+        "rootZero": true,
+        "memoryTargetMiB": 128,
+        "cpuMsPerSecond": 250,
+        "log": "build/thermal-residual-lifecycle-20261025-r1.log"
+      },
+      {
+        "name": "restored",
+        "attempt": 1,
+        "status": "failed",
+        "started": "2026-10-25T21:53:49.8588924+08:00",
+        "ended": "2026-10-25T21:58:39.4403814+08:00",
+        "exit": 1,
+        "requiredPassed": 0,
+        "rootZero": true,
+        "memoryTargetMiB": 128,
+        "cpuMsPerSecond": 250,
+        "log": "build/thermal-residual-restored-20261025-r1.log"
+      },
+      {
+        "name": "restored",
+        "attempt": 2,
+        "status": "failed",
+        "started": "2026-10-25T22:06:27.3689105+08:00",
+        "ended": "2026-10-25T22:11:18.7456361+08:00",
+        "exit": 1,
+        "requiredPassed": 0,
+        "rootZero": true,
+        "memoryTargetMiB": 128,
+        "cpuMsPerSecond": 250,
+        "log": "build/thermal-residual-restored-20261025-r2.log"
+      },
+      {
+        "name": "restored",
+        "attempt": 3,
+        "status": "passed",
+        "started": "2026-10-25T22:14:36.737792+08:00",
+        "ended": "2026-10-25T22:17:19.0829911+08:00",
+        "exit": 0,
+        "requiredPassed": 1,
+        "rootZero": true,
+        "memoryTargetMiB": 128,
+        "cpuMsPerSecond": 250,
+        "log": "build/thermal-residual-restored-20261025-r3.log"
+      }
+    ],
+    "fixtureBuilds": [
+      {
+        "log": "build/thermal-residual-fixture-compile-r2.log",
+        "status": "passed",
+        "elapsed": "21s",
+        "main": "UP-TO-DATE"
+      },
+      {
+        "log": "build/thermal-residual-fixture-compile-r3.log",
+        "status": "passed",
+        "elapsed": "21s",
+        "main": "UP-TO-DATE"
+      },
+      {
+        "log": "build/thermal-residual-fixture-compile-r4.log",
+        "status": "passed",
+        "elapsed": "21s",
+        "main": "UP-TO-DATE"
+      }
+    ],
+    "fixtureCorrection": "Restored-support r1 stopped before save because point-basis >8 was impossible: shared-grid pointBasisCount is 8. R2 passed save/reload/doorway but an added positive-history requirement incorrectly rejected a field colder than current natural temperature. Final fixture checks nonzero signed history, freshness and geometry; original reload/gradient/doorway tolerances retained. Only this group was retried. Main production code and JAR unchanged.",
+    "otherPredicateMigrationsCompiledOnly": [
+      "ContinuousAirSupportProductionGameTests",
+      "ContinuousAirCapacityProductionGameTests"
+    ],
+    "latestCases": [
+      {
+        "name": "block",
+        "attempt": 1,
+        "status": "passed",
+        "started": "2026-10-25T21:48:46.2691527+08:00",
+        "ended": "2026-10-25T21:50:27.62992+08:00",
+        "exit": 0,
+        "requiredPassed": 3,
+        "rootZero": true,
+        "memoryTargetMiB": 128,
+        "cpuMsPerSecond": 250,
+        "log": "build/thermal-residual-block-20261025-r1.log"
+      },
+      {
+        "name": "grid",
+        "attempt": 1,
+        "status": "passed",
+        "started": "2026-10-25T21:46:17.8571102+08:00",
+        "ended": "2026-10-25T21:48:46.2639149+08:00",
+        "exit": 0,
+        "requiredPassed": 1,
+        "rootZero": true,
+        "memoryTargetMiB": 128,
+        "cpuMsPerSecond": 250,
+        "log": "build/thermal-residual-grid-20261025-r1.log"
+      },
+      {
+        "name": "input",
+        "attempt": 1,
+        "status": "passed",
+        "started": "2026-10-25T21:41:26.8077203+08:00",
+        "ended": "2026-10-25T21:44:35.3404611+08:00",
+        "exit": 0,
+        "requiredPassed": 8,
+        "rootZero": true,
+        "memoryTargetMiB": 128,
+        "cpuMsPerSecond": 250,
+        "log": "build/thermal-residual-input-20261025-r1.log"
+      },
+      {
+        "name": "lifecycle",
+        "attempt": 1,
+        "status": "passed",
+        "started": "2026-10-25T21:50:27.6330903+08:00",
+        "ended": "2026-10-25T21:53:49.8554653+08:00",
+        "exit": 0,
+        "requiredPassed": 3,
+        "rootZero": true,
+        "memoryTargetMiB": 128,
+        "cpuMsPerSecond": 250,
+        "log": "build/thermal-residual-lifecycle-20261025-r1.log"
+      },
+      {
+        "name": "restored",
+        "attempt": 3,
+        "status": "passed",
+        "started": "2026-10-25T22:14:36.737792+08:00",
+        "ended": "2026-10-25T22:17:19.0829911+08:00",
+        "exit": 0,
+        "requiredPassed": 1,
+        "rootZero": true,
+        "memoryTargetMiB": 128,
+        "cpuMsPerSecond": 250,
+        "log": "build/thermal-residual-restored-20261025-r3.log"
+      },
+      {
+        "name": "storage",
+        "attempt": 1,
+        "status": "passed",
+        "started": "2026-10-25T21:44:35.3489622+08:00",
+        "ended": "2026-10-25T21:46:17.8534581+08:00",
+        "exit": 0,
+        "requiredPassed": 5,
+        "rootZero": true,
+        "memoryTargetMiB": 128,
+        "cpuMsPerSecond": 250,
+        "log": "build/thermal-residual-storage-20261025-r1.log"
+      }
+    ],
+    "requiredTestsPassed": 21,
+    "failedFixtureAttempts": 2
+  },
+  "limits": [
+    "This batch does not add a performance or fully networked hundred-player qualification",
+    "Legacy saved-function decoding was retained and statically reviewed; no dedicated historical saved-function fixture was run"
+  ],
+  "observations": {
+    "readersHeldAtPublisherClose": 3,
+    "rootBeforeLastReaderRelease": 1321864,
+    "rootAfterRelease": 0,
+    "gridCycles": 2,
+    "gridCheckpoints": 2,
+    "maximumCoarseningJumpC": 1.476219993433439,
+    "maximumRecoveryJumpC": 0.0043283980075461415,
+    "maximumCheckpointErrorC": 0.09656309847574995,
+    "maximumCoarseningEnergyErrorJ": 2.980232238769531E-08,
+    "restoredHistoryC": -12.111244213623676,
+    "restoredNaturalC": -11.9,
+    "restoredGameTick": 1143,
+    "restoredSampleTick": 1140
+  },
+  "generatedRunCleanup": {
+    "path": "build/thermal-residual-run-20261025",
+    "status": "blocked-by-automatic-approval",
+    "reason": "blocked by policy; no more specific reason returned",
+    "retained": true,
+    "gitIgnored": true,
+    "logsRetained": true
+  }
+}

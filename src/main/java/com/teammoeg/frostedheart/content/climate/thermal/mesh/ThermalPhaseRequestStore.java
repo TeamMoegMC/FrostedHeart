@@ -45,6 +45,8 @@ final class ThermalPhaseRequestStore {
         requestStates = Arrays.copyOf(requestStates, capacity);
     }
 
+    void recordBacking(AirBackingMeter meter) { meter.array(requestSequences); meter.array(requestStates); }
+
     void clear(int slot) {
         requestSequences[slot] = 0L;
         requestStates[slot] = REQUEST_IDLE;

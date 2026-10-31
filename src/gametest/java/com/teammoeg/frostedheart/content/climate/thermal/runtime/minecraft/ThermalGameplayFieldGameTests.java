@@ -247,6 +247,7 @@ public final class ThermalGameplayFieldGameTests {
     @GameTest(template = TEMPLATE, batch = "thermal_fields_phase", timeoutTicks = 200)
     public static void analyticBoundsControlRealIceTransitionsInsidePhysicalOwnership(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
+        MinecraftThermalInput.closeActiveLevel(level);
         BlockPos anchor = helper.absolutePos(new BlockPos(2, 3, 2));
         BlockPos ice = new BlockPos((anchor.getX() & ~3) + 1, (anchor.getY() & ~3) + 1,
                 (anchor.getZ() & ~3) + 1);
@@ -290,7 +291,13 @@ public final class ThermalGameplayFieldGameTests {
                 BlockState expected = data.heating().target();
                 helper.assertTrue(level.getBlockState(ice).is(Blocks.ICE),
                         "an owned material transition must first pass through worker energy settlement");
-                BlockPos unowned = ice.east(160);
+                BlockPos unowned = ice.south(160);
+                var comparisonOwner = owner(level, unowned);
+                int comparisonBlock = (unowned.getX() & 15) | (unowned.getZ() & 15) << 4
+                        | (unowned.getY() & 15) << 8;
+                helper.assertTrue(comparisonOwner == null
+                                || !comparisonOwner.ownsMaterialPosition(comparisonBlock),
+                        "comparison position must not be resident in another thermal Page");
                 level.setBlockAndUpdate(unowned, Blocks.ICE.defaultBlockState());
                 try {
                     helper.assertTrue(MinecraftThermalInput.tryMaterialPhaseAtRandomTick(

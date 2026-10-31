@@ -62,49 +62,73 @@ public final class MinecraftThermalEvents {
 
     @SubscribeEvent
     public static void onChunkDataLoad(ChunkDataEvent.Load event) {
-        if (event.getStatus() != ChunkStatus.ChunkType.LEVELCHUNK
-                || !(event.getChunk() instanceof LevelChunk chunk)) {
-            return;
-        }
-        MinecraftThermalInput.setDormantState(
-                chunk,
-                DormantChunkThermalState.decode(
-                        event.getData(),
-                        chunk.getSectionYFromSectionIndex(0),
-                        chunk.getSections().length));
+        var stageObserver = com.teammoeg.frostedheart.content.climate.thermal.solver.ThermalDiagnostics.observer;
+        boolean observeStage = stageObserver != null;
+        if (observeStage) stageObserver.stage("thermal_data_load", true);
+        try {
+            if (event.getStatus() != ChunkStatus.ChunkType.LEVELCHUNK
+                    || !(event.getChunk() instanceof LevelChunk chunk)) {
+                return;
+            }
+            MinecraftThermalInput.setDormantState(
+                    chunk,
+                    DormantChunkThermalState.decode(
+                            event.getData(),
+                            chunk.getSectionYFromSectionIndex(0),
+                            chunk.getSections().length));
+        } finally { if (observeStage) stageObserver.stage("thermal_data_load", false); }
+
     }
 
     @SubscribeEvent
     public static void onChunkDataSave(ChunkDataEvent.Save event) {
-        LevelChunk chunk = fullChunk(event.getChunk());
-        if (chunk == null) {
-            return;
-        }
-        if (event.getLevel() instanceof ServerLevel level) {
-            MinecraftThermalInput.checkpointForSave(level, chunk);
-        }
-        DormantChunkThermalState state = MinecraftThermalInput.dormantState(chunk);
-        if (state == null) {
-            event.getData().remove("FrostedHeartThermal");
-        } else {
-            state.encode(event.getData());
-        }
+        var stageObserver = com.teammoeg.frostedheart.content.climate.thermal.solver.ThermalDiagnostics.observer;
+        boolean observeStage = stageObserver != null;
+        if (observeStage) stageObserver.stage("thermal_data_save", true);
+        try {
+            LevelChunk chunk = fullChunk(event.getChunk());
+            if (chunk == null) {
+                return;
+            }
+            if (event.getLevel() instanceof ServerLevel level) {
+                MinecraftThermalInput.checkpointForSave(level, chunk);
+            }
+            DormantChunkThermalState state = MinecraftThermalInput.dormantState(chunk);
+            if (state == null) {
+                event.getData().remove("FrostedHeartThermal");
+            } else {
+                state.encode(event.getData());
+            }
+        } finally { if (observeStage) stageObserver.stage("thermal_data_save", false); }
+
     }
 
     @SubscribeEvent
     public static void onChunkLoad(ChunkEvent.Load event) {
-        if (event.getLevel() instanceof ServerLevel level
-                && event.getChunk() instanceof LevelChunk chunk) {
-            MinecraftThermalInput.onChunkLoad(level, chunk);
-        }
+        var stageObserver = com.teammoeg.frostedheart.content.climate.thermal.solver.ThermalDiagnostics.observer;
+        boolean observeStage = stageObserver != null;
+        if (observeStage) stageObserver.stage("thermal_chunk_load", true);
+        try {
+            if (event.getLevel() instanceof ServerLevel level
+                    && event.getChunk() instanceof LevelChunk chunk) {
+                MinecraftThermalInput.onChunkLoad(level, chunk);
+            }
+        } finally { if (observeStage) stageObserver.stage("thermal_chunk_load", false); }
+
     }
 
     @SubscribeEvent
     public static void onChunkUnload(ChunkEvent.Unload event) {
-        if (event.getLevel() instanceof ServerLevel level
-                && event.getChunk() instanceof LevelChunk chunk) {
-            MinecraftThermalInput.onChunkUnload(level, chunk);
-        }
+        var stageObserver = com.teammoeg.frostedheart.content.climate.thermal.solver.ThermalDiagnostics.observer;
+        boolean observeStage = stageObserver != null;
+        if (observeStage) stageObserver.stage("thermal_chunk_unload", true);
+        try {
+            if (event.getLevel() instanceof ServerLevel level
+                    && event.getChunk() instanceof LevelChunk chunk) {
+                MinecraftThermalInput.onChunkUnload(level, chunk);
+            }
+        } finally { if (observeStage) stageObserver.stage("thermal_chunk_unload", false); }
+
     }
 
     @SubscribeEvent
@@ -140,7 +164,7 @@ public final class MinecraftThermalEvents {
         if (event.side == LogicalSide.SERVER
                 && event.phase == TickEvent.Phase.END
                 && event.level instanceof ServerLevel level) {
-            MinecraftThermalInput.sealActiveLevel(level);
+            MinecraftThermalInput.tickLevel(level);
         }
     }
 

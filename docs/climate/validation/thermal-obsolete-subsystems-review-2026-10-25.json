@@ -1,0 +1,195 @@
+{
+  "verifiedAt": "2026-10-25 18:49:57 +08:00",
+  "author": "Codex / OpenAI GPT-6; primary static inspection",
+  "status": "Review completed; obsolete internal subsystems found; production and test sources unchanged.",
+  "scope": "Thermal runtime and necessary production entry points; protected player particle simulator excluded.",
+  "source": {
+    "files": 141,
+    "physicalLines": 49443,
+    "productionEditsInThisReview": 0,
+    "testEditsInThisReview": 0
+  },
+  "method": {
+    "classDependencies": "jdeps current ordinary JAR, nested classes grouped by top-level source type",
+    "productionClassesInspected": 3762,
+    "gameTestClassesReadWithoutExecution": 195,
+    "thermalInvocationReferences": 20358,
+    "invocations": "method instruction owner/name/descriptor and invokedynamic implementation handles",
+    "manualReview": [
+      "Forge annotation registration",
+      "fineGrid fixed true and current layout generation",
+      "spatial source mode unconditionally enabled by the only production constructor",
+      "ContactPreparation state assignments/transitions",
+      "version-6 old-function decode/evaluation and item heat-exchange consumers"
+    ],
+    "limitations": "Class dependencies and direct invocation counts are candidate evidence, not a whole-program reachability proof; reflection/callbacks and path feasibility require manual review."
+  },
+  "findings": [
+    {
+      "id": "scalar-numerical-path",
+      "status": "confirmed obsolete numerical path",
+      "anchors": [
+        "ThermalSolver.step",
+        "ThermalSolver.maxTemperatureResidualC",
+        "MaterialEnthalpyExchange.exchange"
+      ],
+      "evidence": [
+        "step and maxTemperatureResidualC: zero invocation references in production and GameTest outputs.",
+        "MaterialEnthalpyExchange has two invocation references, both inside the old ThermalSolver scalar sweeps."
+      ],
+      "delete": [
+        "Old scalar sweeps, residual scan, exclusive scratch and traversal helpers",
+        "MaterialEnthalpyExchange"
+      ],
+      "retain": [
+        "ThermalSolver topology, staged token, fragment/material edge and span-reference responsibilities",
+        "ThermalExchangeKernel used by actual ReservoirEnvironmentExchange item gameplay"
+      ]
+    },
+    {
+      "id": "node-source-integrator",
+      "status": "confirmed obsolete source integration mode",
+      "anchors": [
+        "ThermalDimensionEngine constructor",
+        "ThermalSourceLedger.useSpatialRecording/acceptAndAdvance/deliverThrough",
+        "NodePowerAccumulatorArena"
+      ],
+      "evidence": [
+        "Only production ledger construction creates the node accumulator and unconditionally enables spatial recording.",
+        "acceptAndAdvance has three call instructions from two GameTest methods; no production caller.",
+        "deliverThrough is called only by acceptAndAdvance; hasActivePowerOrPendingEnergy has no caller.",
+        "Actual accepted heat belongs to Timeline/Ingress/Store and regional commits."
+      ],
+      "delete": [
+        "NodePowerAccumulatorArena",
+        "Legacy direct-arena integration and mode switch",
+        "Exclusive node capacity, binding reference and empty retirement-check plumbing"
+      ],
+      "retain": [
+        "Current source identity/ports/membership/space prefix and energy accounting",
+        "Signed impulses, unload and phase saturation semantics"
+      ]
+    },
+    {
+      "id": "local-function-build",
+      "status": "confirmed obsolete construction mode; data compatibility retained",
+      "anchors": [
+        "ContinuousAirSolver.CandidateBuild.fineGrid=true",
+        "AirShapeStore.prepare/compile/restorePieces/reconstructPieces",
+        "LocalAirBasisCache",
+        "LocalAirModeRank",
+        "CoarseAirModeSpan"
+      ],
+      "evidence": [
+        "LocalAirBasisCache.prepare and AirShapeStore.prepare have zero call instructions; their source calls are behind fixed fineGrid branches.",
+        "Current newly constructed fine/direct-coarse layouts carry zero local function modes.",
+        "Rank selection and coarse span inspection have no useful mode result; seedMerged still merges empty basis caches."
+      ],
+      "delete": [
+        "Old local response-function generation and its exclusive helpers",
+        "LocalAirBasisCache/LocalAirModeRank/CoarseAirModeSpan and exclusive trial switches",
+        "Empty cache ownership/seed/restore/meter branches"
+      ],
+      "retain": [
+        "LocalAirShape and AirFieldCheckpoint legacy decoding/evaluation/projection",
+        "AirShapeStore shared-grid support discovery/cache and saved support lifecycle",
+        "MinimumThermalModel/MinimumRegionStep actual coarse overload protection"
+      ]
+    },
+    {
+      "id": "contact-preparation-control",
+      "status": "confirmed obsolete local orchestration branches",
+      "anchors": [
+        "ContinuousAirSolver.ContactPreparation"
+      ],
+      "evidence": [
+        "committed starts at -1 and has no feasible transition into the nonnegative old-directory traversal.",
+        "changedFragments and changedExecutions use the same regionScope.fragmentIndexes with duplicate merge cursors.",
+        "Stage 1 enters stage 3 directly; no current stage enters stage 2."
+      ],
+      "delete": [
+        "Old global/changed-fragment merge state",
+        "Unreachable stage 2 material contact assembly"
+      ],
+      "retain": [
+        "Original regional traversal order, bounded yielding, material execution, routed contacts and far boundaries"
+      ]
+    }
+  ],
+  "wholeTypeRetirementCandidates": [
+    {
+      "file": "src/main/java/com/teammoeg/frostedheart/content/climate/thermal/source/NodePowerAccumulatorArena.java",
+      "physicalLines": 420,
+      "status": "retirement candidate; requires corresponding call-site cleanup; not deleted in this review"
+    },
+    {
+      "file": "src/main/java/com/teammoeg/frostedheart/content/climate/thermal/solver/MaterialEnthalpyExchange.java",
+      "physicalLines": 68,
+      "status": "retirement candidate; requires corresponding call-site cleanup; not deleted in this review"
+    },
+    {
+      "file": "src/main/java/com/teammoeg/frostedheart/content/climate/thermal/solver/LocalAirBasisCache.java",
+      "physicalLines": 151,
+      "status": "retirement candidate; requires corresponding call-site cleanup; not deleted in this review"
+    },
+    {
+      "file": "src/main/java/com/teammoeg/frostedheart/content/climate/thermal/solver/LocalAirModeRank.java",
+      "physicalLines": 118,
+      "status": "retirement candidate; requires corresponding call-site cleanup; not deleted in this review"
+    },
+    {
+      "file": "src/main/java/com/teammoeg/frostedheart/content/climate/thermal/solver/CoarseAirModeSpan.java",
+      "physicalLines": 122,
+      "status": "retirement candidate; requires corresponding call-site cleanup; not deleted in this review"
+    }
+  ],
+  "wholeTypeCandidatePhysicalLines": 879,
+  "testCoverageCorrection": {
+    "class": "FrostedHeartMinecraftThermalInputGameTests",
+    "legacyOnlyTests": [
+      "sourceLedgerDeliversPowerAtTheExactCut",
+      "sourceEnergyIsAccountedWhenMaterialCannotAcceptMore"
+    ],
+    "meaning": "These tests validate the old direct node ledger. Their pass results must not be described as current spatial intake coverage.",
+    "nextStep": "Move their exact integration/conservation/saturation assertions onto the existing Timeline/Store/regional commit tests when retiring the old mode."
+  },
+  "retainedWithEvidence": [
+    {
+      "symbol": "MinecraftThermalEvents",
+      "reason": "Forge @Mod.EventBusSubscriber and @SubscribeEvent registration; no ordinary Java incoming edge is expected."
+    },
+    {
+      "symbol": "ThermalExchangeKernel",
+      "reason": "Production player/thermalitem/ReservoirEnvironmentExchange invokes its finite-capacity exchange kernels."
+    },
+    {
+      "symbol": "LocalAirShape/AirFieldCheckpoint",
+      "reason": "Old function-shaped v6 data still decodes and evaluates for recovery/projection."
+    },
+    {
+      "symbol": "RegionalAirRuntime/RegionJob/RegionBuild/RegionalWorkQueue/MinimumThermalModel",
+      "reason": "Current multicore regional control and coarse overload protection."
+    },
+    {
+      "symbol": "climate/player/unused four particle files",
+      "reason": "Explicit user retention; excluded from cleanup/review mutations."
+    }
+  ],
+  "execution": {
+    "compileRuns": 0,
+    "forgeRuns": 0,
+    "junitRuns": 0,
+    "benchmarkRuns": 0,
+    "pythonEdits": 0,
+    "subagents": 0,
+    "productionSourceChanges": 0
+  },
+  "performanceConclusion": "No speed-up measurement. Many findings are already outside numerical execution; benefits are simpler maintenance plus removal of limited empty-cache/initialization work.",
+  "rawLocalEvidence": [
+    "build/thermal-module-review-jdeps.txt",
+    "build/thermal-module-review-types.json",
+    "build/thermal-module-review-calls.tsv",
+    "build/thermal-module-review-calls-summary.txt"
+  ],
+  "investigation": "plans/2026-10-25_18-49-57_thermal-obsolete-subsystems-review.md"
+}

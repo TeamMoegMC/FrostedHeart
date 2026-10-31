@@ -35,7 +35,6 @@ import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.CampfireBlock;
 import net.minecraft.world.level.block.LeavesBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.common.Tags;
@@ -50,8 +49,6 @@ import java.util.Map;
 /** Server-wide immutable gameplay resolver/material cut. */
 public final class MinecraftThermalProfiles {
     public static final int TOPOLOGY_MUTATION = 1;
-    public static final int SOURCE_MUTATION = 1 << 1;
-    public static final int RADIATION_MUTATION = 1 << 2;
     public static final int OCCLUSION_MUTATION = 1 << 3;
     private static final double STEFAN_BOLTZMANN_W_PER_M2_K4 = 5.670_374_419e-8D;
     private static volatile Snapshot snapshot;
@@ -76,7 +73,7 @@ public final class MinecraftThermalProfiles {
                         config.dormantTemperatureHalfLifeSeconds.get(),
                         MinecraftPhysicalSourceProfile.campfire(
                                 config.campfirePowerW.get(), config.campfireRadiationShare.get()),
-                        config.continuousAir.get());
+                        config.continuousAirCorrectionToleranceC.get());
         List<Block> blocks = new ArrayList<>(ForgeRegistries.BLOCKS.getValues());
         blocks.sort(
                 Comparator.comparing(
@@ -161,7 +158,6 @@ public final class MinecraftThermalProfiles {
                         state,
                         signatureId,
                         radiationProfileId,
-                        campfireFlags(state),
                         MinecraftRadiationOcclusion.blocksRadiation(state));
             }
         }
@@ -195,13 +191,6 @@ public final class MinecraftThermalProfiles {
         return profileEpoch;
     }
 
-    public static int mutationFlags(BlockState oldState, BlockState newState) {
-        Snapshot current = snapshot;
-        return current == null
-                ? TOPOLOGY_MUTATION
-                : current.states.mutationFlags(oldState, newState);
-    }
-
     public static boolean lavaBlockRadiationEnabled() {
         Snapshot current = snapshot;
         return current != null
@@ -211,17 +200,6 @@ public final class MinecraftThermalProfiles {
 
     private static boolean isCampfire(BlockState state) {
         return state.is(Blocks.CAMPFIRE) || state.is(Blocks.SOUL_CAMPFIRE);
-    }
-
-    private static byte campfireFlags(BlockState state) {
-        if (!isCampfire(state)) {
-            return 0;
-        }
-        int flags = MinecraftStateThermalTable.CAMPFIRE_PRESENT;
-        if (state.hasProperty(CampfireBlock.LIT) && state.getValue(CampfireBlock.LIT)) {
-            flags |= MinecraftStateThermalTable.CAMPFIRE_LIT;
-        }
-        return (byte) flags;
     }
 
     private static double lavaSurfacePowerWPerM2(FHConfig.Common.ThermalRuntime config) {
@@ -348,7 +326,7 @@ public final class MinecraftThermalProfiles {
             double farFieldConductanceWPerK,
             double dormantTemperatureHalfLifeSeconds,
             MinecraftPhysicalSourceProfile campfire,
-            boolean continuousAir) {}
+            double continuousAirCorrectionToleranceC) {}
 
     private record BodyKey(
             double conductance,
