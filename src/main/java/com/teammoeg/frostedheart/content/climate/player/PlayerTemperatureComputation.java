@@ -171,7 +171,8 @@ public final class PlayerTemperatureComputation {
         	totalWeight+=context.getWeight(part);
         if(totalWeight>10) {
         	int level=Mth.floor((totalWeight-10)/5);
-        	if (player.getEffect(FHMobEffects.HEAVY_LOAD.get()).getAmplifier()!=level) {
+        	MobEffectInstance heavyLoad=player.getEffect(FHMobEffects.HEAVY_LOAD.get());
+        	if (heavyLoad!=null&&heavyLoad.getAmplifier()!=level) {
         		player.removeEffectNoUpdate(FHMobEffects.HEAVY_LOAD.get());
         	}
         	if(!player.hasEffect(FHMobEffects.HEAVY_LOAD.get()))

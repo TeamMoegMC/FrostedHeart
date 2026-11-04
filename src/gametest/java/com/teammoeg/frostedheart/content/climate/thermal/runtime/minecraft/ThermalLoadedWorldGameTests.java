@@ -80,6 +80,7 @@ import net.minecraft.server.Services;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.server.players.GameProfileCache;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
@@ -237,6 +238,69 @@ public final class ThermalLoadedWorldGameTests {
             MinecraftThermalInput.closeActiveLevel(level);
             throw error;
         }
+    }
+
+    @GameTest(template = TEMPLATE, batch = "thermal_player_heavy_load", timeoutTicks = 100)
+    public static void heavyLoadFollowsLiningWeightFromTheFirstCrossing(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        MinecraftThermalInput.closeActiveLevel(level);
+        BlockPos position = helper.absolutePos(new BlockPos(4, 2, 2));
+        var player = FakePlayerFactory.get(level,
+                new com.mojang.authlib.GameProfile(java.util.UUID.randomUUID(), "HeavyLoadTest"));
+        player.setPos(position.getX() + .5D, position.getY(), position.getZ() + .5D);
+        ThermalFieldKey fieldKey = ThermalFieldKey.of(FHMain.rl("gametest_heavy_load"), player.getUUID(), 0);
+        MinecraftGameplayFields.upsert(level, new ThermalAnalyticField(fieldKey, 100,
+                ThermalAnalyticField.CombineMode.OVERRIDE,
+                player.getX(), player.getEyeY(), player.getZ(), 5, -15));
+        try {
+            double unloadedSpeed = player.getAttributeValue(Attributes.MOVEMENT_SPEED);
+            PlayerTemperatureData data = new PlayerTemperatureData();
+            var torso = data.getClothesByPart(BodyPart.TORSO);
+            var legs = data.getClothesByPart(BodyPart.LEGS);
+
+            torso.setStackInSlot(0, new ItemStack(FHItems.fox_jacket.get()));
+            torso.setStackInSlot(1, new ItemStack(FHItems.fox_jacket.get()));
+            PlayerTemperatureComputation.updatePlayer(player, data, 20);
+            helper.assertTrue(!player.hasEffect(FHMobEffects.HEAVY_LOAD.get()),
+                    "two fox jackets weigh 7.2 and must stay under the limit");
+
+            torso.setStackInSlot(2, new ItemStack(FHItems.fox_jacket.get()));
+            PlayerTemperatureComputation.updatePlayer(player, data, 20);
+            assertHeavyLoad(helper, player, 0, unloadedSpeed * .85D);
+
+            for (int slot = 0; slot < legs.getSlots(); slot++) {
+                legs.setStackInSlot(slot, new ItemStack(FHItems.fox_pants.get()));
+            }
+            PlayerTemperatureComputation.updatePlayer(player, data, 20);
+            assertHeavyLoad(helper, player, 1, unloadedSpeed * .7D);
+
+            for (int slot = 0; slot < legs.getSlots(); slot++) {
+                legs.setStackInSlot(slot, ItemStack.EMPTY);
+            }
+            PlayerTemperatureComputation.updatePlayer(player, data, 20);
+            assertHeavyLoad(helper, player, 0, unloadedSpeed * .85D);
+
+            torso.setStackInSlot(2, ItemStack.EMPTY);
+            PlayerTemperatureComputation.updatePlayer(player, data, 20);
+            helper.assertTrue(!player.hasEffect(FHMobEffects.HEAVY_LOAD.get()),
+                    "dropping back under the limit must clear the effect");
+            helper.assertTrue(Math.abs(player.getAttributeValue(Attributes.MOVEMENT_SPEED) - unloadedSpeed) < 1e-6D,
+                    "clearing the effect must restore movement speed");
+            helper.succeed();
+        } finally {
+            player.removeEffect(FHMobEffects.HEAVY_LOAD.get());
+            MinecraftGameplayFields.remove(level, fieldKey);
+            MinecraftThermalInput.closeActiveLevel(level);
+        }
+    }
+
+    private static void assertHeavyLoad(GameTestHelper helper, net.minecraft.server.level.ServerPlayer player,
+                                        int expectedAmplifier, double expectedSpeed) {
+        MobEffectInstance effect = player.getEffect(FHMobEffects.HEAVY_LOAD.get());
+        helper.assertTrue(effect != null && effect.getAmplifier() == expectedAmplifier,
+                "expected heavy load amplifier " + expectedAmplifier + " but found " + effect);
+        helper.assertTrue(Math.abs(player.getAttributeValue(Attributes.MOVEMENT_SPEED) - expectedSpeed) < 1e-6D,
+                "heavy load amplifier " + expectedAmplifier + " must set movement speed to " + expectedSpeed);
     }
 
     @GameTest(template = TEMPLATE, batch = "thermal_player_regulation_production", timeoutTicks = 100)

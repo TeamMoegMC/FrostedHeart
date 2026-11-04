@@ -23,6 +23,7 @@
   "death.attack.hypothermia_instant": "%s was deep freezed.",
   "death.attack.hypothermia_instant.player": "%s was deep freezed.",
   "effect.frostedheart.anemia": "Anemia",
+  "effect.frostedheart.heavy_load": "Heavy Load",
   "effect.frostedheart.hyperthermia": "Hyperthermia",
   "effect.frostedheart.hypothermia": "Hypothermia",
   "effect.frostedheart.ionizing_radiation": "Radiation",
