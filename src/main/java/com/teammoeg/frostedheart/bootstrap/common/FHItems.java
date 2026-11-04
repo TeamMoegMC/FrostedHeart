@@ -1592,15 +1592,19 @@ thinner.png
     // Polar Bear
     public static final ItemEntry<FHBaseArmorItem> polar_bear_boots = REGISTRATE
             .item("polar_bear_fur_socks", p -> new FHBaseArmorItem(FHArmorMaterial.POLAR_BEAR, Type.BOOTS, createProps()))
+            .tag(FHTags.Items.INNER_LINNING.tag)
             .register();
     public static final ItemEntry<FHBaseArmorItem> polar_bear_hat = REGISTRATE
             .item("polar_bear_fur_hat", p -> new FHBaseArmorItem(FHArmorMaterial.POLAR_BEAR, Type.HELMET, createProps()))
+            .tag(FHTags.Items.INNER_LINNING.tag)
             .register();
     public static final ItemEntry<FHBaseArmorItem> polar_bear_jacket = REGISTRATE
             .item("polar_bear_fur_jacket", p -> new FHBaseArmorItem(FHArmorMaterial.POLAR_BEAR, Type.CHESTPLATE, createProps()))
+            .tag(FHTags.Items.INNER_LINNING.tag)
             .register();
     public static final ItemEntry<FHBaseArmorItem> polar_bear_pants = REGISTRATE
             .item("polar_bear_fur_pants", p -> new FHBaseArmorItem(FHArmorMaterial.POLAR_BEAR, Type.LEGGINGS, createProps()))
+            .tag(FHTags.Items.INNER_LINNING.tag)
             .register();
     public static final ItemEntry<LiningItem> polar_bear_gloves = REGISTRATE
             .item("polar_bear_fur_gloves", LiningItem::new)
