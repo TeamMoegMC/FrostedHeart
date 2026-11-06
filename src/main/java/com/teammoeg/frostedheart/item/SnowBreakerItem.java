@@ -57,10 +57,13 @@ public class SnowBreakerItem extends FHBaseItem {
         var player = context.getPlayer();
         if (context.getHand() == InteractionHand.MAIN_HAND && state.is(BlockTags.SNOW)) {
             if (player instanceof ServerPlayer sp) {
+                // 麻酱的史诗级甜美大粪坑：使用betweenClosedStream里的坐标前先immutable，否则可能会出现意料之外的行为
                 BlockPos.betweenClosedStream(pos.offset(-1, 0, -1), pos.offset(1, 1, 1))
                         .forEach(pos2 -> {
-                            if (level.getBlockState(pos2).is(BlockTags.SNOW)) {
-                                sp.gameMode.destroyBlock(pos2);
+                            var p = pos2.immutable();
+                            var s = level.getBlockState(p);
+                            if (s.is(BlockTags.SNOW)) {
+                                sp.gameMode.destroyBlock(p);
                             }
                         });
                 if (!player.isCreative()) {
