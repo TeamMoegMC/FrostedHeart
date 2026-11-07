@@ -23,6 +23,7 @@
   "death.attack.hypothermia_instant": "%s被冻成了冰雕。",
   "death.attack.hypothermia_instant.player": "%s被冻成了冰雕。",
   "effect.frostedheart.anemia": "贫血症",
+  "effect.frostedheart.heavy_load": "超重",
   "effect.frostedheart.hyperthermia": "中暑",
   "effect.frostedheart.hypothermia": "失温",
   "effect.frostedheart.ionizing_radiation": "辐射",
