@@ -71,7 +71,7 @@ public record SimpleItemKey(Item item, @Nullable CompoundTag tag)
 
     public static SimpleItemKey fromBuffer(FriendlyByteBuf buf) {
         return new SimpleItemKey(
-            buf.readRegistryIdUnsafe(ForgeRegistries.ITEMS),
+            buf.readRegistryId(),
             buf.readNbt()
         );
     }

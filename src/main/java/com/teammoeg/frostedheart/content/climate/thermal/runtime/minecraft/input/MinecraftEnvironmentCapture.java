@@ -82,7 +82,8 @@ public final class MinecraftEnvironmentCapture implements AutoCloseable {
         int minX = SectionPos.sectionToBlockCoord(sectionX);
         int minY = SectionPos.sectionToBlockCoord(sectionY);
         int minZ = SectionPos.sectionToBlockCoord(sectionZ);
-        long topBricks = residentBrickMask & 0xffff_0000_0000_0000L;
+        // Every captured column can have an exposed sparse upper boundary, even below the Section roof.
+        long topBricks = (residentBrickMask | residentBrickMask >>> 16 | residentBrickMask >>> 32 | residentBrickMask >>> 48) & 0xffffL;
         while (topBricks != 0L) {
             int brick = Long.numberOfTrailingZeros(topBricks);
             int brickMinX = (brick & 3) << 2;
@@ -111,7 +112,7 @@ public final class MinecraftEnvironmentCapture implements AutoCloseable {
         if (entry == null || entry.handle != handle) {
             return;
         }
-        long topBricks = addedBrickMask & 0xffff_0000_0000_0000L;
+        long topBricks = (addedBrickMask | addedBrickMask >>> 16 | addedBrickMask >>> 32 | addedBrickMask >>> 48) & 0xffffL;
         int minX = SectionPos.sectionToBlockCoord(
                 SectionPos.x(handle.sectionKey()));
         int minY = SectionPos.sectionToBlockCoord(

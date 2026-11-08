@@ -1,9 +1,9 @@
 # 温度区域运行时：输入、任务与保存所有权
 
 - Status: `Current for the sole regional implementation and active-time service target; stated scenes validated at their listed allowances`
-- Last verified: `2026-10-31 public specialization removal: final assemble and15 focused Forge cases passed, thermalErrors0/root0; earlier results retain their own build scope; defaults1000ms/s and128MiB`
+- Last verified: `2026-11-08: on-demand minimum-summary experiment reverted after inconclusive performance; graph-deduplication prototype rejected; final rollback validation recorded in the linked baseline; defaults1000ms/s and128MiB`
 - Scope: `SHARED_GRID输入接管、区域任务、资源准入、粗细计算、查询、v6保存与关闭`
-- Code anchors: `MinecraftThermalInput`, `ThermalMemoryBudget`, `ThermalWorkBudget.Account.activeNanos`, `ThermalWorkerPool.regionalWorkAllowanceNanos`, `RegionWorkPolicy`, `FHConfig.COMMON.THERMAL_RUNTIME.continuousAirWorkBudgetMsPerSecond`, `ThermalDimensionEngine`, `SpatialSourceTimeline`, `SpatialSourceIngress`, `SpatialHeatStore`, `AirLoadTable`, `AirFieldLayout`, `CoupledThermalOperator.ProjectionPreparation`, `RegionalAirRuntime`, `RegionalQualityControl`, `RegionJob`, `RegionBuild`, `RegionalWorkQueue`, `QueryPublication`, `RegionalQueryIndex`, `RegionalCheckpoint`, `ThermalPageHandle`, `ThermalSignatureTable.samePhysicalProperties`, `AirRouteValidity`
+- Code anchors: `MinecraftThermalInput`, `MinecraftThermalInput.reportResourcePressure`, `ThermalDiagnostics.TRACE`, `ThermalMemoryBudget`, `ThermalWorkBudget.Account.activeNanos`, `ThermalWorkerPool.regionalWorkAllowanceNanos`, `RegionWorkPolicy`, `FHConfig.COMMON.THERMAL_RUNTIME.continuousAirWorkBudgetMsPerSecond`, `ThermalDimensionEngine`, `SpatialSourceTimeline`, `SpatialSourceIngress`, `SpatialHeatStore`, `AirLoadTable`, `AirFieldLayout`, `CoupledThermalOperator.ProjectionPreparation`, `RegionalAirRuntime`, `RegionalQualityControl`, `RegionJob`, `RegionBuild`, `RegionalWorkQueue`, `QueryPublication`, `RegionalQueryIndex`, `RegionalCheckpoint`, `ThermalPageHandle`, `ThermalSignatureTable.samePhysicalProperties`, `AirRouteValidity`
 
 本文件描述当前源码与服务取舍。正式运行只保留区域共享网格；`LegacyThermalDimensionEngine`、FUNCTIONS/scalar运行入口、`ThermalDimensionProcessor`双协议和旧`ThermalInputStore`已经删除。旧存档的函数布局求值与投影属于数据兼容，继续保留；它们不能再选择第二套调度。[本轮退役计划](../../diary/2026-10-29_23-38-00_thermal-development-history.md)记录删除与验收范围。2026-10-24的27组/66项只证明清理前的对应版本，不自动转为本轮资格。
 
@@ -144,9 +144,9 @@ main用`ThermalInputEnvelope`一次交出按Page拆分的控制载荷和源窗�
 
 `ContinuousAirSolver.stateC/candidateC/rhsJ`只准备空气行，材料权威仍为独立的H、branch和waiting；查询按材料law求温度。`powerW`仍覆盖空气和材料行，功率半步在没有空气节点的材料区域也执行。瞬时材料输入使用`LocalMaterialBoundary.law`中的同一不可变物性；operator继续冻结环境与真实路由。`RegionalQuerySnapshot.copyStateTo/Restoration`只恢复这些实际状态，不再生成或复制未消费的材料温度尾段。专属重复物性数组、冻结选择标志及恒为0的`rejectedSteps`已删除，实际acceptedSteps与成本计量保留。
 
-`RegionalAirRuntime.prepareJob`按Accepted.minimumQuality分流：细档使用`CutLoadBuffer`和`ContinuousAirSolver.CutCursor`，最大子步仍为`ThermalInputBatch.CUT_INTERVAL_TICKS=40`；粗档直接把Claim记录送入`MinimumRegionStep`，按现有规则准备最多8个时间段。细档入口不再保存旧粗档时间合并及可变最大步长参数；Store的时间汇总和质量政策中的aggregated判定仍有效。
+`RegionalAirRuntime.prepareJob`按Accepted.minimumQuality分流：细档使用`CutLoadBuffer`和`ContinuousAirSolver.CutCursor`，最大子步仍为`ThermalInputBatch.CUT_INTERVAL_TICKS=20`；粗档直接把Claim记录送入`MinimumRegionStep`，按现有规则准备最多8个时间段。细档入口不再保存旧粗档时间合并及可变最大步长参数；Store的时间汇总和质量政策中的aggregated判定仍有效。这里修正旧文档的40字样，源码步长未改。
 
-`RegionBuild`的构建几何直接使用求解器已有的`regionScope`；图容量仍读取同一Scope内的fineVolumes/fineEdges/airComponents，不再保留不可达的通用几何重数备用扫描。真实几何遍历保留分段`AirGeometryView.cellCursor`，旧的无调用forEachCell接口和覆盖已删除。`RegionWork.prepareFrame`在任务就绪前完成帧及最低摘要，提交直接使用该帧；取消释放私有帧，接受时只记录`acceptedSnapshot`，没有提交端同步补帧入口或第二份“最后快照”字段。[清理闭合复查](../../diary/2026-10-29_23-38-00_thermal-development-history.md)记录对应构造不变量和本批验证范围。
+`RegionBuild`的构建几何直接使用求解器已有的`regionScope`；图容量仍读取同一Scope内的fineVolumes/fineEdges/airComponents，不再保留不可达的通用几何重数备用扫描。真实几何遍历保留分段`AirGeometryView.cellCursor`，旧的无调用forEachCell接口和覆盖已删除。`RegionWork.prepareFrame`在任务就绪前完成查询帧与最低摘要投影，粗档随后激活该摘要。取消释放私有帧，接受时只记录`acceptedSnapshot`，没有提交端同步补帧入口或第二份“最后快照”字段。[清理闭合复查](../../diary/2026-10-29_23-38-00_thermal-development-history.md)记录构造不变量，摘要试验及撤回见下文。
 
 `ContinuousAirSolver.CandidateBuild`使用`CandidatePhase`依次表达捕获布局、支持搜索、节点编号、体积算子、材料索引、接触、装配、材料边界、状态初始化和节点能量/温度投影。粗档在`ALLOCATE_STATE`完成自身暖启动后直接进入`COMPLETE`；细档继续两个投影阶段。暂停点仍为状态初始化之前，截止时间与异常恢复出口保持。枚举只命名现有构建进度，不另建一套任务状态机。`ContactWeightTable`按4096项分块保存double权重；原始位相同的整块只存一个值，其他块沿用无损字典或密集数组。字典暂存只在实际需要时创建，旧块共享、BackingMeter登记和最后引用释放沿原路径。实现及当前性能边界见[存储与性能说明](thermal-storage-optimization.md)。
 
@@ -259,7 +259,15 @@ PreparedTopologyChange不再携带独立材料边/执行表列，RegionalTopolog
 
 `RegionalQualityControl`是唯一模式控制者。不同容量出口通过`resourcePressure`请求；优先选择相关边界内一个已有细档区域转换；若本区没有可缩减状态，则从共享root下本维度已有细档中选择一个，不遍历取消其他区域的准备。小房间在内存压力下降粗档允许发生。活动时间触发降档仍要求规模有实际缩减收益，平台CPU量化修正已退出费用链。
 
-最低模型保留64空气节点、64材料池、最多32显式相变体和8个时间段。粗细共用输入领取、取消、发布和释放；热容量、能量、背景、输入、查询使用相同空间权重。细档只准备最低摘要；细档区域不长期预留粗档工作空间，实际转换/粗档首步才取得有明确归属的空间。粗档步工作空间按已提交图的真实pairCount计量，取消空气区域一律256KiB以及候选间workspace donor交接。首次降档在同一`RegionJob.Kind.MINIMUM_LAYOUT`中按需构建最低传热图，不领取J、不改变物理时间。粗转细用同一质量候选和父帧借用，准备时粗档继续推进，实际交接对齐父提交时间。
+最低模型保留64空气节点、64材料池、最多32显式相变体和8个时间段。粗细共用输入领取、取消、发布和释放；热容量、能量、背景、输入、查询使用相同空间权重。普通细档帧在发布前生成`minimumSummary`；`componentPerturbationC/vertexPerturbationC/activeAtSlot`从摘要布局读取原不可变空气背景。布局、背景及温场摘要均在已有准备任务内完成。
+
+降档使用已有`RegionJob.Kind.MINIMUM_LAYOUT`准备最低传热图，并激活Accepted上已经存在的最低摘要；完成前沿用旧Accepted，不领取新J、不改变物理时间。普通准备任务覆盖投影暂存；最低工作空间按已有摘要和实际图计量。粗转细仍使用同一质量候选和父帧借用，交接对齐父提交时间。
+
+材料回执按原`withMaterialControl/withPoolControl/withPhaseControl`顺序增量修正已有摘要与材料锚点，保留池温和零容量等待历史。`prepareMinimumForControl`与独立`airBackground`字段已随按需试验撤回，控制边界不再同步补投影。时间步、物性、默认配置与v6保存格式保持原值。
+
+2026-11-07曾试验普通细档按需生成最低摘要，[定向验收](validation/thermal-minimum-summary-2026-11-07.json)5组12项通过、同帧温度/能量差0；独立重放仍保留较早基线的启动差异。该试验净增33行并增加首次材料控制同步准备，后续性能没有证明稳定整体收益，现已按用户授权撤回。原数值和性能记录仅证明当时实现，继续作为历史证据保留。
+
+随后补做的[同条件性能对照](validation/thermal-minimum-summary-performance-2026-11-07.json)共用当前编译资源和GameTest，只替换上述8个类族的已有旧编译组件；普通世界双基地按旧、新、新、旧四个独立进程运行，各2400tick/12000查询，全部服务通过且无降粗。每版两次的中心值：worker累计分配1.892→1.851GB（少2.14%），热登记峰60.56→59.93MiB（少1.04%），细档推进活动耗时2.994→2.828s（少5.54%）；全部区域时间片活动耗时6.912→7.265s（多5.10%），worker线程周期29.845→32.485十亿（多8.85%）。重复波动明显，旧版细档推进1.838–4.149s、新版2.264–3.392s，完整server tick P99中心值也未改善。因此没有稳定的整体提速资格；局部中心值下降不能解释为整体CPU同幅下降。初次平坦世界试跑因服务违规而排除，原记录保留。详见[统一入口中的测量范围](thermal-validation-baseline.md)。
 
 已经选择粗档的结构候选从父快照直接进行最低模型投影，跳过父细布局拼接、细系数数组复制和细工作空间借用；`minimumConstruction`也直接使用粗布局/最低传热图，跳过细格编译、细pairwise operator与细档节点投影。真实几何、材料身份和相变记录仍用于路由、结构依赖和v6保存，成本不能按64个数值节点视为常数。
 
@@ -271,12 +279,14 @@ PreparedTopologyChange不再携带独立材料边/执行表列，RegionalTopolog
 
 `WorkerPageStore.advanceMaintenance`沿用1°C进入、0.5°C退出的活动滞回。`RegionalQuerySnapshot.activeAtSlot`合并空气/材料分类和阈值判断；已确认热砖后跳过额外数值判定，仍为每个slot持有快照并通知相变。维护批次的FrameLease、几何失效重来、完成后才替换frontier输出的规则保持。面采样直接读取已知Air单元的顶点系数，细网格不按坐标合并互不连通的顶点；粗档沿用扰动插值和原坐标去重，天空直接开口仍在采样前排除。
 
-`ThermalDiagnostics.TRACE`集中读取`FH_CONTINUOUS_AIR_REGION_DIAGNOSTICS`，默认false。详细逐slot极值、局部构建文本与交接记录由它开启；局部构建只记录本次prepared区域。普通`FH_CONTINUOUS_AIR_PROFILE`保留廉价计数，不再自动打开逐slot扫描和整维度构建日志。实际模式变化、故障与已有JFR事件仍可观察。显式TRACE输出可阻塞控制台，属于诊断成本；本批新旧生产性能对照均关闭它，实际收益及局部退步见[维护与存储优化](thermal-storage-optimization.md)。
+`ThermalDiagnostics.TRACE`集中读取`FH_CONTINUOUS_AIR_REGION_DIAGNOSTICS`，默认false。详细逐slot极值、局部构建文本与交接记录由它开启；局部构建只记录本次prepared区域。普通`FH_CONTINUOUS_AIR_PROFILE`保留廉价计数，不再自动打开逐slot扫描和整维度构建日志。故障、当前区域状态与已有JFR事件仍可观察。显式TRACE输出可阻塞控制台，属于诊断成本；本批新旧生产性能对照均关闭它，实际收益及局部退步见[维护与存储优化](thermal-storage-optimization.md)。
+
+2026-11-05收敛资源调节日志：`THERMAL_CANDIDATE_MEMORY`、`THERMAL_CANDIDATE_MINIMUM`、`THERMAL_REGION_MINIMUM_REQUEST`、`THERMAL_REGION_POLICY`（含预选与安装）和`THERMAL_REGION_TRANSFER`统一只在上述TRACE开启时逐次输出。默认由`MinecraftThermalInput.reportResourcePressure`按真实单调时钟每60秒检查一次服务器共享预算；仅在出现新增准入拒绝时输出一条INFO `THERMAL_RESOURCE_PRESSURE`，不按区域或维度分别刷屏。`newAdmissionRefusals`为距上次汇总的新增次数，`totalAdmissionRefusals`为共享预算累计次数；`usedBytes`、`peakBytes`和`targetBytes`分别为当前登记量、累计峰值与软准入目标，单位B，并非JVM或整机内存。`closeAll`归还工作后重置汇总基线，避免下一次进入世界重报上次会话的拒绝。没有新增拒绝时不输出，停止拒绝也不冒充已经恢复细档；`ThermalDimensionEngine.regionalProgressDescription()`仍保留粗档区域数和最近限制原因，`ThermalMemoryBudget.admissionRefusals()`保留累计计数。逐次日志开关不改变质量策略、工作交接、预算准入或异常处理。
 
 - 共享工作池使用`max(1, min(4, processors-1))`个线程。`continuousAirCpuBudgetMsPerSecond`为**整个池跨线程、跨维度累计活动时间**的软额度，默认1000ms/墙钟秒，范围1至4000；一秒额度允许短时突发。扩大额度允许更多工作开工；实际服务延迟和执行周期必须另行观察，不能用不可靠的平台CPU读数推导精确占核。
 - `RegionWorkPolicy`保留8窗口费用历史及恢复防抖；600至9600tick的恢复等待在20TPS下为30秒至8分钟，本批没有顺带缩短。
 - 正常细档保留40tick读取年龄门槛。粗档仍允许读取最后几何有效的Accepted，不承诺40tick；实际年龄、提交活性、可读比例和最长空读必须分别记录，不能用旧温度可读冒充持续求解。
-- `WorkerPageStore.advanceMaintenance()`沿用1°C进入、0.5°C退出的热活动门槛。全部热源熄灭后，低于退出门槛的区域可以保存余温并退出在线计算，玩法读取由保存场按休眠规则冷却；退休后不继续发布在线帧。粗档压低局部温度峰值，可能比细档更早进入这条退休路径。
+- `WorkerPageStore.advanceMaintenance()`沿用1°C进入、0.5°C退出的热活动门槛。低于退出门槛且无其他责任的普通数据在捕获/有限维护中释放；有意义余温、潜热和未消费J继续保存并按各自规则处理。退休后不继续发布在线帧，红外接收实际删除更新。源码默认休眠温差半衰期为30游戏秒，显式旧配置仍优先；完整合同见[余温生命周期](thermal-residual-lifecycle.md)。粗档压低局部温度峰值，可能比细档更早进入这条退休路径。
 - 主线程的有界捕获继续限制每tick工作量，冷启动/恢复会产生相应排队延迟。
 - 保存不再因临时额度拥挤而额外近似温场或输入分布；已经粗化或聚合的已提交/输入状态照常保存。v6格式保持，精度保障的代价是保存空间或耗时可能更高。
 

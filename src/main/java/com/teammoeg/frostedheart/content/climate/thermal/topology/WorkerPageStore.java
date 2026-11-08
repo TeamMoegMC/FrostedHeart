@@ -30,6 +30,7 @@ import com.teammoeg.frostedheart.content.climate.thermal.mesh.PageSignatures;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalCellArena;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalPageHandle;
 import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureTable;
+import com.teammoeg.frostedheart.content.climate.thermal.persistence.ThermalRetentionPolicy;
 import com.teammoeg.frostedheart.content.climate.thermal.query.QueryPublication;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.GeometryHalo;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ThermalCompletion;
@@ -243,7 +244,7 @@ public final class WorkerPageStore implements AutoCloseable, AirGeometryView {
                     long bit = 1L << brick;
                     if ((page.residentBrickMask & bit) != 0) {
                         var topology = page.brick(brick);
-                        double threshold = (state.hot & bit) == 0 ? 1.0 : .5;
+                        double threshold = (state.hot & bit) == 0 ? ThermalRetentionPolicy.ENTER_C : ThermalRetentionPolicy.EXIT_C;
                         boolean hot = false;
                         for (int slot = topology.span.firstSlot(); slot < topology.span.endSlotExclusive(); slot++) {
                             var field = maintenanceSnapshot(slot);
@@ -285,7 +286,8 @@ public final class WorkerPageStore implements AutoCloseable, AirGeometryView {
                                 case NEGATIVE_Z -> Z_MIN; case POSITIVE_Z -> Z_MAX;
                             };
                             requestFace(page, state.brick, face, (boundary & bit) == 0 ? page.handle.sectionKey() : target,
-                                    (boundary & bit) == 0 ? state.brick + offset : boundaryTargetBrick(state.brick, face), arena, referenceC, 1.0, .5);
+                                    (boundary & bit) == 0 ? state.brick + offset : boundaryTargetBrick(state.brick, face), arena, referenceC,
+                                    ThermalRetentionPolicy.ENTER_C, ThermalRetentionPolicy.EXIT_C);
                         }
                     }
                     if (!maintenanceBlocked && ++state.face == 7) {
@@ -705,6 +707,11 @@ public final class WorkerPageStore implements AutoCloseable, AirGeometryView {
             while (surfaces != 0) {
                 int block = Long.numberOfTrailingZeros(surfaces);
                 surfaces &= surfaces - 1;
+                int slot = page.brick(brick).slotAt(block);
+                var field = maintenanceSnapshot(slot);
+                if (field == null) return;
+                double perturbationC = Math.abs(field.materialPerturbationAtSlotC(slot, page.naturalTemperatureC));
+                if (perturbationC < ThermalRetentionPolicy.EXIT_C) continue;
                 long position = AirRouteCompiler.blockPosition(origin, block);
                 int x = BlockPos.getX(position),
                         y = BlockPos.getY(position),
@@ -720,6 +727,9 @@ public final class WorkerPageStore implements AutoCloseable, AirGeometryView {
                     long section = SectionPos.asLong(nx >> 4, ny >> 4, nz >> 4);
                     int neighborBrick =
                             (nx & 15) >>> 2 | ((nz & 15) >>> 2) << 2 | ((ny & 15) >>> 2) << 4;
+                    double threshold = (desiredBySection.get(section) & 1L << neighborBrick) == 0
+                            ? ThermalRetentionPolicy.ENTER_C : ThermalRetentionPolicy.EXIT_C;
+                    if (perturbationC < threshold) continue;
                     PageState neighbor = find(section);
                     // A cold resident neighbor still needs the owner's incoming request.
                     int signature =
@@ -848,14 +858,12 @@ public final class WorkerPageStore implements AutoCloseable, AirGeometryView {
     }
 
     private static boolean allTopColumnsDirectSky(PageState page, int brick) {
-        if ((brick >>> 4 & 3) != 3) {
-            return false;
-        }
+        int topY = (brick >>> 4 & 3) * 4 + 3;
         int firstX = (brick & 3) << 2;
         int firstZ = (brick >>> 2 & 3) << 2;
         for (int z = firstZ; z < firstZ + 4; z++) {
             for (int x = firstX; x < firstX + 4; x++) {
-                if (Byte.toUnsignedInt(page.firstExposedLocalY[x | z << 4]) > 15) {
+                if (Byte.toUnsignedInt(page.firstExposedLocalY[x | z << 4]) > topY) {
                     return false;
                 }
             }
@@ -864,12 +872,9 @@ public final class WorkerPageStore implements AutoCloseable, AirGeometryView {
     }
 
     private static boolean topPortDirectSky(PageState page, int brick, int blockInBrick) {
-        if ((brick >>> 4 & 3) != 3) {
-            return false;
-        }
         int x = ((brick & 3) << 2) + (blockInBrick & 3);
         int z = ((brick >>> 2 & 3) << 2) + (blockInBrick >>> 2 & 3);
-        return Byte.toUnsignedInt(page.firstExposedLocalY[x | z << 4]) <= 15;
+        return Byte.toUnsignedInt(page.firstExposedLocalY[x | z << 4]) <= (brick >>> 4 & 3) * 4 + 3;
     }
 
     private void orDesired(long sectionKey, long mask) {

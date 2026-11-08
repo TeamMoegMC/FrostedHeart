@@ -306,7 +306,7 @@ public class FHConfig {
 					.defineInRange("fireRadiantPowerW", 1_000.0D, 0.0D, 1.0e9D);
 				dormantTemperatureHalfLifeSeconds = builder
 					.comment("Sensible temperature half-life in game seconds for dormant Air and materials approaching natural temperature. Material latent heat is retained; no offline source simulation.")
-					.defineInRange("dormantTemperatureHalfLifeSeconds", 1_800.0D, 1.0D, 604_800.0D);
+					.defineInRange("dormantTemperatureHalfLifeSeconds", 30.0D, 1.0D, 604_800.0D);
 				builder.pop();
 			}
 		}
@@ -418,7 +418,7 @@ public class FHConfig {
 				tdiffculty = builder.comment("Temperature System difficulty", "easy=Strong body", "normal=Average", "hard=Reality", "hardcore=Sick body")
 					.defineEnum("temperatureDifficulty", FHTemperatureDifficulty.normal);
 				tempSpeed = builder
-					.comment("Modifier of body temperature change speed, Adjust this higher only when you lower the update interval respectively This does not affect hypothermia temperature.")
+					.comment("Multiplier of hot/cold food and drink temperature effects. Normal body heat exchange and regulation use elapsed ticks, independently of this value.")
 					.defineInRange("temperatureChangeRate", 1f, 0, 20);
 				temperatureUpdateIntervalTicks = builder.comment("The interval of temperature update in ticks.")
 					.defineInRange("temperatureUpdateIntervalTicks", 20, 1, Integer.MAX_VALUE);

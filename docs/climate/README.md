@@ -5,9 +5,13 @@
 | Document | Scope | Status |
 |---|---|---|
 | [thermal-runtime-control.md](thermal-runtime-control.md) | 当前SHARED_GRID输入、任务、准入、粗细切换、查询、Minecraft接入归属和v6保存合同 | Current; validation scope and deferred work recorded in the linked document |
+| [thermal-residual-lifecycle.md](thermal-residual-lifecycle.md) | 材料扩张门槛、0.5°C 余温退出、Page/Chunk 交接、休眠维护和红外删除 | Current for stated validation; river comparison and limits linked within |
 | [thermal-storage-optimization.md](thermal-storage-optimization.md) | 局部容量摘要、Debug盘点、热活动维护、无损存储及同配置CPU/分配/服务代价 | Current; control refactor, focused lifecycle checks and per-build performance/resource limits recorded |
 | [thermal-regional-server-validation.md](thermal-regional-server-validation.md) | 当前区域架构的100温度消费者分散负载、资源代价、粗档全程构建与部署配置 | Current for stated multicore and single-worker measurements; full networked server scope stated separately |
+| [thermal-validation-baseline.md](thermal-validation-baseline.md) | 简化前统一真实测试入口、温度重放、负载与分批结果 | Current for recorded baseline; startup repeatability and retirement assertion unqualified |
 | [world-climate-and-temperature.md](world-climate-and-temperature.md) | 逻辑气候时钟、事件轨道、世界/空气/方块温度公式、局部热区 | Current |
+| [thermal-legacy-gameplay-parity.md](thermal-legacy-gameplay-parity.md) | 与旧版生存难度、供暖收益的源码数值对照及待校准项目 | Current for source audit; survival/heating balance calibration outstanding |
+| [thermal-gameplay-balance.md](thermal-gameplay-balance.md) | 原始数值差距、后续身体定标、有限食物/强风/真实供暖结果 | Current for selected cold-survival and wind calibration; broader gameplay parity unqualified |
 | [thermal-runtime-architecture-and-optimization.md](thermal-runtime-architecture-and-optimization.md) | 运行时组成及按日期保留的架构/性能记录 | Transitional; current control contract linked above |
 | [continuous-air-runtime.md](continuous-air-runtime.md) | 区域空气场、材料成对换热、精确位置查询、空间存档及带日期的历史试验 | Partial; current control linked separately |
 | [continuous-air-overload.md](continuous-air-overload.md) | 当前过载协议入口及按日期保留的粗细/容量试验 | Transitional; current control contract linked above |

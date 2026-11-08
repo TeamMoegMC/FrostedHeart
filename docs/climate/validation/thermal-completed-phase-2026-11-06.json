@@ -1,0 +1,97 @@
+{
+  "status": "completed for the selected source fix and Forge checks; packaging cancelled at user request",
+  "verified_date": "2026-11-06",
+  "author": "OpenAI Codex / GPT-6; primary implementation and production-validation agent",
+  "production_change": {
+    "path": "src/main/java/com/teammoeg/frostedheart/content/climate/thermal/runtime/minecraft/input/MinecraftPhaseController.java",
+    "contract": "fluid_boundary_tag gates untracked natural initiation; live/dormant completed H commits without that start-boundary predicate",
+    "natural_entry": "tryAtRandomTick -> canTransition(requireFluidBoundary=true)",
+    "live_entry": "apply -> matchesMaterialRequest (including completed H) -> canTransition(requireFluidBoundary=false)",
+    "dormant_entry": "applyDormantTransition -> edge.complete(energyJ) -> canTransition(requireFluidBoundary=false)",
+    "retained_world_rules": ["randomTickSpeed", "min_y_exclusive", "excluded_biome_tag", "analytic guaranteed floor", "loaded current block and registered target identity"],
+    "energy_handoff": "Existing THERMAL_TRANSITION keeps H; no second latent-energy debit",
+    "save_format": 6
+  },
+  "before": {
+    "log": "build/river-thermal-completed-phase-before.log",
+    "required_failed": 1,
+    "expected_failure": "Completed saved interior water must commit without changing its liquid neighbors",
+    "check_tick": 500,
+    "scope_note": "Failure established on the real completed-water fixture before the production patch. The final fixture additionally checks a natural-bank positive control and explicitly round-trips the completed record through v6 NBT.",
+    "thermal_save_or_worker_errors": 0,
+    "shutdown_root_bytes": 0
+  },
+  "stored_completed_water": {
+    "test": "ThermalBlockedPhaseProductionGameTests.completedInteriorWaterCommitsPreservesEnergyAndRetires",
+    "log": "build/river-thermal-completed-phase-storage-final.log",
+    "clock": "actual Forge ticks with lockstep acceleration; not a wall-clock performance measurement",
+    "fixture": "Real covered water pool, actual source-water/ice laws, one completed material record encoded and read back as v6 NBT, ordinary loaded-chunk dormant maintenance",
+    "natural_temperature_c": -23.700000762939453,
+    "enabled_sources": 0,
+    "untracked_natural_interior_stays_water": true,
+    "untracked_natural_bank_starts_freezing": true,
+    "half_completed_h_cannot_submit": true,
+    "completed_h_j": 1493000.0,
+    "commit_ticks": 17,
+    "committed_block": "frostedheart:thin_ice[crack=0]",
+    "committed_raw_h_j": 1493000.0,
+    "cooling_observation_ticks_after_commit": 200,
+    "cooling_temperature_c": -8.874936803480852,
+    "cooling_h_j": 1472075.3412612034,
+    "first_no_record_sample_tick": 22000,
+    "sample_interval_ticks": 2000,
+    "tail_check_tick": 25217,
+    "tail_block": "minecraft:ice",
+    "tail_chunk_thermal_attachment": null,
+    "timing_note": "The exact retirement tick was not measured. The later fixed observation window proves actual subsequent ice-stage completion and record removal, rather than a universal cleanup deadline."
+  },
+  "live_completed_water": {
+    "test_source": "src/gametest/java/com/teammoeg/frostedheart/content/climate/thermal/runtime/minecraft/CompletedPhaseOnlineGameTests.java",
+    "log": "build/river-thermal-completed-phase-online-final.log",
+    "required_passed": 2,
+    "activation": "Actual coal-fuelled campfires on dry raised foundations; live material and Air publications verified",
+    "finite_control": "Production requestGameplayPhase(COOLING) applies the accounted finite energy adjustment needed to complete H. This is a commit/ACK test, not a measurement of passive freezing time.",
+    "coarse_setup": "RegionalGridSwitchObservation requests actual minimum quality and waits for the published coarse region",
+    "hard_rule_pause": "randomTickSpeed=0 keeps completed material from mutating for 40 additional ticks; restoring 3 resumes submission",
+    "neighbors_remain_water": true,
+    "fine": {"elapsed_request_ticks": 89, "committed_h_j": 1493000.0, "target_h_j": 1493000.0, "temperature_c": -5.0},
+    "coarse": {"elapsed_request_ticks": 83, "committed_h_j": 1493000.0, "target_h_j": 1493000.0, "temperature_c": -5.0}
+  },
+  "final_groups": [
+    {"log": "build/river-thermal-completed-phase-online-final.log", "required_passed": 2, "scope": "Fine/coarse completed-H world commit, rule pause/resume and energy handoff"},
+    {"log": "build/river-thermal-completed-phase-material-regressions.log", "required_passed": 11, "scope": "Eight material cases, two infrared removal cases and one cross-Section contact graph"},
+    {"log": "build/river-thermal-completed-phase-integration.log", "required_passed": 6, "scope": "Actual Minecraft phase sampling, native block behavior and lifecycle integration"},
+    {"log": "build/river-thermal-completed-phase-storage-final.log", "required_passed": 5, "scope": "Completed water plus four existing residual/checkpoint/dormant-soil cases"},
+    {"log": "build/river-thermal-completed-phase-river-final.log", "required_passed": 1, "scope": "Actual 160m river, fuelled tower, short campfire and untouched control; realtime20, 3600 observation ticks"}
+  ],
+  "total_required_passed_in_final_groups": 25,
+  "thermal_save_or_worker_errors_in_each_final_group": 0,
+  "shutdown_root_bytes_in_each_final_group": 0,
+  "river_regression": {
+    "infrared_at_128_marker_all_scenes_water_and_bank_raw": -32768,
+    "meaning": "No material/analytic display record; this is not a measured -20C temperature",
+    "generator_coal_initial": 32,
+    "generator_coal_final": 28,
+    "local_tower_heating_assertion": "passed",
+    "regions_final": 2,
+    "registered_bytes_final": 6414784
+  },
+  "retained_intermediate_result": {
+    "log": "build/river-thermal-completed-phase-core.log",
+    "required_failed": 2,
+    "scope": "Stored completion/cooling/retirement succeeded. The online fixture put campfires at water level and failed its strict shovel cleanup; it was changed to dry raised foundations and asserts both actual sources remain lit. Final online cases pass without weakening phase/H assertions."
+  },
+  "build_and_packaging": {
+    "compile_logs": ["build/completed-phase-after-compile.log", "build/completed-phase-final-compile.log", "build/completed-phase-final-fixtures.log"],
+    "compilation_completed_before_user_stop_request": true,
+    "user_request": "不用你build了",
+    "action": "Kept the already-running validation on existing classes; cancelled queued assemble before project tasks and stopped its wrapper after the test summary was written",
+    "new_production_jar": null,
+    "previous_jar_contains_this_change": false
+  },
+  "limits": [
+    "Explicit biome/height/rule/floor vetoes retain their current meaning; this fixes reuse of the fluid-boundary start condition after energy completion.",
+    "No new standalone distribution, client framebuffer or separate-JVM disk restart campaign was performed. The completed checkpoint was round-tripped through the current NBT format and actual world maintenance was exercised.",
+    "This does not close the separately recorded source-free coarse-region retirement qualification failure."
+  ]
+}

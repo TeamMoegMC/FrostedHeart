@@ -32,7 +32,8 @@ public class PlayerThermalModel {
     static final double CORE_REFERENCE_TEMPERATURE_C = 37.0D;
     static final double WHOLE_BODY_HEAT_CAPACITY_J_PER_K = 245_000.0D;
     static final double GAMEPLAY_TIME_SCALE = 8.0D;
-    private static final double AIR_EXCHANGE_MULTIPLIER = 0.0824D;
+    private static final double AIR_EXCHANGE_MULTIPLIER = 0.1D;
+    private static final double WIND_EXCHANGE_MULTIPLIER = 0.045D;
     private static final double WATER_EXCHANGE_MULTIPLIER = 0.51D;
     // Provisional spring-only gameplay gain; boundary temperature stays 38 C.
     static final double HOT_SPRING_EXCHANGE_GAIN = 64.0D;
@@ -54,10 +55,9 @@ public class PlayerThermalModel {
         return deltaC * WHOLE_BODY_HEAT_CAPACITY_J_PER_K;
     }
 
-    static double physiologicalSeconds(double elapsedSeconds, double temperatureSpeed) {
+    static double physiologicalSeconds(double elapsedSeconds) {
         return Math.max(0.0D, elapsedSeconds)
-                * GAMEPLAY_TIME_SCALE
-                * Math.max(0.0D, temperatureSpeed);
+                * GAMEPLAY_TIME_SCALE;
     }
 
     static double outdoorWindMPerS(double worldWind) {
@@ -132,11 +132,13 @@ public class PlayerThermalModel {
         double insulationFactor = clothing.environmentExchangeFactor;
         double unscaledAirConductanceWPerK =
                 areaM2 * air / (tissueResistanceM2KPerW + 1.0D / hTotal);
-        // The old clothing factor affected ambient exchange, while direct
-        // source radiation heated the body independently of insulation.
+        // Absorbed external radiation crosses the same clothing as ambient heat.
         double directRadiationW = DIRECT_RADIATION_MULTIPLIER
-                * unscaledAirConductanceWPerK * absorbedFluxWPerM2 / hTotal;
-        double airConductanceWPerK = AIR_EXCHANGE_MULTIPLIER
+                * unscaledAirConductanceWPerK * insulationFactor * absorbedFluxWPerM2 / hTotal;
+        // The additional gameplay loss is zero in still air and bounded by the wind multiplier.
+        double airExchangeMultiplier = AIR_EXCHANGE_MULTIPLIER + WIND_EXCHANGE_MULTIPLIER
+                * (hConvection - hNatural) / hTotal;
+        double airConductanceWPerK = airExchangeMultiplier
                 * unscaledAirConductanceWPerK * insulationFactor;
         double contactProtection = 1.0D - clothing.waterResistance;
         double waterConductanceWPerK = WATER_EXCHANGE_MULTIPLIER
@@ -157,17 +159,19 @@ public class PlayerThermalModel {
                 ? WET_EXCHANGE_MULTIPLIER
                 * insulationFactor * areaM2 * air * wetExchangeCoefficientWPerM2K
                 * contactProtection : 0.0D;
-        // Copy primitive results into the reusable context for integration.
+        double dryConductance = airConductanceWPerK + waterConductanceWPerK
+                + hotSpringConductanceWPerK + powderConductanceWPerK + lavaConductanceWPerK;
+        double weightedBoundary = airConductanceWPerK * airTemperatureC
+                + waterConductanceWPerK * waterTemperatureC
+                + hotSpringConductanceWPerK * HOT_SPRING_TEMPERATURE_C
+                + powderConductanceWPerK * POWDER_SNOW_TEMPERATURE_C
+                + lavaConductanceWPerK * LAVA_TEMPERATURE_C;
+        // Exposure is a real medium boundary. Added watts never become a burn temperature.
+        data.setThermalExposure(part, dryConductance > 0.0D
+                ? weightedBoundary / dryConductance : data.getAbsoluteBodyTempByPart(part),
+                dryConductance > 0.0D ? insulationFactor : 0.0D);
         context.setPartEnvironment(part,
-                airConductanceWPerK + waterConductanceWPerK + hotSpringConductanceWPerK
-                        + powderConductanceWPerK
-                        + lavaConductanceWPerK,
-                airConductanceWPerK * airTemperatureC + directRadiationW
-                        + waterConductanceWPerK * waterTemperatureC
-                        + hotSpringConductanceWPerK * HOT_SPRING_TEMPERATURE_C
-                        + powderConductanceWPerK
-                        * POWDER_SNOW_TEMPERATURE_C
-                        + lavaConductanceWPerK * LAVA_TEMPERATURE_C,
+                dryConductance, weightedBoundary, directRadiationW,
                 wetConductanceWPerK, airTemperatureC, clothing.radiantHeatProof, air,
                 clothing.weight);
     }
@@ -248,7 +252,7 @@ public class PlayerThermalModel {
     }
 
     /* Active fire power and conservative internal conductance, in W or W/K. */
-    private static final double ON_FIRE_HEAT_POWER_W = 1_200.0D;
+    static final double ON_FIRE_HEAT_POWER_W = 1_200.0D;
     private static final double TORSO_HEAD_CONDUCTANCE_W_PER_K = 4.0D;
     private static final double TORSO_LEGS_CONDUCTANCE_W_PER_K = 3.0D;
     private static final double TORSO_HANDS_CONDUCTANCE_W_PER_K = 4.0D;
@@ -295,19 +299,34 @@ public class PlayerThermalModel {
                 context.getWeightedBoundaryWPerK(part)
                         + wetConductance
                         * context.getOperativeTemperatureC(part);
-        double activePowerW = sharedBodyPowerW * part.area
-                + context.getPowerW(part);
+        double activePowerW = sharedBodyPowerW * part.area + context.getRadiantPowerW(part);
         if (onFire && lavaHeightRatio <= 0.0D) {
             activePowerW += ON_FIRE_HEAT_POWER_W * part.area
                     * (1.0D - context.getRadiantHeatProof(part));
         }
 
-        double passiveEquilibriumC = totalConductance > 0.0D
-                ? weightedBoundary / totalConductance
-                : airTemperatureC;
-        data.setFeelTempByPart(part, (float) passiveEquilibriumC);
-        return closedFormEnergyChangeJ(temperatureC, passiveEquilibriumC,
-                totalConductance, activePowerW, partHeatCapacityJPerK(part), physiologicalSeconds);
+        double capacityJPerK = partHeatCapacityJPerK(part);
+        double responseJPerW = energyResponseJPerW(totalConductance, capacityJPerK, physiologicalSeconds);
+        double otherEnergyJ = (weightedBoundary - totalConductance * temperatureC + activePowerW)
+                * responseJPerW;
+        // Only the equipment contribution is limited. Real environmental heat and
+        // physiology still integrate normally, including an already overheated body.
+        double equipmentEnergyJ = context.getPowerW(part) * responseJPerW;
+        if (equipmentEnergyJ > 0.0D) {
+            equipmentEnergyJ = Math.min(equipmentEnergyJ, Math.max(0.0D,
+                    (CORE_REFERENCE_TEMPERATURE_C - temperatureC) * capacityJPerK - otherEnergyJ));
+        }
+        return otherEnergyJ + equipmentEnergyJ;
+    }
+
+    /** Extra watts that reach 37 C at the end of this exact step, never remove existing heat. */
+    static double equipmentHeatingLimitW(double temperatureC, double conductanceWPerK,
+                                         double nonEquipmentNetPowerW, double capacityJPerK, double seconds) {
+        if (!(seconds > 0.0D)) return 0.0D;
+        double responseJPerW = energyResponseJPerW(conductanceWPerK, capacityJPerK, seconds);
+        double requiredW = (CORE_REFERENCE_TEMPERATURE_C - temperatureC)
+                * capacityJPerK / responseJPerW - nonEquipmentNetPowerW;
+        return Math.max(0.0D, requiredW);
     }
 
     /**
@@ -317,15 +336,14 @@ public class PlayerThermalModel {
     static double closedFormEnergyChangeJ(double temperatureC, double passiveEquilibriumC,
                                           double conductanceWPerK, double activePowerW,
                                           double capacityJPerK, double seconds) {
-        if (!(conductanceWPerK > 0.0D)) {
-            return activePowerW * seconds;
-        }
-        double forcedEquilibriumC = passiveEquilibriumC
-                + activePowerW / conductanceWPerK;
-        double alpha = -Math.expm1(
-                -conductanceWPerK * seconds / capacityJPerK);
-        return capacityJPerK
-                * (forcedEquilibriumC - temperatureC) * alpha;
+        double netPowerW = conductanceWPerK * (passiveEquilibriumC - temperatureC) + activePowerW;
+        return netPowerW * energyResponseJPerW(conductanceWPerK, capacityJPerK, seconds);
+    }
+
+    private static double energyResponseJPerW(double conductanceWPerK, double capacityJPerK, double seconds) {
+        return conductanceWPerK > 0.0D
+                ? capacityJPerK / conductanceWPerK * -Math.expm1(-conductanceWPerK * seconds / capacityJPerK)
+                : seconds;
     }
 
     /** Transfers equal and opposite energy without crossing pair equilibrium. */
@@ -422,11 +440,4 @@ public class PlayerThermalModel {
         return Math.max(minimum, Math.min(maximum, value));
     }
 
-    static double feelTemperature(double dryTemperatureC, double relativeHumidity, double relativeWindSpeed) {
-        double vaporPressure = relativeHumidity * 6.105D * Math.exp(
-                17.27D * dryTemperatureC
-                        / (237.7D + dryTemperatureC));
-        return dryTemperatureC + 0.33D * vaporPressure
-                - 0.7D * relativeWindSpeed * 35.0D - 4.0D;
-    }
 }

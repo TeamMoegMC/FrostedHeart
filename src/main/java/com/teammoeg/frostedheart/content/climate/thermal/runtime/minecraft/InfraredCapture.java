@@ -49,6 +49,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
 
 import java.util.Arrays;
+import com.teammoeg.frostedheart.content.climate.network.InfraredWindow;
 
 /** Shared main-thread scratch; display reads never start a runtime or load chunks. */
 final class InfraredCapture implements AutoCloseable {
@@ -63,6 +64,9 @@ final class InfraredCapture implements AutoCloseable {
     private final long[] presence = new long[INFRARED_PRESENCE_WORDS];
     private final long[] fieldPages = new long[INFRARED_PRESENCE_WORDS];
     private final long[] storedPresence = new long[INFRARED_PRESENCE_WORDS];
+    private final long[] remappedPresence = new long[INFRARED_PRESENCE_WORDS];
+    private final long[] remappedFields = new long[INFRARED_PRESENCE_WORDS];
+    private final InfraredDisplayCache displays = new InfraredDisplayCache();
     private final LevelChunk[] loadedChunks = new LevelChunk[81];
     private final double[] storedTemperatures = new double[4096];
     private final long[] changedMaterialBlocks = new long[64];
@@ -99,7 +103,7 @@ final class InfraredCapture implements AutoCloseable {
             boolean knownReadable,
             long[] knownFieldPages,
             long knownStoredEpoch,
-            long knownStoredSampleTick) {
+            long knownStoredSampleTick, int knownDisplayRequestId, int requestId) {
         level = player.serverLevel();
         int cx = Mth.floor(player.getX()) >> 4, cy = Mth.floor(player.getEyeY()) >> 4;
         int cz = Mth.floor(player.getZ()) >> 4;
@@ -107,6 +111,20 @@ final class InfraredCapture implements AutoCloseable {
         originY = (cy - 4) * 16;
         originZ = (cz - 4) * 16;
         long center = SectionPos.asLong(cx, cy, cz), tick = level.getGameTime();
+        boolean moved = knownCenter != center;
+        boolean overlap = InfraredWindow.overlaps(knownCenter, center);
+        if (moved && overlap) {
+            InfraredWindow.remap(knownPresence, remappedPresence, knownCenter, center);
+            knownPresence = remappedPresence;
+            if (knownFieldPages.length != 0) {
+                InfraredWindow.remap(knownFieldPages, remappedFields, knownCenter, center);
+                knownFieldPages = remappedFields;
+            }
+        }
+        boolean cache = requestId >= 0;
+        if (cache && forceFull) displays.remove(player.getUUID());
+        var previousDisplay = cache ? displays.find(player.getUUID(), level.dimension(), knownGeneration,
+                knownCenter, knownDisplayRequestId) : null;
         captureTick = tick;
         boolean reactivated =
                 publication != null && publication.noteInfraredRequest(tick, INFRARED_ACTIVE_TICKS);
@@ -122,6 +140,10 @@ final class InfraredCapture implements AutoCloseable {
             // client baseline.
             captureAttempt:
             for (int attempt = 0; attempt < 2; attempt++) {
+                InfraredDisplayCache.Page[] displayPages = cache && hasFieldPages()
+                        ? previousDisplay != null && !moved ? previousDisplay.pages()
+                                : new InfraredDisplayCache.Page[INFRARED_PAGE_CAPACITY] : null;
+                boolean sharedPages = displayPages != null && previousDisplay != null && displayPages == previousDisplay.pages();
                 payload.reset();
                 cursor.clear();
                 Arrays.fill(presence, 0L);
@@ -134,7 +156,7 @@ final class InfraredCapture implements AutoCloseable {
                 boolean full =
                         forceFull
                                 || knownGeneration != generation
-                                || knownCenter != center
+                                || moved && !overlap
                                 || knownStoredEpoch > storedEpoch
                                 || knownStoredSampleTick > tick
                                 || knownReadable != readable
@@ -245,9 +267,25 @@ final class InfraredCapture implements AutoCloseable {
                                             changed);
                         if (changed == 0) continue;
                         payload.beginPage();
+                        int pageStart = payload.pageStart();
                         if (!writePage(page, storedMask, local, changed, full)
                                 || page != null && handle.lastPublication() != page)
                             continue captureAttempt;
+                        int oldPage = previousDisplay == null ? -1
+                                : InfraredWindow.previousPage(local, previousDisplay.center(), center);
+                        var previous = oldPage < 0 ? null : previousDisplay.pages()[oldPage];
+                        if (previous != null || displayPages != null && presenceBit(fieldPages, local)) {
+                            byte[] encoded = payload.finishPage(pageStart, full || previous == null ? null : previous.encoded);
+                            InfraredDisplayCache.Page next = null;
+                            if (displayPages != null && presenceBit(fieldPages, local)) {
+                                long section = SectionPos.asLong(cx - 4 + local % 9, sectionY, cz - 4 + local / 9 % 9);
+                                next = displays.page(level.dimension(), section, encoded, previous);
+                            }
+                            if (displayPages != null && displayPages[local] != next) {
+                                if (sharedPages) { displayPages = displayPages.clone(); sharedPages = false; }
+                                displayPages[local] = next;
+                            }
+                        }
                     }
                 }
                 // Regional values are pinned and each used Page was checked above.
@@ -255,10 +293,11 @@ final class InfraredCapture implements AutoCloseable {
                 // can only cause an extra resend, never hide the next temperature.
                 boolean changedPresence = !Arrays.equals(presence, knownPresence);
                 if (!full
+                        && !moved
                         && !changedPresence
                         && payload.size() == 0
                         && sameFieldPages(knownFieldPages)) return null;
-                return new InfraredSnapshot(
+                var result = new InfraredSnapshot(
                         cx,
                         cz,
                         cy,
@@ -271,6 +310,9 @@ final class InfraredCapture implements AutoCloseable {
                         payload.finishParts(),
                         DormantChunkThermalState.currentMaterialRevision(),
                         tick);
+                if (cache) displays.put(player.getUUID(), displayPages == null ? null
+                        : new InfraredDisplayCache.Display(level.dimension(), generation, center, requestId, displayPages));
+                return result;
             }
             return null;
         } finally {
@@ -635,7 +677,12 @@ final class InfraredCapture implements AutoCloseable {
     @Override
     public void close() {
         payload.close();
+        displays.clear();
     }
+
+    InfraredDisplayCache.Statistics displayStatistics() { return displays.statistics(); }
+    void forget(java.util.UUID observer) { displays.remove(observer); }
+    void unload(ServerLevel level) { displays.removeDimension(level.dimension()); }
 
     private static boolean presenceBit(long[] presence, int page) {
         return presence.length != 0 && (presence[page >>> 6] & 1L << (page & 63)) != 0;

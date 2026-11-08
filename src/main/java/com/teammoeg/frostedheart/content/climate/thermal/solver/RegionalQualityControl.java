@@ -153,7 +153,7 @@ public final class RegionalQualityControl {
         region.qualityIntent = new Intent(Model.MINIMUM, reason);
         if (region.workPolicy == null) region.workPolicy = new RegionWorkPolicy();
         region.workPolicy.coarse(runtime.receivedThrough(), false);
-        if (first && region.accepted().field() != null && !region.accepted().field().minimumQuality())
+        if (ThermalDiagnostics.TRACE && first && region.accepted().field() != null && !region.accepted().field().minimumQuality())
             FHMain.LOGGER.info("THERMAL_REGION_MINIMUM_REQUEST,receivedTick={},regionId={},reason={},allowanceNs={},jobActiveNs={},policy={}",
                     runtime.receivedThrough(), region.id, reason, runtime.regionWorkAllowance(region),
                     region.job == null || region.job.account == null ? -1 : region.job.account.activeNanos(), region.workPolicy.summary());
@@ -198,14 +198,14 @@ public final class RegionalQualityControl {
                     && cost > RegionalAirRuntime.buildWorkLimit(item.workAllowance))) {
                 region.workPolicy.built(1, cost);
                 minimumCandidate(region, capacity ? "resource_pressure" : "construction_work");
-                if (capacity) FHMain.LOGGER.info("THERMAL_CANDIDATE_MEMORY,regionId={},cause={}", region.id, build.failure.toString());
+                if (ThermalDiagnostics.TRACE && capacity) FHMain.LOGGER.info("THERMAL_CANDIDATE_MEMORY,regionId={},cause={}", region.id, build.failure.toString());
             } else if (build.ready) region.workPolicy.built(region.solver.gridStep(), cost);
         } else if (item instanceof RegionJob job && !job.qualityOnly()
                 && region.solver.gridStep() == 1 && region.workCoarseningUseful() && runtime.receivedThrough() - region.sampleTick() > 20
                 && cost > 2 * item.workAllowance) minimum(region, "advance_work");
     }
     void minimumCandidate(ThermalRegion region, String reason) {
-        if (region.qualityIntent == null || region.qualityIntent.target != Model.MINIMUM)
+        if (ThermalDiagnostics.TRACE && (region.qualityIntent == null || region.qualityIntent.target != Model.MINIMUM))
             FHMain.LOGGER.info("THERMAL_CANDIDATE_MINIMUM,receivedTick={},regionId={},reason={},cells={},allowanceNs={}",
                     runtime.receivedThrough(), region.id, reason, region.scope.cells.length, region.buildWorkAllowance);
         region.qualityIntent = new Intent(Model.MINIMUM, reason);

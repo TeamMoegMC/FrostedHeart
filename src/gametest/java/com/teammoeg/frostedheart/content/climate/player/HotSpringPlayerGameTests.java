@@ -162,41 +162,27 @@ public class HotSpringPlayerGameTests {
         helper.assertTrue(clothing.waterResistance > 0.0D && clothing.environmentExchangeFactor < 1.0D,
                 "test coat actually contributes insulation and water resistance through equipment data");
 
-        boolean fastRecovery = true;
-        boolean clothedRecovery = true;
-        for (double rate : new double[]{0.5D, 1.0D}) {
-            player.setItemSlot(EquipmentSlot.CHEST, ItemStack.EMPTY);
-            player.setItemSlot(EquipmentSlot.LEGS, ItemStack.EMPTY);
-            Recovery fedDry = simulate(player, 0.0D, 0.0D, true, rate, 1.0D);
-            Recovery fedWater = simulate(player, shallowRatio, 0.0D, true, rate, 1.0D);
-            Recovery hungryDry = simulate(player, 0.0D, 0.0D, false, rate, 1.0D);
-            FHMain.LOGGER.info("Spring recovery baseline rate={} air=-20C initial=35C: fedDry={}, fedWater={}, hungryDry={}",
-                    rate, fedDry, fedWater, hungryDry);
-            for (double gain : new double[]{1.0D, 8.0D, 16.0D, 32.0D, 64.0D, 128.0D}) {
-                player.setItemSlot(EquipmentSlot.CHEST, ItemStack.EMPTY);
-                player.setItemSlot(EquipmentSlot.LEGS, ItemStack.EMPTY);
-                Recovery fedSpring = simulate(player, 0.0D, shallowRatio, true, rate, gain);
-                Recovery hungrySpring = simulate(player, 0.0D, shallowRatio, false, rate, gain);
-                player.setItemSlot(EquipmentSlot.CHEST, coat);
-                Recovery coatedSpring = simulate(player, 0.0D, shallowRatio, false, rate, gain);
-                player.setItemSlot(EquipmentSlot.LEGS, pants);
-                Recovery clothedSpring = simulate(player, 0.0D, shallowRatio, false, rate, gain);
-                FHMain.LOGGER.info("Spring recovery candidates rate={} gain={}: fed={}, hungry={}, coat={}, coatAndPants={}",
-                        rate, gain, fedSpring, hungrySpring, coatedSpring, clothedSpring);
-                helper.assertTrue(fedSpring.core120() > fedDry.core120()
-                                && fedSpring.core120() > fedWater.core120(),
-                        "spring improves fed recovery at both source and pack temperature rates");
-                helper.assertTrue(hungrySpring.core120() > hungryDry.core120(),
-                        "spring improves recovery without shivering fuel");
-                if (gain == PlayerThermalModel.HOT_SPRING_EXCHANGE_GAIN) {
-                    fastRecovery &= hungrySpring.core120() > 35.5D;
-                    clothedRecovery &= clothedSpring.core120() > 35.2D;
-                }
-            }
-        }
-        helper.assertTrue(fastRecovery,
+        player.setItemSlot(EquipmentSlot.CHEST, ItemStack.EMPTY);
+        player.setItemSlot(EquipmentSlot.LEGS, ItemStack.EMPTY);
+        Recovery fedDry = simulate(player, 0.0D, 0.0D, true, 1.0D);
+        Recovery fedWater = simulate(player, shallowRatio, 0.0D, true, 1.0D);
+        Recovery hungryDry = simulate(player, 0.0D, 0.0D, false, 1.0D);
+        double gain = PlayerThermalModel.HOT_SPRING_EXCHANGE_GAIN;
+        Recovery fedSpring = simulate(player, 0.0D, shallowRatio, true, gain);
+        Recovery hungrySpring = simulate(player, 0.0D, shallowRatio, false, gain);
+        player.setItemSlot(EquipmentSlot.CHEST, coat);
+        Recovery coatedSpring = simulate(player, 0.0D, shallowRatio, false, gain);
+        player.setItemSlot(EquipmentSlot.LEGS, pants);
+        Recovery clothedSpring = simulate(player, 0.0D, shallowRatio, false, gain);
+        FHMain.LOGGER.info("Spring recovery at production gain={}: dry={}, water={}, spring={}, hungry={}, coat={}, coatAndPants={}",
+                gain, fedDry, fedWater, fedSpring, hungrySpring, coatedSpring, clothedSpring);
+        helper.assertTrue(fedSpring.core120() > fedDry.core120()
+                        && fedSpring.core120() > fedWater.core120(), "spring improves fed recovery");
+        helper.assertTrue(hungrySpring.core120() > hungryDry.core120(),
+                "spring improves recovery without shivering fuel");
+        helper.assertTrue(hungrySpring.core120() > 35.5D,
                 "provisional spring gain restores at least 0.5 C within two minutes without food");
-        helper.assertTrue(clothedRecovery,
+        helper.assertTrue(clothedSpring.core120() > 35.2D,
                 "directly immersed insulating pants retain meaningful shallow recovery");
         assertPassiveContactBound(helper, player);
         helper.succeed();
@@ -268,7 +254,7 @@ public class HotSpringPlayerGameTests {
     private record Recovery(double core30, double core60, double core120) { }
 
     private static Recovery simulate(ServerPlayer player, double waterRatio, double springRatio, boolean fed,
-                                     double rate, double springGain) {
+                                     double springGain) {
         player.setDeltaMovement(Vec3.ZERO);
         player.setSprinting(false);
         player.setOnGround(true);
@@ -277,7 +263,7 @@ public class HotSpringPlayerGameTests {
         for (BodyPart part : BodyPart.VALUES) data.setBodyTempByPart(part, -2.0F);
         data.refreshCoreTemperature();
         double hNatural = PlayerThermalModel.naturalConvectionCoefficientWPerM2K(AIR_C);
-        double physiologicalSeconds = PlayerThermalModel.physiologicalSeconds(1.0D, rate);
+        double physiologicalSeconds = PlayerThermalModel.physiologicalSeconds(1.0D);
         double core30 = 0.0D;
         double core60 = 0.0D;
         for (int second = 0; second < 120; second++) {

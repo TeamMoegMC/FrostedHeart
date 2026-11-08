@@ -2,6 +2,7 @@
 .idea/
 /.project
 /.classpath
+/.factorypath
 .settings/
 *.iml
 *.ipr
@@ -137,6 +138,7 @@ run/config/*
 !run/config/fhresearches/
 !run/config/fhresearches/**
 run-gametest/
+run-gametest-deposits/
 run-infrared-validation/
 run-online-latency/
 

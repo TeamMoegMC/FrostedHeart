@@ -183,13 +183,11 @@ public class ObjectWriter {
     	case 14:{
 			List<Object> obj=new ArrayList<>();
 			int size=pb.readVarInt();
-			ByteBuf crnbytes=pb.readBytes((size+1)/2);
+			ByteBuf crnbytes=pb.readSlice((size+1)/2);
 			for(int i=0;i<size;i++) {
-				if(i%2==1) {
-					obj.add(readWithType(crnbytes.getByte(i/2)&15,pb));
-				}else {
-					obj.add(readWithType((crnbytes.getByte(i/2)>>4)&15,pb));
-				}
+				int kind = i % 2 == 1 ? crnbytes.getByte(i / 2) & 15 : (crnbytes.getByte(i / 2) >> 4) & 15;
+				// DFU compressed maps use Java null for omitted field slots.
+				obj.add(kind == 0 ? null : readWithType(kind, pb));
 			}
 			return obj;
 		}

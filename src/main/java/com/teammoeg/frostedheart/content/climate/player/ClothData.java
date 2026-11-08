@@ -54,17 +54,17 @@ public class ClothData {
 	}
     public static double sumAttributes(Collection<AttributeModifier> attribute) {
         double base = 0;
-        double mbase = 1;
+        double mbase = 0;
         double mtotal = 1;
         for (AttributeModifier attrib : attribute) {
             if (attrib.getOperation() == Operation.ADDITION)
                 base += attrib.getAmount();
             if (attrib.getOperation() == Operation.MULTIPLY_BASE)
-                mbase *= attrib.getAmount();
+                mbase += attrib.getAmount();
             if (attrib.getOperation() == Operation.MULTIPLY_TOTAL)
                 mtotal *= 1 + attrib.getAmount();
         }
-        return base * mbase * mtotal;
+        return base * (1.0D + mbase) * mtotal;
     }
 
     public static double sumAttributesPercentage(Collection<AttributeModifier> attribute) {

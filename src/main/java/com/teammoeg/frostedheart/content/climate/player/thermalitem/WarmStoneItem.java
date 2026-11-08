@@ -131,6 +131,9 @@ public class WarmStoneItem extends BlockItem
                 "tooltip.frostedheart.wearable_thermal_reservoir.capacity",
                 formatCapacityPercent(profile.capacityRatio())
         ).withStyle(ChatFormatting.GRAY));
+        tooltip.add(Component.translatable(
+                "tooltip.frostedheart.wearable_thermal_reservoir.regulated"
+        ).withStyle(ChatFormatting.GRAY));
     }
 
     private static double weightedAverageTemperatureC(

@@ -243,6 +243,11 @@ public final class QueryPublication implements AutoCloseable {
             for (var page : change.replacementPages) retainPage(page);
             for (var page : change.expectedPages) releasePage(page);
             for (var snapshot : previous) {
+                // Removed Bricks can disappear while other regions keep the same Page readable.
+                if (pendingInfraredBrickMasks != null && targetTick <= infraredActiveUntilTick) {
+                    for (int page = 0; page < snapshot.template.distinctPages.length; page++)
+                        addInfraredChange(snapshot.template.distinctPages[page], snapshot.template.pageBrickMasks[page]);
+                }
                 releaseFrame(snapshot);
                 var replacement = regionalIndex.regions.get(snapshot.template.regionId);
                 if (replacement == null || replacement.handle != snapshot.template.handle) {
@@ -834,13 +839,22 @@ public final class QueryPublication implements AutoCloseable {
         /** Requires pageAirSampleTick(page) >= 0 on this lease; those immutable frames remain pinned. */
         public AirFieldCheckpoint captureValidatedAir(
                 com.teammoeg.frostedheart.content.climate.thermal.mesh.PagePublication page, double naturalC) {
+            return captureValidatedAir(page, naturalC, -1L, false);
+        }
+
+        public AirFieldCheckpoint captureValidatedAir(
+                com.teammoeg.frostedheart.content.climate.thermal.mesh.PagePublication page, double naturalC,
+                long brickMask, boolean retiring) {
             var capture = new AirFieldCheckpoint.Capture(naturalC);
             for (int brick = 0; brick < 64; brick++) {
+                if ((brickMask & 1L << brick) == 0) continue;
                 var payload = page.brick(brick);
                 if (payload.firstSlot() < 0) continue;
                 for (int node = 0; node < payload.airNodeCount(); node++) {
                     int slot = payload.firstSlot() + node;
                     var snapshot = regionalLease.forSlot(slot);
+                    if (retiring && !snapshot.activeAtSlot(slot, naturalC,
+                            com.teammoeg.frostedheart.content.climate.thermal.persistence.ThermalRetentionPolicy.EXIT_C)) continue;
                     capture.atTick(snapshot.sampleTick);
                     if (snapshot.minimumQuality()) capture.add(snapshot.template.air,
                             (x, y, z) -> snapshot.componentTemperatureC(slot, x, y, z),

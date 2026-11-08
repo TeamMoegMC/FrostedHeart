@@ -25,15 +25,17 @@ import net.minecraftforge.common.util.LazyOptional;
 
 /** Owns metabolism, shivering, sweating, and their food/water costs. */
 public final class PlayerThermoregulation {
-    private static final double BASAL_METABOLIC_POWER_W = 30.625D;
+    private static final double BASAL_METABOLIC_POWER_W = 32.0D;
     private static final double WALKING_METABOLIC_POWER_W = 30.625D;
     private static final double SPRINTING_METABOLIC_POWER_W = 0.0D;
-    private static final double MILD_COLD_POWER_W = 61.25D;
-    private static final double MODERATE_COLD_POWER_W = 91.875D;
-    private static final double SEVERE_COLD_POWER_W = 122.5D;
+    private static final double MILD_COLD_POWER_W = 30.0D;
+    private static final double MODERATE_COLD_POWER_W = 45.0D;
+    private static final double SEVERE_COLD_POWER_W = 60.0D;
     private static final double MILD_HEAT_COOLING_W = 30.625D;
     private static final double SEVERE_HEAT_COOLING_W = 61.25D;
-    private static final double JOULES_PER_EXHAUSTION = 5_444.444D;
+    // Food and water exhaustion are different resources; calibrate their costs separately.
+    static final double FOOD_ENERGY_J_PER_EXHAUSTION = 2_800.0D;
+    private static final double SWEAT_ENERGY_J_PER_WATER_EXHAUSTION = 5_444.444D;
 
     private PlayerThermoregulation() {
     }
@@ -73,12 +75,12 @@ public final class PlayerThermoregulation {
         if (shiveringPowerW > 0.0D) {
             player.causeFoodExhaustion((float) (
                     shiveringPowerW * physiologicalSeconds
-                            / JOULES_PER_EXHAUSTION));
+                            / FOOD_ENERGY_J_PER_EXHAUSTION));
         }
         if (sweatingAppliedW > 0.0D) {
             float exhaustion = (float) (
                     sweatingAppliedW * physiologicalSeconds
-                            / JOULES_PER_EXHAUSTION);
+                            / SWEAT_ENERGY_J_PER_WATER_EXHAUSTION);
             waterLevel.ifPresent(value ->
                     value.addExhaustion(player, exhaustion));
         }

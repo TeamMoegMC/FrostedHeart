@@ -1,0 +1,149 @@
+{
+  "type": "frostedheart:deposit",
+  "config": {
+    "dimension": "frostedheart_deposits:core",
+    "placement": {
+      "cell_size": 512,
+      "jitter": 80,
+      "anchor_y": {
+        "min": -24,
+        "max": 0
+      },
+      "chance": 1.0,
+      "salt": 48151623
+    },
+    "profiles": {
+      "frostedheart_deposits:core": {
+        "chance": 1.0,
+        "shape": {
+          "length": {
+            "min": 160,
+            "max": 224
+          },
+          "width": {
+            "min": 64,
+            "max": 96
+          },
+          "height": {
+            "min": 40,
+            "max": 56
+          },
+          "pool_depth": {
+            "min": 6,
+            "max": 10
+          },
+          "water_offset": -6,
+          "bend": 0.18,
+          "roughness": 2,
+          "terraces": 2
+        },
+        "materials": {
+          "carvable": "#the_winter_rescue:deposit_carvable",
+          "host": "#the_winter_rescue:deposit_host",
+          "lining": {
+            "Name": "minecraft:tuff"
+          },
+          "sediment": {
+            "Name": "minecraft:calcite"
+          },
+          "altered": {
+            "Name": "minecraft:tuff"
+          },
+          "fluid": {
+            "Name": "minecraft:water"
+          },
+          "column": {
+            "Name": "minecraft:basalt"
+          }
+        },
+        "ore_chance": 0.16,
+        "ores": [
+          {
+            "host": "#minecraft:stone_ore_replaceables",
+            "state": {
+              "Name": "frostedheart:pyrite_ore"
+            },
+            "weight": 10
+          },
+          {
+            "host": "#minecraft:deepslate_ore_replaceables",
+            "state": {
+              "Name": "frostedheart:deepslate_pyrite_ore"
+            },
+            "weight": 10
+          },
+          {
+            "host": "#minecraft:stone_ore_replaceables",
+            "state": {
+              "Name": "minecraft:copper_ore"
+            },
+            "weight": 1
+          },
+          {
+            "host": "#minecraft:deepslate_ore_replaceables",
+            "state": {
+              "Name": "minecraft:deepslate_copper_ore"
+            },
+            "weight": 1
+          },
+          {
+            "host": "#minecraft:stone_ore_replaceables",
+            "state": {
+              "Name": "create:zinc_ore"
+            },
+            "weight": 6
+          },
+          {
+            "host": "#minecraft:deepslate_ore_replaceables",
+            "state": {
+              "Name": "create:deepslate_zinc_ore"
+            },
+            "weight": 6
+          },
+          {
+            "host": "#minecraft:stone_ore_replaceables",
+            "state": {
+              "Name": "immersiveengineering:ore_lead"
+            },
+            "weight": 5
+          },
+          {
+            "host": "#minecraft:deepslate_ore_replaceables",
+            "state": {
+              "Name": "immersiveengineering:deepslate_ore_lead"
+            },
+            "weight": 5
+          },
+          {
+            "host": "#minecraft:stone_ore_replaceables",
+            "state": {
+              "Name": "immersiveengineering:ore_silver"
+            },
+            "weight": 6
+          },
+          {
+            "host": "#minecraft:deepslate_ore_replaceables",
+            "state": {
+              "Name": "immersiveengineering:deepslate_ore_silver"
+            },
+            "weight": 6
+          },
+          {
+            "host": "#minecraft:stone_ore_replaceables",
+            "state": {
+              "Name": "immersiveengineering:ore_nickel"
+            },
+            "weight": 6
+          },
+          {
+            "host": "#minecraft:deepslate_ore_replaceables",
+            "state": {
+              "Name": "immersiveengineering:deepslate_ore_nickel"
+            },
+            "weight": 6
+          }
+        ]
+      }
+    }
+  }
+}

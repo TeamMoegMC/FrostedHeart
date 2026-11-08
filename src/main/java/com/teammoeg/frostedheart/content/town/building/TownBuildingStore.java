@@ -16,6 +16,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 
 /** Owns building objects, recovery records and one lazy encoding cache per building. */
 public final class TownBuildingStore {
@@ -34,7 +35,7 @@ public final class TownBuildingStore {
     private final List<Issue> viewIssues = new ArrayList<>();
     private ResourceKey<Level> dimension;
     private ITownBuildingChangeEventListener listener;
-    private Runnable metadataListener = () -> {};
+    private Consumer<Boolean> metadataListener = viewChanged -> {};
     private boolean needsInitialSave;
     private boolean hasUnreadableContainer;
     private long metadataVersion;
@@ -98,14 +99,15 @@ public final class TownBuildingStore {
         return List.copyOf(result);
     }
 
-    public void setListeners(ITownBuildingChangeEventListener listener, Runnable metadataListener) {
+    /** The metadata callback flags only fields not already represented by building deltas. */
+    public void setListeners(ITownBuildingChangeEventListener listener, Consumer<Boolean> metadataListener) {
         this.listener = listener;
-        this.metadataListener = metadataListener == null ? () -> {} : metadataListener;
+        this.metadataListener = metadataListener == null ? viewChanged -> {} : metadataListener;
         records.forEach((pos, entry) -> wire(pos, entry));
     }
     public void reportInitialChanges() {
         if (needsInitialSave) {
-            metadataListener.run();
+            metadataListener.accept(true);
             needsInitialSave = false;
         }
     }
@@ -114,7 +116,7 @@ public final class TownBuildingStore {
             return false;
         }
         dimension = next;
-        metadataChanged();
+        metadataChanged(true);
         return true;
     }
 
@@ -134,7 +136,7 @@ public final class TownBuildingStore {
         }
         removeAt(pos);
         installDecoded(pos, building, new CompoundTag(), new CompoundTag());
-        metadataChanged();
+        metadataChanged(false);
         notifyRegistration(building, pos);
     }
 
@@ -145,7 +147,7 @@ public final class TownBuildingStore {
             return false;
         }
         installDecoded(pos, building, new CompoundTag(), new CompoundTag());
-        metadataChanged();
+        metadataChanged(false);
         notifyRegistration(building, pos);
         return true;
     }
@@ -172,7 +174,7 @@ public final class TownBuildingStore {
         if (previous == null && !removedRaw && !removedSummary) {
             return false;
         }
-        metadataChanged();
+        metadataChanged(removedRaw || removedSummary);
         notifyRegistration(this, pos);
         return true;
     }
@@ -198,10 +200,10 @@ public final class TownBuildingStore {
         }
     }
 
-    private void metadataChanged() {
+    private void metadataChanged(boolean viewChanged) {
         metadataVersion++;
         needsInitialSave = true;
-        metadataListener.run();
+        metadataListener.accept(viewChanged);
     }
 
     void addViewIssue(Issue issue) {
@@ -327,7 +329,7 @@ public final class TownBuildingStore {
             notifyRegistration(decoded.building, pos);
         }
         if (changed) {
-            metadataChanged();
+            metadataChanged(true);
         }
         return changed;
     }

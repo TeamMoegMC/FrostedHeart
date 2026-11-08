@@ -910,10 +910,11 @@ public class TeamTownData implements com.teammoeg.chorda.dataholders.PersistentC
      */
     private void initializeChangeTracking() {
         if(!this.listenerInitialized){
-            this.buildingStore.setListeners(this.dataSyncCache, () -> {
+            this.buildingStore.setListeners(this.dataSyncCache, viewChanged -> {
                 persistentChanged();
                 markWarehouseTopologyDirty();
-                if (serverTracking && buildingOwner != null) TownSync.invalidate(buildingOwner);
+                if (viewChanged && serverTracking && buildingOwner != null)
+                    TownSync.invalidate(buildingOwner, "building_metadata");
             });
             this.residents.setOnAttach(r -> r.setChangeEventListener(this.dataSyncCache));
             this.residents.setOnDetach(r -> r.setChangeEventListener(null));

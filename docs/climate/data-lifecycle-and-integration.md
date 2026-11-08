@@ -1,7 +1,7 @@
 # Climate Data And Lifecycle
 
 - Status: `Transitional; material lifecycle integration is under validation`
-- Last verified: `2026-10-29` for current runtime selection and gameplay entry call-chain review; `2026-10-22` for inactive player simulator removal; `2026-10-18` for phase-temperature and icicle receipt integration. Other sections retain their earlier verification scope.
+- Last verified: `2026-11-07` for infrared bandwidth, overlapping windows and display-cache lifecycle; `2026-11-06` for completed-enthalpy phase submission, infrared request completion and topology retirement invalidation; `2026-11-05` for body packet v2 and the orb's separate display conversion; `2026-10-29` for current runtime selection and gameplay entry call-chain review; `2026-10-22` for inactive player simulator removal; `2026-10-18` for phase-temperature and icicle receipt integration. Other sections retain their earlier verification scope.
 - Scope: recipe/configuration ownership, capabilities, server lifecycle, thermal runtime integration, and network boundaries
 - Primary code anchors: `FHRecipeCachingReloadListener`, `WorldTemperature`, `MinecraftThermalEvents`, `MinecraftThermalInput`, `MinecraftPhaseController.temperature`, `ThermalWorkerPool`, `LevelChunkSectionMixin_ThermalInput`, `FHCapabilities`, `FHNetwork`
 
@@ -218,9 +218,13 @@ or retained old arena is required. Slot generation checks still prevent stale
 arena access.
 
 Air and material share lazy natural cooling through `DormantThermalCooling`.
+The source-default dormant half-life is 30 game seconds. Ordinary residuals below
+0.5°C are removed during capture or bounded loaded-checkpoint maintenance, while
+latent state and pending input keep their owners. See [residual lifecycle](thermal-residual-lifecycle.md)
+for Page retirement, unload cancellation, restart and infrared deletion rules.
 No source-support flag, source-neighbor refresh or save-time decay remains.
 Infrared does not read dormant Air means. Air restoration targets actual Air only.
-`DormantChunkThermalState` writes and reads format 5 exclusively; older thermal
+`DormantChunkThermalState` writes and reads format 6 exclusively; older thermal
 records are not restored. `MaterialSectionState` records exact material H, active
 phase branch, sampling tick and stable BlockState identity separately from Air history.
 One scalar tick covers uniform-age records; partial writes lazily add per-record
@@ -306,6 +310,9 @@ BlockState，坠落使用 vanilla falling-block NBT。规则与验证入口见 [
 `StateTransitionData.hasRandomTransitions`使水不增加方块随机资格，也不在其他方块
 开启的Section中进入通用相变抽样；重载资格变化比较使用同一判断。独立水温/目标算法没有恢复。
 地表积雪/降水与岩浆原生点火继续执行。无记录相变使用编译边做环境平衡近似。
+无H记录的自然冻结继续检查 `world_conditions.fluid_boundary_tag`；在线/休眠的完成相变
+按已完成H兑现，不再因这项启动几何约束等待岸边。休眠入口检查完成度，世界转换沿原
+`THERMAL_TRANSITION` 交接原H；其他明确世界限制保留，见[相变提交](thermal-residual-lifecycle.md#自然冻结启动与已完成相变提交)。
 薄冰热裂与裂纹修复通过 `MinecraftPhaseController.temperature` 读取相同的材料温度：
 活动/休眠本体优先，确实无记录时共用原位环境回退；归属未发布或记录不匹配时等待。
 其每级 1/4 相变预算与部分进度见 [thin-ice.md](thin-ice.md)。
@@ -314,12 +321,21 @@ BlockState，坠落使用 vanilla falling-block NBT。规则与验证入口见 [
 只于重载边界重算包含相关状态的已加载Section计数。单纯加载、但不参与原随机更新的区域
 没有转换时限；该路径不加载Chunk或启动worker。
 
-`FHBodyDataSyncPacket` carries only the quantized player-facing environment and
-absolute core temperature. It is sent on the player-temperature cadence only
-when either value changes, plus one forced state on login, respawn, and
-dimension change. Net body power remains server-side diagnostic state and is
-not a client HUD input. World air and Page cell state remain query-on-demand
-and are never placed in the body packet.
+`FHBodyDataSyncPacket` version `2` carries sampled player Air at `0.1 C`,
+absolute core at `0.01 C`, and the server's final orb reading at `0.1 C`
+(7 payload bytes). Raw radiation is not synchronized. It is sent on the player-temperature cadence only
+when quantized Air, core, or the orb's combined air/radiation reading changes,
+plus one forced state on login, respawn, and dimension change. Net body power
+remains server-side diagnostic state. The orb conversion and its separate
+physical inputs are defined in [player-temperature.md](player-temperature.md).
+Full world-air and Page-cell state remain query-on-demand and are never placed
+in the body packet.
+
+`FHClimatePacket` additionally carries a `0.1 C` short from
+`WorldClimate.getTemp(ChunkPos)` for the forecast bar's current weather baseline.
+`ClientClimateData.climateTemperatureC` is cleared with the existing climate
+state and does not read a player or a thermal Page. The existing climate sync
+cadence is retained; the forecast no longer uses heated local Air as weather.
 
 `FHTemperatureDisplayPacket` remains the registered `temperature_display` message
 for localized temperature reports. Its floating-point constructors carry the
@@ -328,28 +344,69 @@ one-decimal display flag and its integer constructors retain integer formatting;
 server component instead of using this packet.
 
 `FHRequestInfraredViewDataSyncPacket` carries requestId, forceFull, committed
-display generation/center, material epoch, twelve material-presence words,
-known material readability, and an optional twelve-word previous field footprint.
-Full omits the old field footprint. Opening/movement forces full; stable clients
-poll every 40 ticks with an entity-ID offset. Awaiting full uses 41..59-tick
-retries; an accepted multipart response finishes before a periodic retry.
-Movement supersedes an old requestId.
+display generation/center, material epoch, material presence, known readability,
+previous field footprint, dormant revision/sample tick and `knownDisplayRequestId`.
+The latter is the last data transaction committed at LAST; an ACK does not advance it.
+Masks use one-byte empty, dense twelve-long, or ascending sparse Page-index delta
+encoding, selecting sparse only when smaller. An omitted response presence differs
+from a transmitted empty mask: the former preserves presence, the latter clears it.
+Full omits the old field footprint. Opening/invalid baselines force full; stable clients
+poll every 40 ticks with an entity-ID offset. `InfraredRequestState` permits one
+outstanding request. Elapsed time, another polling interval or movement cannot
+replace its requestId; movement is coalesced until its response completes, then
+the next tick requests the current window. FIRST through LAST retain that identity.
+After a completed acknowledgement without a usable full baseline, the existing
+41..59-tick cadence controls the next full request. Closing, world reset and
+recipe invalidation cancel the pending identity and allow a fresh request.
 
 `FHResponseInfraredViewDataSyncPacket` carries server center, dimension generation,
-material epoch and FULL/FIRST/LAST/READABLE flags, optional changed/full material
+material epoch and FULL/FIRST/LAST/ACK/READABLE flags, optional changed/full material
 presence, the complete current field footprint, and final display Brick records.
-Empty field footprint explicitly clears its baseline. Each part carries the same
-footprint. READABLE describes physical input availability; a field-only or empty
+Empty field footprint explicitly clears its baseline. Only LAST carries presence,
+field footprint and dormant revision/sample tick; intermediate parts carry their
+identity, center, generation, material epoch, flags and Brick payload. READABLE describes physical input availability; a field-only or empty
 full is a valid display transaction. There is no background key/grid or separate
 material-update/control transaction. Matching packet implementations are required
-on both endpoints.
+on both endpoints. If capture returns null because nothing changed or a coherent
+snapshot is temporarily unavailable, the server sends an ACK through the same
+packet type. ACK releases the pending request without modifying the committed
+CPU/GPU display, origin or epochs. Its complete body is requestId VarInt plus flags
+(two bytes for one-byte IDs); it carries no snapshot or temperature records.
+Both endpoints must implement this completion
+contract; a client waiting for ACK cannot use an older server that silently omits it.
 
 Server composition restores analytic fields over raw material, with naturalAir
 read only at actual field hits needing natural/base. The previous/current field
 Page union is rebuilt each poll, independent of material epoch. A removed field
-restores material or INVALID. Non-field Pages retain material epoch increments.
+restores material or INVALID. `InfraredDisplayCache` compares canonical encoded
+Page values against that observer's last committed request identity. Unchanged
+records are removed after final 0.25°C quantization; deleted valid Bricks retain
+explicit INVALID. Equality is byte-for-byte, without probabilistic fingerprints.
+Non-field Pages retain material epoch increments.
+
+The cache shares immutable encoded world Pages between observers. It retains at
+most 256 observer baselines and an 8 MiB accounted allowance, including estimated
+Page/entry metadata; this is not a JVM heap bound. Old versions remain charged
+until their last observer releases them. A cache miss, eviction or unknown token
+resends actual values. It is acceleration data, never a physical temperature
+authority or a second full mirror per player. Logout, dimension change, actual
+Level unload and server close release the corresponding entries. The production
+entry point is `MinecraftThermalInput.gameplayInfraredSnapshot(ServerPlayer,
+FHRequestInfraredViewDataSyncPacket)`; the raw-baseline overload does not use this cache.
+
+`InfraredWindow` remaps presence and the old field footprint by absolute Section.
+When all center offsets are below nine Sections, overlapping windows use delta:
+existing samples are retained and entering/changed regions are sent. At FIRST the
+client shifts its existing CPU mirror in place and fills entering space INVALID;
+at LAST it uploads the moved mirror and commits the new origin. GPU data remains
+at its old origin until that commit. A non-overlapping jump, generation change or
+invalid baseline uses full. Moving still performs a full local texture upload;
+this change saves network data, not that upload.
 Local geometry mutation keeps unchanged bodies readable from the last Page publication;
 the existing material journal excludes replacements and sends affected Brick deltas.
+`QueryPublication.installRegions` invalidates the removed regions' old Page/Brick footprint
+as well as the added footprint. A shrinking or retired region therefore sends explicit
+INVALID records for missing materials even when another region keeps Page presence true.
 Concurrent publication/slot mismatches retry the entire snapshot twice, then send
 nothing rather than a false removal; the client retains its committed texture and
 requests again on its normal schedule. A stably invalid or over-age physical input
@@ -374,9 +431,21 @@ full, while retaining the visible GPU image until replacement. World reset clear
 request/field state and detaches existing GPU handles before deletion. No background
 resources exist. Missing data uses the original blue placeholder and keeps the
 scan complete. Closed clients stop polling; material comparisons stop after the
-last request's 80-tick activity window. No-field unchanged windows send no S2C;
-field-window capture/traffic scales with its refreshed Page area. Shader scope
+last request's 80-tick activity window. Unchanged windows send compact ACKs;
+field composition still scans its refreshed Page area, while traffic follows
+changed final encoded Bricks and metadata. Shader scope
 and approximations are in [world temperature](world-climate-and-temperature.md).
+
+Bandwidth measurements and limits are recorded in
+[the 2026-11-07 comparison](validation/infrared-bandwidth-2026-11-07.json).
+`frostedheart_infrared_bandwidth_measure` runs the two comparison scenes and the
+alternating cached/uncached capture measurement; `frostedheart_infrared_bandwidth`,
+`frostedheart_infrared_window`, `frostedheart_infrared_network` and
+`frostedheart_infrared_refresh` cover correctness. Measurements include C2S, ACK,
+S2C, real Forge envelopes, Minecraft compression at threshold 256 and outer frame
+lengths. They exclude TCP/IP, retransmissions and actual client rendering. The
+old `measureSurfaceRequests` snapshot byte sum excludes requests/ACK/compression
+and must not be treated as complete network traffic.
 The player NBT schema preserves each existing clothing `ItemStackHandler`, its
 complete item NBT, and temperature difficulty. New saves store per-part
 `energy_j`; old Celsius body/feel/environment and dormant

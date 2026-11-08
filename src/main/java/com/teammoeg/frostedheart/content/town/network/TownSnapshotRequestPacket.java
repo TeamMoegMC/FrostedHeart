@@ -13,7 +13,7 @@ public final class TownSnapshotRequestPacket implements CMessage {
     @Override public void encode(FriendlyByteBuf buffer) {}
     @Override public void handle(Supplier<NetworkEvent.Context> context) {
         var ctx = context.get();
-        ctx.enqueueWork(() -> { if (ctx.getSender() != null) TownSync.requestFull(ctx.getSender()); });
+        ctx.enqueueWork(() -> { if (ctx.getSender() != null) TownSync.requestFull(ctx.getSender(), "client_recovery"); });
         ctx.setPacketHandled(true);
     }
 }

@@ -20,10 +20,11 @@
 package com.teammoeg.frostedheart.content.climate.thermal.radiation;
 
 /**
- * Reservoir conversion from radiant flux to an equivalent boundary-temperature delta.
+ * Shared conversion from radiant flux to an equivalent temperature delta for reservoirs and the HUD.
  *
- * <p>The frozen wearable balance uses {@code deltaT = q * 0.8 / 6.0}. The player
- * energy model consumes radiant watts directly and does not use this conversion.</p>
+ * <p>The frozen wearable balance and temperature orb use {@code deltaT = q * 0.8 / 6.0}.
+ * The orb uses a fixed reference independent of clothing. The player energy model
+ * consumes radiant watts directly; direct injury never uses this displayed equivalent.</p>
  */
 public final class RadiantEquivalentTemperature {
     public static final double RESERVOIR_RADIATION_ABSORPTIVITY = 0.8D;

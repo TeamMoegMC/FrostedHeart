@@ -41,7 +41,7 @@ import java.util.TreeSet;
 public final class ResearchGraphLayoutEngine {
     public static final double NODE_WIDTH = 144.0D;
     public static final double NODE_HEIGHT = 52.0D;
-    public static final double RANK_SPACING = 176.0D;
+    public static final double RANK_SPACING = 208.0D;
     public static final double LANE_SPACING = 72.0D;
     public static final double BOUNDS_PADDING = 24.0D;
     private static final int BARYCENTRIC_SWEEPS = 4;

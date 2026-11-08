@@ -9,3 +9,11 @@ Start with the relevant system in [docs/README.md](../../docs/README.md). The `g
 Thermal tests retain input/source ownership, query and save lifecycle, quality recovery, gameplay integration, and current two-base/scattered/overload fixtures. One-off recording clients, retired capacity variants and duplicate entry wrappers were removed; their history is recorded in [the thermal consolidation](../../diary/2026-10-29_23-38-00_thermal-development-history.md#retired-validation-tools). Other systems' test code and fixture data are separate from that cleanup.
 
 Use Java 17 and compile the test source set with `./gradlew compileGameTestJava` (`.\gradlew.bat compileGameTestJava` on Windows). For example, select the compact-storage checks with `./gradlew runGameTestServer -PgameTestNamespaces=frostedheart_compact_storage`. Runtime worlds, logs and profiling recordings are generated outputs and stay outside Git; test source and deliberate fixtures stay versioned.
+
+Player heating equipment checks use namespace `frostedheart_equipment_heating`:
+real item capabilities, sustained body curves, stacked devices, fuel cadence and
+reload, vest demand, reservoir energy conservation and the actual player tick.
+Their gameplay contract and validation scope belong to
+[player temperature](../../docs/climate/player-temperature.md).
+
+For the shared thermal comparison baseline, run [`scripts/run-thermal-baseline.ps1`](../../scripts/run-thermal-baseline.ps1). The [baseline reference](../../docs/climate/thermal-validation-baseline.md) owns its scene list, recorded configuration, clocks and result interpretation.

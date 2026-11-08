@@ -35,6 +35,8 @@ import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.bootstrap.client.FHShaders;
 import com.teammoeg.frostedheart.content.climate.network.FHRequestInfraredViewDataSyncPacket;
 import com.teammoeg.frostedheart.content.climate.network.InfraredBrickCodec;
+import com.teammoeg.frostedheart.content.climate.network.InfraredRequestState;
+import com.teammoeg.frostedheart.content.climate.network.InfraredWindow;
 import com.teammoeg.frostedheart.content.climate.render.infrared.InfraredSurfaceTarget;
 
 
@@ -103,11 +105,11 @@ public final class InfraredViewRenderer {
     private static boolean surfacePrepared, terrainVisited, terrainDepthCaptured;
     private static int frameTexture, frameOriginX, frameOriginY, frameOriginZ;
     private static boolean open;
-    private static boolean displayHasCoverage;
     private static boolean deltaBaselineValid;
     private static boolean receivingResponse;
     private static boolean requestCenterValid;
-    private static int requestId;
+    private static final InfraredRequestState requests = new InfraredRequestState();
+    private static int knownDisplayRequestId = -1;
     private static long lastRequestTick = Long.MIN_VALUE;
     private static int infraredEpoch;
     private static long storedEpoch;
@@ -139,7 +141,7 @@ public final class InfraredViewRenderer {
 
     /** Called by our terrain renderer after the original pass has selected its target. */
     public static boolean visitTerrainPass() {
-        if (!displayHasCoverage || radius <= 0 || cameraPose == null || GL11.glGetInteger(GL30.GL_DRAW_FRAMEBUFFER_BINDING)
+        if (radius <= 0 || cameraPose == null || GL11.glGetInteger(GL30.GL_DRAW_FRAMEBUFFER_BINDING)
                 != Minecraft.getInstance().getMainRenderTarget().frameBufferId) return false;
         terrainVisited = true;
         return true;
@@ -148,7 +150,12 @@ public final class InfraredViewRenderer {
     public static boolean prepareSurfaceCapture() {
         if (surfacePrepared) return true;
         Minecraft minecraft = Minecraft.getInstance();
-        if (minecraft.player == null || !displayHasCoverage || temperatureTexture == 0) return false;
+        if (minecraft.player == null) return false;
+        if (temperatureTexture == 0) {
+            // The scan can start before a response; never reuse samples from a previous world.
+            if (!ensureTemperatureMirror()) clearMirror();
+            uploadFullTemperatureTexture();
+        }
         RenderTarget main = minecraft.getMainRenderTarget();
         if (surfaceTarget == null) surfaceTarget = new InfraredSurfaceTarget();
         if (!surfaceTarget.ensure(main.width, main.height, main.getColorTextureId(), main.getDepthTextureId())) return false;
@@ -180,39 +187,39 @@ public final class InfraredViewRenderer {
     }
 
     public static void clientTick() {
-        if (open && displayHasCoverage && radius < SCAN_RADIUS_BLOCKS) {
+        if (open && radius < SCAN_RADIUS_BLOCKS) {
             radius = Mth.clamp(
                     radius + RADIUS_DUR, 0.0F, SCAN_RADIUS_BLOCKS);
-        } else if ((!open || !displayHasCoverage) && radius > 0.0F) {
+        } else if (!open && radius > 0.0F) {
             radius = Mth.clamp(
                     radius - RADIUS_DUR, 0.0F, SCAN_RADIUS_BLOCKS);
         }
 
         Minecraft minecraft = Minecraft.getInstance();
-        if (!open || minecraft.player == null || minecraft.level == null) {
+        if (!open || minecraft.player == null || minecraft.level == null || requests.isPending()) {
             return;
         }
         int centerChunkX = Mth.floor(minecraft.player.getX()) >> 4;
         int centerChunkZ = Mth.floor(minecraft.player.getZ()) >> 4;
         int centerSectionY = Mth.floor(minecraft.player.getEyeY()) >> 4;
-        boolean forceFull = !requestCenterValid
+        boolean windowChanged = !requestCenterValid
                 || centerChunkX != requestedChunkX
                 || centerChunkZ != requestedChunkZ
                 || centerSectionY != requestedSectionY;
         long gameTick = minecraft.level.getGameTime();
         boolean awaitingFull = requestCenterValid && !deltaBaselineValid;
-        // All parts are sent together over TCP; let an accepted response finish.
+        // A completed request without a usable full snapshot can retry on the normal cadence.
         boolean retryFull = awaitingFull && !receivingResponse
                 && gameTick - lastRequestTick
                 >= FULL_RETRY_MIN_TICKS + Math.floorMod(
                         minecraft.player.getId(), FULL_RETRY_SPREAD_TICKS);
         boolean periodic = !awaitingFull && Math.floorMod(
                 gameTick + minecraft.player.getId(), REFRESH_TICKS) == 0L;
-        if ((forceFull || retryFull || periodic)
+        if ((windowChanged || retryFull || periodic)
                 && lastRequestTick != gameTick) {
             sendRequest(
                     centerChunkX, centerChunkZ, centerSectionY,
-                    forceFull, gameTick);
+                    !requestCenterValid || !deltaBaselineValid, gameTick);
         }
     }
 
@@ -223,7 +230,8 @@ public final class InfraredViewRenderer {
             boolean forceFull,
             long gameTick
     ) {
-        requestId = nextRequestId(requestId);
+        int requestId = requests.tryBegin();
+        if (requestId == InfraredRequestState.NO_REQUEST) return;
         receivingResponse = false;
         lastRequestTick = gameTick;
         requestCenterValid = true;
@@ -239,20 +247,23 @@ public final class InfraredViewRenderer {
                         requestId,
                         forceFull || !deltaBaselineValid,
                         generation, SectionPos.asLong(textureCenterChunkX, textureCenterSectionY, textureCenterChunkZ),
-                        infraredEpoch, knownPresence.clone(), materialReadable, knownFieldPages, storedEpoch, storedSampleTick));
+                        infraredEpoch, knownPresence.clone(), materialReadable, knownFieldPages, storedEpoch, storedSampleTick,
+                        knownDisplayRequestId));
     }
 
     /** Only LAST commits the complete display baseline, including field-only responses. */
     /** Apply response parts to the existing CPU mirror; publish the baseline only on the last part. */
     public static void updateData(int responseRequestId, InfraredSnapshot data, boolean firstPart, boolean lastPart) {
         RenderSystem.assertOnRenderThread();
-        if (!open || responseRequestId != requestId) return;
+        if (!open || !requests.accepts(responseRequestId)) return;
         boolean sameCenter = data.centerChunkX() == textureCenterChunkX
                 && data.centerChunkZ() == textureCenterChunkZ && data.centerSectionY() == textureCenterSectionY;
+        long previousCenter = SectionPos.asLong(textureCenterChunkX, textureCenterSectionY, textureCenterChunkZ);
+        long nextCenter = SectionPos.asLong(data.centerChunkX(), data.centerSectionY(), data.centerChunkZ());
         if (firstPart) {
-            if (!data.full() && (!deltaBaselineValid || !sameCenter || data.generation() != generation)) {
-                deltaBaselineValid = false;
-                requestCenterValid = false;
+            if (!data.full() && (!deltaBaselineValid || !InfraredWindow.overlaps(previousCenter, nextCenter)
+                    || data.generation() != generation)) {
+                invalidateDisplay();
                 return;
             }
             receivingResponse = true;
@@ -262,6 +273,12 @@ public final class InfraredViewRenderer {
             ensureTemperatureMirror();
             Arrays.fill(dirtyUploadPages, 0L);
             if (data.full()) clearMirror();
+            else if (!sameCenter) {
+                InfraredWindow.shift(temperatureMirror, previousCenter, nextCenter);
+                InfraredWindow.remap(knownPresence, dirtyUploadPages, previousCenter, nextCenter);
+                System.arraycopy(dirtyUploadPages, 0, knownPresence, 0, knownPresence.length);
+                Arrays.fill(dirtyUploadPages, 0L);
+            }
         } else if (!receivingResponse) return;
         for (byte[] records : data.brickRecords()) {
             FriendlyByteBuf input = new FriendlyByteBuf(Unpooled.wrappedBuffer(records));
@@ -280,17 +297,18 @@ public final class InfraredViewRenderer {
         generation = data.generation(); infraredEpoch = data.infraredEpoch();
         storedEpoch = data.storedEpoch();
         storedSampleTick = data.storedSampleTick();
-        if (data.full()) uploadFullTemperatureTexture(); else uploadDirtyPages();
+        if (data.full() || !sameCenter) uploadFullTemperatureTexture(); else uploadDirtyPages();
         materialReadable = data.readable();
         deltaBaselineValid = true;
         Arrays.fill(dirtyUploadPages, 0L);
         knownFieldPages = data.fieldPages();
-        displayHasCoverage = hasCoverage(knownPresence) || hasCoverage(knownFieldPages);
+        knownDisplayRequestId = responseRequestId;
+        requests.complete(responseRequestId);
     }
 
-    private static boolean hasCoverage(long[] pages) {
-        for (long word : pages) if (word != 0L) return true;
-        return false;
+    public static void acknowledgeRequest(int responseRequestId) {
+        RenderSystem.assertOnRenderThread();
+        if (requests.complete(responseRequestId)) receivingResponse = false;
     }
 
     public static void invalidateDisplay() {
@@ -602,7 +620,7 @@ public final class InfraredViewRenderer {
         invalidateRequests();
         open = false;
         radius = 0.0F;
-        displayHasCoverage = false;
+        knownDisplayRequestId = -1;
         deltaBaselineValid = false;
         infraredEpoch = 0;
         storedEpoch = 0;
@@ -639,13 +657,9 @@ public final class InfraredViewRenderer {
 
     private static void invalidateRequests() {
         receivingResponse = false;
-        requestId = nextRequestId(requestId);
+        requests.invalidate();
         requestCenterValid = false;
         lastRequestTick = Long.MIN_VALUE;
-    }
-
-    private static int nextRequestId(int current) {
-        return current == Integer.MAX_VALUE ? 0 : current + 1;
     }
 
 }

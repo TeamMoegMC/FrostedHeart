@@ -33,6 +33,7 @@ public class ClientClimateData {
     public static long secs = 0;
     public static int wind = 0;
     public static float humidity = 0;
+    public static float climateTemperatureC = 0;
 
     public static void clear() {
         secs = 0;
@@ -43,6 +44,7 @@ public class ClientClimateData {
         climateChange = -1;
         wind = 0;
         humidity = 0;
+        climateTemperatureC = 0;
     }
 
     public static long getDate() {

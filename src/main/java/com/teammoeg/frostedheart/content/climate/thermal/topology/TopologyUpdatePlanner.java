@@ -691,8 +691,8 @@ public final class TopologyUpdatePlanner {
             for (int index = 0; index < update.skyColumns().length; index++) {
                 int column = Short.toUnsignedInt(update.skyColumns()[index]);
                 draft.setSkyColumn(column, update.firstExposedLocalY()[index]);
-                int brick = (column & 15) >>> 2 | (column >>> 4) >>> 2 << 2 | 3 << 4;
-                draft.fragmentDirtyMask |= 1L << brick;
+                int brick = (column & 15) >>> 2 | (column >>> 4) >>> 2 << 2;
+                draft.fragmentDirtyMask |= (0x0001_0001_0001_0001L << brick) & draft.nextResidentBrickMask;
             }
         }
     }

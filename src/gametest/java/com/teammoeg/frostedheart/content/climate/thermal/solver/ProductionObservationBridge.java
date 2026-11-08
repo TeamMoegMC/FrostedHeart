@@ -60,6 +60,7 @@ public final class ProductionObservationBridge implements ThermalDiagnostics.Obs
                         sources.spatialBoundThrough(source.getLongKey(), source.getIntValue()));
         }
         RegionalGridSwitchObservation.observe(runtime);
+        RegionalRetirementObservation.observe(runtime, cells, tick);
         if (runtime.commitRevision() != observedCommit) {
             observedCommit = runtime.commitRevision(); WorkPolicyObservation.end(air, sources, tick);
             GeometryInputProductionObservation.afterCut(cells);

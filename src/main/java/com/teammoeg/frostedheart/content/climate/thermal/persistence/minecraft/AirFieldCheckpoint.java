@@ -23,6 +23,8 @@ package com.teammoeg.frostedheart.content.climate.thermal.persistence.minecraft;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.AirFieldLayout;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.AirBackingMeter;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.LocalAirShape;
+import com.teammoeg.frostedheart.content.climate.thermal.persistence.DormantThermalCooling;
+import com.teammoeg.frostedheart.content.climate.thermal.persistence.ThermalRetentionPolicy;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -43,6 +45,7 @@ public final class AirFieldCheckpoint {
     private final double[] amplitudesC;
     private final long brickMask;
     private final int[] firstComponentByBrick, nextComponent;
+    private final double[] minimumC, maximumC;
 
     private AirFieldCheckpoint(int minX, int minY, int minZ, Component[] components,
             LocalAirShape[] shapes, double[] amplitudesC) {
@@ -54,9 +57,22 @@ public final class AirFieldCheckpoint {
         this.amplitudesC = amplitudesC;
         firstComponentByBrick = new int[64];
         nextComponent = new int[components.length];
+        minimumC = new double[components.length]; maximumC = new double[components.length];
+        double[] shapeBounds = new double[shapes.length];
+        for (int shape = 0; shape < shapes.length; shape++)
+            for (int vertex = 0; vertex < shapes[shape].vertexCount(); vertex++)
+                shapeBounds[shape] = Math.max(shapeBounds[shape], Math.abs(shapes[shape].vertexValue(vertex)));
         java.util.Arrays.fill(firstComponentByBrick, -1);
         long mask = 0;
         for (int index = components.length - 1; index >= 0; index--) {
+            Component component = components[index];
+            double low = Double.POSITIVE_INFINITY, high = Double.NEGATIVE_INFINITY;
+            for (double value : component.nodalC == null ? component.coarseC : component.nodalC) {
+                low = Math.min(low, value); high = Math.max(high, value);
+            }
+            double extra = 0;
+            for (int mode : component.modes) extra += Math.abs(amplitudesC[mode]) * shapeBounds[mode];
+            minimumC[index] = low - extra; maximumC[index] = high + extra;
             int brick = components[index].brick;
             mask |= 1L << brick;
             nextComponent[index] = firstComponentByBrick[brick];
@@ -71,6 +87,7 @@ public final class AirFieldCheckpoint {
         meter.bytes(64L + 64L * components.length);
         meter.array(components); meter.array(shapes); meter.array(amplitudesC);
         meter.array(firstComponentByBrick); meter.array(nextComponent);
+        meter.array(minimumC); meter.array(maximumC);
         for (Component component : components) {
             meter.array(component.coarseC); meter.array(component.modes);
             meter.array(component.unitCorners); meter.array(component.nodalC);
@@ -83,6 +100,30 @@ public final class AirFieldCheckpoint {
     public int shapeCount() { return shapes.length; }
     public LocalAirShape shape(int index) { return shapes[index]; }
     public double amplitudeC(int index) { return amplitudesC[index]; }
+
+    /** Retains original samples; filtering never restarts their elapsed cooling time. */
+    public AirFieldCheckpoint retain(long eligibleBricks, double naturalC, long tick, double rate, long fallbackTick) {
+        if ((eligibleBricks & brickMask) == 0) return this;
+        ArrayList<Component> retained = null;
+        long cachedTick = Long.MIN_VALUE;
+        double factor = 0;
+        for (int index = 0; index < components.length; index++) {
+            Component component = components[index];
+            long saved = component.sampleTick < 0 ? fallbackTick : component.sampleTick;
+            if (cachedTick != saved) { cachedTick = saved; factor = DormantThermalCooling.factor(saved, tick, rate); }
+            boolean keep = (eligibleBricks & 1L << component.brick) == 0
+                    || ThermalRetentionPolicy.retains(Math.max(Math.abs(minimumC[index] - naturalC),
+                            Math.abs(maximumC[index] - naturalC)) * factor);
+            if (!keep && retained == null) {
+                retained = new ArrayList<>(components.length);
+                for (int previous = 0; previous < index; previous++) retained.add(components[previous]);
+            }
+            if (keep && retained != null) retained.add(component);
+        }
+        if (retained == null) return this;
+        if (retained.isEmpty()) return null;
+        return new AirFieldCheckpoint(minX, minY, minZ, retained.toArray(Component[]::new), shapes, amplitudesC);
+    }
 
     /** Collect only this Page's values, using each component's original coefficient addresses. */
     public static final class Capture {
@@ -106,7 +147,7 @@ public final class AirFieldCheckpoint {
                         component.minZ + ((corner & 2) == 0 ? 0 : 4));
                 residual = Math.max(residual, Math.abs(values[corner] - naturalC));
             }
-            if (residual <= .0625) return;
+            if (!ThermalRetentionPolicy.retains(residual)) return;
             minX = component.minX & ~15; minY = component.minY & ~15; minZ = component.minZ & ~15;
             components.add(new Component(brick, component.airBlocks, values, new int[0], null, null, sampleTick));
         }
@@ -117,7 +158,7 @@ public final class AirFieldCheckpoint {
             if (component == null || component.arenaGeneration != generation) return;
             double lower = referenceC + component.minimumOffsetC(coefficientsC);
             double upper = referenceC + component.maximumOffsetC(coefficientsC);
-            if (Math.max(Math.abs(lower - naturalC), Math.abs(upper - naturalC)) <= 0.0625) return;
+            if (!ThermalRetentionPolicy.retains(Math.max(Math.abs(lower - naturalC), Math.abs(upper - naturalC)))) return;
             minX = component.minX & ~15;
             minY = component.minY & ~15;
             minZ = component.minZ & ~15;

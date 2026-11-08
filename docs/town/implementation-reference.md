@@ -1,9 +1,9 @@
 # Town Implementation Reference
 
 > Status: Partial
-> Last verified: 2026-10-23 (28 real Forge scenarios and the final independent-process restart read)
+> Last verified: 2026-11-07 (assemble, 36 unified Forge cases, three real rendered building GUIs and sparse wire fields); 2026-10-23 (independent-process restart read)
 > Scope: State ownership, daily lifecycle, building extension, transport reservations, and town-data synchronization
-> Code anchors: `TeamTownData`, `TeamTown`, `ITownBuilding.CODEC`, `DataSyncCache`, `TownTransportState`, `TownTransportSnapshot`, `TransportReservationModel`, `TransportEndpointKind`, `TransportAdmissionStatus`, `TownResourceUpdatePacket`, `WarehouseInterfaceBlockEntity`, `WarehouseInterfaceTransportView`
+> Code anchors: `TeamTownData`, `TeamTown`, `ITownBuilding.CODEC`, `DataSyncCache`, `TownSync.ensureCurrent/requestFull`, `TownClientUpdates.pending`, `ObjectWriter.readWithType`, `TownTransportState`, `TownTransportSnapshot`, `TransportReservationModel`, `TransportEndpointKind`, `TransportAdmissionStatus`, `TownResourceUpdatePacket`, `WarehouseUpdatePacket`, `SimpleItemKey.writeTo/fromBuffer`, `WarehouseInterfaceBlockEntity`, `WarehouseInterfaceTransportView`
 
 This document records invariants that are easy to violate when extending the town system. Source remains authoritative; gameplay formulas and simulator behavior belong in [town-model.md](town-model.md), while citizen presence and movement belong in [hybrid-simulation-architecture.md](hybrid-simulation-architecture.md).
 
@@ -16,6 +16,14 @@ This document records invariants that are easy to violate when extending the tow
 Resource mutations use `TeamTownResourceActionExecutorHandler` and `TownResourceActions`. `TownResourceManager` and direct `addUnsafe` or `costUnsafe` calls are not extension APIs.
 
 The current file layout, server binding, migration, automatic scheduling and synchronization recovery are owned by [persistence-and-runtime.md](persistence-and-runtime.md).
+
+## Warehouse Item Synchronization
+
+[`WarehouseMenu.detectAndSendChanges`](../../src/main/java/com/teammoeg/frostedheart/content/town/buildings/warehouse/WarehouseMenu.java) sends full and incremental inventory views through [`WarehouseUpdatePacket`](../../src/main/java/com/teammoeg/frostedheart/content/town/network/WarehouseUpdatePacket.java). The payload is a boolean incremental flag, a VarInt entry count, and one `SimpleItemKey` followed by a VarLong quantity for each entry. An incremental quantity of zero removes that item from the client view.
+
+[`SimpleItemKey.writeTo/fromBuffer`](../../src/main/java/com/teammoeg/frostedheart/content/town/buildings/warehouse/SimpleItemKey.java) use the matching Forge `writeRegistryId` / `readRegistryId` methods, followed by nullable NBT. The registry prefix is the UTF-8 resource location `minecraft:item`, then the item's numeric registry ID. Reading only an ID with `readRegistryIdUnsafe` would leave that prefix in the NBT stream: its characters `i` and `n` become the false length `0x696E = 26990`, causing the reported `EOFException`. The 2026-11-05 correction changes the reader to match the existing writer; the transmitted fields and town persistence formats stay compatible.
+
+[`WarehouseNetworkGameTests`](../../src/gametest/java/com/teammoeg/frostedheart/content/town/WarehouseNetworkGameTests.java), namespace `frostedheart_warehouse_network`, checks plain and modded item keys, nested NBT, quantities beyond the int range, and full/incremental packets with multiple entries. Warehouse-core removal and stale-menu access continue to follow the [building lifecycle contract](building-data.md).
 
 ## Daily Lifecycle
 
@@ -84,6 +92,10 @@ P2P bindings use a separate authority path: `TeamTown#bindOrRebindP2PTerminals`,
 ## Synchronization Invariants
 
 `ObservableTownMap`, object change listeners, and resource listeners feed independent persistence versions and the network change collection in `TeamTownData.DataSyncCache`. Server `tick()` prepares dirty warehouse topology before draining transport state, then flushes dirty keys through `TownBuildingUpdatePacket`, `TownResidentUpdatePacket`, and `TownResourceUpdatePacket`. Full `TeamTownDataS2CPacket` synchronization uses explicit PENDING/PRESENT/ABSENT states through TownSync; a connection needs a complete baseline before receiving management deltas.
+
+Building menus and the Mayor's Seal call `TownSync.ensureCurrent` to reuse a ready baseline. `requestFull` coalesces pending work until the server boundary; ordinary record changes no longer invalidate every player's baseline. `TownClientUpdates.currentTown` retains the current display during a same-holder refresh while `canApply`/`apply` suspend deltas until the new complete view installs. Ownership changes, confirmed absence and logout clear that display. Full-request reasons and the exceptional metadata path are documented in [the current synchronization contract](persistence-and-runtime.md#管理视图).
+
+`ObjectWriter.readWithType` preserves Java `null` in sparse compressed-map lists. Replacing those absent slots with a sentinel object makes strict optional building fields fail during real wire decoding, even when direct Codec or server-only checks succeed. The wire regression exercises all six building types through the actual writer and reader; the rendered-client run additionally exercises packet handlers and GUI continuity.
 
 The station report is persisted and incrementally synchronized as part of its building object. The town state is persisted in `TeamTownData.transportState`. Both `TownResourceUpdatePacket` and `TeamTownDataS2CPacket` carry an immutable `TownTransportSnapshot` containing the daily report, stable reservation list, current total capacity, server-derived reservation capacities, effective warehouse count, and server `warehouseDistanceCostPerBlock`. Incremental application updates the resource holder and snapshot before firing one resource callback. Full sync decodes the persistent town data, applies the accompanying snapshot, replaces the client instance, and then fires one existing full-sync callback batch. This is required because `TransportReservation.CODEC` intentionally omits derived capacity while `TransportReservation.SNAPSHOT_CODEC` includes it. Snapshot decoding limits the reservation count and rejects invalid numeric fields.
 

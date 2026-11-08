@@ -83,14 +83,14 @@ public class TemperatureCommand {
                 for (PlayerTemperatureData.BodyPart part : PlayerTemperatureData.BodyPart.values()) {
                     String partName = part.name().charAt(0) + part.name().substring(1).toLowerCase();
                     float body = data.getAbsoluteBodyTempByPart(part);
-                    float felt = data.getFeelTempByPart(part);
+                    float felt = data.getExposureTemperatureC(part);
 
                     // Color code based on temperature range (optional)
                     String colorCode = getTemperatureColorCode(body);
                     String colorCodeFelt = getTemperatureColorCode(felt);
 
                     result.append(String.format(
-                            "§6%s Body:§r %s%.1f°C | §6Boundary: %s%.1f°C§r\n",
+                            "§6%s Body:§r %s%.1f°C | §6Exposure: %s%.1f°C§r\n",
                             partName, colorCode, body, colorCodeFelt, felt));
                 }
 
@@ -154,11 +154,11 @@ public class TemperatureCommand {
                         }))
                 )
                 // Set feelTemp
-                .then(Commands.literal("feelTemp")
+                .then(Commands.literal("exposureTemp")
                         .then(Commands.argument("value", FloatArgumentType.floatArg()).executes((ct) -> {
                             Player player = ct.getSource().getPlayerOrException();
                             PlayerTemperatureData.getCapability(player).ifPresent(data -> {
-                                data.setAllPartsFeelTemp(ct.getArgument("value", Float.class));
+                                data.setAllPartsExposureTemperature(ct.getArgument("value", Float.class));
                             });
                             return Command.SINGLE_SUCCESS;
                         }))

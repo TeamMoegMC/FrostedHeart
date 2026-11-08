@@ -1,0 +1,106 @@
+{
+  "status": "inspection completed before the later completed-phase fix; original observations and retirement failures retained",
+  "follow_up": {
+    "fluid_boundary_wait": "Later fixed by distinguishing natural initiation from energy-complete submission; the observations below describe the earlier build",
+    "validation": "thermal-completed-phase-2026-11-06.json",
+    "source_free_retirement_qualification": "Not closed by that separate fix"
+  },
+  "verified_date": "2026-11-06",
+  "author": "OpenAI Codex / GPT-6; primary investigation and production-validation agent",
+  "production_code_changed_in_this_investigation": false,
+  "scope": [
+    "WorkerPageStore material/air admission and route support",
+    "RegionalQuerySnapshot natural-background subtraction in fine/coarse frames",
+    "MinecraftPageManager source/restoration seed ownership",
+    "DormantThermalCooling, DormantThermalMaintenance and world mutation conditions"
+  ],
+  "remaining_confirmed_behavior": {
+    "name": "Completed latent material remains at its plateau while world mutation is blocked",
+    "test_source": "src/gametest/java/com/teammoeg/frostedheart/content/climate/thermal/runtime/minecraft/ThermalBlockedPhaseProductionGameTests.java",
+    "namespace": "frostedheart_blocked_phase",
+    "log": "build/river-thermal-similar-blocked-water.log",
+    "clock": "actual Forge server ticks, lockstep acceleration; behavior rather than wall-clock capacity",
+    "fixture": "One actual solver checkpoint record in a covered source-water pool; real production material law, loaded Chunk attachment, ordinary dormant maintenance and real block mutations",
+    "natural_temperature_c": -23.700000762939453,
+    "enabled_physical_sources": 0,
+    "complete_cooling_enthalpy_j": 1493000.0,
+    "branch": -1,
+    "mutation_condition": "Four horizontal neighbors are water, so world_conditions.fluid_boundary_tag=minecraft:water blocks freezing",
+    "held_observation_ticks": 12010,
+    "held_temperature_c": -5.0,
+    "held_block": "minecraft:water[level=0]",
+    "held_source": "STORED",
+    "maintenance_records_examined_at_12000_ticks": 98,
+    "records_removed_at_12000_ticks": 0,
+    "recovery_action": "Replace the west neighbor with an actual stone block",
+    "recovery_delay_ticks": 61,
+    "recovered_block": "frostedheart:thin_ice[crack=0]",
+    "recovered_temperature_c": -5.0215907,
+    "characterization_required_passed": 1,
+    "interpretation": "Passing proves that the held plateau and condition-dependent recovery were reproduced. It does not qualify automatic cold retirement or constitute a production fix.",
+    "thermal_save_or_worker_errors": 0,
+    "shutdown_root_bytes": 0,
+    "anchors": [
+      "DormantThermalCooling.project: energyLimitJ==0 stops at the completed edge",
+      "MinecraftPhaseController.canTransition/applyDormantTransition: fluid-boundary conditions can reject a world mutation",
+      "ThermalRetentionPolicy.retains: nonzero transition progress keeps the record",
+      "MinecraftPhaseController.apply: online business-condition failures return RETRY; not separately timed in this scene"
+    ]
+  },
+  "natural_background_and_quality_recovery": {
+    "namespace": "frostedheart_regional_background",
+    "log": "build/river-thermal-similar-natural-baselines.log",
+    "clock": "lockstep",
+    "required_passed": 1,
+    "maximum_background_range_c": 18.0,
+    "maximum_cells": 730,
+    "maximum_coarsening_temperature_jump_c": 1.3898699686426674,
+    "maximum_recovery_temperature_jump_c": 0.028343148383735084,
+    "maximum_checkpoint_error_c": 0.079387940207166,
+    "maximum_coarsening_energy_error_j": 3.725290298461914e-9,
+    "source_replay": {
+      "input_j": 6400.0,
+      "delivered_j": 6400.0,
+      "cancellations": 2,
+      "publications": 1,
+      "maximum_replay_energy_delta_j": 0.0,
+      "maximum_replay_temperature_delta_c": 0.0
+    },
+    "interpretation": "This selected scene did not reproduce unbounded admission from natural baselines. The observed quality-switch temperature jump is an approximation effect, not evidence of new source energy.",
+    "thermal_save_or_worker_errors": 0,
+    "shutdown_root_bytes": 0
+  },
+  "unresolved_retirement_qualification": {
+    "namespace": "frostedheart_coarse_cooling",
+    "logs": [
+      "build/river-thermal-similar-coarse-recovery.log",
+      "build/river-thermal-similar-coarse-diagnostics.log"
+    ],
+    "clock": "realtime20",
+    "required_failed_each_run": 1,
+    "failed_assertion": "The low-residual, source-free coarse region must finish its ordinary retirement",
+    "extra_diagnostics_added": "Test-only THERMAL_COARSE_RETIREMENT_WAIT; original assertions retained",
+    "last_observation": {
+      "ticks_after_extinguishing": 1979,
+      "point_temperature_c": -11.93112275075707,
+      "point_natural_query_c": -11.9,
+      "sample_tick": 2380,
+      "runtime_intake_tick": 2400,
+      "enabled_physical_sources": 0,
+      "pending_source_j": 0.0,
+      "regions": 1,
+      "degraded_regions": 0,
+      "registered_bytes": 5779600
+    },
+    "interpretation": "The region remains readable and advances after the source stops, including recovery to fine quality. One point near its query natural temperature does not prove all material/air ownership is below its captured-background exit threshold. Do not classify this failure as duplicate heating or invalid retention without the remaining regional evidence.",
+    "unreached_checks": "This run did not reach its later save/unload/reload/relight assertions; those are not claimed as passing here.",
+    "thermal_save_or_worker_errors_each_run": 0,
+    "shutdown_root_bytes_each_run": 0
+  },
+  "limits": [
+    "This is a targeted thermal inspection, not an assertion that all remaining system defects are excluded.",
+    "Existing source-restoration ownership and ventilation support were inspected, but a new full restart or very-long porous-structure campaign was not performed.",
+    "The earlier river fix addresses material admission; it does not resolve the confirmed completed-phase waiting behavior.",
+    "No production JAR was rebuilt for this investigation because only test sources and project knowledge were edited."
+  ]
+}

@@ -1,0 +1,189 @@
+{
+  "status": "completed; prototype rejected and removed; prior on-demand-summary change reverted",
+  "verified_date": "2026-11-08",
+  "benchmark_date": "2026-11-07",
+  "author": "OpenAI Codex / GPT-6; primary implementation and measurement agent",
+  "production": {
+    "on_demand_summary_retained": false,
+    "unique_edge_hash_prototype_retained": false,
+    "affected_rollback_files": 8,
+    "net_lines_relative_to_task_start": -33,
+    "new_production_types": 0,
+    "new_runtime_configuration_keys": 0,
+    "new_runtime_backends": 0,
+    "graph_sorter": "original packed/paired occurrence sorting",
+    "preserved_unrelated_hunks": 7,
+    "preserved_changes": [
+      "natural phase material perturbation",
+      "existing TRACE logging changes"
+    ]
+  },
+  "prototype": {
+    "method": "hash duplicate endpoint pairs before sorting only unique keys; original endpoint order and contribution mapping retained",
+    "changed_production_families": 2,
+    "prototype_net_source_lines": -16,
+    "correctness": "Each artifact passed3 Forge GameTests; independent ordered map matched all endpoint arrays and contribution maps in8 graph fixtures, with65 sorter bit widths",
+    "measurement": "Fixed production-grid fixtures inside Forge, not a player-world load;48 warmups and12 batches of8 measured constructions per fixture",
+    "comparison": {
+      "dense": {
+        "before": {
+          "volumes": 8192,
+          "occurrences": 98304,
+          "unique": 27200,
+          "warmup": 48,
+          "iterations": 96,
+          "allocatedBytesPerGraph": 2185081,
+          "wallMedianNsPerGraph": 2202087,
+          "wallMinimumNsPerGraph": 1643687,
+          "wallMaximumNsPerGraph": 6120762,
+          "exact": "true"
+        },
+        "rejected_candidate": {
+          "volumes": 8192,
+          "occurrences": 98304,
+          "unique": 27200,
+          "warmup": 48,
+          "iterations": 96,
+          "allocatedBytesPerGraph": 1833945,
+          "wallMedianNsPerGraph": 2633025,
+          "wallMinimumNsPerGraph": 2107762,
+          "wallMaximumNsPerGraph": 5125262,
+          "exact": "true"
+        },
+        "allocation_change_percent": -16.0697017639163,
+        "median_time_change_percent": 19.569526544591564
+      },
+      "disconnected": {
+        "before": {
+          "volumes": 256,
+          "occurrences": 3072,
+          "unique": 3072,
+          "warmup": 48,
+          "iterations": 96,
+          "allocatedBytesPerGraph": 87417,
+          "wallMedianNsPerGraph": 48262,
+          "wallMinimumNsPerGraph": 46450,
+          "wallMaximumNsPerGraph": 107850,
+          "exact": "true"
+        },
+        "rejected_candidate": {
+          "volumes": 256,
+          "occurrences": 3072,
+          "unique": 3072,
+          "warmup": 48,
+          "iterations": 96,
+          "allocatedBytesPerGraph": 136665,
+          "wallMedianNsPerGraph": 721856,
+          "wallMinimumNsPerGraph": 274425,
+          "wallMaximumNsPerGraph": 799412,
+          "exact": "true"
+        },
+        "allocation_change_percent": 56.336868114897555,
+        "median_time_change_percent": 1395.7026231817993
+      }
+    },
+    "decision": "Dense allocation fell but median time did not improve; the disconnected fixture increased both allocation and elapsed time. Rejected before full-load candidate testing.",
+    "repeat_limit": "One process per artifact; timing centers are descriptive, with ranges retained. No stable overall speedup claimed.",
+    "output": "build/thermal-graph-unique/rejected-prototype.patch",
+    "composition": {
+      "before_count": 3741,
+      "after_count": 3741,
+      "changed_classes": [
+        "com/teammoeg/frostedheart/content/climate/thermal/runtime/LongRadixSortCursor.class",
+        "com/teammoeg/frostedheart/content/climate/thermal/solver/CoupledThermalOperator$Contacts.class",
+        "com/teammoeg/frostedheart/content/climate/thermal/solver/CoupledThermalOperator$PairwiseGraphPreparation.class",
+        "com/teammoeg/frostedheart/content/climate/thermal/solver/CoupledThermalOperator$Preparation.class",
+        "com/teammoeg/frostedheart/content/climate/thermal/solver/CoupledThermalOperator.class"
+      ],
+      "common_compiled": "D:\\Frosted-Heart\\build\\thermal-baselines\\graph-unique-r2\\compiled",
+      "before_classes": "D:\\Frosted-Heart\\build\\thermal-graph-unique\\before-classes",
+      "changed_families": [
+        "com/teammoeg/frostedheart/content/climate/thermal/solver/CoupledThermalOperator",
+        "com/teammoeg/frostedheart/content/climate/thermal/runtime/LongRadixSortCursor"
+      ],
+      "shared_harness_and_resources": true,
+      "old_source_rebuilt": false
+    },
+    "evidence": [
+      "build/thermal-baselines/graph-unique-r2/graph.log",
+      "build/thermal-baselines/graph-unique-before-1/graph.log"
+    ]
+  },
+  "final_validation": {
+    "cases": [
+      {
+        "name": "grid-switch",
+        "namespace": "frostedheart_regional_grid_switch",
+        "clock": "realtime20",
+        "world": "world-grid-switch",
+        "expected": 1,
+        "passed": 1,
+        "failed": 0,
+        "exit": 0,
+        "thermalErrors": 0,
+        "rootZero": true,
+        "phaseMarkerPresent": true,
+        "climateInput": "D:\\Frosted-Heart\\build\\thermal-baselines\\graph-rejected-final-r4\\grid-switch.climate.dat",
+        "qualified": true,
+        "started": "2026-11-08T03:02:12.5989127+08:00",
+        "elapsedSeconds": 111.0306655,
+        "log": "D:\\Frosted-Heart\\build\\thermal-baselines\\graph-rejected-final-r4\\grid-switch.log"
+      },
+      {
+        "name": "normal-load",
+        "namespace": "frostedheart_two_dense_machine_bases",
+        "clock": "realtime20",
+        "world": "world-normal-load",
+        "expected": 1,
+        "passed": 1,
+        "failed": 0,
+        "exit": 0,
+        "thermalErrors": 0,
+        "rootZero": true,
+        "phaseMarkerPresent": true,
+        "climateInput": "D:\\Frosted-Heart\\build\\thermal-baselines\\graph-rejected-final-runtime-r5\\normal-load.climate.dat",
+        "qualified": true,
+        "started": "2026-11-08T03:06:38.2666782+08:00",
+        "elapsedSeconds": 187.4461032,
+        "log": "D:\\Frosted-Heart\\build\\thermal-baselines\\graph-rejected-final-runtime-r5\\normal-load.log"
+      }
+    ],
+    "compile": "build/thermal-baselines/graph-rejected-final-r4/compile.log",
+    "core_class_comparison": {
+      "assembled_final_class_count": 3741,
+      "fresh_compile_class_count": 3741,
+      "different_classes": [
+        "com/teammoeg/frostedheart/content/climate/player/HeatingDeviceContext.class",
+        "com/teammoeg/frostedheart/content/climate/player/PlayerTemperatureComputation.class",
+        "com/teammoeg/frostedheart/content/climate/player/PlayerTemperatureData.class",
+        "com/teammoeg/frostedheart/content/climate/player/PlayerThermalModel.class",
+        "com/teammoeg/frostedheart/content/climate/player/thermalitem/ThreeNodeWearableHeatExchange.class",
+        "com/teammoeg/frostedheart/content/climate/player/thermalitem/WarmStoneItem.class",
+        "com/teammoeg/frostedheart/content/climate/player/thermalitem/WearableThermalExchangeHandler$Status.class",
+        "com/teammoeg/frostedheart/content/climate/player/thermalitem/WearableThermalExchangeHandler.class",
+        "com/teammoeg/frostedheart/content/climate/tooltips/ArmorTempStats.class",
+        "com/teammoeg/frostedheart/content/climate/tooltips/EquipmentTempStats.class"
+      ]
+    },
+    "runtime_scope": "Final thermal classes match fresh R4 compilation byte-for-byte. R5 reuses an earlier common harness and resources with10 earlier player-temperature classes; this is thermal-service validation, not qualification of those later player-model edits."
+  },
+  "startup_attempts": [
+    {
+      "label": "graph-unique-r1",
+      "outcome": "Init-script list was passed as an unquoted PowerShell array and coerced into one invalid path; no compilation"
+    },
+    {
+      "label": "graph-rejected-final-r3",
+      "outcome": "Current compilation succeeded; first invocation selected no cases because Only was coerced into a space-separated string. Only now accepts string arrays and comma-separated strings. Later run could not find production classes."
+    },
+    {
+      "label": "graph-rejected-final-r4/normal-load",
+      "outcome": "Startup failed before test execution because the compiled GameTest classes were missing after the preceding run. Cause of missing class directories was not established. Preserved components were reused for R5."
+    }
+  ],
+  "limits": [
+    "No new overall performance improvement demonstrated.",
+    "No full temperature-curve replay, full-modpack qualification,100 networked clients or exhaustive matrix added.",
+    "Shared-grid temporary-coordinate removal and block-centered model changes were not implemented."
+  ]
+}

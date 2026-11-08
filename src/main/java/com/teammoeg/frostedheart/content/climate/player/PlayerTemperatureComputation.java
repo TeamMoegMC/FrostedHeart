@@ -25,7 +25,6 @@ import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
 import com.teammoeg.frostedheart.content.climate.thermal.query.ThermalEnvironmentSample;
 import com.teammoeg.frostedheart.content.water.capability.WaterLevelCapability;
-import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.FluidTags;
@@ -104,8 +103,7 @@ public final class PlayerTemperatureComputation {
 
         // Convert real elapsed time into the gameplay-accelerated body time step.
         double elapsedSeconds = Math.max(0.0D, intervalTicks / 20.0D);
-        double physiologicalSeconds = PlayerThermalModel.physiologicalSeconds(
-                elapsedSeconds, FHConfig.SERVER.CLIMATE.tempSpeed.get());
+        double physiologicalSeconds = PlayerThermalModel.physiologicalSeconds(elapsedSeconds);
         context.reset(player, elapsedSeconds, physiologicalSeconds, data);
 
         // 3. Build all five passive air/contact paths before active power.
@@ -139,10 +137,6 @@ public final class PlayerTemperatureComputation {
         double sweatingRequestedW = PlayerThermoregulation.sweatingPowerW(
                 coreTemperatureC, regulationMultiplier, waterAvailable);
 
-        if (!frozen && physiologicalSeconds > 0.0D) {
-            PlayerEquipmentHeating.collect(player, context);
-        }
-
         // Scale both Wet cooling and sweating against one evaporation ceiling.
         double evaporationScale = PlayerThermalModel.evaporationScale(
                 airTemperatureC, relativeHumidity, localWindMPerS,
@@ -150,6 +144,10 @@ public final class PlayerTemperatureComputation {
         double sweatingAppliedW = sweatingRequestedW * evaporationScale;
         double sharedBodyPowerW = PlayerThermoregulation.sharedBodyPowerW(
                 player, regulationMultiplier, shiveringPowerW, sweatingAppliedW);
+        context.setBodyRegulation(sharedBodyPowerW, evaporationScale, onFire, lavaHeightRatio);
+        if (!frozen && physiologicalSeconds > 0.0D) {
+            PlayerEquipmentHeating.collect(player, context);
+        }
 
         // Integrate passive exchange, active power, and internal body transfer.
         double integratedEnergyJ = PlayerThermalModel.integrateBody(data, context,
@@ -166,30 +164,21 @@ public final class PlayerTemperatureComputation {
         data.applyThermalObservation(environmentTemperatureC, averageBodyPowerW,
                 sampledAirTemperatureC, sample.radiantFluxWPerM2(),
                 outdoorWindMPerS, localWindMPerS, canSeeSky);
-        double totalWeight=0;
-        for(BodyPart part:BodyPart.VALUES)
-        	totalWeight+=context.getWeight(part);
-        if(totalWeight>10) {
-        	int level=Mth.floor((totalWeight-10)/5);
-        	if (player.getEffect(FHMobEffects.HEAVY_LOAD.get()).getAmplifier()!=level) {
-        		player.removeEffectNoUpdate(FHMobEffects.HEAVY_LOAD.get());
-        	}
-        	if(!player.hasEffect(FHMobEffects.HEAVY_LOAD.get()))
-        		player.addEffect(new MobEffectInstance(FHMobEffects.HEAVY_LOAD.get(), -1, level));
-        }else if (player.hasEffect(FHMobEffects.HEAVY_LOAD.get())) {
-        	player.removeEffect(FHMobEffects.HEAVY_LOAD.get());
+        double totalWeight = 0.0D;
+        for (BodyPart part : BodyPart.VALUES) totalWeight += context.getWeight(part);
+        if (totalWeight > 10.0D) {
+            int level = Mth.floor((totalWeight - 10.0D) / 5.0D);
+            var current = player.getEffect(FHMobEffects.HEAVY_LOAD.get());
+            if (current == null || current.getAmplifier() != level) {
+                player.removeEffect(FHMobEffects.HEAVY_LOAD.get());
+                player.addEffect(new MobEffectInstance(FHMobEffects.HEAVY_LOAD.get(), -1, level));
+            }
+        } else if (player.hasEffect(FHMobEffects.HEAVY_LOAD.get())) {
+            player.removeEffect(FHMobEffects.HEAVY_LOAD.get());
         }
         // Resource costs follow applied regulation, not the original request.
         PlayerThermoregulation.consumeResources(
                 player, waterLevel, frozen, physiologicalSeconds, shiveringPowerW, sweatingAppliedW);
     }
 
-    /** Applies direct hot or cold injury on the existing injury cadence. */
-    public static void burning(ServerPlayer player, PlayerTemperatureData data) {
-        PlayerThermalInjury.apply(player, data);
-    }
-
-    /*public static double feelTemperature(double dryTemperatureC, double relativeHumidity, double relativeWindSpeed) {
-        return PlayerThermalModel.feelTemperature(dryTemperatureC, relativeHumidity, relativeWindSpeed);
-    }*/
 }

@@ -11,10 +11,15 @@ This directory explains implemented, player-facing game systems. Source, configu
 | Knowledge archive and linking | [knowledge/README.md](knowledge/README.md)               | Current      |
 | Climate and temperature       | [climate/README.md](climate/README.md)                   | Transitional      |
 | Space station                 | [space/README.md](space/README.md)                       | Current      |
+| Natural deposit generation    | [world-generation.md](world-generation.md)              | Current      |
 | Scenario font rendering       | [scenario-font-rendering.md](scenario-font-rendering.md) | Current      |
 | Ice cave world generation     | [worldgen/README.md](worldgen/README.md)                   | Partial      |
 
 `Current` means verified against implementation. `Partial` omits known areas. `Transitional` mixes verified material with legacy, experimental, or proposed content. [`deprecated/`](deprecated/) is historical only.
+
+As of 2026-10-19, JUnit source files and their Gradle dependency have been removed at the user's request. Earlier references to unit-test paths or historical pass counts do not describe a runnable suite. Current verification uses the real Forge GameTest server and, where applicable, client gameplay and separate-process restart checks.
+
+Reusable tests and fixtures live in [src/gametest/](../src/gametest/README.md), including `ResearchGameTests`; ordinary production JARs exclude them. Generated run directories, logs and profiling recordings stay outside Git.
 
 ## Library Guides
 

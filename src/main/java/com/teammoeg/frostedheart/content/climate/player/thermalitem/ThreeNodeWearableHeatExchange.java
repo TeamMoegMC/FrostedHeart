@@ -99,6 +99,21 @@ public final class ThreeNodeWearableHeatExchange {
             MutableResult result,
             Scratch scratch
     ) {
+        return exchangeInto(profile, reservoirCoreTemperatureC, reservoirSurfaceTemperatureC,
+                playerTemperatureC, dtSeconds, Double.POSITIVE_INFINITY, result, scratch);
+    }
+
+    /** Bounds only positive transfer to the player and retains unused heat in the surface node. */
+    public static ThermalExchangeKernel.Status exchangeInto(
+            WearableThermalProfile profile,
+            double reservoirCoreTemperatureC,
+            double reservoirSurfaceTemperatureC,
+            double playerTemperatureC,
+            double dtSeconds,
+            double maximumPlayerTemperatureC,
+            MutableResult result,
+            Scratch scratch
+    ) {
         if (result == null || scratch == null) {
             throw new NullPointerException("result and scratch are required");
         }
@@ -181,8 +196,11 @@ public final class ThreeNodeWearableHeatExchange {
                         result
                 );
             }
-            surfaceEnthalpy = scratch.pairResult.enthalpyAJ();
-            playerEnthalpy = scratch.pairResult.enthalpyBJ();
+            double nextPlayerEnthalpy = Math.min(scratch.pairResult.enthalpyBJ(),
+                    Math.max(playerTemperatureC, maximumPlayerTemperatureC) * PLAYER_CAPACITY_RATIO);
+            surfaceEnthalpy = scratch.pairResult.enthalpyAJ()
+                    + (scratch.pairResult.enthalpyBJ() - nextPlayerEnthalpy);
+            playerEnthalpy = nextPlayerEnthalpy;
 
             if (!exchangePair(
                     coreEnthalpy,

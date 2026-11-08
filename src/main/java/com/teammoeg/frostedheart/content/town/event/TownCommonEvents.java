@@ -40,12 +40,12 @@ import net.minecraftforge.fml.common.Mod;
 public class TownCommonEvents {
     @SubscribeEvent
     public static void syncTownDataOnRespawn(PlayerEvent.PlayerRespawnEvent event) {
-        if (event.getEntity() instanceof ServerPlayer player) com.teammoeg.frostedheart.content.town.TownSync.requestFull(player);
+        if (event.getEntity() instanceof ServerPlayer player) com.teammoeg.frostedheart.content.town.TownSync.requestFull(player, "respawn");
     }
 
     @SubscribeEvent
     public static void syncTownDataOnTeamChange(com.teammoeg.chorda.events.PlayerTeamChangedEvent event) {
-        com.teammoeg.frostedheart.content.town.TownSync.requestFull(event.player);
+        com.teammoeg.frostedheart.content.town.TownSync.requestFull(event.player, "team_changed");
     }
     @SubscribeEvent
     public static void attachToChunk(AttachCapabilitiesEvent<LevelChunk> event) {
@@ -64,7 +64,7 @@ public class TownCommonEvents {
     @SubscribeEvent
     public static void syncTownDataOnLogin(PlayerEvent.PlayerLoggedInEvent event) {
         if (event.getEntity() instanceof ServerPlayer player) {
-            com.teammoeg.frostedheart.content.town.TownSync.requestFull(player);
+            com.teammoeg.frostedheart.content.town.TownSync.requestFull(player, "login");
         }
     }
 
@@ -74,20 +74,19 @@ public class TownCommonEvents {
     @SubscribeEvent
     public static void syncTownDataOnDimensionChange(PlayerEvent.PlayerChangedDimensionEvent event) {
         if (event.getEntity() instanceof ServerPlayer player) {
-            com.teammoeg.frostedheart.content.town.TownSync.requestFull(player);
+            com.teammoeg.frostedheart.content.town.TownSync.requestFull(player, "dimension_changed");
         }
     }
 
     /**
-     * 玩家打开城镇相关 GUI（基于方块实体的城镇建筑菜单）时全量同步城镇数据，
-     * 确保界面打开瞬间即有最新权威数据。
+     * 打开建筑菜单时复用当前同步基线；仅缺失或归属改变时安排完整视图。
      */
     @SubscribeEvent
     public static void syncTownDataOnGuiOpen(PlayerContainerEvent.Open event) {
         if (event.getEntity() instanceof ServerPlayer player
                 && event.getContainer() instanceof CBlockEntityMenu<?> menu
                 && menu.getBlock() instanceof AbstractTownBuildingBlockEntity) {
-            com.teammoeg.frostedheart.content.town.TownSync.requestFull(player);
+            com.teammoeg.frostedheart.content.town.TownSync.ensureCurrent(player);
         }
     }
 }

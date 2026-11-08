@@ -455,11 +455,10 @@ public final class MinecraftPageManager implements AutoCloseable {
             PageEntry page = pages.get(sectionKey);
             int brick =
                     SectionPos.sectionRelative(worldX) >>> 2
-                            | (SectionPos.sectionRelative(worldZ) >>> 2) << 2
-                            | 3 << 4;
+                            | (SectionPos.sectionRelative(worldZ) >>> 2) << 2;
             if (page != null
                     && page.handle != null
-                    && (page.capturedBrickMask & 1L << brick) != 0L) {
+                    && (page.capturedBrickMask & 0x0001_0001_0001_0001L << brick) != 0L) {
                 environment.updateSkyColumn(page.handle, worldX, worldZ, exposedWorldY);
             }
         }
@@ -495,7 +494,13 @@ public final class MinecraftPageManager implements AutoCloseable {
                 PageEntry page = pages.get(sectionKey);
                 if (page != null) {
                     page.restoreSeedMask = 0;
-                    if (page.handle != null) retire(page, !checkpointCaptured);
+                    if (page.handle != null) {
+                        // The unload callback owns this actual Chunk even after getChunkNow stops finding it.
+                        // Normally the native/ordinary chunk checkpoint has already sealed all Pages.
+                        if (!checkpointCaptured && !input.captureDormantPage(page.handle, chunk, page.capturedBrickMask))
+                            checkpointCaptured = input.captureRegionalCheckpoint(chunk, true);
+                        retire(page, false);
+                    }
                     if (!page.interested()) removeEntry(page);
                 }
             }
@@ -716,7 +721,7 @@ public final class MinecraftPageManager implements AutoCloseable {
             if (page.handle.currentPublication() == null
                     || page.handle.pendingFullGeometryResync() != null
                     || page.fullResync || page.centerCount != 0
-                    || !input.captureDormantPage(page.handle)) {
+                    || !input.captureDormantPage(page.handle, page.capturedBrickMask & ~desired)) {
                 shrinkQueue.add(page.sectionKey);
                 continue;
             }
@@ -1005,7 +1010,7 @@ public final class MinecraftPageManager implements AutoCloseable {
                     }
                     discardLifecycle(page);
                 } else {
-                    retire(page);
+                    if (!retire(page, true)) { withdrawals.add(page.sectionKey); return; }
                 }
             }
             removeEntry(page);
@@ -1063,14 +1068,11 @@ public final class MinecraftPageManager implements AutoCloseable {
         }
     }
 
-    private void retire(PageEntry page) {
-        retire(page, true);
-    }
-
-    private void retire(PageEntry page, boolean capture) {
-        if (capture) input.captureDormantPage(page.handle);
+    private boolean retire(PageEntry page, boolean capture) {
+        if (capture && !input.captureDormantPage(page.handle, page.capturedBrickMask)) return false;
         accumulator.retire(page.handle);
         discardLifecycle(page);
+        return true;
     }
 
     private void discardLifecycle(PageEntry page) {

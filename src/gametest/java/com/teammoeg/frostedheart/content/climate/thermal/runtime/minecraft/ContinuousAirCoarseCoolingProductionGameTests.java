@@ -6,6 +6,7 @@ import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.thermal.persistence.minecraft.AirFieldCheckpoint;
 import com.teammoeg.frostedheart.content.climate.thermal.query.ThermalEnvironmentSample;
 import com.teammoeg.frostedheart.content.climate.thermal.solver.RegionalGridSwitchObservation;
+import com.teammoeg.frostedheart.content.climate.thermal.solver.RegionalRetirementObservation;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
@@ -68,7 +69,17 @@ public final class ContinuousAirCoarseCoolingProductionGameTests {
             ContinuousAirProductionGameTests.useItem(helper, fire, Items.IRON_SHOVEL);
             ContinuousAirProductionGameTests.useItem(helper, control, Items.IRON_SHOVEL);
             extinguished[0] = level.getGameTime();
+            RegionalRetirementObservation.begin();
         }).thenIdle(160).thenWaitUntil(() -> {
+            if (level.getGameTime() % 200 == 0) {
+                boolean readable = ThermalConvergenceScenes.readable(helper, probe, sample);
+                FHMain.LOGGER.info("THERMAL_COARSE_RETIREMENT_WAIT,elapsed={},readable={},temperatureC={},naturalC={},sampleTick={},minimum={},sources={},reader={},worker={}",
+                        level.getGameTime() - extinguished[0], readable, sample.airTemperatureC(),
+                        WorldTemperature.naturalAir(level, probe), sample.airSampleTick(), sample.airMinimumQuality(),
+                        MinecraftThermalInput.enabledPhysicalSourceCount(level), MinecraftThermalInput.describeAirRead(level, probe),
+                        MinecraftThermalInput.describeWorkerProgress(level));
+                FHMain.LOGGER.info("THERMAL_COARSE_RETIREMENT_REGIONAL_EVIDENCE,{}", RegionalRetirementObservation.summary());
+            }
             helper.assertTrue(MinecraftThermalInput.enabledPhysicalSourceCount(level) == 0,
                     "No maintaining fire may supply heat during the source-free observation");
             helper.assertTrue(!MinecraftThermalInput.describeAirRead(level, probe).startsWith("geometry_current"),
@@ -129,6 +140,7 @@ public final class ContinuousAirCoarseCoolingProductionGameTests {
             FHMain.LOGGER.info("THERMAL_COARSE_COOLING_RESULT,coldSampleTick={},reloadedSampleTick={},rootPeakBytes={}",
                     coldSample[0], sample.airSampleTick(), MinecraftThermalInput.thermalBudgetPeakBytes());
             watchedChunk = null;
+            RegionalRetirementObservation.end();
             ContinuousAirProductionGameTests.useItem(helper, fire, Items.IRON_SHOVEL);
             ThermalConvergenceScenes.force(helper, origin, 16, false);
             ThermalConvergenceScenes.force(helper, controlOrigin, 16, false);

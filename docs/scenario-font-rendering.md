@@ -58,6 +58,6 @@ This lifecycle does not add an executor. Resource preparation uses Minecraft's r
 
 ## Validation
 
-Automated coverage under `src/test/java/com/teammoeg/frostedheart/content/scenario/client/gui/layered/font/` verifies parsing, bounds, metrics, exact mask colors, malformed input, duplicate precedence, cache hits, color separation, the 4096-entry cap, LRU eviction, concurrent same-key publication, provider precedence, snapshot replacement, failed-preparation retention, stale-glyph removal, and continued old-snapshot drawing.
+The former automated suite under `src/test/java/com/teammoeg/frostedheart/content/scenario/client/gui/layered/font/` covered parsing, bounds, metrics, exact mask colors, malformed input, duplicate precedence, cache hits, color separation, the 4096-entry cap, LRU eviction, concurrent same-key publication, provider precedence, snapshot replacement, failed-preparation retention, stale-glyph removal, and continued old-snapshot drawing. JUnit sources were removed on 2026-10-19 at the user's request; that historical coverage is no longer a runnable suite.
 
 A clean client restart is required for post-change `GC.class_histogram` and JFR measurements. Before any scenario text is opened, there should be no per-Unihex-glyph `BufferedImage` population and the active snapshot cache should contain zero rendered variants. After text is rendered, the cache must remain at or below 4096 entries.

@@ -31,10 +31,11 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.network.NetworkEvent;
 
 public final class FHBodyDataSyncPacket implements CMessage {
-    private static final byte VERSION = 1;
+    private static final byte VERSION = 2;
 
     private final short environmentDeciC;
     private final short coreCentiC;
+    private final short displayDeciC;
 
     public FHBodyDataSyncPacket(Player player) {
         PlayerTemperatureData data = PlayerTemperatureData
@@ -44,12 +45,14 @@ public final class FHBodyDataSyncPacket implements CMessage {
         coreCentiC = quantize(
                 data == null ? 37.0F : data.getAbsoluteCoreBodyTemp(),
                 100.0F);
+        displayDeciC = quantize(data == null ? -20.0F : data.getDisplayTemperatureC(), 10.0F);
     }
 
     public FHBodyDataSyncPacket(FriendlyByteBuf buffer) {
         buffer.readByte();
         environmentDeciC = buffer.readShort();
         coreCentiC = buffer.readShort();
+        displayDeciC = buffer.readShort();
     }
 
     @Override
@@ -57,6 +60,7 @@ public final class FHBodyDataSyncPacket implements CMessage {
         buffer.writeByte(VERSION);
         buffer.writeShort(environmentDeciC);
         buffer.writeShort(coreCentiC);
+        buffer.writeShort(displayDeciC);
     }
 
     @Override
@@ -65,7 +69,8 @@ public final class FHBodyDataSyncPacket implements CMessage {
             Player player = ClientUtils.getPlayer();
             if (player == null) return;
             PlayerTemperatureData.getCapability(player).ifPresent(data ->
-                    data.applyClientThermalSync(environmentDeciC / 10.0F, coreCentiC / 100.0F));
+                    data.applyClientThermalSync(environmentDeciC / 10.0F, coreCentiC / 100.0F,
+                            displayDeciC / 10.0F));
         });
         context.get().setPacketHandled(true);
     }

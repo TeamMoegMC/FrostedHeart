@@ -1,7 +1,7 @@
 # 城镇建筑：数据、恢复与世界绑定
 
-- Status: Partial — 源码与 28 个真实 Forge 功能场景、独立进程 seed/migrate/read 已核对；图形客户端与长时负载尚未完整验证。
-- Last verified: 2026-10-23
+- Status: Partial — 当前同步已通过36项统一Forge回归及住宅/狩猎站/矿场真实渲染；独立进程seed/migrate/read保留原资格，远程多客户端与长时负载未完整验证。
+- Last verified: 2026-11-07（同步与GUI）；2026-10-23（独立进程迁移/重开）
 - Scope: 玩家队伍的六类逻辑建筑、持久化、名册关联、核心生命周期、结构与环境刷新、管理视图。
 - Code anchors: `TownBuildingStore`, `BuildingRecordsCodec`, `TownBuildingTypes`, `TownBuildingChangeEvent`, `AbstractTownBuilding`, `TeamTown`, `TownAssignments`, `AbstractTownBuildingBlockEntity`, `LoadedTownWorld`, `BlockScanner`, `SchedulerQueue`。
 
@@ -65,6 +65,8 @@
 所有变化都使该栋记录缓存失效；类型说明其余哪些工作需要重做。调用处通过 `requiresSpaceRecheck()`、`affectsAvailability()` 表达用途。`updateBatch(Runnable)` 在一批字段应用完成后合并发布一次；未变化的 setter 和相同最终名册不增加建筑版本。这里没有要求读者计算数字位掩码。
 
 store 以 `changeVersion` 与 `encodedVersion` 判断单栋缓存是否过期。元数据修复、迁移、维度确认和 pending 提升通过独立通知使 town/TEAM 变脏，即使没有可运行建筑也会保存。`codecCalls()` 统计持久编码执行次数，`metadataVersion()` 用于核对元数据变化；它们不表示文件写入次数或总耗时。
+
+`TownBuildingStore.setListeners`的元数据回调同时传递`viewChanged`：普通已解析记录增删为false，维度确认、恢复摘要移除和pending提升为true。两类都保留保存与派生拓扑通知；只有增量无法表达的管理元数据变化才安排完整管理视图。普通新增、替换与拆除沿既有`REGISTRATION`及建筑增量同步，同队其他建筑GUI不再因这些操作清空城镇数据。显示保留与基线恢复规则见[管理视图](persistence-and-runtime.md#管理视图)。
 
 ## 核心生命周期与维度
 

@@ -48,6 +48,10 @@ import com.teammoeg.frostedheart.content.world.features.LayeredDiskFeature;
 import com.teammoeg.frostedheart.content.world.features.ShrubTreeConfig;
 import com.teammoeg.frostedheart.content.world.features.ShrubTreeFeature;
 import com.teammoeg.frostedheart.content.world.features.SpacecraftFeature;
+import com.teammoeg.frostedheart.content.world.features.deposit.DepositFeature;
+import com.teammoeg.frostedheart.content.world.features.deposit.DepositRegions;
+import com.teammoeg.frostedheart.content.world.features.deposit.DepositDensity;
+import com.teammoeg.frostedheart.content.world.features.deposit.DepositBiomeSource;
 
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderGetter;
@@ -87,9 +91,22 @@ import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 
+@net.minecraftforge.fml.common.Mod.EventBusSubscriber(modid = FHMain.MODID, bus = net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus.MOD)
 @SuppressWarnings("unused")
 public class FHFeatures {
     public static final DeferredRegister<Feature<?>> FEATURES = DeferredRegister.create(ForgeRegistries.FEATURES, FHMain.MODID);
+
+    public static final RegistryObject<DepositFeature> DEPOSIT = register("deposit", DepositFeature::new, DepositFeature.Config.CODEC);
+
+    @net.minecraftforge.eventbus.api.SubscribeEvent
+    public static void registerDepositCodecs(net.minecraftforge.registries.RegisterEvent event) {
+        event.register(Registries.DENSITY_FUNCTION_TYPE, helper -> {
+            helper.register(new net.minecraft.resources.ResourceLocation(FHMain.MODID, "deposit_regions"), DepositRegions.CODEC.codec());
+            helper.register(new net.minecraft.resources.ResourceLocation(FHMain.MODID, "deposit_terrain"), DepositDensity.CODEC.codec());
+        });
+        event.register(Registries.BIOME_SOURCE, helper -> helper.register(
+                new net.minecraft.resources.ResourceLocation(FHMain.MODID, "deposit_biomes"), DepositBiomeSource.CODEC));
+    }
 
     public static final RegistryObject<ImprovedFreezeTopLayerFeature> FREEZE_TOP_LAYER = register("freeze_top_layer", ImprovedFreezeTopLayerFeature::new, NoneFeatureConfiguration.CODEC);
     public static final RegistryObject<ImprovedIceSpikeFeature> ICE_SPIKES = register("ice_spikes", ImprovedIceSpikeFeature::new, NoneFeatureConfiguration.CODEC);

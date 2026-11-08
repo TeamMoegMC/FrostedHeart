@@ -1,0 +1,152 @@
+{
+  "status": "completed for the stated Forge server scenarios",
+  "verified_date": "2026-11-06",
+  "author": "OpenAI Codex / GPT-6; primary implementation and production validation agent",
+  "production_anchors": [
+    "MaterialThermalLaw.initialBranch",
+    "ThermalCellArena.stageMaterialLaw",
+    "RegionalQuerySnapshot.materialPerturbationAtSlotC",
+    "WorkerPageStore.collectMaterialFrontier"
+  ],
+  "fixture": {
+    "source": "src/gametest/java/com/teammoeg/frostedheart/content/climate/thermal/runtime/minecraft/RiverThermalProductionGameTests.java",
+    "namespace": "frostedheart_river_thermal",
+    "java": 17,
+    "forge": "47.3.0",
+    "backend": "SHARED_GRID",
+    "river_length_blocks": 160,
+    "terrain_width_blocks": 21,
+    "water_width_blocks": 5,
+    "water_surface_y": 199,
+    "bank_height_above_water_blocks": 1,
+    "biome": "minecraft:frozen_river",
+    "captured_natural_temperature_c": -23.700000762939453,
+    "sample_distances_from_river_origin_blocks": [4, 16, 32, 64, 96, 128, 152],
+    "distance_note": "Distance markers are measured from the west end of each river. The 128 marker is approximately 127m from the tower/source center.",
+    "scenes": [
+      "Actual formed T1 generator, real team registration, coal inventory and ordinary machine ticks. Temperature/range start at steady level 1; fuel use is not bypassed.",
+      "Actual coal-fuelled campfire, extinguished with the normal shovel interaction after 200 ticks.",
+      "Identical loaded river with no heat source."
+    ],
+    "settings": {
+      "thermalMemoryTargetMiB": 128,
+      "continuousAirCpuBudgetMsPerSecond": 1000,
+      "airHeatCapacityJPerBlockK": 1200,
+      "airMixingWPerBlockK": 96,
+      "farFieldConductanceWPerK": 7747.2298793470545,
+      "dormantTemperatureHalfLifeSeconds": 30,
+      "daylight_cycle_during_observation": false,
+      "random_tick_speed_during_observation": 3
+    }
+  },
+  "normal_20tps_comparison": {
+    "observation_ticks": 3600,
+    "final_result_elapsed_ticks_including_capture": 3610,
+    "before": {
+      "log": "build/river-thermal-raised-baseline20.log",
+      "required_failed": 1,
+      "failure": "The deliberate regression assertion detects remote material activation, after recording infrared and cleaning up.",
+      "maximum_recorded_far_material_temperature_rise_k": 18.700000762939453,
+      "generator_coal_initial": 32,
+      "generator_coal_final": 28,
+      "enabled_sources_final": 1,
+      "thermal_registered_bytes_final": 116665218,
+      "regions_final": 155,
+      "degraded_regions_final": 1,
+      "first_observed_pulse_bank_at_128_marker_tick": 700,
+      "first_observed_pulse_water_at_128_marker_tick": 1200,
+      "far_water_enthalpy_j": 1732779.9949645996,
+      "far_water_enthalpy_note": "Equals the material law's natural-temperature initialization H; this reading does not show transported generator heat entering the remote water.",
+      "infrared_128_marker": {
+        "tower_water_c": -5,
+        "tower_bank_c": -10,
+        "extinguished_pulse_water_c": -5,
+        "extinguished_pulse_bank_c": -10,
+        "untouched_water_raw": -32768,
+        "untouched_bank_raw": -32768
+      },
+      "thermal_save_or_worker_errors": 0,
+      "shutdown_root_bytes": 0
+    },
+    "after": {
+      "log": "build/river-thermal-after-realtime20.log",
+      "required_passed": 1,
+      "generator_coal_initial": 32,
+      "generator_coal_final": 28,
+      "enabled_sources_final": 1,
+      "local_tower_floor_assertion": "passed: ordinary local environment retains at least natural + 9.5C at temperature level 1",
+      "far_material_records_at_96_128_152_markers": "none in either heated scene throughout the sampled window",
+      "infrared_128_marker_raw_all_scenes_water_and_bank": -32768,
+      "thermal_registered_bytes_final": 6414784,
+      "regions_final": 2,
+      "degraded_regions_final": 0,
+      "thermal_save_or_worker_errors": 0,
+      "shutdown_root_bytes": 0
+    },
+    "measurement_limits": [
+      "INVALID (-32768) means no tracked material/analytic display sample. It is not a measured -20C water temperature; the client uses blue as a placeholder.",
+      "Registered bytes are end-of-scene accounting, including then-pending work. They are not peak heap, CPU usage or a general multiplayer performance qualification.",
+      "Weather wind noise is not deterministic across fresh JVMs: final reported windScale was 1.0 before and 1.008 after. The material rule, scene geometry and thermal configuration were otherwise retained."
+    ]
+  },
+  "long_behavior_check": {
+    "log": "build/river-thermal-after-long.log",
+    "clock": "lockstep: actual Forge ticks with already-submitted worker cuts drained between ticks",
+    "observation_ticks": 12000,
+    "simulated_seconds": 600,
+    "required_passed": 1,
+    "far_material_records_at_96_128_152_markers": "none in either heated scene",
+    "infrared_128_marker_raw_all_scenes_water_and_bank": -32768,
+    "generator_coal_final": 21,
+    "thermal_registered_bytes_final": 6446848,
+    "thermal_save_or_worker_errors": 0,
+    "shutdown_root_bytes": 0,
+    "scope": "Spatial/lifecycle behavior, not wall-clock service capacity."
+  },
+  "additional_regressions": [
+    {
+      "log": "build/river-thermal-material-regressions.log",
+      "required_passed": 9,
+      "scope": "Eight material-runtime tests: sensible/latent energy, ACK and conversion, exact checkpoints, replacement/mass/state identity, freezing restart and palette/snapshot isolation; one contact-graph check across three Section boundaries.",
+      "thermal_save_or_worker_errors": 0,
+      "shutdown_root_bytes": 0
+    },
+    {
+      "log": "build/river-thermal-retention-infrared-final.log",
+      "required_passed": 4,
+      "scope": "Two infrared region-removal/shrink tests; exposed-sky cooling; actual ground latent-energy release after extinguishing.",
+      "observed_live_ground_release_j": 6.678961353143677,
+      "thermal_save_or_worker_errors": 0,
+      "shutdown_root_bytes": 0
+    }
+  ],
+  "retained_nonpassing_investigations": [
+    {
+      "log": "build/river-river-before.log",
+      "result": "Original flat-bank 3600-tick scene passed before the fix. It established that initial phase formulas alone do not imply hundred-meter propagation; raising the bank by one block produced the reported behavior."
+    },
+    {
+      "log": "build/river-thermal-raised-before.log",
+      "result": "Early long lockstep log ends at elapsed 6700 with remote water/bank records, but has no final result or normal shutdown. It is partial evidence only."
+    },
+    {
+      "log": "build/river-thermal-retention-infrared-regressions.log",
+      "result": "Three of four checks passed; old ground test failed after admission tightened. Its fixture implicitly searched surrounding generated terrain. The revised fixture explicitly places nine dirt blocks on the actual room boundary and first asserts a real phase publication; the original post-extinguish H-decrease requirement is retained."
+    }
+  ],
+  "package": {
+    "path": "build/river-thermal-20261106/libs/frostedheart-1.20.1-0.7.9.jar",
+    "bytes": 14593843,
+    "implementation_version": "1.20.1-0.7.9",
+    "current_main_classes": 3734,
+    "missing_main_classes": 0,
+    "gametest_classes_in_production_jar": 0,
+    "javap_verified_methods": ["MaterialThermalLaw.initialBranch", "RegionalQuerySnapshot.materialPerturbationAtSlotC"],
+    "build_log": "build/river-thermal-package.log"
+  },
+  "limits": [
+    "Actual Forge server world, production source/worker/material ownership and production infrared record codec were exercised. This is not a complete companion-modpack or client framebuffer acceptance test.",
+    "Existing saved latent records were not erased or migrated. The change governs further material admission while preserving their current energy and phase contracts.",
+    "No fresh cross-JVM restart campaign or general server capacity campaign was performed for this admission-only change; the existing material checkpoint regressions were rerun."
+  ]
+}

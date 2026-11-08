@@ -1,0 +1,13 @@
+// Each baseline owns compiler outputs while its server JVMs are using them.
+gradle.beforeProject { project ->
+    project.buildDir = new File(project.property('thermalBaselineBuildDirectory').toString())
+    if (project.hasProperty('thermalPrecompiledDirectory')) {
+        project.afterEvaluate {
+            def compiled = new File(project.property('thermalPrecompiledDirectory').toString())
+            project.sourceSets.main.output.classesDirs.setFrom(project.file(project.property('thermalMainClassesDirectory')))
+            project.sourceSets.main.output.resourcesDir = new File(compiled, 'resources/main')
+            project.sourceSets.gameTest.output.classesDirs.setFrom(new File(compiled, 'classes/java/gameTest'))
+            project.sourceSets.gameTest.output.resourcesDir = new File(compiled, 'resources/gameTest')
+        }
+    }
+}

@@ -97,7 +97,7 @@ public final class ThermalInfraredGameTests {
         wire(helper, full);
         player.setPos(player.getX()+16, player.getY(), player.getZ());
         InfraredSnapshot moved = sample(player, full, false, full.presence());
-        helper.assertTrue(moved.full() && moved.centerChunkX() == full.centerChunkX()+1, "server detects moved baseline");
+        helper.assertTrue(!moved.full() && moved.centerChunkX() == full.centerChunkX()+1, "server rebases an overlapping window");
         helper.succeed();
     }
 
@@ -542,7 +542,7 @@ public final class ThermalInfraredGameTests {
     }
 
     private static void measureSurfaceRequests(ServerPlayer player, InfraredSnapshot baseline) {
-        // One real source scene, 100 sequential client-carried baselines; no server observer state.
+        // Capture-only microprofile. C2S, ACK and compression are measured by InfraredBandwidthGameTests.
         for (boolean full : new boolean[]{false, true}) {
             // Keep JIT compilation out of the measured request window. The level tick and
             // client-carried baseline stay fixed, just as in the measured calls below.
@@ -568,7 +568,7 @@ public final class ThermalInfraredGameTests {
                 }
             } finally { wire.release(); }
             Arrays.sort(nanos);
-            FHMain.LOGGER.info("Surface request sample: warmup=256, full={}, count=100, capture median={} ms, p95={} ms, responses={}, wire={} bytes",
+            FHMain.LOGGER.info("Surface request sample: warmup=256, full={}, count=100, capture median={} ms, p95={} ms, responses={}, snapshotS2cBody={} bytes (excludes C2S/ACK/framing/compression)",
                     full, nanos[50]/1e6, nanos[94]/1e6, responses, bytes);
         }
     }
@@ -676,8 +676,8 @@ public final class ThermalInfraredGameTests {
                 var response=new FHResponseInfraredViewDataSyncPacket(b);
                 h.assertTrue(!b.isReadable() && response.firstPart()==(part==0) && response.lastPart()==(part==count-1),"part boundaries");
                 h.assertTrue(response.snapshot().readable()==s.readable(),"independent control flags");
-                h.assertTrue(response.snapshot().storedEpoch()==s.storedEpoch(),"stored material revision survives each part");
-                h.assertTrue(Arrays.equals(response.snapshot().fieldPages(),s.fieldPages()),"each part retains the final field footprint");
+                h.assertTrue(response.snapshot().storedEpoch()==(part==count-1?s.storedEpoch():0),"LAST commits the stored material revision");
+                h.assertTrue(Arrays.equals(response.snapshot().fieldPages(),part==count-1?s.fieldPages():new long[0]),"LAST carries the final field footprint once");
                 response.encode(copy);
                 h.assertTrue(Arrays.equals(original,ByteBufUtil.getBytes(copy)),"response must preserve complete wire data");
             }

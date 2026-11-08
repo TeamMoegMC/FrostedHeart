@@ -1,11 +1,13 @@
 # 世界气候与环境温度
 
 - Status: `Current`
-- Last verified: `2026-09-25`
+- Last verified: `2026-11-07`（红外编码去重、窗口重叠与带宽验证；`2026-11-06`核对慢响应与区域退出；`2026-11-05`核对红外开启、预报栏当前气候温度和同步接线）
 - Scope: 逻辑气候时钟、长期事件、局部白幕、自然/mesh/analytic 温度合成、红外视野、方块状态消费者
 - Primary code anchors: `WorldClockSource`, `WorldClimate`, `ClimateEventModel`, `ClimateEventTrack`, `InterpolationClimateEvent`, `WhiteCurtainDescriptor`, `WhiteCurtainFieldModel`, `WhiteCurtainInfo`, `WorldTemperature`, `BlockTemperatureModel`, `ThermalAnalyticField`, `ThermalAnalyticFieldIndex`, `MinecraftThermalInput.gameplayPassiveEnvironment`, `MinecraftThermalInput.gameplayCropEnvironment`, `MinecraftThermalInput.gameplayInfraredSnapshot`, `BlockScanner.RoomData.calculateTemperature`, `TownThermalProjection`, `MinecraftThermalInput.gameplayTownEnvironment`, `InfraredViewRenderer`
 
 本文只描述当前源码行为。所有温度若无特别说明均为摄氏度；“修正”表示摄氏度增量。
+
+当前公式与新热模拟引入前的旧玩法并不等价；保留原配方不代表原供暖、作物和玩家效果已还原。具体差异、公式反例和验证边界见[旧玩法数值对照](thermal-legacy-gameplay-parity.md)。
 
 正式运行时按请求的精确xyz求值区域共享空气场。旧`continuousAir`及`continuousAirBackend`选择项已经退役；当前配置、区域粗细档和保存合同见[运行时控制](thermal-runtime-control.md)。
 同 Brick 的空气不再只有一个温度；live/dormant 查询、依赖失效和新版空间存档见
@@ -27,6 +29,8 @@
 每个服务端维度 tick 的 START 阶段先调用 `WorldClimate.updateClock`。`dayTime` 停止时逻辑时钟也停止；时间向后跳时，`WorldClockSource.elapsedDayTimeTicks` 把它解释为跨到下一日相同日内时刻。每 20 game ticks 调用一次 `updateCache` 和 `trimTempEventStream`：每次都会检查并移除已经完全结束的白幕；逻辑小时变化时切换小时缓存并更新预报。小时变化或 `WorldClockSource.update` 检出的 `>20 dayTime ticks` 大跳都会向该维度玩家发送一次现有 `FHClimatePacket`，供客户端按同源 `clockDayTime` 重锚。
 
 `WorldClimate.DAY_CACHE_LENGTH` 为 `8`。内部 `dailyTempData` 保留前一日、当前日和未来日队列，并按 `populateDays` 的 `size <= DAY_CACHE_LENGTH` 条件填充。温度在同一气候小时内不插值更新，查询值整小时保持不变。
+
+预报栏当前温度读取 `FHClimatePacket` 新增的 `climateDeciC`（0.1°C的short），来自玩家区块的 `WorldClimate.getTemp(ChunkPos)`，客户端存于 `ClientClimateData.climateTemperatureC`。它含当前普通气候及该区块白幕的合成，排除维度、生物群系、海拔、局部篝火/房间与辐射；是天气系统的气候基准，不是叠加全部条件后的室外空气实测。沿用上述气候同步及登录/重生/切维度同步，数字表示上次同步的当前地点气候样本。以前这里复用了玩家局部空气，室内供暖会抬高天气栏读数；现已分开。温度球仍显示局部空气与辐射折算的合成值，见[玩家显示合同](player-temperature.md#player-facing-values)。
 
 ## 2. 长期事件模型
 
@@ -230,14 +234,16 @@ Generator 的半径/温差来自 `GeneratorData.getRadius/getTempMod` 和 `Gener
 
 `MinecraftThermalInput.gameplayInfraredSnapshot`通过`BlockBrickLayout.materialNodeMask`
 读取材料本体节点的H→T，包括普通材料、相变平台与相变后的状态。楼梯本体不再与空气
-共用温度；实际Air和休眠Air均温不作为材料基础。材料本体H/分支/时间另存于format 5，
+共用温度；实际Air和休眠Air均温不作为材料基础。材料本体H/分支/时间另存于format 6，
 不通过Air均温恢复。旧相变池和旧存档兼容读取已移除。
 
 活动Brick优先使用当前材料发布；未驻留的Brick可直接读取已加载Chunk中
 `DormantChunkThermalState.materials`的既有材料记录，并验证当前BlockState一致。
 这与温度计使用同一`MaterialSectionState.read`关系。活动Page正在更新时不以旧记录覆盖它。
 活动模拟关闭后，保存的材料温度按`DormantThermalCooling`投影后显示；不创建新Page或第二份H。
-空气与普通材料共用默认1800游戏秒温差半衰期，相变材料保留潜热平台。
+空气与普通材料共用源码默认30游戏秒温差半衰期，相变材料保留潜热平台；旧配置中的显式值仍优先。
+普通余温低于0.5°C后由捕获/有限维护释放，相变和未消费输入继续按其责任保留。
+具体退出、保存与红外删除合同见[余温生命周期](thermal-residual-lifecycle.md)。
 当前Section中心自然温度近似整个休眠区间；不回放天气历史，也不累计服务器停止的现实时间。
 
 局部几何变化不等于材料温度消失。红外和`sampleMaterial`读取`ThermalPageHandle.lastPublication()`
@@ -246,19 +252,26 @@ Generator 的半径/温差来自 `GeneratorData.getRadius/getTempMod` 和 `Gener
 当Page发布先于查询缓冲完成切换时，`sampleMaterial`可从`previousPublication`读取未改变方块，
 但必须同时匹配当前BlockState，并要求查询拓扑版本早于新Page；旧slot在新拓扑中复用后不能被误读。
 红外通过`collectMaterialChangesSince`一次展开到共用的64个long（512 bytes）临时位图，
-只重发受影响Brick，不为每Page/玩家保存额外温度。被删除或A→Air→A替换的旧物体不会保温串值；
+只重发受影响Brick，不为每Page/玩家保存额外物理温度状态。下述有界编码缓存仅用于显示去重。
+被删除或A→Air→A替换的旧物体不会保温串值；
 整段替换仍排除整段旧材料。这不允许空气传输查询复用已失效的几何路线。
 
 `storedEpoch`只用于同步变化：客户端在完整响应的最后一片提交后回传编号，服务端按Section
 变化编号更新，删除记录和替换/重载Chunk也会清除旧热色。编号不写入存档；协议不保留旧格式读取。
 协议另带`storedSampleTick`，LAST时一起提交。即使记录未编辑，两个时刻的量化温度不同也会更新
-对应Brick；没有量化变化且没有解析场刷新时不产生重复响应。自然温度变动会使Section显示基准失效。
+对应Brick。解析场重新计算后，`InfraredDisplayCache`逐字节比较最终量化的编码记录，
+没有热色变化时只回复ACK；材料变化、自然温度变化和场缩小/删除仍产生需要的更新。
+客户端回传最后在LAST提交的`knownDisplayRequestId`，仅匹配该基准才允许省略已有记录。
+相同世界Page的编码由多个观察者共享；全服缓存计量上限8MiB、最多256个观察基准，
+淘汰仅导致重发，不影响温度权威。离线、换维度、Level卸载和停服释放相关引用。
 
-有材料且无场时显示材料温度；无材料且无场时发送`Short.MIN_VALUE`。客户端在已有
-材料或解析场Page覆盖的窗口内使用`MIN_TEMP=-20`的蓝色**占位**，不把-20当实测值。
-若整个窗口尚无任何覆盖，客户端保留原场景并等待后续响应，不把初始化的全INVALID纹理
-渲染为短暂全蓝画面；首次获得覆盖后才从零开始展开扫描。真正不高于色标下限的有效温度
-仍按原色标呈蓝色。全窗口自然背景估计、729值背景包和第二张背景纹理已删除。
+有材料且无场时显示材料温度；无材料且无场时发送`Short.MIN_VALUE`。客户端对缺失值
+使用`MIN_TEMP=-20`的蓝色**占位**，不把-20当实测值。`InfraredViewRenderer.toggleInfraredView()`
+切换开关后，扫描半径仅由`open`推进或收回，不以材料或解析场Page覆盖作为开启条件；
+附近没有篝火、整个窗口没有温度覆盖或首个响应尚未到达时也能展开扫描。首次捕获前按需
+创建全INVALID显示纹理；重新进入世界时会清除复用mirror中的旧样本。后续材料/解析场响应
+直接更新已有显示，覆盖变空不关闭视野。真正不高于色标下限的有效温度仍按原色标呈蓝色。
+全窗口自然背景估计、729值背景包和第二张背景纹理已删除。
 
 命中场的块中心使用`ThermalAnalyticFieldIndex.Sample`合成。能量塔仍是
 `max(base, naturalAir + getTempMod())`保底；有冷材料也执行，较热材料不被降低。
@@ -270,6 +283,19 @@ OVERRIDE不需要这项读取。场合成后统一量化0.25°C，保留原prior
 客户端仍用单张`GL_R16I 144³`最终显示纹理、一个direct mirror和部分Page上传scratch。
 稳定窗口每40 ticks错峰请求；无场窗口按材料epoch增量，场窗口重算上次/当前场Page并集，
 使关闭或缩小范围后恢复材料/蓝底。材料presence不会在客户端直接擦掉场热色。
+跨Section移动且窗口仍重叠时，`InfraredWindow`保留旧144³镜像的绝对位置重叠，
+只补进入区域和发生变化的记录；进入位置初始化为INVALID。无重叠远跳、失效或新generation
+仍使用full。移动后的本地GPU纹理在LAST一次完整上传，网络节省不等于省掉该上传。
+同一客户端最多一个未完成请求，慢响应和分片接收期间不换requestId，也不因跨Section移动
+取消该响应；完成后再请求当前窗口。服务端无变化或暂未取得一致快照时仍发送ACK，
+只结束等待而不改变既有热色。41..59tick是缺少完整基准时在完成回复后的重试节奏，
+不是丢弃慢响应的超时。ACK正文只有requestId与flags；掩码按空/稀疏/完整选择，
+分包的presence、场footprint和休眠版本只在LAST发送。两端都需要实现该回复合同，
+详见[网络合同](data-lifecycle-and-integration.md#network-and-consumers)与
+[带宽记录](validation/infrared-bandwidth-2026-11-07.json)。
+`QueryPublication.installRegions()`同时标记退出区域的旧Page/Brick范围与新区域范围；
+同Page仍有其他材料、区域完全退出或同一region缩小时，旧范围也进入下一次增量回包。
+已无材料与解析场的Brick发送显式INVALID，清除客户端旧热色，不依赖重新登录或整页presence改变。
 并发发布导致Page/slot/cursor不一致时，整份读取最多重试两次；仍未读到一致cut则不发送响应，
 客户端保留已提交的显示，下一次按原节奏请求，不把读竞争编码成材料删除。
 全局物理cut稳定invalid或超过40 ticks时

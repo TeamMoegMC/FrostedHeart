@@ -1,0 +1,173 @@
+{
+  "status": "verified for listed Forge fixtures; not a global optimum or live WAN measurement",
+  "verifiedDate": "2026-11-07",
+  "modVersion": "0.7.9",
+  "measurement": {
+    "compressionThresholdBytes": 256,
+    "packetPath": "CMessage encode; actual Forge toVanillaPacket; PLAY packet ID; CompressionEncoder; Varint21LengthFieldPrepender",
+    "scope": "both C2S and S2C including compact ACK; excludes TCP/IP, retransmissions, live sockets and client GL rendering",
+    "scene": "constant OVERRIDE CUBE field, radius 24 blocks; movement by one Section; fixed game tick during each synchronous sample loop",
+    "baselineNote": "before optimization algorithms, with last-committed-request token plumbing already added for the shared fixture",
+    "timing": "System.nanoTime capture elapsed, not pure CPU; paired paths alternate within the same process/state after 32 warmup pairs",
+    "allocation": "enabled Java ThreadMXBean thread allocation counter around the capture call"
+  },
+  "beforeLog": "build/infrared-bandwidth-before-20261107.log",
+  "afterLog": "build/infrared-bandwidth-delivery-20261107.log",
+  "requiredTestsPassed": 20,
+  "comparisons": {
+    "constant-field": {
+      "polls": 24,
+      "beforeFramedBytes": 250961,
+      "afterFramedBytes": 3456,
+      "reductionPercent": 98.62289359701309
+    },
+    "move-one-section": {
+      "polls": 1,
+      "beforeFramedBytes": 5659,
+      "afterFramedBytes": 237,
+      "reductionPercent": 95.81198091535606
+    }
+  },
+  "pairedCapture": {
+    "samplesPerPath": 64,
+    "uncachedP50us": 4930.5,
+    "cachedP50us": 4332.1,
+    "p50ReductionPercent": 12.136700131832468,
+    "uncachedP95us": 9590.0,
+    "cachedP95us": 9186.9,
+    "uncachedAllocatedBytesPerQuery": 22504.0,
+    "cachedAllocatedBytesPerQuery": 17600.0,
+    "allocationReductionPercent": 21.7916814788482
+  },
+  "observerCache": {
+    "observers": 100,
+    "pages": 64,
+    "accountedBytes": 622384,
+    "pageIncrease": 64
+  },
+  "cacheLimits": {
+    "accountedBytes": 8388608,
+    "observerBaselines": 256,
+    "meaning": "encoded immutable Pages are shared; accounting includes metadata estimates, not a heap bound"
+  },
+  "beforeScenes": {
+    "move-one-section": {
+      "scene": "move-one-section",
+      "polls": 1,
+      "c2sBody": 217,
+      "s2cBody": 16366,
+      "c2sFrames": 243,
+      "s2cFrames": 5416,
+      "dataParts": 1,
+      "acks": 0,
+      "p50us": 6931.5,
+      "p95us": 6931.5,
+      "compressionThreshold": 256
+    },
+    "constant-field": {
+      "scene": "constant-field",
+      "polls": 24,
+      "c2sBody": 5208,
+      "s2cBody": 527232,
+      "c2sFrames": 5832,
+      "s2cFrames": 245129,
+      "dataParts": 24,
+      "acks": 0,
+      "p50us": 1681.7,
+      "p95us": 2744.3,
+      "compressionThreshold": 256
+    }
+  },
+  "afterScenes": {
+    "100-observers-constant": {
+      "scene": "100-observers-constant",
+      "polls": 100,
+      "c2sBody": 9200,
+      "s2cBody": 200,
+      "c2sFrames": 11700,
+      "s2cFrames": 2700,
+      "dataParts": 0,
+      "acks": 100,
+      "p50us": 4479.9,
+      "p95us": 7847.3,
+      "queryAllocatedBytes": 1760000,
+      "compressionThreshold": 256
+    },
+    "paired-uncached": {
+      "scene": "paired-uncached",
+      "polls": 64,
+      "c2sBody": 5888,
+      "s2cBody": 1404032,
+      "c2sFrames": 7488,
+      "s2cFrames": 652440,
+      "dataParts": 64,
+      "acks": 0,
+      "p50us": 4930.5,
+      "p95us": 9590.0,
+      "queryAllocatedBytes": 1440256,
+      "compressionThreshold": 256
+    },
+    "paired-cached": {
+      "scene": "paired-cached",
+      "polls": 64,
+      "c2sBody": 5888,
+      "s2cBody": 128,
+      "c2sFrames": 7488,
+      "s2cFrames": 1728,
+      "dataParts": 0,
+      "acks": 64,
+      "p50us": 4332.1,
+      "p95us": 9186.9,
+      "queryAllocatedBytes": 1126400,
+      "compressionThreshold": 256
+    },
+    "constant-field": {
+      "scene": "constant-field",
+      "polls": 24,
+      "c2sBody": 2208,
+      "s2cBody": 48,
+      "c2sFrames": 2808,
+      "s2cFrames": 648,
+      "dataParts": 0,
+      "acks": 24,
+      "p50us": 5214.5,
+      "p95us": 8243.0,
+      "queryAllocatedBytes": 422400,
+      "compressionThreshold": 256
+    },
+    "material-change-under-field": {
+      "scene": "material-change-under-field",
+      "polls": 1,
+      "c2sBody": 95,
+      "s2cBody": 121,
+      "c2sFrames": 120,
+      "s2cFrames": 147,
+      "dataParts": 1,
+      "acks": 0,
+      "p50us": 50652.8,
+      "p95us": 50652.8,
+      "queryAllocatedBytes": 3125280,
+      "compressionThreshold": 256
+    },
+    "move-one-section": {
+      "scene": "move-one-section",
+      "polls": 1,
+      "c2sBody": 92,
+      "s2cBody": 95,
+      "c2sFrames": 117,
+      "s2cFrames": 120,
+      "dataParts": 1,
+      "acks": 0,
+      "p50us": 5921.1,
+      "p95us": 5921.1,
+      "queryAllocatedBytes": 20760,
+      "compressionThreshold": 256
+    }
+  },
+  "limits": [
+    "100 observers are FakePlayer baselines, not 100 complete networked players.",
+    "Field composition still runs; caching suppresses unchanged encoded output, not the underlying temperature calculation.",
+    "Moved windows still upload the local GPU texture at LAST.",
+    "Actual WAN delay, client GL frames and full server gameplay capacity remain unmeasured."
+  ]
+}

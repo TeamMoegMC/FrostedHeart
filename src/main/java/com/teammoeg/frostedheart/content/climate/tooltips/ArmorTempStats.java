@@ -109,7 +109,7 @@ public class ArmorTempStats implements TooltipModifier {
 				}
 				Collection<AttributeModifier> wpattrs=stack.getAttributeModifiers(es.slot).get(FHAttributes.WIND_PROOF.get());
 				if(!wpattrs.isEmpty()) {
-					WindProofBySlot.computeIfAbsent(ClothData.sumAttributesPercentage(insattrs), func).add(es);
+					WindProofBySlot.computeIfAbsent(ClothData.sumAttributesPercentage(wpattrs), func).add(es);
 					hasWindProof=true;
 				}
 			}

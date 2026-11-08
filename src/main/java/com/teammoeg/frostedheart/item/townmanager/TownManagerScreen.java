@@ -136,10 +136,10 @@ public class TownManagerScreen extends PrimaryLayer implements ITownDataUpdateLi
     }
 
     /**
-     * 获取客户端缓存的城镇数据。数据由服务端定期全量同步，可能尚未到达。
+     * 获取客户端城镇视图；正常变化使用增量，同镇重同步期间保留已有显示。
      * <p>
-     * Gets the client-cached town data. Synced from the server periodically;
-     * may be null if no sync has arrived yet.
+     * Gets the current display view, retained during a same-town refresh.
+     * May be null before the first snapshot or after ownership changes.
      *
      * @return 城镇数据，可能为 null / town data, or null
      */

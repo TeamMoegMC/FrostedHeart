@@ -31,10 +31,13 @@ public final class ContinuousAirPrecisionProductionGameTests {
         level.setDayTime(6000);
         level.getGameRules().getRule(GameRules.RULE_DAYLIGHT).set(false, level.getServer());
         restoreReferenceClimate(helper, false);
-        BlockPos fire = ContinuousAirProductionGameTests.room(helper, helper.absolutePos(BlockPos.ZERO));
+        // GameTest's template origin is below ground; avoid its steep geothermal background.
+        BlockPos origin = new BlockPos(8192, 192, 8192);
+        ThermalConvergenceScenes.force(helper, origin, 8, true);
+        BlockPos fire = ThermalBaselineGameTests.room(helper, origin);
         long startedTick = level.getGameTime();
         BlockPos near = fire.above();
-        ContinuousAirProductionTiming.observe(helper, "precision_room", new BlockPos[]{near, near.east(4)}, 2600);
+        ContinuousAirProductionTiming.observe(helper, "precision_room", new BlockPos[]{near, near.east(3)}, 2600);
         FHMain.LOGGER.info("THERMAL_PRECISION_START,trial={},startedTick={},fire={},dayTime={},seed={}",
                 ContinuousAirSolver.TRANSPORT_TOLERANCE_C, startedTick, fire, level.getDayTime(), level.getSeed());
         var nearSample = new ThermalEnvironmentSample();
@@ -55,8 +58,12 @@ public final class ContinuousAirPrecisionProductionGameTests {
                 }
                 if (elapsed % 20 != 0) return;
                 ContinuousAirProductionGameTests.sampleAt(level, fire.getX() + .5, fire.getY() + 1.5, fire.getZ() + .5, nearSample);
-                ContinuousAirProductionGameTests.sampleAt(level, fire.getX() + 4.5, fire.getY() + 1.5, fire.getZ() + .5, farSample);
-                double rise = nearSample.airTemperatureC() - farSample.airTemperatureC();
+                ContinuousAirProductionGameTests.sampleAt(level, fire.getX() + 3.5, fire.getY() + 1.5, fire.getZ() + .5, farSample);
+                double nearC = nearSample.airAvailable() ? nearSample.airTemperatureC()
+                        : MinecraftThermalInput.gameplayPassiveEnvironment(level, near, WorldTemperature.naturalAir(level, near));
+                double farC = farSample.airAvailable() ? farSample.airTemperatureC()
+                        : MinecraftThermalInput.gameplayPassiveEnvironment(level, near.east(3), WorldTemperature.naturalAir(level, near.east(3)));
+                double rise = nearC - farC;
                 if (elapsed > 600 && elapsed <= 1200) peakRise[0] = Math.max(peakRise[0], rise);
                 if (elapsed == 1280) retainedRise[0] = rise;
                 if (elapsed >= 1300) {
@@ -67,13 +74,18 @@ public final class ContinuousAirPrecisionProductionGameTests {
                 previousRise[0] = rise;
                 FHMain.LOGGER.info("THERMAL_PRECISION_TRACE,toleranceC={},elapsedTicks={},worldTick={},sampleTick={},farSampleTick={},nearC={},farC={},riseC={},floorC={},naturalC={},wind={},climateSec={},basisTerms={},geometry={}",
                         ContinuousAirSolver.TRANSPORT_TOLERANCE_C, elapsed, level.getGameTime(), nearSample.airSampleTick(), farSample.airSampleTick(),
-                        nearSample.airTemperatureC(), farSample.airTemperatureC(), rise, WorldTemperature.material(level, fire.below()),
+                        nearC, farC, rise, WorldTemperature.material(level, fire.below()),
                         WorldTemperature.naturalAir(level, near), WorldClimate.getWind(level), WorldClimate.getSec(level),
                         nearSample.airBasisTerms(), MinecraftThermalInput.describeAirRead(level, near).split(",", 2)[0]);
-                if (elapsed >= 800) {
-                    helper.assertTrue(nearSample.airAvailable() && nearSample.airSampleTick() == farSample.airSampleTick()
-                            && level.getGameTime() - nearSample.airSampleTick() <= 40, "Actual room samples remain current and coherent");
+                helper.assertTrue(Double.isFinite(nearC) && Double.isFinite(farC), "Public queries remain finite through ordinary retirement");
+                if (elapsed >= 800 && elapsed <= 1200) {
+                    helper.assertTrue(nearSample.airAvailable() && level.getGameTime() - nearSample.airSampleTick() <= 40,
+                            "The heated source-side field stays current");
                 }
+                if (nearSample.airAvailable() && farSample.airAvailable())
+                    helper.assertTrue(nearSample.airSampleTick() == farSample.airSampleTick()
+                                    && level.getGameTime() - nearSample.airSampleTick() <= 40,
+                            "Two live samples in the same room remain current and coherent");
                 if (elapsed != 2600) return;
                 helper.assertTrue(peakRise[0] > .05, "Ordinary source power must enter the actual Air field; peak=" + peakRise[0]);
                 helper.assertTrue(retainedRise[0] > .005, "Actual room retains heat after extinguishing; rise=" + retainedRise[0]);
@@ -83,6 +95,7 @@ public final class ContinuousAirPrecisionProductionGameTests {
                 FHMain.LOGGER.info("THERMAL_PRECISION_RESULT,trial={},peakRiseC={},retainedRiseC={},finalRiseC={},coolingSamples={},downwardSamples={},stalledSamples={},worker={}",
                         ContinuousAirSolver.TRANSPORT_TOLERANCE_C, peakRise[0], retainedRise[0], rise, coolingSamples[0], downwardSamples[0], stalledSamples[0],
                         MinecraftThermalInput.describeWorkerProgress(level));
+                ThermalConvergenceScenes.force(helper, origin, 8, false);
                 helper.succeed();
             });
         }

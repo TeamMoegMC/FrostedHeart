@@ -27,6 +27,7 @@ import com.teammoeg.frostedheart.content.climate.thermal.mesh.AirBackingMeter;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialThermalLaw;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.PagePublication;
 import com.teammoeg.frostedheart.content.climate.thermal.persistence.DormantThermalCooling;
+import com.teammoeg.frostedheart.content.climate.thermal.persistence.ThermalRetentionPolicy;
 import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureTable;
 import com.teammoeg.frostedheart.content.climate.thermal.query.QueryPublication;
 
@@ -127,6 +128,69 @@ public final class MaterialSectionState {
 
     public long brickMask() {
         return brickMask;
+    }
+
+    /** A bounded scan records removals; publication copies survivors once and preserves their clocks. */
+    public final class Retirement {
+        private final long eligibleBricks, tick;
+        private final double naturalC, rate;
+        private final long[] removed = new long[64];
+        private final MaterialSample sample = new MaterialSample();
+        private int cursor, removedCount;
+        private long projectedTick = Long.MIN_VALUE;
+        private double fraction;
+
+        public Retirement(long eligibleBricks, long tick, double naturalC, double rate) {
+            this.eligibleBricks = eligibleBricks; this.tick = tick; this.naturalC = naturalC; this.rate = rate;
+        }
+
+        public boolean advance(int maximumRecords) {
+            int end = Math.min(size(), cursor + maximumRecords);
+            for (; cursor < end; cursor++) {
+                if ((eligibleBricks & 1L << brickIndex(position(cursor))) == 0) continue;
+                if (projectedTick != savedTick(cursor)) {
+                    projectedTick = savedTick(cursor);
+                    fraction = DormantThermalCooling.fraction(projectedTick, tick, rate);
+                }
+                read(cursor, law(cursor), tick, naturalC, rate, fraction, sample);
+                if (!ThermalRetentionPolicy.retains(sample.law(), sample.enthalpyJ(), sample.branch(), naturalC))
+                    remove(cursor);
+            }
+            return cursor == size();
+        }
+
+        /** Also used after verifying that a stored BlockState has really been replaced. */
+        public void remove(int index) {
+            long bit = 1L << (index & 63);
+            if ((removed[index >>> 6] & bit) == 0) { removed[index >>> 6] |= bit; removedCount++; }
+        }
+
+        public MaterialSectionState finish() {
+            if (removedCount == 0) return MaterialSectionState.this;
+            int count = size() - removedCount;
+            if (count == 0) return null;
+            short[] nextPositions = new short[count];
+            double[] nextEnergy = new double[count];
+            byte[] nextBranches = new byte[count];
+            int[] nextPalettes = new int[count];
+            long[] ticks = savedTicks == null ? null : new long[count];
+            for (int index = 0, next = 0; index < size(); index++) {
+                if ((removed[index >>> 6] & 1L << (index & 63)) != 0) continue;
+                nextPositions[next] = positions[index]; nextEnergy[next] = enthalpiesJ[index];
+                nextBranches[next] = branches[index]; nextPalettes[next] = paletteIndexes[index];
+                if (ticks != null) ticks[next] = savedTicks[index];
+                next++;
+            }
+            return new MaterialSectionState(nextPositions, nextEnergy, nextBranches, nextPalettes,
+                    stateIds, laws, savedTick, ticks);
+        }
+    }
+
+    public MaterialSectionState retain(long eligibleBricks, long tick, double naturalC, double rate) {
+        if ((brickMask & eligibleBricks) == 0) return this;
+        var retirement = new Retirement(eligibleBricks, tick, naturalC, rate);
+        retirement.advance(size());
+        return retirement.finish();
     }
 
     public static boolean contentEquals(MaterialSectionState first, MaterialSectionState second) {
@@ -506,11 +570,18 @@ public final class MaterialSectionState {
     public static Capture capture(PagePublication page, QueryPublication query,
             ThermalSignatureTable signatures, CaptureScratch scratch, boolean preserveRecordTimes,
             QueryPublication.ReadCursor cursor) {
+        return capture(page, query, signatures, scratch, preserveRecordTimes, cursor, -1L, Double.NaN);
+    }
+
+    public static Capture capture(PagePublication page, QueryPublication query,
+            ThermalSignatureTable signatures, CaptureScratch scratch, boolean preserveRecordTimes,
+            QueryPublication.ReadCursor cursor, long brickMask, double naturalC) {
         resetCapture(scratch);
         long tick = -1, sampledBricks = 0;
         boolean mixedTicks = false;
         int count = 0;
         for (int brick = 0; brick < 64; brick++) {
+            if ((brickMask & 1L << brick) == 0) continue;
             var payload = page.brick(brick);
             if (!payload.resolved() || payload.firstSlot() < 0) continue;
             sampledBricks |= 1L << brick;
@@ -527,6 +598,8 @@ public final class MaterialSectionState {
                 if (!read) {
                     return new Capture(false, 0, null);
                 }
+                if (scratch.sample.requestSequence() == 0 && !ThermalRetentionPolicy.retains(
+                        scratch.sample.law(), scratch.sample.enthalpyJ(), scratch.sample.branch(), naturalC)) continue;
                 if (tick >= 0 && tick != scratch.sample.sampleTick()) {
                     if (!preserveRecordTimes || scratch.recordTicks == null) {
                         return new Capture(false, 0, null);
@@ -558,6 +631,10 @@ public final class MaterialSectionState {
 
     /** Saving consumes the checkpoint's immutable bodies, without another query lease or live slot lookup. */
     public static Capture capture(RegionalCheckpoint.Section section, CaptureScratch scratch) {
+        return capture(section, scratch, Double.NaN);
+    }
+
+    public static Capture capture(RegionalCheckpoint.Section section, CaptureScratch scratch, double naturalC) {
         resetCapture(scratch);
         long tick = -1;
         long[] ticks = null;
@@ -566,6 +643,8 @@ public final class MaterialSectionState {
             var field = part.field();
             for (int ordinal = 0; ordinal < part.materialCount(); ordinal++) {
                 int body = part.materialBody(ordinal);
+                if (!field.materialWaiting(body) && !ThermalRetentionPolicy.retains(field.materialLaw(body),
+                        field.materialEnthalpyJ(body), field.materialBranch(body), naturalC)) continue;
                 long position = field.materialPosition(body);
                 int local = (net.minecraft.core.BlockPos.getX(position) & 15)
                         | (net.minecraft.core.BlockPos.getZ(position) & 15) << 4

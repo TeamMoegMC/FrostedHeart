@@ -861,7 +861,7 @@ public final class RegionalAirRuntime implements MaterialStateAccess {
                 region.workPolicy = old != null && old.workPolicy != null
                         ? exclusivePrevious && !continuingParents ? old.workPolicy : new RegionWorkPolicy(old.workPolicy) : new RegionWorkPolicy();
                 if (gridStep == 4 && (old == null || old.solver.gridStep() == 1)) region.workPolicy.coarse(targetTick, false);
-                if (old != null && gridStep != old.solver.gridStep())
+                if (TRACE && old != null && gridStep != old.solver.gridStep())
                     FHMain.LOGGER.info("THERMAL_REGION_POLICY,targetTick={},regionId={},event=preselect,fromStep={},toStep={},allowanceNs={},buildLimitNs={},{}",
                             targetTick, id, old.solver.gridStep(), gridStep, region.buildWorkAllowance,
                             buildWorkLimit(region.buildWorkAllowance), region.workPolicy.summary());
@@ -875,7 +875,7 @@ public final class RegionalAirRuntime implements MaterialStateAccess {
             region.publication.publish(null, targetTick, consumedSequence);
             if (continuingParents) solver.holdCandidateProjection();
             if (previous.isEmpty()) minimumParentTick = maximumParentTick = targetTick;
-            if (TRACE || minimumParentTick != targetTick || maximumParentTick != targetTick)
+            if (TRACE)
                 FHMain.LOGGER.info("THERMAL_REGION_TRANSFER,targetTick={},regionId={},parentCount={},parentMinTick={},parentMaxTick={},parentTimeAligned={},completedSequence={}",
                     targetTick, id, previous.size(), minimumParentTick, maximumParentTick,
                     minimumParentTick == targetTick && maximumParentTick == targetTick, region.consumedSequence());
@@ -912,8 +912,8 @@ public final class RegionalAirRuntime implements MaterialStateAccess {
             region.accept(frames[index], region.sampleTick(), region.consumedSequence());
             if (prepared && region.accepted().field().minimumQuality()) region.solver.releaseDetailedWorkspaces();
             if (prepared && region.workPolicy != null) {
-                boolean changed = region.workPolicy.installed(region.solver.gridStep(), region.sampleTick());
-                if (changed || TRACE) FHMain.LOGGER.info("THERMAL_REGION_POLICY,targetTick={},regionId={},event=installed,gridStep={},{}",
+                region.workPolicy.installed(region.solver.gridStep(), region.sampleTick());
+                if (TRACE) FHMain.LOGGER.info("THERMAL_REGION_POLICY,targetTick={},regionId={},event=installed,gridStep={},{}",
                         region.sampleTick(), region.id, region.solver.gridStep(), region.workPolicy.summary());
             }
         }

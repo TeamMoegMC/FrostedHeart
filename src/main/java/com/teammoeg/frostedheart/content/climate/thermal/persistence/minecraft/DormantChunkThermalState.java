@@ -68,7 +68,7 @@ public final class DormantChunkThermalState {
     // Air stores signed temperature excess in sixteenths of a degree, relative to savedNaturalC.
     // All short values are valid here, including MIN_VALUE (unlike infrared's missing marker).
     private static final int RESIDUAL_SCALE = 16;
-    private static final int PRUNE_RESIDUAL = 4; // Retain only residuals strictly above 0.25 C.
+    private static final int PRUNE_RESIDUAL = 8; // Half a degree in sixteenths; equality is retained.
     private static final int MAX_AIR_PAYLOAD_BYTES = 640;
     private static final long CACHE_INTERVAL_TICKS = 20L;
 
@@ -208,6 +208,18 @@ public final class DormantChunkThermalState {
         }
         entries[index] = entry;
         return true;
+    }
+
+    public SectionEntry air(int sectionY) { return entries[index(sectionY)]; }
+    public boolean hasPendingHeat() { return !pending.empty() || !coldPending.empty(); }
+
+    /** Both values come from the same main-thread maintenance cut. Older readers keep their arrays. */
+    public boolean commitRetirement(int sectionY, SectionEntry expectedAir, MaterialSectionState expectedMaterial,
+            SectionEntry nextAir, MaterialSectionState nextMaterial) {
+        if (air(sectionY) != expectedAir || materials(sectionY) != expectedMaterial) return false;
+        boolean changed = replace(sectionY, nextAir);
+        if (expectedMaterial != nextMaterial) { replaceMaterials(sectionY, nextMaterial); changed = true; }
+        return changed;
     }
 
     public MaterialSectionState materials(int sectionY) {
@@ -390,6 +402,8 @@ public final class DormantChunkThermalState {
             return null;
         }
         SectionEntry entry = entries[index];
+        entry = entry.retain(-1L, currentNaturalTemperatureC, gameTick, DormantThermalCooling.rate(halfLifeSeconds));
+        if (entry == null) return null;
         return new ThermalInputBatch.DormantAirCut(
                 entry,
                 currentNaturalTemperatureC,
@@ -514,7 +528,7 @@ public final class DormantChunkThermalState {
             double factor = DormantThermalCooling.factor(source.savedGameTick, tick, rate);
             short mean =
                     quantizeResidual(source.meanTemperatureC(brick, naturalC, factor) - naturalC);
-            boolean retained = Math.abs(mean) > PRUNE_RESIDUAL;
+            boolean retained = Math.abs(mean) >= PRUNE_RESIDUAL;
             int count = source.exactCount(brick);
             for (int n = 0; n < count; n++) {
                 short value =
@@ -529,7 +543,7 @@ public final class DormantChunkThermalState {
                 scratch.nodeResiduals[brick * 64 + n] = value;
                 scratch.nodeMasks[brick * 64 + n] =
                         source.blockMasks[source.nodeMaskOffsets[brick] + n];
-                retained |= Math.abs(value) > PRUNE_RESIDUAL;
+                retained |= Math.abs(value) >= PRUNE_RESIDUAL;
             }
             if (!retained) continue;
             mask |= 1L << brick;
@@ -596,6 +610,39 @@ public final class DormantChunkThermalState {
         }
 
         public AirFieldCheckpoint spatialAir() { return spatialAir; }
+
+        public SectionEntry retain(long eligibleBricks, double naturalC, long tick, double rate) {
+            if ((eligibleBricks & brickMask) == 0) return this;
+            if (spatialAir != null) {
+                var retained = spatialAir.retain(eligibleBricks, naturalC, tick, rate, savedGameTick);
+                return retained == spatialAir ? this : retained == null ? null
+                        : new SectionEntry(savedGameTick, savedNaturalC, retained);
+            }
+            double factor = DormantThermalCooling.factor(savedGameTick, tick, rate);
+            long retainedMask = brickMask;
+            for (int brick = 0; brick < 64; brick++) {
+                if ((brickMask & eligibleBricks & 1L << brick) == 0) continue;
+                boolean keep = false;
+                for (int node = 0; node <= exactCount(brick); node++)
+                    keep |= com.teammoeg.frostedheart.content.climate.thermal.persistence.ThermalRetentionPolicy.retains(
+                            temperature(residualAt(residuals, residualOffsets[brick] + node), naturalC, factor) - naturalC);
+                if (!keep) retainedMask &= ~(1L << brick);
+            }
+            if (retainedMask == brickMask) return this;
+            if (retainedMask == 0) return null;
+            var scratch = new CaptureScratch();
+            int nodes = 0;
+            for (int brick = 0; brick < 64; brick++) {
+                if ((retainedMask & 1L << brick) == 0) continue;
+                scratch.means[brick] = meanResidual(brick);
+                int count = exactCount(brick); scratch.counts[brick] = (byte) count; nodes += count;
+                for (int node = 0; node < count; node++) {
+                    scratch.nodeResiduals[brick * 64 + node] = residualAt(residuals, residualOffsets[brick] + 1 + node);
+                    scratch.nodeMasks[brick * 64 + node] = blockMasks[nodeMaskOffsets[brick] + node];
+                }
+            }
+            return fromScratch(savedGameTick, savedNaturalC, retainedMask, nodes, scratch);
+        }
 
         /** Immutable restored payload retained by either its chunk checkpoint or an input cut. */
         public void recordBacking(AirBackingMeter meter) {

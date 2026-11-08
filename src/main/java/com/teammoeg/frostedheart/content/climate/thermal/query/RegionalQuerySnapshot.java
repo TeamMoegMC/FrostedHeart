@@ -407,6 +407,15 @@ public final class RegionalQuerySnapshot {
         return body < 0 ? Double.NaN : materialTemperatureC(body);
     }
 
+    /** Natural phase relaxation retains its body, but must not recruit another untouched body. */
+    public double materialPerturbationAtSlotC(int slot, double naturalC) {
+        int body = template.bodyIndex(slot);
+        if (body < 0) return 0;
+        var law = template.laws[body];
+        double backgroundC = law.temperatureC(law.enthalpyAtTemperature(naturalC), law.initialBranch(naturalC));
+        return materialTemperatureC(body) - backgroundC;
+    }
+
     private RegionalQuerySnapshot(RegionalQuerySnapshot previous, long tick, long topology) {
         minimumInfraredEpoch = previous.minimumInfraredEpoch;
         template = previous.template; sampleTick = tick; topologyGeneration = topology;

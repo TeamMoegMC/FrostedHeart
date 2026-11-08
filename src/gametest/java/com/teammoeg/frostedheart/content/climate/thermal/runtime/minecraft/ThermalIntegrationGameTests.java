@@ -107,8 +107,12 @@ public final class ThermalIntegrationGameTests {
             level.setBlock(upper, full, 18);
             long[] key = {Long.MIN_VALUE};
             radiationPower(cache, lava, key);
-            cache.tick(0);
-            double covered = radiationPower(cache, lava, key);
+            double covered = 0.0D;
+            // A range covers up to 125 Bricks; initial capture is bounded to 64 per tick.
+            for (int captureTick = 0; captureTick < 3 && covered == 0.0D; captureTick++) {
+                cache.tick(captureTick);
+                covered = radiationPower(cache, lava, key);
+            }
             helper.assertTrue(covered > 0, "the actual lava Brick must be captured before dependency changes");
             level.setBlock(upper, Blocks.AIR.defaultBlockState(), 18);
             cache.tick(20);

@@ -361,16 +361,15 @@ public final class BrickTopologyCompiler {
                         view);
             }
         }
-        // Existing FarField eligibility is direct sky at the absent upper Page.
-        if ((brick >>> 4) == 3
-                && view.brickAtWorld(x, y + 4, z) == null
+        // The computational boundary can end at any Brick, not only at the Section ceiling.
+        if (view.brickAtWorld(x, y + 4, z) == null
                 && owner.coverageSlot >= 0) {
             for (int i = 0; i < 16; i++) {
                 int blockIndex = BlockBrickLayout.faceBlock(1, 3, i),
                         slot = owner.airSlotAt(blockIndex);
                 int column =
                         ((x + (blockIndex & 3)) & 15) | ((z + (blockIndex >>> 2 & 3)) & 15) << 4;
-                if (slot < 0 || view.firstExposedLocalY(page, column) > 15) continue;
+                if (slot < 0 || view.firstExposedLocalY(page, column) > ((brick >>> 4) * 4 + 3)) continue;
                 int v =
                         signatures.ventilation(
                                 cut.get(BlockBrickLayout.pageBlock(brick, blockIndex)));

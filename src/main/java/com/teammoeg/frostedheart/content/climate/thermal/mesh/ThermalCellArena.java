@@ -388,15 +388,10 @@ public final class ThermalCellArena implements MaterialStateAccess {
         materialProfileIds[slot] = profileId;
         materialIncarnations[slot] = Math.incrementExact(nextMaterialIncarnation);
         nextMaterialIncarnation = materialIncarnations[slot];
-        materialBranches[slot] = MaterialThermalLaw.SENSIBLE;
+        materialBranches[slot] = law.initialBranch(initialTemperatureC);
         capacityJPerK[slot] = law.capacityJPerK();
         inverseCapacityKPerJ[slot] = 1 / law.capacityJPerK();
         enthalpyJ[slot] = law.enthalpyAtTemperature(initialTemperatureC);
-        if (law.heating() != null && initialTemperatureC >= law.heating().transitionTemperatureC())
-            materialBranches[slot] = MaterialThermalLaw.HEATING;
-        else if (law.cooling() != null
-                && initialTemperatureC <= law.cooling().transitionTemperatureC())
-            materialBranches[slot] = MaterialThermalLaw.COOLING;
     }
 
     public MaterialThermalLaw materialLaw(int slot) {

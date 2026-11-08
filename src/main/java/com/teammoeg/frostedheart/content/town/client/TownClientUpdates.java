@@ -38,18 +38,23 @@ public final class TownClientUpdates {
     }
 
     public static Optional<TeamTownData> currentTown() {
-        return ready ? CClientTeamDataManager.INSTANCE.getInstance().getOptional(FHSpecialDataTypes.TOWN_DATA)
-                : Optional.empty();
+        return CClientTeamDataManager.INSTANCE.getInstance().getOptional(FHSpecialDataTypes.TOWN_DATA);
     }
 
     public static void pending(UUID serverHolderId) {
+        boolean sameTown = serverHolderId != null && serverHolderId.equals(holderId);
         holderId = serverHolderId;
         ready = false;
+        if (!pendingRequest || !sameTown) {
+            ticksUntilRequest = 20;
+            retryTicks = 20;
+        }
         pendingRequest = true;
-        ticksUntilRequest = 20;
-        CClientTeamDataManager.INSTANCE.getInstance().removeData(FHSpecialDataTypes.TOWN_DATA);
-        com.teammoeg.frostedheart.content.town.observation.TownOperationalStatusClientCache.reset();
-        TeamTownData.fireClientDataChanged();
+        if (!sameTown) {
+            CClientTeamDataManager.INSTANCE.getInstance().removeData(FHSpecialDataTypes.TOWN_DATA);
+            com.teammoeg.frostedheart.content.town.observation.TownOperationalStatusClientCache.reset();
+            TeamTownData.fireClientDataChanged();
+        }
     }
 
     public static void install(UUID serverHolderId, TeamTownData candidate) {

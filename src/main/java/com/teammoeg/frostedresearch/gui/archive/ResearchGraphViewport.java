@@ -43,8 +43,13 @@ import com.teammoeg.frostedresearch.gui.archive.graph.ResearchGraphProjection;
 import com.teammoeg.frostedresearch.gui.archive.graph.ResearchGraphSnapshot;
 import com.teammoeg.frostedresearch.gui.archive.graph.ResearchTypeIdNormalizer;
 import com.teammoeg.frostedresearch.research.Research;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
+import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.profiling.ProfilerFiller;
 import org.joml.Matrix4f;
 
@@ -61,16 +66,30 @@ final class ResearchGraphViewport extends PanZoomViewport {
     private static final double NODE_WIDTH = ResearchGraphLayoutEngine.NODE_WIDTH;
     private static final double NODE_HEIGHT = ResearchGraphLayoutEngine.NODE_HEIGHT;
     private static final int TOOL_SIZE = 20;
+    private static final int ICON_SIZE = 16;
+    private static final int MIN_ICON_SIZE = 8;
+    private static final int MIN_HIT_SIZE = 12;
+    private static final Style TITLE_STYLE = Style.EMPTY;
+    private static final int TITLE_LINE_HEIGHT = 9;
+    private static final int TITLE_TEXT_HEIGHT = 8;
+    private static final int MIN_ELLIPSIS_WIDTH = 48;
+    private static final long ZOOM_DURATION_NANOS = 150_000_000L;
 
     private final ResearchWorkspaceState state;
     private final ResearchArchiveViewCache viewCache;
     private final ResearchNavigationController navigation;
     private final Runnable navigationChanged;
-    private final boolean ownsViewCache;
     private final ResearchGraphLayoutEngine layoutEngine = new ResearchGraphLayoutEngine();
     private final Set<String> fittedResearchTypes = new HashSet<>();
     private final Button fitButton;
     private final Button focusButton;
+    private int renderedTitleCount;
+    private int titlePlanBuildCount;
+    private int renderedIconSize = ICON_SIZE;
+    private double cardExpansion;
+    @Nullable
+    private ZoomMotion zoomMotion;
+    private boolean applyingZoomMotion;
     private ResearchGraphSnapshot snapshot = ResearchGraphSnapshot.of(List.of(), 0L);
     private ResearchGraphLayout layout = layoutEngine.layout(snapshot);
     private ResearchGraphProjection projection = ResearchGraphProjection.forResearchType(snapshot, "*");
@@ -88,11 +107,17 @@ final class ResearchGraphViewport extends PanZoomViewport {
     private int renderedNodeCount;
     private int renderedEdgeRectCount;
     private int renderedGridRectCount;
+    private int renderedNodeWidth;
+    private int renderedNodeHeight;
+    private int viewportScreenX;
+    private int viewportScreenY;
+    private int renderOriginX;
+    private int renderOriginY;
+    private double renderZoom;
     private boolean renderPlanDirty = true;
     private boolean styleDirty = true;
     @Nullable
     private RenderPlanKey renderPlanKey;
-    private float renderPlanTextScale = 1.0F;
     private String renderPlanZoomLabel = "100%";
     @Nullable
     private NodeStyleKey nodeStyleKey;
@@ -101,33 +126,14 @@ final class ResearchGraphViewport extends PanZoomViewport {
     ResearchGraphViewport(
             UIElement parent,
             ResearchWorkspaceState state,
-            ResearchNavigationController navigation,
-            Runnable navigationChanged) {
-        this(parent, state, new ResearchArchiveViewCache(), navigation, navigationChanged, true);
-    }
-
-    ResearchGraphViewport(
-            UIElement parent,
-            ResearchWorkspaceState state,
             ResearchArchiveViewCache viewCache,
             ResearchNavigationController navigation,
             Runnable navigationChanged) {
-        this(parent, state, viewCache, navigation, navigationChanged, false);
-    }
-
-    private ResearchGraphViewport(
-            UIElement parent,
-            ResearchWorkspaceState state,
-            ResearchArchiveViewCache viewCache,
-            ResearchNavigationController navigation,
-            Runnable navigationChanged,
-            boolean ownsViewCache) {
         super(parent, ResearchWorkspaceState.MIN_ZOOM, ResearchWorkspaceState.MAX_ZOOM);
         this.state = Objects.requireNonNull(state, "state");
         this.viewCache = Objects.requireNonNull(viewCache, "viewCache");
         this.navigation = Objects.requireNonNull(navigation, "navigation");
         this.navigationChanged = Objects.requireNonNull(navigationChanged, "navigationChanged");
-        this.ownsViewCache = ownsViewCache;
         this.fitButton = new Button(
                 this,
                 Component.translatable("gui.frostedresearch.archive.fit"),
@@ -165,10 +171,16 @@ final class ResearchGraphViewport extends PanZoomViewport {
         focusButton.setPosAndSize(getWidth() - TOOL_SIZE * 2 - 8, 5, TOOL_SIZE, TOOL_SIZE);
     }
 
+    @Override
+    public void updateRenderInfo(int x, int y, double mouseX, double mouseY, float partialTicks) {
+        // The screen adapter's centering offset is supplied here, not by the CUI root's getScreenX/Y.
+        viewportScreenX = x + getX();
+        viewportScreenY = y + getY();
+        super.updateRenderInfo(x, y, mouseX, mouseY, partialTicks);
+    }
+
     void setDefinitions(List<Research> definitions, long revision) {
-        if (ownsViewCache) {
-            viewCache.setDefinitions(definitions);
-        }
+        zoomMotion = null;
         snapshot = ResearchGraphSnapshot.fromResearches(definitions, revision, FHResearch.editor);
         layout = layoutEngine.layout(snapshot);
         rebuildProjection();
@@ -183,6 +195,7 @@ final class ResearchGraphViewport extends PanZoomViewport {
     }
 
     void onResearchTypeChanged() {
+        zoomMotion = null;
         rebuildProjection();
         restoreOrFitCurrentCamera();
     }
@@ -197,6 +210,7 @@ final class ResearchGraphViewport extends PanZoomViewport {
     }
 
     void resizeViewport(int x, int y, int width, int height) {
+        zoomMotion = null;
         setPosAndSize(x, y, width, height);
         alignWidgets();
         invalidateRenderPlan();
@@ -235,7 +249,8 @@ final class ResearchGraphViewport extends PanZoomViewport {
                         view,
                         view.research().getIcon(),
                         position,
-                        projection.contextNodeIds().contains(id)));
+                        projection.contextNodeIds().contains(id),
+                        new NodeTitleLayout()));
             }
         }
         nodeSources = List.copyOf(nodes);
@@ -246,6 +261,8 @@ final class ResearchGraphViewport extends PanZoomViewport {
             ResearchGraphLayout.NodePosition child = layout.positions().get(edge.childId());
             if (parent != null && child != null) {
                 edges.add(new EdgeRenderSource(
+                        edge.parentId(),
+                        edge.childId(),
                         parent,
                         child,
                         projection.contextNodeIds().contains(edge.parentId())
@@ -273,7 +290,8 @@ final class ResearchGraphViewport extends PanZoomViewport {
             int height,
             Camera camera,
             RenderingHint hint) {
-        ensureRenderPlan(x, y, width, height, camera);
+        advanceZoomMotion();
+        ensureRenderPlan(x, y, width, height, getCamera());
         updateNodeStyles();
         Matrix4f matrix = graphics.pose().last().pose();
         ProfilerFiller profiler = net.minecraft.client.Minecraft.getInstance().getProfiler();
@@ -289,7 +307,7 @@ final class ResearchGraphViewport extends PanZoomViewport {
                     drawRect(shapes, matrix, renderedEdgeBuffer.get(i));
                 }
                 for (int i = 0; i < renderedNodeCount; i++) {
-                    drawNodeBackground(shapes, matrix, renderedNodeBuffer.get(i), camera.zoom());
+                    drawNodeBackground(shapes, matrix, renderedNodeBuffer.get(i));
                 }
             }
         } finally {
@@ -313,7 +331,7 @@ final class ResearchGraphViewport extends PanZoomViewport {
         }
         profiler.push("frostedresearch_graph_labels");
         try {
-            drawNodeLabels(graphics);
+            drawNodeTitles(graphics);
         } finally {
             profiler.pop();
         }
@@ -334,16 +352,33 @@ final class ResearchGraphViewport extends PanZoomViewport {
 
     private void ensureRenderPlan(int x, int y, int width, int height, Camera camera) {
         long presentationRevision = viewCache.presentationRevision();
+        double guiScale = Minecraft.getInstance().getWindow().getGuiScale();
         if (!renderPlanDirty && renderPlanKey != null
-                && renderPlanKey.matches(x, y, width, height, camera, presentationRevision)) {
+                && renderPlanKey.matches(x, y, width, height, camera, presentationRevision, guiScale)) {
             return;
         }
-        renderPlanKey = new RenderPlanKey(x, y, width, height, camera, presentationRevision);
-        renderPlanTextScale = nodeTextScale(camera.zoom());
+        renderPlanKey = new RenderPlanKey(x, y, width, height, camera, presentationRevision, guiScale);
+        renderZoom = camera.zoom();
+        // Snap the shared translation once. Panning must move all projects by the same pixels.
+        renderOriginX = (int) Math.round(x + width / 2.0D - camera.x() * renderZoom);
+        renderOriginY = (int) Math.round(y + height / 2.0D - camera.y() * renderZoom);
+        int scaledWidth = scaledNodeLength(NODE_WIDTH, camera.zoom());
+        int scaledHeight = scaledNodeLength(NODE_HEIGHT, camera.zoom());
+        renderedIconSize = Math.max(MIN_ICON_SIZE, Math.min(ICON_SIZE,
+                (int) Math.round(ResearchGraphLayoutEngine.LANE_SPACING * camera.zoom() - 4)));
+        cardExpansion = smoothStep((camera.zoom() - .24D) / .46D);
+        int tileSize = renderedIconSize + 2;
+        // At a distance, use spare column space for short names and retain a one-pixel edge corridor.
+        int compactWidth = Math.max(tileSize,
+                (int) Math.floor(ResearchGraphLayoutEngine.RANK_SPACING * camera.zoom()) - 1);
+        renderedNodeWidth = (int) Math.round(compactWidth + (scaledWidth - compactWidth) * cardExpansion);
+        renderedNodeHeight = Math.max(tileSize,
+                (int) Math.round(tileSize + (scaledHeight - tileSize) * cardExpansion));
         renderPlanZoomLabel = Math.round(camera.zoom() * 100.0D) + "%";
         rebuildGridPlan(x, y, width, height, camera);
         rebuildEdgePlan(x, y, width, height);
-        rebuildNodePlan(x, y, width, height, camera.zoom());
+        rebuildNodePlan(x, y, width, height);
+        invalidateNodeHitCache();
         renderPlanDirty = false;
         styleDirty = true;
         renderPlanBuildCount++;
@@ -355,20 +390,18 @@ final class ResearchGraphViewport extends PanZoomViewport {
         while (step < 18.0D) {
             step *= 2.0D;
         }
-        double originX = x + width / 2.0D - camera.x() * camera.zoom();
-        double originY = y + height / 2.0D - camera.y() * camera.zoom();
-        int firstX = (int) Math.floor((x - originX) / step);
-        int lastX = (int) Math.ceil((x + width - originX) / step);
+        int firstX = (int) Math.floor((x - renderOriginX) / step);
+        int lastX = (int) Math.ceil((x + width - renderOriginX) / step);
         for (int i = firstX; i <= lastX; i++) {
-            int lineX = (int) Math.round(originX + i * step);
+            int lineX = renderOriginX + (int) Math.round(i * step);
             if (lineX >= x && lineX < x + width) {
                 addGridRect(lineX, y, lineX + 1, y + height, ResearchArchiveLayer.COLOR_GRAPH_GRID);
             }
         }
-        int firstY = (int) Math.floor((y - originY) / step);
-        int lastY = (int) Math.ceil((y + height - originY) / step);
+        int firstY = (int) Math.floor((y - renderOriginY) / step);
+        int lastY = (int) Math.ceil((y + height - renderOriginY) / step);
         for (int i = firstY; i <= lastY; i++) {
-            int lineY = (int) Math.round(originY + i * step);
+            int lineY = renderOriginY + (int) Math.round(i * step);
             if (lineY >= y && lineY < y + height) {
                 addGridRect(x, lineY, x + width, lineY + 1, ResearchArchiveLayer.COLOR_GRAPH_GRID);
             }
@@ -378,83 +411,127 @@ final class ResearchGraphViewport extends PanZoomViewport {
     private void rebuildEdgePlan(int x, int y, int width, int height) {
         renderedEdgeRectCount = 0;
         for (EdgeRenderSource edge : edgeSources) {
-            int x1 = worldToScreenX(edge.parent.x() + NODE_WIDTH, x, width);
-            int y1 = worldToScreenY(edge.parent.y() + NODE_HEIGHT / 2.0D, y, height);
-            int x2 = worldToScreenX(edge.child.x(), x, width);
-            int y2 = worldToScreenY(edge.child.y() + NODE_HEIGHT / 2.0D, y, height);
-            int midX = (x1 + x2) / 2;
-            appendHorizontalPlan(x1, midX, y1, x, y, x + width, y + height, edge.color);
-            appendVerticalPlan(midX, y1, y2, x, y, x + width, y + height, edge.color);
-            appendHorizontalPlan(midX, x2, y2, x, y, x + width, y + height, edge.color);
+            int x1 = projectX(edge.parent.x() + NODE_WIDTH / 2.0D)
+                    - renderedNodeWidth / 2 + renderedNodeWidth;
+            int y1 = projectY(edge.parent.y() + NODE_HEIGHT / 2.0D);
+            int x2 = projectX(edge.child.x() + NODE_WIDTH / 2.0D)
+                    - renderedNodeWidth / 2;
+            int y2 = projectY(edge.child.y() + NODE_HEIGHT / 2.0D);
+            int midX = x1 + Math.floorDiv(x2 - x1, 2);
+            appendHorizontalPlan(x1, midX, y1, x, y, x + width, y + height, edge);
+            appendVerticalPlan(midX, y1, y2, x, y, x + width, y + height, edge);
+            appendHorizontalPlan(midX, x2, y2, x, y, x + width, y + height, edge);
         }
     }
 
-    private void rebuildNodePlan(int x, int y, int width, int height, double zoom) {
-        int nodeWidth = scaledNodeLength(NODE_WIDTH, zoom);
-        int nodeHeight = scaledNodeLength(NODE_HEIGHT, zoom);
+    private int projectX(double worldX) {
+        return renderOriginX + (int) Math.round(worldX * renderZoom);
+    }
+
+    private int projectY(double worldY) {
+        return renderOriginY + (int) Math.round(worldY * renderZoom);
+    }
+
+    private void rebuildNodePlan(int x, int y, int width, int height) {
+        int nodeWidth = renderedNodeWidth;
+        int nodeHeight = renderedNodeHeight;
+        int iconFrameSize = Math.min(nodeHeight, renderedIconSize + 2 + (int) Math.round(6 * cardExpansion));
+        // Share one border so the nameplate visibly belongs to its icon at every zoom.
+        int titleFrameOffset = iconFrameSize - 1;
+        int textInset = 1 + (int) Math.round(3 * cardExpansion);
+        int titleFrameWidth = nodeWidth - titleFrameOffset;
+        int textWidth = Math.max(1, titleFrameWidth - textInset * 2);
+        boolean twoLinesFit = TITLE_LINE_HEIGHT + TITLE_TEXT_HEIGHT <= nodeHeight - 2;
+        long presentationRevision = viewCache.presentationRevision();
         renderedNodeCount = 0;
+        renderedTitleCount = 0;
         for (NodeRenderSource source : nodeSources) {
             ResearchGraphLayout.NodePosition position = source.position;
-            int nodeX = worldToScreenX(position.x(), x, width);
-            int nodeY = worldToScreenY(position.y(), y, height);
+            int nodeX = projectX(position.x() + NODE_WIDTH / 2.0D) - nodeWidth / 2;
+            int nodeY = projectY(position.y() + NODE_HEIGHT / 2.0D) - nodeHeight / 2;
             if (nodeX >= x + width || nodeY >= y + height
-                    || nodeX + nodeWidth <= x || nodeY + nodeHeight <= y) {
-                continue;
+                    || nodeX + nodeWidth <= x || nodeY + nodeHeight <= y) continue;
+            NodeRenderData node;
+            if (renderedNodeCount < renderedNodeBuffer.size()) node = renderedNodeBuffer.get(renderedNodeCount);
+            else {
+                node = new NodeRenderData();
+                renderedNodeBuffer.add(node);
             }
-            NodeRenderData renderedNode;
-            if (renderedNodeCount < renderedNodeBuffer.size()) {
-                renderedNode = renderedNodeBuffer.get(renderedNodeCount);
-            } else {
-                renderedNode = new NodeRenderData();
-                renderedNodeBuffer.add(renderedNode);
-            }
-            int inset = zoom >= 0.45D ? 2 : 1;
-            int iconSize = scaledNodeIconLength(zoom);
-            int iconX = nodeX + Math.max(2, scaledNodeLength(10.0D, zoom));
-            int iconY = nodeY + (nodeHeight - iconSize) / 2;
-            int textX = iconX + iconSize + Math.max(1, scaledNodeLength(4.0D, zoom));
-            int textWidth = Math.max(2, nodeX + nodeWidth - inset - textX);
-            int logicalTextWidth = Math.max(1, (int) Math.floor(textWidth / renderPlanTextScale));
-            String title = source.view.title();
-            String visibleTitle = getFont().plainSubstrByWidth(title, logicalTextWidth);
-            if (visibleTitle.isEmpty() && !title.isEmpty()) {
-                visibleTitle = title.substring(0, title.offsetByCodePoints(0, 1));
-            }
-            int renderedTextHeight = Math.max(
-                    1, (int) Math.ceil(getFont().lineHeight * renderPlanTextScale));
-            int textY = nodeY + (nodeHeight - renderedTextHeight) / 2;
-            int logicalTextX = Math.round(textX / renderPlanTextScale);
-            int logicalTextY = Math.round(textY / renderPlanTextScale);
-            renderedNode.setGeometry(
-                    source,
-                    nodeX,
-                    nodeY,
-                    nodeWidth,
-                    nodeHeight,
-                    iconX,
-                    iconY,
-                    iconSize,
-                    logicalTextX,
-                    logicalTextY,
-                    visibleTitle);
+            node.source = source;
+            node.x = nodeX;
+            node.y = nodeY;
+            node.width = nodeWidth;
+            node.height = nodeHeight;
+            node.iconFrameSize = iconFrameSize;
+            node.iconFrameY = nodeY + (nodeHeight - iconFrameSize) / 2;
+            node.iconX = nodeX + (iconFrameSize - renderedIconSize) / 2;
+            node.iconY = nodeY + (nodeHeight - renderedIconSize) / 2;
+            node.iconSize = renderedIconSize;
+            NodeTitleLayout title = source.titleLayout;
+            updateTitleLayout(source, textWidth, twoLinesFit, presentationRevision);
+            node.titleLine1 = title.line1;
+            node.titleLine2 = title.line2;
+            node.titleGlyphs1 = title.glyphs1;
+            node.titleGlyphs2 = title.glyphs2;
+            int lines = node.titleLine2.isEmpty() ? 1 : 2;
+            int textHeight = TITLE_TEXT_HEIGHT + TITLE_LINE_HEIGHT * (lines - 1);
+            node.titleX = nodeX + titleFrameOffset;
+            node.titleWidth = titleFrameWidth;
+            node.titleHeight = Math.min(nodeHeight, textHeight + textInset * 2);
+            node.titleY = nodeY + (nodeHeight - node.titleHeight) / 2;
+            // Keep text at its native size and on whole GUI pixels, independently of camera zoom.
+            node.fontX = node.titleX + textInset;
+            node.fontY = node.titleY + (node.titleHeight - textHeight) / 2;
+            if (!node.titleLine1.isBlank()) renderedTitleCount++;
             renderedNodeCount++;
         }
     }
 
+    /** One latest layout per source keeps panning independent of text measurement and allocation. */
+    private void updateTitleLayout(NodeRenderSource source, int width, boolean twoLinesFit, long revision) {
+        NodeTitleLayout layout = source.titleLayout;
+        if (layout.width == width && layout.twoLinesFit == twoLinesFit && layout.revision == revision) return;
+        String title = source.view.title();
+        String first = getFont().getSplitter().plainHeadByWidth(title, width, TITLE_STYLE);
+        String second = "";
+        if (first.length() < title.length()) {
+            if (twoLinesFit) {
+                // Prefer English word boundaries; CJK and long single words use glyph boundaries.
+                int space = first.lastIndexOf(' ');
+                if (space > 0) first = first.substring(0, space);
+                second = clipTitle(title.substring(first.length()).stripLeading(), width);
+            } else first = ellipsizeTitle(first, width);
+        }
+        layout.width = width;
+        layout.twoLinesFit = twoLinesFit;
+        layout.revision = revision;
+        layout.line1 = first;
+        layout.line2 = second;
+        layout.glyphs1 = FormattedCharSequence.forward(first, TITLE_STYLE);
+        layout.glyphs2 = second.isEmpty() ? FormattedCharSequence.EMPTY
+                : FormattedCharSequence.forward(second, TITLE_STYLE);
+        titlePlanBuildCount++;
+    }
+
     private void updateNodeStyles() {
         String selectedResearchId = state.selectedResearchId();
+        Research hovered = nodeAtMouse();
+        String hoveredResearchId = hovered == null ? null : hovered.getId();
         long stateRevision = viewCache.stateRevision();
         if (!styleDirty && nodeStyleKey != null
-                && nodeStyleKey.matches(selectedResearchId, cachedSearchQuery, stateRevision)) {
+                && nodeStyleKey.matches(selectedResearchId, hoveredResearchId, cachedSearchQuery, stateRevision)) {
             return;
         }
         for (int i = 0; i < renderedNodeCount; i++) {
             NodeRenderData node = renderedNodeBuffer.get(i);
             ResearchArchiveViewCache.View view = node.source.view;
-            boolean selected = node.source.id.equals(selectedResearchId);
-            boolean dimmed = !cachedSearchQuery.isEmpty()
-                    && !view.lowercaseSearchText().contains(cachedSearchQuery);
-            int border = selected ? ResearchArchiveLayer.COLOR_RED
+            boolean isSelected = node.source.id.equals(selectedResearchId);
+            boolean isHovered = node.source.id.equals(hoveredResearchId);
+            boolean matches = !cachedSearchQuery.isEmpty()
+                    && view.lowercaseSearchText().contains(cachedSearchQuery);
+            boolean dimmed = !cachedSearchQuery.isEmpty() && !matches && !isSelected && !isHovered;
+            int border = isSelected ? ResearchArchiveLayer.COLOR_RED
+                    : isHovered ? ResearchArchiveLayer.COLOR_GOLD
                     : view.completed() ? ResearchArchiveLayer.COLOR_TEAL
                     : view.active() ? ResearchArchiveLayer.COLOR_GOLD
                     : node.source.context ? 0xFF76796F : 0xFFAFA58E;
@@ -465,48 +542,62 @@ final class ResearchGraphViewport extends PanZoomViewport {
             }
             node.setStyle(border, paper, dimmed);
         }
-        nodeStyleKey = new NodeStyleKey(selectedResearchId, cachedSearchQuery, stateRevision);
+        for (int i = 0; i < renderedEdgeRectCount; i++) {
+            RectRenderData rect = renderedEdgeBuffer.get(i);
+            EdgeRenderSource edge = rect.edgeSource;
+            boolean focused = edge.connects(selectedResearchId) || edge.connects(hoveredResearchId);
+            rect.color = focused ? 0xFFD0B274 : edge.color;
+        }
+        nodeStyleKey = new NodeStyleKey(selectedResearchId, hoveredResearchId, cachedSearchQuery, stateRevision);
         styleDirty = false;
     }
 
     private void drawNodeBackground(
             ShapeTesslator shapes,
             Matrix4f matrix,
-            NodeRenderData node,
-            double zoom) {
-        shapes.fillRect(matrix, node.x, node.y, node.x + node.width, node.y + node.height, node.border);
-        int inset = zoom >= 0.45D ? 2 : 1;
-        if (node.width > inset * 2 && node.height > inset * 2) {
-            shapes.fillRect(matrix, node.x + inset, node.y + inset,
-                    node.x + node.width - inset, node.y + node.height - inset, node.paper);
-        }
-        if (node.width >= 7 && node.height >= 5) {
-            int stripeWidth = Math.max(1, Math.min(4, scaledNodeLength(4.0D, zoom)));
-            shapes.fillRect(matrix, node.x + inset, node.y + inset,
-                    node.x + inset + stripeWidth, node.y + node.height - inset, node.border);
-        }
+            NodeRenderData node) {
+        int iconPaper = node.dimmed ? 0xFF6B6D64 : node.source.context ? 0xFFBDB69F : 0xFFD6C8A6;
+        drawNodeFrame(shapes, matrix, node.x, node.iconFrameY, node.iconFrameSize, node.iconFrameSize,
+                node.border, iconPaper);
+        drawNodeFrame(shapes, matrix, node.titleX, node.titleY, node.titleWidth, node.titleHeight,
+                node.border, node.paper);
     }
 
-    private void drawNodeLabels(GuiGraphics graphics) {
-        if (renderedNodeCount == 0) {
-            return;
-        }
-        graphics.pose().pushPose();
-        try {
-            graphics.pose().scale(renderPlanTextScale, renderPlanTextScale, 1.0F);
-            for (int i = 0; i < renderedNodeCount; i++) {
-                NodeRenderData node = renderedNodeBuffer.get(i);
-                graphics.drawString(
-                        getFont(),
-                        node.visibleTitle,
-                        node.logicalTextX,
-                        node.logicalTextY,
-                        node.dimmed ? 0xFF43443F : ResearchArchiveLayer.COLOR_INK,
-                        false);
+    /** Two small cut-corner frames keep the icon mount distinct from its paper nameplate. */
+    private static void drawNodeFrame(ShapeTesslator shapes, Matrix4f matrix,
+            int x, int y, int width, int height, int border, int paper) {
+        shapes.fillRect(matrix, x + 1, y, x + width - 1, y + height, border);
+        shapes.fillRect(matrix, x, y + 1, x + width, y + height - 1, border);
+        shapes.fillRect(matrix, x + 1, y + 1, x + width - 1, y + height - 1, paper);
+    }
+
+    private String clipTitle(String title, int width) {
+        String prefix = getFont().getSplitter().plainHeadByWidth(title, width, TITLE_STYLE);
+        return prefix.length() == title.length() ? prefix : ellipsizeTitle(prefix, width);
+    }
+
+    private String ellipsizeTitle(String prefix, int width) {
+        // In a tiny name slot, keep useful letters instead of spending the slot on an ellipsis.
+        if (width < MIN_ELLIPSIS_WIDTH) return prefix;
+        int ellipsisWidth = getFont().width(FormattedCharSequence.forward("…", TITLE_STYLE));
+        return getFont().getSplitter().plainHeadByWidth(prefix, width - ellipsisWidth, TITLE_STYLE) + "…";
+    }
+
+    private void drawNodeTitles(GuiGraphics graphics) {
+        // Minecraft owns glyph baking/atlases; cached sequences use the same font as measurement.
+        Matrix4f matrix = graphics.pose().last().pose();
+        Font font = getFont();
+        for (int i = 0; i < renderedNodeCount; i++) {
+            NodeRenderData node = renderedNodeBuffer.get(i);
+            int color = node.dimmed ? 0xFF43443F : ResearchArchiveLayer.COLOR_INK;
+            font.drawInBatch(node.titleGlyphs1, node.fontX, node.fontY, color, false, matrix,
+                    graphics.bufferSource(), Font.DisplayMode.NORMAL, 0, LightTexture.FULL_BRIGHT);
+            if (!node.titleLine2.isEmpty()) {
+                font.drawInBatch(node.titleGlyphs2, node.fontX, node.fontY + TITLE_LINE_HEIGHT, color, false, matrix,
+                        graphics.bufferSource(), Font.DisplayMode.NORMAL, 0, LightTexture.FULL_BRIGHT);
             }
-        } finally {
-            graphics.pose().popPose();
         }
+        graphics.flush();
     }
 
     private void drawRect(ShapeTesslator shapes, Matrix4f matrix, RectRenderData rect) {
@@ -515,6 +606,7 @@ final class ResearchGraphViewport extends PanZoomViewport {
 
     @Override
     public boolean onMousePressed(MouseButton button) {
+        if (isMouseOver()) zoomMotion = null;
         if (super.onMousePressed(button)) {
             return true;
         }
@@ -533,7 +625,46 @@ final class ResearchGraphViewport extends PanZoomViewport {
     }
 
     @Override
+    public boolean onMouseScrolled(double scroll) {
+        if (!isMouseOver() || scroll == 0) return false;
+        Camera current = getCamera();
+        double target = zoomMotion == null ? current.zoom() : zoomMotion.targetZoom;
+        double requested = Math.max(getMinZoom(), Math.min(getMaxZoom(), target * Math.pow(getZoomStep(), scroll)));
+        if (requested == current.zoom()) {
+            zoomMotion = null;
+            return true;
+        }
+        zoomMotion = new ZoomMotion(current.zoom(), requested, screenToWorldX(getMouseX()), screenToWorldY(getMouseY()),
+                getMouseX(), getMouseY(), System.nanoTime());
+        fittedResearchTypes.add(state.researchTypeFilter());
+        return true;
+    }
+
+    private void advanceZoomMotion() {
+        ZoomMotion motion = zoomMotion;
+        if (motion == null) return;
+        double progress = Math.min(1.0D, (System.nanoTime() - motion.startedNanos) / (double) ZOOM_DURATION_NANOS);
+        double amount = smoothStep(progress);
+        double zoom = progress == 1.0D ? motion.targetZoom
+                : Math.exp(Math.log(motion.startZoom) + Math.log(motion.targetZoom / motion.startZoom) * amount);
+        if (progress == 1.0D) zoomMotion = null;
+        applyingZoomMotion = true;
+        try {
+            setCamera(new Camera(motion.worldX - (motion.localX - getWidth() / 2.0D) / zoom,
+                    motion.worldY - (motion.localY - getHeight() / 2.0D) / zoom, zoom));
+        } finally {
+            applyingZoomMotion = false;
+        }
+    }
+
+    private static double smoothStep(double value) {
+        double t = Math.max(0.0D, Math.min(1.0D, value));
+        return t * t * (3.0D - 2.0D * t);
+    }
+
+    @Override
     protected void onCameraChanged(Camera previous, Camera current, CameraChange change) {
+        if (!applyingZoomMotion) zoomMotion = null;
         state.setCamera(state.researchTypeFilter(), current);
         invalidateRenderPlan();
         invalidateNodeHitCache();
@@ -544,7 +675,7 @@ final class ResearchGraphViewport extends PanZoomViewport {
 
     @Override
     public void getTooltip(TooltipBuilder tooltip) {
-        if (fitButton.isMouseOver() || focusButton.isMouseOver()) {
+        if (toolAtMouse()) {
             super.getTooltip(tooltip);
             return;
         }
@@ -592,37 +723,53 @@ final class ResearchGraphViewport extends PanZoomViewport {
     }
 
     private void focusSelected() {
-        ResearchGraphLayout.NodePosition position = layout.positions().get(state.selectedResearchId());
+        String selectedResearchId = state.selectedResearchId();
+        ResearchGraphLayout.NodePosition position = selectedResearchId == null
+                ? null : layout.positions().get(selectedResearchId);
         if (position == null) {
             fitToVisible();
             return;
         }
-        centerOn(position.x() + NODE_WIDTH / 2.0D, position.y() + NODE_HEIGHT / 2.0D);
+        centerOn(new WorldBounds(position.x(), position.y(),
+                position.x() + NODE_WIDTH, position.y() + NODE_HEIGHT), Math.max(1.0D, getCamera().zoom()));
     }
 
     @Nullable
     private Research nodeAtMouse() {
-        if (!isMouseOver() || fitButton.isMouseOver() || focusButton.isMouseOver()) {
+        if (!isMouseOver() || isPanning() || toolAtMouse()) {
             return null;
         }
-        double mouseX = getMouseX();
-        double mouseY = getMouseY();
+        int x = viewportScreenX;
+        int y = viewportScreenY;
+        ensureRenderPlan(x, y, getWidth(), getHeight(), getCamera());
+        double mouseX = x + getMouseX();
+        double mouseY = y + getMouseY();
         if (nodeHitCache.matches(mouseX, mouseY)) {
             return nodeHitCache.result();
         }
-        double worldX = screenToWorldX(mouseX);
-        double worldY = screenToWorldY(mouseY);
         Research hit = null;
-        for (NodeRenderSource source : nodeSources) {
-            ResearchGraphLayout.NodePosition position = source.position;
-            if (worldX >= position.x() && worldX <= position.x() + NODE_WIDTH
-                    && worldY >= position.y() && worldY <= position.y() + NODE_HEIGHT) {
-                hit = source.view.research();
-                break;
+        double nearestDistance = Double.POSITIVE_INFINITY;
+        for (int i = 0; i < renderedNodeCount; i++) {
+            NodeRenderData node = renderedNodeBuffer.get(i);
+            int padX = Math.max(0, (MIN_HIT_SIZE - node.width) / 2);
+            int padY = Math.max(0, (MIN_HIT_SIZE - node.height) / 2);
+            if (mouseX >= node.x - padX && mouseX < node.x + node.width + padX
+                    && mouseY >= node.y - padY && mouseY < node.y + node.height + padY) {
+                double dx = mouseX - (node.x + node.width / 2.0D);
+                double dy = mouseY - (node.y + node.height / 2.0D);
+                double distance = dx * dx + dy * dy;
+                if (distance < nearestDistance) {
+                    hit = node.source.view.research();
+                    nearestDistance = distance;
+                }
             }
         }
         nodeHitCache.update(mouseX, mouseY, hit);
         return hit;
+    }
+
+    private boolean toolAtMouse() {
+        return fitButton.isMouseOver() || focusButton.isMouseOver();
     }
 
     private void invalidateNodeHitCache() {
@@ -637,11 +784,11 @@ final class ResearchGraphViewport extends PanZoomViewport {
             int minY,
             int maxX,
             int maxY,
-            int color) {
+            EdgeRenderSource edge) {
         if (clipHorizontalSegment(x1, x2, y, minX, minY, maxX, maxY, clippedSegment)) {
             addEdgeRect(
                     clippedSegment.x1(), clippedSegment.y1(),
-                    clippedSegment.x2() + 1, clippedSegment.y2() + 1, color);
+                    clippedSegment.x2() + 1, clippedSegment.y2() + 1, edge);
         }
     }
 
@@ -653,11 +800,11 @@ final class ResearchGraphViewport extends PanZoomViewport {
             int minY,
             int maxX,
             int maxY,
-            int color) {
+            EdgeRenderSource edge) {
         if (clipVerticalSegment(x, y1, y2, minX, minY, maxX, maxY, clippedSegment)) {
             addEdgeRect(
                     clippedSegment.x1(), clippedSegment.y1(),
-                    clippedSegment.x2() + 1, clippedSegment.y2() + 1, color);
+                    clippedSegment.x2() + 1, clippedSegment.y2() + 1, edge);
         }
     }
 
@@ -673,7 +820,7 @@ final class ResearchGraphViewport extends PanZoomViewport {
         renderedGridRectCount++;
     }
 
-    private void addEdgeRect(int x1, int y1, int x2, int y2, int color) {
+    private void addEdgeRect(int x1, int y1, int x2, int y2, EdgeRenderSource edge) {
         RectRenderData rect;
         if (renderedEdgeRectCount < renderedEdgeBuffer.size()) {
             rect = renderedEdgeBuffer.get(renderedEdgeRectCount);
@@ -681,7 +828,8 @@ final class ResearchGraphViewport extends PanZoomViewport {
             rect = new RectRenderData();
             renderedEdgeBuffer.add(rect);
         }
-        rect.set(x1, y1, x2, y2, color);
+        rect.set(x1, y1, x2, y2, edge.color);
+        rect.edgeSource = edge;
         renderedEdgeRectCount++;
     }
 
@@ -692,14 +840,6 @@ final class ResearchGraphViewport extends PanZoomViewport {
 
     static int scaledNodeLength(double worldLength, double zoom) {
         return Math.max(1, (int) Math.round(worldLength * zoom));
-    }
-
-    static int scaledNodeIconLength(double zoom) {
-        return Math.max(4, Math.min(16, scaledNodeLength(16.0D, zoom)));
-    }
-
-    static float nodeTextScale(double zoom) {
-        return (float) Math.max(0.25D, Math.min(1.0D, zoom));
     }
 
     int projectionBuildCountForTest() {
@@ -714,13 +854,21 @@ final class ResearchGraphViewport extends PanZoomViewport {
         return lastIconFlushCount;
     }
 
+    int titlePlanBuildCountForTest() {
+        return titlePlanBuildCount;
+    }
+
+    private record ZoomMotion(double startZoom, double targetZoom, double worldX, double worldY,
+                              double localX, double localY, long startedNanos) {}
+
     private record RenderPlanKey(
             int x,
             int y,
             int width,
             int height,
             Camera camera,
-            long presentationRevision) {
+            long presentationRevision,
+            double guiScale) {
 
         private boolean matches(
                 int currentX,
@@ -728,26 +876,31 @@ final class ResearchGraphViewport extends PanZoomViewport {
                 int currentWidth,
                 int currentHeight,
                 Camera currentCamera,
-                long currentPresentationRevision) {
+                long currentPresentationRevision,
+                double currentGuiScale) {
             return x == currentX
                     && y == currentY
                     && width == currentWidth
                     && height == currentHeight
                     && Objects.equals(camera, currentCamera)
-                    && presentationRevision == currentPresentationRevision;
+                    && presentationRevision == currentPresentationRevision
+                    && guiScale == currentGuiScale;
         }
     }
 
     private record NodeStyleKey(
             @Nullable String selectedResearchId,
+            @Nullable String hoveredResearchId,
             String searchQuery,
             long stateRevision) {
 
         private boolean matches(
                 @Nullable String currentSelectedResearchId,
+                @Nullable String currentHoveredResearchId,
                 String currentSearchQuery,
                 long currentStateRevision) {
             return Objects.equals(selectedResearchId, currentSelectedResearchId)
+                    && Objects.equals(hoveredResearchId, currentHoveredResearchId)
                     && searchQuery.equals(currentSearchQuery)
                     && stateRevision == currentStateRevision;
         }
@@ -758,13 +911,31 @@ final class ResearchGraphViewport extends PanZoomViewport {
             ResearchArchiveViewCache.View view,
             CIcon icon,
             ResearchGraphLayout.NodePosition position,
-            boolean context) {
+            boolean context,
+            NodeTitleLayout titleLayout) {
+    }
+
+    /** Bounded by projected nodes; replaced in place when typography inputs change. */
+    private static final class NodeTitleLayout {
+        private int width = -1;
+        private boolean twoLinesFit;
+        private long revision = -1;
+        private String line1;
+        private String line2;
+        private FormattedCharSequence glyphs1;
+        private FormattedCharSequence glyphs2;
     }
 
     private record EdgeRenderSource(
+            String parentId,
+            String childId,
             ResearchGraphLayout.NodePosition parent,
             ResearchGraphLayout.NodePosition child,
             int color) {
+
+        private boolean connects(@Nullable String researchId) {
+            return parentId.equals(researchId) || childId.equals(researchId);
+        }
     }
 
     private static final class RectRenderData {
@@ -773,6 +944,7 @@ final class ResearchGraphViewport extends PanZoomViewport {
         private int x2;
         private int y2;
         private int color;
+        private EdgeRenderSource edgeSource;
 
         private void set(int x1, int y1, int x2, int y2, int color) {
             this.x1 = x1;
@@ -792,37 +964,21 @@ final class ResearchGraphViewport extends PanZoomViewport {
         private int iconX;
         private int iconY;
         private int iconSize;
-        private int logicalTextX;
-        private int logicalTextY;
-        private String visibleTitle;
+        private int iconFrameSize;
+        private int iconFrameY;
+        private int titleX;
+        private int titleY;
+        private int titleWidth;
+        private int titleHeight;
+        private String titleLine1;
+        private String titleLine2;
+        private FormattedCharSequence titleGlyphs1;
+        private FormattedCharSequence titleGlyphs2;
+        private int fontX;
+        private int fontY;
         private int border;
         private int paper;
         private boolean dimmed;
-
-        private void setGeometry(
-                NodeRenderSource source,
-                int x,
-                int y,
-                int width,
-                int height,
-                int iconX,
-                int iconY,
-                int iconSize,
-                int logicalTextX,
-                int logicalTextY,
-                String visibleTitle) {
-            this.source = source;
-            this.x = x;
-            this.y = y;
-            this.width = width;
-            this.height = height;
-            this.iconX = iconX;
-            this.iconY = iconY;
-            this.iconSize = iconSize;
-            this.logicalTextX = logicalTextX;
-            this.logicalTextY = logicalTextY;
-            this.visibleTitle = visibleTitle;
-        }
 
         private void setStyle(int border, int paper, boolean dimmed) {
             this.border = border;

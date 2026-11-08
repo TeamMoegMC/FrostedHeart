@@ -1,0 +1,181 @@
+{
+  "status": "implemented; all selected checks passed",
+  "verified_date": "2026-11-07",
+  "author": "OpenAI Codex / GPT-6.1 Sol; primary implementation and validation agent",
+  "scope": "on-demand minimum temperature summaries and independent Air background; existing material-control corrections retained",
+  "production": {
+    "files": 8,
+    "net_added_physical_lines": 33,
+    "new_top_level_types": 0,
+    "new_task_types": 0,
+    "new_control_queues": 0,
+    "new_control_history": 0,
+    "fine_publications_prepare_minimum_summary": false,
+    "geometry_mapping_still_prepared": true,
+    "material_control": "Prepare once from the original immutable frame before its first control; retain original incremental pool/phase corrections",
+    "control_boundary": "Synchronous coordinator boundary; completion scratch reservation covers projection; no publication monitor held",
+    "quality_conversion": "Existing MINIMUM_LAYOUT job resumes the original projection and transport preparation from the same Accepted without consuming input or advancing physical time",
+    "air_background": "Original immutable geometry background retained directly by the reading; no live point-natural substitution",
+    "cut_interval_ticks": 20,
+    "configuration_defaults_changed": false,
+    "persistence_format_changed": false
+  },
+  "profile": {
+    "java": 17,
+    "heap": "4g",
+    "available_processors": 5,
+    "thermal_workers": 4,
+    "world_type": "minecraft:flat",
+    "world_seed": "755111011717574879",
+    "clock": "realtime20",
+    "memory_target_mib": 128,
+    "active_work_budget_ms_per_second": 1000,
+    "dormant_half_life_game_seconds": 30,
+    "reference_climate": "build/thermal-baselines/unified-replay-r5/curves.climate.dat",
+    "compile_log": "build/thermal-baselines/minimum-demand-r3/compile.log",
+    "test_subset_exclusions": [
+      "content/world/features/deposit",
+      "content/town"
+    ],
+    "exclusion_reason": "Existing local Forge-tool helper excludes deposit fixtures; the unrelated TownViewClientValidation stage-variable collision prevented full GameTest compilation"
+  },
+  "selection": {
+    "groups": 5,
+    "expected": 12,
+    "passed": 12,
+    "failed": 0,
+    "thermal_errors": 0,
+    "all_root_zero": true
+  },
+  "cases": [
+    {
+      "name": "grid-switch",
+      "namespace": "frostedheart_regional_grid_switch",
+      "expected": 1,
+      "passed": 1,
+      "failed": 0,
+      "thermal_errors": 0,
+      "root_zero": true,
+      "qualified": true,
+      "clock": "realtime20",
+      "result": "build/thermal-baselines/minimum-demand-r3/grid-switch.result.json"
+    },
+    {
+      "name": "materials",
+      "namespace": "frostedheart_material_runtime",
+      "expected": 8,
+      "passed": 8,
+      "failed": 0,
+      "thermal_errors": 0,
+      "root_zero": true,
+      "qualified": true,
+      "clock": "realtime20",
+      "result": "build/thermal-baselines/minimum-demand-r3/materials.result.json"
+    },
+    {
+      "name": "curves",
+      "namespace": "frostedheart_thermal_baseline",
+      "expected": 1,
+      "passed": 1,
+      "failed": 0,
+      "thermal_errors": 0,
+      "root_zero": true,
+      "qualified": true,
+      "clock": "realtime20",
+      "result": "build/thermal-baselines/minimum-demand-r3/curves.result.json"
+    },
+    {
+      "name": "background",
+      "namespace": "frostedheart_regional_background",
+      "expected": 1,
+      "passed": 1,
+      "failed": 0,
+      "thermal_errors": 0,
+      "root_zero": true,
+      "qualified": true,
+      "clock": "realtime20",
+      "result": "build/thermal-baselines/minimum-demand-r3/background.result.json"
+    },
+    {
+      "name": "reload",
+      "namespace": "frostedheart_retirement_reload",
+      "expected": 1,
+      "passed": 1,
+      "failed": 0,
+      "thermal_errors": 0,
+      "root_zero": true,
+      "qualified": true,
+      "clock": "realtime20",
+      "result": "build/thermal-baselines/minimum-demand-r3/reload.result.json"
+    }
+  ],
+  "same_frame": {
+    "quality_conversions": 2,
+    "material_controls": 14,
+    "maximum_temperature_difference_c": 0,
+    "maximum_energy_difference_j": 0,
+    "checks": [
+      "same sampleTick and geometry identity",
+      "independent background residual and frontier decisions",
+      "all minimum node energies and temperatures",
+      "material H, phase branches and waiting",
+      "Air cell-center queries"
+    ],
+    "production_shadow_computation": false,
+    "test_helper": "src/gametest/java/com/teammoeg/frostedheart/content/climate/thermal/solver/MinimumProjectionEquivalence.java"
+  },
+  "curve_comparisons": {
+    "latest_reference": "unified-replay-r6",
+    "latest_comparison_qualified": true,
+    "air_rows": 3120,
+    "material_rows": 1560,
+    "maximum_air_difference_c": 1.7212897773788427E-11,
+    "maximum_material_temperature_difference_c": 1.2434497875801753E-13,
+    "maximum_material_energy_difference_j": 6.693881005048752E-10,
+    "air_sample_tick_mismatches": 0,
+    "material_sample_tick_mismatches": 0,
+    "weather_and_radiation_difference": {
+      "airC": 1.7212897773788427E-11,
+      "naturalC": 0.0,
+      "radiantWPerM2": 0.0,
+      "wind": 0.0
+    },
+    "earlier_reference": "unified-replay-r5",
+    "earlier_comparison_qualified": false,
+    "earlier_maximum_air_difference_c": 3.3829712802443836,
+    "earlier_from_tick300_maximum_air_difference_c": 0.001088215020217831,
+    "earlier_material_availability_mismatches": 4,
+    "latest_raw": "build/thermal-baselines/minimum-demand-r3/comparison-old-r6.json",
+    "earlier_raw": "build/thermal-baselines/minimum-demand-r3/comparison-old-r5.json",
+    "interpretation": "Both historical references are retained. The earlier-reference startup difference matches the previously recorded unchanged-code replay variability. This does not resolve general startup repeatability.",
+    "environment_limit": "Historical runs used normal generation; current focused checks use a flat world with explicitly constructed local geometry. Natural, wind, radiation, Air sample ticks and availability matched in the local curve comparison."
+  },
+  "lifecycle": {
+    "actual_unload_reload_relight_passed": true,
+    "cooling_ticks_including_unloaded_wait": 3222,
+    "final_live_pages": 0,
+    "native_pending_and_root_released": true,
+    "new_cross_jvm_restart_campaign": false
+  },
+  "retained_attempts": [
+    {
+      "label": "minimum-demand-r1",
+      "status": "GameTest compilation failed before tests",
+      "reason": "Unrelated TownViewClientValidation declared a duplicate stage variable",
+      "production_compile_passed": true
+    },
+    {
+      "label": "minimum-demand-r2",
+      "status": "aborted before thermal tests",
+      "reason": "Normal-world startup remained at spawn preparation56%; server thread was in DistanceManager.FixedPlayerDistanceChunkTracker.runAllUpdates; switched only the focused test world to flat",
+      "thread_dump": "build/thermal-baselines/minimum-demand-r2/spawn-thread-dump.txt"
+    }
+  ],
+  "limits": [
+    "No claim of production code-line reduction: this change adds33 lines while removing normal-frame work/state allocations",
+    "The first material-control preparation completes synchronously on the coordinator; extreme phase-heavy regions were not newly benchmarked",
+    "No full29-case rerun, large-base speed percentage, full-pack/networked-client qualification or new cross-JVM campaign",
+    "Previously recorded startup-frame repeatability and closed-room retirement assertion remain separate outstanding work"
+  ],
+  "documentation": "docs/climate/thermal-runtime-control.md"
+}

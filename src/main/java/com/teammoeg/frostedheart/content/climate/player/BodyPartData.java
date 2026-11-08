@@ -35,7 +35,8 @@ public class BodyPartData {
     };
     public final ItemStackHandler clothes;
 	double bodyEnergyOffsetJ;
-	float feelingTemperatureC = 37.0F;
+    float exposureTemperatureC = 37.0F;
+    double exposureTransmission;
 
     BodyPartData(int max_count) {
         this.clothes = new ItemStackHandler(max_count) {
@@ -51,6 +52,8 @@ public class BodyPartData {
     }
 
     public void load(CompoundTag itemsTag, boolean energySchema) {
+        exposureTemperatureC = 37.0F;
+        exposureTransmission = 0.0D;
         if (itemsTag.contains("Size")) {
             clothes.deserializeNBT(itemsTag);
         }

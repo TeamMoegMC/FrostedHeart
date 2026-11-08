@@ -180,6 +180,10 @@ public final class MinecraftThermalInput implements AutoCloseable {
     static final int GAMEPLAY_ITEM_ENVIRONMENT_SAMPLES_PER_TICK = 64;
     private static final ThermalMemoryBudget MEMORY = new ThermalMemoryBudget(() ->
             FHConfig.COMMON.THERMAL_RUNTIME.thermalMemoryTargetMiB.get() * 1024L * 1024L);
+    // Main-thread reporting is shared across dimensions, just like the admission target.
+    private static final long RESOURCE_LOG_INTERVAL_NANOS = 60_000_000_000L;
+    private static long nextResourceLogNanos = System.nanoTime();
+    private static long reportedAdmissionRefusals;
     private static final RadiationService.Parameters RADIATION_PARAMETERS =
             new RadiationService.Parameters(
                     MAXIMUM_RADIATION_SECTIONS,
@@ -1069,6 +1073,13 @@ public final class MinecraftThermalInput implements AutoCloseable {
                         position.getX() + 0.5D, position.getY() + 0.5D, position.getZ() + 0.5D);
     }
 
+    public static InfraredSnapshot gameplayInfraredSnapshot(ServerPlayer player,
+            com.teammoeg.frostedheart.content.climate.network.FHRequestInfraredViewDataSyncPacket request) {
+        return captureInfraredSnapshot(player, request.forceFull(), request.knownGeneration(), request.knownCenter(),
+                request.lastEpoch(), request.knownPresence(), request.knownReadable(), request.knownFieldPages(),
+                request.knownStoredEpoch(), request.knownStoredSampleTick(), request.knownDisplayRequestId(), request.requestId());
+    }
+
     public static InfraredSnapshot gameplayInfraredSnapshot(
             ServerPlayer player,
             boolean forceFull,
@@ -1080,6 +1091,13 @@ public final class MinecraftThermalInput implements AutoCloseable {
             long[] knownFieldPages,
             long knownStoredEpoch,
             long knownStoredSampleTick) {
+        return captureInfraredSnapshot(player, forceFull, knownGeneration, knownCenter, lastEpoch, knownPresence,
+                knownReadable, knownFieldPages, knownStoredEpoch, knownStoredSampleTick, -1, -1);
+    }
+
+    private static InfraredSnapshot captureInfraredSnapshot(ServerPlayer player, boolean forceFull, long knownGeneration,
+            long knownCenter, int lastEpoch, long[] knownPresence, boolean knownReadable, long[] knownFieldPages,
+            long knownStoredEpoch, long knownStoredSampleTick, int knownDisplayRequestId, int requestId) {
         if (knownPresence.length != InfraredCapture.INFRARED_PRESENCE_WORDS
                 || knownFieldPages.length != 0
                         && knownFieldPages.length != InfraredCapture.INFRARED_PRESENCE_WORDS)
@@ -1099,7 +1117,11 @@ public final class MinecraftThermalInput implements AutoCloseable {
                 knownReadable,
                 knownFieldPages,
                 knownStoredEpoch,
-                knownStoredSampleTick);
+                knownStoredSampleTick, knownDisplayRequestId, requestId);
+    }
+
+    static InfraredDisplayCache.Statistics infraredDisplayStatistics() {
+        return infraredCapture == null ? new InfraredDisplayCache.Statistics(0, 0, 0) : infraredCapture.displayStatistics();
     }
 
     public static double materialTemperature(ServerLevel level, BlockPos position) {
@@ -1347,6 +1369,7 @@ public final class MinecraftThermalInput implements AutoCloseable {
         // A newly loaded chunk can replace a client's previous stored display,
         // including when the new chunk has no material records at all.
         setDormantState(chunk, state);
+        DormantThermalMaintenance.loaded(chunk);
         MinecraftThermalInput input = active(level);
         if (input == null && state != null && !state.coldPending().empty())
             input = start(level, chunk.getPos().getMiddleBlockPosition(level.getMinBuildHeight()));
@@ -1382,12 +1405,26 @@ public final class MinecraftThermalInput implements AutoCloseable {
             input.physicalSources.beforeChunkUnload(chunk, level.getGameTime());
             input.radiationOcclusion.onChunkUnload(chunk);
         }
+        DormantThermalMaintenance.unload(chunk);
     }
 
     public static void tickLevel(ServerLevel level) {
         MinecraftThermalInput input = active(level);
         if (input == null) input = retryStartup(level);
         if (input != null) input.tick();
+        reportResourcePressure();
+    }
+
+    private static void reportResourcePressure() {
+        long now = System.nanoTime();
+        if (now - nextResourceLogNanos < 0) return;
+        nextResourceLogNanos = now + RESOURCE_LOG_INTERVAL_NANOS;
+        long refusals = MEMORY.admissionRefusals();
+        if (refusals != reportedAdmissionRefusals) {
+            FHMain.LOGGER.info("THERMAL_RESOURCE_PRESSURE,newAdmissionRefusals={},totalAdmissionRefusals={},usedBytes={},peakBytes={},targetBytes={}",
+                    refusals - reportedAdmissionRefusals, refusals, MEMORY.usedBytes(), MEMORY.peakUsedBytes(), MEMORY.limitBytes());
+            reportedAdmissionRefusals = refusals;
+        }
     }
 
     private static MinecraftThermalInput retryStartup(ServerLevel level) {
@@ -1411,6 +1448,7 @@ public final class MinecraftThermalInput implements AutoCloseable {
     }
 
     public static void onPlayerLogout(ServerPlayer player) {
+        if (infraredCapture != null) infraredCapture.forget(player.getUUID());
         MinecraftThermalInput input = active(player.serverLevel());
         if (input != null) {
             if (input.radiation != null) {
@@ -1420,6 +1458,7 @@ public final class MinecraftThermalInput implements AutoCloseable {
     }
 
     public static void onPlayerChangedDimension(ServerPlayer player, ServerLevel previousLevel) {
+        if (infraredCapture != null) infraredCapture.forget(player.getUUID());
         MinecraftThermalInput input = active(previousLevel);
         if (input != null && input.radiation != null) {
             input.radiation.removeReceiver(receiverKey(player));
@@ -1438,6 +1477,12 @@ public final class MinecraftThermalInput implements AutoCloseable {
             infraredCapture.close();
             infraredCapture = null;
         }
+        reportedAdmissionRefusals = MEMORY.admissionRefusals();
+        nextResourceLogNanos = System.nanoTime();
+    }
+
+    static void onInfraredLevelUnload(ServerLevel level) {
+        if (infraredCapture != null) infraredCapture.unload(level);
     }
 
     public static void onRawBlockContainerReplaced(LevelChunkSection section) {
@@ -1599,12 +1644,15 @@ public final class MinecraftThermalInput implements AutoCloseable {
     }
 
     public boolean captureDormantPage(ThermalPageHandle page) {
+        return captureDormantPage(page, -1L);
+    }
+
+    public boolean captureDormantPage(ThermalPageHandle page, long retiringBricks) {
         LevelChunk chunk =
-                level.getChunkSource()
-                        .getChunkNow(
+                chunkForThermalCapture(
                                 SectionPos.x(page.sectionKey()), SectionPos.z(page.sectionKey()));
         if (chunk != null) {
-            return captureDormantPage(page, chunk);
+            return captureDormantPage(page, chunk, retiringBricks);
         }
         return false;
     }
@@ -1626,6 +1674,8 @@ public final class MinecraftThermalInput implements AutoCloseable {
                         SectionPos.z(sectionKey),
                         tick,
                         dormantPosition);
+        state = state.retain(-1L, tick, natural, DormantThermalCooling.rate(dormantHalfLifeSeconds()));
+        if (state == null) return null;
         return new ThermalInputBatch.DormantMaterialCut(
                 state, tick, natural, DormantThermalCooling.rate(dormantHalfLifeSeconds()));
     }
@@ -1741,12 +1791,12 @@ public final class MinecraftThermalInput implements AutoCloseable {
         }
     }
 
-    private boolean captureDormantPage(ThermalPageHandle page, LevelChunk chunk) {
-        try { return captureDormantPageWithCursor(page, chunk); }
+    public boolean captureDormantPage(ThermalPageHandle page, LevelChunk chunk, long retiringBricks) {
+        try { return captureDormantPageWithCursor(page, chunk, retiringBricks); }
         finally { checkpointCursor.clear(); }
     }
 
-    private boolean captureDormantPageWithCursor(ThermalPageHandle page, LevelChunk chunk) {
+    private boolean captureDormantPageWithCursor(ThermalPageHandle page, LevelChunk chunk, long retiringBricks) {
         ensureCheckpointTimeScratch();
         PagePublication publication;
         DormantChunkThermalState.SectionEntry capturedAir = null;
@@ -1781,12 +1831,12 @@ public final class MinecraftThermalInput implements AutoCloseable {
                             ? natural
                             : state.captureNatural(
                                     sectionY, captureTick, natural);
-            var air = checkpointCursor.captureValidatedAir(publication, airNatural);
+            var air = checkpointCursor.captureValidatedAir(publication, airNatural, retiringBricks, true);
             capturedAir = air == null ? null : new DormantChunkThermalState.SectionEntry(captureTick, airNatural, air);
             capturedMaterials =
                     MaterialSectionState.capture(
                             publication, queryPublication, profiles.signatures(), materialCapture, true,
-                            (checkpointCursor));
+                            checkpointCursor, retiringBricks, natural);
             if (capturedMaterials.valid() && matchesCheckpointPage(page, publication, checkpointCursor)) {
                 materialSnapshotRevision = publication.geometryRevision();
                 break;
@@ -1828,6 +1878,7 @@ public final class MinecraftThermalInput implements AutoCloseable {
         if (changed) {
             chunk.setUnsaved(true);
         }
+        DormantThermalMaintenance.track(chunk);
         return true;
     }
 
@@ -1855,7 +1906,7 @@ public final class MinecraftThermalInput implements AutoCloseable {
             double natural = WorldTemperature.naturalAir(level, dormantPosition);
             double airNatural = target.captureNatural(sectionY, section.sampleTick(), natural);
             var air = section.captureAir(airNatural);
-            var materials = MaterialSectionState.capture(section, materialCapture);
+            var materials = MaterialSectionState.capture(section, materialCapture, natural);
             var materialState = materials.state();
             var owner = ((MinecraftThermalSectionAttachment) (Object) chunk.getSections()[
                     chunk.getSectionIndex(SectionPos.sectionToBlockCoord(sectionY))]).frostedheart$getThermalInputOwner();
@@ -2058,6 +2109,21 @@ public final class MinecraftThermalInput implements AutoCloseable {
         if (workerEngine.hasRetainedInputInChunk(chunk) || !accumulator.sourcesCapturedThrough(chunk, level.getGameTime())) return false;
         if (batchTouchesChunk(pendingSubmission, chunk)) return false;
         return true;
+    }
+
+    /** Excludes live, preparing, saving and restoring owners before touching a checkpoint. */
+    static long dormantMaintenanceMask(ServerLevel level, LevelChunk chunk, int sectionY) {
+        var state = dormantState(chunk);
+        if (state == null || state.hasPendingHeat() || !dormantMaintenanceReady(level, chunk)) return 0;
+        var input = active(level);
+        if (input == null) return -1L;
+        return ~input.pages.capturedMask(SectionPos.asLong(chunk.getPos().x, sectionY, chunk.getPos().z));
+    }
+
+    static boolean dormantMaintenanceReady(ServerLevel level, LevelChunk chunk) {
+        var input = active(level);
+        long key = chunk.getPos().toLong();
+        return input == null || input.mayWithdrawThermalChunk(key) && !input.coldRestores.containsKey(key);
     }
 
     private static long checkpointAllocatedBytes() {
@@ -2442,6 +2508,7 @@ public final class MinecraftThermalInput implements AutoCloseable {
     static void setDormantState(LevelChunk chunk, DormantChunkThermalState state) {
         ((MinecraftThermalChunkAttachment) (Object) chunk)
                 .frostedheart$setDormantThermalState(state);
+        DormantThermalMaintenance.track(chunk);
     }
 
     static double dormantHalfLifeSeconds() {
