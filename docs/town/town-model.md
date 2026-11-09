@@ -1712,6 +1712,19 @@ T1 燃料总 process tick 定义为：
 其中 `C_max = resources[MAX_CAPACITY, level 0]`，`C_occupied = TeamTownResourceHolder.occupiedCapacity`。界面同时
 显示使用率 `C_occupied / C_max`；总容量为零时不执行除零，并用“暂无容量”或“超出容量”状态表达。
 
+`C_max` 由 `TeamTownData#reloadMaxCapacity` 对所有 `isBuildingWorkable()` 的仓库求和。单座仓库容量在
+`WarehouseBlockEntity#scanStructure` 中按房间扫描结果计算（2026-11-09 核对源码）：
+
+```text
+W = A * (0.02 * V / A)^0.9 * 1980 + 512 * N_rack     (A > 0；否则 W = 0)
+```
+
+- `A`：房间有效地板方块数；`V`：内部空气体素数，单位均为方块。
+- `N_rack`：`RoomData#countAllBlock` 统计到的 `frostedheart:warehouse_storage_rack` 数量，即位于房间占据格子内
+  或与占据格子六向相邻的储物架。储物架是完整碰撞方块，扫描器把它当作 `WALL`，它不会进入占据格子；因此只统计
+  “室内”方块会让任何摆放方式都得到 `0`。现行规则下，落地、靠墙、角落或叠放的储物架只要至少一面挨着房间内部空间
+  就会计入；被其他储物架完全包住的储物架不计入。储物架占用的地板和空间会相应减少 `A`、`V`。
+
 运力是每日重建但不在搬运时消耗的 transport-capacity service。`1` 运力表示零距离成本下支持
 `1 item/s` 的设置传输速率。仓库接口可以放在城镇所在维度的任意位置，并由首次交互的本队玩家认领；接口自身
 `GlobalPos` 是预约端点，不再绑定或保存某座仓库核心。已经接受的设置速率 `R` 单位是 `items/s`，默认 `20`，有效
