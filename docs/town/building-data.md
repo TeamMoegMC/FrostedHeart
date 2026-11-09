@@ -1,7 +1,7 @@
 # 城镇建筑：数据、恢复与世界绑定
 
 - Status: Partial — 当前同步已通过36项统一Forge回归及住宅/狩猎站/矿场真实渲染；独立进程seed/migrate/read保留原资格，远程多客户端与长时负载未完整验证。
-- Last verified: 2026-11-07（同步与GUI）；2026-10-23（独立进程迁移/重开）
+- Last verified: 2026-11-08（日报初始化路径）；2026-11-07（同步与GUI）；2026-10-23（独立进程迁移/重开）
 - Scope: 玩家队伍的六类逻辑建筑、持久化、名册关联、核心生命周期、结构与环境刷新、管理视图。
 - Code anchors: `TownBuildingStore`, `BuildingRecordsCodec`, `TownBuildingTypes`, `TownBuildingChangeEvent`, `AbstractTownBuilding`, `TeamTown`, `TownAssignments`, `AbstractTownBuildingBlockEntity`, `LoadedTownWorld`, `BlockScanner`, `SchedulerQueue`。
 
@@ -36,6 +36,8 @@
 | 同坐标冲突条目 | archive，不覆盖已选建筑 |
 
 `BuildingRecordsCodec.strict()` 只改变建筑字段的可选值语义：缺失可以使用默认值，存在但错误必须报告解码失败。它不改变全局 Codec 工具。
+
+读档检查日报时，`TownBuildingTypes.Type.reportCodec()` 可能先于建筑 Codec 初始化嵌套日报类。`MineBaseBuilding.MiningDailyReport` 与 `TransportStationBuilding.TransportStationDailyReport` 在本类内完成数值规范化；创建 `EMPTY` 不调用外层建筑的静态方法，避免外层 `MAP_CODEC` 反向读取尚未赋值的日报 `CODEC`。日报先加载和建筑先加载均使用原有字段、默认值及数值规则，无需迁移存档。
 
 只有 pending 会在启动或资源重载时重试；普通核心绑定和 getter 不重复解码失败原文。archive 不自动注册。保留区按原值去重，重开不再包装同一份已保留数据。实际拆除或明确新放置会清理该坐标的 pending 与可定位 archive；没有位置的原文继续留作证据。
 

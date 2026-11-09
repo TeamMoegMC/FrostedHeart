@@ -81,6 +81,11 @@ public class TransportStationBuilding extends AbstractTownResidentWorkBuilding {
             addedCapacity = Math.min(plannedCapacity, sanitize(addedCapacity));
             stopReason = stopReason == null ? TownProductionStopReason.NONE : stopReason;
         }
+
+        // EMPTY must not initialize the enclosing building while this CODEC is still unset.
+        private static double sanitize(double value) {
+            return Double.isFinite(value) ? Math.max(0.0, value) : 0.0;
+        }
     }
 
     /** Predicted result for the next town settlement before resource mutation. */
@@ -92,8 +97,8 @@ public class TransportStationBuilding extends AbstractTownResidentWorkBuilding {
     ) {
         public TransportStationForecast {
             workerCount = Math.max(0, workerCount);
-            totalProductivity = sanitize(totalProductivity);
-            plannedCapacity = sanitize(plannedCapacity);
+            totalProductivity = TransportStationDailyReport.sanitize(totalProductivity);
+            plannedCapacity = TransportStationDailyReport.sanitize(plannedCapacity);
             stopReason = stopReason == null ? TownProductionStopReason.NONE : stopReason;
         }
     }
@@ -343,7 +348,4 @@ public class TransportStationBuilding extends AbstractTownResidentWorkBuilding {
         }
     }
 
-    private static double sanitize(double value) {
-        return Double.isFinite(value) ? Math.max(0.0, value) : 0.0;
-    }
 }

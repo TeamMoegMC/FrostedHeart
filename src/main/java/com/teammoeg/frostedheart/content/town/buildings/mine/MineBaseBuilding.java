@@ -91,6 +91,11 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
         public double lost() {
             return items.stream().mapToDouble(TownProductionReportItem::lost).sum();
         }
+
+        // EMPTY can initialize before the enclosing building's codec during save loading.
+        private static double sanitize(double value) {
+            return Double.isFinite(value) ? Math.max(0.0, value) : 0.0;
+        }
     }
 
     public record MiningForecast(
@@ -356,10 +361,6 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
                 .sorted(Comparator.comparingDouble(TownProductionReportItem::produced).reversed()
                         .thenComparing(item -> item.item().getDescriptionId()))
                 .toList();
-    }
-
-    private static double sanitize(double value) {
-        return Double.isFinite(value) ? Math.max(0.0, value) : 0.0;
     }
 
     @Override
