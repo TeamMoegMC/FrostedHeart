@@ -29,9 +29,12 @@ import com.teammoeg.frostedheart.content.health.capability.NutritionCapability;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+
+import static com.teammoeg.frostedheart.infrastructure.command.CommandHelper.player;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class NutritionCommand {
@@ -47,7 +50,7 @@ public class NutritionCommand {
             LiteralArgumentBuilder<CommandSourceStack> nutrientCommand = Commands.literal(nutrient)
                     // Get Command
                     .then(Commands.literal("get").executes(ct -> {
-                        NutritionCapability.getCapability(ct.getSource().getPlayer()).ifPresent(data -> {
+                        NutritionCapability.getCapability(EntityArgument.getPlayer(ct, "player")).ifPresent(data -> {
                             float value = getNutrientValue(data, nutrient);
                             ct.getSource().sendSuccess(() -> Components.str(capitalize(nutrient) + ": " + value).withStyle(ChatFormatting.GREEN), false);
                         });
@@ -56,7 +59,7 @@ public class NutritionCommand {
                     // Add Command
                     .then(Commands.literal("add")
                             .then(Commands.argument("amount", FloatArgumentType.floatArg()).executes(ct -> {
-                                NutritionCapability.getCapability(ct.getSource().getPlayer()).ifPresent(data -> {
+                                NutritionCapability.getCapability(EntityArgument.getPlayer(ct, "player")).ifPresent(data -> {
                                     float amount = ct.getArgument("amount", Float.class);
                                     addNutrientValue(data, nutrient, amount);
                                     ct.getSource().sendSuccess(() -> Components.str("Added " + amount + " to " + capitalize(nutrient)).withStyle(ChatFormatting.GREEN), false);
@@ -67,7 +70,7 @@ public class NutritionCommand {
                     // Set Command
                     .then(Commands.literal("set")
                             .then(Commands.argument("amount", FloatArgumentType.floatArg()).executes(ct -> {
-                                NutritionCapability.getCapability(ct.getSource().getPlayer()).ifPresent(data -> {
+                                NutritionCapability.getCapability(EntityArgument.getPlayer(ct, "player")).ifPresent(data -> {
                                     float amount = ct.getArgument("amount", Float.class);
                                     setNutrientValue(data, nutrient, amount);
                                     ct.getSource().sendSuccess(() -> Components.str("Set " + capitalize(nutrient) + " to " + amount).withStyle(ChatFormatting.GREEN), false);
@@ -77,14 +80,14 @@ public class NutritionCommand {
                     )
                     // Fill Command
                     .then(Commands.literal("fill").executes(ct -> {
-                        NutritionCapability.getCapability(ct.getSource().getPlayer()).ifPresent(data -> {
+                        NutritionCapability.getCapability(EntityArgument.getPlayer(ct, "player")).ifPresent(data -> {
 							setNutrientValue(data, nutrient, 100.0f);
                             ct.getSource().sendSuccess(() -> Components.str(capitalize(nutrient) + " filled to max").withStyle(ChatFormatting.GREEN), false);
                         });
                         return Command.SINGLE_SUCCESS;
                     }));
 
-            nutrition.then(nutrientCommand);
+            nutrition.then(player("player").then(nutrientCommand));
         }
 
         for (String string : new String[]{FHMain.MODID, FHMain.ALIAS, FHMain.TWRID}) {
