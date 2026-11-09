@@ -570,11 +570,11 @@ public final class SpatialHeatStore {
             return input;
         }
         /** The job can release its numerical scratch while this bounded retirement still owns records. */
-        public void retainCleanup(ThermalMemoryBudget.Reservation jobScratch, boolean prepaidWorkspace) {
+        public void retainCleanup(ThermalMemoryBudget.Reservation jobScratch) {
             input = null; builder.release();
             // The minimum consumer never builds an O(records) payload. Its held
             // span references and retirement metadata stay in the store's charge.
-            if (prepaidWorkspace || streamed || retention != null || touched.isEmpty() || jobScratch == null) return;
+            if (streamed || retention != null || touched.isEmpty() || jobScratch == null) return;
             long bytes = 512L + 128L * touched.size() + 48L * allocatedRecords;
             retention = jobScratch.split(bytes);
         }

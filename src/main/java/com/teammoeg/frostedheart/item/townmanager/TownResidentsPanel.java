@@ -90,7 +90,7 @@ public class TownResidentsPanel extends UILayer {
     private UUID editorResidentId;
     private String displayedNameKey = "";
     @Nullable
-    private String pendingNameKey;
+    private Resident pendingNameResident;
     private boolean updatingNameEditors;
 
     public TownResidentsPanel(UIElement parent, int x, int y, Supplier<TeamTown> townSource) {
@@ -278,7 +278,7 @@ public class TownResidentsPanel extends UILayer {
         List<Resident> residents = residents();
         int index = listScroll + row;
         if (index >= residents.size()) return false;
-        commitResidentName();
+        commitResidentName(false);
         selectedResident = residents.get(index).getUUID();
         editorResidentId = null;
         detailScroll = 0;
@@ -434,7 +434,7 @@ public class TownResidentsPanel extends UILayer {
         if (resident == null) {
             editorResidentId = null;
             displayedNameKey = "";
-            pendingNameKey = null;
+            pendingNameResident = null;
             setNameEditorText("", "");
             lastNameBox.setEnabled(false);
             firstNameBox.setEnabled(false);
@@ -446,13 +446,14 @@ public class TownResidentsPanel extends UILayer {
             editorResidentId = resident.getUUID();
             setNameEditorText(resident.getFirstName(), resident.getLastName());
             displayedNameKey = nameKey(resident.getUUID(), resident.getFirstName(), resident.getLastName());
-            pendingNameKey = null;
+            pendingNameResident = null;
         } else if (!lastNameBox.isFocused() && !firstNameBox.isFocused()) {
+            // Children commit focus loss after this background render; retain their draft until then.
+            if (lastNameBox.focusedLastFrame || firstNameBox.focusedLastFrame) return;
             String authoritativeKey = nameKey(resident.getUUID(), resident.getFirstName(), resident.getLastName());
-            if (pendingNameKey != null) {
-                if (!authoritativeKey.equals(pendingNameKey)) return;
-                pendingNameKey = null;
-            }
+            // Resident packets replace snapshots, including equal-name and coalesced updates.
+            if (pendingNameResident == resident) return;
+            pendingNameResident = null;
             if (!authoritativeKey.equals(displayedNameKey)) {
                 setNameEditorText(resident.getFirstName(), resident.getLastName());
                 displayedNameKey = authoritativeKey;
@@ -466,14 +467,22 @@ public class TownResidentsPanel extends UILayer {
         syncNameEditors(selected);
     }
 
-    private void commitResidentName() {
+    private void commitResidentName(boolean explicit) {
         if (editorResidentId == null) return;
+        TeamTown town = townSource.get();
+        Resident resident = town == null ? null : town.getResident(editorResidentId).orElse(null);
+        if (resident == null) return;
         TownNamingModel.normalizeResidentName(firstNameBox.getText(), lastNameBox.getText())
                 .ifPresent(name -> {
                     String key = nameKey(editorResidentId, name.firstName(), name.lastName());
-                    if (key.equals(pendingNameKey)) return;
-                    if (pendingNameKey == null && key.equals(displayedNameKey)) return;
-                    pendingNameKey = key;
+                    if (key.equals(displayedNameKey) && (!explicit || pendingNameResident == resident)) return;
+                    setNameEditorText(name.firstName(), name.lastName());
+                    displayedNameKey = key;
+                    if (key.equals(nameKey(editorResidentId, resident.getFirstName(), resident.getLastName()))) {
+                        pendingNameResident = null;
+                        return;
+                    }
+                    pendingNameResident = resident;
                     FHNetwork.INSTANCE.sendToServer(new TownResidentNameEditRequestPacket(
                             editorResidentId, name.firstName(), name.lastName()));
                 });
@@ -515,12 +524,12 @@ public class TownResidentsPanel extends UILayer {
 
         @Override
         public void onEnterPressed() {
-            commitResidentName();
+            commitResidentName(true);
         }
 
         @Override
         public void onTabPressed() {
-            commitResidentName();
+            commitResidentName(true);
         }
 
         @Override
@@ -532,7 +541,7 @@ public class TownResidentsPanel extends UILayer {
         @Override
         public void render(GuiGraphics graphics, int x, int y, int width, int height, RenderingHint hint) {
             boolean focused = isFocused();
-            if (!focused && focusedLastFrame && !updatingNameEditors) commitResidentName();
+            if (!focused && focusedLastFrame && !updatingNameEditors) commitResidentName(false);
             focusedLastFrame = focused;
             super.render(graphics, x, y, width, height, hint);
         }

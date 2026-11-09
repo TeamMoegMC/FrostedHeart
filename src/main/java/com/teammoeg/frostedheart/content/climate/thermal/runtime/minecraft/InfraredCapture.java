@@ -55,6 +55,11 @@ import com.teammoeg.frostedheart.content.climate.network.InfraredWindow;
 final class InfraredCapture implements AutoCloseable {
     private static final int INFRARED_ACTIVE_TICKS = 80;
     private static final int INFRARED_PAGE_CAPACITY = 9 * 9 * 9;
+    private static final int[] PAGE_ORDER=java.util.stream.IntStream.range(0,INFRARED_PAGE_CAPACITY).boxed()
+            .sorted(java.util.Comparator.comparingInt(local -> {
+                int x=local%9-4,y=local/81-4,z=local/9%9-4;
+                return x*x+y*y+z*z;
+            })).mapToInt(Integer::intValue).toArray();
     static final int INFRARED_PRESENCE_WORDS = 12;
     private static final long[] NO_INFRARED_PRESENCE = new long[0];
     private final QueryPublication.ReadCursor cursor = new QueryPublication.ReadCursor();
@@ -162,7 +167,9 @@ final class InfraredCapture implements AutoCloseable {
                                 || knownReadable != readable
                                 || readable && (reactivated || lastEpoch == 0 || lastEpoch > epoch);
                 if (publication != null) collectMaterials(pages, cx, cy, cz, readable);
-                for (int word = 0; word < presence.length; word++) {
+                // Nearby Pages reach the first receipt window, before distant field volumes.
+                for (int local : PAGE_ORDER) {
+                    int word=local>>>6;
                     long previousFields =
                             full || knownFieldPages.length == 0 ? 0 : knownFieldPages[word];
                     long work =
@@ -170,121 +177,117 @@ final class InfraredCapture implements AutoCloseable {
                                     | storedPresence[word]
                                     | fieldPages[word]
                                     | (full ? 0 : knownPresence[word] | previousFields);
-                    while (work != 0) {
-                        int local = word * 64 + Long.numberOfTrailingZeros(work);
-                        work &= work - 1;
-                        if (local >= INFRARED_PAGE_CAPACITY) continue;
-                        LevelChunk chunk = loadedChunks[local % 81];
-                        int sectionY = cy - 4 + local / 81;
-                        var attachment = (MinecraftThermalChunkAttachment) (Object) chunk;
-                        var state =
-                                attachment == null
-                                        ? null
-                                        : attachment.frostedheart$getDormantThermalState();
-                        MaterialSectionState stored =
-                                state == null ? null : state.materials(sectionY);
-                        ThermalPageHandle handle = localHandles[local];
-                        if (handle == null && publication != null && stored != null) {
-                            handle =
-                                    pages.handle(
-                                            SectionPos.asLong(
-                                                    cx - 4 + local % 9,
-                                                    cy - 4 + local / 81,
-                                                    cz - 4 + local / 9 % 9));
-                        }
-                        PagePublication page =
-                                !readable || handle == null ? null : handle.lastPublication();
-                        if (page != null && page.topologyGeneration() > cursor.topologyGeneration())
-                            continue captureAttempt;
-                        if (page == null) {
-                            presence[word] &= ~(1L << (local & 63));
-                        }
-                        if (handle != null && page == null) stored = null;
-                        changedMaterialBricks =
-                                page != null
-                                                && page.geometryRevision()
-                                                        != handle.liveGeometryRevision()
-                                        ? pages.collectMaterialChangesSince(
-                                                handle.sectionKey(),
-                                                page.geometryRevision(),
-                                                changedMaterialBlocks)
-                                        : 0L;
-                        if (changedMaterialBricks != 0L) {
-                            presence[word] &= ~(1L << (local & 63));
-                            for (int b = 0; b < 64; b++)
-                                if (readableSurfaceMask(page.brick(b), b, page.topologyGeneration()) != 0) {
-                                    presence[word] |= 1L << (local & 63);
-                                    break;
-                                }
-                        }
-                        long storedMask = storedBrickMask(page, stored);
-                        double storedNatural =
-                                storedMask == 0
-                                        ? 0
-                                        : state.naturalTemperature(
-                                                level,
+                    if((work & (1L << (local & 63))) == 0)continue;
+                    LevelChunk chunk = loadedChunks[local % 81];
+                    int sectionY = cy - 4 + local / 81;
+                    var attachment = (MinecraftThermalChunkAttachment) (Object) chunk;
+                    var state =
+                            attachment == null
+                                    ? null
+                                    : attachment.frostedheart$getDormantThermalState();
+                    MaterialSectionState stored =
+                            state == null ? null : state.materials(sectionY);
+                    ThermalPageHandle handle = localHandles[local];
+                    if (handle == null && publication != null && stored != null) {
+                        handle =
+                                pages.handle(
+                                        SectionPos.asLong(
                                                 cx - 4 + local % 9,
-                                                sectionY,
-                                                cz - 4 + local / 9 % 9,
-                                                tick,
-                                                position);
-                        long storedRevision =
-                                attachment == null
-                                        ? 0
-                                        : Math.max(
-                                                attachment.frostedheart$getMaterialRevision(),
-                                                state == null
-                                                        ? 0
-                                                        : state.materialRevision(sectionY));
-                        if (storedMask != 0) presence[word] |= 1L << (local & 63);
-                        boolean refresh =
-                                presenceBit(fieldPages, local)
-                                        || (previousFields & 1L << (local & 63)) != 0;
-                        boolean replace =
-                                full
-                                        || refresh
-                                        || presenceBit(presence, local)
-                                                != presenceBit(knownPresence, local);
-                        long changed =
-                                replace
-                                        ? -1L
-                                        : page == null
-                                                ? 0
-                                                : changedBricks(page.workerPageSlot(), lastEpoch);
-                        changed |= changedMaterialBricks;
-                        if (storedRevision > knownStoredEpoch
-                                || storedMask != 0 && profileRevision > knownStoredEpoch)
-                            changed = -1L;
-                        if (storedMask != 0)
-                            changed |=
-                                    readStoredPage(
-                                            stored,
-                                            storedMask,
-                                            local,
-                                            storedNatural,
+                                                cy - 4 + local / 81,
+                                                cz - 4 + local / 9 % 9));
+                    }
+                    PagePublication page =
+                            !readable || handle == null ? null : handle.lastPublication();
+                    if (page != null && page.topologyGeneration() > cursor.topologyGeneration())
+                        continue captureAttempt;
+                    if (page == null) {
+                        presence[word] &= ~(1L << (local & 63));
+                    }
+                    if (handle != null && page == null) stored = null;
+                    changedMaterialBricks =
+                            page != null
+                                            && page.geometryRevision()
+                                                    != handle.liveGeometryRevision()
+                                    ? pages.collectMaterialChangesSince(
+                                            handle.sectionKey(),
+                                            page.geometryRevision(),
+                                            changedMaterialBlocks)
+                                    : 0L;
+                    if (changedMaterialBricks != 0L) {
+                        presence[word] &= ~(1L << (local & 63));
+                        for (int b = 0; b < 64; b++)
+                            if (readableSurfaceMask(page.brick(b), b, page.topologyGeneration()) != 0) {
+                                presence[word] |= 1L << (local & 63);
+                                break;
+                            }
+                    }
+                    long storedMask = storedBrickMask(page, stored);
+                    double storedNatural =
+                            storedMask == 0
+                                    ? 0
+                                    : state.naturalTemperature(
+                                            level,
+                                            cx - 4 + local % 9,
+                                            sectionY,
+                                            cz - 4 + local / 9 % 9,
                                             tick,
-                                            knownStoredSampleTick,
-                                            changed);
-                        if (changed == 0) continue;
-                        payload.beginPage();
-                        int pageStart = payload.pageStart();
-                        if (!writePage(page, storedMask, local, changed, full)
-                                || page != null && handle.lastPublication() != page)
-                            continue captureAttempt;
-                        int oldPage = previousDisplay == null ? -1
-                                : InfraredWindow.previousPage(local, previousDisplay.center(), center);
-                        var previous = oldPage < 0 ? null : previousDisplay.pages()[oldPage];
-                        if (previous != null || displayPages != null && presenceBit(fieldPages, local)) {
-                            byte[] encoded = payload.finishPage(pageStart, full || previous == null ? null : previous.encoded);
-                            InfraredDisplayCache.Page next = null;
-                            if (displayPages != null && presenceBit(fieldPages, local)) {
-                                long section = SectionPos.asLong(cx - 4 + local % 9, sectionY, cz - 4 + local / 9 % 9);
-                                next = displays.page(level.dimension(), section, encoded, previous);
-                            }
-                            if (displayPages != null && displayPages[local] != next) {
-                                if (sharedPages) { displayPages = displayPages.clone(); sharedPages = false; }
-                                displayPages[local] = next;
-                            }
+                                            position);
+                    long storedRevision =
+                            attachment == null
+                                    ? 0
+                                    : Math.max(
+                                            attachment.frostedheart$getMaterialRevision(),
+                                            state == null
+                                                    ? 0
+                                                    : state.materialRevision(sectionY));
+                    if (storedMask != 0) presence[word] |= 1L << (local & 63);
+                    boolean refresh =
+                            presenceBit(fieldPages, local)
+                                    || (previousFields & 1L << (local & 63)) != 0;
+                    boolean replace =
+                            full
+                                    || refresh
+                                    || presenceBit(presence, local)
+                                            != presenceBit(knownPresence, local);
+                    long changed =
+                            replace
+                                    ? -1L
+                                    : page == null
+                                            ? 0
+                                            : changedBricks(page.workerPageSlot(), lastEpoch);
+                    changed |= changedMaterialBricks;
+                    if (storedRevision > knownStoredEpoch
+                            || storedMask != 0 && profileRevision > knownStoredEpoch)
+                        changed = -1L;
+                    if (storedMask != 0)
+                        changed |=
+                                readStoredPage(
+                                        stored,
+                                        storedMask,
+                                        local,
+                                        storedNatural,
+                                        tick,
+                                        knownStoredSampleTick,
+                                        changed);
+                    if (changed == 0) continue;
+                    payload.beginPage();
+                    int pageStart = payload.pageStart();
+                    if (!writePage(page, storedMask, local, changed, full)
+                            || page != null && handle.lastPublication() != page)
+                        continue captureAttempt;
+                    int oldPage = previousDisplay == null ? -1
+                            : InfraredWindow.previousPage(local, previousDisplay.center(), center);
+                    var previous = oldPage < 0 ? null : previousDisplay.pages()[oldPage];
+                    if (previous != null || displayPages != null && presenceBit(fieldPages, local)) {
+                        byte[] encoded = payload.finishPage(pageStart, full || previous == null ? null : previous.encoded);
+                        InfraredDisplayCache.Page next = null;
+                        if (displayPages != null && presenceBit(fieldPages, local)) {
+                            long section = SectionPos.asLong(cx - 4 + local % 9, sectionY, cz - 4 + local / 9 % 9);
+                            next = displays.page(level.dimension(), section, encoded, previous);
+                        }
+                        if (displayPages != null && displayPages[local] != next) {
+                            if (sharedPages) { displayPages = displayPages.clone(); sharedPages = false; }
+                            displayPages[local] = next;
                         }
                     }
                 }

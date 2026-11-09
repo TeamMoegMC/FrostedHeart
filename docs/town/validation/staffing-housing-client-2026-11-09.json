@@ -1,0 +1,113 @@
+{
+  "verified": "2026-11-09",
+  "scope": "Actual rendered Minecraft client and integrated server; three residents, physical scanned rooms, management packets, Screen mouse events, settlement and core lifecycle",
+  "regressionCommit": "fdacc2bc724ad3331a4166bfed73f4a17d79d83f",
+  "priorDependencyChange": "763d8475bc",
+  "historicalVerification": "Git diffs only; historical versions were not rebuilt",
+  "serverRequiredPassed": 39,
+  "serverRequiredFailed": 0,
+  "beforeFix": {
+    "zeroGuaranteeServer": {
+      "buildings": 3,
+      "staffingRows": 1,
+      "housingRows": 1,
+      "guaranteedWorkers": 0,
+      "guaranteedMeals": 0,
+      "population": 3,
+      "employed": 3,
+      "housed": 3,
+      "idle": 0,
+      "foodConsumed": 16.40000021457672
+    },
+    "zeroGuaranteeClient": {
+      "buildings": 3,
+      "staffingRows": 0,
+      "housingRows": 0,
+      "guaranteedWorkers": 0,
+      "guaranteedMeals": 0,
+      "population": 3,
+      "employed": 3,
+      "housed": 3,
+      "idle": 0,
+      "foodConsumed": 16.40000021457672
+    },
+    "passed": false,
+    "failure": "java.lang.AssertionError: confirmed: server has housing/jobs but both client scheduling queues remained empty after building deltas",
+    "lastStep": 3,
+    "renderedFrames": 286,
+    "controlledBuildingTemperatureCelsius": 20,
+    "extraFullViewInstalls": 0
+  },
+  "afterFix": {
+    "zeroGuaranteeServer": {
+      "buildings": 3,
+      "staffingRows": 1,
+      "housingRows": 1,
+      "guaranteedWorkers": 0,
+      "guaranteedMeals": 0,
+      "population": 3,
+      "employed": 3,
+      "housed": 3,
+      "idle": 0,
+      "foodConsumed": 28.800000429153442
+    },
+    "zeroGuaranteeClient": {
+      "buildings": 3,
+      "staffingRows": 1,
+      "housingRows": 1,
+      "guaranteedWorkers": 0,
+      "guaranteedMeals": 0,
+      "population": 3,
+      "employed": 3,
+      "housed": 3,
+      "idle": 0,
+      "foodConsumed": 28.800000429153442
+    },
+    "editedGuaranteesNextDayServer": {
+      "buildings": 3,
+      "staffingRows": 1,
+      "housingRows": 1,
+      "guaranteedWorkers": 2,
+      "guaranteedMeals": 2,
+      "population": 3,
+      "employed": 3,
+      "housed": 3,
+      "idle": 0,
+      "foodConsumed": 27.200000405311584
+    },
+    "editedGuaranteesNextDayClient": {
+      "buildings": 3,
+      "staffingRows": 1,
+      "housingRows": 1,
+      "guaranteedWorkers": 2,
+      "guaranteedMeals": 2,
+      "population": 3,
+      "employed": 3,
+      "housed": 3,
+      "idle": 0,
+      "foodConsumed": 27.200000405311584
+    },
+    "replacementClient": {
+      "buildings": 3,
+      "staffingRows": 0,
+      "housingRows": 2,
+      "guaranteedWorkers": 0,
+      "guaranteedMeals": 2,
+      "population": 3,
+      "employed": 0,
+      "housed": 3,
+      "idle": 3,
+      "foodConsumed": 27.200000405311584
+    },
+    "passed": true,
+    "failure": null,
+    "lastStep": 11,
+    "renderedFrames": 844,
+    "controlledBuildingTemperatureCelsius": 20,
+    "extraFullViewInstalls": 0
+  },
+  "serverLog": "build/town-scheduling-server-r3.log",
+  "clientLog": "build/town-scheduling-after-r4.log",
+  "screenshotDirectory": "build/town-scheduling-after-r4",
+  "limitation": "Building temperature is controlled at 20 C; the second server player uses EmbeddedChannel; remote rendered clients and network delay are outside this run"
+}

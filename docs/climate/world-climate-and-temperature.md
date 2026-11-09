@@ -1,7 +1,7 @@
 # 世界气候与环境温度
 
 - Status: `Current`
-- Last verified: `2026-11-07`（红外编码去重、窗口重叠与带宽验证；`2026-11-06`核对慢响应与区域退出；`2026-11-05`核对红外开启、预报栏当前气候温度和同步接线）
+- Last verified: `2026-11-08`（红外接收驱动分片、渐进GPU显示、真实双客户端限速与单慢观察者；`2026-11-07`核对编码去重与窗口重叠；`2026-11-06`核对区域退出；`2026-11-05`核对预报栏和同步接线）
 - Scope: 逻辑气候时钟、长期事件、局部白幕、自然/mesh/analytic 温度合成、红外视野、方块状态消费者
 - Primary code anchors: `WorldClockSource`, `WorldClimate`, `ClimateEventModel`, `ClimateEventTrack`, `InterpolationClimateEvent`, `WhiteCurtainDescriptor`, `WhiteCurtainFieldModel`, `WhiteCurtainInfo`, `WorldTemperature`, `BlockTemperatureModel`, `ThermalAnalyticField`, `ThermalAnalyticFieldIndex`, `MinecraftThermalInput.gameplayPassiveEnvironment`, `MinecraftThermalInput.gameplayCropEnvironment`, `MinecraftThermalInput.gameplayInfraredSnapshot`, `BlockScanner.RoomData.calculateTemperature`, `TownThermalProjection`, `MinecraftThermalInput.gameplayTownEnvironment`, `InfraredViewRenderer`
 
@@ -265,7 +265,8 @@ Generator 的半径/温差来自 `GeneratorData.getRadius/getTempMod` 和 `Gener
 相同世界Page的编码由多个观察者共享；全服缓存计量上限8MiB、最多256个观察基准，
 淘汰仅导致重发，不影响温度权威。离线、换维度、Level卸载和停服释放相关引用。
 
-有材料且无场时显示材料温度；无材料且无场时发送`Short.MIN_VALUE`。客户端对缺失值
+有材料且无场时显示材料温度；无材料且无场时发送`Short.MIN_VALUE`。
+现场判别与收包/提交状态见[红外视野架构与诊断](infrared-view.md)。客户端对缺失值
 使用`MIN_TEMP=-20`的蓝色**占位**，不把-20当实测值。`InfraredViewRenderer.toggleInfraredView()`
 切换开关后，扫描半径仅由`open`推进或收回，不以材料或解析场Page覆盖作为开启条件；
 附近没有篝火、整个窗口没有温度覆盖或首个响应尚未到达时也能展开扫描。首次捕获前按需
@@ -285,22 +286,26 @@ OVERRIDE不需要这项读取。场合成后统一量化0.25°C，保留原prior
 使关闭或缩小范围后恢复材料/蓝底。材料presence不会在客户端直接擦掉场热色。
 跨Section移动且窗口仍重叠时，`InfraredWindow`保留旧144³镜像的绝对位置重叠，
 只补进入区域和发生变化的记录；进入位置初始化为INVALID。无重叠远跳、失效或新generation
-仍使用full。移动后的本地GPU纹理在LAST一次完整上传，网络节省不等于省掉该上传。
+仍使用full。移动后的本地GPU镜像在FIRST按新origin完整上传，后续逐片上传变化Page；
+完整增量基准在LAST确认。网络节省不等于省掉移动时的本地完整上传。
 同一客户端最多一个未完成请求，慢响应和分片接收期间不换requestId，也不因跨Section移动
 取消该响应；完成后再请求当前窗口。服务端无变化或暂未取得一致快照时仍发送ACK，
 只结束等待而不改变既有热色。41..59tick是缺少完整基准时在完成回复后的重试节奏，
 不是丢弃慢响应的超时。ACK正文只有requestId与flags；掩码按空/稀疏/完整选择，
-分包的presence、场footprint和休眠版本只在LAST发送。两端都需要实现该回复合同，
+分包的presence、场footprint和休眠版本只在LAST发送。首片上限32KiB、后续128KiB，附近Section优先；
+客户端处理一片后通过`FHContinueInfraredViewPacket`继续取下一片，LAST也发送最终回执。
+传输期间保留变化跟踪，取消/离线/换维度时释放回复。两端都需要实现`:infrared-stream-1`合同，
 详见[网络合同](data-lifecycle-and-integration.md#network-and-consumers)与
 [带宽记录](validation/infrared-bandwidth-2026-11-07.json)。
 `QueryPublication.installRegions()`同时标记退出区域的旧Page/Brick范围与新区域范围；
 同Page仍有其他材料、区域完全退出或同一region缩小时，旧范围也进入下一次增量回包。
 已无材料与解析场的Brick发送显式INVALID，清除客户端旧热色，不依赖重新登录或整页presence改变。
-并发发布导致Page/slot/cursor不一致时，整份读取最多重试两次；仍未读到一致cut则不发送响应，
-客户端保留已提交的显示，下一次按原节奏请求，不把读竞争编码成材料删除。
+并发发布导致Page/slot/cursor不一致时，整份读取最多重试两次；仍未读到一致cut则返回null，
+请求处理器发送ACK，客户端保留显示并按原节奏请求，不把读竞争编码成材料删除。
 全局物理cut稳定invalid或超过40 ticks时
-返回field-only full，恢复后full重建。同一不可读状态可以继续delta。只有LAST才提交
-origin、epoch、generation与两个Page位图并上传。详见[网络合同](data-lifecycle-and-integration.md#network-and-consumers)。
+返回field-only full，恢复后full重建。同一不可读状态可以继续delta。FIRST切换显示origin，
+收到的Page立即上传；只有LAST才确认epoch、generation、两个Page位图及完整增量基准。
+真实慢网复现、修复与画面证据见[红外验证](infrared-view.md#验证边界)。
 
 `FHClientEvents.onRenderSurfaceInfrared`在`AFTER_LEVEL`直接混合到主颜色附件。
 `InfraredChunkRenderer`继承Embeddium原地形renderer，沿用原网格、可见性、排序和multiDraw。

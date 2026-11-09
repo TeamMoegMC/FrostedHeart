@@ -35,7 +35,7 @@ public final class ProductionObservationBridge implements ThermalDiagnostics.Obs
         SourceStepProductionObservation.engine(cells, backing);
         RegionalAcceptanceObservation.engine(air, cells, sources, queries);
         RegionalBoundaryObservation.engine(air, sources, queries);
-        RegionalGridSwitchObservation.engine(air, sources, queries);
+        RegionalGridSwitchObservation.engine(air, sources, queries, backing);
         WorkPolicyObservation.begin(air);
     }
     @Override public void roundFinished(RegionalAirRuntime air, ThermalCellArena cells, ThermalSourceLedger sources,

@@ -8,9 +8,11 @@ import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.frostedheart.content.town.building.ITownBuilding;
 import com.teammoeg.frostedheart.content.town.network.TeamTownDataS2CPacket;
 import com.teammoeg.frostedheart.content.town.network.TownBuildingUpdatePacket;
+import com.teammoeg.frostedheart.content.town.network.TownHousingPlanUpdatePacket;
 import com.teammoeg.frostedheart.content.town.network.TownResidentUpdatePacket;
 import com.teammoeg.frostedheart.content.town.network.TownResourceUpdatePacket;
 import com.teammoeg.frostedheart.content.town.network.TownSignalNotificationPacket;
+import com.teammoeg.frostedheart.content.town.network.TownStaffingPlanUpdatePacket;
 import com.teammoeg.frostedheart.content.town.network.TownTransportShortageNotificationPacket;
 import com.teammoeg.frostedheart.content.town.observation.TownSignalEventModel;
 import com.teammoeg.frostedheart.content.town.observation.TownSignalNotice;
@@ -155,12 +157,16 @@ public final class TownSync {
         Set<BlockPos> buildingsBefore = Set.copyOf(data.dataSyncCache.changedBuildingPos);
         Set<ITownResourceKey> resourcesBefore = Set.copyOf(data.dataSyncCache.changedResourceKey);
         boolean transportBefore = data.dataSyncCache.transportStateChanged;
+        boolean staffingBefore = data.dataSyncCache.staffingPlanChanged;
+        boolean housingBefore = data.dataSyncCache.housingPlanChanged;
         try { flushChanges(data, level, teamData); }
         catch (RuntimeException failure) {
             data.dataSyncCache.changedResidentUUID.addAll(residentsBefore);
             data.dataSyncCache.changedBuildingPos.addAll(buildingsBefore);
             data.dataSyncCache.changedResourceKey.addAll(resourcesBefore);
             data.dataSyncCache.transportStateChanged |= transportBefore;
+            data.dataSyncCache.staffingPlanChanged |= staffingBefore;
+            data.dataSyncCache.housingPlanChanged |= housingBefore;
             TownSync.invalidate(teamData, "incremental_capture_failed");
             FHMain.LOGGER.error("Town {} incremental capture remains pending", teamData.getId(), failure);
         }
@@ -214,6 +220,17 @@ public final class TownSync {
                 }
             }
             teamData.sendToOnline(FHNetwork.INSTANCE, new TownBuildingUpdatePacket(changedBuildings, removedBuildings));
+        }
+
+        // Install building records before their authoritative queues. A new record may already
+        // contain workers, whose roster size is not the player's guaranteed staffing target.
+        if (data.dataSyncCache.staffingPlanChanged) {
+            teamData.sendToOnline(FHNetwork.INSTANCE, new TownStaffingPlanUpdatePacket(data.getStaffingPlan()));
+            data.dataSyncCache.staffingPlanChanged = false;
+        }
+        if (data.dataSyncCache.housingPlanChanged) {
+            teamData.sendToOnline(FHNetwork.INSTANCE, new TownHousingPlanUpdatePacket(data.getHousingPlan()));
+            data.dataSyncCache.housingPlanChanged = false;
         }
 
         TownTowerTipThrottle.Result deferredTower = TownTowerTipThrottle.onTick(

@@ -700,7 +700,7 @@
   "gui.frostedheart.town_manager.virtual_resource.uses_warehouse_capacity": "占用仓库容量：%s",
   "gui.frostedheart.town_manager.virtual_resource.level_amount": "等级 %s：%s",
   "gui.frostedheart.town_manager.staffing": "岗位调度",
-  "gui.frostedheart.town_manager.staffing_summary": "可工作 %s · 目标 %s/%s · 待分配 %s",
+  "gui.frostedheart.town_manager.staffing_summary": "可工作 %s · 保障 %s/%s · 待分配 %s",
   "gui.frostedheart.town_manager.staffing_counts": "%s → %s / %s",
   "gui.frostedheart.town_manager.staffing_tooltip_order": "拖动调整队列；靠前建筑先补足保障人数",
   "gui.frostedheart.town_manager.staffing_tooltip_target": "拖动设置保障人数；绿/橙为保障岗位，蓝为额外分配，红为缺席",

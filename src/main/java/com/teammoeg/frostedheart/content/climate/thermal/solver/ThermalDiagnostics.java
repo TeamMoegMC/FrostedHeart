@@ -45,6 +45,7 @@ public final class ThermalDiagnostics {
         default void accepted(RegionalAirRuntime runtime, RegionJob job, List<ThermalRegion> regions) { }
         default void installing(RegionalAirRuntime runtime, List<ThermalRegion> previous, List<ThermalRegion> candidates) { }
         default void installed(RegionalAirRuntime runtime) { }
+        default void preparationCreated(RegionalAirRuntime.RebuildPreparation preparation) { }
         default void qualityPublished(ThermalRegion region, com.teammoeg.frostedheart.content.climate.thermal.query.RegionalQuerySnapshot before,
                 com.teammoeg.frostedheart.content.climate.thermal.query.RegionalQuerySnapshot after) { }
         default void blocked(RegionalContinuationBoundary boundary, long tick, List<ThermalRegion> regions) { }

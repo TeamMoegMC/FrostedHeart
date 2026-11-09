@@ -38,12 +38,6 @@ final class ThermalRegion {
     RegionWorkPolicy workPolicy;
     long buildWorkAllowance;
     int snapshotPauses, snapshotSeals;
-    com.teammoeg.frostedheart.content.climate.thermal.runtime.ThermalMemoryBudget.Reservation minimumWorkspace;
-
-    void releaseMinimumWorkspace() {
-        if (minimumWorkspace != null) { minimumWorkspace.close(); minimumWorkspace = null; }
-    }
-
     ThermalRegion(long id, long epoch, RegionalAirRuntime.Scope scope, ContinuousAirSolver solver) {
         this.id = id; this.epoch = epoch; this.scope = scope; this.solver = solver;
         publication = new RegionalQuerySnapshot.Handle(id);

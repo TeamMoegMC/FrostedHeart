@@ -703,7 +703,7 @@
   "gui.frostedheart.town_manager.virtual_resource.uses_warehouse_capacity": "Uses warehouse capacity: %s",
   "gui.frostedheart.town_manager.virtual_resource.level_amount": "Level %s: %s",
   "gui.frostedheart.town_manager.staffing": "Workforce Dispatch",
-  "gui.frostedheart.town_manager.staffing_summary": "Ready %s | Goals %s/%s | Idle %s",
+  "gui.frostedheart.town_manager.staffing_summary": "Ready %s | Guaranteed %s/%s | Idle %s",
   "gui.frostedheart.town_manager.staffing_counts": "%s -> %s / %s",
   "gui.frostedheart.town_manager.staffing_tooltip_order": "Drag to reorder; earlier buildings fill guaranteed staffing first",
   "gui.frostedheart.town_manager.staffing_tooltip_target": "Drag to set guaranteed staffing; green/orange is target, blue surplus, red absent",

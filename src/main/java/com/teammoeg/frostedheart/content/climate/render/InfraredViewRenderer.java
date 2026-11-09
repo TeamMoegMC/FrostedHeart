@@ -32,8 +32,10 @@ import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.teammoeg.frostedheart.FHNetwork;
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.client.FHShaders;
 import com.teammoeg.frostedheart.content.climate.network.FHRequestInfraredViewDataSyncPacket;
+import com.teammoeg.frostedheart.content.climate.network.FHContinueInfraredViewPacket;
 import com.teammoeg.frostedheart.content.climate.network.InfraredBrickCodec;
 import com.teammoeg.frostedheart.content.climate.network.InfraredRequestState;
 import com.teammoeg.frostedheart.content.climate.network.InfraredWindow;
@@ -126,6 +128,11 @@ public final class InfraredViewRenderer {
     private static int textureCenterSectionY;
     private static int temperatureTexture;
     private static float radius;
+    private static boolean diagnosticTrace, lastRenderHadTerrainDepth;
+    private static long sentRequests, receivedParts, receivedAcks, committedReplies, ignoredReplies, renderedFrames;
+    private static long lastSentNanos;
+    private static int lastSentId;
+    private static int nextResponsePart;
 
     private InfraredViewRenderer() {
     }
@@ -232,6 +239,9 @@ public final class InfraredViewRenderer {
     ) {
         int requestId = requests.tryBegin();
         if (requestId == InfraredRequestState.NO_REQUEST) return;
+        sentRequests++; lastSentId=requestId; lastSentNanos=System.nanoTime();
+        if(diagnosticTrace)FHMain.LOGGER.info("IR_CLIENT_SEND id={} full={} center={},{},{} baseline={}",
+                requestId,forceFull,centerChunkX,centerSectionY,centerChunkZ,knownDisplayRequestId);
         receivingResponse = false;
         lastRequestTick = gameTick;
         requestCenterValid = true;
@@ -251,18 +261,25 @@ public final class InfraredViewRenderer {
                         knownDisplayRequestId));
     }
 
-    /** Only LAST commits the complete display baseline, including field-only responses. */
-    /** Apply response parts to the existing CPU mirror; publish the baseline only on the last part. */
+    /** Show received Pages progressively; only LAST commits the complete delta baseline. */
     public static void updateData(int responseRequestId, InfraredSnapshot data, boolean firstPart, boolean lastPart) {
         RenderSystem.assertOnRenderThread();
-        if (!open || !requests.accepts(responseRequestId)) return;
+        receivedParts++;
+        if(diagnosticTrace)FHMain.LOGGER.info("IR_CLIENT_PART id={} accepted={} first={} last={} full={} readable={} payloadBytes={}",
+                responseRequestId,open&&requests.accepts(responseRequestId),firstPart,lastPart,data.full(),data.readable(),
+                java.util.Arrays.stream(data.brickRecords()).mapToInt(part -> part.length).sum());
+        if (!open || !requests.accepts(responseRequestId)) { ignoredReplies++; return; }
         boolean sameCenter = data.centerChunkX() == textureCenterChunkX
                 && data.centerChunkZ() == textureCenterChunkZ && data.centerSectionY() == textureCenterSectionY;
         long previousCenter = SectionPos.asLong(textureCenterChunkX, textureCenterSectionY, textureCenterChunkZ);
         long nextCenter = SectionPos.asLong(data.centerChunkX(), data.centerSectionY(), data.centerChunkZ());
         if (firstPart) {
+            nextResponsePart=1;
             if (!data.full() && (!deltaBaselineValid || !InfraredWindow.overlaps(previousCenter, nextCenter)
                     || data.generation() != generation)) {
+                ignoredReplies++;
+                if(diagnosticTrace)FHMain.LOGGER.info("IR_CLIENT_REJECT id={} reason=delta-baseline localGeneration={} replyGeneration={}",
+                        responseRequestId,generation,data.generation());
                 invalidateDisplay();
                 return;
             }
@@ -279,7 +296,11 @@ public final class InfraredViewRenderer {
                 System.arraycopy(dirtyUploadPages, 0, knownPresence, 0, knownPresence.length);
                 Arrays.fill(dirtyUploadPages, 0L);
             }
-        } else if (!receivingResponse) return;
+        } else if (!receivingResponse) {
+            ignoredReplies++;
+            if(diagnosticTrace)FHMain.LOGGER.info("IR_CLIENT_REJECT id={} reason=missing-FIRST",responseRequestId);
+            return;
+        }
         for (byte[] records : data.brickRecords()) {
             FriendlyByteBuf input = new FriendlyByteBuf(Unpooled.wrappedBuffer(records));
             try {
@@ -288,7 +309,15 @@ public final class InfraredViewRenderer {
                     writeBrick(brick, decodedBrick);
             } finally { input.release(); }
         }
-        if (!lastPart) return;
+        textureCenterChunkX=data.centerChunkX();textureCenterChunkZ=data.centerChunkZ();
+        textureCenterSectionY=data.centerSectionY();
+        if(firstPart&&(data.full()||!sameCenter))uploadFullTemperatureTexture();
+        else uploadDirtyPages();
+        Arrays.fill(dirtyUploadPages,0L);
+        if (!lastPart) {
+            FHNetwork.INSTANCE.sendToServer(new FHContinueInfraredViewPacket(responseRequestId,nextResponsePart++));
+            return;
+        }
         receivingResponse = false;
         if (data.presence().length != 0)
             System.arraycopy(data.presence(), 0, knownPresence, 0, knownPresence.length);
@@ -297,18 +326,40 @@ public final class InfraredViewRenderer {
         generation = data.generation(); infraredEpoch = data.infraredEpoch();
         storedEpoch = data.storedEpoch();
         storedSampleTick = data.storedSampleTick();
-        if (data.full() || !sameCenter) uploadFullTemperatureTexture(); else uploadDirtyPages();
         materialReadable = data.readable();
         deltaBaselineValid = true;
         Arrays.fill(dirtyUploadPages, 0L);
         knownFieldPages = data.fieldPages();
         knownDisplayRequestId = responseRequestId;
+        FHNetwork.INSTANCE.sendToServer(new FHContinueInfraredViewPacket(responseRequestId,nextResponsePart));
         requests.complete(responseRequestId);
+        committedReplies++;
+        if(diagnosticTrace)FHMain.LOGGER.info("IR_CLIENT_COMMIT {}",diagnosticStatus());
     }
 
     public static void acknowledgeRequest(int responseRequestId) {
         RenderSystem.assertOnRenderThread();
-        if (requests.complete(responseRequestId)) receivingResponse = false;
+        receivedAcks++;
+        boolean accepted=requests.complete(responseRequestId);
+        if(accepted)receivingResponse=false; else ignoredReplies++;
+        if(diagnosticTrace)FHMain.LOGGER.info("IR_CLIENT_ACK id={} accepted={}",responseRequestId,accepted);
+    }
+
+    public static void setDiagnosticTrace(boolean enabled) { diagnosticTrace=enabled; }
+
+    public static String diagnosticStatus() {
+        long valid=0;short min=Short.MAX_VALUE,max=Short.MIN_VALUE;
+        if(temperatureMirror!=null)for(int i=0;i<temperatureMirror.capacity();i++) {
+            short value=temperatureMirror.get(i);
+            if(value!=InfraredBrickCodec.INVALID_TEMPERATURE){valid++;min=(short)Math.min(min,value);max=(short)Math.max(max,value);}
+        }
+        long waitMs=requests.isPending()?(System.nanoTime()-lastSentNanos)/1_000_000:0;
+        return "IR_CLIENT open="+open+" pending="+requests.isPending()+" waitMs="+waitMs+" request="+lastSentId
+                +" sent="+sentRequests+" dataParts="+receivedParts+" acks="+receivedAcks+" commits="+committedReplies+" display="+knownDisplayRequestId
+                +" ignored="+ignoredReplies+" staging="+receivingResponse+" baseline="+deltaBaselineValid
+                +" validMirrorSamples="+valid+" minC="+(valid==0?Double.NaN:min*.25)+" maxC="+(valid==0?Double.NaN:max*.25)
+                +" materialReadable="+materialReadable+" texture="+(temperatureTexture!=0)+" renderedFrames="+renderedFrames
+                +" terrainDepth="+lastRenderHadTerrainDepth+" center="+textureCenterChunkX+","+textureCenterSectionY+","+textureCenterChunkZ;
     }
 
     public static void invalidateDisplay() {
@@ -580,6 +631,7 @@ public final class InfraredViewRenderer {
                 buffer.vertex(1, -1, 0).endVertex();
                 buffer.vertex(1, 1, 0).endVertex();
                 BufferUploader.draw(buffer.end());
+                renderedFrames++; lastRenderHadTerrainDepth=terrainDepthCaptured;
             } finally {
                 // ShaderProgram binds raw GL. Restore it raw too, leaving vanilla/Oculus caches unchanged.
                 GL20.glUseProgram(previousProgram);
@@ -621,6 +673,9 @@ public final class InfraredViewRenderer {
         open = false;
         radius = 0.0F;
         knownDisplayRequestId = -1;
+        diagnosticTrace=false;lastRenderHadTerrainDepth=false;
+        sentRequests=receivedParts=receivedAcks=committedReplies=ignoredReplies=renderedFrames=0;
+        lastSentNanos=0;lastSentId=0;
         deltaBaselineValid = false;
         infraredEpoch = 0;
         storedEpoch = 0;
@@ -656,6 +711,8 @@ public final class InfraredViewRenderer {
     }
 
     private static void invalidateRequests() {
+        if(requests.isPending()&&Minecraft.getInstance().getConnection()!=null)
+            FHNetwork.INSTANCE.sendToServer(new FHContinueInfraredViewPacket(lastSentId,-1));
         receivingResponse = false;
         requests.invalidate();
         requestCenterValid = false;

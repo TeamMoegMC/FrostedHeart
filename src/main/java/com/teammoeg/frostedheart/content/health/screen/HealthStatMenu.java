@@ -30,9 +30,11 @@ import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.common.util.LazyOptional;
 
 public class HealthStatMenu extends CBaseMenu {
+	private final Player owner;
 	public CDataSlot<Float> fat=CCustomMenuSlot.SLOT_PERCENTAGE.create(this);
 	public CDataSlot<Float> protein=CCustomMenuSlot.SLOT_PERCENTAGE.create(this);
 	public CDataSlot<Float> carbohydrate=CCustomMenuSlot.SLOT_PERCENTAGE.create(this);
@@ -49,9 +51,11 @@ public class HealthStatMenu extends CBaseMenu {
 
 	public HealthStatMenu(int pContainerId, Inventory inventoryPlayer, FriendlyByteBuf extraData) {
 		super(FHMenuTypes.NUTRITION_GUI.get(), pContainerId,inventoryPlayer.player, 0);
+		owner = inventoryPlayer.player;
 	}
 	public HealthStatMenu(int pContainerId, Inventory inventoryPlayer) {
 		super(FHMenuTypes.NUTRITION_GUI.get(), pContainerId,inventoryPlayer.player, 0);
+		owner = inventoryPlayer.player;
 		
 		LazyOptional<NutritionCapability> nut_lo=NutritionCapability.getCapability(inventoryPlayer.player);
 		nut_lo.ifPresent(cap->{
@@ -70,6 +74,11 @@ public class HealthStatMenu extends CBaseMenu {
 			feetTemperature.bind(()->data.getBodyTempByPart(BodyPart.FEET));
 			coreTemperatureTrend.bind(()->coreTemperatureTrend(data));
 		});
+	}
+
+	@Override
+	public boolean stillValid(Player player) {
+		return player == owner && owner.isAlive() && !owner.isRemoved() && super.stillValid(player);
 	}
 
 	private static int coreTemperatureTrend(PlayerTemperatureData data) {

@@ -21,7 +21,6 @@
 package com.teammoeg.frostedheart.content.climate.network;
 
 import com.teammoeg.chorda.network.CMessage;
-import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
@@ -124,14 +123,10 @@ public record FHRequestInfraredViewDataSyncPacket(
         context.get().enqueueWork(() -> {
             var player = context.get().getSender();
             if (player == null) return;
+            InfraredDiagnostics.request(player,this);
             var snapshot = MinecraftThermalInput.gameplayInfraredSnapshot(player, this);
-            if (snapshot != null) {
-                int count = Math.max(1, snapshot.brickRecords().length);
-                for (int part = 0; part < count; part++)
-                    FHNetwork.INSTANCE.sendPlayer(player, new FHResponseInfraredViewDataSyncPacket(requestId, snapshot, part));
-            } else {
-                FHNetwork.INSTANCE.sendPlayer(player, FHResponseInfraredViewDataSyncPacket.acknowledge(this));
-            }
+            InfraredDiagnostics.response(player,requestId,snapshot);
+            InfraredTransfers.start(player,requestId,snapshot);
         });
         context.get().setPacketHandled(true);
     }

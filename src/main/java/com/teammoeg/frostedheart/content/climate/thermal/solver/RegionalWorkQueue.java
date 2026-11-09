@@ -84,7 +84,7 @@ final class RegionalWorkQueue {
         for (var build : builds) {
             build.region.retired = true;
             if (!cancel(build)) { complete = false; continue; }
-            build.region.solver.abortPreparedRebuild(); build.region.pending.retireRetention(); build.region.releaseMinimumWorkspace();
+            build.region.solver.abortPreparedRebuild(); build.region.pending.retireRetention();
         }
         return complete;
     }

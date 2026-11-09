@@ -1,0 +1,854 @@
+{
+  "status": "reproduced; production behavior unchanged",
+  "verifiedDate": "2026-11-09",
+  "author": "Codex; OpenAI GPT-6; investigation collaborator",
+  "environment": {
+    "minecraft": "1.20.1",
+    "forge": "47.3.0",
+    "modVersion": "0.7.13",
+    "java": 17,
+    "sourceHead": "fdacc2bc7",
+    "source": "current working tree; existing unrelated thermal changes left intact"
+  },
+  "scope": "Player nutrition lifecycle and persistent-config migration; isolated real Forge GameTest server with synthetic player connections",
+  "normalConsumptionRate": 0.25,
+  "normalLifecycle": [
+    {
+      "case": "alive-one-hunger",
+      "samples": [
+        {
+          "tick": 0,
+          "alive": true,
+          "removed": false,
+          "health": 20.0,
+          "maxHealth": 10.0,
+          "food": 20,
+          "lastFood": 20,
+          "exhaustion": 4.1,
+          "capabilityAvailable": true,
+          "state": {
+            "fat": 15.0,
+            "carbohydrate": 15.0,
+            "protein": 15.0,
+            "vegetable": 15.0
+          },
+          "menuFatEncoded": 1500
+        },
+        {
+          "tick": -1,
+          "alive": true,
+          "removed": false,
+          "health": 20.0,
+          "maxHealth": 10.0,
+          "food": 20,
+          "lastFood": 20,
+          "exhaustion": 4.1,
+          "capabilityAvailable": true,
+          "state": {
+            "fat": 15.0,
+            "carbohydrate": 15.0,
+            "protein": 15.0,
+            "vegetable": 15.0
+          },
+          "menuFatEncoded": 1500
+        },
+        {
+          "tick": 1,
+          "alive": true,
+          "removed": false,
+          "health": 20.0,
+          "maxHealth": 10.0,
+          "food": 19,
+          "lastFood": 20,
+          "exhaustion": 0.099999905,
+          "capabilityAvailable": true,
+          "state": {
+            "fat": 14.75,
+            "carbohydrate": 14.75,
+            "protein": 14.75,
+            "vegetable": 14.75
+          },
+          "menuFatEncoded": 1474
+        },
+        {
+          "tick": 10,
+          "alive": true,
+          "removed": false,
+          "health": 20.0,
+          "maxHealth": 10.0,
+          "food": 19,
+          "lastFood": 19,
+          "exhaustion": 0.099999905,
+          "capabilityAvailable": true,
+          "state": {
+            "fat": 14.75,
+            "carbohydrate": 14.75,
+            "protein": 14.75,
+            "vegetable": 14.75
+          },
+          "menuFatEncoded": 1474
+        },
+        {
+          "tick": 20,
+          "alive": true,
+          "removed": false,
+          "health": 20.0,
+          "maxHealth": 10.0,
+          "food": 19,
+          "lastFood": 19,
+          "exhaustion": 0.099999905,
+          "capabilityAvailable": true,
+          "state": {
+            "fat": 14.75,
+            "carbohydrate": 14.75,
+            "protein": 14.75,
+            "vegetable": 14.75
+          },
+          "menuFatEncoded": 1474
+        },
+        {
+          "tick": 200,
+          "alive": true,
+          "removed": false,
+          "health": 20.0,
+          "maxHealth": 10.0,
+          "food": 19,
+          "lastFood": 19,
+          "exhaustion": 0.099999905,
+          "capabilityAvailable": true,
+          "state": {
+            "fat": 14.75,
+            "carbohydrate": 14.75,
+            "protein": 14.75,
+            "vegetable": 14.75
+          },
+          "menuFatEncoded": 1474
+        }
+      ]
+    },
+    {
+      "case": "dead-no-exhaustion",
+      "samples": [
+        {
+          "tick": 0,
+          "alive": true,
+          "removed": false,
+          "health": 20.0,
+          "maxHealth": 10.0,
+          "food": 20,
+          "lastFood": 20,
+          "exhaustion": 0.0,
+          "capabilityAvailable": true,
+          "state": {
+            "fat": 15.0,
+            "carbohydrate": 15.0,
+            "protein": 15.0,
+            "vegetable": 15.0
+          },
+          "menuFatEncoded": 1500
+        },
+        {
+          "tick": -1,
+          "alive": false,
+          "removed": false,
+          "health": 0.0,
+          "maxHealth": 10.0,
+          "food": 20,
+          "lastFood": 20,
+          "exhaustion": 0.0,
+          "capabilityAvailable": true,
+          "state": {
+            "fat": 15.0,
+            "carbohydrate": 15.0,
+            "protein": 15.0,
+            "vegetable": 15.0
+          },
+          "menuFatEncoded": 1500
+        },
+        {
+          "tick": 1,
+          "alive": false,
+          "removed": false,
+          "health": 0.0,
+          "maxHealth": 10.0,
+          "food": 20,
+          "lastFood": 20,
+          "exhaustion": 0.0,
+          "capabilityAvailable": true,
+          "state": {
+            "fat": 15.0,
+            "carbohydrate": 15.0,
+            "protein": 15.0,
+            "vegetable": 15.0
+          },
+          "menuFatEncoded": 1500
+        },
+        {
+          "tick": 10,
+          "alive": false,
+          "removed": false,
+          "health": 0.0,
+          "maxHealth": 10.0,
+          "food": 20,
+          "lastFood": 20,
+          "exhaustion": 0.0,
+          "capabilityAvailable": true,
+          "state": {
+            "fat": 15.0,
+            "carbohydrate": 15.0,
+            "protein": 15.0,
+            "vegetable": 15.0
+          },
+          "menuFatEncoded": 1500
+        },
+        {
+          "tick": 20,
+          "alive": false,
+          "removed": true,
+          "health": 0.0,
+          "maxHealth": 10.0,
+          "food": 20,
+          "lastFood": 20,
+          "exhaustion": 0.0,
+          "capabilityAvailable": false,
+          "state": {
+            "fat": 15.0,
+            "carbohydrate": 15.0,
+            "protein": 15.0,
+            "vegetable": 15.0
+          },
+          "menuFatEncoded": 0
+        },
+        {
+          "tick": 200,
+          "alive": false,
+          "removed": true,
+          "health": 0.0,
+          "maxHealth": 10.0,
+          "food": 20,
+          "lastFood": 20,
+          "exhaustion": 0.0,
+          "capabilityAvailable": false,
+          "state": {
+            "fat": 15.0,
+            "carbohydrate": 15.0,
+            "protein": 15.0,
+            "vegetable": 15.0
+          },
+          "menuFatEncoded": 0
+        }
+      ]
+    },
+    {
+      "case": "dead-one-hunger",
+      "samples": [
+        {
+          "tick": 0,
+          "alive": true,
+          "removed": false,
+          "health": 20.0,
+          "maxHealth": 10.0,
+          "food": 20,
+          "lastFood": 20,
+          "exhaustion": 4.1,
+          "capabilityAvailable": true,
+          "state": {
+            "fat": 15.0,
+            "carbohydrate": 15.0,
+            "protein": 15.0,
+            "vegetable": 15.0
+          },
+          "menuFatEncoded": 1500
+        },
+        {
+          "tick": -1,
+          "alive": false,
+          "removed": false,
+          "health": 0.0,
+          "maxHealth": 10.0,
+          "food": 20,
+          "lastFood": 20,
+          "exhaustion": 4.1,
+          "capabilityAvailable": true,
+          "state": {
+            "fat": 15.0,
+            "carbohydrate": 15.0,
+            "protein": 15.0,
+            "vegetable": 15.0
+          },
+          "menuFatEncoded": 1500
+        },
+        {
+          "tick": 1,
+          "alive": false,
+          "removed": false,
+          "health": 0.0,
+          "maxHealth": 10.0,
+          "food": 19,
+          "lastFood": 20,
+          "exhaustion": 0.099999905,
+          "capabilityAvailable": true,
+          "state": {
+            "fat": 14.75,
+            "carbohydrate": 14.75,
+            "protein": 14.75,
+            "vegetable": 14.75
+          },
+          "menuFatEncoded": 1474
+        },
+        {
+          "tick": 10,
+          "alive": false,
+          "removed": false,
+          "health": 0.0,
+          "maxHealth": 10.0,
+          "food": 19,
+          "lastFood": 19,
+          "exhaustion": 0.099999905,
+          "capabilityAvailable": true,
+          "state": {
+            "fat": 14.75,
+            "carbohydrate": 14.75,
+            "protein": 14.75,
+            "vegetable": 14.75
+          },
+          "menuFatEncoded": 1474
+        },
+        {
+          "tick": 20,
+          "alive": false,
+          "removed": true,
+          "health": 0.0,
+          "maxHealth": 10.0,
+          "food": 19,
+          "lastFood": 19,
+          "exhaustion": 0.099999905,
+          "capabilityAvailable": false,
+          "state": {
+            "fat": 14.75,
+            "carbohydrate": 14.75,
+            "protein": 14.75,
+            "vegetable": 14.75
+          },
+          "menuFatEncoded": 0
+        },
+        {
+          "tick": 200,
+          "alive": false,
+          "removed": true,
+          "health": 0.0,
+          "maxHealth": 10.0,
+          "food": 19,
+          "lastFood": 19,
+          "exhaustion": 0.099999905,
+          "capabilityAvailable": false,
+          "state": {
+            "fat": 14.75,
+            "carbohydrate": 14.75,
+            "protein": 14.75,
+            "vegetable": 14.75
+          },
+          "menuFatEncoded": 0
+        }
+      ]
+    },
+    {
+      "case": "dead-max-exhaustion",
+      "samples": [
+        {
+          "tick": 0,
+          "alive": true,
+          "removed": false,
+          "health": 20.0,
+          "maxHealth": 10.0,
+          "food": 20,
+          "lastFood": 20,
+          "exhaustion": 40.0,
+          "capabilityAvailable": true,
+          "state": {
+            "fat": 15.0,
+            "carbohydrate": 15.0,
+            "protein": 15.0,
+            "vegetable": 15.0
+          },
+          "menuFatEncoded": 1500
+        },
+        {
+          "tick": -1,
+          "alive": false,
+          "removed": false,
+          "health": 0.0,
+          "maxHealth": 10.0,
+          "food": 20,
+          "lastFood": 20,
+          "exhaustion": 40.0,
+          "capabilityAvailable": true,
+          "state": {
+            "fat": 15.0,
+            "carbohydrate": 15.0,
+            "protein": 15.0,
+            "vegetable": 15.0
+          },
+          "menuFatEncoded": 1500
+        },
+        {
+          "tick": 1,
+          "alive": false,
+          "removed": false,
+          "health": 0.0,
+          "maxHealth": 10.0,
+          "food": 19,
+          "lastFood": 20,
+          "exhaustion": 36.0,
+          "capabilityAvailable": true,
+          "state": {
+            "fat": 14.75,
+            "carbohydrate": 14.75,
+            "protein": 14.75,
+            "vegetable": 14.75
+          },
+          "menuFatEncoded": 1474
+        },
+        {
+          "tick": 10,
+          "alive": false,
+          "removed": false,
+          "health": 0.0,
+          "maxHealth": 10.0,
+          "food": 11,
+          "lastFood": 11,
+          "exhaustion": 4.0,
+          "capabilityAvailable": true,
+          "state": {
+            "fat": 12.75,
+            "carbohydrate": 12.75,
+            "protein": 12.75,
+            "vegetable": 12.75
+          },
+          "menuFatEncoded": 1275
+        },
+        {
+          "tick": 20,
+          "alive": false,
+          "removed": true,
+          "health": 0.0,
+          "maxHealth": 10.0,
+          "food": 11,
+          "lastFood": 11,
+          "exhaustion": 4.0,
+          "capabilityAvailable": false,
+          "state": {
+            "fat": 12.75,
+            "carbohydrate": 12.75,
+            "protein": 12.75,
+            "vegetable": 12.75
+          },
+          "menuFatEncoded": 0
+        },
+        {
+          "tick": 200,
+          "alive": false,
+          "removed": true,
+          "health": 0.0,
+          "maxHealth": 10.0,
+          "food": 11,
+          "lastFood": 11,
+          "exhaustion": 4.0,
+          "capabilityAvailable": false,
+          "state": {
+            "fat": 12.75,
+            "carbohydrate": 12.75,
+            "protein": 12.75,
+            "vegetable": 12.75
+          },
+          "menuFatEncoded": 0
+        }
+      ]
+    },
+    {
+      "case": "respawn-at-15",
+      "samples": [
+        {
+          "tick": 0,
+          "alive": true,
+          "removed": false,
+          "health": 20.0,
+          "maxHealth": 10.0,
+          "food": 20,
+          "lastFood": 20,
+          "exhaustion": 0.0,
+          "capabilityAvailable": true,
+          "state": {
+            "fat": 15.0,
+            "carbohydrate": 15.0,
+            "protein": 15.0,
+            "vegetable": 15.0
+          },
+          "menuFatEncoded": 1500
+        },
+        {
+          "tick": -1,
+          "alive": true,
+          "removed": false,
+          "health": 10.0,
+          "maxHealth": 10.0,
+          "food": 20,
+          "lastFood": 20,
+          "exhaustion": 0.0,
+          "capabilityAvailable": true,
+          "state": {
+            "fat": 15.0,
+            "carbohydrate": 15.0,
+            "protein": 15.0,
+            "vegetable": 15.0
+          },
+          "menuFatEncoded": 1500
+        },
+        {
+          "tick": 1,
+          "alive": true,
+          "removed": false,
+          "health": 10.0,
+          "maxHealth": 10.0,
+          "food": 20,
+          "lastFood": 20,
+          "exhaustion": 0.0,
+          "capabilityAvailable": true,
+          "state": {
+            "fat": 15.0,
+            "carbohydrate": 15.0,
+            "protein": 15.0,
+            "vegetable": 15.0
+          },
+          "menuFatEncoded": 1500
+        },
+        {
+          "tick": 10,
+          "alive": true,
+          "removed": false,
+          "health": 10.0,
+          "maxHealth": 10.0,
+          "food": 20,
+          "lastFood": 20,
+          "exhaustion": 0.0,
+          "capabilityAvailable": true,
+          "state": {
+            "fat": 15.0,
+            "carbohydrate": 15.0,
+            "protein": 15.0,
+            "vegetable": 15.0
+          },
+          "menuFatEncoded": 1500
+        },
+        {
+          "tick": 20,
+          "alive": true,
+          "removed": false,
+          "health": 10.0,
+          "maxHealth": 10.0,
+          "food": 20,
+          "lastFood": 20,
+          "exhaustion": 0.0,
+          "capabilityAvailable": true,
+          "state": {
+            "fat": 15.0,
+            "carbohydrate": 15.0,
+            "protein": 15.0,
+            "vegetable": 15.0
+          },
+          "menuFatEncoded": 1500
+        },
+        {
+          "tick": 200,
+          "alive": true,
+          "removed": false,
+          "health": 10.0,
+          "maxHealth": 10.0,
+          "food": 20,
+          "lastFood": 20,
+          "exhaustion": 0.0,
+          "capabilityAvailable": true,
+          "state": {
+            "fat": 15.0,
+            "carbohydrate": 15.0,
+            "protein": 15.0,
+            "vegetable": 15.0
+          },
+          "menuFatEncoded": 1500
+        }
+      ]
+    },
+    {
+      "case": "delayed-respawn-at-15",
+      "samples": [
+        {
+          "tick": 0,
+          "alive": true,
+          "removed": false,
+          "health": 20.0,
+          "maxHealth": 10.0,
+          "food": 20,
+          "lastFood": 20,
+          "exhaustion": 0.0,
+          "capabilityAvailable": true,
+          "state": {
+            "fat": 15.0,
+            "carbohydrate": 15.0,
+            "protein": 15.0,
+            "vegetable": 15.0
+          },
+          "menuFatEncoded": 1500
+        },
+        {
+          "tick": -1,
+          "alive": false,
+          "removed": false,
+          "health": 0.0,
+          "maxHealth": 10.0,
+          "food": 20,
+          "lastFood": 20,
+          "exhaustion": 0.0,
+          "capabilityAvailable": true,
+          "state": {
+            "fat": 15.0,
+            "carbohydrate": 15.0,
+            "protein": 15.0,
+            "vegetable": 15.0
+          },
+          "menuFatEncoded": 1500
+        },
+        {
+          "tick": 1,
+          "alive": false,
+          "removed": false,
+          "health": 0.0,
+          "maxHealth": 10.0,
+          "food": 20,
+          "lastFood": 20,
+          "exhaustion": 0.0,
+          "capabilityAvailable": true,
+          "state": {
+            "fat": 15.0,
+            "carbohydrate": 15.0,
+            "protein": 15.0,
+            "vegetable": 15.0
+          },
+          "menuFatEncoded": 1500
+        },
+        {
+          "tick": 10,
+          "alive": false,
+          "removed": false,
+          "health": 0.0,
+          "maxHealth": 10.0,
+          "food": 20,
+          "lastFood": 20,
+          "exhaustion": 0.0,
+          "capabilityAvailable": true,
+          "state": {
+            "fat": 15.0,
+            "carbohydrate": 15.0,
+            "protein": 15.0,
+            "vegetable": 15.0
+          },
+          "menuFatEncoded": 1500
+        },
+        {
+          "tick": 20,
+          "alive": false,
+          "removed": true,
+          "health": 0.0,
+          "maxHealth": 10.0,
+          "food": 20,
+          "lastFood": 20,
+          "exhaustion": 0.0,
+          "capabilityAvailable": false,
+          "state": {
+            "fat": 15.0,
+            "carbohydrate": 15.0,
+            "protein": 15.0,
+            "vegetable": 15.0
+          },
+          "menuFatEncoded": 0
+        },
+        {
+          "tick": 200,
+          "alive": false,
+          "removed": true,
+          "health": 0.0,
+          "maxHealth": 10.0,
+          "food": 20,
+          "lastFood": 20,
+          "exhaustion": 0.0,
+          "capabilityAvailable": false,
+          "state": {
+            "fat": 15.0,
+            "carbohydrate": 15.0,
+            "protein": 15.0,
+            "vegetable": 15.0
+          },
+          "menuFatEncoded": 0
+        },
+        {
+          "tick": 201,
+          "alive": true,
+          "removed": false,
+          "health": 10.0,
+          "maxHealth": 10.0,
+          "food": 20,
+          "lastFood": 20,
+          "exhaustion": 0.0,
+          "capabilityAvailable": true,
+          "state": {
+            "fat": 15.0,
+            "carbohydrate": 15.0,
+            "protein": 15.0,
+            "vegetable": 15.0
+          },
+          "menuFatEncoded": 1500
+        }
+      ]
+    }
+  ],
+  "version2NbtRoundTrip": {
+    "tag": "{carbohydrate:15.0f,fat:15.0f,protein:15.0f,vegetable:15.0f,version:2}",
+    "state": {
+      "fat": 15.0,
+      "carbohydrate": 15.0,
+      "protein": 15.0,
+      "vegetable": 15.0
+    },
+    "case": "current-nbt"
+  },
+  "naturalFreshWorldConfig": {
+    "nutritionScaleVersion": 2,
+    "nutritionGainRate": 400.0,
+    "nutritionConsumptionRate": 0.25
+  },
+  "naturalStartupInterleavingEvents": [
+    "[16:11:00] [Server thread/INFO] [Frosted Heart (The Winter Rescue)/]: NUTRITION_CONFIG_OBSERVATION,before,Loading,Server thread,version=1,gain=null,consumption=null",
+    "[16:11:00] [Thread-2/INFO] [Frosted Heart (The Winter Rescue)/]: NUTRITION_CONFIG_OBSERVATION,before,Reloading,Thread-2,version=1,gain=0.0025,consumption=0.0025",
+    "[16:11:00] [Server thread/INFO] [Frosted Heart (The Winter Rescue)/]: NUTRITION_CONFIG_OBSERVATION,after,Loading,Server thread,version=2,gain=1.0,consumption=0.25",
+    "[16:11:00] [Thread-2/INFO] [Frosted Heart (The Winter Rescue)/]: NUTRITION_CONFIG_OBSERVATION,after,Reloading,Thread-2,version=2,gain=1.0,consumption=0.25",
+    "[16:11:00] [Thread-2/INFO] [Frosted Heart (The Winter Rescue)/]: NUTRITION_CONFIG_OBSERVATION,before,Reloading,Thread-2,version=2,gain=1.0,consumption=0.25",
+    "[16:11:00] [Thread-2/INFO] [Frosted Heart (The Winter Rescue)/]: NUTRITION_CONFIG_OBSERVATION,after,Reloading,Thread-2,version=2,gain=1.0,consumption=0.25"
+  ],
+  "controlledMigrationAndDeath": [
+    {
+      "version": 2,
+      "gain": 400.0,
+      "case": "controlled-loading-reloading-interleave",
+      "nutritionAfterOneHungerLossFrom15": {
+        "fat": 0.0,
+        "carbohydrate": 0.0,
+        "protein": 0.0,
+        "vegetable": 0.0
+      },
+      "afterBothConsumption": 25.0,
+      "afterFirstConsumption": 0.25
+    },
+    {
+      "samples": [
+        {
+          "tick": 0,
+          "alive": true,
+          "removed": false,
+          "health": 20.0,
+          "maxHealth": 10.0,
+          "food": 20,
+          "lastFood": 20,
+          "exhaustion": 4.1,
+          "capabilityAvailable": true,
+          "state": {
+            "fat": 15.0,
+            "carbohydrate": 15.0,
+            "protein": 15.0,
+            "vegetable": 15.0
+          },
+          "menuFatEncoded": 1500
+        },
+        {
+          "tick": 1,
+          "alive": false,
+          "removed": false,
+          "health": 0.0,
+          "maxHealth": 10.0,
+          "food": 19,
+          "lastFood": 20,
+          "exhaustion": 0.099999905,
+          "capabilityAvailable": true,
+          "state": {
+            "fat": 0.0,
+            "carbohydrate": 0.0,
+            "protein": 0.0,
+            "vegetable": 0.0
+          },
+          "menuFatEncoded": 0
+        },
+        {
+          "tick": 2,
+          "alive": true,
+          "removed": false,
+          "health": 1.0,
+          "maxHealth": 1.0,
+          "food": 20,
+          "lastFood": 20,
+          "exhaustion": 0.0,
+          "capabilityAvailable": true,
+          "state": {
+            "fat": 0.0,
+            "carbohydrate": 0.0,
+            "protein": 0.0,
+            "vegetable": 0.0
+          },
+          "menuFatEncoded": 0
+        }
+      ],
+      "consumption": 25.0,
+      "case": "real-death-after-config-race"
+    }
+  ],
+  "unscheduledConcurrentMigrationPairs": {
+    "attempts": 40,
+    "doubleConversionObserved": false,
+    "interpretation": "Not a failure-rate estimate. A deterministic timing barrier subsequently demonstrated a valid failing schedule."
+  },
+  "companionTemplate": {
+    "repository": "D:/TheWinterRescue",
+    "file": "defaultconfigs/frostedheart-server.toml",
+    "legacyGain": 0.0003,
+    "legacyConsumption": 0.0003,
+    "expectedGainAfterOneMigration": 0.12,
+    "expectedConsumptionAfterOneMigration": 0.03,
+    "gainAfterTwoConversions": 48.0,
+    "consumptionAfterTwoConversions": 3.0,
+    "hungerLossToExhaust15AtTwiceConvertedRate": 5,
+    "valuesAfterTwoConversions": "Derived from the exact production conversion factors; the real controlled runtime reproduction above uses source defaults."
+  },
+  "productionAnchors": [
+    "HealthCommonEvents.onPlayerRespawn(PlayerEvent.Clone)",
+    "HealthCommonEvents.onPlayerTick(TickEvent.PlayerTickEvent)",
+    "NutritionCapability.consume(Player)",
+    "NutritionCapability.consume(int)",
+    "FHConfig.onConfigLoading(ModConfigEvent.Loading)",
+    "FHConfig.onConfigReloading(ModConfigEvent.Reloading)",
+    "FHConfig.migratePersistentServerConfig(ModConfig)",
+    "FHConfig.migrateNutritionScale()",
+    "HealthStatMenu(int, Inventory)",
+    "C2SOpenNutritionScreenMessage.handle(Supplier<Context>)"
+  ],
+  "limits": [
+    "The reporting live server world configuration was not available. The incident cannot be assigned to a demonstrated cause solely from the latest-version answer.",
+    "The controlled test pauses a config read after the first caller passed its version check, runs a second production entrypoint to completion, then resumes the first. This demonstrates possibility, not natural frequency.",
+    "The dead-entity menu observation constructs a new menu for each sample. It does not assert that an already-bound menu turns zero automatically.",
+    "Client GL rendering and actual player interaction while the death screen is open were not tested.",
+    "Player loops replay 200 actual player ticks within the server test; this is game time, not 10 seconds of wall-clock waiting.",
+    "No production implementation, player save, balance value or companion-pack file was changed."
+  ],
+  "temporaryHarness": "build/nutrition-investigation/src; build/nutrition-investigation/run.init.gradle",
+  "rawLogs": [
+    "build/nutrition-investigation/config-runtime.log",
+    "build/nutrition-investigation/race-runtime.log",
+    "build/nutrition-investigation/race-controlled-runtime.log"
+  ]
+}

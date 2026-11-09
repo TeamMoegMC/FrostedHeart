@@ -103,7 +103,8 @@ public final class TownStaffingPanel extends UIElement {
     private void syncDraft(@Nullable TeamTown town) {
         if (town == null || draggedBuilding != null || targetBuilding != null) return;
         TownStaffingPlan serverPlan = town.getStaffingPlan();
-        if (serverPlan.equals(observedPlan)) return;
+        // Equal contents can be a new authoritative reply rejecting the local draft.
+        if (serverPlan == observedPlan) return;
         observedPlan = serverPlan;
         draftOrder.clear();
         draftTargets.clear();

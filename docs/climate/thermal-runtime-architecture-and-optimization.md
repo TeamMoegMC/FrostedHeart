@@ -781,6 +781,8 @@ pause, not an estimate of exchange through the new geometry.
 
 ## Query Publication
 
+> Historical implementation reference. The infrared transport and opening-gate paragraphs below predate the 2026-11-06 through 2026-11-08 changes. Current request completion, 128 KiB receipt-driven streaming, progressive GPU display, overlapping windows and cache ownership are maintained in [the network contract](data-lifecycle-and-integration.md#network-and-consumers) and [the infrared reference](infrared-view.md). The historical 960 KiB / LAST-only GPU upload and coverage-gated opening descriptions are not current behaviour.
+
 `QueryPublication` is a lock-free seqlock double buffer addressed directly by
 arena slot. A publish writes live slots once into the inactive buffer through
 `ThermalCellArena.nextLiveSlot` while readers retain the old envelope. Only the

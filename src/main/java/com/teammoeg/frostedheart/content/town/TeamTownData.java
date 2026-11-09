@@ -240,8 +240,8 @@ public class TeamTownData implements com.teammoeg.chorda.dataholders.PersistentC
 
     /**
      * 玩家编辑的工作建筑队列与保障人数。列表顺序是完整优先关系；保障人数是
-     * 第一轮优先补足的目标而非硬上限。通过 {@link #getStaffingPlan()} 读取时会与
-     * 当前建筑表对齐，以清理已拆除建筑并补入新建筑。
+     * 第一轮优先补足的目标而非硬上限。建筑注册变化时由
+     * {@link #prepareAssignments()} 与当前建筑表对齐，并同步权威计划。
      */
     private TownStaffingPlan staffingPlan = TownStaffingPlan.EMPTY;
 
@@ -532,7 +532,11 @@ public class TeamTownData implements com.teammoeg.chorda.dataholders.PersistentC
 
     private void normalizeHousingPlan() {
         TownHousingPlan normalized = housingPlan.normalize(buildings, buildingStore::preservesReference);
-        if (!normalized.equals(housingPlan)) { housingPlan = normalized; persistentChanged(); }
+        if (!normalized.equals(housingPlan)) {
+            housingPlan = normalized;
+            dataSyncCache.housingPlanChanged |= serverTracking;
+            persistentChanged();
+        }
     }
 
     public boolean setHousingGuarantee(BlockPos building, int target) {
@@ -830,9 +834,8 @@ public class TeamTownData implements com.teammoeg.chorda.dataholders.PersistentC
     /**
      * 返回与当前建筑集合一致的权威岗位计划。
      * <p>
-     * 读取前会执行轻量规范化：移除已拆除或不再属于工作建筑的条目，并把尚未进入
-     * 计划的新工作建筑追加到队尾。旧存档中的空计划也在这里完成惰性迁移。因此调用方
-     * 不应缓存旧的计划对象，而应在需要显示或编辑时重新读取。
+     * 加载与建筑注册变化通过 {@link #prepareAssignments()} 对齐计划；读取不修改
+     * 状态。客户端使用服务端下发的队列与保障人数，不从本日名册推断玩家目标。
      *
      * @return 当前规范化后的不可变岗位计划
      */
@@ -847,7 +850,11 @@ public class TeamTownData implements com.teammoeg.chorda.dataholders.PersistentC
      */
     private void normalizeStaffingPlan() {
         TownStaffingPlan normalized = staffingPlan.normalize(buildings, buildingStore::preservesReference);
-        if (!normalized.equals(staffingPlan)) { staffingPlan = normalized; persistentChanged(); }
+        if (!normalized.equals(staffingPlan)) {
+            staffingPlan = normalized;
+            dataSyncCache.staffingPlanChanged |= serverTracking;
+            persistentChanged();
+        }
     }
 
     /**
@@ -1620,6 +1627,7 @@ public class TeamTownData implements com.teammoeg.chorda.dataholders.PersistentC
     /** Client-side authoritative town-name update. */
     public void applyNameUpdate(String updatedName) {
         this.name = updatedName;
+        com.teammoeg.frostedheart.content.town.client.TownClientUpdates.nameUpdated();
     }
 
     /** Client-side idempotent history merge; retransmitted entries replace by town day. */
@@ -1657,6 +1665,8 @@ public class TeamTownData implements com.teammoeg.chorda.dataholders.PersistentC
         Set<BlockPos> changedBuildingPos = new HashSet<>();
         Set<BlockPos> changedBuildingZonePos = new HashSet<>();
         boolean transportStateChanged;
+        boolean staffingPlanChanged;
+        boolean housingPlanChanged;
 
         /**
          * 上次已通过增量包同步给客户端的资源值快照（仅服务端维护）。
@@ -1791,7 +1801,8 @@ public class TeamTownData implements com.teammoeg.chorda.dataholders.PersistentC
          */
         public boolean hasChanges() {
             return !changedBuildingPos.isEmpty() || !changedResidentUUID.isEmpty()
-                    || !changedResourceKey.isEmpty() || transportStateChanged;
+                    || !changedResourceKey.isEmpty() || transportStateChanged
+                    || staffingPlanChanged || housingPlanChanged;
         }
 
         /**
@@ -1802,6 +1813,8 @@ public class TeamTownData implements com.teammoeg.chorda.dataholders.PersistentC
             changedResidentUUID.clear();
             changedResourceKey.clear();
             transportStateChanged = false;
+            staffingPlanChanged = false;
+            housingPlanChanged = false;
         }
 
 

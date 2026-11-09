@@ -1,7 +1,7 @@
 # Climate Data And Lifecycle
 
 - Status: `Transitional; material lifecycle integration is under validation`
-- Last verified: `2026-11-07` for infrared bandwidth, overlapping windows and display-cache lifecycle; `2026-11-06` for completed-enthalpy phase submission, infrared request completion and topology retirement invalidation; `2026-11-05` for body packet v2 and the orb's separate display conversion; `2026-10-29` for current runtime selection and gameplay entry call-chain review; `2026-10-22` for inactive player simulator removal; `2026-10-18` for phase-temperature and icicle receipt integration. Other sections retain their earlier verification scope.
+- Last verified: `2026-11-08` for infrared receipt-driven streaming, progressive GPU uploads and five real-client WAN scenarios; `2026-11-07` for infrared bandwidth, overlapping windows and display-cache lifecycle; `2026-11-06` for completed-enthalpy phase submission, infrared request completion and topology retirement invalidation; `2026-11-05` for body packet v2 and the orb's separate display conversion; `2026-10-29` for current runtime selection and gameplay entry call-chain review; `2026-10-22` for inactive player simulator removal; `2026-10-18` for phase-temperature and icicle receipt integration. Other sections retain their earlier verification scope.
 - Scope: recipe/configuration ownership, capabilities, server lifecycle, thermal runtime integration, and network boundaries
 - Primary code anchors: `FHRecipeCachingReloadListener`, `WorldTemperature`, `MinecraftThermalEvents`, `MinecraftThermalInput`, `MinecraftPhaseController.temperature`, `ThermalWorkerPool`, `LevelChunkSectionMixin_ThermalInput`, `FHCapabilities`, `FHNetwork`
 
@@ -398,8 +398,8 @@ FHRequestInfraredViewDataSyncPacket)`; the raw-baseline overload does not use th
 When all center offsets are below nine Sections, overlapping windows use delta:
 existing samples are retained and entering/changed regions are sent. At FIRST the
 client shifts its existing CPU mirror in place and fills entering space INVALID;
-at LAST it uploads the moved mirror and commits the new origin. GPU data remains
-at its old origin until that commit. A non-overlapping jump, generation change or
+the moved mirror is uploaded at FIRST and subsequent changed Pages are uploaded
+per part. LAST commits the complete delta baseline. A non-overlapping jump, generation change or
 invalid baseline uses full. Moving still performs a full local texture upload;
 this change saves network data, not that upload.
 Local geometry mutation keeps unchanged bodies readable from the last Page publication;
@@ -407,9 +407,9 @@ the existing material journal excludes replacements and sends affected Brick del
 `QueryPublication.installRegions` invalidates the removed regions' old Page/Brick footprint
 as well as the added footprint. A shrinking or retired region therefore sends explicit
 INVALID records for missing materials even when another region keeps Page presence true.
-Concurrent publication/slot mismatches retry the entire snapshot twice, then send
-nothing rather than a false removal; the client retains its committed texture and
-requests again on its normal schedule. A stably invalid or over-age physical input
+Concurrent publication/slot mismatches retry the entire snapshot twice, then
+return null for a compact ACK rather than a false removal; the client retains its
+display and requests again on its normal schedule. A stably invalid or over-age physical input
 transitions to a field-only full. An unchanged
 unreadable state can continue delta. Readability recovery and generation changes
 force full. No field can be hidden solely because physical presence is empty.
@@ -417,11 +417,20 @@ force full. No field can be hidden solely because physical presence is empty.
 `InfraredBrickCodec` uses 0.25°C final quantization and INVALID/UNIFORM/INDEXED/RAW.
 Full can omit INVALID after clearing the mirror; all deltas use explicit INVALID
 for removal, including Page replacement. The client never erases field display
-based on material-presence changes. Parts split at Page boundaries within 960 KiB
-including 2,048 reserved header bytes. TCP supplies order, requestId identity.
-FIRST validates/starts CPU staging; LAST commits origin, both masks, material
-epoch/readability and generation, then uploads. Previous GPU data remains at its
-old origin until commit. A field-only full establishes the display baseline;
+based on material-presence changes. Parts split at Page boundaries within 32 KiB
+for the first response and 128 KiB thereafter, including 2,048 reserved header bytes. Nearby Sections encode first. TCP supplies
+order and requestId supplies identity. `InfraredTransfers` initially sends one
+part; `FHContinueInfraredViewPacket` receipts each received part before the next
+can enter the connection. LAST also has a final receipt that releases the reply.
+FIRST validates/starts CPU staging, selects its display origin and uploads the
+received data (INVALID for missing cells); subsequent parts upload dirty Pages.
+LAST commits both masks, material epoch/readability, generation and the complete
+display token. A partial GPU display cannot become a delta baseline. The stream
+retains physical infrared change tracking once per game second until its final
+receipt, without starting a runtime. Cancellation, replacement, logout, dimension
+change, Level unload and stop clear retained replies. A missing continuation
+state sends ACK so the client can recover with full. The network protocol suffix
+is `:infrared-stream-1`. A field-only full establishes the display baseline;
 materialReadable=false does not trigger perpetual full retries or disable shader
 sampling. There is still only one 144³ mirror and one temperature texture, with
 an 8 KiB scratch for partial Page uploads.
@@ -431,7 +440,7 @@ full, while retaining the visible GPU image until replacement. World reset clear
 request/field state and detaches existing GPU handles before deletion. No background
 resources exist. Missing data uses the original blue placeholder and keeps the
 scan complete. Closed clients stop polling; material comparisons stop after the
-last request's 80-tick activity window. Unchanged windows send compact ACKs;
+last request/transfer's 80-tick activity window. Unchanged windows send compact ACKs;
 field composition still scans its refreshed Page area, while traffic follows
 changed final encoded Bricks and metadata. Shader scope
 and approximations are in [world temperature](world-climate-and-temperature.md).

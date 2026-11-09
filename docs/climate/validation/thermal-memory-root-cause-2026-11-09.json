@@ -1,0 +1,564 @@
+{
+  "status": "confirmed_defects_fixed_and_tested_original_oom_unresolved",
+  "date": "2026-11-09",
+  "scope": "Existing incident GC logs, prior local live heaps, and a Java 21 dedicated-server reproduction; not the incident server heap.",
+  "originalIncident": {
+    "gcAnalysis": "server-gc-22312-2026-11-09.json",
+    "afterFullGcMiBAround2100": 6023,
+    "heapMiB": 6144,
+    "fullGcSummaryEvents": 709,
+    "fullGcObjectOwnersKnown": false
+  },
+  "confirmedDefects": [
+    {
+      "name": "Completed preparation retained by live region callback",
+      "kind": "strong-reference leak",
+      "fix": "RegionalAirRuntime.trackPendingRetention captures runtime and current region, not RebuildPreparation",
+      "priorHeapClosedPreparations": 38,
+      "installedRegionsReferencingClosedPreparations": 1748,
+      "largestIndividuallyRetainedBytes": 15752904
+    },
+    {
+      "name": "Readiness allocates checkpoint destinations for every source port",
+      "kind": "allocation amplification",
+      "path": "SpatialSourceIngress.pendingFor -> WorkerPhysicalSourceBindings.checkpointTarget",
+      "fix": "airPortTargets reuses the coordinator MutableAirTarget and returns boolean membership",
+      "focusedQueries": 30000,
+      "focusedAllocatedBytes": 0
+    },
+    {
+      "name": "Boundary prelude consumes numerical work deadline",
+      "kind": "coordinator progress failure",
+      "fix": "Start the selected owner 2ms slice after boundary/readiness bookkeeping; charge entire round to the original global allowance",
+      "deterministicOldControl": "build/thermal-coordinator-overhead-control3-20261109.log",
+      "oldReadyWorkProgressed": false,
+      "oldOverdueRounds": 120,
+      "actualPreludeNanosPerRound": 3000000
+    },
+    {
+      "name": "Waiting boundaries prepay nonexistent frozen source snapshots",
+      "kind": "premature repeated accounting, not equivalent physical heap retention",
+      "waitingCandidates": 119,
+      "totalCandidateCreditBytes": 61757376,
+      "fix": "Waiting candidate retains only boundary metadata; actual GeometryWork prepays snapshot immediately before freeze",
+      "totalCandidateCreditMiB": 58.89642333984375,
+      "creditLimit": "Includes actual boundary metadata; the entire 58.9MiB is not claimed as exact physical heap savings."
+    }
+  ],
+  "baseline": {
+    "runtime": "build/thermal-root-profile-20261109/current-cpu1000",
+    "metadata": {
+      "variant": "current",
+      "artifact": "D:\\Frosted-Heart\\build\\libs\\frostedheart-1.20.1-0.7.13-deobf.jar",
+      "artifactSha256": "9d08dd6536ba266d76ac88108592f11455058cf3ea630111a2f360d99ab9e497",
+      "java": "C:\\Program Files\\Java\\jdk-21\\bin\\java.exe",
+      "heap": "4GiB",
+      "cpuBudgetMsPerSecond": 1000,
+      "thermalTargetMiB": 128,
+      "seed": "71108222452",
+      "viewDistance": 10,
+      "minutes": 8,
+      "sourcesPerBase": 1024,
+      "gameTestClassesExcluded": true,
+      "nativeCheckpoint": true,
+      "sourceGeometry": "pockets",
+      "residentPlayer": true,
+      "warmupTicks": 2400,
+      "scenarioSha256": "12c0b4fb85f5d626d17c3c9131ebb446ca5a4fce23eb1a1f565d9385af87c5c2",
+      "configSha256": "9f0e024bb3869e543b7f5c3155d07d491b518c988a0dc7120ff4e27acfb8f2fe",
+      "activeProcessorCount": 8,
+      "midpointAllObjectSnapshotTick": 0,
+      "compiledClassesDirectory": "D:\\Frosted-Heart\\build\\thermal-memory-prospective-1000-20261109\\current-cpu1000\\existing-mod",
+      "compiledClassesSha256": "bec0f68a989d7f540ee20be3fec5c8729e04d371106128a579d082ad8d9b77c6",
+      "scope": "Three server player objects with vanilla chunk tracking; no real network clients and no original server world."
+    },
+    "result": {
+      "exitCode": 0,
+      "ended": 1794234919.470985,
+      "outcome": "workload_completed",
+      "lastObservedTick": 9600.0,
+      "heapCaptureAttempted": false
+    },
+    "profileWindow": {
+      "coordinatorRegionNanos": 32487919000,
+      "coordinatorRounds": 278526,
+      "geometryNanos": 108850299600,
+      "incomingCheckpointDestinationSampleWeight": 42018828824,
+      "incomingMembershipAllocationSampleWeight": 42227987592,
+      "inputNanos": 107366211600,
+      "maintenanceNanos": 20508393900,
+      "otherThreadAllocatedBytes": 89182477768,
+      "progressNanos": 3099974400,
+      "qualityNanos": 278910700,
+      "serverThreadAllocatedBytes": 109503848176,
+      "serverThreadAllocationFirstEpochMs": 1794234500861,
+      "serverThreadAllocationLastEpochMs": 1794234781381,
+      "thermalWorkerAllocatedBytes": 61194599984,
+      "thermalWorkerAllocationFirstEpochMs": 1794234500861,
+      "thermalWorkerAllocationLastEpochMs": 1794234781381,
+      "windowEndEpochMs": 1794234785904,
+      "windowMillis": 320524,
+      "windowStartEpochMs": 1794234465380,
+      "otherThreadObservedAllocationBytesPerSecond": 318511769,
+      "serverThreadObservedAllocationBytesPerSecond": 390360217,
+      "thermalWorkerObservedAllocationBytesPerSecond": 218147013
+    },
+    "gcIncludingShutdown": {
+      "allFull": 6,
+      "diagnosticFull": 1,
+      "naturalFullInWorkload": 4,
+      "naturalFullAfterWorkload": 1,
+      "totalPauseMs": 9694.969,
+      "fullEvents": [
+        {
+          "time": 1794234666.425,
+          "kind": "Full",
+          "gc": 200,
+          "beforeMiB": 4094,
+          "afterMiB": 1251,
+          "ms": 364.548,
+          "diagnostic": false,
+          "inWorkload": true,
+          "line": "[2026-11-09T22:31:06.425+0800][296.109s][info][gc             ] GC(200) Pause Full (G1 Compaction Pause) 4094M->1251M(4096M) 364.548ms"
+        },
+        {
+          "time": 1794234786.278,
+          "kind": "Full",
+          "gc": 367,
+          "beforeMiB": 4090,
+          "afterMiB": 1198,
+          "ms": 313.778,
+          "diagnostic": false,
+          "inWorkload": true,
+          "line": "[2026-11-09T22:33:06.278+0800][415.962s][info][gc             ] GC(367) Pause Full (G1 Compaction Pause) 4090M->1198M(4096M) 313.778ms"
+        },
+        {
+          "time": 1794234817.58,
+          "kind": "Full",
+          "gc": 411,
+          "beforeMiB": 3008,
+          "afterMiB": 1199,
+          "ms": 331.93,
+          "diagnostic": true,
+          "inWorkload": true,
+          "line": "[2026-11-09T22:33:37.580+0800][447.264s][info][gc             ] GC(411) Pause Full (Heap Dump Initiated GC) 3008M->1199M(4096M) 331.930ms"
+        },
+        {
+          "time": 1794234892.328,
+          "kind": "Full",
+          "gc": 506,
+          "beforeMiB": 4092,
+          "afterMiB": 1205,
+          "ms": 291.918,
+          "diagnostic": false,
+          "inWorkload": true,
+          "line": "[2026-11-09T22:34:52.328+0800][522.012s][info][gc             ] GC(506) Pause Full (G1 Compaction Pause) 4092M->1205M(4096M) 291.918ms"
+        },
+        {
+          "time": 1794234907.643,
+          "kind": "Full",
+          "gc": 534,
+          "beforeMiB": 4082,
+          "afterMiB": 1191,
+          "ms": 289.308,
+          "diagnostic": false,
+          "inWorkload": true,
+          "line": "[2026-11-09T22:35:07.643+0800][537.326s][info][gc             ] GC(534) Pause Full (G1 Compaction Pause) 4082M->1191M(4096M) 289.308ms"
+        },
+        {
+          "time": 1794234914.26,
+          "kind": "Full",
+          "gc": 557,
+          "beforeMiB": 4081,
+          "afterMiB": 1194,
+          "ms": 316.18,
+          "diagnostic": false,
+          "inWorkload": false,
+          "line": "[2026-11-09T22:35:14.260+0800][543.943s][info][gc             ] GC(557) Pause Full (G1 Compaction Pause) 4081M->1194M(4096M) 316.180ms"
+        }
+      ]
+    },
+    "livePressureHeap": {
+      "snapshot": "build/thermal-root-profile-20261109/current-cpu1000/pressure-live.hprof",
+      "approxReachableGiB": 1.1,
+      "largestDominator": "net.minecraft.server.level.ChunkMap",
+      "largestDominatorBytes": 230760424,
+      "significantIOWorkerBacklog": false
+    },
+    "limits": [
+      "JFR profiling enables additional thermal diagnostic events. Allocation sample weights are estimates, not retained sizes.",
+      "One heap dump explicitly forced a Full GC during this workload. The matching CPU/allocation window ends before that dump.",
+      "Three server FakePlayers with real chunk tracking; no network clients or original incident world/modpack."
+    ]
+  },
+  "validation": {
+    "finalUnifiedLog": "build/thermal-root-cause-unified-final-20261109.log",
+    "status": "10_of_10_unified_passed_but_complete_oom_and_realtime_qualification_failed",
+    "discardedControls": [
+      "Control 1/2 used parkNanos, which can return before the requested duration; control 3 used a measured busy interval.",
+      "The first unified run had 9/10 passes; its overdue-work assertion mistakenly used independentCommits, which increments only while unrelated earlier geometry is pending. The corrected assertion uses commitRevision and physical sample time."
+    ],
+    "unqualifiedRun": "build/thermal-root-fixed-profile-20261109: stopped at tick 0 to add the newly confirmed deadline fix before final performance qualification.",
+    "testsPassed": 10,
+    "testsRequired": 10,
+    "deadlineFixedRounds": 3,
+    "completedPreparationsCollected": 21,
+    "sourceMembershipQueries": 30000,
+    "sourceMembershipAllocatedBytes": 0,
+    "stalledWorkerRealSaveNanoseconds": 14568500
+  },
+  "remaining": "The exact incident server owners retaining approximately6GiB after Full GC are not identified by the available evidence. This local run still has natural Full GC and thermal progression backlog; it does not qualify as a complete original-OOM or real-time performance fix.",
+  "finalRuntime": "build/thermal-root-cause-final-profile-20261109/current-cpu1000",
+  "comparison": {
+    "baseline": {
+      "profile": {
+        "coordinatorRegionNanos": 32487919000,
+        "coordinatorRounds": 278526,
+        "geometryNanos": 108850299600,
+        "incomingCheckpointDestinationSampleWeight": 42018828824,
+        "incomingMembershipAllocationSampleWeight": 42227987592,
+        "inputNanos": 107366211600,
+        "maintenanceNanos": 20508393900,
+        "otherThreadAllocatedBytes": 89182477768,
+        "progressNanos": 3099974400,
+        "qualityNanos": 278910700,
+        "serverThreadAllocatedBytes": 109503848176,
+        "serverThreadAllocationFirstEpochMs": 1794234500861,
+        "serverThreadAllocationLastEpochMs": 1794234781381,
+        "thermalWorkerAllocatedBytes": 61194599984,
+        "thermalWorkerAllocationFirstEpochMs": 1794234500861,
+        "thermalWorkerAllocationLastEpochMs": 1794234781381,
+        "windowEndEpochMs": 1794234785904,
+        "windowMillis": 320524,
+        "windowStartEpochMs": 1794234465380,
+        "otherThreadObservedAllocationBytesPerSecond": 318511769,
+        "serverThreadObservedAllocationBytesPerSecond": 390360217,
+        "thermalWorkerObservedAllocationBytesPerSecond": 218147013
+      },
+      "gcIncludingShutdown": {
+        "allFull": 6,
+        "diagnosticFull": 1,
+        "naturalFullInWorkload": 4,
+        "naturalFullAfterWorkload": 1,
+        "totalPauseMs": 9694.969,
+        "fullEvents": [
+          {
+            "time": 1794234666.425,
+            "kind": "Full",
+            "gc": 200,
+            "beforeMiB": 4094,
+            "afterMiB": 1251,
+            "ms": 364.548,
+            "diagnostic": false,
+            "inWorkload": true,
+            "line": "[2026-11-09T22:31:06.425+0800][296.109s][info][gc             ] GC(200) Pause Full (G1 Compaction Pause) 4094M->1251M(4096M) 364.548ms"
+          },
+          {
+            "time": 1794234786.278,
+            "kind": "Full",
+            "gc": 367,
+            "beforeMiB": 4090,
+            "afterMiB": 1198,
+            "ms": 313.778,
+            "diagnostic": false,
+            "inWorkload": true,
+            "line": "[2026-11-09T22:33:06.278+0800][415.962s][info][gc             ] GC(367) Pause Full (G1 Compaction Pause) 4090M->1198M(4096M) 313.778ms"
+          },
+          {
+            "time": 1794234817.58,
+            "kind": "Full",
+            "gc": 411,
+            "beforeMiB": 3008,
+            "afterMiB": 1199,
+            "ms": 331.93,
+            "diagnostic": true,
+            "inWorkload": true,
+            "line": "[2026-11-09T22:33:37.580+0800][447.264s][info][gc             ] GC(411) Pause Full (Heap Dump Initiated GC) 3008M->1199M(4096M) 331.930ms"
+          },
+          {
+            "time": 1794234892.328,
+            "kind": "Full",
+            "gc": 506,
+            "beforeMiB": 4092,
+            "afterMiB": 1205,
+            "ms": 291.918,
+            "diagnostic": false,
+            "inWorkload": true,
+            "line": "[2026-11-09T22:34:52.328+0800][522.012s][info][gc             ] GC(506) Pause Full (G1 Compaction Pause) 4092M->1205M(4096M) 291.918ms"
+          },
+          {
+            "time": 1794234907.643,
+            "kind": "Full",
+            "gc": 534,
+            "beforeMiB": 4082,
+            "afterMiB": 1191,
+            "ms": 289.308,
+            "diagnostic": false,
+            "inWorkload": true,
+            "line": "[2026-11-09T22:35:07.643+0800][537.326s][info][gc             ] GC(534) Pause Full (G1 Compaction Pause) 4082M->1191M(4096M) 289.308ms"
+          },
+          {
+            "time": 1794234914.26,
+            "kind": "Full",
+            "gc": 557,
+            "beforeMiB": 4081,
+            "afterMiB": 1194,
+            "ms": 316.18,
+            "diagnostic": false,
+            "inWorkload": false,
+            "line": "[2026-11-09T22:35:14.260+0800][543.943s][info][gc             ] GC(557) Pause Full (G1 Compaction Pause) 4081M->1194M(4096M) 316.180ms"
+          }
+        ]
+      }
+    },
+    "fixed": {
+      "profile": {
+        "coordinatorRegionNanos": 33197081200,
+        "coordinatorRounds": 290283,
+        "geometryNanos": 105670070600,
+        "incomingMembershipAllocationSampleWeight": 165351992,
+        "inputNanos": 106814306400,
+        "maintenanceNanos": 22727337300,
+        "otherThreadAllocatedBytes": 75443067112,
+        "progressNanos": 3102248200,
+        "qualityNanos": 288247000,
+        "serverThreadAllocatedBytes": 99221858504,
+        "serverThreadAllocationFirstEpochMs": 1794236186257,
+        "serverThreadAllocationLastEpochMs": 1794236458808,
+        "thermalWorkerAllocatedBytes": 24400069384,
+        "thermalWorkerAllocationFirstEpochMs": 1794236186257,
+        "thermalWorkerAllocationLastEpochMs": 1794236458808,
+        "windowEndEpochMs": 1794236485060,
+        "windowMillis": 320392,
+        "windowStartEpochMs": 1794236164668,
+        "otherThreadObservedAllocationBytesPerSecond": 277434411,
+        "serverThreadObservedAllocationBytesPerSecond": 364048778,
+        "thermalWorkerObservedAllocationBytesPerSecond": 89524784
+      },
+      "gcIncludingShutdown": {
+        "allFull": 7,
+        "diagnosticFull": 1,
+        "naturalFullInWorkload": 5,
+        "naturalFullAfterWorkload": 1,
+        "totalPauseMs": 9754.805,
+        "fullEvents": [
+          {
+            "time": 1794236364.229,
+            "kind": "Full",
+            "gc": 203,
+            "beforeMiB": 4094,
+            "afterMiB": 1266,
+            "ms": 362.134,
+            "diagnostic": false,
+            "inWorkload": true,
+            "line": "[2026-11-09T22:59:24.229+0800][294.616s][info][gc             ] GC(203) Pause Full (G1 Compaction Pause) 4094M->1266M(4096M) 362.134ms"
+          },
+          {
+            "time": 1794236371.424,
+            "kind": "Full",
+            "gc": 218,
+            "beforeMiB": 4084,
+            "afterMiB": 1202,
+            "ms": 289.955,
+            "diagnostic": false,
+            "inWorkload": true,
+            "line": "[2026-11-09T22:59:31.424+0800][301.810s][info][gc             ] GC(218) Pause Full (G1 Compaction Pause) 4084M->1202M(4096M) 289.955ms"
+          },
+          {
+            "time": 1794236483.372,
+            "kind": "Full",
+            "gc": 359,
+            "beforeMiB": 4092,
+            "afterMiB": 1199,
+            "ms": 323.829,
+            "diagnostic": false,
+            "inWorkload": true,
+            "line": "[2026-11-09T23:01:23.372+0800][413.758s][info][gc             ] GC(359) Pause Full (G1 Compaction Pause) 4092M->1199M(4096M) 323.829ms"
+          },
+          {
+            "time": 1794236542.668,
+            "kind": "Full",
+            "gc": 446,
+            "beforeMiB": 4092,
+            "afterMiB": 1208,
+            "ms": 289.059,
+            "diagnostic": false,
+            "inWorkload": true,
+            "line": "[2026-11-09T23:02:22.668+0800][473.054s][info][gc             ] GC(446) Pause Full (G1 Compaction Pause) 4092M->1208M(4096M) 289.059ms"
+          },
+          {
+            "time": 1794236603.11,
+            "kind": "Full",
+            "gc": 542,
+            "beforeMiB": 4087,
+            "afterMiB": 1220,
+            "ms": 303.084,
+            "diagnostic": false,
+            "inWorkload": true,
+            "line": "[2026-11-09T23:03:23.110+0800][533.496s][info][gc             ] GC(542) Pause Full (G1 Compaction Pause) 4087M->1220M(4096M) 303.084ms"
+          },
+          {
+            "time": 1794236606.602,
+            "kind": "Full",
+            "gc": 549,
+            "beforeMiB": 3892,
+            "afterMiB": 1189,
+            "ms": 285.413,
+            "diagnostic": true,
+            "inWorkload": false,
+            "line": "[2026-11-09T23:03:26.602+0800][536.988s][info][gc             ] GC(549) Pause Full (Heap Dump Initiated GC) 3892M->1189M(4096M) 285.413ms"
+          },
+          {
+            "time": 1794236609.825,
+            "kind": "Full",
+            "gc": 559,
+            "beforeMiB": 4077,
+            "afterMiB": 1236,
+            "ms": 364.658,
+            "diagnostic": false,
+            "inWorkload": false,
+            "line": "[2026-11-09T23:03:29.825+0800][540.212s][info][gc             ] GC(559) Pause Full (G1 Compaction Pause) 4077M->1236M(4096M) 364.658ms"
+          }
+        ]
+      }
+    },
+    "thermalAllocationRateReductionFraction": 0.589612606797417
+  },
+  "finalRun": {
+    "runtime": "build\\thermal-root-cause-final-profile-20261109\\current-cpu1000",
+    "outcome": {
+      "exitCode": 0,
+      "ended": 1794236618.2623458,
+      "outcome": "workload_completed",
+      "lastObservedTick": 9600.0,
+      "heapCaptureAttempted": true
+    },
+    "scenario": {
+      "ticks": 9600.0,
+      "saves": 1.0,
+      "uniqueTrackedChunks": 21983.0
+    },
+    "metadata": {
+      "variant": "current",
+      "artifact": "D:\\Frosted-Heart\\build\\libs\\frostedheart-1.20.1-0.7.13-deobf.jar",
+      "artifactSha256": "9d08dd6536ba266d76ac88108592f11455058cf3ea630111a2f360d99ab9e497",
+      "java": "C:\\Program Files\\Java\\jdk-21\\bin\\java.exe",
+      "heap": "4GiB",
+      "cpuBudgetMsPerSecond": 1000,
+      "thermalTargetMiB": 128,
+      "seed": "71108222452",
+      "viewDistance": 10,
+      "minutes": 8,
+      "sourcesPerBase": 1024,
+      "gameTestClassesExcluded": true,
+      "nativeCheckpoint": true,
+      "sourceGeometry": "pockets",
+      "residentPlayer": true,
+      "warmupTicks": 2400,
+      "scenarioSha256": "12c0b4fb85f5d626d17c3c9131ebb446ca5a4fce23eb1a1f565d9385af87c5c2",
+      "configSha256": "9f0e024bb3869e543b7f5c3155d07d491b518c988a0dc7120ff4e27acfb8f2fe",
+      "activeProcessorCount": 8,
+      "midpointAllObjectSnapshotTick": 0,
+      "compiledClassesDirectory": "D:\\Frosted-Heart\\build\\thermal-root-cause-20261109\\fixed-overlay",
+      "compiledClassesSha256": "001e2647735eb609bc67c63bc3602725de0dc43a21d2cd48be4e109bc5400890",
+      "scope": "Three server player objects with vanilla chunk tracking; no real network clients and no original server world."
+    },
+    "lastTelemetry": {
+      "ticks": 9600.0,
+      "phase": "exploring-new-terrain",
+      "players": 3.0,
+      "levelPlayers": 3.0,
+      "loadedChunks": 10114.0,
+      "uniqueTrackedChunks": 21983.0,
+      "updatingChunks": 10114.0,
+      "pendingUnloads": 0.0,
+      "unloadQueue": 0.0,
+      "ioWrites": 0.0,
+      "ioMailbox": 0.0,
+      "sourcesPlanted": 3072.0,
+      "saves": 1.0,
+      "thermal": {
+        "active": true,
+        "usedBytes": 181968280.0,
+        "peakBytes": 395087358.0,
+        "refusals": 133707.0,
+        "nativeCheckpoint": true,
+        "knownSources": 1024.0,
+        "enabledSources": 1024.0,
+        "nativeRequests": 154.0,
+        "nativePrepared": 152.0,
+        "nativePending": 0.0,
+        "nativePeakPending": 11.0,
+        "nativePreparationQueue": 0.0,
+        "sourceChunksWaiting": 1.0,
+        "coldRestores": 0.0,
+        "saveWaitCalls": 2905.0,
+        "saveWaitNs": 76573458800.0,
+        "unloadWaitCalls": 0.0,
+        "unloadWaitNs": 0.0,
+        "publishedFields": [
+          {
+            "placed": true,
+            "loaded": true,
+            "available": false,
+            "sampleTick": -1.0,
+            "minimumQuality": false,
+            "temperatureC": null
+          },
+          {
+            "placed": true,
+            "loaded": false,
+            "available": false,
+            "sampleTick": -1.0,
+            "minimumQuality": false,
+            "temperatureC": null
+          },
+          {
+            "placed": true,
+            "loaded": false,
+            "available": false,
+            "sampleTick": -1.0,
+            "minimumQuality": false,
+            "temperatureC": null
+          }
+        ]
+      },
+      "positions": [
+        [
+          795.5,
+          87.0,
+          -804.5
+        ],
+        [
+          2395.5,
+          159.0,
+          -2404.5
+        ],
+        [
+          5796.459999998525,
+          81.0,
+          -2203.539999998713
+        ]
+      ]
+    },
+    "workerFailures": 0,
+    "saveFailures": 0,
+    "oomErrors": 0,
+    "engineFailureRecovery": false,
+    "sourceFedRegionCount": 474,
+    "sourceFedMinimumTick": 5920,
+    "sourceFedMaximumTick": 5920,
+    "approxLiveReachableGiB": 1.11,
+    "closedPreparationsRetained": 0
+  },
+  "remainingAllocationSamples": {
+    "window": "ticks800..7200",
+    "firstApplicationFrameWeightsBytes": {
+      "worldgen.BiomeColumnSolver.baseFitness": 10684425480,
+      "worldgen.ColumnCachingBiomeResolver.constructor": 5260691800,
+      "worldgen.BlockLightSectionStorage.copy": 15921509960,
+      "server.PalettedContainer.pack": 14505735112
+    },
+    "finding": "BiomeColumnSolver allocates one parameter-sized fitness array for each of 16 quart columns; ColumnCachingBiomeResolver also copies parameter tables per chunk. No historical-owner retention is evidenced here. Other dominant samples are vanilla lighting, palette serialization, fluid updates, and terrain generation. No world-generation behavior was changed."
+  }
+}

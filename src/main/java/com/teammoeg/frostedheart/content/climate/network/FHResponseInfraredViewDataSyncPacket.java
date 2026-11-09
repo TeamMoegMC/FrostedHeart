@@ -52,6 +52,10 @@ public final class FHResponseInfraredViewDataSyncPacket implements CMessage {
         return new FHResponseInfraredViewDataSyncPacket(request.requestId());
     }
 
+    public static FHResponseInfraredViewDataSyncPacket acknowledge(int requestId) {
+        return new FHResponseInfraredViewDataSyncPacket(requestId);
+    }
+
     private FHResponseInfraredViewDataSyncPacket(int requestId) {
         this.requestId = requestId;
         acknowledgement = firstPart = lastPart = true;
