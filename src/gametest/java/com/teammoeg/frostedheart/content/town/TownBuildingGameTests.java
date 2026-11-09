@@ -18,6 +18,7 @@ import com.teammoeg.frostedheart.content.town.buildings.hunting.HuntingBaseBlock
 import com.teammoeg.frostedheart.content.town.buildings.hunting.HuntingBaseBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBlockEntity;
+import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseBlockEntity;
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseBuilding;
 import com.teammoeg.frostedheart.content.town.citizen.sim.CitizenSimScheduler;
 import com.teammoeg.frostedheart.content.town.provider.TeamTownProvider;
@@ -402,10 +403,10 @@ public final class TownBuildingGameTests {
         });
     }
 
-    @GameTest(template = "phase0a_empty", timeoutTicks = 200)
-    public static void realRoomScanTracksDoorBedAndStableRepeat(GameTestHelper helper) throws Exception {
-        TeamDataHolder holder = newTeam(helper, "real-room-scan");
-        BlockPos origin = helper.absolutePos(new BlockPos(2, 2, 2));
+    /**
+     * Builds a 5x3x5 stone room at origin+(1,1,1)..(5,3,5) with an oak door at origin+(3,1,0).
+     */
+    static BlockPos buildEnclosedRoom(GameTestHelper helper, BlockPos origin) {
         for (int x = 0; x <= 6; x++) {
             for (int y = 0; y <= 4; y++) {
                 for (int z = 0; z <= 6; z++) {
@@ -420,6 +421,40 @@ public final class TownBuildingGameTests {
                 Blocks.OAK_DOOR.defaultBlockState().setValue(DoorBlock.HALF, DoubleBlockHalf.LOWER));
         helper.getLevel().setBlockAndUpdate(door.above(),
                 Blocks.OAK_DOOR.defaultBlockState().setValue(DoorBlock.HALF, DoubleBlockHalf.UPPER));
+        return door;
+    }
+
+    @GameTest(template = "phase0a_empty", timeoutTicks = 200)
+    public static void warehouseCountsStorageRacksPlacedInTheRoom(GameTestHelper helper) {
+        TeamDataHolder holder = newTeam(helper, "warehouse-racks");
+        BlockPos origin = helper.absolutePos(new BlockPos(2, 2, 2));
+        buildEnclosedRoom(helper, origin);
+        var core = (WarehouseBlockEntity) placeCore(helper, holder, origin.offset(3, 0, 3), FHBlocks.WAREHOUSE.get());
+        WarehouseBuilding warehouse = core.getBuilding().orElseThrow();
+        core.refresh_safe(warehouse);
+        double emptyCapacity = warehouse.getCapacity();
+        helper.assertTrue(warehouse.isStructureValid() && warehouse.getDecorationAmount() == 0 && emptyCapacity > 0,
+                "an empty enclosed warehouse must be valid with only its room capacity");
+
+        var rack = FHBlocks.WAREHOUSE_STORAGE_RACK.get().defaultBlockState();
+        helper.getLevel().setBlockAndUpdate(origin.offset(2, 1, 4), rack); // free-standing on the floor
+        helper.getLevel().setBlockAndUpdate(origin.offset(1, 1, 1), rack); // in a corner, against two walls
+        helper.getLevel().setBlockAndUpdate(origin.offset(5, 1, 5), rack); // two-high stack in a corner
+        helper.getLevel().setBlockAndUpdate(origin.offset(5, 2, 5), rack);
+        core.refresh_safe(warehouse);
+        helper.assertTrue(warehouse.isStructureValid() && warehouse.getDecorationAmount() == 4,
+                "every rack residents can reach must count, got " + warehouse.getDecorationAmount());
+        helper.assertTrue(warehouse.getCapacity() > emptyCapacity + 3 * 512,
+                "four racks must outweigh the floor space they take, got " + warehouse.getCapacity()
+                        + " from " + emptyCapacity);
+        helper.succeed();
+    }
+
+    @GameTest(template = "phase0a_empty", timeoutTicks = 200)
+    public static void realRoomScanTracksDoorBedAndStableRepeat(GameTestHelper helper) throws Exception {
+        TeamDataHolder holder = newTeam(helper, "real-room-scan");
+        BlockPos origin = helper.absolutePos(new BlockPos(2, 2, 2));
+        BlockPos door = buildEnclosedRoom(helper, origin);
         BlockPos bed = origin.offset(2, 1, 3);
         helper.getLevel().setBlockAndUpdate(bed,
                 Blocks.RED_BED.defaultBlockState().setValue(BedBlock.FACING, Direction.SOUTH).setValue(BedBlock.PART, BedPart.FOOT));

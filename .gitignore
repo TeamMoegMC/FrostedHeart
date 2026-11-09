@@ -162,3 +162,4 @@ run-online-latency/
 /run/kubejs/config/
 /run/kubejs/client_scripts/
 /run/kubejs/README.txt
+/server-logs/

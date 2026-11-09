@@ -60,7 +60,9 @@ public class WarehouseBlockEntity extends AbstractTownBuildingBlockEntity<Wareho
             building.setOccupiedVolume(room.occupiedCells);
             return StructureScanResult.INVALID;
         }
-        int storageRacks = room.countInsideBlock(state -> state.getBlock() instanceof WarehouseStorageRackBlock);
+        // Racks have full collision, so the scanner treats them as walls and they never enter the
+        // occupied cells; count those inside or bordering the room instead.
+        int storageRacks = room.countAllBlock(state -> state.getBlock() instanceof WarehouseStorageRackBlock);
         double capacity = room.area <= 0 ? 0.0
                 : room.area * Math.pow(room.volume * 0.02 / room.area, 0.9) * 1980 + storageRacks * 512;
         building.setOccupiedVolume(room.occupiedCells);

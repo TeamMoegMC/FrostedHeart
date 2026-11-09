@@ -158,6 +158,17 @@ public final class DepositClientValidation {
         beginSite();
     }
 
+    /**
+     * Maps a per-block-id counter array to block registry name → count, omitting zero entries.
+     */
+    private static Map<String, Integer> stateCounts(int[] countsById) {
+        Map<String, Integer> counts = new LinkedHashMap<>();
+        for (int i = 0; i < countsById.length; i++)
+            if (countsById[i] > 0)
+                counts.put(BuiltInRegistries.BLOCK.getKey(BuiltInRegistries.BLOCK.byId(i)).toString(), countsById[i]);
+        return counts;
+    }
+
     private static String describe(DepositLayout plan) {
         return plan == null ? "none" : plan.center().toShortString();
     }
