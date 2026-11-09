@@ -1,0 +1,17 @@
+// Opt-in: runClient with the agent command bridge
+// (src/gametest/java/com/teammoeg/frostedheart/devtools/AgentClientBridge.java). Does not alter build.gradle.
+//   ./gradlew runClient -I Scripts/dev_client_bridge.init.gradle
+// Then drive it with: python3 Scripts/agent_client.py "<command>" ...
+allprojects {
+    afterEvaluate {
+        minecraft.runs.client {
+            mods { frostedheart { source sourceSets.gameTest } }
+            property 'frostedheart.agentBridge', 'true'
+            // A fixed window keeps screenshot sizes and GUI coordinates comparable between runs.
+            args '--width', '1280', '--height', '720'
+        }
+        tasks.matching { it.name == 'runClient' }.configureEach {
+            dependsOn tasks.named('compileGameTestJava')
+        }
+    }
+}

@@ -1,0 +1,10 @@
+// Opt-in: run the dedicated dev server without the Swing console window, e.g. when it is
+// started in the background and driven through RCON (Scripts/rcon.py). Does not alter build.gradle.
+//   ./gradlew runServer -I Scripts/dev_server_nogui.init.gradle
+allprojects {
+    afterEvaluate {
+        minecraft.runs.server {
+            arg '--nogui'
+        }
+    }
+}

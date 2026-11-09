@@ -173,9 +173,9 @@ minecraft {
             arg "-mixin.config=chorda.mixins.json"
             mods {
                 frostedheart {
+                    // sourceSets.server is omitted on purpose: it carries the dedicated server's companion mods.
                     source sourceSets.noDatagen
                     source sourceSets.main
-                    source sourceSets.server
                     source sourceSets.gameTest
                 }
             }
@@ -370,13 +370,20 @@ dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
 //    implementation fileTree(include: ['*.jar'], dir: 'libs')
 
-    // Companion catalogue registry providers needed by the local client run.
-    clientRuntimeOnly fg.deobf("curse.maven:immersive-industry-542053:7530803")
-    clientRuntimeOnly fg.deobf("local.devmods:stone-age-1.20.1:1.6.8")
-    clientRuntimeOnly fg.deobf("curse.maven:charcoal-pit-reloaded-534602:7748097")
-    clientRuntimeOnly fg.deobf("curse.maven:kubejs-238086:5853326")
-    // KubeJS hard dependencies; these are libraries, not KubeJS addons.
-    clientRuntimeOnly fg.deobf("dev.latvian.mods:rhino-forge:2001.2.3-build.6")
+    // Companion catalogue registry providers needed by the local client and dedicated-server runs:
+    // run/config/fhresearches references their items, and the research catalogue rejects unknown items.
+    // gameTestServer does not include sourceSets.server, so GameTests stay independent of these mods.
+    [
+            "curse.maven:immersive-industry-542053:7530803",
+            "local.devmods:stone-age-1.20.1:1.6.8",
+            "curse.maven:charcoal-pit-reloaded-534602:7748097",
+            "curse.maven:kubejs-238086:5853326",
+            // KubeJS hard dependency; a library, not a KubeJS addon.
+            "dev.latvian.mods:rhino-forge:2001.2.3-build.6",
+    ].each { companion ->
+        clientRuntimeOnly fg.deobf(companion)
+        serverRuntimeOnly fg.deobf(companion)
+    }
     runtimeOnly fg.deobf("dev.architectury:architectury-forge:${architectury_version}")
 
     // IE
