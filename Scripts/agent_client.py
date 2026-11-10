@@ -7,6 +7,9 @@ Commands run one at a time, in order; the script prints each JSON result and sto
 Commands may be queued before the client has finished starting. GUI coordinates are the scaled GUI
 coordinates reported by 'screen' (multiply by guiScale for screenshot pixels).
 
+Apart from the bridge class, the client has the same mods and data as a plain ./gradlew runClient
+(no GameTest resources), so a plain client can open the worlds it creates or opens.
+
     state                          player, screen, position, looked-at block
     connect <host[:port]>          join a server from the title screen
     world <save folder>            open an existing singleplayer save
