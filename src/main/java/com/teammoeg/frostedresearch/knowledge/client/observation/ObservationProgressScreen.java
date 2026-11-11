@@ -26,9 +26,6 @@ import org.lwjgl.glfw.GLFW;
 import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.PrimaryLayer;
 import com.teammoeg.chorda.client.cui.screenadapter.CUIScreenWrapper;
-import com.teammoeg.frostedresearch.FRNetwork;
-import com.teammoeg.frostedresearch.knowledge.observation.ObservationActionPacket;
-import com.teammoeg.frostedresearch.knowledge.observation.ObservationSessions;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -44,8 +41,8 @@ import static com.teammoeg.frostedresearch.knowledge.client.KnowledgePresentatio
  * The world remains live; the Chorda overlay follows only the server-locked target.
  */
 public final class ObservationProgressScreen extends CUIScreenWrapper {
-    public ObservationProgressScreen(BlockPos position, int entityId) {
-        super(new FocusLayer(position, entityId));
+    public ObservationProgressScreen(BlockPos position, int entityId, int duration, boolean handheld) {
+        super(new FocusLayer(position, entityId, duration, handheld));
     }
 
     @Override
@@ -56,12 +53,16 @@ public final class ObservationProgressScreen extends CUIScreenWrapper {
     private static final class FocusLayer extends PrimaryLayer {
         private final BlockPos position;
         private final int entityId;
+        private final int duration;
+        private final boolean handheld;
         private int elapsed;
         private Component keyHint;
 
-        FocusLayer(BlockPos position, int entityId) {
+        FocusLayer(BlockPos position, int entityId, int duration, boolean handheld) {
             this.position = position;
             this.entityId = entityId;
+            this.duration = duration;
+            this.handheld = handheld;
             setRenderGradient(false);
         }
 
@@ -69,7 +70,7 @@ public final class ObservationProgressScreen extends CUIScreenWrapper {
         public boolean onInit() {
             var window = Minecraft.getInstance().getWindow();
             setSize(window.getGuiScaledWidth(), window.getGuiScaledHeight());
-            keyHint = t("observation.hold", ObservationClient.OBSERVE.getTranslatedKeyMessage());
+            keyHint = t("observation.hold", ObservationClient.inputHint());
             return super.onInit();
         }
 
@@ -107,24 +108,32 @@ public final class ObservationProgressScreen extends CUIScreenWrapper {
 
         @Override
         public boolean onKeyPressed(int key, int scan, int modifiers) {
-            if (key == GLFW.GLFW_KEY_ESCAPE || ObservationClient.OBSERVE.matches(key, scan)) return true;
+            if (key == GLFW.GLFW_KEY_ESCAPE) {
+                cancel();
+                return true;
+            }
+            if (ObservationClient.OBSERVE.matches(key, scan)) return true;
             return super.onKeyPressed(key, scan, modifiers);
         }
 
         @Override
         public void drawBackground(GuiGraphics g, int x, int y, int w, int h, RenderingHint hint) {
-            float progress = Math.min(1, (elapsed + getPartialTick()) / ObservationSessions.DURATION_TICKS);
+            float progress = Math.min(1, (elapsed + getPartialTick()) / duration);
             int shade = Math.round(progress * 170) << 24;
-            int[] a = aperture();
-            g.fill(0, 0, w, a[1], shade);
-            g.fill(0, a[3], w, h, shade);
-            g.fill(0, a[1], a[0], a[3], shade);
-            g.fill(a[2], a[1], w, a[3], shade);
             int ink = 0xFFD8C69E;
-            for (int side = 0; side < 2; side++) {
-                int ax = side == 0 ? a[0] : a[2] - 7;
-                g.fill(ax, a[1], ax + 7, a[1] + 1, ink);
-                g.fill(ax, a[3] - 1, ax + 7, a[3], ink);
+            if (handheld) {
+                g.fill(0, 0, w, h, shade);
+            } else {
+                int[] a = aperture();
+                g.fill(0, 0, w, a[1], shade);
+                g.fill(0, a[3], w, h, shade);
+                g.fill(0, a[1], a[0], a[3], shade);
+                g.fill(a[2], a[1], w, a[3], shade);
+                for (int side = 0; side < 2; side++) {
+                    int ax = side == 0 ? a[0] : a[2] - 7;
+                    g.fill(ax, a[1], ax + 7, a[1] + 1, ink);
+                    g.fill(ax, a[3] - 1, ax + 7, a[3], ink);
+                }
             }
             Component title = t("observation.focus");
             g.drawString(getFont(), title, (w - getFont().width(title)) / 2, h - 110, ink, false);

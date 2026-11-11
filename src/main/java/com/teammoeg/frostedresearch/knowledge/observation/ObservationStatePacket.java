@@ -31,11 +31,15 @@ import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.network.NetworkEvent;
 
 public record ObservationStatePacket(State state, BlockPos position, int entityId, CompoundTag record,
-                                     String message) implements CMessage {
+                                     String message, int durationTicks, boolean itemTarget) implements CMessage {
     public enum State {STARTED, CANCELLED, PREVIEW, ACCEPTED, REJECTED, OBSERVED}
 
     public ObservationStatePacket(FriendlyByteBuf buffer) {
-        this(buffer.readEnum(State.class), buffer.readBlockPos(), buffer.readVarInt(), buffer.readNbt(), buffer.readUtf());
+        this(buffer.readEnum(State.class), buffer.readBlockPos(), buffer.readVarInt(), buffer.readNbt(), buffer.readUtf(), buffer.readVarInt(), buffer.readBoolean());
+    }
+
+    public ObservationStatePacket(State state, BlockPos position, int entityId, CompoundTag record, String message) {
+        this(state, position, entityId, record, message, 60, false);
     }
 
     public ObservationStatePacket(State state, String message) {
@@ -48,6 +52,8 @@ public record ObservationStatePacket(State state, BlockPos position, int entityI
         buffer.writeVarInt(entityId);
         buffer.writeNbt(record);
         buffer.writeUtf(message);
+        buffer.writeVarInt(durationTicks);
+        buffer.writeBoolean(itemTarget);
     }
 
     public void handle(Supplier<NetworkEvent.Context> supplier) {

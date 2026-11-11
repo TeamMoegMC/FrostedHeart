@@ -16,4 +16,16 @@ reload, vest demand, reservoir energy conservation and the actual player tick.
 Their gameplay contract and validation scope belong to
 [player temperature](../../docs/climate/player-temperature.md).
 
+Knowledge observation checks use namespace `frostedresearch_observation`:
+`./gradlew runGameTestServer -PgameTestNamespaces=frostedresearch_observation`.
+They cover shared item sampling, 30/60-tick sessions, non-consuming inventory
+inspection and interruption when targets, tools or menus change.
+`./gradlew runObservationUiClient` creates a fresh local world and uses Minecraft's
+keyboard/mouse callbacks with a test-only held-input device to exercise world and inventory observation, including
+Shift-right-click and creative inventory. It focuses its own client window,
+writes screenshots and `result.json` to `build/observation-ui-validation/`, then
+exits and restores the options it changed. These client checks need a desktop
+session; they do not verify physical OS input delivery. Player controls are described in
+[observations and notes](../../docs/knowledge/observations-and-notes.md).
+
 For the shared thermal comparison baseline, run [`scripts/run-thermal-baseline.ps1`](../../scripts/run-thermal-baseline.ps1). The [baseline reference](../../docs/climate/thermal-validation-baseline.md) owns its scene list, recorded configuration, clocks and result interpretation.

@@ -44,6 +44,7 @@ import com.teammoeg.frostedresearch.knowledge.experiment.ExperimentTableBlock;
 import com.teammoeg.frostedresearch.knowledge.experiment.ExperimentTableBlockEntity;
 import com.teammoeg.frostedresearch.knowledge.experiment.ExperimentTableMenu;
 import com.teammoeg.frostedresearch.knowledge.item.ResearchNoteItem;
+import com.teammoeg.frostedresearch.knowledge.item.MagnifyingGlassItem;
 import com.teammoeg.frostedresearch.recipe.InspireRecipe;
 import com.teammoeg.frostedresearch.recipe.ResearchPaperRecipe;
 
@@ -129,6 +130,8 @@ public class FRContents {
 				"research_note", () -> new ResearchNoteItem(new Item.Properties()));
 		public static final RegistryObject<UpgradePrototypeItem> UPGRADE_PROTOTYPE = REGISTER.register(
 			"upgrade_prototype", () -> new UpgradePrototypeItem(new Item.Properties().stacksTo(1)));
+		public static final RegistryObject<MagnifyingGlassItem> MAGNIFYING_GLASS = REGISTER.register(
+			"magnifying_glass", () -> new MagnifyingGlassItem(new Item.Properties().stacksTo(1)));
 	}
 
 	public static class BlockEntityTypes {

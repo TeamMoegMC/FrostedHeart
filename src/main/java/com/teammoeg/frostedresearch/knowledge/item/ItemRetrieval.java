@@ -53,7 +53,7 @@ public final class ItemRetrieval {
     }
 
     public static KnowledgeElement observe(ServerPlayer player, ItemStack original) {
-        if (original.isEmpty() || ResearchNotes.isNote(original))
+        if (!canObserve(original))
             throw new IllegalArgumentException("Retrieve a physical item, not a research note");
         ItemStack sample = original.copyWithCount(1);
         ResourceLocation item = BuiltInRegistries.ITEM.getKey(sample.getItem());
@@ -68,5 +68,9 @@ public final class ItemRetrieval {
             values.put("item." + key, ObservationValue.known(itemData.get(key).toString()));
         Observation.Source source = new Observation.Source("item_retrieval", Optional.of(player.getUUID()), Optional.empty(), Optional.empty(), Optional.empty());
         return KnowledgeElement.observation(new Observation(UUID.randomUUID(), Observation.Type.ITEM, item, values, source, itemData.isEmpty() ? Optional.empty() : Optional.of(itemData)));
+    }
+
+    public static boolean canObserve(ItemStack stack) {
+        return !stack.isEmpty() && !ResearchNotes.isNote(stack);
     }
 }

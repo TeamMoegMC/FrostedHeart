@@ -45,7 +45,11 @@ import static com.teammoeg.frostedresearch.knowledge.client.ui.KnowledgeUiTheme.
  */
 public final class ObservationRecordScreen extends CUIScreenWrapper {
     public ObservationRecordScreen(Observation observation) {
-        super(new NoteLayer(observation));
+        this(observation, () -> Minecraft.getInstance().setScreen(null));
+    }
+
+    public ObservationRecordScreen(Observation observation, Runnable close) {
+        super(new NoteLayer(observation, close));
     }
 
     public void rejected(String reason) {
@@ -62,13 +66,15 @@ public final class ObservationRecordScreen extends CUIScreenWrapper {
         private final net.minecraft.world.item.ItemStack icon;
         private final Component title;
         private final JournalText text;
+        private final Runnable close;
         private JournalButton keep;
         private Component status = Component.empty();
         private boolean expanded, waiting;
         private FormattedCharSequence heading;
 
-        NoteLayer(Observation observation) {
+        NoteLayer(Observation observation, Runnable close) {
             this.observation = observation;
+            this.close = close;
             title = ObservationPresentation.title(observation);
             icon = KnowledgePresentation.icon(KnowledgeElement.observation(observation));
             text = new JournalText(this);
@@ -122,7 +128,7 @@ public final class ObservationRecordScreen extends CUIScreenWrapper {
 
         void discard() {
             FRNetwork.INSTANCE.sendToServer(new ObservationActionPacket(ObservationActionPacket.Action.DISCARD));
-            Minecraft.getInstance().setScreen(null);
+            close.run();
         }
 
         @Override

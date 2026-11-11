@@ -1,0 +1,9 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    { "item": "minecraft:glass_pane" },
+    { "item": "minecraft:copper_ingot" },
+    { "item": "minecraft:stick" }
+  ],
+  "result": { "item": "frostedresearch:magnifying_glass" }
+}

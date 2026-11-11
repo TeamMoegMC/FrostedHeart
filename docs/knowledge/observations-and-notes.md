@@ -1,26 +1,43 @@
 # 观察、实物检索与研究笔记
 
 - Status: `Current`
-- Last verified: `2026-09-08`
-- Scope: 主动观察、间接记录预览、研究笔记身份和物品检索；不包含后续研究项目的证据提交规则。
+- Last verified: `2026-11-11`（本轮源码核对手持观察遮罩；其余行为沿用 2026-11-09 验证，客户端实际操作验收另见开发记录）
+- Scope: 世界、手持与容器观察、放大镜、间接记录预览、研究笔记身份和物品检索；不包含后续研究项目的证据提交规则。
 - Code anchors: [
   `ObservationSampling`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/observation/ObservationSampling.java)、[
   `ObservationSessions`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/observation/ObservationSessions.java)、[
+  `ObservationClient`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/client/observation/ObservationClient.java)、[
+  `InventoryObservationOverlay`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/client/observation/InventoryObservationOverlay.java)、[
   `Observation`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/model/Observation.java)、[
   `ResearchNotes`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/item/ResearchNotes.java)、[
   `ItemRetrieval`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/item/ItemRetrieval.java)。
 
 ## 主动观察
 
-准星指向方块或实体后持续按住观察键（源码默认 **N**）。服务端锁定该方块位置与类型，或该实体 UUID；默认持续
-`ObservationSessions.DURATION_TICKS = 60` 游戏刻（20 TPS 时 3 秒）。开始时沿用玩家的实际触及范围并留 1
+观察键源码默认 **N**；读取玩家实际配置，也可在物品栏与容器中使用。每次按住只尝试一次，中断后需要松开再按。
+
+| 场景 | 操作与目标 | 时长（20 TPS） |
+|---|---|---|
+| 世界 | 对准方块、普通实体或掉落物，长按观察键 | 60 tick，3 秒 |
+| 世界，准星没有目标 | 长按观察键检视主手物品；主手为空则副手 | 60 tick，3 秒 |
+| 玩家背包、箱子及其他容器 | 鼠标悬停实际物品槽，长按观察键 | 60 tick，3 秒 |
+| 主手或副手拿放大镜 | 长按使用键（默认右键，支持 Shift），优先观察世界目标；无目标时检视另一只手 | 物品 30 tick，1.5 秒；方块和普通实体 60 tick |
+| 背包或容器中，光标拿放大镜 | 在实际物品槽上长按右键，支持 Shift | 30 tick，1.5 秒 |
+
+放大镜为 `frostedresearch:magnifying_glass`，tooltip「用于细致观察物品」，堆叠上限 1，无耐久或使用消耗。配方为各一件玻璃板、铜锭、木棍的无序合成，亦在研究创造栏中。其物品半时长由 `ObservationSessions.MAGNIFIED_ITEM_TICKS = DURATION_TICKS / 2` 决定；物品以外不加速。服务器 TPS 下降时实际等待会变长。
+
+掉落物使用额外射线选取，因为原版 `ItemEntity` 不参与普通准星实体选取；只在最近世界命中之前寻找掉落物。观察锁定该掉落物 UUID，最终生成 `Observation.Type.ITEM`，采用与手持、容器、绘图台相同的 `ItemRetrieval.observe` 采样。观察研究笔记载体仍被排除，应读取其内容。
+
+容器观察保持原菜单打开，以覆盖层显示进度与记录。鼠标移开原槽、槽内物品的类型/数量/NBT 改变、移走光标放大镜或关闭菜单都会取消；取消的放大镜右键不会向槽位放置工具。创造模式只映射玩家已有的实际物品槽，创造目录与 JEI 虚拟条目不作为实物；创造光标由客户端维护，服务端依据创造模式和实际目标槽处理该入口。
+
+服务端锁定世界方块位置与类型，或实体 UUID。开始时沿用玩家的实际触及范围并留 1
 格移动余量，不再向方块中心重新发射射线；因此准星框中的目标不会因为中心射线撞到邻块而被拒绝。持续期间距离为
 `max(MAX_DISTANCE = 8, 当前触及距离 + 2)`，兼容扩展触及距离。
 
-观察期间世界继续运行。半透明暗色逐渐覆盖目标之外的区域，开口随被锁定目标的屏幕投影移动。一次长按只启动一次；操作系统的按键重复不会重开界面。中途松开立即取消，不显示记录预览；晚到的主动观察完成消息同样受该手势状态约束。取消确认前的下一次按压会等待确认再启动，避免关闭前一轮时干扰下一轮。进度和提示抬到物品栏及状态球上方，不再需要
+观察期间世界继续运行。世界观察的半透明暗色逐渐覆盖目标之外的区域，开口随被锁定目标的屏幕投影移动；手持物品使用完整屏幕遮罩，不保留中央开口，容器使用窗口底部进度条。一次长按只启动一次；操作系统的按键重复不会重开界面。中途松开立即取消，不显示记录预览；晚到的主动观察完成消息同样受该手势状态约束。取消确认前的下一次按压会等待确认再启动，避免关闭前一轮时干扰下一轮。进度和提示抬到物品栏及状态球上方，不再需要
 Esc。
 
-目标方块被移除或换成不同类型、实体消失、目标越界、玩家受到实际伤害或切换维度时，服务端也会取消。实体移动不会切换观察目标；同一方块类型的状态变化在完成时被采样。间接观察仍使用独立的
+目标方块被移除或换成不同类型、实体消失、目标越界、玩家受到实际伤害或切换维度时，服务端也会取消。手持或掉落物的类型/数量/NBT 改变、手持检视时切换快捷栏槽位、移走正在使用的放大镜，也会取消。实体移动不会切换观察目标；同一方块类型的状态变化在完成时被采样。放大镜使用会拦截本次普通右键，不会同时开箱、放置副手物品或与实体互动。间接观察仍使用独立的
 `PREVIEW` 消息，不要求接收者按住观察键；主动完成使用 `OBSERVED` 消息。
 
 当前源码的轮盘默认键为 **G**；已有玩家保存的按键配置不会被覆盖，观察时的提示始终显示实际设置。
@@ -89,7 +106,7 @@ UUID。方法本身不填充历史记录的缺失信息，也不自动收入来�
 `item_block`。它不自动复制任意 NBT、数量、世界坐标或环境数据。后续物品变化不会修改已有记录。再次检索可以生成新的原始记录，其是否适合学习由知识用途与差异规则判断。
 
 其他模组可在初始化时用 `ItemRetrieval.registerField(itemId, field, collector)` 显式注册该物品允许采集的 `item.<field>`
-字符串字段；每个采集器读取独立的数量为 1 的副本。检索获得的知识由绘图台直接收入来件区。
+字符串字段；每个采集器读取独立的数量为 1 的副本。绘图台检视直接收入来件区；世界、手持和容器长按完成后先显示记录预览，选择保留才收入来件。新增入口不修改用途、差异、理解和学习判定，观察本身不保证能够记入档案。
 
 数据包 `data/<namespace>/frostedresearch/knowledge/item_retrieval/*.json` 经
 `KnowledgeDefinitions.current().itemRetrievalRules()` 的匹配规则可通过 `nbt_keys` 明确允许复制指定顶层附加 NBT

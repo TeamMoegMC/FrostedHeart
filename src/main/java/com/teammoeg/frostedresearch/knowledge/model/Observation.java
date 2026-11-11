@@ -38,13 +38,19 @@ public record Observation(UUID recordId, Type type, ResourceLocation object,
                           Map<String, ObservationValue> values, Source source, Optional<CompoundTag> itemData) {
     public enum Type {BLOCK, ENTITY, ITEM}
 
-    public static final Codec<UUID> UUID_CODEC = Codec.STRING.comapFlatMap(s -> {
-        try {
-            return DataResult.success(UUID.fromString(s));
-        } catch (IllegalArgumentException e) {
-            return DataResult.error(() -> "Invalid UUID: " + s);
-        }
-    }, UUID::toString);
+    // Source can initialize before Observation (for example, the first item inspection).
+    // Its codec must not trigger the outer codec while Source.CODEC is still being built.
+    private static final class UuidCodecHolder {
+        static final Codec<UUID> CODEC = Codec.STRING.comapFlatMap(s -> {
+            try {
+                return DataResult.success(UUID.fromString(s));
+            } catch (IllegalArgumentException e) {
+                return DataResult.error(() -> "Invalid UUID: " + s);
+            }
+        }, UUID::toString);
+    }
+
+    public static final Codec<UUID> UUID_CODEC = UuidCodecHolder.CODEC;
     public static final Codec<Observation> CODEC = RecordCodecBuilder.<Stored>create(i -> i.group(
             UUID_CODEC.fieldOf("record_id").forGetter(Stored::recordId),
             KnowledgeKey.enumCodec(Type.class).fieldOf("type").forGetter(Stored::type),
@@ -142,8 +148,8 @@ public record Observation(UUID recordId, Type type, ResourceLocation object,
                          Optional<ResourceLocation> dimension, Optional<BlockPos> position) {
         public static final Codec<Source> CODEC = RecordCodecBuilder.create(i -> i.group(
                 Codec.STRING.fieldOf("kind").forGetter(Source::kind),
-                UUID_CODEC.optionalFieldOf("original_observer").forGetter(Source::originalObserver),
-                UUID_CODEC.optionalFieldOf("organization").forGetter(Source::organization),
+                UuidCodecHolder.CODEC.optionalFieldOf("original_observer").forGetter(Source::originalObserver),
+                UuidCodecHolder.CODEC.optionalFieldOf("organization").forGetter(Source::organization),
                 ResourceLocation.CODEC.optionalFieldOf("dimension").forGetter(Source::dimension),
                 BlockPos.CODEC.optionalFieldOf("position").forGetter(Source::position)
         ).apply(i, Source::new));

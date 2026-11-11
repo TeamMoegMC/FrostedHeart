@@ -26,11 +26,20 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 
-public record ObservationActionPacket(Action action, BlockPos position, int entityId) implements CMessage {
-    public enum Action {BLOCK, ENTITY, CANCEL, ACCEPT, DISCARD}
+/** entityId is an entity runtime id, a main/off-hand index (0/1), or a menu slot index, according to action. */
+public record ObservationActionPacket(Action action, BlockPos position, int entityId, int containerId,
+                                      Method method) implements CMessage {
+    public enum Action {BLOCK, ENTITY, CANCEL, ACCEPT, DISCARD, HELD_ITEM, SLOT_ITEM}
+
+    /** The server resolves both the target and the tool from the player's current inventory. */
+    public enum Method {KEY, MAIN_HAND_GLASS, OFF_HAND_GLASS, CURSOR_GLASS, CREATIVE_CURSOR_GLASS}
 
     public ObservationActionPacket(FriendlyByteBuf buffer) {
-        this(buffer.readEnum(Action.class), buffer.readBlockPos(), buffer.readVarInt());
+        this(buffer.readEnum(Action.class), buffer.readBlockPos(), buffer.readVarInt(), buffer.readVarInt(), buffer.readEnum(Method.class));
+    }
+
+    public ObservationActionPacket(Action action, BlockPos position, int entityId) {
+        this(action, position, entityId, -1, Method.KEY);
     }
 
     public ObservationActionPacket(Action action) {
@@ -41,6 +50,8 @@ public record ObservationActionPacket(Action action, BlockPos position, int enti
         buffer.writeEnum(action);
         buffer.writeBlockPos(position);
         buffer.writeVarInt(entityId);
+        buffer.writeVarInt(containerId);
+        buffer.writeEnum(method);
     }
 
     public void handle(Supplier<NetworkEvent.Context> supplier) {
