@@ -68,20 +68,7 @@ public final class ResidentNutritionExplanation {
         lines.add(delta("gui.frostedheart.resident.intelligence_net_change",
                 snapshot.intelligence().netChange()));
 
-        ResidentNutritionSupportModel.Weights weights = Resident.nutritionSupportWeights().normalized();
-        ResidentNutritionSupportModel.WeightRow combinedWeights =
-                new ResidentNutritionSupportModel.WeightRow(
-                        weights.health().protein() + weights.mental().protein()
-                                + weights.strength().protein() + weights.intelligence().protein(),
-                        weights.health().fat() + weights.mental().fat()
-                                + weights.strength().fat() + weights.intelligence().fat(),
-                        weights.health().vegetable() + weights.mental().vegetable()
-                                + weights.strength().vegetable() + weights.intelligence().vegetable(),
-                        weights.health().carbohydrate() + weights.mental().carbohydrate()
-                                + weights.strength().carbohydrate() + weights.intelligence().carbohydrate());
-        List<ResidentNutritionSupportModel.Nutrient> limits =
-                ResidentNutritionSupportModel.limitingNutrients(
-                        snapshot.satisfaction(), combinedWeights, 2);
+        List<ResidentNutritionSupportModel.Nutrient> limits = limitingNutrients(snapshot, 2);
         if (limits.isEmpty()) {
             lines.add(Component.translatable("gui.frostedheart.resident.nutrition_supported")
                     .withStyle(ChatFormatting.GREEN));
@@ -95,6 +82,34 @@ public final class ResidentNutritionExplanation {
             lines.add(line.withStyle(ChatFormatting.YELLOW));
         }
         return List.copyOf(lines);
+    }
+
+
+    /**
+     * 当前最限制这个居民的营养（最多 {@code max} 项，按影响从大到小）；没有快照或营养充足时为空。
+     * The nutrients currently limiting this resident most, at most {@code max}, largest effect first; empty without a
+     * snapshot or when nutrition is sufficient.
+     */
+    public static List<ResidentNutritionSupportModel.Nutrient> limitingNutrients(Resident resident, int max) {
+        ResidentNutritionSnapshot snapshot = resident.getNutritionSnapshot();
+        return snapshot.hasData() ? limitingNutrients(snapshot, max) : List.of();
+    }
+
+    private static List<ResidentNutritionSupportModel.Nutrient> limitingNutrients(ResidentNutritionSnapshot snapshot, int max) {
+        ResidentNutritionSupportModel.Weights weights = Resident.nutritionSupportWeights().normalized();
+        ResidentNutritionSupportModel.WeightRow combinedWeights =
+                new ResidentNutritionSupportModel.WeightRow(
+                        weights.health().protein() + weights.mental().protein()
+                                + weights.strength().protein() + weights.intelligence().protein(),
+                        weights.health().fat() + weights.mental().fat()
+                                + weights.strength().fat() + weights.intelligence().fat(),
+                        weights.health().vegetable() + weights.mental().vegetable()
+                                + weights.strength().vegetable() + weights.intelligence().vegetable(),
+                        weights.health().carbohydrate() + weights.mental().carbohydrate()
+                                + weights.strength().carbohydrate() + weights.intelligence().carbohydrate());
+        return
+                ResidentNutritionSupportModel.limitingNutrients(
+                        snapshot.satisfaction(), combinedWeights, max);
     }
 
     private static Component percent(String key, double value) {

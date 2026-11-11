@@ -22,9 +22,9 @@ package com.teammoeg.frostedheart.content.town.observation;
 import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.chorda.multiblock.CMultiblockHelper;
 import com.teammoeg.chorda.util.CUtils;
-import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorData;
+import com.teammoeg.frostedheart.content.town.TeamTownData;
 import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorFuelModel;
 import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorRecipe;
 import com.teammoeg.frostedheart.content.climate.block.generator.t1.T1GeneratorState;
@@ -121,7 +121,8 @@ public final class TownOperationalStatusProvider {
                 town.getResourceHolder().get(ItemResourceType.RESIDENT_FOOD_LEVEL),
                 residents.population(), FHConfig.SERVER.TOWN.HOUSING.foodConsumptionPerResidentDay.get());
 
-        GeneratorData generator = teamData.getOptional(FHSpecialDataTypes.GENERATOR_DATA).orElse(null);
+        // Only a tower in the town's own dimension serves it; one elsewhere reads as no tower.
+        GeneratorData generator = TeamTownData.townGenerator(teamData).orElse(null);
         ServerLevel towerWorld = generator != null && generator.dimension != null
                 ? world.getServer().getLevel(generator.dimension) : world;
         if (towerWorld == null) {

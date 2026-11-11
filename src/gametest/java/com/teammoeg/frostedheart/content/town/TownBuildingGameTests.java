@@ -369,7 +369,7 @@ public final class TownBuildingGameTests {
     }
 
     @GameTest(template = "phase0a_empty", timeoutTicks = 200)
-    public static void dimensionMismatchSurvivesPeriodicRegistryAndCoreQueries(GameTestHelper helper) {
+    public static void towerInAnotherDimensionLeavesTheTownRunning(GameTestHelper helper) {
         var fixture = TeamTownPersistenceGameTests.populatedTown(helper, "building-dimension-mismatch");
         var generator = fixture.holder().getData(FHSpecialDataTypes.GENERATOR_DATA);
         long townDay = fixture.town().getTownDay();
@@ -384,21 +384,31 @@ public final class TownBuildingGameTests {
         fixture.town().debugSpawnRefugeeBatch(wrongLevel, fixture.holder());
         helper.assertTrue(wrongLevel.getChunkSource().getLoadedChunksCount() == wrongWorldChunks,
                 "the debug entry must reject another world before querying terrain or climate");
-        generator.actualPos = null;
+        // The tower now stands in the Nether: it no longer serves the town, but the town keeps running where its
+        // buildings are, because a player may move or dismantle the tower at any time.
         generator.dimension = Level.NETHER;
         fixture.holder().setData(FHSpecialDataTypes.GENERATOR_DATA, generator);
         helper.runAfterDelay(25, () -> {
             CitizenSimScheduler.get(helper.getLevel()).refreshRegistryNow(helper.getLevel());
-            helper.assertTrue(TeamTownData.executionLevel(fixture.holder()) == null && !fixture.sim().isAdopted(),
-                    "periodic registry refresh must not reactivate a town in its tower's wrong dimension");
-            helper.assertTrue(!fixture.town().buildings.isEmpty(), "paused execution must retain building facts");
-            helper.assertTrue(fixture.town().tickMorning(helper.getLevel(), fixture.holder()) == TownSettlement.Result.SKIPPED
-                            && fixture.town().getTownDay() == townDay,
-                    "a mismatched tower must also pause direct manual settlement");
+            helper.assertTrue(TeamTownData.executionLevel(fixture.holder()) == helper.getLevel() && fixture.sim().isAdopted(),
+                    "a tower in another dimension must not stop the town in its buildings' world");
+            helper.assertTrue(TeamTownData.townGenerator(fixture.holder()).isEmpty(),
+                    "a tower in another dimension does not serve the town");
+            fixture.town().prepareView(helper.getLevel(), fixture.holder());
+            helper.assertTrue(fixture.town().getTowerPos() == null, "directions ignore a tower in another dimension");
+            // The fixture's house has no core block, so the morning may drop it; only the day itself is checked.
+            var settled = fixture.town().tickMorning(helper.getLevel(), fixture.holder());
+            helper.assertTrue(settled == TownSettlement.Result.COMMITTED,
+                    "the town keeps settling without a tower in its dimension, got " + settled);
+            helper.assertTrue(fixture.town().getTownDay() == townDay + 1,
+                    "the settlement without a tower in its dimension advances the day");
             generator.dimension = helper.getLevel().dimension();
             fixture.holder().setData(FHSpecialDataTypes.GENERATOR_DATA, generator);
             TownRuntimeManager.current().install(fixture.holder());
-            helper.assertTrue(fixture.sim().isAdopted(), "matching tower context must reconnect the original simulation");
+            fixture.town().prepareView(helper.getLevel(), fixture.holder());
+            helper.assertTrue(fixture.sim().isAdopted() && generator.actualPos.equals(fixture.town().getTowerPos()),
+                    "a tower back in the town's dimension serves it again, with the original simulation");
+            generator.actualPos = null; // no multiblock stands there; leave the fixture's tower dismantled
             helper.succeed();
         });
     }

@@ -44,6 +44,7 @@ import com.teammoeg.frostedheart.content.steamenergy.steamcore.SteamCoreTileEnti
 import com.teammoeg.frostedheart.content.town.buildings.house.HouseBlockEntity;
 import com.teammoeg.frostedheart.content.town.buildings.hunting.HuntingBaseBlockEntity;
 import com.teammoeg.frostedheart.content.town.buildings.logistics.TransportStationBlockEntity;
+import com.teammoeg.frostedheart.content.town.buildings.institute.ResearchInstituteBlockEntity;
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBaseBlockEntity;
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBlockEntity;
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseBlockEntity;
@@ -169,6 +170,9 @@ public class FHBlockEntityTypes {
     );
     public static final RegistryObject<BlockEntityType<TransportStationBlockEntity>> TRANSPORT_STATION = REGISTER.register(
             "transport_station", makeType(TransportStationBlockEntity::new, FHBlocks.TRANSPORT_STATION::get)
+    );
+    public static final RegistryObject<BlockEntityType<ResearchInstituteBlockEntity>> RESEARCH_INSTITUTE = REGISTER.register(
+            "research_institute", makeType(ResearchInstituteBlockEntity::new, FHBlocks.RESEARCH_INSTITUTE::get)
     );
 
     public static final RegistryObject<BlockEntityType<WardrobeBlockEntity>> WARDROBE = REGISTER.register(

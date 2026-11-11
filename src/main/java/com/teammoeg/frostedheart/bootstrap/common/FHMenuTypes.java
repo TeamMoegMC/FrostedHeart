@@ -26,6 +26,8 @@ import com.teammoeg.frostedheart.content.town.buildings.hunting.HuntingBaseBlock
 import com.teammoeg.frostedheart.content.town.buildings.hunting.HuntingBaseMenu;
 import com.teammoeg.frostedheart.content.town.buildings.logistics.TransportStationBlockEntity;
 import com.teammoeg.frostedheart.content.town.buildings.logistics.TransportStationMenu;
+import com.teammoeg.frostedheart.content.town.buildings.institute.ResearchInstituteBlockEntity;
+import com.teammoeg.frostedheart.content.town.buildings.institute.ResearchInstituteMenu;
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBaseBlockEntity;
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBaseMenu;
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBlockEntity;
@@ -123,6 +125,8 @@ public class FHMenuTypes {
 			register(HuntingBaseBlockEntity.class, "hunting_base", HuntingBaseMenu::new);
 	public static final RegistryObject<MenuType<TransportStationMenu>> TRANSPORT_STATION =
 			register(TransportStationBlockEntity.class, "transport_station", TransportStationMenu::new);
+	public static final RegistryObject<MenuType<ResearchInstituteMenu>> RESEARCH_INSTITUTE =
+			register(ResearchInstituteBlockEntity.class, "research_institute", ResearchInstituteMenu::new);
 	public static final RegistryObject<MenuType<MineMenu>> MINE =
 			register(MineBlockEntity.class, "mine", MineMenu::new);
 	public static final RegistryObject<MenuType<WarehouseInterfaceMenu>> WAREHOUSE_INTERFACE =

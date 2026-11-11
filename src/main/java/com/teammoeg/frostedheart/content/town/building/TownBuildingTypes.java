@@ -4,6 +4,7 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.teammoeg.frostedheart.content.town.buildings.house.HouseBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.hunting.HuntingBaseBuilding;
+import com.teammoeg.frostedheart.content.town.buildings.institute.ResearchInstituteBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.logistics.TransportStationBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBaseBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBuilding;
@@ -26,7 +27,8 @@ public final class TownBuildingTypes {
             new Type<>("mine", MineBuilding.class, () -> MineBuilding.MAP_CODEC, null),
             new Type<>("mineBase", MineBaseBuilding.class, () -> MineBaseBuilding.MAP_CODEC, () -> MineBaseBuilding.MiningDailyReport.CODEC),
             new Type<>("warehouse", WarehouseBuilding.class, () -> WarehouseBuilding.MAP_CODEC, null),
-            new Type<>("transportStation", TransportStationBuilding.class, () -> TransportStationBuilding.MAP_CODEC, () -> TransportStationBuilding.TransportStationDailyReport.CODEC));
+            new Type<>("transportStation", TransportStationBuilding.class, () -> TransportStationBuilding.MAP_CODEC, () -> TransportStationBuilding.TransportStationDailyReport.CODEC),
+            new Type<>("researchInstitute", ResearchInstituteBuilding.class, () -> ResearchInstituteBuilding.MAP_CODEC, () -> ResearchInstituteBuilding.InstituteDailyReport.CODEC));
     private static final List<String> LEGACY = List.of("house", "huntingBase", "mine", "mineBase", "warehouse", "transportStation");
 
     private TownBuildingTypes() {}

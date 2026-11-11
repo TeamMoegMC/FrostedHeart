@@ -42,6 +42,7 @@ import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaScreen;
 import com.teammoeg.frostedheart.content.town.buildings.house.HouseScreen;
 import com.teammoeg.frostedheart.content.town.buildings.hunting.HuntingBaseScreen;
 import com.teammoeg.frostedheart.content.town.buildings.logistics.TransportStationScreen;
+import com.teammoeg.frostedheart.content.town.buildings.institute.ResearchInstituteScreen;
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBaseScreen;
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineScreen;
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseLevelEmitterScreen;
@@ -74,6 +75,7 @@ public class FHScreens {
         registerCUIScreen(FHMenuTypes.MINE_BASE.get(), MineBaseScreen::new);
         registerCUIScreen(FHMenuTypes.HUNTING_BASE.get(), HuntingBaseScreen::new);
         registerCUIScreen(FHMenuTypes.TRANSPORT_STATION.get(), TransportStationScreen::new);
+        registerCUIScreen(FHMenuTypes.RESEARCH_INSTITUTE.get(), ResearchInstituteScreen::new);
         registerCUIScreen(FHMenuTypes.MINE.get(), MineScreen::new);
         registerCUIScreen(FHMenuTypes.WAREHOUSE_INTERFACE.get(), WarehouseInterfaceScreen::new);
         registerCUIScreen(FHMenuTypes.WAREHOUSE_LEVEL_EMITTER.get(), WarehouseLevelEmitterScreen::new);

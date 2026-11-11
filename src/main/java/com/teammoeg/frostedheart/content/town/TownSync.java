@@ -11,6 +11,7 @@ import com.teammoeg.frostedheart.content.town.network.TownBuildingUpdatePacket;
 import com.teammoeg.frostedheart.content.town.network.TownResidentUpdatePacket;
 import com.teammoeg.frostedheart.content.town.network.TownResourceUpdatePacket;
 import com.teammoeg.frostedheart.content.town.network.TownSignalNotificationPacket;
+import com.teammoeg.frostedheart.content.town.network.TownTowerUpdatePacket;
 import com.teammoeg.frostedheart.content.town.network.TownTransportShortageNotificationPacket;
 import com.teammoeg.frostedheart.content.town.observation.TownSignalEventModel;
 import com.teammoeg.frostedheart.content.town.observation.TownSignalNotice;
@@ -200,6 +201,10 @@ public final class TownSync {
                 }
             }
             teamData.sendToOnline(FHNetwork.INSTANCE, new TownResidentUpdatePacket(changedResidents, removedResidents));
+        }
+
+        if(data.drainTowerChange()){
+            teamData.sendToOnline(FHNetwork.INSTANCE, new TownTowerUpdatePacket(data.getTowerPos()));
         }
 
         if(!data.dataSyncCache.changedBuildingPos.isEmpty()){

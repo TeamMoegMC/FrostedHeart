@@ -161,7 +161,7 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
         }
     }
 
-    public static final MapCodec<HouseBuilding> MAP_CODEC = RecordCodecBuilder.mapCodec(t -> t.group(
+    public static final MapCodec<HouseBuilding> MAP_CODEC = AbstractTownBuilding.named(RecordCodecBuilder.mapCodec(t -> t.group(
             strict(BlockPos.CODEC).optionalFieldOf("pos",BlockPos.ZERO).forGetter(o -> o.pos),
             strict(Codec.BOOL).optionalFieldOf("isStructureValid",false).forGetter(o -> o.isStructureValid()),
             strict(OccupiedZoneInfo.CODEC).optionalFieldOf("occupiedVolume",OccupiedZoneInfo.EMPTY).forGetter(o -> o.getOccupiedVolume()),
@@ -177,7 +177,7 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
             strict(BED_POSITIONS_CODEC).optionalFieldOf("bedPositions", NO_BED_POSITIONS).forGetter(o -> o.bedPositions),
             strict(Codec.LONG).optionalFieldOf("entrancePosition").forGetter(o ->
                     o.hasEntrance ? Optional.of(o.entrancePosition) : Optional.empty()))
-            .apply(t, HouseBuilding::new));
+            .apply(t, HouseBuilding::new)));
         public static final Codec<HouseBuilding> CODEC = MAP_CODEC.codec();
 
 

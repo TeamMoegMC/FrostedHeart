@@ -113,18 +113,23 @@ public class WarehouseInterfaceScreen extends MenuPrimaryLayer<WarehouseInterfac
             default -> 0x9a2828;
         };
         graphics.drawString(getFont(), status, x + 8, y + 83, statusColor, false);
-        graphics.drawString(getFont(), Component.translatable(
-                        "gui.frostedheart.warehouse_interface.transport.current_rate",
-                        format(view.effectiveRateItemsPerSecond())),
-                x + 8, y + 93, view.isRateLimited() ? 0x9a2828 : 0x404040, false);
+        // Players read whole numbers: the actual rate per minute, transport rounded (what is left rounded down).
+        // Detailed mode keeps the exact per-second figures.
+        boolean detailed = com.teammoeg.frostedheart.content.town.client.TownUiModeClient.detailed();
+        Component rate = detailed
+                ? Component.translatable("gui.frostedheart.warehouse_interface.transport.current_rate",
+                        format(view.effectiveRateItemsPerSecond()))
+                : Component.translatable("gui.frostedheart.warehouse_interface.transport.current_rate_minute",
+                        whole(view.effectiveRateItemsPerSecond() * 60));
+        graphics.drawString(getFont(), rate, x + 8, y + 93, view.isRateLimited() ? 0x9a2828 : 0x404040, false);
         graphics.drawString(getFont(), Component.translatable(
                         "gui.frostedheart.warehouse_interface.transport.reserved",
-                        format(view.reservedCapacity())),
+                        detailed ? format(view.reservedCapacity()) : whole(view.reservedCapacity())),
                 x + 8, y + 103, 0x404040, false);
         graphics.drawString(getFont(), Component.translatable(
                         "gui.frostedheart.warehouse_interface.transport.town_capacity",
-                        format(view.townRemainingCapacity()),
-                        format(view.townTotalCapacity())),
+                        detailed ? format(view.townRemainingCapacity()) : floor(view.townRemainingCapacity()),
+                        detailed ? format(view.townTotalCapacity()) : whole(view.townTotalCapacity())),
                 x + 8, y + 113, 0x404040, false);
     }
 
@@ -148,6 +153,14 @@ public class WarehouseInterfaceScreen extends MenuPrimaryLayer<WarehouseInterfac
 
     private static String format(double value) {
         return String.format(Locale.ROOT, "%.1f", value);
+    }
+
+    private static String whole(double value) {
+        return com.teammoeg.frostedheart.content.town.ui.TownFormat.count(Math.round(Math.max(0, value)));
+    }
+
+    private static String floor(double value) {
+        return com.teammoeg.frostedheart.content.town.ui.TownFormat.count((long) Math.floor(Math.max(0, value) + 1e-6));
     }
 
     static String rateInputText(WarehouseInterfaceTransportView view) {

@@ -1,7 +1,7 @@
 # Chorda UI (CUI) 指南
 
 - Status: `Current`
-- Last verified: `2026-10-19`
+- Last verified: `2026-11-10`
 - Scope: `com.teammoeg.chorda.client.cui` 的架构、生命周期、布局、输入、主题、适配器、控件库、内容面板、平移缩放视口与编辑器框架
 - Code anchors: [`UIElement`](../src/main/java/com/teammoeg/chorda/client/cui/base/UIElement.java), [`UILayer`](../src/main/java/com/teammoeg/chorda/client/cui/base/UILayer.java), [`PrimaryLayer`](../src/main/java/com/teammoeg/chorda/client/cui/base/PrimaryLayer.java), [`CUIScreenWrapper`](../src/main/java/com/teammoeg/chorda/client/cui/screenadapter/CUIScreenWrapper.java), [`CUIMenuScreenWrapper`](../src/main/java/com/teammoeg/chorda/client/cui/screenadapter/CUIMenuScreenWrapper.java), [`CUIOverlay`](../src/main/java/com/teammoeg/chorda/client/cui/screenadapter/CUIOverlay.java), [`ContentPanel`](../src/main/java/com/teammoeg/chorda/client/cui/contentpanel/ContentPanel.java), [`Theme`](../src/main/java/com/teammoeg/chorda/client/cui/theme/Theme.java), [`PanZoomViewport`](../src/main/java/com/teammoeg/chorda/client/cui/base/PanZoomViewport.java), [`Editor`](../src/main/java/com/teammoeg/chorda/client/cui/editor/Editor.java)
 
@@ -112,6 +112,19 @@ event.registerAboveAll("example_tip", new CUIOverlay(TipLayer.INSTANCE, true, CU
 - 分发顺序：`UILayer` 从最后添加的元素开始（顶层优先），`enabled && visible` 才参与；返回 `true` 停止传播。
 - 焦点：实现 `Focusable`（`isFocused/setFocused`）的元素由 `PrimaryLayer.focusOn(element)` 管理，
   `TextBox` 在点击时请求焦点，`PrimaryLayer` 键盘事件优先发给当前焦点元素。
+  - 焦点元素若已在 `refreshElements()` 重建中被移出元素树，`PrimaryLayer` 会先清除它的焦点，按键、滚轮和输入法字符
+    不会再落到看不见的旧元素上。
+  - 界面定时重建时若要保留输入框的焦点，需要在新输入框上调用 `setFocused(true)` 接过焦点。仓库的搜索框就是这样做的。
+- 鼠标坐标：`getMouseX/Y` 在每帧渲染时更新。点击、松开、拖动和滚轮在分发前也会先按当前指针更新坐标和悬停状态
+  （`isMouseOver`），所以事件里读到的是指针此刻的位置。以前拖动读的是上一帧的位置，快速拖动会少算一段：拖到第一行的
+  条目会落在第二行。
+- 侧栏按钮：铺满窗口的主层实现 `HidesSidebarButtons`，打开时其他模组画在屏幕边上的侧栏按钮（FTB Library）不画。
+- 中文断行：原版 `Font.split` 总在空格处断行，中文句子里数字两边的空格常让一行提前折断。城镇界面用
+  `TownTextLayout.breakLines(font, text, width)` 逐字排满并守避头尾；别的界面需要中文排版时也可以用它。
+- 输入框（`TextBox`）：
+  - `selectAll()` 选中全部文字，光标停在末尾，接着输入就整段替换。Ctrl+A 用的也是它。
+  - `ghostText` 默认和原版一样，聚焦后就隐藏。一打开就聚焦的输入框可以把 `showGhostWhenFocused` 设为 `true`，
+    清空时提示照样显示。布告板的改名框（`RenameBox`）打开时全选旧名字，清空后提示留空会恢复成什么。
 - 滚动条：
   - `ScrollBar(parent, isVertical, thumbSize)`：通用滚动条，支持拖拽、点击轨道翻页、滚轮。
   - `LayerScrollBar(parent, affectedLayer)`：绑定到某个 `UILayer`，自动计算 `max/page/thumb`，
@@ -128,7 +141,31 @@ event.registerAboveAll("example_tip", new CUIOverlay(TipLayer.INSTANCE, true, CU
 
 - 给某个 `UILayer`（含 `PrimaryLayer`）`setTheme(theme)`，其整棵子树都换主题；
 - 颜色一律用 `UIColors.*`（`Coloring` 实现）或自定义 `Coloring`，不要在控件里写死 ARGB；
-- 内置主题：`VanillaTheme.INSTANCE`（默认）、`SimpleTechTheme.INSTANCE`；档案界面还有自己的 `ArchiveTheme`。
+- 内置主题：`VanillaTheme.INSTANCE`（默认）、`SimpleTechTheme.INSTANCE`；档案界面还有自己的 `ArchiveTheme`，城镇界面用 `NoticeBoardTheme`（木板底加布告纸，`content/town/client/board`）。
+  - `NoticeBoardTheme` 也重写了 `drawSlot`（压在纸上的格子）、`drawSliderBackground` 与 `drawSliderBar`（纸槽与纸签），
+    所以用主题画格子和滚动条的控件（例如仓库的 `VirtualItemGridElement`）放到布告板上会自动换成纸面样式。
+
+### 7.1 变形
+
+`UILayer` 可以像 CSS 那样整体倾斜、旋转或缩放，内部控件照常响应鼠标：
+
+```java
+card.setTransform(CSSStylingUtil.rotate(0.5f));      // 也有 skewX/skewY/scale/rotateX/rotateY/perspective
+card.setTransformOrigin(new Vector2f(.5f, .5f));      // 变形中心，按层宽高的比例，默认居中
+card.mulTransform(CSSStylingUtil.skewX(-2f));         // 叠加
+```
+
+- 渲染时变形作用于整棵子树和裁剪模板；`updateRenderInfo` 用逆矩阵把鼠标换回层内坐标，所以按钮、文本框在倾斜的层里照样能点。
+- 变形中心取层自己的屏幕位置（2026-11-10 修正：此前鼠标换算漏加了层的 `x/y`，只有位于父层原点的层才命中准确）。
+- 参考：`ArchiveScreen` 的翻页倾斜、城镇布告板的 `PaperCard`。
+
+### 7.2 进度条与染色贴图
+
+- `ProgressBar(parent, progress, color)`：每帧从供应器读 0–1 的进度和颜色，由主题的 `drawProgressBar` 绘制。
+  `Theme.drawProgressBar` 有纯色默认实现，主题可以换成贴图（例如 `NoticeBoardTheme` 的纸槽）。
+- `CTextureIcon.drawTinted(graphics, x, y, w, h, argb)`：乘上颜色后绘制，九宫格同样适用；白色贴图可以染成任意颜色（印戳、进度填充）。
+  普通 `draw` 会先 `resetGuiDrawing()` 把着色器颜色复位，所以不能靠事先 `setShaderColor` 染色。
+- `CInputHelper.playUISound(sound, pitch)`：播放与位置无关的界面音效（翻纸、盖章）。
 
 ## 8. 适配器与位置
 
@@ -166,6 +203,7 @@ event.registerAboveAll("example_tip", new CUIOverlay(TipLayer.INSTANCE, true, CU
 | `ScrollBar` / `LayerScrollBar` | 见第 6 节 |
 | `TabImageButtonElement` | 标签页按钮（激活/未激活图标） |
 | `LevelSpinLayer` | 档位选择器 |
+| `ProgressBar` | 进度条，颜色与进度来自供应器，外观由主题决定 |
 
 菜单集成：`CUISlot`（`Container` 槽位）、`CUISlotItemHandler`（`IItemHandler` 槽位）实现
 `DeactivatableSlot`，可运行时启停。

@@ -68,7 +68,7 @@ public class WarehouseInteractPacket implements CMessage {
             if (town == null) return;
 
 			if (player.containerMenu instanceof WarehouseMenu warehouseMenu
-					&& warehouseMenu.canAccessWarehouse()) {
+					&& warehouseMenu.canUseStock()) {
 				IActionExecutorHandler executor = town.getActionExecutorHandler();
 				ItemStack carried = player.containerMenu.getCarried();
 

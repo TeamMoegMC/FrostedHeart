@@ -73,7 +73,7 @@ import com.teammoeg.frostedheart.item.snowsack.network.ToggleDeleteOverflowMessa
 
 public class FHNetwork extends CBaseNetwork {
     @Override
-    protected String protocolVersion(String modVersion) { return modVersion + ":town-view-1:building-data-1"; }
+    protected String protocolVersion(String modVersion) { return modVersion + ":town-view-1:building-data-3:town-ui-3"; }
 	private FHNetwork() {
 		super(FHMain.MODID);
 	}
@@ -146,6 +146,9 @@ public class FHNetwork extends CBaseNetwork {
         registerMessage("town_history_update", TownHistoryUpdatePacket.class);
         registerMessage("town_name_edit_request", TownNameEditRequestPacket.class);
         registerMessage("town_name_update", TownNameUpdatePacket.class);
+        registerMessage("town_tower_update", com.teammoeg.frostedheart.content.town.network.TownTowerUpdatePacket.class);
+        registerMessage("town_ui_mode", com.teammoeg.frostedheart.content.town.ui.TownUiModeS2CPacket.class);
+        registerMessage("town_building_rename", com.teammoeg.frostedheart.content.town.network.TownBuildingRenameRequestPacket.class);
         registerMessage("town_resident_name_edit_request", TownResidentNameEditRequestPacket.class);
         registerMessage("town_signal_notification", TownSignalNotificationPacket.class);
         registerMessage("town_transport_shortage_notification", TownTransportShortageNotificationPacket.class);

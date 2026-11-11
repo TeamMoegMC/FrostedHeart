@@ -40,7 +40,7 @@ import net.minecraft.world.item.Items;
 
 public class MineBuilding extends AbstractTownBuilding {
 
-	public static final MapCodec<MineBuilding> MAP_CODEC = RecordCodecBuilder.mapCodec(t -> t.group(
+	public static final MapCodec<MineBuilding> MAP_CODEC = AbstractTownBuilding.named(RecordCodecBuilder.mapCodec(t -> t.group(
                     strict(BlockPos.CODEC).optionalFieldOf("pos",BlockPos.ZERO).forGetter(o -> o.pos),
                     strict(Codec.BOOL).optionalFieldOf("initialized", false).forGetter(o -> o.isInitialized()),
                     strict(Codec.BOOL).optionalFieldOf("isStructureValid",false).forGetter(o -> o.isStructureValid()),
@@ -49,7 +49,7 @@ public class MineBuilding extends AbstractTownBuilding {
 					strict(Codec.STRING).optionalFieldOf("biomePath","minecraft:plains")
                             .forGetter(o -> o.getBiomePath().toString())
 					)
-			.apply(t, MineBuilding::new));
+			.apply(t, MineBuilding::new)));
         public static final Codec<MineBuilding> CODEC = MAP_CODEC.codec();
 
 

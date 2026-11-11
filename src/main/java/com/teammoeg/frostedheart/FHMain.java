@@ -242,6 +242,8 @@ public class FHMain {
 
 		//town stuff
 		ITownProviderSerializable.registerAll();
+		// Research institutes grant their teams knowledge capacity.
+		com.teammoeg.frostedheart.content.town.buildings.institute.InstituteKnowledgeCapacity.register();
 
 		// stupid vanilla
 		ComposterBlock.COMPOSTABLES.putIfAbsent(FHBlocks.RYE_BLOCK.asItem(), 0.3f);

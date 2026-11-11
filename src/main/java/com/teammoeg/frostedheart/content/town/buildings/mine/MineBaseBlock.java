@@ -58,7 +58,8 @@ public class MineBaseBlock extends AbstractTownBuildingBlock implements CEntityB
             }, () -> player.displayClientMessage(Components.str(CConstants.NO_CORRESPONDING_TOWN_BUILDING_INSTANCE_FOUND), false));
             return InteractionResult.SUCCESS;
         }
-        return InteractionResult.PASS;
+        // Claim the click on the client too, so a held item (the Mayor's Seal, say) is not used as well.
+        return worldIn.isClientSide && handIn == InteractionHand.MAIN_HAND ? InteractionResult.SUCCESS : InteractionResult.PASS;
     }
 
 

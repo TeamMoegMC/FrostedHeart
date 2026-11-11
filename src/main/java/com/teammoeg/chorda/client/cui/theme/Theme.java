@@ -157,6 +157,22 @@ public interface Theme {
 	 *
 	 * @return ARGB颜色值 / the ARGB color value
 	 */
+	/**
+	 * 绘制进度条：先画底槽，再按进度画填充。默认用纯色，主题可以换成贴图。
+	 * <p>
+	 * Draws a progress bar: the track, then the part filled by {@code progress}. The default uses flat fills;
+	 * themes may draw textures instead.
+	 *
+	 * @param progress  进度 0–1 / progress from 0 to 1
+	 * @param fillColor 填充颜色 ARGB / ARGB color of the filled part
+	 */
+	default void drawProgressBar(GuiGraphics graphics, int x, int y, int w, int h, float progress, int fillColor) {
+		graphics.fill(x, y, x + w, y + h, UIBGBorderColor());
+		int filled = Math.round(Math.max(0f, Math.min(1f, progress)) * w);
+		if (filled > 0)
+			graphics.fill(x, y, x + filled, y + h, fillColor);
+	}
+
 	int UITextColor();
 
 	/**

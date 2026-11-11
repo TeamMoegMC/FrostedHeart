@@ -30,7 +30,10 @@ import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
 import com.teammoeg.frostedheart.content.town.building.ITownResidentWorkBuilding;
 import com.teammoeg.frostedheart.content.town.network.TownStaffingEditRequestPacket;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
+import com.teammoeg.frostedheart.content.town.client.board.BoardQueue;
+import com.teammoeg.frostedheart.content.town.client.board.NoticeBoardTheme;
 import com.teammoeg.frostedheart.content.town.tabs.TownTextLayout;
+import com.teammoeg.frostedheart.content.town.ui.TownBuildingLabels;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -46,19 +49,19 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
 
-/** Drag-and-drop staffing queue with integer guaranteed-target sliders. */
+/**
+ * 岗位调度：一列可以拖动排序的工单纸条，每张带一道纸槽，黄铜图钉是保障人数的滑块。放在布告板上，尺寸随板子。
+ * <p>
+ * The staffing queue: paper work orders dragged into priority order, each with a paper track whose brass pin sets
+ * the guaranteed workers. Lives on the notice board and takes the board's size.
+ */
 public final class TownStaffingPanel extends UIElement {
-    private static final int WIDTH = TownManagerScreen.CONTENT_WIDTH;
-    private static final int HEIGHT = TownManagerScreen.CONTENT_HEIGHT;
-    private static final int LIST_TOP = 32;
-    private static final int ROW_HEIGHT = 28;
-    private static final int VISIBLE_ROWS = 6;
-    private static final int HANDLE_RIGHT = 14;
-    private static final int BAR_X = 128;
-    private static final int BAR_Y_IN_ROW = 17;
-    private static final int BAR_WIDTH = WIDTH - BAR_X - 8;
+    private static final int LIST_TOP = 30;
+    private static final int ROW_HEIGHT = 30;
+    private static final int HANDLE_RIGHT = 16;
+    private static final int BAR_Y_IN_ROW = 18;
     private static final int BAR_HEIGHT = 6;
-    private static final int SCROLLBAR_WIDTH = 3;
+    private static final int SCROLLBAR_WIDTH = 8;
 
     private final Supplier<TeamTown> townSource;
     private TownStaffingPlan observedPlan = TownStaffingPlan.EMPTY;
@@ -76,10 +79,26 @@ public final class TownStaffingPanel extends UIElement {
     public TownStaffingPanel(
             UIElement parent, int x, int y, Supplier<TeamTown> townSource
     ) {
+        this(parent, x, y, TownManagerScreen.CONTENT_WIDTH, TownManagerScreen.CONTENT_HEIGHT, townSource);
+    }
+
+    public TownStaffingPanel(UIElement parent, int x, int y, int width, int height, Supplier<TeamTown> townSource) {
         super(parent);
         this.townSource = townSource;
         setPos(x, y);
-        setSize(WIDTH, HEIGHT);
+        setSize(width, height);
+    }
+
+    private int visibleRows() {
+        return Math.max(1, (getHeight() - LIST_TOP) / ROW_HEIGHT);
+    }
+
+    private int barX() {
+        return Math.max(130, getWidth() * 48 / 100);
+    }
+
+    private int barWidth() {
+        return getWidth() - barX() - SCROLLBAR_WIDTH - 14;
     }
 
     @Override
@@ -90,14 +109,21 @@ public final class TownStaffingPanel extends UIElement {
         TeamTown town = townSource.get();
         syncDraft(town);
         Font font = Minecraft.getInstance().font;
-        drawPanel(graphics, x, y, width, height);
-        graphics.drawString(font,
-                Component.translatable("gui.frostedheart.town_manager.staffing"),
-                x + 4, y + 4, 0xFFFFAA00, true);
+        com.teammoeg.frostedheart.content.town.client.board.BoardDraw.textOnWood(graphics,
+                Component.translatable("gui.frostedheart.town_manager.staffing").copy().withStyle(net.minecraft.ChatFormatting.BOLD),
+                x + 4, y + 2, NoticeBoardTheme.ON_WOOD);
         renderSummary(graphics, font, x, y, town);
         renderRows(graphics, font, x, y, town);
         renderScrollbar(graphics, x, y);
         renderDropMarker(graphics, x, y);
+        // Below the last strip, where the board would stand empty, a note says how the page works.
+        int listBottom = y + LIST_TOP + Math.min(draftOrder.size(), visibleRows()) * ROW_HEIGHT + 8;
+        com.teammoeg.frostedheart.content.town.client.board.BoardDraw.helpNote(graphics,
+                net.minecraft.network.chat.Component.translatable("gui.frostedheart.board.town.staffing.help.title"),
+                java.util.List.of(net.minecraft.network.chat.Component.translatable("gui.frostedheart.board.town.staffing.help.order"),
+                        net.minecraft.network.chat.Component.translatable("gui.frostedheart.board.town.staffing.help.pin"),
+                        net.minecraft.network.chat.Component.translatable("gui.frostedheart.board.town.staffing.help.colors")),
+                x + 8, listBottom, Math.min(getWidth() - 24, 300), y + getHeight() - listBottom - 4);
     }
 
     private void syncDraft(@Nullable TeamTown town) {
@@ -118,9 +144,9 @@ public final class TownStaffingPanel extends UIElement {
             GuiGraphics graphics, Font font, int x, int y, @Nullable TeamTown town
     ) {
         if (town == null) {
-            graphics.drawString(font,
+            com.teammoeg.frostedheart.content.town.client.board.BoardDraw.textOnWood(graphics,
                     Component.translatable("gui.frostedheart.town_manager.no_data"),
-                    x + 4, y + 17, 0xFFAAAAAA, false);
+                    x + 4, y + 14, NoticeBoardTheme.ON_WOOD);
             return;
         }
         StaffingSummary summary = summary(town);
@@ -128,12 +154,11 @@ public final class TownStaffingPanel extends UIElement {
                 "gui.frostedheart.town_manager.staffing_summary",
                 summary.availableWorkers(), summary.coveredTargets(),
                 summary.totalTargets(), summary.unemployedWorkers());
-        graphics.drawString(font,
-                TownTextLayout.ellipsize(font, text.getString(), WIDTH - 8),
-                x + 4, y + 17,
+        com.teammoeg.frostedheart.content.town.client.board.BoardDraw.textOnWood(graphics,
+                TownTextLayout.ellipsize(font, text.getString(), getWidth() - 8),
+                x + 4, y + 14,
                 summary.coveredTargets() < summary.totalTargets()
-                        ? 0xFFFFAA00 : 0xFFAAAAAA,
-                false);
+                        ? 0xFFFAC775 : NoticeBoardTheme.ON_WOOD);
     }
 
     private void renderRows(
@@ -143,7 +168,8 @@ public final class TownStaffingPanel extends UIElement {
         Map<BlockPos, AbstractTownBuilding> buildings = town.getTownBuildings();
         List<Resident> residents = List.copyOf(town.getAllResidents());
         scroll = Mth.clamp(scroll, 0, maxScroll());
-        for (int row = 0; row < VISIBLE_ROWS; row++) {
+        int barX = barX(), barWidth = barWidth(), stripRight = getWidth() - SCROLLBAR_WIDTH - 6;
+        for (int row = 0; row < visibleRows(); row++) {
             int index = scroll + row;
             if (index >= draftOrder.size()) break;
             BlockPos pos = draftOrder.get(index);
@@ -162,87 +188,68 @@ public final class TownStaffingPanel extends UIElement {
                 if (workable && building.canResidentWork(resident)) active++;
             }
 
-            int background = pos.equals(draggedBuilding)
-                    ? 0xA0446688
-                    : workable ? 0x90202020 : 0x90404040;
-            graphics.fill(x + 2, rowY, x + WIDTH - 5, rowY + ROW_HEIGHT - 2, background);
-            graphics.drawString(font, "≡", x + 4, rowY + 9,
-                    workable ? 0xFFCCCCCC : 0xFF777777, false);
-            String name = TownResidentsPanel.buildingName(
-                    value.getClass().getSimpleName()).getString();
-            graphics.drawString(font,
-                    TownTextLayout.ellipsize(font, name, BAR_X - 19),
-                    x + 15, rowY + 3, workable ? 0xFFFFFFFF : 0xFF999999, false);
-            graphics.drawString(font,
-                    pos.getX() + ", " + pos.getY() + ", " + pos.getZ(),
-                    x + 15, rowY + 15, 0xFF888888, false);
+            boolean lifted = pos.equals(draggedBuilding);
+            BoardQueue.strip(graphics, x + 2, rowY, stripRight - 2, ROW_HEIGHT - 4, lifted, !workable);
+            BoardQueue.handle(graphics, x + 7, rowY + 9, !workable);
+            Component name = TownBuildingLabels.name(buildings, pos, value);
+            // A stopped building keeps its name in ink; the red line below says it is stopped.
+            graphics.drawString(font, TownTextLayout.ellipsize(font, name.getString(), barX - 26), x + 19, rowY + 4,
+                    NoticeBoardTheme.INK, false);
+            Component where = workable ? TownBuildingLabels.subtitle(value, town.getTowerPos(), pos)
+                    : Component.translatable("gui.frostedheart.board.town.staffing.closed");
+            graphics.drawString(font, TownTextLayout.ellipsize(font, where.getString(), barX - 26), x + 19, rowY + 15,
+                    workable ? NoticeBoardTheme.MUTED : NoticeBoardTheme.RED, false);
 
-            Component counts = Component.translatable(
-                    "gui.frostedheart.town_manager.staffing_counts",
-                    active, target, capacity);
-            graphics.drawString(font,
-                    TownTextLayout.ellipsize(font, counts.getString(), BAR_WIDTH),
-                    x + BAR_X, rowY + 3,
-                    !workable ? 0xFF888888
-                            : active < effectiveTarget ? 0xFFFFAA00 : 0xFFFFFFFF,
-                    false);
-            renderCapacityBar(graphics, x + BAR_X, rowY + BAR_Y_IN_ROW,
+            Component counts = Component.translatable("gui.frostedheart.board.town.staffing.counts", active, target, capacity);
+            graphics.drawString(font, TownTextLayout.ellipsize(font, counts.getString(), barWidth), x + barX, rowY + 4,
+                    !workable ? NoticeBoardTheme.MUTED : active < effectiveTarget ? NoticeBoardTheme.AMBER : NoticeBoardTheme.INK, false);
+            renderCapacityBar(graphics, x + barX, rowY + BAR_Y_IN_ROW, barWidth,
                     active, assigned - active, target, capacity, workable);
         }
     }
 
     private static void renderCapacityBar(
-            GuiGraphics graphics, int x, int y,
+            GuiGraphics graphics, int x, int y, int barWidth,
             int active, int absent, int target, int capacity, boolean workable
     ) {
-        graphics.fill(x, y, x + BAR_WIDTH, y + BAR_HEIGHT, 0xFF181818);
-        if (capacity <= 0 || !workable) {
-            graphics.fill(x + 1, y + 1, x + BAR_WIDTH - 1, y + BAR_HEIGHT - 1,
-                    0xFF555555);
+        BoardQueue.track(graphics, x, y, barWidth, BAR_HEIGHT);
+        if (capacity <= 0) return;
+        if (!workable) {
+            // A closed building keeps its setting for when it opens again; show where the pin stands.
+            BoardQueue.knob(graphics, x, y, Mth.clamp(barWidth * Math.min(target, capacity) / capacity, 0, barWidth - 1), BAR_HEIGHT, false);
             return;
         }
         int effectiveTarget = Math.min(target, capacity);
-        int activeWidth = BAR_WIDTH * Math.min(active, capacity) / capacity;
-        int targetWidth = BAR_WIDTH * effectiveTarget / capacity;
+        int activeWidth = barWidth * Math.min(active, capacity) / capacity;
+        int targetWidth = barWidth * effectiveTarget / capacity;
         int targetFilledWidth = Math.min(activeWidth, targetWidth);
-        int targetColor = active >= effectiveTarget ? 0xFF55AA55 : 0xFFFFAA00;
-        if (targetFilledWidth > 0) {
-            graphics.fill(x, y, x + targetFilledWidth, y + BAR_HEIGHT, targetColor);
-        }
-        if (activeWidth > targetWidth) {
-            graphics.fill(x + targetWidth, y, x + activeWidth, y + BAR_HEIGHT, 0xFF5599CC);
-        }
+        BoardQueue.fill(graphics, x, y, 0, targetFilledWidth, BAR_HEIGHT, active >= effectiveTarget ? BoardQueue.GOOD : BoardQueue.WARN);
+        if (activeWidth > targetWidth) BoardQueue.fill(graphics, x, y, targetWidth, activeWidth, BAR_HEIGHT, BoardQueue.EXTRA);
         if (absent > 0) {
-            int absentEnd = BAR_WIDTH * Math.min(capacity, active + absent) / capacity;
-            graphics.fill(x + activeWidth, y + 1, x + absentEnd, y + BAR_HEIGHT - 1,
-                    0xFFAA5555);
+            int absentEnd = barWidth * Math.min(capacity, active + absent) / capacity;
+            BoardQueue.fill(graphics, x, y, activeWidth, absentEnd, BAR_HEIGHT, BoardQueue.BAD);
         }
-        int marker = Mth.clamp(targetWidth, 0, BAR_WIDTH - 1);
-        graphics.fill(x + marker, y - 1, x + marker + 1, y + BAR_HEIGHT + 1,
-                target > capacity ? 0xFFFF5555 : 0xFFFFFFFF);
+        BoardQueue.knob(graphics, x, y, Mth.clamp(targetWidth, 0, barWidth - 1), BAR_HEIGHT, target > capacity);
     }
 
     private void renderScrollbar(GuiGraphics graphics, int x, int y) {
         int maximum = maxScroll();
         if (maximum <= 0) return;
-        int trackX = x + WIDTH - SCROLLBAR_WIDTH - 1;
+        int trackX = x + getWidth() - SCROLLBAR_WIDTH;
         int trackY = y + LIST_TOP;
-        int trackHeight = VISIBLE_ROWS * ROW_HEIGHT - 2;
-        int thumbHeight = Math.max(10,
-                trackHeight * VISIBLE_ROWS / draftOrder.size());
+        int trackHeight = visibleRows() * ROW_HEIGHT - 4;
+        int thumbHeight = Math.max(12, trackHeight * visibleRows() / draftOrder.size());
         int thumbY = trackY + (trackHeight - thumbHeight) * scroll / maximum;
-        graphics.fill(trackX, trackY, trackX + SCROLLBAR_WIDTH,
-                trackY + trackHeight, 0xFF222222);
-        graphics.fill(trackX, thumbY, trackX + SCROLLBAR_WIDTH,
-                thumbY + thumbHeight, 0xFFAAAAAA);
+        NoticeBoardTheme.INSTANCE.drawSliderBackground(graphics, trackX, trackY, SCROLLBAR_WIDTH, trackHeight, false);
+        NoticeBoardTheme.INSTANCE.drawSliderBar(graphics, trackX + 1, thumbY, SCROLLBAR_WIDTH - 2, thumbHeight, false);
     }
 
     private void renderDropMarker(GuiGraphics graphics, int x, int y) {
         if (draggedBuilding == null) return;
         int visibleIndex = dragDropIndex - scroll;
-        if (visibleIndex < 0 || visibleIndex > VISIBLE_ROWS) return;
-        int markerY = y + LIST_TOP + visibleIndex * ROW_HEIGHT;
-        graphics.fill(x + 2, markerY - 1, x + WIDTH - 5, markerY + 1, 0xFFFFFFFF);
+        if (visibleIndex < 0 || visibleIndex > visibleRows()) return;
+        int markerY = y + LIST_TOP + visibleIndex * ROW_HEIGHT - 2;
+        BoardQueue.dropLine(graphics, x + 4, markerY, getWidth() - SCROLLBAR_WIDTH - 14);
     }
 
     @Override
@@ -256,7 +263,7 @@ public final class TownStaffingPanel extends UIElement {
             dragDropIndex = index;
             return true;
         }
-        if (getMouseX() >= BAR_X && getMouseX() <= BAR_X + BAR_WIDTH) {
+        if (getMouseX() >= barX() && getMouseX() <= barX() + barWidth()) {
             AbstractTownBuilding value = building(pos);
             if (!(value instanceof ITownResidentWorkBuilding building)
                     || building.getMaxResidents() <= 0) return false;
@@ -280,7 +287,7 @@ public final class TownStaffingPanel extends UIElement {
                     "gui.frostedheart.town_manager.staffing_tooltip_order"));
             tooltip.accept(Component.translatable(
                     "gui.frostedheart.town_manager.staffing_tooltip_next_day"));
-        } else if (getMouseX() >= BAR_X && getMouseX() <= BAR_X + BAR_WIDTH) {
+        } else if (getMouseX() >= barX() && getMouseX() <= barX() + barWidth()) {
             tooltip.accept(Component.translatable(
                     "gui.frostedheart.town_manager.staffing_tooltip_target"));
             tooltip.accept(Component.translatable(
@@ -304,7 +311,7 @@ public final class TownStaffingPanel extends UIElement {
         }
         if (draggedBuilding == null) return false;
         if (getMouseY() < LIST_TOP + 7 && scroll > 0) scroll--;
-        if (getMouseY() > LIST_TOP + VISIBLE_ROWS * ROW_HEIGHT - 7
+        if (getMouseY() > LIST_TOP + visibleRows() * ROW_HEIGHT - 7
                 && scroll < maxScroll()) scroll++;
         double relative = getMouseY() - LIST_TOP + ROW_HEIGHT / 2.0;
         dragDropIndex = Mth.clamp(
@@ -355,18 +362,18 @@ public final class TownStaffingPanel extends UIElement {
     private void updateTargetFromMouse(int capacity) {
         if (targetBuilding == null || capacity <= 0) return;
         double fraction = Mth.clamp(
-                (getMouseX() - BAR_X) / (double) BAR_WIDTH, 0.0, 1.0);
+                (getMouseX() - barX()) / (double) barWidth(), 0.0, 1.0);
         draftTargets.put(targetBuilding, (int) Math.round(fraction * capacity));
     }
 
     private int rowAtMouse() {
         if (getMouseY() < LIST_TOP
-                || getMouseY() >= LIST_TOP + VISIBLE_ROWS * ROW_HEIGHT) return -1;
+                || getMouseY() >= LIST_TOP + visibleRows() * ROW_HEIGHT) return -1;
         return scroll + (int) ((getMouseY() - LIST_TOP) / ROW_HEIGHT);
     }
 
     private int maxScroll() {
-        return Math.max(0, draftOrder.size() - VISIBLE_ROWS);
+        return Math.max(0, draftOrder.size() - visibleRows());
     }
 
     @Nullable
@@ -385,11 +392,10 @@ public final class TownStaffingPanel extends UIElement {
             boolean eligible = workBuildings.stream().anyMatch(value ->
                     value.isBuildingWorkable()
                             && ((ITownResidentWorkBuilding) value).canResidentWork(resident));
-            if (eligible) {
-                available++;
-                if (resident.getWorkPos() == null) unemployed++;
-            }
+            if (eligible) available++;
         }
+        // 空闲 counts the same people as the residents page: fit, old enough and without a job.
+        unemployed = com.teammoeg.frostedheart.content.town.ui.view.BoardPresenters.headcount(List.copyOf(town.getAllResidents()), town.getTownBuildings()).free();
         int targets = 0;
         int covered = 0;
         for (TownStaffingPlan.Entry entry : town.getStaffingPlan().entries()) {
@@ -407,15 +413,6 @@ public final class TownStaffingPanel extends UIElement {
         return new StaffingSummary(available, covered, targets, unemployed);
     }
 
-    private static void drawPanel(
-            GuiGraphics graphics, int x, int y, int width, int height
-    ) {
-        graphics.fill(x, y, x + width, y + height, 0xE0101010);
-        graphics.fill(x, y, x + width, y + 1, 0xFF373737);
-        graphics.fill(x, y, x + 1, y + height, 0xFF373737);
-        graphics.fill(x, y + height - 1, x + width, y + height, 0xFF8B8B8B);
-        graphics.fill(x + width - 1, y, x + width, y + height, 0xFF8B8B8B);
-    }
 
     private record StaffingSummary(
             int availableWorkers,

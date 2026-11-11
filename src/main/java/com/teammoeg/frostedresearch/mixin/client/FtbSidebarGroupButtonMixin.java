@@ -34,8 +34,14 @@ public abstract class FtbSidebarGroupButtonMixin {
     @Inject(method = "render", at = @At("HEAD"), cancellable = true, require = 0, remap = false)
     private void fh$hideWhileResearchArchiveOpen(
             GuiGraphics graphics, int mouseX, int mouseY, float partialTick, CallbackInfo callback) {
-        if ((DrawDeskScreen.isResearchArchiveOpen() || DrawDeskScreen.isKnowledgeOpen())) {
+        if (DrawDeskScreen.isResearchArchiveOpen() || DrawDeskScreen.isKnowledgeOpen() || fullWindowLayerOpen()) {
             callback.cancel();
         }
+    }
+
+    /** A CUI screen that fills the window, such as a town notice board, keeps the sidebar off itself too. */
+    private static boolean fullWindowLayerOpen() {
+        return net.minecraft.client.Minecraft.getInstance().screen instanceof com.teammoeg.chorda.client.cui.screenadapter.CUIScreen cui
+                && cui.getPrimaryLayer() instanceof com.teammoeg.chorda.client.cui.base.HidesSidebarButtons;
     }
 }

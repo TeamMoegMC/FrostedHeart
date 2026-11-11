@@ -2,7 +2,7 @@
 
 - Status: Partial — 当前同步已通过36项统一Forge回归及住宅/狩猎站/矿场真实渲染；独立进程seed/migrate/read保留原资格，远程多客户端与长时负载未完整验证。
 - Last verified: 2026-11-07（同步与GUI）；2026-10-23（独立进程迁移/重开）
-- Scope: 玩家队伍的六类逻辑建筑、持久化、名册关联、核心生命周期、结构与环境刷新、管理视图。
+- Scope: 玩家队伍的七类逻辑建筑、持久化、名册关联、核心生命周期、结构与环境刷新、管理视图。
 - Code anchors: `TownBuildingStore`, `BuildingRecordsCodec`, `TownBuildingTypes`, `TownBuildingChangeEvent`, `AbstractTownBuilding`, `TeamTown`, `TownAssignments`, `AbstractTownBuildingBlockEntity`, `LoadedTownWorld`, `BlockScanner`, `SchedulerQueue`。
 
 ## 数据归属
@@ -23,7 +23,7 @@
 | `buildingDimension` | 可选的建筑归属维度 ID |
 | `retainedBuildingData` | 保留原文列表，区分 `pending` 和 `archive` |
 
-`TownBuildingTypes.VERSION` 为 `1`。缺少 `version` 是旧版本 `0`；旧整数映射固定为 `0=house`、`1=huntingBase`、`2=mine`、`3=mineBase`、`4=warehouse`、`5=transportStation`。这个映射不依赖今后的注册顺序。每类 `MAP_CODEC` 声明拥有的顶层字段，`CODEC` 从它派生；类型表通过延迟 supplier 避免父类与子类静态初始化循环。
+`TownBuildingTypes.VERSION` 为 `1`。缺少 `version` 是旧版本 `0`；旧整数映射固定为 `0=house`、`1=huntingBase`、`2=mine`、`3=mineBase`、`4=warehouse`、`5=transportStation`。这个映射不依赖今后的注册顺序。2026-11-09 新增的研究所只有字符串键 `researchInstitute`，没有旧整数。每类 `MAP_CODEC` 声明拥有的顶层字段，`CODEC` 从它派生；类型表通过延迟 supplier 避免父类与子类静态初始化循环。
 
 读取逐项进行。外层合法 `pos` 是位置权威，覆盖解码候选中的内部镜像；冲突或损坏的原位置进入字段 archive。只有内部位置合法时可以恢复外层位置。两个位置都无法解释的条目只归档，不生成原点建筑。同坐标选择第一条完整可解析记录，其余归档；没有健康候选时，第一条可定位记录成为 pending。
 
@@ -80,7 +80,9 @@ store 以 `changeVersion` 与 `encodedVersion` 判断单栋缓存是否过期。
 
 经营或绑定占用当前 town 操作边界时，核心请求进入 `TownRuntimeManager` 的按 holder/位置合并队列，在操作结束后核对当前组件并执行。晚到的旧核心移除不能删掉新核心。捕获和发送完整管理视图不会执行实际住房或就业分配。
 
-`buildingDimension` 表示存储归属；`TeamTownData.executionLevel(holder)` 表示当前执行世界，并要求 holder 仍是当前队伍注册表中的实例。旧档在完整 holder 安装后从 generator 恢复归属。已有记录不随 tower 换维度而自动迁移。generator 缺失、维度不匹配或 Level 不存在时，执行连接不可用，建筑事实仍保留。模拟注册表、运输设备、管理视图准备、`/town tick` 与 `/town spawn_refugees` 使用同一执行上下文。
+`buildingDimension` 表示存储归属；`TeamTownData.executionLevel(holder)` 表示当前执行世界，并要求 holder 仍是当前队伍注册表中的实例。执行世界就是建筑归属的维度，还没有建筑归属时才用 generator 的维度；能量塔在不在、在哪个维度都不影响执行，因为玩家随时可能拆塔。只有两者都缺失或 Level 不存在时执行连接才不可用，建筑事实仍保留。旧档在完整 holder 安装后从 generator 恢复归属。已有记录不随 tower 换维度而自动迁移。模拟注册表、运输设备、管理视图准备、`/town tick` 与 `/town spawn_refugees` 使用同一执行上下文。
+
+能量塔只在与城镇同一维度时为城镇服务（`TeamTownData.townGenerator`）：塔的城镇 tick、方位、结算日报位置、塔状态和难民都只认这座塔；塔在别的维度时对这个城镇等于没有塔。没有塔时结算照常进行，屋子只有自然温度，也不会来难民。
 
 `TownSettlement.advanceOneDay` 与调试难民入口还调用 `isCurrentExecutionContext`，在读取世界前核对当前 town 组件和传入的实际 `ServerLevel`。错误世界、已替换组件和已退休 holder 不推进经营；重入仍优先返回 `IN_PROGRESS`。
 
@@ -104,7 +106,7 @@ store 以 `changeVersion` 与 `encodedVersion` 判断单栋缓存是否过期。
 
 ## 管理视图与验证入口
 
-`TeamTownData.MANAGEMENT_CODEC` 导出可解释建筑及 `buildingLoadIssues` 摘要，不发送 `retainedBuildingData` 原文。磁盘继续使用 `TeamTownData.CODEC`。FH 协议版本包含 `:town-view-1:building-data-1`，两端须一起更新。居民页显示待恢复住房与岗位；建筑页显示恢复摘要。
+`TeamTownData.MANAGEMENT_CODEC` 导出可解释建筑及 `buildingLoadIssues` 摘要，不发送 `retainedBuildingData` 原文。磁盘继续使用 `TeamTownData.CODEC`。FH 协议版本包含 `:town-view-1:building-data-2`（加入研究所时由 `-1` 升级，旧客户端无法解码新建筑类型），两端须一起更新。居民页显示待恢复住房与岗位；建筑页显示恢复摘要。
 
 `TownBuildingGameTests` 覆盖真实核心、原版保存入口、混合损坏记录、恢复关联、布局扫描、非加载查询、操作边界及编码失败。`TeamTownPersistenceRestartGameTests` 使用独立 `seed/migrate/read` 进程读取同一个测试世界，seed 由真实保存结果生成旧格式，读取阶段不重建预期数据。
 

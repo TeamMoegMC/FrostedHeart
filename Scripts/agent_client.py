@@ -20,6 +20,7 @@ coordinates reported by 'screen' (multiply by guiScale for screenshot pixels).
     key <name>                     press a key: e, escape, key.mouse.right (use the looked-at block), ...
     type <text>                    type text into the open screen
     click <x> <y> [left|right|middle]       click inside the open screen
+    drag <x1> <y1> <x2> <y2>       press at x1,y1, drag to x2,y2 with the left button, release (sliders, reordering)
     scroll <x> <y> <delta>         scroll inside the open screen
     move <x> <y>                   move the in-game cursor (hover/tooltips) without moving the OS cursor
     screen                         describe the open screen: vanilla widgets, container slots, CUI element tree

@@ -82,6 +82,18 @@ public final class JournalList extends UIElement {
         offset = 0;
     }
 
+    /** Scrolls just far enough that the row holding {@code value} is in view. */
+    public void reveal(Object value) {
+        for (int i = 0; i < rows.size(); i++)
+            if (java.util.Objects.equals(rows.get(i).value(), value)) {
+                int visible = Math.max(1, getHeight() / ROW_HEIGHT);
+                if (i < offset) offset = i;
+                else if (i >= offset + visible) offset = i - visible + 1;
+                offset = Mth.clamp(offset, 0, maxOffset());
+                return;
+            }
+    }
+
     private int maxOffset() {
         return Math.max(0, rows.size() - Math.max(1, getHeight() / ROW_HEIGHT));
     }
@@ -136,7 +148,7 @@ public final class JournalList extends UIElement {
             if (selection && !row.group())
                 (selected.test(row.value()) ? TechIcons.CHECKBOX_CHECKED : TechIcons.CHECKBOX).draw(g, x + indent + 3, ry + 9, 9, 9);
             if (!row.icon().isEmpty()) g.renderItem(row.icon(), iconX, ry + 6);
-            Label label = labels.computeIfAbsent(i, n -> new Label(language.getVisualOrder(getFont().substrByWidth(row.title(), Math.max(1, w - (textX - x) - 7))), language.getVisualOrder(getFont().substrByWidth(row.subtitle(), Math.max(1, w - (textX - x) - 7)))));
+            Label label = labels.computeIfAbsent(i, n -> new Label(language.getVisualOrder(Clip.fit(getFont(), row.title(), Math.max(1, w - (textX - x) - 7))), language.getVisualOrder(Clip.fit(getFont(), row.subtitle(), Math.max(1, w - (textX - x) - 7)))));
             g.drawString(getFont(), label.title(), textX, ry + 5, KnowledgeUiTheme.INK, false);
             g.drawString(getFont(), label.subtitle(), textX, ry + 17, KnowledgeUiTheme.MUTED, false);
             KnowledgeUiTheme.rule(g, x + 5, ry + ROW_HEIGHT - 1, w - 12);

@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart.content.town.buildings.logistics;
 
+import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -76,10 +77,19 @@ public class TransportStationBuilding extends AbstractTownResidentWorkBuilding {
 
         public TransportStationDailyReport {
             workerCount = Math.max(0, workerCount);
-            totalProductivity = sanitize(totalProductivity);
-            plannedCapacity = sanitize(plannedCapacity);
-            addedCapacity = Math.min(plannedCapacity, sanitize(addedCapacity));
+            totalProductivity = finiteNonNegative(totalProductivity);
+            plannedCapacity = finiteNonNegative(plannedCapacity);
+            addedCapacity = Math.min(plannedCapacity, finiteNonNegative(addedCapacity));
             stopReason = stopReason == null ? TownProductionStopReason.NONE : stopReason;
+        }
+
+        /**
+         * The report's own copy of the outer {@code sanitize}. Calling an outer static method while this record's
+         * {@code EMPTY} is built would initialize {@link TransportStationBuilding}, whose {@code MAP_CODEC} reads this
+         * record's still-null {@code CODEC}: loading a save whose first touch is the report codec then crashed.
+         */
+        private static double finiteNonNegative(double value) {
+            return Double.isFinite(value) ? Math.max(0.0, value) : 0.0;
         }
     }
 
@@ -98,7 +108,7 @@ public class TransportStationBuilding extends AbstractTownResidentWorkBuilding {
         }
     }
 
-    public static final MapCodec<TransportStationBuilding> MAP_CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
+    public static final MapCodec<TransportStationBuilding> MAP_CODEC = AbstractTownBuilding.named(RecordCodecBuilder.mapCodec(instance -> instance.group(
             strict(BlockPos.CODEC).optionalFieldOf("pos", BlockPos.ZERO).forGetter(building -> building.pos),
             strict(Codec.BOOL).optionalFieldOf("initialized", false).forGetter(TransportStationBuilding::isInitialized),
             strict(Codec.BOOL).optionalFieldOf("isStructureValid", false)
@@ -112,7 +122,7 @@ public class TransportStationBuilding extends AbstractTownResidentWorkBuilding {
             strict(Codec.INT).optionalFieldOf("maxResidents", 0).forGetter(TransportStationBuilding::getMaxResidents),
             strict(TransportStationDailyReport.CODEC).optionalFieldOf("dailyReport", TransportStationDailyReport.EMPTY)
                     .forGetter(TransportStationBuilding::getDailyReport)
-    ).apply(instance, TransportStationBuilding::new));
+    ).apply(instance, TransportStationBuilding::new)));
         public static final Codec<TransportStationBuilding> CODEC = MAP_CODEC.codec();
 
 

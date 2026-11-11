@@ -36,6 +36,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.locale.Language;
 import net.minecraft.nbt.*;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
@@ -143,6 +144,33 @@ public final class KnowledgeLayer extends UILayer {
         return mode == Mode.TOOLS;
     }
 
+    /**
+     * 没有绘图台时只读：能翻、能搜、能看，不能整理、联想或用工具。从别处（例如研究所的布告板）打开札记时就是这样。
+     * Without a drawing desk the journal is read-only: browse, search and read, but no organising, linking or tools.
+     * This is how it opens from elsewhere, such as the research institute's board.
+     */
+    public boolean readOnly() {
+        return menu == null;
+    }
+
+    /** The entry the list should scroll to once its rows are built. */
+    private KnowledgeKey reveal;
+
+    /** Opens the archive at one entry, choosing its kind tab and scrolling the list to it, as a link from elsewhere does. */
+    public void showEntry(KnowledgeKey key) {
+        if (key == null) return;
+        reveal = key;
+        page = Page.ARCHIVE;
+        kind = key.kind();
+        mode = Mode.READ;
+        focused = key;
+        query = "";
+        statusFilter = "";
+        subtype = "";
+        rowsDirty = true;
+        rebuild();
+    }
+
     public void resize(int width, int height) {
         if (width != getWidth() || height != getHeight() || layout == null) {
             setSize(width, height);
@@ -232,10 +260,12 @@ public final class KnowledgeLayer extends UILayer {
 
     private void buildHeader() {
         int tabX = getWidth() < KnowledgeLayout.WIDE ? 14 : 105, tabY = getWidth() < KnowledgeLayout.WIDE ? 30 : 12;
-        for (Page value : Page.values())
-            button(tabX + value.ordinal() * 43, tabY, 42, 18, t("page." + value.name().toLowerCase(Locale.ROOT)), true, () -> switchPage(value)).selected(page == value);
-        button(getWidth() - 122, 12, 57, 18, t("tools"), true, this::openTools);
-        button(getWidth() - 63, 12, 48, 18, t("back"), true, back);
+        for (Page value : Page.values()) {
+            JournalButton tab = button(tabX + value.ordinal() * 43, tabY, 42, 18, t("page." + value.name().toLowerCase(Locale.ROOT)), true, () -> switchPage(value)).selected(page == value);
+            if (value == Page.INBOX || value == Page.ARCHIVE) tab.tooltip(capacityLine(value));
+        }
+        if (!readOnly()) button(getWidth() - 122, 12, 57, 18, t("tools"), true, this::openTools);
+        button(getWidth() - 63, 12, 48, 18, t(readOnly() ? "close" : "back"), true, back);
     }
 
     private void buildFilters() {
@@ -330,8 +360,10 @@ public final class KnowledgeLayer extends UILayer {
         }
         reading.setVisible(true);
         List<Component> paragraphs = new ArrayList<>();
-        if (entry == null) paragraphs.add(t(page == Page.INBOX ? "empty.inbox" : "empty.archive"));
-        else {
+        if (entry == null) {
+            paragraphs.add(capacityLine(page));
+            paragraphs.add(t(page == Page.INBOX ? "empty.inbox" : "empty.archive"));
+        } else {
             if (!entry.body().getString().isBlank()) paragraphs.add(entry.body());
             paragraphs.addAll(entry.summary());
             if (details) {
@@ -346,7 +378,9 @@ public final class KnowledgeLayer extends UILayer {
             details = !details;
             rebuild();
         });
-        if (page == Page.INBOX && organize) {
+        if (readOnly()) {
+            // Read-only: nothing to do with the entry here, so the text keeps the whole pane.
+        } else if (page == Page.INBOX && organize) {
             learn = button(x, bottom - 45, w / 2 - 3, 19, t("learn.selection", selected.size()), false, () -> sendSelected(Action.LEARN));
             remove = button(x + w / 2 + 2, bottom - 45, w / 2 - 2, 19, t("remove.selection"), true, () -> {
                 mode = Mode.DELETE;
@@ -428,10 +462,12 @@ public final class KnowledgeLayer extends UILayer {
             requirementIndex = Math.floorMod(requirementIndex, requirements.size());
             for (int i = 0; i < requirements.size(); i++)
                 paragraphs.add(requirementLine(requirements.get(i), run != null, run != null && i == requirementIndex));
-            if (run != null) paragraphs.addAll(requirementDetails(requirements.get(requirementIndex)));
+            if (run != null) paragraphs.addAll(requirementDetails(requirements.get(requirementIndex), run));
+            else requirements.stream().filter(r -> r.labor() != null).findFirst().ifPresent(r -> paragraphs.add(t("research.labor.has_collaboration")));
         }
         reading.text(paragraphs);
         if (run == null) {
+            if (readOnly()) return;
             boolean startable = project.startStatus().equals("LEARNABLE") && !requirements.isEmpty();
             button(x, bottom - 23, w, 20, t("research.start"), false,
                     () -> send(Action.START_RESEARCH, project.origin() == null ? List.of() : List.of(project.origin()), project.id(), "", ""))
@@ -454,8 +490,9 @@ public final class KnowledgeLayer extends UILayer {
                 ax = x + 24;
                 aw = w - 48;
             }
-            requirementAction(requirement, run, ax, bottom - 45, aw);
+            if (!readOnly()) requirementAction(requirement, run, ax, bottom - 45, aw);
         }
+        if (readOnly()) return;
         button(x, bottom - 22, w / 2 - 3, 19, t("research.complete"), false, () -> send(Action.COMPLETE_RESEARCH, List.of(), run.id(), "", ""))
                 .setEnabled(!requirements.isEmpty() && requirements.stream().allMatch(KnowledgeJournalData.Requirement::satisfied));
         button(x + w / 2 + 2, bottom - 22, w / 2 - 2, 19, t("research.abandon"), true, () -> {
@@ -469,6 +506,12 @@ public final class KnowledgeLayer extends UILayer {
         if (requirement.satisfied()) {
             button(x, y, w, 19, t("research.requirement_done"), true, () -> {
             }).setEnabled(false);
+            return;
+        }
+        if (!requirement.evidence() && requirement.playerRemaining() == 0) {
+            // The player's part is done; required institute labor is still under way.
+            button(x, y, w, 19, t("research.labor.waiting"), true, () -> {
+            }).tooltip(t("research.labor.waiting.explain")).setEnabled(false);
             return;
         }
         if (requirement.experiment()) {
@@ -507,19 +550,31 @@ public final class KnowledgeLayer extends UILayer {
         if (!started) return t("research.line.plain", title);
         Component progress = r.evidence()
                 ? t(r.satisfied() ? "research.evidence.done" : r.ready() ? "research.evidence.ready_short" : "research.evidence.waiting")
-                : r.experiment() ? t("research.experiment.progress", r.done(), r.count())
-                : t("research.calculation.progress", r.done(), r.count());
+                : playerProgress(r);
         return t(selected ? "research.line.selected" : r.satisfied() ? "research.line.done" : "research.line.open", title, progress);
     }
 
-    private List<Component> requirementDetails(KnowledgeJournalData.Requirement r) {
+    /**
+     * Games or experiments done, with the days of required institute labor beside them.
+     */
+    private static Component playerProgress(KnowledgeJournalData.Requirement r) {
+        Component own = r.experiment() ? t("research.experiment.progress", r.done(), r.count()) : t("research.calculation.progress", r.done(), r.count());
+        var labor = r.labor();
+        if (labor == null || !labor.required()) return own;
+        Component institute = t("research.labor.days", days(labor.done() / labor.workers()), labor.days());
+        return r.count() == 0 ? institute : t("research.labor.with", own, institute);
+    }
+
+    private List<Component> requirementDetails(KnowledgeJournalData.Requirement r, KnowledgeJournalData.Run run) {
         List<Component> lines = new ArrayList<>();
         if (r.experiment()) {
-            lines.add(t("research.experiment.explain", r.duration() / 20));
+            if (r.count() > 0) lines.add(t("research.experiment.explain", r.duration() / 20));
+            if (r.labor() != null) lines.addAll(laborDetails(r, run));
             return lines;
         }
         if (!r.evidence()) {
-            lines.add(t("research.calculation.explain", r.level()));
+            if (r.count() > 0) lines.add(t("research.calculation.explain", r.level()));
+            if (r.labor() != null) lines.addAll(laborDetails(r, run));
             return lines;
         }
         if (r.satisfied()) {
@@ -530,6 +585,63 @@ public final class KnowledgeLayer extends UILayer {
         for (int i = 0; i < r.slots().size(); i++)
             lines.add(r.slots().get(i) == 0 ? t("research.evidence.slot_none", i + 1) : t("research.evidence.slot", i + 1, r.slots().get(i)));
         return lines;
+    }
+
+    /**
+     * What institute researchers do for this requirement, what they have put in and what the last settlement gave it.
+     */
+    private List<Component> laborDetails(KnowledgeJournalData.Requirement r, KnowledgeJournalData.Run run) {
+        var labor = r.labor();
+        List<Component> lines = new ArrayList<>();
+        Component who = labor.education() > 0
+                ? t("research.labor.workers_educated", labor.workers(), education(labor.education()))
+                : t("research.labor.workers", labor.workers());
+        lines.add(t(labor.required() ? "research.labor.required" : "research.labor.optional", who, labor.days()));
+        if (!labor.items().isEmpty()) {
+            MutableComponent items = Component.empty();
+            for (int i = 0; i < labor.items().size(); i++) {
+                if (i > 0) items.append(t("research.labor.item_separator"));
+                items.append(labor.items().get(i));
+            }
+            lines.add(t("research.labor.items", items));
+        }
+        if (labor.required()) lines.add(t("research.labor.progress", days(Math.min(labor.done(), labor.share())), days(labor.share())));
+        else {
+            double current = labor.remaining() <= 1e-6 ? labor.share() : labor.done() - labor.shares() * labor.share();
+            lines.add(t("research.labor.progress", days(Math.max(0, current)), days(labor.share())));
+            if (labor.shares() > 0) lines.add(t("research.labor.shares", labor.shares()));
+        }
+        var day = data.laborDay;
+        var allocation = day == null ? null : day.allocation(run.id(), r.id());
+        if (allocation == null) lines.add(t(day != null && day.total() <= 1e-6 ? "research.labor.last_idle" : "research.labor.none_yet"));
+        else if (allocation.given() <= 1e-6)
+            lines.add(t(allocation.itemsShort() ? "research.labor.last_no_items" : "research.labor.last_no_workers"));
+        else lines.add(t(allocation.itemsShort() ? "research.labor.last_short" : "research.labor.last", days(allocation.given())));
+        return lines;
+    }
+
+    /** Resident education level names come from the town's translations. */
+    private static Component education(int level) {
+        return Component.translatable("gui.frostedheart.town_manager.education_level." + level);
+    }
+
+    /** Worker-days and days of labor, floored to two decimals so unfinished work never reads as done. */
+    private static String days(double value) {
+        double safe = Double.isFinite(value) && value > 0 ? value : 0;
+        return String.format(Locale.ROOT, "%.2f", Math.floor(safe * 100 + 1e-6) / 100);
+    }
+
+    /**
+     * Observation records held against the limit; the part granted beyond the configured base is named.
+     */
+    private Component capacityLine(Page shown) {
+        var capacity = data.capacity;
+        boolean inbox = shown == Page.INBOX;
+        int used = inbox ? capacity.inboxUsed() : capacity.archiveUsed();
+        int limit = inbox ? capacity.inboxLimit() : capacity.archiveLimit();
+        int extra = limit - (inbox ? capacity.inboxBase() : capacity.archiveBase());
+        Component line = t(inbox ? "capacity.inbox" : "capacity.archive", used, limit);
+        return extra > 0 ? t("capacity.extended", line, extra) : line;
     }
 
     /**
@@ -722,6 +834,10 @@ public final class KnowledgeLayer extends UILayer {
                     rows.add(new JournalList.Row(i, data.hints.get(i), t("hint.saved"), new ItemStack(Items.FEATHER), false));
         }
         list.rows(rows);
+        if (reveal != null) {
+            list.reveal(reveal);
+            reveal = null;
+        }
         rowsDirty = false;
         updateListFocus();
     }
@@ -813,7 +929,7 @@ public final class KnowledgeLayer extends UILayer {
     }
 
     private void sendSelected(Action action) {
-        if (!selected.isEmpty())
+        if (!selected.isEmpty() && !readOnly())
             KnowledgeWorkbenchBatch.start(menu.getBlock().getBlockPos(), action, List.copyOf(selected));
     }
 
@@ -822,6 +938,8 @@ public final class KnowledgeLayer extends UILayer {
     }
 
     private void send(Action action, List<KnowledgeKey> keys, String rule, String title, String remarks, String requirement) {
+        // A read-only journal has no desk to ask; the synced snapshot is all it shows.
+        if (readOnly()) return;
         var packet = new KnowledgeWorkbenchActionPacket(menu.getBlock().getBlockPos(), action, keys, rule, title, remarks, requirement);
         if (action == Action.RETRIEVE) {
             retrievalRequest = packet.requestId();

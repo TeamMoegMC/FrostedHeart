@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart.content.town.buildings.mine;
 
+import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -78,10 +79,19 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
         ).apply(instance, MiningDailyReport::new));
 
         public MiningDailyReport {
-            requested = sanitize(requested);
-            extracted = Math.min(requested, sanitize(extracted));
+            requested = finiteNonNegative(requested);
+            extracted = Math.min(requested, finiteNonNegative(extracted));
             items = List.copyOf(items);
             stopReason = stopReason == null ? TownProductionStopReason.NONE : stopReason;
+        }
+
+        /**
+         * The report's own copy of the outer {@code sanitize}. Calling an outer static method while this record's
+         * {@code EMPTY} is built would initialize {@link MineBaseBuilding}, whose {@code MAP_CODEC} reads this
+         * record's still-null {@code CODEC}: loading a save whose first touch is the report codec then crashed.
+         */
+        private static double finiteNonNegative(double value) {
+            return Double.isFinite(value) ? Math.max(0.0, value) : 0.0;
         }
 
         public double stored() {
@@ -100,7 +110,7 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
             TownProductionStopReason stopReason
     ) {}
 
-	public static final MapCodec<MineBaseBuilding> MAP_CODEC = RecordCodecBuilder.mapCodec(t -> t.group(
+	public static final MapCodec<MineBaseBuilding> MAP_CODEC = AbstractTownBuilding.named(RecordCodecBuilder.mapCodec(t -> t.group(
                     strict(BlockPos.CODEC).optionalFieldOf("pos",BlockPos.ZERO).forGetter(o -> o.pos),
                     strict(Codec.BOOL).optionalFieldOf("initialized", false).forGetter(o -> o.isInitialized()),
                     strict(Codec.BOOL).optionalFieldOf("isStructureValid",false).forGetter(o -> o.isStructureValid()),
@@ -116,7 +126,7 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
                     strict(MiningDailyReport.CODEC).optionalFieldOf("dailyReport", MiningDailyReport.EMPTY)
                             .forGetter(MineBaseBuilding::getDailyReport)
 			)
-			.apply(t, MineBaseBuilding::new));
+			.apply(t, MineBaseBuilding::new)));
         public static final Codec<MineBaseBuilding> CODEC = MAP_CODEC.codec();
 
 
@@ -356,10 +366,6 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
                 .sorted(Comparator.comparingDouble(TownProductionReportItem::produced).reversed()
                         .thenComparing(item -> item.item().getDescriptionId()))
                 .toList();
-    }
-
-    private static double sanitize(double value) {
-        return Double.isFinite(value) ? Math.max(0.0, value) : 0.0;
     }
 
     @Override

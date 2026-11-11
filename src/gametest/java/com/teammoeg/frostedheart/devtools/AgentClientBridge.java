@@ -400,6 +400,28 @@ public final class AgentClientBridge {
                     invoke(MOUSE_PRESS, mc.mouseHandler, window(mc), button, GLFW.GLFW_RELEASE, 0);
                 });
             }
+            case "drag" -> {
+                // Press at the start, move in eight steps so the screen sees mouseDragged, release at the end.
+                double x1 = Double.parseDouble(arg(args, 0, "x1")), y1 = Double.parseDouble(arg(args, 1, "y1"));
+                double x2 = Double.parseDouble(arg(args, 2, "x2")), y2 = Double.parseDouble(arg(args, 3, "y2"));
+                int steps = 8;
+                job.render = (mc, j) -> {
+                    j.frames++;
+                    return false;
+                };
+                job.tick = (mc, j) -> {
+                    requireScreen(mc);
+                    int age = j.age;
+                    if (age == 0) moveMouse(mc, x1, y1);
+                    else if (age == 1) invoke(MOUSE_PRESS, mc.mouseHandler, window(mc), GLFW.GLFW_MOUSE_BUTTON_LEFT, GLFW.GLFW_PRESS, 0);
+                    else if (age <= 1 + steps) {
+                        double t = (age - 1) / (double) steps;
+                        moveMouse(mc, x1 + (x2 - x1) * t, y1 + (y2 - y1) * t);
+                    } else if (age == 2 + steps)
+                        invoke(MOUSE_PRESS, mc.mouseHandler, window(mc), GLFW.GLFW_MOUSE_BUTTON_LEFT, GLFW.GLFW_RELEASE, 0);
+                    return age >= 4 + steps;
+                };
+            }
             case "scroll" -> {
                 double x = Double.parseDouble(arg(args, 0, "x"));
                 double y = Double.parseDouble(arg(args, 1, "y"));

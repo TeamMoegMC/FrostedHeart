@@ -23,6 +23,7 @@ import com.mojang.serialization.Codec;
 import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.frostedheart.content.town.ITownWithBuildings;
 import com.teammoeg.frostedheart.content.town.buildings.house.HouseBuilding;
+import com.teammoeg.frostedheart.content.town.buildings.institute.ResearchInstituteBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.hunting.HuntingBaseBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBaseBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBuilding;
@@ -42,6 +43,7 @@ public interface ITownBuilding {
             .typeLazy("mineBase", MineBaseBuilding.class, () -> MineBaseBuilding.CODEC)
             .typeLazy("warehouse", WarehouseBuilding.class, () -> WarehouseBuilding.CODEC)
             .typeLazy("transportStation", TransportStationBuilding.class, () -> TransportStationBuilding.CODEC)
+            .typeLazy("researchInstitute", ResearchInstituteBuilding.class, () -> ResearchInstituteBuilding.CODEC)
             // 按字符串key分发（写盘存 "house"/"mine" 等名称），解码时兼容旧存档的整数索引。
             // 新增建筑类型时可任意位置插入，不再受注册顺序约束。
             .buildByNameWithLegacyInt();

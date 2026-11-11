@@ -64,6 +64,13 @@ public class TextBox extends UIElement implements Focusable {
 	public Coloring errorColor=UIColors.ERROR_TEXT;
 	/** 占位文本（未输入内容时显示） / Ghost/placeholder text shown when empty */
 	public String ghostText = "";
+	/**
+	 * 聚焦时文本为空也显示占位文本。默认和原版一样聚焦即隐藏；一打开就聚焦的输入框（如改名框）可以打开它，让提示一直看得见。
+	 * <p>
+	 * Show the ghost text while focused and empty too. By default it hides on focus, as in vanilla; a box that opens
+	 * focused, such as a rename box, can turn this on so its hint stays visible.
+	 */
+	public boolean showGhostWhenFocused;
 	/** 当前输入文本 / Current input text */
 	private String text = "";
 	/** 文本显示起始位置（用于滚动） / Text display start position (for scrolling) */
@@ -289,6 +296,16 @@ public class TextBox extends UIElement implements Focusable {
 	public void setCursorPos(int pos) {
 		cursorPos = Mth.clamp(pos, 0, text.length());
 		scrollTo(cursorPos);
+	}
+
+	/**
+	 * 选中全部文字，光标停在末尾；接着输入就整段替换，方向键仍可逐字修改。
+	 * <p>
+	 * Selects all of the text with the cursor at the end; typing next replaces it, while the arrow keys still edit it.
+	 */
+	public void selectAll() {
+		setCursorPos(text.length());
+		setSelectionPos(0);
 	}
 
 	/**
@@ -534,8 +551,7 @@ public class TextBox extends UIElement implements Focusable {
 		if (!isFocused()) {
 			return false;
 		} else if (CInputHelper.isSelectAll(keyCode)) {
-			setCursorPos(text.length());
-			setSelectionPos(0);
+			selectAll();
 			return true;
 		} else if (CInputHelper.isCopy(keyCode)) {
 			CInputHelper.setClipboardText(getSelectedText());
@@ -644,14 +660,18 @@ public class TextBox extends UIElement implements Focusable {
 	}
 
 	/**
-	 * 获取格式化后的显示文本。未聚焦且文本为空时返回占位文本。
+	 * 获取格式化后的显示文本。文本为空且该显示占位文本时返回占位文本。
 	 * <p>
-	 * Gets the formatted display text. Returns ghost text when unfocused and text is empty.
+	 * Gets the formatted display text. Returns ghost text when the text is empty and the ghost should show.
 	 *
 	 * @return 格式化后的显示文本 / Formatted display text
 	 */
 	public String getFormattedText() {
-		return (!isFocused() && text.isEmpty() && !ghostText.isEmpty()) ? (ChatFormatting.ITALIC + ghostText) : text;
+		return showsGhost() ? (ChatFormatting.ITALIC + ghostText) : text;
+	}
+
+	private boolean showsGhost() {
+		return (!isFocused() || showGhostWhenFocused) && text.isEmpty() && !ghostText.isEmpty();
 	}
 
 	/** {@inheritDoc} */
@@ -666,7 +686,7 @@ public class TextBox extends UIElement implements Focusable {
 	@Override
 	public void render(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
 		drawTextBox(graphics, x, y, w, h, hint);
-		var drawGhostText = !isFocused() && text.isEmpty() && !ghostText.isEmpty();
+		var drawGhostText = showsGhost();
 		var textToDraw = getFormattedText();
 		graphics.enableScissor( x, y, x+w, y+h);
 		if(this.isPressed) {

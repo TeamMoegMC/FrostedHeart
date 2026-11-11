@@ -20,6 +20,7 @@ import com.teammoeg.frostedheart.content.town.buildings.mine.MineBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBaseBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.logistics.TransportStationBuilding;
+import com.teammoeg.frostedheart.content.town.buildings.institute.ResearchInstituteBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.house.HouseBlockEntity;
 import com.teammoeg.frostedheart.content.town.buildings.house.HouseMenu;
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseBlockEntity;
@@ -66,7 +67,7 @@ public final class TownViewSyncGameTests {
         List<AbstractTownBuilding> buildings = List.of(new HouseBuilding(BlockPos.ZERO),
                 new HuntingBaseBuilding(new BlockPos(1, 2, 3)), new MineBuilding(new BlockPos(2, 3, 4)),
                 new MineBaseBuilding(new BlockPos(3, 4, 5)), new WarehouseBuilding(new BlockPos(4, 5, 6)),
-                new TransportStationBuilding(new BlockPos(5, 6, 7)));
+                new TransportStationBuilding(new BlockPos(5, 6, 7)), new ResearchInstituteBuilding(new BlockPos(6, 7, 8)));
         for (AbstractTownBuilding building : buildings) {
             building.setInitialized(true);
             building.setIsStructureValid(true);
@@ -240,6 +241,49 @@ public final class TownViewSyncGameTests {
         } catch (RuntimeException | Error failure) { session.close(); throw failure; }
     }
 
+    @GameTest(template = "phase0a_empty", batch = "town_view_towerless", timeoutTicks = 80)
+    public static void townWithoutTowerStillSendsItsChanges(GameTestHelper helper) {
+        Session session = new Session(helper.getLevel(), helper.absolutePos(new BlockPos(2, 2, 2)), null, false);
+        try {
+            helper.assertTrue(session.holder.getOptional(FHSpecialDataTypes.GENERATOR_DATA).isEmpty()
+                            && TeamTownData.executionLevel(session.holder) == session.level,
+                    "a town that never had a tower runs in its buildings' world");
+            session.warm();
+            session.placeExtra();
+            // No manual tick from here on: the server's own town update has to deliver every change.
+            helper.startSequence().thenIdle(3).thenExecute(() -> {
+                try {
+                    session.drain();
+                    helper.assertTrue(session.firstProbe.buildings > 0 && session.secondProbe.buildings > 0,
+                            "a building placed before any tower reaches both connections");
+                    var tower = session.holder.getData(FHSpecialDataTypes.GENERATOR_DATA);
+                    tower.dimension = session.level.dimension();
+                    tower.actualPos = session.origin.offset(30, 0, 3);
+                    session.firstProbe.clear();
+                    session.secondProbe.clear();
+                } catch (RuntimeException | Error failure) { session.close(); throw failure; }
+            }).thenIdle(3).thenExecute(() -> {
+                try {
+                    session.drain();
+                    helper.assertTrue(session.origin.offset(30, 0, 3).equals(session.data.getTowerPos())
+                                    && session.firstProbe.towers > 0 && session.secondProbe.towers > 0,
+                            "a tower built later is announced to both connections");
+                    session.holder.getData(FHSpecialDataTypes.GENERATOR_DATA).actualPos = null;
+                    session.firstProbe.clear();
+                    session.secondProbe.clear();
+                } catch (RuntimeException | Error failure) { session.close(); throw failure; }
+            }).thenIdle(3).thenExecute(() -> {
+                try {
+                    session.drain();
+                    helper.assertTrue(session.data.getTowerPos() == null
+                                    && session.firstProbe.towers > 0 && session.secondProbe.towers > 0,
+                            "dismantling the tower is announced too, and the town keeps updating");
+                    helper.succeed();
+                } finally { session.close(); }
+            });
+        } catch (RuntimeException | Error failure) { session.close(); throw failure; }
+    }
+
     /** Shared by the dedicated GameTest and opt-in rendered client verification. */
     public static final class Session implements AutoCloseable {
         public final ServerLevel level;
@@ -256,6 +300,11 @@ public final class TownViewSyncGameTests {
         boolean closed;
 
         public Session(ServerLevel level, BlockPos origin, ServerPlayer existingFirst) {
+            this(level, origin, existingFirst, true);
+        }
+
+        /** {@code withTowerData} false leaves the team without any generator data, as before its first tower. */
+        public Session(ServerLevel level, BlockPos origin, ServerPlayer existingFirst, boolean withTowerData) {
             this.level = level; this.origin = origin;
             housePos = origin.offset(3, 0, 3);
             warehousePos = origin.offset(13, 0, 3);
@@ -282,7 +331,7 @@ public final class TownViewSyncGameTests {
                 public String getProviderName() { return "town-view-test"; }
             });
             holder = CTeamDataManager.INSTANCE.get(team);
-            holder.getData(FHSpecialDataTypes.GENERATOR_DATA).dimension = level.dimension();
+            if (withTowerData) holder.getData(FHSpecialDataTypes.GENERATOR_DATA).dimension = level.dimension();
             data = holder.getData(FHSpecialDataTypes.TOWN_DATA);
             firstProbe = ownsFirst ? new Probe(channels.get(0)) : null;
             secondProbe = new Probe(channels.get(channels.size() - 1));
@@ -379,8 +428,8 @@ public final class TownViewSyncGameTests {
 
     public static final class Probe {
         private final EmbeddedChannel channel;
-        private final int fullId, resourceId, buildingId;
-        public int full, pending, present, absent, resources, buildings;
+        private final int fullId, resourceId, buildingId, towerId;
+        public int full, pending, present, absent, resources, buildings, towers;
         public UUID lastHolder;
 
         Probe(EmbeddedChannel channel) {
@@ -388,6 +437,7 @@ public final class TownViewSyncGameTests {
             fullId = discriminator(TeamTownDataS2CPacket.pending(null));
             resourceId = discriminator(new TownResourceUpdatePacket(Map.of(), 0, TownTransportSnapshot.EMPTY));
             buildingId = discriminator(new TownBuildingUpdatePacket(Map.of(), Set.of()));
+            towerId = discriminator(new TownTowerUpdatePacket((BlockPos) null));
         }
 
         private static int discriminator(CMessage message) {
@@ -415,10 +465,11 @@ public final class TownViewSyncGameTests {
                         else absent++;
                     } else if (id == resourceId) resources++;
                     else if (id == buildingId) buildings++;
+                    else if (id == towerId) towers++;
                 } finally { data.release(); }
             }
         }
 
-        public void clear() { full = pending = present = absent = resources = buildings = 0; lastHolder = null; }
+        public void clear() { full = pending = present = absent = resources = buildings = towers = 0; lastHolder = null; }
     }
 }

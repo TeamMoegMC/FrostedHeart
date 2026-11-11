@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart.content.town.buildings.hunting;
 
+import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
 import static com.teammoeg.frostedheart.content.town.ITown.*;
 
 import java.util.ArrayList;
@@ -110,7 +111,7 @@ public class HuntingBaseBuilding extends AbstractTownResidentWorkBuilding implem
             TownProductionStopReason stopReason
     ) {}
 
-	public static final MapCodec<HuntingBaseBuilding> MAP_CODEC = RecordCodecBuilder.mapCodec(t -> t.group(
+	public static final MapCodec<HuntingBaseBuilding> MAP_CODEC = AbstractTownBuilding.named(RecordCodecBuilder.mapCodec(t -> t.group(
 					strict(BlockPos.CODEC).optionalFieldOf("pos",BlockPos.ZERO).forGetter(o -> o.pos),
 					strict(Codec.BOOL).optionalFieldOf("initialized", false).forGetter(o -> o.isInitialized()),
 					strict(Codec.BOOL).optionalFieldOf("isStructureValid",false).forGetter(o -> o.isStructureValid()),
@@ -126,7 +127,7 @@ public class HuntingBaseBuilding extends AbstractTownResidentWorkBuilding implem
 					strict(Codec.DOUBLE).optionalFieldOf("lootRollCarry",0D).forGetter(o -> o.getLootRollCarry()),
                     strict(HuntingDailyReport.CODEC).optionalFieldOf("dailyReport", HuntingDailyReport.EMPTY)
                             .forGetter(HuntingBaseBuilding::getDailyReport))
-			.apply(t, HuntingBaseBuilding::new));
+			.apply(t, HuntingBaseBuilding::new)));
         public static final Codec<HuntingBaseBuilding> CODEC = MAP_CODEC.codec();
 
 	@Getter

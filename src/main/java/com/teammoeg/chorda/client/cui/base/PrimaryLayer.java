@@ -214,10 +214,34 @@ public class PrimaryLayer extends UILayer implements LayerHolder,EditorManager {
 		return 0;
 	}
 
+	/**
+	 * 焦点元素；若它已在重建中被移出元素树，则先清除焦点，避免按键落到看不见的旧元素上。
+	 * <p>
+	 * The focused element. One that a rebuild has removed from the element tree loses focus first, so keys never
+	 * go to an element that is no longer on screen.
+	 */
+	private UIElement focused() {
+		if (lastFocused != null && !isAttached(lastFocused)) {
+			((Focusable) lastFocused).setFocused(false);
+			lastFocused = null;
+		}
+		return lastFocused;
+	}
+
+	/** Whether every ancestor of {@code element} up to this layer still lists it among its elements. */
+	private boolean isAttached(UIElement element) {
+		UIElement child = element;
+		while (child != this) {
+			if (!(child.parent instanceof UILayer layer) || !layer.elements.contains(child)) return false;
+			child = layer;
+		}
+		return true;
+	}
+
 	@Override
 	public boolean onKeyPressed(int keyCode, int scanCode, int modifiers) {
-		
-		if (lastFocused != null && lastFocused.onKeyPressed(keyCode, scanCode, modifiers)) {
+		UIElement target = focused();
+		if (target != null && target.onKeyPressed(keyCode, scanCode, modifiers)) {
 			return true;
 		} else if (super.onKeyPressed(keyCode, scanCode, modifiers)) {
 			return true;
@@ -230,7 +254,8 @@ public class PrimaryLayer extends UILayer implements LayerHolder,EditorManager {
 
 	@Override
 	public boolean onMouseScrolled(double scroll) {
-		if (lastFocused != null && lastFocused.onMouseScrolled(scroll)) {
+		UIElement target = focused();
+		if (target != null && target.onMouseScrolled(scroll)) {
 			return true;
 		}
 		return super.onMouseScrolled(scroll);
@@ -238,7 +263,8 @@ public class PrimaryLayer extends UILayer implements LayerHolder,EditorManager {
 
 	@Override
 	public boolean onIMEInput(char c, int modifiers) {
-		if (lastFocused != null && lastFocused.onIMEInput(c, modifiers)) {
+		UIElement target = focused();
+		if (target != null && target.onIMEInput(c, modifiers)) {
 			return true;
 		}
 		return super.onIMEInput(c, modifiers);

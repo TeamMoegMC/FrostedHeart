@@ -388,8 +388,9 @@ public abstract class UILayer extends UIElement {
 			return;
 		}
 		if(transform!=null) {
-    		float dx=x+width*transformOrigin.x;
-    		float dy=y+height*transformOrigin.y;
+			// x/y here are the parent's content origin; render() pivots on this layer's own screen position.
+    		float dx=x+getX()+width*transformOrigin.x;
+    		float dy=y+getY()+height*transformOrigin.y;
     		Matrix4f m4f=new Matrix4f();
     		m4f.translate(dx, dy, 0);
     		m4f.mul(transform);

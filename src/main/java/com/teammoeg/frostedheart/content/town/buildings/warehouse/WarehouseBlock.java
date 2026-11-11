@@ -19,8 +19,6 @@
 
 package com.teammoeg.frostedheart.content.town.buildings.warehouse;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.function.Supplier;
 
 import com.teammoeg.chorda.block.CEntityBlock;
@@ -55,18 +53,14 @@ public class WarehouseBlock extends AbstractTownBuildingBlock implements CEntity
             }
             te.getBuilding().ifPresentOrElse(building -> {
                 te.refresh_safe(building);
-                if (building.isStructureValid()){
-                    NetworkHooks.openScreen((ServerPlayer) player, te, pos);
-                }else {
-                    AbstractTownBuildingBlock.displayBasicInfo(player, building);
-                    player.displayClientMessage(Components.str("Volume: " + (building.getVolume())), false);
-                    player.displayClientMessage(Components.str("Area: " + (building.getArea())), false);
-                    player.displayClientMessage(Components.str("Capacity: " + BigDecimal.valueOf(building.getCapacity())
-                            .setScale(2, RoundingMode.HALF_UP).doubleValue()), false);
-                }}, () -> player.displayClientMessage(Components.str(CConstants.NO_CORRESPONDING_TOWN_BUILDING_INSTANCE_FOUND), false));
+                // The board opens whatever the room's state and says what is wrong; a broken room keeps its stock
+                // closed, which WarehouseMenu.canUseStock enforces on the server.
+                NetworkHooks.openScreen((ServerPlayer) player, te, pos);
+            }, () -> player.displayClientMessage(Components.str(CConstants.NO_CORRESPONDING_TOWN_BUILDING_INSTANCE_FOUND), false));
             return InteractionResult.SUCCESS;
         }
-        return InteractionResult.PASS;
+        // Claim the click on the client too, so a held item (the Mayor's Seal, say) is not used as well.
+        return worldIn.isClientSide && handIn == InteractionHand.MAIN_HAND ? InteractionResult.SUCCESS : InteractionResult.PASS;
     }
 
 	@Override
