@@ -1,0 +1,9 @@
+{
+  "values": [
+    "minecraft:diamond",
+    {
+      "id": "absent_mod:missing",
+      "required": false
+    }
+  ]
+}

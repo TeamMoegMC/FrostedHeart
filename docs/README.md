@@ -8,7 +8,7 @@ This directory explains implemented, player-facing game systems. Source, configu
 | Curiosity encounter           | [boss/README.md](boss/README.md)                         | Transitional |
 | Nutrition                     | [nutrition/README.md](nutrition/README.md)               | Current      |
 | Frosted Research              | [research/README.md](research/README.md)                 | Current      |
-| Knowledge archive and linking | [knowledge/README.md](knowledge/README.md)               | Current      |
+| Knowledge and staged research | [knowledge/README.md](knowledge/README.md)               | Current      |
 | Climate and temperature       | [climate/README.md](climate/README.md)                   | Transitional      |
 | Space station                 | [space/README.md](space/README.md)                       | Current      |
 | Natural deposit generation    | [world-generation.md](world-generation.md)              | Current      |

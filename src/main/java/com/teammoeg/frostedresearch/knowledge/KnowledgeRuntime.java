@@ -90,6 +90,7 @@ public final class KnowledgeRuntime {
         if (event.getPlayer() != null) return;
         LegacyResearchBridge.refreshDefinitions();
         TemporaryResearchRecipes.refresh();
+        com.teammoeg.frostedresearch.knowledge.furnace.RefractoryObservationIndex.refresh(net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer());
         // A reload targets already logged-in players, with the final tags installed. The marks below become one
         // snapshot per team at the end of the tick.
         java.util.Set<java.util.UUID> sent = new java.util.HashSet<>();
@@ -106,12 +107,14 @@ public final class KnowledgeRuntime {
     public static void started(net.minecraftforge.event.server.ServerStartedEvent event) {
         LegacyResearchBridge.refreshDefinitions();
         TemporaryResearchRecipes.refresh();
+        com.teammoeg.frostedresearch.knowledge.furnace.RefractoryObservationIndex.refresh(net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer());
     }
 
     @SubscribeEvent
     public static void stopped(ServerStoppedEvent event) {
         LegacyResearchBridge.clear();
         TemporaryResearchRecipes.clear();
+        com.teammoeg.frostedresearch.knowledge.furnace.RefractoryObservationIndex.clear();
         KnowledgeDiscussion.clear();
         KnowledgeLinkSessions.clear();
         TeamResearchService.clear();

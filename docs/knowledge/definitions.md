@@ -384,3 +384,7 @@ team_current_run（缺省false）。有experiment须team_current_run=true；只�
 
 铜/青铜和碳燃料任选组仍使用已有物品tag谓词，start_all在两组之间取AND；没有新增OR表达式。
 阶段行为、保存与客户端披露见 [阶段与风道](stages-and-airflow.md)。
+
+## M5 自有炉配方与制品用途
+
+`controlled_firing` 小格式及 `RefractoryObservationIndex` 最终 reload 一跳用途见 [控温实验炉](controlled-furnace.md)。只引用 TWR tag 路径，不使某个可选模组成为硬依赖；没有新增知识条件运算符或 KnowledgeState 版本。

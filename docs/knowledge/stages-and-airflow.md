@@ -67,3 +67,9 @@ $env:JAVA_HOME='C:/Program Files/Java/jdk-17.0.2'
 另外两条生产配方是按当前TWR KubeJS声明建立的运行fixture，不能据此宣称KubeJS整包脚本已执行。
 
 最终服务端验证与完整文件清单见 [M4交接](../../diary/2026-11-12_17-27-52_research-m4-full-stage-tuyere-handoff.md).
+
+## M4 管道绘制
+
+风道九格保留原有 JournalButton 坐标、30×30 尺寸和点击操作；其上只渲染、不接管输入的 UIElement 按 N/E/S/W=1/2/4/8 从中心画四像素宽管道到格边，墙为暗色块，中行左右显示入口/出口箭头；成功后管线改 ACCENT 色。无新贴图或游戏规则变动。
+
+该绘制改动已通过本轮生产编译；实际截图与点击由 M5/M7 客户端接续，不能用服务端 GameTest 替代画面验收。

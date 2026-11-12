@@ -150,8 +150,9 @@ public class JEICompat implements IModPlugin {
         Map<ItemStack, Boolean> stackLockedStatus = new HashMap<>(); // true=锁定, false=解锁
         for (Recipe<?> i : recipesToRefresh.values()) {
             boolean currentlyManaged = currentManagedRecipes.containsKey(i.getId());
-            boolean locked = currentlyManaged
-                    && !ClientKnowledgeDataAPI.technologyProjection().recipe(i.getId()).allowed();
+            boolean controlledProduction = i instanceof com.teammoeg.frostedresearch.knowledge.furnace.ControlledFiringRecipe firing && firing.experiment().isEmpty();
+            boolean locked = controlledProduction && !ClientKnowledgeDataAPI.technologyProjection().managedRecipes().contains(i.getId())
+                    || currentlyManaged && !ClientKnowledgeDataAPI.technologyProjection().recipe(i.getId()).allowed();
             updateRecipeVisibility(i.getId(), locked);
 
             ItemStack out = RecipeUtil.getResultItem(i);
@@ -225,6 +226,8 @@ public class JEICompat implements IModPlugin {
         RecipeManager recipes = Minecraft.getInstance().level == null
                 ? null : Minecraft.getInstance().level.getRecipeManager();
         if (recipes != null) {
+            for (var firing : recipes.getAllRecipesFor(com.teammoeg.frostedresearch.FRContents.Recipes.CONTROLLED_FIRING.get()))
+                if (firing.experiment().isEmpty()) managed.put(firing.getId(), firing);
             for (ResourceLocation id : ClientKnowledgeDataAPI.technologyProjection().managedRecipes()) {
                 recipes.byKey(id).ifPresent(recipe -> managed.put(id, recipe));
             }
@@ -281,6 +284,7 @@ public class JEICompat implements IModPlugin {
     @Override
     public void registerCategories(IRecipeCategoryRegistration registration) {
         IGuiHelper guiHelper = registration.getJeiHelpers().getGuiHelper();
+        registration.addRecipeCategories(new ControlledFiringCategory(guiHelper));
     }
 
     @Override
@@ -289,6 +293,7 @@ public class JEICompat implements IModPlugin {
 
     @Override
     public void registerRecipeCatalysts(IRecipeCatalystRegistration registration) {
+        registration.addRecipeCatalyst(new ItemStack(com.teammoeg.frostedresearch.FRContents.Blocks.CONTROLLED_FURNACE.get()),ControlledFiringCategory.TYPE);
 
     }
 
@@ -297,6 +302,7 @@ public class JEICompat implements IModPlugin {
         ClientLevel world = Minecraft.getInstance().level;
         checkNotNull(world, "minecraft world");
         RecipeManager recipeManager = world.getRecipeManager();
+        registration.addRecipes(ControlledFiringCategory.TYPE, recipeManager.getAllRecipesFor(com.teammoeg.frostedresearch.FRContents.Recipes.CONTROLLED_FIRING.get()));
         JEICompat.scheduleSyncJEI();
     }
 

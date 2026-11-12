@@ -193,3 +193,7 @@ facts but contributes no current source. See [stage state and lifecycle](../know
 Legacy mappings now accept a nonempty set of Design/Construction targets, including one Design owning both the
 ordinary tuyere and bloomery recipes. Completion/effect facts, per-result receipts and prerequisite equivalence
 retain the M3 bridge semantics; neither temporary grants nor external results manufacture completion history.
+
+## M5 自有炉生产接点
+
+`ControlledFurnaceBlockEntity.start` 的无 experiment 配方必须由当前 enabled Design 声明且 `ResearchHooks.canUseRecipe(team, recipe)` 允许。它不改变全局 unmanaged 策略或旧三方耐火砖工艺；遗忘仅阻止下一炉，已扣料批次继续交付。JEI 自有分类沿原投影刷新配方显隐。见 [控温实验炉](../knowledge/controlled-furnace.md)。

@@ -131,3 +131,7 @@ UUID、游戏刻或 NBT。笔记物品名也使用可读的知识或物件名称
 M2：ObservationSessions 完成采样就独立派发 observation_completed，重复记录、容量或学习失败不抹去已发生的动作。
 行为事件的物品上下文使用 ItemRetrieval.behaviorSample，可描述笔记物品本身；主动观察资格和笔记内容研读不受影响。
 IdeaAcquisition 的所有 required / optional / trigger.subject 观察条件也参与用途索引。
+
+## M5 耐火制品与试验砖
+
+新鲜采样的普通信号与 `frostedresearch:refractory_component_observed` 合并一次派发，保持 M2 每个实际动作最多一次想法概率。受控炉成功砖复用 M4 实物 binding 观察任务，不提交、不消耗、不复制 BE。最终 reload 的一跳产品索引与用途休眠见 [控温实验炉](controlled-furnace.md)。

@@ -422,11 +422,36 @@ public final class KnowledgeLayer extends UILayer {
         int left=x+(w-96)/2,top=bottom-132;
         for(int cell=0;cell<9;cell++) {
             final int chosen=cell;int mask=masks.length==9 ? masks[cell] : 0;
-            String shape=switch(mask) { case 5 -> "│";case 10 -> "─";case 3 -> "└";case 6 -> "┌";case 12 -> "┐";case 9 -> "┘";default -> "■"; };
-            button(left+(cell%3)*32,top+(cell/3)*32,30,30,Component.literal(shape),false,
+            button(left+(cell%3)*32,top+(cell/3)*32,30,30,Component.empty(),false,
                 () -> send(Action.ROTATE_AIRFLOW,List.of(),airflowRun,Integer.toString(chosen),"",airflowTask))
                 .setEnabled(mask!=0 && !airflowBoard.getBoolean("won"));
         }
+        // Render only: the original nine 30x30 buttons retain all input and driver coordinates.
+        UIElement pipes=new UIElement(this) {
+            @Override public void render(GuiGraphics g,int px,int py,int width,int height,RenderingHint hint) {
+                int color=airflowBoard.getBoolean("won") ? ACCENT : INK;
+                for(int cell=0;cell<9;cell++) {
+                    int mask=masks.length==9 ? masks[cell] : 0;
+                    int bx=px+12+(cell%3)*32,by=py+(cell/3)*32,cx=bx+15,cy=by+15;
+                    if(mask==0) {g.fill(bx+8,by+8,bx+22,by+22,MUTED);continue;}
+                    g.fill(cx-2,cy-2,cx+2,cy+2,color);
+                    if((mask&1)!=0)g.fill(cx-2,by,cx+2,cy,color);
+                    if((mask&2)!=0)g.fill(cx,cy-2,bx+30,cy+2,color);
+                    if((mask&4)!=0)g.fill(cx-2,cy,cx+2,by+30,color);
+                    if((mask&8)!=0)g.fill(bx,cy-2,cx,cy+2,color);
+                }
+                int mid=py+47;
+                for(int ax:new int[]{px,px+108}) {
+                    g.fill(ax,mid-2,ax+10,mid+2,color);
+                    g.fill(ax+6,mid-5,ax+8,mid+5,color);
+                    g.fill(ax+8,mid-3,ax+10,mid+3,color);
+                    g.fill(ax+10,mid-1,ax+12,mid+1,color);
+                }
+            }
+        };
+        pipes.setPosAndSize(left-12,top,120,94);
+        pipes.setEnabled(false);
+        add(pipes);
         button(x,bottom-27,w/2-2,20,t("research.airflow_reset"),true,
             () -> send(Action.RESET_AIRFLOW,List.of(),airflowRun,"","",airflowTask)).setEnabled(!airflowBoard.getBoolean("won"));
         button(x+w/2+2,bottom-27,w/2-2,20,t("research.airflow_back"),true,() -> {airflowOpen=false;rebuild();});

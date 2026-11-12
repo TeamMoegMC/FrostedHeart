@@ -77,8 +77,10 @@ import net.minecraftforge.registries.RegistryObject;
 public class FRContents {
 
 	public static class Blocks {
+
 		public static final DeferredRegister<Block> REGISTER = DeferredRegister.create(
 			ForgeRegistries.BLOCKS, FRMain.MODID);
+		        public static final RegistryObject<com.teammoeg.frostedresearch.knowledge.furnace.ControlledFurnaceBlock> CONTROLLED_FURNACE = register("controlled_furnace", () -> new com.teammoeg.frostedresearch.knowledge.furnace.ControlledFurnaceBlock(BlockBehaviour.Properties.of().mapColor(MapColor.CLAY).sound(SoundType.STONE).strength(1.5f)));
 		// DRAWING_DESK
 		public static final RegistryObject<DrawingDeskBlock> DRAWING_DESK = register("drawing_desk", () -> new DrawingDeskBlock(
 			BlockBehaviour.Properties.of()
@@ -128,8 +130,10 @@ public class FRContents {
 	}
 
 	public static class Items {
+
 		public static final DeferredRegister<Item> REGISTER = DeferredRegister.create(
 			ForgeRegistries.ITEMS, FRMain.MODID);
+		public static final RegistryObject<Item> CRACKED_REFRACTORY_BRICK = REGISTER.register("cracked_refractory_brick", () -> new Item(new Item.Properties()));
 		public static RegistryObject<RubbingTool> rubbing_tool = REGISTER
 			.register("rubbing_tool", () -> new RubbingTool(new Item.Properties().durability(5).setNoRepair()));
 		public static RegistryObject<FHBasePen> charcoal = REGISTER.register("charcoal", () -> new FHBasePen(new Item.Properties().durability(50).setNoRepair()));
@@ -151,6 +155,7 @@ public class FRContents {
 	public static class BlockEntityTypes {
 		public static final DeferredRegister<BlockEntityType<?>> REGISTER = DeferredRegister.create(
 			ForgeRegistries.BLOCK_ENTITY_TYPES, FRMain.MODID);
+		public static final RegistryObject<BlockEntityType<com.teammoeg.frostedresearch.knowledge.furnace.ControlledFurnaceBlockEntity>> CONTROLLED_FURNACE = REGISTER.register("controlled_furnace", makeType(com.teammoeg.frostedresearch.knowledge.furnace.ControlledFurnaceBlockEntity::new, Blocks.CONTROLLED_FURNACE::get));
 		public static final RegistryObject<BlockEntityType<DrawingDeskTileEntity>> DRAWING_DESK = REGISTER.register(
 			"drawing_desk", makeType(DrawingDeskTileEntity::new, Blocks.DRAWING_DESK::get));
 		public static final RegistryObject<BlockEntityType<ExperimentTableBlockEntity>> EXPERIMENT_TABLE = REGISTER.register(
@@ -202,6 +207,7 @@ public class FRContents {
 
 		public static final DeferredRegister<MenuType<?>> CONTAINERS = DeferredRegister.create(ForgeRegistries.MENU_TYPES,
 			FRMain.MODID);
+		public static final RegistryObject<MenuType<com.teammoeg.frostedresearch.knowledge.furnace.ControlledFurnaceMenu>> CONTROLLED_FURNACE = register(com.teammoeg.frostedresearch.knowledge.furnace.ControlledFurnaceBlockEntity.class,"controlled_furnace",com.teammoeg.frostedresearch.knowledge.furnace.ControlledFurnaceMenu::new);
 		public static final RegistryObject<MenuType<DrawDeskContainer>> DRAW_DESK = register(DrawingDeskTileEntity.class, ("draw_desk"), DrawDeskContainer::new);
 		public static final RegistryObject<MenuType<ExperimentTableMenu>> EXPERIMENT_TABLE = register(ExperimentTableBlockEntity.class, "experiment_table", ExperimentTableMenu::new);
 
@@ -222,6 +228,8 @@ public class FRContents {
 			ForgeRegistries.RECIPE_SERIALIZERS, FRMain.MODID);
 		public static final DeferredRegister<RecipeType<?>> RECIPE_TYPES = DeferredRegister.create(
 			ForgeRegistries.RECIPE_TYPES, FRMain.MODID);
+		public static final RegistryObject<RecipeType<com.teammoeg.frostedresearch.knowledge.furnace.ControlledFiringRecipe>> CONTROLLED_FIRING = createRecipeType("controlled_firing");
+        public static final RegistryObject<RecipeSerializer<?>> CONTROLLED_FIRING_SERIALIZER = RECIPE_SERIALIZERS.register("controlled_firing",com.teammoeg.frostedresearch.knowledge.furnace.ControlledFiringRecipe.Serializer::new);
 		static {
 			ResearchPaperRecipe.TYPE = createRecipeType("paper");
 			ResearchPaperRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("paper", ResearchPaperRecipe.Serializer::new);

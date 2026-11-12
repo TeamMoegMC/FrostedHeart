@@ -792,3 +792,26 @@ if (providers.gradleProperty('m4CharcoalPitTests').isPresent()) {
         tasks.named('cleanResearchGameTestWorld') { enabled = false }
     }
 }
+
+// M5 controlled furnace integration uses only the existing dedicated-server runtime.
+if (providers.gradleProperty('m5Tests').isPresent()) {
+    sourceSets {
+        m5Integration {
+            java.srcDirs = ['src/m5/java']
+            resources.srcDirs = ['src/m5/resources']
+            compileClasspath += sourceSets.main.output + sourceSets.gameTest.output + sourceSets.gameTest.compileClasspath
+            runtimeClasspath += output + sourceSets.gameTest.runtimeClasspath
+        }
+    }
+    tasks.named('compileM5IntegrationJava') { dependsOn compileJava, compileGameTestJava }
+    minecraft.runs.gameTestServer {
+        property 'frostedresearch.m5RestartPhase', providers.gradleProperty('m5RestartPhase').getOrElse('write')
+        mods { frostedheart { source sourceSets.m5Integration } }
+    }
+    tasks.matching { it.name == 'runGameTestServer' }.configureEach {
+        dependsOn compileM5IntegrationJava, processM5IntegrationResources
+    }
+    if (providers.gradleProperty('m5RestartPhase').getOrElse('write') == 'read') {
+        tasks.named('cleanResearchGameTestWorld') { enabled = false }
+    }
+}
