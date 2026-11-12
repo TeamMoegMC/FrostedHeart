@@ -15,7 +15,10 @@
     "minecraft.research.BlockEntityMixin_Research",
     "minecraft.research.OwnerBlockMixin_Research",
     "minecraft.research.RecipeManagerMixin_Research",
-    "minecraft.research.ResultContainerMixin_Research"
+    "minecraft.research.ResultContainerMixin_Research",
+    "minecraft.research.KnowledgeMenuAcquisitionMixin",
+    "minecraft.research.KnowledgeUseAcquisitionMixin",
+    "minecraft.research.KnowledgeItemUseAcquisitionMixin"
   ],
   "client": [
     "client.FtbSidebarGroupButtonMixin",

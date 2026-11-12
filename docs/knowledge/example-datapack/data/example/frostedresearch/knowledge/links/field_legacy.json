@@ -1,0 +1,37 @@
+{
+  "inputs": [
+    {
+      "kind": "observation",
+      "observation_type": "item",
+      "conditions": [
+        {
+          "field": "object",
+          "operator": "eq",
+          "value": {
+            "state": "known",
+            "type": "string",
+            "text": "minecraft:clay_ball"
+          }
+        }
+      ],
+      "name": "clay"
+    },
+    {
+      "kind": "observation",
+      "observation_type": "item",
+      "conditions": [
+        {
+          "field": "object",
+          "operator": "eq",
+          "value": {
+            "state": "known",
+            "type": "string",
+            "text": "minecraft:sand"
+          }
+        }
+      ],
+      "name": "sand"
+    }
+  ],
+  "output": "example:field_idea"
+}

@@ -155,7 +155,14 @@ public final class ObservationGameTests {
 
         ObservationStatePacket last() { return replies.get(replies.size() - 1); }
         boolean observed() { return replies.stream().anyMatch(packet -> packet.state() == ObservationStatePacket.State.OBSERVED); }
-        void tick() { ObservationSessions.tick(new TickEvent.PlayerTickEvent(TickEvent.Phase.END, player)); }
+        void tick() {
+            // These isolated observers never log in to FTB. Supply their real Chorda test team while dispatching
+            // the completed action; normal logged-in-player behavior is covered by IdeaAcquisitionGameTests.
+            var previous = com.teammoeg.chorda.dataholders.team.TeamsAPI.getAPI();
+            com.teammoeg.chorda.dataholders.team.TeamsAPI.register(new com.teammoeg.chorda.dataholders.team.SinglePlayerTeamAPIProvider());
+            try { ObservationSessions.tick(new TickEvent.PlayerTickEvent(TickEvent.Phase.END, player)); }
+            finally { com.teammoeg.chorda.dataholders.team.TeamsAPI.register(previous); }
+        }
         void discard() { ObservationSessions.handle(player, new ObservationActionPacket(Action.DISCARD)); }
     }
 }

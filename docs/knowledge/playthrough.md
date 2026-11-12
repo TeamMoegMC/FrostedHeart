@@ -1,7 +1,7 @@
 # 示例包的游戏内检查路线
 
 - Status: `Current`
-- Last verified: `2026-11-09`（本轮更新观察入口；其余研究路线沿用原核对记录）
+- Last verified: `2026-11-12`（M2 手动回环服务测试核对；客户端画面与完整路线仍待综合验收）
 - Scope: 开发测试用知识联络、研究页上的项目执行与完成、实验台、图谱分支/回环与成果效果
 - Code anchors: [`example-datapack`](example-datapack/README.md)、[
   `KnowledgeCommands`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/KnowledgeCommands.java)、[
@@ -77,7 +77,7 @@
 - `metallurgy_finding` + `climbing_finding` → 已有的 `materials`。
 - `feedback_finding` + `lever_procedure` → 已有的 `mechanisms`。
 
-知识身份不会重复增加，但会记录新的实际推导路径，形成回指初始想法的环。图中使用回指连线表达这些路径，不执行力导向迭代。
+M2 中这些已知输出仍可选作手动联络候选，并按正常等待完成。知识身份和获得经历不会重复增加，但不同规则会记录新的实际推导路径，形成回指初始想法的环；重复同一规则保留首次绑定。已有来件也可记录路径，但不会因此自动学习；自动行为触发仍跳过档案/来件已有的想法。图中使用回指连线表达这些路径，不执行力导向迭代。
 
 滚轮以鼠标所在位置缩放；拖动画布平移；「全图」重新适配。点击知识、项目或联络连接点，打开第二张浮纸；关闭后保留相机与当前页面。
 

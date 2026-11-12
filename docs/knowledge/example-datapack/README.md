@@ -18,3 +18,8 @@ M1 验证：`/knowledge grant idea example:i` 后打开 `example:joint_study`，
 作者例外可只从 start_all 删除 a，保留组关联作为参考。
 `/knowledge grant result example:smelting_finding` 后可发现 `example:followup`；
 `/knowledge research complete example:followup` 无需指定想法。上述 grant 是开发验证入口，不代表正式生存获取路线。
+
+M2：授予并入档 example:i 后，实际拾取纸、使用苹果、观察纸或调用 example:field_work 可获得 example:field_idea（示例 chance=1）。
+也可在档案零选择匹配 field_zero，选择一份纸匹配 field_one，或用粘土球＋沙匹配 field_legacy，等待完成。
+example:smelting_finding 入档后会触发无联络规则的 learned_hint，并使 field_idea 联络减20tick。
+behavior_study 承接新想法。示例用于测试世界，开发 grant 不代表正式生存获取路线。

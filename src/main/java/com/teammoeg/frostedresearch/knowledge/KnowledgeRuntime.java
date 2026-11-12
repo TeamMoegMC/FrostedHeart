@@ -103,6 +103,7 @@ public final class KnowledgeRuntime {
     @SubscribeEvent
     public static void stopped(ServerStoppedEvent event) {
         KnowledgeDiscussion.clear();
+        KnowledgeLinkSessions.clear();
         TeamResearchService.clear();
     }
 }

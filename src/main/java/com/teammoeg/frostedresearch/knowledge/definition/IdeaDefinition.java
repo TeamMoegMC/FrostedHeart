@@ -31,14 +31,19 @@ import java.util.List;
  * 想法内容与产生路径相互独立。
  */
 public record IdeaDefinition(String title, String body, List<KnowledgeKey> understanding,
-                             List<ResourceLocation> projects, boolean enabled) {
+                             List<ResourceLocation> projects, boolean enabled, IdeaAcquisition acquisition) {
     public static final Codec<IdeaDefinition> CODEC = RecordCodecBuilder.create(i -> i.group(
             Codec.STRING.fieldOf("title").forGetter(IdeaDefinition::title),
             Codec.STRING.optionalFieldOf("body", "").forGetter(IdeaDefinition::body),
             KnowledgeKey.CODEC.listOf().optionalFieldOf("understanding", List.of()).forGetter(IdeaDefinition::understanding),
             ResourceLocation.CODEC.listOf().optionalFieldOf("projects", List.of()).forGetter(IdeaDefinition::projects),
-            Codec.BOOL.optionalFieldOf("enabled", true).forGetter(IdeaDefinition::enabled)
+            Codec.BOOL.optionalFieldOf("enabled", true).forGetter(IdeaDefinition::enabled),
+            ProjectRequirement.field(IdeaAcquisition.CODEC, "acquisition", IdeaAcquisition.NONE).forGetter(IdeaDefinition::acquisition)
     ).apply(i, IdeaDefinition::new));
+
+    public IdeaDefinition(String title, String body, List<KnowledgeKey> understanding, List<ResourceLocation> projects, boolean enabled) {
+        this(title, body, understanding, projects, enabled, IdeaAcquisition.NONE);
+    }
 
     public IdeaDefinition {
         understanding = List.copyOf(understanding);

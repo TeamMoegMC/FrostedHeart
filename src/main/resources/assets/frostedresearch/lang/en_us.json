@@ -523,7 +523,7 @@
   "gui.frostedresearch.journal.tools.choose_note": "Choose a note to copy",
   "gui.frostedresearch.journal.tools.copying": "Copy: %s",
   "gui.frostedresearch.journal.link.need_more": "Add another note to look for a connection.",
-  "gui.frostedresearch.journal.link.explain": "Consider these records together to find a new thought.",
+  "gui.frostedresearch.journal.link.explain": "Try selected notes; with none, check configured zero-input links",
   "gui.frostedresearch.journal.tools.unreadable": "There is nothing legible on these pages yet.",
   "gui.frostedresearch.journal.group.open": "%s records · Expand",
   "gui.frostedresearch.journal.group.close": "%s records · Fold",
@@ -680,5 +680,10 @@
   "gui.frostedresearch.journal.research.access_group": "Source group: rows %s",
   "gui.frostedresearch.journal.research.state.needs_knowledge": "Start knowledge missing; explore unknown requirements",
   "gui.frostedresearch.journal.research.state.completable": "Tasks ready to complete",
-  "gui.frostedresearch.journal.graph.related_sources": "Discovery sources"
+  "gui.frostedresearch.journal.graph.related_sources": "Discovery sources",
+  "gui.frostedresearch.journal.link.waiting": "Linking: %s / %s seconds",
+  "gui.frostedresearch.journal.link.completed": "Link complete; relationship recorded",
+  "gui.frostedresearch.journal.link.cancelled": "Link cancelled; choose again to restart",
+  "knowledge.frostedresearch.link.completed": "Link complete; relationship recorded.",
+  "knowledge.frostedresearch.behavior.acquired": "A new idea: %s"
 }

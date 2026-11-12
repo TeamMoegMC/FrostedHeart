@@ -1,0 +1,15 @@
+{
+  "title": "学习后的联想",
+  "acquisition": {
+    "chance": 1.0,
+    "triggers": [
+      {
+        "event": "frostedresearch:knowledge_learned",
+        "subject": {
+          "kind": "result",
+          "definition": "example:smelting_finding"
+        }
+      }
+    ]
+  }
+}

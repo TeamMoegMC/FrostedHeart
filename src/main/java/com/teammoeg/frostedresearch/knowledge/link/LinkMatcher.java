@@ -43,7 +43,7 @@ public final class LinkMatcher {
     }
 
     public static List<Match> match(List<KnowledgeElement> selected, Map<ResourceLocation, LinkRule> rules, TagLookup tags) {
-        if (selected.size() < 2 || selected.size() > 5 || selected.stream().map(KnowledgeElement::key).distinct().count() != selected.size())
+        if (selected.size() > 5 || selected.stream().map(KnowledgeElement::key).distinct().count() != selected.size())
             return List.of();
         return search(selected, rules, tags, true, Integer.MAX_VALUE);
     }

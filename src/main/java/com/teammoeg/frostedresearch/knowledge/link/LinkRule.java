@@ -55,7 +55,7 @@ public record LinkRule(List<Slot> inputs, List<CrossCondition> conditions, Resou
 
     public List<String> validate() {
         List<String> errors = new ArrayList<>();
-        if (inputs.size() < 2 || inputs.size() > 5) errors.add("Link rules require 2 to 5 input slots");
+        if (inputs.size() > 5) errors.add("Link rules allow 0 to 5 explicitly declared input slots");
         if (conditions.size() > 5) errors.add("Link rules allow at most 5 cross conditions");
         validateBindings(inputs, conditions, errors);
         return errors;

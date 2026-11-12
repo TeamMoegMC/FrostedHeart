@@ -11,6 +11,40 @@
   `LinkMatcher`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/link/LinkMatcher.java)、[
   `ProjectRequirement`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/definition/ProjectRequirement.java)。
 
+## 行为想法与联络前置（M2）
+
+`IdeaDefinition.acquisition` 缺席时保持没有行为入口、没有获取前置。存在时支持：
+
+```json
+{
+  "acquisition": {
+    "required": [{"kind": "idea", "definition": "example:i"}],
+    "optional": [{"kind": "result", "definition": "example:smelting_finding"}],
+    "chance": 0.15,
+    "triggers": [
+      {"event": "frostedresearch:item_obtained", "subject": {"kind": "observation", "observation_type": "item"}},
+      {"event": "example:field_work"}
+    ]
+  }
+}
+```
+
+`required` 和 `optional` 均复用 KnowledgeCondition，默认空；triggers 默认空。每个 trigger 必填 event，subject 可选，
+缺席表示只匹配事件 ID。有多个入口时 OR；同一次操作命中几个入口也只为该想法抽一次概率。
+全部 required 仅限制行为和联络；不限制外部 receive / produce / learn，understanding 继续只负责学习。
+subject 描述当次行为载荷，required / optional 查询有效档案；不把两者混成同一种事件判断。
+chance 可按想法指定 [0,1]，未指定用服务器 knowledgeBehaviorChance。概率与等待公式见 [API 文档](state-and-api.md#m2-行为事件与短联络)。
+
+内置事件 ID：`frostedresearch:item_obtained`、`item_used`、`block_interacted`、`observation_completed`、`knowledge_learned`。
+前三者载荷为对应 item/block Observation，观察完成为当次采样，学习为入档的 KnowledgeElement；
+`example:field_work` 这类外部事件可不带载荷，或带同一有类型元素。无联络规则的想法仍可行为获得。
+全部 required / optional / trigger.subject 观察条件加入单槽用途索引，包括隐藏想法。
+
+LinkRule.inputs 仍必填，作者可显式给 0–5 槽。0 槽表示明确配置的零输入候选，1 槽只需一份札记；
+旧 2–5 槽仍按互异身份与原跨字段条件完整匹配。不会从全部想法自动生成候选目录。
+示例 [field_idea](example-datapack/data/example/frostedresearch/knowledge/ideas/field_idea.json)
+及 field_zero/field_one/field_legacy 演示三个输入规模。新可选字段严格解码，错误类型不静默变空。
+
 ## 身份与观察快照
 
 `KnowledgeKey(kind, id)` 使用三个互不混淆的身份空间：`observation` 的 `id` 是原始记录 UUID，`idea` 和 `result` 的 `id`
@@ -161,7 +195,7 @@ research topic 内。类型效果结构见 [成果与权限](../research/results
 共享 B 在所有组间只有一行，组引用该行；数量与要求结构可见。公开的非必要条件标为参考，不阻止开始。
 观察条件的全部用途（包括未发现项目、参考和揭示条件）逐项注册为单槽 pattern，不增加独立证据份数。
 可运行数据见 [joint_study](example-datapack/data/example/frostedresearch/knowledge/projects/joint_study.json)
-及 [纯成果 followup](example-datapack/data/example/frostedresearch/knowledge/projects/followup.json)。M2 获取概率、M4 阶段尚未实现。
+及 [纯成果 followup](example-datapack/data/example/frostedresearch/knowledge/projects/followup.json)。M2 获取概率与短联络见上文；M4 阶段尚未实现。
 
 每项需求的 `id` 在项目内唯一，是进度身份：增删一项需求不会让其他需求的进度错位。`type` 取：
 
@@ -288,7 +322,7 @@ NBT。未列出的数据不会进入这次观察，物品本身不被消耗。
 
 ## 当前用途、差异与重载
 
-`Snapshot.hasObservationUse` 判断观察能否匹配任何已注册用途的局部输入：含观察槽位的联络规则、所有项目的证据需求槽位、全部 access.conditions 的独立单槽用途，或外部
+`Snapshot.hasObservationUse` 判断观察能否匹配任何已注册用途的局部输入：含观察槽位的联络规则、所有项目的证据需求槽位、全部 access.conditions 与 acquisition 的独立单槽用途，或外部
 `ObservationUse`。不要求队伍已拥有完整组合。证据需求与联络规则一样参与 `addsObservationDifference`，同一需求中的重复槽位会保留所需数量的独立记录。
 
 `addsObservationDifference` 先排除相同原始 UUID；对不同 UUID

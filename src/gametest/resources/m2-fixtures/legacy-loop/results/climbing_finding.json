@@ -1,0 +1,8 @@
+{
+  "title": "knowledge.knowledge_example.results.climbing_finding.title",
+  "body": "knowledge.knowledge_example.results.climbing_finding.body",
+  "result": {
+    "type": "finding",
+    "id": "knowledge_example:climbing_finding"
+  }
+}

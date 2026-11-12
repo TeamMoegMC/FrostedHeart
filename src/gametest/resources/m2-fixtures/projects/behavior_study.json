@@ -1,0 +1,25 @@
+{
+  "title": "整理实地思路",
+  "results": [
+    "example:joint_finding"
+  ],
+  "access": {
+    "conditions": {
+      "idea": {
+        "kind": "idea",
+        "definition": "example:field_idea"
+      }
+    },
+    "start_all": [
+      "idea"
+    ]
+  },
+  "requirements": [
+    {
+      "id": "tabulate",
+      "type": "calculation",
+      "title": "整理记录",
+      "count": 1
+    }
+  ]
+}

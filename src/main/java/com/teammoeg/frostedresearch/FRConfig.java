@@ -46,7 +46,15 @@ public class FRConfig {
         public final ForgeConfigSpec.IntValue knowledgeArchiveObservations;
         public final ForgeConfigSpec.IntValue knowledgeInboxObservations;
 
+        public final ForgeConfigSpec.IntValue knowledgeLinkTicks, knowledgeLinkMinimumTicks, knowledgeLinkOptionalReduction;
+        public final ForgeConfigSpec.DoubleValue knowledgeBehaviorChance, knowledgeBehaviorOptionalBonus;
+
         Server(ForgeConfigSpec.Builder builder) {
+            knowledgeLinkTicks = builder.defineInRange("knowledgeLinkTicks", 200, 1, 72000);
+            knowledgeLinkMinimumTicks = builder.defineInRange("knowledgeLinkMinimumTicks", 20, 1, 72000);
+            knowledgeLinkOptionalReduction = builder.defineInRange("knowledgeLinkOptionalReduction", 20, 0, 72000);
+            knowledgeBehaviorChance = builder.defineInRange("knowledgeBehaviorChance", 0.15, 0, 1);
+            knowledgeBehaviorOptionalBonus = builder.defineInRange("knowledgeBehaviorOptionalBonus", 0.1, 0, 1);
             knowledgeArchiveObservations = builder.comment("Maximum archived observation records per team; existing records are retained when lowered.").defineInRange("knowledgeArchiveObservations", 4096, 0, Integer.MAX_VALUE);
             knowledgeInboxObservations = builder.comment("Maximum inbox observation records per team.").defineInRange("knowledgeInboxObservations", 512, 0, Integer.MAX_VALUE);
             rangeInsight = builder.comment("Range Radius for each insight visitable rings")

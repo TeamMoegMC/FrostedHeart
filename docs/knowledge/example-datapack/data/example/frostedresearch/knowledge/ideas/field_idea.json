@@ -1,0 +1,81 @@
+{
+  "title": "实地材料思路",
+  "body": "可从实际操作或联络已有记录获得。",
+  "acquisition": {
+    "required": [
+      {
+        "kind": "idea",
+        "definition": "example:i"
+      }
+    ],
+    "optional": [
+      {
+        "kind": "result",
+        "definition": "example:smelting_finding"
+      }
+    ],
+    "chance": 1.0,
+    "triggers": [
+      {
+        "event": "frostedresearch:item_obtained",
+        "subject": {
+          "kind": "observation",
+          "observation_type": "item",
+          "title": "paper",
+          "conditions": [
+            {
+              "field": "object",
+              "operator": "eq",
+              "value": {
+                "state": "known",
+                "type": "string",
+                "text": "minecraft:paper"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "event": "frostedresearch:item_used",
+        "subject": {
+          "kind": "observation",
+          "observation_type": "item",
+          "title": "apple",
+          "conditions": [
+            {
+              "field": "object",
+              "operator": "eq",
+              "value": {
+                "state": "known",
+                "type": "string",
+                "text": "minecraft:apple"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "event": "frostedresearch:observation_completed",
+        "subject": {
+          "kind": "observation",
+          "observation_type": "item",
+          "title": "paper",
+          "conditions": [
+            {
+              "field": "object",
+              "operator": "eq",
+              "value": {
+                "state": "known",
+                "type": "string",
+                "text": "minecraft:paper"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "event": "example:field_work"
+      }
+    ]
+  }
+}

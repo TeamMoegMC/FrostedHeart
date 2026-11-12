@@ -55,6 +55,12 @@ public final class ItemRetrieval {
     public static KnowledgeElement observe(ServerPlayer player, ItemStack original) {
         if (!canObserve(original))
             throw new IllegalArgumentException("Retrieve a physical item, not a research note");
+        return behaviorSample(player, original);
+    }
+
+    /** An item action payload, independent of whether the item can be actively inspected. Never learns note contents. */
+    public static KnowledgeElement behaviorSample(ServerPlayer player, ItemStack original) {
+        if (original.isEmpty()) throw new IllegalArgumentException("Item action requires a nonempty stack");
         ItemStack sample = original.copyWithCount(1);
         ResourceLocation item = BuiltInRegistries.ITEM.getKey(sample.getItem());
         Map<String, ObservationValue> values = new LinkedHashMap<>();

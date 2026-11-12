@@ -92,6 +92,8 @@ public final class KnowledgeLayer extends UILayer {
     private Component toolFeedback = Component.empty();
     private boolean inspectedPresent;
     private int noticeTicks;
+    private String linkState = "idle";
+    private int linkElapsed, linkDuration;
     private int lastBatchCount = -1;
     private boolean rowsDirty = true;
 
@@ -172,7 +174,7 @@ public final class KnowledgeLayer extends UILayer {
     }
 
     private void rebuild() {
-        layout = KnowledgeLayout.of(getWidth(), getHeight(), page == Page.ARCHIVE && !selected.isEmpty() && mode != Mode.TOOLS);
+        layout = KnowledgeLayout.of(getWidth(), getHeight(), page == Page.ARCHIVE && mode != Mode.TOOLS);
         refresh();
     }
 
@@ -225,7 +227,7 @@ public final class KnowledgeLayer extends UILayer {
         list.setEnabled(mode != Mode.DELETE);
         add(list);
         buildReading();
-        if (page == Page.ARCHIVE && !selected.isEmpty()) buildTray();
+        if (page == Page.ARCHIVE) buildTray();
         if (rowsDirty) rebuildRows();
         else updateListFocus();
     }
@@ -282,6 +284,11 @@ public final class KnowledgeLayer extends UILayer {
                 mode = Mode.READ;
                 rebuild();
             });
+            return;
+        }
+        if (linkState.equals("running")) {
+            reading.text(List.of(t("link.waiting", linkElapsed / 20.0, linkDuration / 20.0)));
+            button(x, bottom - 21, w, 19, t("cancel"), true, () -> send(Action.CANCEL_LINK, List.of(), "", "", ""));
             return;
         }
         if (mode == Mode.CANDIDATES) {
@@ -604,7 +611,7 @@ public final class KnowledgeLayer extends UILayer {
             button(x + index * cardWidth, y, cardWidth - 3, 28, data.title(key), false, () -> toggleTray(key)).tooltip(t("tray.remove_record", data.title(key)));
             index++;
         }
-        button(getWidth() - actionWidth - 15, y, actionWidth, 28, t("link.try"), false, () -> send(Action.PREVIEW_LINK, List.copyOf(selected), "", "", "")).tooltip(t(selected.size() < 2 ? "link.need_more" : "link.explain")).setEnabled(selected.size() >= 2);
+        button(getWidth() - actionWidth - 15, y, actionWidth, 28, t("link.try"), false, () -> send(Action.PREVIEW_LINK, List.copyOf(selected), "", "", "")).tooltip(t("link.explain"));
     }
 
     private void buildGraphPage() {
@@ -877,6 +884,14 @@ public final class KnowledgeLayer extends UILayer {
     }
 
     public void receiveReply(CompoundTag payload) {
+        if (payload.contains("link_state")) {
+            linkState = payload.getString("link_state"); linkElapsed = payload.getInt("link_elapsed"); linkDuration = payload.getInt("link_duration");
+            if (linkState.equals("completed") || linkState.equals("cancelled")) {
+                mode = Mode.READ; candidates.clear(); selected.clear();
+                notice = t(linkState.equals("completed") ? "link.completed" : "link.cancelled"); noticeTicks = 100;
+            }
+            rebuild(); return;
+        }
         boolean retrieval = payload.getString("action").equals("RETRIEVE");
         // Research replies lead with their own message rather than a generic status.
         boolean research = RESEARCH_ACTIONS.contains(payload.getString("action"));

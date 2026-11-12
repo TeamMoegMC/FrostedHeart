@@ -186,6 +186,8 @@ public final class ObservationSessions {
         SESSIONS.remove(player.getUUID());
         Observation record = !currentItem.isEmpty() ? ItemRetrieval.observe(player, currentItem).observation().orElseThrow()
                 : entity == null ? ObservationSampling.block(player, session.block()) : ObservationSampling.entity(player, entity);
+        com.teammoeg.frostedresearch.knowledge.IdeaAcquisitionService.emit(player,
+            com.teammoeg.frostedresearch.knowledge.IdeaAcquisitionService.OBSERVATION_COMPLETED, java.util.Optional.of(KnowledgeElement.observation(record)));
         preview(player, record, AcquisitionSource.of("player_observation", player), true);
     }
 

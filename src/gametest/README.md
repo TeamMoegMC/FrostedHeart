@@ -33,3 +33,6 @@ For the shared thermal comparison baseline, run [`scripts/run-thermal-baseline.p
 Project access checks use namespace `frostedresearch_m1` (`ProjectAccessGameTests`), with deliberate fixtures under
 `resources/m1-fixtures/`. They exercise disclosure, learned-only prerequisites, author exceptions, result/observation
 entry, legacy projects, observation uses, strict decoding and v2/v3 state round trips. Keep runtime directories under build.
+
+M2 behavior and contact checks use `frostedresearch_m2` (`IdeaAcquisitionGameTests`), including real item pickup,
+crafting/furnace/container extraction, use/interaction bridges and repeated observation sessions; fixtures live under resources/m2-fixtures/.

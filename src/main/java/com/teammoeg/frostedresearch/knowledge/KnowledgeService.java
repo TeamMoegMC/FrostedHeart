@@ -114,6 +114,10 @@ public final class KnowledgeService {
         return state;
     }
 
+    public Optional<UUID> actor() { return actor; }
+
+    public long time() { return time; }
+
     public UUID teamId() {
         return team == null ? testTeamId : team.getId();
     }
@@ -277,21 +281,43 @@ public final class KnowledgeService {
     }
 
     public List<LinkMatcher.Match> previewLinks(List<KnowledgeKey> keys) {
-        if (keys.size() < 2 || keys.size() > 5 || new HashSet<>(keys).size() != keys.size() || keys.stream().anyMatch(k -> !query(k).active()))
+        if (keys.size() > 5 || new HashSet<>(keys).size() != keys.size() || keys.stream().anyMatch(k -> !query(k).active()))
             return List.of();
-        return LinkMatcher.match(keys.stream().map(k -> state.archive().entries().get(k).element()).toList(), KnowledgeDefinitions.current().links());
+        return LinkMatcher.match(keys.stream().map(k -> state.archive().entries().get(k).element()).toList(), KnowledgeDefinitions.current().links()).stream().filter(this::linkAllowed).toList();
     }
 
     public List<LinkMatcher.Match> candidateLinks(int limit) {
-        return LinkMatcher.candidates(state.archive().entries().values().stream().map(KnowledgeEntry::element).filter(e -> isActive(e.key())).toList(), KnowledgeDefinitions.current().links(), limit);
+        if (limit <= 0) return List.of();
+        return LinkMatcher.candidates(state.archive().entries().values().stream().map(KnowledgeEntry::element).filter(e -> isActive(e.key())).toList(), KnowledgeDefinitions.current().links(), Integer.MAX_VALUE).stream().filter(this::linkAllowed).limit(limit).toList();
+    }
+
+    private boolean linkAllowed(LinkMatcher.Match match) {
+        return IdeaAcquisitionService.requiredMet(this, match.rule().output());
+    }
+
+    /** Check one selected rule without enumerating candidates, used by transient waits. */
+    public Optional<LinkMatcher.Match> matchLink(ResourceLocation ruleId, List<KnowledgeKey> keys) {
+        var rule = KnowledgeDefinitions.current().links().get(ruleId);
+        if (rule == null || keys.size() > 5 || new HashSet<>(keys).size() != keys.size() || keys.stream().anyMatch(k -> !isActive(k))) return Optional.empty();
+        return LinkMatcher.bindExact(keys.stream().map(k -> state.archive().entries().get(k).element()).toList(), rule.pattern(), TagLookup.SERVER)
+            .map(binding -> {
+                Map<String, KnowledgeKey> witnesses = new LinkedHashMap<>();
+                binding.forEach((name, element) -> witnesses.put(name, element.key()));
+                return new LinkMatcher.Match(ruleId, rule, witnesses);
+            }).filter(this::linkAllowed);
     }
 
     public OperationResult link(ResourceLocation ruleId, List<KnowledgeKey> keys) {
-        var match = previewLinks(keys).stream().filter(m -> m.ruleId().equals(ruleId)).findFirst().orElse(null);
+        var match = matchLink(ruleId, keys).orElse(null);
         if (match == null) return result(Status.NO_MATCH, null);
         KnowledgeKey output = KnowledgeKey.idea(match.rule().output());
         boolean discovered = state.discover(new LinkDiscovery(ruleId, output, match.bindings(), time));
-        OperationResult produced = produce(KnowledgeElement.idea(match.rule().output()), new AcquisitionSource("link:" + ruleId, actor, time));
+        // A valid manual deduction can add a new path to an already known or received idea.
+        // Keep that history independent of acquisition; do not relearn/regrant an existing entity.
+        Query owned = query(output);
+        OperationResult produced = owned.inArchive() ? result(Status.ALREADY_OWNED, output)
+            : owned.inInbox() ? result(Status.ALREADY_RECEIVED, output)
+            : produce(KnowledgeElement.idea(match.rule().output()), new AcquisitionSource("link:" + ruleId, actor, time));
         if (discovered) notifyChanged();
         return produced;
     }
@@ -625,6 +651,8 @@ public final class KnowledgeService {
 
     private void committed(String operation, KnowledgeEntry entry) {
         MinecraftForge.EVENT_BUS.post(new KnowledgeOperationEvent.Committed(teamId(), actor, operation, entry.element(), entry.source()));
+        if (operation.equals("learn") || operation.startsWith("learn_"))
+            IdeaAcquisitionService.fire(this, List.of(new IdeaAcquisitionService.Signal(IdeaAcquisitionService.KNOWLEDGE_LEARNED, entry.element())), java.util.concurrent.ThreadLocalRandom.current()::nextDouble);
     }
 
     private static OperationResult result(Status status, KnowledgeKey key) {

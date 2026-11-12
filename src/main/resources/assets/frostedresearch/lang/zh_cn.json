@@ -523,7 +523,7 @@
   "gui.frostedresearch.journal.tools.choose_note": "先翻开要誊写的札记",
   "gui.frostedresearch.journal.tools.copying": "誊写：%s",
   "gui.frostedresearch.journal.link.need_more": "再放一份札记，看看能否找到联系。",
-  "gui.frostedresearch.journal.link.explain": "把这些记录放在一起，试着找出新的思路。",
+  "gui.frostedresearch.journal.link.explain": "尝试所选札记；不选札记时查找作者配置的零输入联络",
   "gui.frostedresearch.journal.tools.unreadable": "纸页上还没有可辨认的内容。",
   "gui.frostedresearch.journal.group.open": "共 %s 份记录 · 展开",
   "gui.frostedresearch.journal.group.close": "共 %s 份记录 · 收起",
@@ -680,5 +680,10 @@
   "gui.frostedresearch.journal.research.access_group": "来源关联：第 %s 项",
   "gui.frostedresearch.journal.research.state.needs_knowledge": "尚缺开始知识；未知要求需要继续探索",
   "gui.frostedresearch.journal.research.state.completable": "任务已齐，可完成",
-  "gui.frostedresearch.journal.graph.related_sources": "发现来源"
+  "gui.frostedresearch.journal.graph.related_sources": "发现来源",
+  "gui.frostedresearch.journal.link.waiting": "正在联络：%s / %s 秒",
+  "gui.frostedresearch.journal.link.completed": "联络完成，关系已记录",
+  "gui.frostedresearch.journal.link.cancelled": "联络已取消；再次选择可重新开始",
+  "knowledge.frostedresearch.link.completed": "联络完成，关系已记录。",
+  "knowledge.frostedresearch.behavior.acquired": "产生了新的想法：%s"
 }

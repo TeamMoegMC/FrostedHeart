@@ -80,7 +80,7 @@ codec 错误而不是异常。`ObservationSampling` 把非有限的坐标与温�
 | `isActive(key)`                                | 当前是否具有有效的档案知识；不使用来件或历史替代                  |
 | `canExport(key)`                               | 检查源条目、可传播性及扩展权限；不消耗笔记                     |
 | `previewLinks(keys)`                           | 返回当前选择完整命中的全部规则及实际绑定，不修改状态                |
-| `link(ruleId, keys)`                           | 重新判定所选规则，记录实际关系并产生想法                      |
+| `link(ruleId, keys)`                           | 内部完成接口；只匹配指定规则、检查必要前置、记录实际关系并产生想法                      |
 | `candidateLinks(limit)`                        | 面向研究所的候选查询；只用有效档案输入，按槽位筛选和回溯，每条规则返回首个可行绑定 |
 | `merge(sourceState)`                           | 由队伍系统明确发起的知识合并；加入、退出队伍不调用                 |
 
@@ -127,13 +127,61 @@ codec 错误而不是异常。`ObservationSampling` 把非有限的坐标与温�
 
 默认允许当前成员共同处理来件和笔记，绘图台另要求队伍归属。其他系统可通过前置事件提供具体权限或学习限制；观察的原始来源、实际获得来源和特殊授予方式均可区分。
 
+## M2 行为事件与短联络
+
+代码锚点：[IdeaAcquisitionService](../../src/main/java/com/teammoeg/frostedresearch/knowledge/IdeaAcquisitionService.java)、
+[KnowledgeBehaviorBridge](../../src/main/java/com/teammoeg/frostedresearch/knowledge/KnowledgeBehaviorBridge.java)、
+[KnowledgeBehaviorEvent](../../src/main/java/com/teammoeg/frostedresearch/knowledge/event/KnowledgeBehaviorEvent.java)、
+[KnowledgeLinkSessions](../../src/main/java/com/teammoeg/frostedresearch/knowledge/KnowledgeLinkSessions.java)。
+
+| 服务器配置（源码默认） | 含义 |
+|---|---|
+| knowledgeBehaviorChance = 0.15 | 未指定 chance 的行为基础概率，0–1 |
+| knowledgeBehaviorOptionalBonus = 0.1 | 每项已掌握 optional 的加概率，0–1 |
+| knowledgeLinkTicks = 200 | 基础联络等待，1–72000 tick；20TPS 时 10 秒 |
+| knowledgeLinkOptionalReduction = 20 | 每项已掌握 optional 减免，0–72000 tick |
+| knowledgeLinkMinimumTicks = 20 | 最短等待，1–72000 tick，并不超过基础等待 |
+
+行为概率 p = min(1, p0 + n × bonus)，p0 为想法 chance 或基础配置；n 为有效档案中满足的 optional 项数。
+联络等待 ticks = max(min(base, minimum), base − n × reduction)。可选知识不需要摆在桌面上；等待在开始时固定，
+中途得到更多参考不改变本次时间，必要知识与所选规则则持续校验。合法等待完成不抽概率。
+
+物品获得桥接只有两处：实际 ItemPickupEvent 的取得堆叠，以及 AbstractContainerMenu.clicked 前后背包＋光标＋玩家工作网格原料的
+物品/NBT 净增量（同次点击聚合）。因此制作、熔炉输出、外部容器普通/快捷取出可触发，背包内部、背包/光标/玩家工作网格原料之间的
+单纯搬动不触发；不再同时监听 crafted/smelted 抽第二次。一次 shift-click 的批量产出是一次操作，非每个物品一次。
+这是玩家实际取出路径；绕过这些原版入口的其他模组直接物品授予可主动调用公开 API。
+
+useItem 仅在服务器接受的成功动作触发（食物在开始使用时，非每个持续 tick）；实际 ItemStack.useOn 的成功物品使用
+与成功 useItemOn 方块交互按同一操作合并再评估，失败/PASS 不触发。空手开关方块只有 block_interacted。
+行为物品载荷取样用 ItemRetrieval.behaviorSample，允许研究笔记物品本身，不解析或学习其内含知识；
+主动检视仍走 observe/canObserve 和既有笔记研读规则。
+
+ObservationSessions 完成有效采样时直接发 observation_completed，早于接收/学习；即使档案已有等价记录或来件不能接收，
+动作仍可供行为和后续任务监听。仅从旧记录学习不会补发观察动作。KnowledgeService 实际 learn/learn_INITIAL/learn_COMMAND
+提交后独立发 knowledge_learned；同一线程用队列排空级联，每个队伍/想法在这次级联中最多尝试一次，且档案/来件已有输出
+直接跳过，防止 A 学到 B、B 又学到 A 的无限触发。事件 ID 索引在定义加载时生成，不逐事件扫描全想法目录。
+
+外部服务器调用（Java/KubeJS Java.loadClass 也可用）：
+
+```java
+IdeaAcquisitionService.emit(player, new ResourceLocation("example:field_work"), Optional.empty());
+// 或传 Optional.of(KnowledgeElement.observation(record)) / idea / result 作为有类型上下文。
+```
+
+API 携带真实玩家、队伍与事件 ID；KnowledgeBehaviorEvent 提供 team() / actor() / id() / subject()，供实际采样动作的
+其他消费者监听；不是通用脚本执行器。fire(service, signals, random) 是一次操作的批量入口，同操作多个 signal 对同想法只抽一次。
+
+KnowledgeLinkSessions 是每玩家的临时短计时，不写存档：关闭绘图台容器、离线、换队、必要知识/规则失效会取消；
+容器内翻页或返回旧研究页仍继续，重开已关闭容器须重新选择并从零计时。重复开始不重置现有计时，取消后不能完成旧请求。
+每 tick 只校验选定 rule ID，不重算全部候选。进度通过 LINK_PROGRESS 每20 tick 推送，完成/取消另发状态。
+START/LINK 完成入口仍服务端重新判定，不相信客户端进度。
+
 ## 实际联络与研究历史
 
-联络使用 2–5
-个不同身份、当前有效的档案元素。输入顺序无关，不消费输入，也不忽略额外输入。匹配规则与槽位条件见 [定义文档](definitions.md)
-。玩家预览可得到多个输出，确认一条后由服务端重新匹配。
+联络使用作者显式配置的 0–5 个不同身份、当前有效的档案元素。输入顺序无关，不消费输入，也不忽略额外输入。匹配规则与槽位条件见 [定义文档](definitions.md)
+。玩家预览可得到多个输出，确认一条后服务端重新匹配并开始短计时，完成时再次校验；不是立即发放。
 
-每队每条规则默认只保存首次成功绑定。同一想法经不同规则产生会增加替代路径；同一规则反复尝试不会无限追加历史。外部学习不创建本队未执行的联络。
+每队每条规则默认只保存首次成功绑定。既有不同规则的替代路径历史保留；手动联络仍允许输出已在档案或来件的规则形成新路径，同一规则反复请求保留首次绑定，不追加历史或再次产出。外部学习不创建本队未执行的联络。
 
 ### 研究启动记录
 

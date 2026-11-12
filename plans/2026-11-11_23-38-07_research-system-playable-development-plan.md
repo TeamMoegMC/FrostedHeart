@@ -2,7 +2,7 @@
 
 - Time: `2026-11-11 23:38:07 +08:00`
 - Authors: `项目所有者提出玩法设计；Codex（OpenAI GPT-6 Astra）整理计划；GPT-6 Luna 协助只读核对实现。`
-- Status: `in-progress`：2026-11-12 M0 基线已交接，M1 实现与服务端回归完成（11项必需测试通过）；新界面、材料可达性与实际游玩随后续阶段验证，下一阶段为 M2。下文“建议默认规则”不是已经确认的玩法。
+- Status: `in-progress`：2026-11-12 M0 基线、M1/M2 实现与服务端回归已完成；M2手动联络回环兼容修复亦通过定向测试。新界面、材料可达性与实际游玩随后续阶段验证，下一阶段为 M3。下文“建议默认规则”不是已经确认的玩法。
 - Scope: FrostedHeart 的知识、研究、实验、界面和存档；TheWinterRescue 的研究内容、配方、引导及旧进度衔接。
 - Related: [改版要点](2026-11-11_22-20-43_research-system-architecture-revision.md)、[讨论记录](../discussion/2026-11-08_23-34-23_research-design-revision-draft.md)、[原始设计，只读](../design/knowledge_research.md)、[知识系统](../docs/knowledge/README.md)、[现有研究系统](../docs/research/README.md)。
 
@@ -117,6 +117,8 @@
 4. 仅用于新前置或后续分支的观察能够正常入档，已有观察去重和独立证据规则仍成立。
 
 ## 7. M2：行为获得想法与联络代价
+
+2026-11-12：[M2 实现交接](../diary/2026-11-12_14-07-13_research-m2-behavior-contact-handoff.md)记录了17项必需测试通过；随后[手动回环更正](../diary/2026-11-12_14-18-30_research-m2-manual-loop-compatibility.md)恢复已知想法的另一条联络历史，并通过7项M2定向测试。自动行为仍去重，客户端实际体验待后续综合验收。
 
 ### 行为入口
 

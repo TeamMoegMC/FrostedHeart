@@ -127,3 +127,7 @@ UUID、游戏刻或 NBT。笔记物品名也使用可读的知识或物件名称
 完成观察动作不等于知识已入档；任务使用的观察副本也不授予知识。以后阶段系统应从有效采样动作读取任务上下文，
 不能仅监听 learn 成功；本阶段未新增任务事件总线或阶段加载器。后续系统须在加载定义时注册全部潜在观察用途，
 可复用 KnowledgeCondition.pattern 或已有 registerObservationUse，不等到阶段解锁才登记。
+
+M2：ObservationSessions 完成采样就独立派发 observation_completed，重复记录、容量或学习失败不抹去已发生的动作。
+行为事件的物品上下文使用 ItemRetrieval.behaviorSample，可描述笔记物品本身；主动观察资格和笔记内容研读不受影响。
+IdeaAcquisition 的所有 required / optional / trigger.subject 观察条件也参与用途索引。

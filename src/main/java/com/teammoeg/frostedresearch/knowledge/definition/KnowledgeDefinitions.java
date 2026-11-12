@@ -95,6 +95,13 @@ public final class KnowledgeDefinitions {
         List<String> errors = new ArrayList<>();
         s.ideas.forEach((id, idea) -> {
             validateKeys(id, idea.understanding(), s, errors);
+            for (var condition : idea.acquisition().allConditions()) {
+                List<String> local = new ArrayList<>(); condition.validate(local);
+                local.forEach(error -> errors.add(id + ": acquisition: " + error));
+                condition.definition().ifPresent(def -> {
+                    if (condition.kind() == KnowledgeKey.Kind.IDEA ? !s.ideas.containsKey(def) : !resultExists(s, def)) errors.add(id + ": acquisition missing " + def);
+                });
+            }
             for (var project : idea.projects())
                 if (!s.projects.containsKey(project)) errors.add(id + ": missing project " + project);
         });
@@ -181,6 +188,7 @@ public final class KnowledgeDefinitions {
         private final Map<ResourceLocation, ObservationUse> observationUses;
         /** Link rules with observation slots and every evidence requirement: the registered observation uses. */
         private final List<SlotPattern> observationPatterns;
+        private final Map<ResourceLocation, Map<ResourceLocation, IdeaDefinition>> behaviorIdeas;
 
         public Snapshot(long revision, Map<ResourceLocation, IdeaDefinition> ideas, Map<ResourceLocation, ResultDefinition> results,
                         Map<ResourceLocation, LinkRule> links, Map<ResourceLocation, ItemRetrievalRule> items,
@@ -206,7 +214,15 @@ public final class KnowledgeDefinitions {
                     .filter(r -> r.type() == ProjectRequirement.Type.EVIDENCE).map(ProjectRequirement::pattern).forEach(patterns::add));
             projects.values().forEach(project -> project.access().ifPresent(access -> access.conditions().values().stream()
                 .filter(c -> c.kind() == KnowledgeKey.Kind.OBSERVATION).map(KnowledgeCondition::pattern).forEach(patterns::add)));
+            ideas.values().stream().flatMap(idea -> idea.acquisition().allConditions().stream())
+                .filter(c -> c.kind() == KnowledgeKey.Kind.OBSERVATION).map(KnowledgeCondition::pattern).forEach(patterns::add);
             this.observationPatterns = List.copyOf(patterns);
+            Map<ResourceLocation, Map<ResourceLocation, IdeaDefinition>> events = new HashMap<>();
+            ideas.forEach((id, idea) -> { if (idea.enabled()) idea.acquisition().triggers().forEach(trigger ->
+                events.computeIfAbsent(trigger.event(), ignored -> new LinkedHashMap<>()).put(id, idea)); });
+            Map<ResourceLocation, Map<ResourceLocation, IdeaDefinition>> frozen = new HashMap<>();
+            events.forEach((event, definitions) -> frozen.put(event, Map.copyOf(definitions)));
+            behaviorIdeas = Map.copyOf(frozen);
         }
 
         public static Snapshot empty() {
@@ -243,6 +259,10 @@ public final class KnowledgeDefinitions {
 
         public Map<ResourceLocation, ObservationUse> observationUses() {
             return observationUses;
+        }
+
+        public Map<ResourceLocation, IdeaDefinition> behaviorIdeas(ResourceLocation event) {
+            return behaviorIdeas.getOrDefault(event, Map.of());
         }
 
         public boolean hasObservationUse(Observation observation) {

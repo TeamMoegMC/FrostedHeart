@@ -54,7 +54,7 @@ import net.minecraftforge.network.NetworkEvent;
  */
 public final class KnowledgeWorkbenchActionPacket implements CMessage {
     public enum Action {
-        REFRESH, LEARN, DELETE, PREVIEW_LINK, LINK, RETRIEVE, EXPORT, DREAM_TOPIC, DISCUSS,
+        REFRESH, LEARN, DELETE, PREVIEW_LINK, LINK, CANCEL_LINK, RETRIEVE, EXPORT, DREAM_TOPIC, DISCUSS,
         START_RESEARCH, SUBMIT_EVIDENCE, CALCULATE, STOP_CALCULATION, COMPLETE_RESEARCH, ABANDON_RESEARCH
     }
 
@@ -132,7 +132,13 @@ public final class KnowledgeWorkbenchActionPacket implements CMessage {
             KnowledgeService service = KnowledgeService.forPlayer(player);
             ListTag results = new ListTag();
             switch (action) {
-                case REFRESH -> TeamResearchService.send(player, CTeamDataManager.get(player));
+                case REFRESH -> {
+                    TeamResearchService.send(player, CTeamDataManager.get(player));
+                    var wait = com.teammoeg.frostedresearch.knowledge.KnowledgeLinkSessions.session(player.getUUID());
+                    com.teammoeg.frostedresearch.knowledge.KnowledgeLinkSessions.send(player, wait.map(session ->
+                        new com.teammoeg.frostedresearch.knowledge.KnowledgeLinkSessions.Update("running", (int)Math.max(0, player.level().getGameTime() - session.started()), session.duration()))
+                        .orElse(new com.teammoeg.frostedresearch.knowledge.KnowledgeLinkSessions.Update("idle", 0, 0)));
+                }
                 case LEARN ->
                         service.learnInbox(keys.stream().distinct().toList()).forEach(result -> addResult(results, result, service));
                 case DELETE ->
@@ -152,10 +158,17 @@ public final class KnowledgeWorkbenchActionPacket implements CMessage {
                 case LINK -> {
                     ResourceLocation chosen = ResourceLocation.tryParse(rule);
                     if (chosen != null) {
-                        OperationResult result = service.link(chosen, keys);
-                        addResult(results, result, service);
-                        response.putBoolean("linked", result.status() != KnowledgeService.Status.NO_MATCH);
+                        var status = com.teammoeg.frostedresearch.knowledge.KnowledgeLinkSessions.start(player.getUUID(), player.containerMenu.containerId,
+                            desk.getBlockPos(), service, chosen, keys, player.level().getGameTime());
+                        addResult(results, new OperationResult(status, null), service);
+                        var wait = com.teammoeg.frostedresearch.knowledge.KnowledgeLinkSessions.session(player.getUUID());
+                        wait.ifPresent(session -> com.teammoeg.frostedresearch.knowledge.KnowledgeLinkSessions.send(player,
+                            new com.teammoeg.frostedresearch.knowledge.KnowledgeLinkSessions.Update("running", (int)Math.max(0, player.level().getGameTime() - session.started()), session.duration())));
                     }
+                }
+                case CANCEL_LINK -> {
+                    com.teammoeg.frostedresearch.knowledge.KnowledgeLinkSessions.cancel(player.getUUID());
+                    response.putString("link_state", "cancelled"); response.putInt("link_elapsed", 0); response.putInt("link_duration", 0);
                 }
                 case RETRIEVE -> retrieve(player, desk, service, results, response);
                 case EXPORT -> export(desk, service, results, response);
