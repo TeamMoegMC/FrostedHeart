@@ -41,10 +41,14 @@ public final class ControlledFurnaceScreen extends MenuPrimaryLayer<ControlledFu
     }
     @Override public void alignWidgets(){}
     @Override public void tick(){var f=menu.getBlock();int now=Objects.hash(f.trial(),f.temperature(),f.lockedTemperature(),f.remaining()/20,f.message(),f.targetTitle(),f.targetCount(),f.displayedBusy());if(now!=signature){signature=now;refresh();}super.tick();}
+    private static void drawSlot(GuiGraphics g,int x,int y){
+        g.fill(x-1,y-1,x+17,y+17,KnowledgeUiTheme.MUTED);
+        g.fill(x,y,x+16,y+16,KnowledgeUiTheme.PAPER_DARK);
+    }
     @Override public void drawBackground(GuiGraphics g,int x,int y,int w,int h,RenderingHint hint){
         KnowledgeUiTheme.drawPaper(g,x,y,w,h);
         g.drawString(getFont(),Component.translatable("block.frostedresearch.controlled_furnace"),x+150,y+12,KnowledgeUiTheme.INK,false);
-        String[] labels={"input","fuel","output"};for(int i=0;i<3;i++){int[] p=ControlledFurnaceMenu.POSITIONS[i];g.drawString(getFont(),t(labels[i]),x+p[0]-5,y+18,KnowledgeUiTheme.INK,false);g.fill(x+p[0]-1,y+p[1]-1,x+p[0]+17,y+p[1]+17,0xFF694929);}
-        for(int i=0;i<36;i++){int p=i<9?i+27:i-9;int sx=x+10+(p%6)*17,sy=y+93+(p/6)*17;g.fill(sx-1,sy-1,sx+17,sy+17,0xFF694929);}
+        String[] labels={"input","fuel","output"};for(int i=0;i<3;i++){int[] p=ControlledFurnaceMenu.POSITIONS[i];g.drawString(getFont(),t(labels[i]),x+p[0]-5,y+18,KnowledgeUiTheme.INK,false);drawSlot(g,x+p[0],y+p[1]);}
+        for(int i=0;i<36;i++){int p=i<9?i+27:i-9;int sx=x+10+(p%6)*17,sy=y+93+(p/6)*17;drawSlot(g,sx,sy);}
     }
 }
