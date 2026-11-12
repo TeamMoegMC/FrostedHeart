@@ -1,9 +1,9 @@
 # 玩家与居民营养系统
 
 - Status: `Current`
-- Last verified: `2026-08-21`
+- Last verified: `2026-11-09`（玩家真实进食、收支、死亡、重生、菜单与统一配置）；居民模型沿用 `2026-08-21` 的验证
 - Scope: 玩家营养、统一食物画像、居民住宅菜单、当前营养支持、属性成长、持久化与界面
-- Primary code anchors: `FoodNutritionProfile`, `FoodNutritionResolver`, `GatherFoodNutritionEvent`, `PlayerNutritionState`, `NutritionCapability`, `ResidentNutrition`, `ResidentPublicMenuModel`, `TownHousingMealService`, `ResidentNutritionSupportModel`, `ResidentAttributeModel.settleDailyAttribute`, `ResidentNutritionSnapshot`, `TeamTownData.tickMorning`
+- Primary code anchors: `FoodNutritionProfile`, `FoodNutritionResolver`, `GatherFoodNutritionEvent`, `PlayerNutritionState`, `NutritionCapability`, `HealthCommonEvents`, `HealthScreenHandler`, `FHConfig.Server.Nutrition`, `ResidentNutrition`, `ResidentPublicMenuModel`, `TownHousingMealService`, `ResidentNutritionSupportModel`, `ResidentAttributeModel.settleDailyAttribute`, `ResidentNutritionSnapshot`, `TeamTownData.tickMorning`
 
 本文描述当前已实现行为。食物原始数据仍由 `new_food_value.xlsx` 及生成的 `frostedheart:diet_override` JSON 提供；运行时百分比语义和消费者公式以本文列出的代码为准。
 
@@ -90,7 +90,9 @@ NBT 字段增加 `version=2`：
 - 缺少版本的旧状态按 `clamp(old / 100, 0, 100)` 迁移；
 - 完全缺少四项字段时初始化为 `70`。
 
-死亡克隆继续复制玩家营养。`/frostedheart nutrition ... fill` 现在写入 `100`。
+这个 `version` 只属于玩家营养存档，用于正确读取已有玩家数据；营养倍率配置不再有版本字段或自动尺度迁移。
+
+死亡克隆通过 `HealthCommonEvents.onPlayerRespawn(PlayerEvent.Clone)` 的 `nutrition.set(n.get())` 直接复制玩家营养，不扣除固定死亡惩罚，也不重新执行 NBT 尺度迁移。2026-11-09 的真实 Forge 服务端回放中，四项 `15` 在立即重生、死亡后等待 `200 tick` 再重生两种情况下均保留为 `15`。`/frostedheart nutrition ... fill` 现在写入 `100`。
 
 ### 3.2 进食
 
@@ -105,6 +107,8 @@ gain_i = effectiveHunger * profile_i / 100 * nutritionGainRate
 
 完整食用熟牛肉时，蛋白质增加 `8 * 60% = 4.8`；若食用前只缺 `2` hunger，则只增加 `1.2`。饥饿溢出部分不提供营养，也不会反向消耗已有营养。
 
+上述 `4.8/1.2` 使用源码默认获取倍率 `1.0`。TheWinterRescue 模板使用 `0.12`，完整恢复 `8` hunger 的熟牛肉增加蛋白质 `0.576`；只缺 `1` hunger 时增加 `0.072`。`NutritionEatingGameTests` 已通过真实 `Item.use`、玩家 tick、Forge `LivingEntityUseItemEvent.Finish` 和实际食物配方验证这两种情况、堆叠中最后一份食物、面包、苹果、胡萝卜、烤马铃薯，以及相同肉汤的碗装/保温杯最后一份。满 hunger 食用金苹果的用例不增加营养，因为实际恢复的 hunger 为零。
+
 ### 3.3 消耗
 
 只有原版 hunger 实际下降时才扣除营养。设下降量为 `hungerLost`：
@@ -115,16 +119,24 @@ loss_i = hungerLost * nutritionConsumptionRate
 
 `nutritionConsumptionRate` 的运行时默认值为 `0.25`，即每损失一点 hunger，四项各固定减少 `0.25` 状态点。当前库存比例不参与计算。
 
-### 3.4 配置版本
+`HealthCommonEvents.onPlayerTick` 只对存活、未移除且不处于创造或旁观模式的服务端玩家结算营养、贫血和营养属性。原版 `FoodData.tick` 可能继续扣除死亡前积累的 exhaustion，但死亡玩家不再由此损失营养。真实回放在四项 `15`、零 saturation、`40` exhaustion 下，死亡后 hunger 从 `20` 降至 `11`，营养仍为 `15`；将消耗倍率故意设为 `25` 的回归场景也保持 `15`，等待 `200 tick` 后重生仍为 `15`。
 
-配置键 `nutritionScaleVersion` 控制一次性迁移：
+### 3.4 统一配置单位
 
-```text
-old nutritionGainRate        * 400
-old nutritionConsumptionRate * 100
-```
+`FHConfig.Server.Nutrition`、整合包模板和运行时直接使用相同单位，配置值不会在加载、热重载或保存时被营养系统缩放：
 
-版本 1 的规范初值仍使用旧 `0.0025/0.0025`。专服世界和单人世界的磁盘型 `frostedheart-server.toml` 加载后立即得到版本 2 的 `1.0/0.25` 并保存，之后不再重复迁移。远程连接期间由 Forge 创建或由服务器同步的内存型 SERVER 配置不在客户端迁移或保存；客户端直接使用服务端权威配置，避免登录服的 vanilla 回退流程对 `SimpleCommentedConfig` 调用 `ModConfig.save()`。
+| 配置键 | 单位 | 源码默认 | TheWinterRescue 模板 |
+|---|---|---:|---:|
+| `nutritionGainRate` | 食物画像为 `100%` 时，每实际恢复一点 hunger 增加的营养百分点 | `1.0` | `0.12` |
+| `nutritionConsumptionRate` | 每实际损失一点 hunger，各通道扣除的营养百分点 | `0.25` | `0.03` |
+
+这些值与先前实现**正确完成一次换算后的运行时值**一致，没有改变正常存活时的数值或公式。例如画像为脂质 `40%`、蛋白质 `60%`，实际恢复 `8` hunger 的食物，在源码默认下增加蛋白质 `4.8`，在整合包配置下增加 `0.576`；消耗 `1` hunger 时分别扣除 `0.25` 或 `0.03`。饥饿溢出、营养上限、最大生命值公式和贫血阈值不变。
+
+根据用户明确选择，只支持统一后的倍率配置；已删除 `nutritionScaleVersion`、`FHConfig.migrateNutritionScale` 和 `NutritionScaleMigration`。旧字面值 `0.0003` 若仍存在，就按 `0.0003` 使用，不再自动乘以 `400/100`。TheWinterRescue 的 `defaultconfigs/frostedheart-server.toml` 已相应写为 `0.12/0.03`，不包含版本字段。Forge 对已有世界使用世界目录内的 `serverconfig/frostedheart-server.toml`；整合包的 `defaultconfigs` 模板用于创建新配置，不会覆盖已有世界的自定义倍率。历史上已被错误放大的倍率和已经归零的玩家储备不会根据数值大小被猜测还原。
+
+远程客户端仍直接使用服务器同步的配置；`FHConfig` 余下的磁盘配置迁移仅处理居民属性模型，不处理玩家营养倍率。删除配置换算不影响玩家营养 NBT 的读取和存档兼容。
+
+原并发迁移缺陷及复现留在[调查记录](../../diary/2026-11-09_16-20-00_player-nutrition-death-investigation.md)和[历史观测数据](validation/player-death-and-config-migration-2026-11-09.json)。当前修复、数值对照及验证边界见[修复记录](../../diary/2026-11-09_17-23-00_nutrition-unified-rates-death-fix.md)和[回归结果](validation/nutrition-unified-rates-death-fix-2026-11-09.json)。
 
 ### 3.5 玩家后果和界面
 
@@ -138,7 +150,27 @@ old nutritionConsumptionRate * 100
 
 系统没有独立的玩家营养同步包；权威存档和消耗在服务端，打开健康菜单时通过容器数据槽同步。
 
+`C2SOpenNutritionScreenMessage.handle` 通过 `HealthScreenHandler.open` 打开菜单。处理请求时先按 UUID 查找当前在线的 `ServerPlayer`，避免重生期间的旧实体引用继续驱动菜单；如果玩家已经死亡或实体已移除，暂存一次打开请求，等待真实 `PlayerRespawnEvent` 后自动对新实体打开。重复请求合并，退出游戏或服务器停止时清除，临时请求不写入玩家存档。`HealthStatMenu.stillValid` 绑定具体存活玩家实体，死亡、移除或更换实体后旧菜单失效。服务端回归已验证死亡后等待 `200 tick` 再请求、自动重生打开、旧引用请求和退出清理，新菜单编码为 `1500`（即 `15%`）；未进行物理客户端画面验收。
+
 健康界面底部另显示核心体温升降趋势，规则见[玩家体温](../climate/player-temperature.md#player-facing-values)。
+
+### 3.6 当前普通饮食收支与低生命值限制
+
+**状态：真实进食加值已验证，普通饮食的长期收支尚未校准。** 本节描述当前实现的限制，不代表新增平衡规则。2026-11-09 的进食调查没有修改食物数据、倍率或玩家后果，具体记录见[真实进食调查](../../diary/2026-11-09_21-58-10_player-real-eating-balance-investigation.md)及[观测数据](validation/player-real-eating-balance-2026-11-09.json)。
+
+在整合包倍率 `gain=0.12`、`consumption=0.03` 下，设同一周期实际损失并补回 `h` hunger，食物四项画像总和为 `P`，营养尚未触及 `0/100` 边界：
+
+```text
+四项总消耗 = 4 * h * 0.03 = 0.12 * h
+四项总摄入 = h * P / 100 * 0.12
+四项合计不下降的必要条件：P >= 100
+```
+
+这只是总量的必要条件，各通道长期维持还要求分别满足摄入。当前 `src/generated/resources/data/frostedheart/recipes/diet_value` 的 `110` 份静态画像中，`107` 份总量低于 `100`，其余 `3` 份（蛋糕、`stone_age:cooked_fat`、`supplementaries:pancake`）均不提供蔬果。只依赖这组静态画像，无法同时长期维持四项正储备；Caupona 动态汤/餐盘和其他数据包必须按实际组成另外计算，不能把这个结论扩大为所有动态食物都无法维持营养。
+
+实际服务端周期验证：四项初始 `70`，真实消耗 `8` hunger 后各为约 `69.76`；随后吃一块熟牛肉恢复到满 hunger，蛋白质变为约 `70.336`，另外三项仍约 `69.76`。蛋白质确实增加，但四项总和净减少约 `0.384`。因此“进食事件正常”并不等于当前普通饮食收支已经平衡。
+
+已有营养缺乏也不会随代码修复自动消失。真实用例四项均为 `0` 时，吃一块熟牛肉令蛋白质变成 `0.576`，其余仍为 `0`；立即用现有 `NutritionCapability.addAttributes` 重新计算后最大生命值仍为 `1`。正常存活时该属性按现有 `200 tick` 节奏更新，少量进食并不保证立刻改变生命上限。健康菜单的数值文本采用 `DecimalFormat("0.0%")`，很小的增量也可能被显示精度掩盖。
 
 ## 4. 居民每日摄入与住宅菜单
 

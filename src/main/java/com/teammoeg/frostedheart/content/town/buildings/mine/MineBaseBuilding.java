@@ -79,19 +79,10 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
         ).apply(instance, MiningDailyReport::new));
 
         public MiningDailyReport {
-            requested = finiteNonNegative(requested);
-            extracted = Math.min(requested, finiteNonNegative(extracted));
+            requested = sanitize(requested);
+            extracted = Math.min(requested, sanitize(extracted));
             items = List.copyOf(items);
             stopReason = stopReason == null ? TownProductionStopReason.NONE : stopReason;
-        }
-
-        /**
-         * The report's own copy of the outer {@code sanitize}. Calling an outer static method while this record's
-         * {@code EMPTY} is built would initialize {@link MineBaseBuilding}, whose {@code MAP_CODEC} reads this
-         * record's still-null {@code CODEC}: loading a save whose first touch is the report codec then crashed.
-         */
-        private static double finiteNonNegative(double value) {
-            return Double.isFinite(value) ? Math.max(0.0, value) : 0.0;
         }
 
         public double stored() {
@@ -100,6 +91,11 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
 
         public double lost() {
             return items.stream().mapToDouble(TownProductionReportItem::lost).sum();
+        }
+
+        // EMPTY can initialize before the enclosing building's codec during save loading.
+        private static double sanitize(double value) {
+            return Double.isFinite(value) ? Math.max(0.0, value) : 0.0;
         }
     }
 

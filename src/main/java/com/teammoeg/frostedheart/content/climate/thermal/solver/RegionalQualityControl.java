@@ -146,7 +146,7 @@ public final class RegionalQualityControl {
     }
     private boolean recoveryEligible(ThermalRegion region, long tick) {
         return recovery == null && tick - region.sampleTick() <= 20 && !region.pending.hasAggregatedInput()
-                && (region.job == null || !region.job.cancelled);
+                && (region.job == null || !region.job.cancelled) && runtime.finePreparationFits(region.scope);
     }
     void minimum(ThermalRegion region, String reason) {
         boolean first = !minimumPending(region);
@@ -201,7 +201,7 @@ public final class RegionalQualityControl {
                 if (ThermalDiagnostics.TRACE && capacity) FHMain.LOGGER.info("THERMAL_CANDIDATE_MEMORY,regionId={},cause={}", region.id, build.failure.toString());
             } else if (build.ready) region.workPolicy.built(region.solver.gridStep(), cost);
         } else if (item instanceof RegionJob job && !job.qualityOnly()
-                && region.solver.gridStep() == 1 && region.workCoarseningUseful() && runtime.receivedThrough() - region.sampleTick() > 20
+                && region.solver.gridStep() == 1 && runtime.receivedThrough() - region.sampleTick() > 20
                 && cost > 2 * item.workAllowance) minimum(region, "advance_work");
     }
     void minimumCandidate(ThermalRegion region, String reason) {

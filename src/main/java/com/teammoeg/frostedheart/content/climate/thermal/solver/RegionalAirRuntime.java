@@ -272,10 +272,8 @@ public final class RegionalAirRuntime implements MaterialStateAccess {
         if (!replacement.minimumQuality()) return false;
         if (!job.transportAdmitted && solverRetention != null) {
             job.transportBytes = replacement.minimumState().transportBackingBytes();
-            if (job.prepaidWorkspace) {
-                long required = Math.max(job.reservation.bytes(), job.workspaceFloor + job.transportBytes);
-                job.reservation.completeResize(required);
-            }
+            long required = Math.max(job.reservation.bytes(), job.workspaceFloor + job.transportBytes);
+            job.reservation.completeResize(required);
             job.transportAdmitted = true;
         }
         Runnable accept = () -> {
@@ -600,6 +598,17 @@ public final class RegionalAirRuntime implements MaterialStateAccess {
         return preparation;
     }
 
+    private void trackPendingRetention(ThermalRegion region) {
+        // This listener lives as long as the region. Creating it inside
+        // RebuildPreparation would also retain that finished preparation's
+        // parent regions, frozen geometry and temporary build state.
+        region.pending.retentionListener(delta -> {
+            retainedPendingBytes += delta; markChunkProgress(region);
+            boolean pending = region.pending.hasPending();
+            if (pending != region.countedPending) { pendingRegionCount += pending ? 1 : -1; region.countedPending = pending; }
+        });
+    }
+
     /** One local build owner prepares its partition and children before any assembly helper is offered. */
     public final class RebuildPreparation implements AutoCloseable {
         final FrozenSources bindings;
@@ -628,6 +637,8 @@ public final class RegionalAirRuntime implements MaterialStateAccess {
             this.bindings = bindings; this.change = change; this.view = view; targetTick = tick;
             this.scratch = scratch; rebuildBoundary = boundary;
             parentFrames = new ParentFrames(scratch);
+            var diagnostics = ThermalDiagnostics.observer;
+            if (diagnostics != null) diagnostics.preparationCreated(this);
         }
         public Rebuild result() {
             if (result == null) throw new IllegalStateException("Region preparation is unfinished");
@@ -799,9 +810,26 @@ public final class RegionalAirRuntime implements MaterialStateAccess {
                 nextRegions.add(old);
                 return;
             }
+            // Select the bounded model before copying parent fine fields or
+            // allocating layouts that cannot reach graph admission anyway.
+            if (automatic && !continuingParents && gridStep == 1 && !finePreparationFits(scope)) gridStep = 4;
             for (var parent : previous) if (!continuingParents && parent.sampleTick() != targetTick)
                 throw new IllegalStateException("Regional handoff is not aligned: region=" + parent.id
-                        + ",sample=" + parent.sampleTick() + ",boundary=" + targetTick);
+                        + ",sample=" + parent.sampleTick() + ",boundary=" + targetTick
+                        + ",held=" + parent.blockedAfterTick + ",executionLimit=" + executionLimit(parent)
+                        + ",qualityOnly=" + qualityOnly + ",affected=" + affected
+                        + ",oldStep=" + (old == null ? -1 : old.solver.gridStep()) + ",newStep=" + gridStep
+                        + ",scopeDifference=" + scope.inputDifferenceSummary(old == null ? null : old.scope)
+                        + ",portsEqual=" + (old != null && scope.ports.equals(old.scope.ports))
+                        + ",sourceResponse=" + (old != null && old.solver.hasPendingSourceResponse())
+                        + ",mixingChanged=" + scope.mixingChanged(bindings)
+                        + ",changedFragments=" + change.fragmentIndexes().length
+                        + ",changedPages=" + Arrays.toString(Arrays.stream(change.pageWrites)
+                                .map(write -> write.page.handle.sectionKey() + ":generation=" + write.page.handle.lifecycleGeneration()
+                                        + ":retirement=" + write.retirement).toArray())
+                        + ",touchesBoundary=" + (rebuildBoundary == null || boundaryTouches(parent, rebuildBoundary))
+                        + ",parentSections=" + parent.scope.sections
+                        + ",changedSections=" + (rebuildBoundary == null ? "all" : rebuildBoundary.sections()));
             boolean exclusivePrevious = old != null && !retained.contains(old);
             long id = exclusivePrevious ? old.id : nextRegionId++;
             if (TRACE) FHMain.LOGGER.info("THERMAL_REGION_REBUILD_CAUSE,targetTick={},regionId={},oldRegionId={},parentCount={},airParentCount={},previousAlreadyClaimed={},cells={},oldCells={},oldAirCoefficients={},dependencyRevisionChanged={},sourceResponsePending={},mixingChanged={},{}",
@@ -851,11 +879,7 @@ public final class RegionalAirRuntime implements MaterialStateAccess {
                 if (scope.containsSection(entry.getLongKey())) solver.restore(entry.getLongKey(), entry.getValue());
             ThermalRegion region = new ThermalRegion(id, old == null ? 1 : old.epoch + 1, scope, solver);
             region.buildWorkAllowance = workAllowance(region.workWeight(), selectionWeight);
-            region.pending.retentionListener(delta -> {
-                retainedPendingBytes += delta; markChunkProgress(region);
-                boolean pending = region.pending.hasPending();
-                if (pending != region.countedPending) { pendingRegionCount += pending ? 1 : -1; region.countedPending = pending; }
-            });
+            trackPendingRetention(region);
             region.parents = List.copyOf(previous);
             if (automatic || old != null && old.workPolicy != null) {
                 region.workPolicy = old != null && old.workPolicy != null
@@ -887,7 +911,7 @@ public final class RegionalAirRuntime implements MaterialStateAccess {
             if (closed) return; closed = true;
             if (result != null) return; // The returned Rebuild has taken these owners.
             for (var region : prepared) {
-                region.solver.abortPreparedRebuild(); region.pending.clear(); region.pending.retireRetention(); region.releaseMinimumWorkspace();
+                region.solver.abortPreparedRebuild(); region.pending.clear(); region.pending.retireRetention();
             }
             prepared.clear(); nextRegions.clear();
             parentFrames.close();
@@ -1129,7 +1153,7 @@ public final class RegionalAirRuntime implements MaterialStateAccess {
     }
     private void unregisterRegion(ThermalRegion region) {
         if (region.minimumInputs != null) { retainedMappingBytes -= region.minimumInputs.retainedBytes(); region.minimumInputs = null; }
-        region.releaseMinimumWorkspace(); materialControlRegions.remove(region);
+        materialControlRegions.remove(region);
         region.materialControls = null; region.materialRestoration = null; region.changedMaterials.clear();
         if (!region.installed) return;
         installedWorkWeight -= region.workWeight();
@@ -1288,6 +1312,14 @@ public final class RegionalAirRuntime implements MaterialStateAccess {
         return installedCoefficientCount;
     }
     List<ThermalRegion> observedRegions() { return regions; }
+    boolean finePreparationFits(Scope scope) {
+        if (inputBudget == null) return true;
+        long bytes = Math.addExact(CoupledThermalOperator.pairwiseGraphPreparationBytes(
+                scope.fineVolumes, scope.fineEdges, scope.airComponents),
+                CoupledThermalOperator.pairwiseSortScratchBytes(1));
+        bytes = Math.addExact(bytes, Math.addExact(64L, Math.multiplyExact(scope.materialContactCount, 16L)));
+        return inputBudget.canReserve(bytes);
+    }
     long capacityRevision() { return inputBudget == null ? 0 : inputBudget.capacityRevision(); }
     void whenCapacityChanges(long revision, Runnable wake) { if (inputBudget != null) inputBudget.whenCapacityChanges(revision, wake); }
     void cancelCapacityWait(Runnable wake) { if (inputBudget != null) inputBudget.cancelCapacityWait(wake); }
@@ -1640,12 +1672,10 @@ public final class RegionalAirRuntime implements MaterialStateAccess {
         if (job.qualityOnly()) {
             if (job.reservation == null) {
                 long bytes = region.solver.minimumTransportBytes() + 4096;
-                if (region.minimumWorkspace == null) region.minimumWorkspace = inputBudget.reserveCompletion(
-                        MinimumRegionStep.workspaceBytes(region.accepted().field()));
-                var workspace = region.minimumWorkspace;
+                var workspace = inputBudget.reserveCompletion(MinimumRegionStep.workspaceBytes(region.accepted().field()));
                 job.workspaceFloor = workspace.bytes();
                 if (workspace.bytes() < bytes) workspace.completeResize(bytes);
-                job.reservation = workspace; job.prepaidWorkspace = true;
+                job.reservation = workspace;
                 job.account = ThermalWorkBudget.newAccount();
             }
             job.inputsReady = true;
@@ -1660,18 +1690,10 @@ public final class RegionalAirRuntime implements MaterialStateAccess {
             int records = heatInputs.records(region.id);
             long bytes = RegionalQuerySnapshot.Preparation.backingBytes(region.template) + MinimumThermalModel.projectionBytes()
                     + 4096L + 1024L * records;
-            // A private fine build can select minimum after its initial metadata
-            // preparation. Acquire that installed model's slot on first use too.
-            if (minimum && region.minimumWorkspace == null) region.minimumWorkspace = inputBudget.reserveCompletion(
-                    MinimumRegionStep.workspaceBytes(region.accepted().field()));
-            if (minimum) region.minimumWorkspace.completeResize(Math.max(region.minimumWorkspace.bytes(),
-                    MinimumRegionStep.workspaceBytes(region.accepted().field())));
-            var reservation = minimum ? region.minimumWorkspace : inputBudget.tryReserve(bytes);
-            job.prepaidWorkspace = minimum;
-            if (reservation == null && region.minimumWorkspace != null && region.minimumWorkspace.bytes() >= bytes
-                    && region.solver.inputArraysFit(records)) {
-                reservation = region.minimumWorkspace; job.prepaidWorkspace = true;
-            }
+            // The bounded numerical arrays belong to this executing job. Idle
+            // regions retain their published state, not a permanent scratch allowance.
+            var reservation = minimum ? inputBudget.reserveCompletion(MinimumRegionStep.workspaceBytes(region.accepted().field()))
+                    : inputBudget.tryReserve(bytes);
             if (reservation == null) {
                 if (!minimum && ThermalWorkBudget.automatic()) quality.resourcePressure(region);
                 else job.waiting = RegionWork.Wait.MEMORY;
@@ -1816,8 +1838,7 @@ public final class RegionalAirRuntime implements MaterialStateAccess {
             this.chunk = chunk; this.regions = regions; this.purpose = purpose;
         }
         boolean waitsForJob(ThermalRegion region) {
-            return region.job != null && (purpose == RegionalCheckpoint.Purpose.UNLOAD
-                    || !region.changedMaterials.isEmpty() || region.materialControls != null);
+            return region.job != null && purpose == RegionalCheckpoint.Purpose.UNLOAD;
         }
     }
     private final IdentityHashMap<Object, SnapshotHold> snapshots = new IdentityHashMap<>();
@@ -1844,6 +1865,10 @@ public final class RegionalAirRuntime implements MaterialStateAccess {
     public boolean snapshotReady(Object identity) {
         var held = snapshots.get(identity);
         if (held == null) return false;
+        // Ordinary persistence uses Accepted plus all unconsumed J. Main projects
+        // world material mutations into that immutable frame during serialization;
+        // it must not cancel or wait for a running numerical candidate to save.
+        if (held.purpose == RegionalCheckpoint.Purpose.SAVE) return true;
         boolean ready = true;
         for (var region : held.regions) {
             if (held.waitsForJob(region)) { work.cancel(region.job); ready = false; }
@@ -1926,7 +1951,7 @@ public final class RegionalAirRuntime implements MaterialStateAccess {
         heatInputs.clear();
         quality.clear();
         routingOwners.clear();
-        for (var region : regions) { region.pending.clear(); region.minimumInputs = null; region.releaseMinimumWorkspace(); }
+        for (var region : regions) { region.pending.clear(); region.minimumInputs = null; }
         retainedMappingBytes = 0;
         if (inputRetention != null) { inputRetention.close(); inputRetention = null; }
     }

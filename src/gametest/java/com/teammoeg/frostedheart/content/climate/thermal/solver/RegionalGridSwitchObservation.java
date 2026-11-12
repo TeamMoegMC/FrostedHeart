@@ -5,6 +5,8 @@ import com.teammoeg.frostedheart.content.climate.thermal.query.QueryPublication;
 import com.teammoeg.frostedheart.content.climate.thermal.query.RegionalQuerySnapshot;
 import com.teammoeg.frostedheart.content.climate.thermal.persistence.minecraft.AirFieldCheckpoint;
 import com.teammoeg.frostedheart.content.climate.thermal.source.ThermalSourceLedger;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.ThermalMemoryBudget;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import java.util.List;
 import net.minecraft.core.BlockPos;
 
@@ -18,6 +20,7 @@ public final class RegionalGridSwitchObservation {
     private static double maximumBackgroundRangeC;
     private static double maximumCoarseningEnergyErrorJ;
     private static int maximumCells;
+    private static int blockedRecoveryChecks;
     private static String failure;
     public static synchronized void arm(BlockPos changing, BlockPos unchanged) {
         target = changing.above().immutable(); control = unchanged.above().immutable(); engine = null;
@@ -25,14 +28,33 @@ public final class RegionalGridSwitchObservation {
         maximumRecoveryJumpC = maximumCoarseningJumpC = maximumCheckpointErrorC = 0;
         maximumBackgroundRangeC = 0; maximumCells = 0;
         maximumCoarseningEnergyErrorJ = 0;
+        blockedRecoveryChecks = 0;
     }
     public static synchronized void request(int step) { requested = step; requestSent = false; }
-    public static synchronized void engine(RegionalAirRuntime solver, ThermalSourceLedger sources, QueryPublication publication) {
+    public static synchronized void engine(RegionalAirRuntime solver, ThermalSourceLedger sources, QueryPublication publication,
+            ThermalMemoryBudget.Reservation backing) {
         if (target == null || solver == null || failure != null || engine != null && engine != solver) return;
         if (requested != 0 && !requestSent) {
             requestSent = solver != null && solver.qualityControl().requestAt(
                     target.getX(), target.getY(), target.getZ(), requested == 1 ? RegionalQualityControl.Model.FINE : RegionalQualityControl.Model.MINIMUM);
             if (requestSent) engine = solver;
+            if (requestSent && requested == 1 && blockedRecoveryChecks == 0) {
+                // Exercise the actual recovery owner while accounting is full,
+                // then return the pressure before ordinary real-room work runs.
+                try (var pressure = backing.reserveCompletionSibling(
+                        FHConfig.COMMON.THERMAL_RUNTIME.thermalMemoryTargetMiB.get() * 1024L * 1024L)) {
+                    var region = at(solver.observedRegions(), target);
+                    if (solver.finePreparationFits(region.scope)) throw new AssertionError("Full budget admitted fine preparation");
+                    for (int check = 0; check < 1000; check++) {
+                        var candidate = solver.qualityControl().next();
+                        if (candidate != null) {
+                            solver.qualityControl().abandon(candidate);
+                            throw new AssertionError("Full budget started a quality candidate: " + candidate);
+                        }
+                        blockedRecoveryChecks++;
+                    }
+                } catch (RuntimeException | AssertionError problem) { failure = problem.toString(); }
+            }
         }
     }
     static synchronized void installing(List<ThermalRegion> old, List<ThermalRegion> next) {
@@ -123,6 +145,7 @@ public final class RegionalGridSwitchObservation {
     public static synchronized int maximumCells() { return maximumCells; }
     public static synchronized double maximumBackgroundRangeC() { return maximumBackgroundRangeC; }
     public static synchronized String summary() { return "completed=" + completed + ",checkpoints=" + checkpoints
+            + ",blockedRecoveryChecks=" + blockedRecoveryChecks
             + ",maxCoarseningJumpC=" + maximumCoarseningJumpC + ",maxRecoveryJumpC=" + maximumRecoveryJumpC
             + ",maxCheckpointErrorC=" + maximumCheckpointErrorC + ",maximumBackgroundRangeC=" + maximumBackgroundRangeC
             + ",maximumCoarseningEnergyErrorJ=" + maximumCoarseningEnergyErrorJ

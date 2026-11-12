@@ -1,0 +1,72 @@
+// Opt-in real-client launch export; normal runs and user saves are untouched.
+gradle.beforeProject { project ->
+    project.afterEvaluate {
+        def role=project.providers.gradleProperty('irRole').getOrElse('fast')
+        def root=project.file(project.providers.gradleProperty('irRoot').getOrElse('build/infrared-network-e2e'))
+        def runtime=new File(root,role)
+        def client=role!='server'
+        // Client catalogue providers also have mandatory network channels on dedicated servers.
+        if(!client)project.configurations.clientRuntimeOnly.allDependencies.findAll {
+            it.name in ['immersive-industry-542053','stone-age-1.20.1','charcoal-pit-reloaded-534602','kubejs-238086','rhino-forge']
+        }.each { project.dependencies.add('serverRuntimeOnly',project.fg.deobf(it.copy())) }
+        def run=project.minecraft.runs.getByName(client?'client':'server')
+        run.workingDirectory runtime
+        run.property 'frostedheart.irE2eRoot',root.absolutePath
+        run.property(client?'frostedheart.irE2eClient':'frostedheart.irE2eServer'),'true'
+        run.property 'frostedheart.irE2eRole',role
+        run.property 'frostedheart.irE2ePort',client&&role=='slow'?'25574':'25573'
+        run.property 'forge.logging.console.level','info'
+        run.mods { frostedheart { source project.sourceSets.gameTest } }
+        def taskName=client?'runClient':'runServer'
+        project.tasks.matching { it.name == taskName }.configureEach {
+            dependsOn project.tasks.named('compileGameTestJava')
+            maxHeapSize=client?'2g':'1536m'
+            jvmArgs '-XX:ActiveProcessorCount=4'
+            doLast { launchTask ->
+                // MinecraftRunTask normally expands these immediately before JavaExec.
+                // Export the same prepared invocation without starting another Gradle-owned JVM.
+                def config=getRunConfig().get()
+                def generator=launchTask.class.classLoader.loadClass('net.minecraftforge.gradle.common.util.runs.RunConfigGenerator')
+                def tokens=generator.configureTokensLazy(project,config,
+                    generator.mapModClassesToGradle(project,config),
+                    getMinecraftArtifacts().files,getRuntimeClasspathArtifacts().files)
+                launchTask.args(generator.getArgsStream(config,tokens,false).toArray())
+                def preparedJvm=config.getJvmArgs().collect { config.replace(tokens,it) }
+                if(client)preparedJvm.addAll(launchTask.getAdditionalClientArgs().get().collect { config.replace(tokens,it) })
+                preparedJvm.add('-XX:ActiveProcessorCount=4')
+                launchTask.setJvmArgs(preparedJvm)
+                config.getEnvironment().each { key,value -> launchTask.environment(key,config.replace(tokens,value)) }
+                config.getProperties().each { key,value -> launchTask.systemProperty(key,config.replace(tokens,value)) }
+                config.getAllSources().each { source -> launchTask.classpath(source.runtimeClasspath) }
+                def launchArgs=new ArrayList(launchTask.getArgs())
+                def filtered=[]
+                for(int i=0;i<launchArgs.size();i++) {
+                    def value=launchArgs[i].toString()
+                    if(value in ['--username','--uuid','--width','--height']) { i++;continue }
+                    if(value.startsWith('-uuid '))continue
+                    filtered.add(value)
+                }
+                if(client)filtered.addAll(['--username',role=='slow'?'IRSlow':'IRFast','--uuid',
+                    UUID.nameUUIDFromBytes(('OfflinePlayer:'+(role=='slow'?'IRSlow':'IRFast')).getBytes('UTF-8')).toString(),
+                    '--width','854','--height','480'])
+                else if(!filtered.contains('--nogui'))filtered.add('--nogui')
+                launchTask.setArgs(filtered)
+                def env=[:]
+                ['MOD_CLASSES','MCP_MAPPINGS','FML_EARLY_WINDOW_DARK'].each { key ->
+                    if(launchTask.environment.containsKey(key))env[key]=launchTask.environment[key].toString()
+                }
+                def command=[launchTask.javaLauncher.get().executablePath.asFile.absolutePath]+launchTask.getAllJvmArgs()+preparedJvm+['-cp',launchTask.classpath.asPath,launchTask.mainClass.get()]+launchTask.getArgs()
+                root.mkdirs()
+                new File(root,'launch-'+role+'.json').text=groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(
+                    [command:command,environment:env,workingDirectory:runtime.absolutePath]))
+            }
+        }
+        gradle.taskGraph.whenReady {
+            project.tasks.matching { it.name == taskName }.each { task ->
+                def prepared=task.actions.findAll { !it.class.name.endsWith('StandardTaskAction') }
+                if(prepared.size()==task.actions.size())throw new GradleException('Expected JavaExec action for launch export')
+                task.setActions(prepared)
+            }
+        }
+    }
+}

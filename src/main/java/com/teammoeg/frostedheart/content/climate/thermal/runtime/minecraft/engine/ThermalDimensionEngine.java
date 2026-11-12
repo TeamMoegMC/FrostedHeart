@@ -215,9 +215,10 @@ public final class ThermalDimensionEngine implements AutoCloseable {
     private long selectionIntake = -1, selectionCommit = -1, selectionTopology = -1;
     private long selectionRouting = -1, selectionSources = -1;
     private int selectionRemaining;
-    private record BoundaryCandidate(TopologyInbox.Input input, long topology, RegionalContinuationBoundary boundary,
+    private record BoundaryCandidate(TopologyInbox.Input input, long topology, long announcedSequence, RegionalContinuationBoundary boundary,
             ThermalMemoryBudget.Reservation reservation) { }
     private final it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap<BoundaryCandidate> pendingBoundaries = new it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap<>();
+    private final LongOpenHashSet announcedGeometrySections = new LongOpenHashSet();
     private Runnable capacityContinuation;
 
     private final Object intakeLock = new Object();
@@ -339,16 +340,23 @@ public final class ThermalDimensionEngine implements AutoCloseable {
     }
     /** One control stage, never a physical catch-up cut. Helpers return through their ordinary cleanup. */
     private boolean processSnapshotCommand(long deadline) {
+        return processSnapshotCommand(deadline, true);
+    }
+    /** Called only under mailbox ownership while no coordinator turn is executing. */
+    public boolean processCheckpointCommandOnMain() {
+        return snapshotCommandsReady() && processSnapshotCommand(System.nanoTime() + 2_000_000L, false);
+    }
+    private boolean processSnapshotCommand(long deadline, boolean allowNumericalWork) {
         SnapshotRequest request;
         synchronized (intakeLock) {
             if (activeSnapshot == null) activeSnapshot = snapshotRequests.pollFirst();
             request = activeSnapshot;
         }
         if (request == null) return false;
-        try { return advanceSnapshot(request, deadline); }
+        try { return advanceSnapshot(request, deadline, allowNumericalWork); }
         finally { checkpointControlReady = snapshotCommandsReady(); }
     }
-    private boolean advanceSnapshot(SnapshotRequest request, long deadline) {
+    private boolean advanceSnapshot(SnapshotRequest request, long deadline, boolean allowNumericalWork) {
         if (request.stage == SnapshotStage.REQUESTED && request.finished == null) {
             regional.beginSnapshot(request, request.chunk, request.purpose); request.stage = SnapshotStage.QUIESCING;
         }
@@ -378,8 +386,13 @@ public final class ThermalDimensionEngine implements AutoCloseable {
         if (request.stage == SnapshotStage.SEALED) return false;
         if (request.stage == SnapshotStage.QUIESCING) {
             if (!regional.snapshotReady(request)) {
-                if (regional.hasReadyWork()) regional.runWorkRound(deadline);
-                return true;
+                if (allowNumericalWork && regional.hasReadyWork()) {
+                    // Unload cleanup also services independent numerical jobs.
+                    // Announce newly offered geometry before accepting any of them.
+                    if (boundarySequence != offeredSequence) refreshBoundaryHolds();
+                    regional.runWorkRound(deadline);
+                }
+                return allowNumericalWork;
             }
             request.stage = SnapshotStage.CAPTURING;
         }
@@ -511,8 +524,11 @@ public final class ThermalDimensionEngine implements AutoCloseable {
     private void refreshBoundaryHoldsLocked() {
         regional.resetBoundaryHolds();
         oldestStructureTick = Long.MAX_VALUE;
+        announcedGeometrySections.clear();
+        topologyInputs.forEachPending(input -> TopologyUpdatePlanner.collectBoundarySeeds(input, announcedGeometrySections));
         var groups = new java.util.LinkedHashMap<ControlOrder, BoundaryGroup>();
         for (long section : topologyInputs.pendingSections()) {
+            announcedGeometrySections.add(section);
             var next = topologyInputs.peek(section);
             groups.computeIfAbsent(new ControlOrder(next.batch().targetTick(), next.batch().sequence()), ignored -> new BoundaryGroup())
                     .add(next.batch(), next.mixing());
@@ -523,6 +539,8 @@ public final class ThermalDimensionEngine implements AutoCloseable {
             oldestStructureTick = Math.min(oldestStructureTick, work.input.targetTick());
         }
         topologyIngress.forEachPending(fragment -> {
+                announcedGeometrySections.add(fragment.section());
+                TopologyUpdatePlanner.collectBoundarySeeds(fragment.payload(), announcedGeometrySections);
                 var group = groups.computeIfAbsent(new ControlOrder(fragment.boundaryTick(), fragment.payload().sequence()),
                         ignored -> new BoundaryGroup());
                 group.add(fragment.payload(), LongSets.EMPTY_SET);
@@ -535,6 +553,10 @@ public final class ThermalDimensionEngine implements AutoCloseable {
             var group = groups.computeIfAbsent(new ControlOrder(tick, sequence), ignored -> new BoundaryGroup());
             sourceBindings.collectMixingFootprint(source, group.mixing);
         });
+        // This primitive index retains its peak table capacity. Charge that
+        // capacity once; it holds no Page, candidate, or historical geometry.
+        geometryRetention.completeResize(Math.max(geometryRetention.bytes(),
+                4096 + 258L * 256 + 64L * announcedGeometrySections.size()));
         for (var entry : groups.entrySet()) {
             var order = entry.getKey();
             var group = entry.getValue();
@@ -627,9 +649,11 @@ public final class ThermalDimensionEngine implements AutoCloseable {
         // closure before freezing geometry, instead of appending a small halo
         // after a route closure that never saw the source change.
         boolean changesRoutes = structural || !mixing.isEmpty();
-        var boundary = topologyPlan.continuationBoundary(sections, changesRoutes);
+        // Announced Pages can connect two currently separate captured islands.
+        // Include them before allowing either island to pass the older boundary.
+        var boundary = topologyPlan.continuationBoundary(sections, changesRoutes, announcedGeometrySections);
         for (var work : geometryWorks) if (overlaps(work.boundary, boundary))
-            boundary = boundary.including(work.planner.continuationBoundary(sections, changesRoutes).sections());
+            boundary = boundary.including(work.planner.continuationBoundary(sections, changesRoutes, announcedGeometrySections).sections());
         return regional.expandBoundary(sourceBindings.includeBoundOutlets(boundary));
     }
 
@@ -653,11 +677,11 @@ public final class ThermalDimensionEngine implements AutoCloseable {
         }
         var diagnostics = com.teammoeg.frostedheart.content.climate.thermal.solver.ThermalDiagnostics.observer;
         if (diagnostics != null) diagnostics.engine(regional, arena, sources, queries, airReservation, topologyInputs, offeredThrough);
-        if (boundarySequence != offeredSequence) refreshBoundaryHolds();
         if (snapshotCommandsReady() && processSnapshotCommand(deadline)) {
             reconcileGeometryBacking();
             return;
         }
+        if (boundarySequence != offeredSequence) refreshBoundaryHolds();
         var observation = jdk.jfr.FlightRecorder.isInitialized() ? new RoundObservation() : null;
         if (observation != null) {
             observation.sequence = lastBatchSequence; observation.intakeTick = transportThrough;
@@ -679,6 +703,10 @@ public final class ThermalDimensionEngine implements AutoCloseable {
             if (ready) { selectedLane = lane; nextWorkLane = (lane + 1) & 3; break; }
         }
         long laneStarted = System.nanoTime();
+        // Boundary discovery/readiness may consume the original deadline. The
+        // selected owner still needs a usable slice; the pool charges the entire
+        // round, including this prelude, to the shared service allowance.
+        deadline = laneStarted + 2_000_000L;
         switch (selectedLane) {
             case 0 -> { receiveRegionalInput(deadline); lastSealedThrough = transportThrough; }
             case 1 -> regional.runWorkRound(deadline);
@@ -755,7 +783,11 @@ public final class ThermalDimensionEngine implements AutoCloseable {
     private boolean geometryCanStart() {
         int active = 0;
         for (var work : geometryWorks) if (work.phase.controls() || work.scratch != null || work.resetting) active++;
-        return active < com.teammoeg.frostedheart.content.climate.thermal.runtime.async.ThermalWorkerPool.shared().parallelism();
+        // Over-target structural work must still finish (including retirement),
+        // but it must not multiply its completion-space overlap across workers.
+        int maximum = airBudget.canReserve(1)
+                ? com.teammoeg.frostedheart.content.climate.thermal.runtime.async.ThermalWorkerPool.shared().parallelism() : 1;
+        return active < maximum;
     }
 
     private void startGeometryWork(long deadline) {
@@ -779,27 +811,36 @@ public final class ThermalDimensionEngine implements AutoCloseable {
             if (input == null) continue;
             var cached = pendingBoundaries.get(section);
             long topology = solver.structuralVersion();
-            if (cached == null || cached.input != input || cached.topology != topology) {
+            if (cached == null || cached.input != input || cached.topology != topology || cached.announcedSequence != boundarySequence) {
                 if (cached != null) { pendingBoundaries.remove(section); cached.reservation.close(); }
-                long estimated = 4096L + sourceBindings.frozenPreparationBytes() + topologyPlan.continuationBoundaryBytes(input.batch())
-                        + 1024L * input.mixing().size();
+                long estimated = 4096L + topologyPlan.continuationBoundaryBytes(input.batch())
+                        + 1024L * input.mixing().size() + 128L * announcedGeometrySections.size();
                 var allowance = airBudget.reserveCompletion(estimated);
                 closures++;
                 var boundary = inputBoundary(input.batch(), input.mixing()).including(new LongOpenHashSet(new long[] {section}));
-                cached = new BoundaryCandidate(input, topology, boundary, allowance); pendingBoundaries.put(section, cached);
+                cached = new BoundaryCandidate(input, topology, boundarySequence, boundary, allowance); pendingBoundaries.put(section, cached);
             }
             var boundary = cached.boundary;
-            cached.reservation.completeResize(4096L + 64L * boundary.sectionCount() + sourceBindings.frozenPreparationBytes());
+            cached.reservation.completeResize(4096L + 64L * boundary.sectionCount());
             boolean occupied = false;
             for (var work : geometryWorks) if (overlaps(work.boundary, boundary)) { occupied = true; break; }
             if (occupied) continue;
+            // A newly captured Page may have no region to hold yet. Preserve
+            // physical input order across the entire closure before creating it.
+            boolean earlierGeometry = false;
+            for (long member : boundary.sections()) if (Math.min(pendingInputBoundary(member), topologyInputs.firstTick(member))
+                    < input.batch().targetTick()) { earlierGeometry = true; break; }
+            if (earlierGeometry) continue;
             if (!boundarySourcesReady(boundary, input.batch().targetTick(), input.batch().sequence()) || !regional.boundaryReady(boundary, input.batch().targetTick(), input.batch().sequence())) continue;
-            var selected = topologyInputs.freeze(boundary.sections(), input.batch().targetTick(), input.batch().sequence());
-            if (!selected.isEmpty()) {
-                pendingBoundaries.remove(section);
-                geometryWorks.addLast(new GeometryWork(selected, boundary, cached.reservation));
-                selectionIntake = -1;
-                return;
+            synchronized (intakeLock) {
+                if (boundarySequence != offeredSequence) { selectionIntake = -1; return; }
+                var selected = topologyInputs.freeze(boundary.sections(), input.batch().targetTick(), input.batch().sequence());
+                if (!selected.isEmpty()) {
+                    pendingBoundaries.remove(section);
+                    geometryWorks.addLast(new GeometryWork(selected, boundary, cached.reservation));
+                    selectionIntake = -1;
+                    return;
+                }
             }
         }
         if (topologyInputs.isEmpty()) selectionRemaining = 0;
@@ -889,6 +930,9 @@ public final class ThermalDimensionEngine implements AutoCloseable {
             kind = qualityOwner == null ? Kind.STRUCTURE : qualityOwner.target() == RegionalQualityControl.Model.FINE
                     ? Kind.QUALITY_RECOVERY : Kind.QUALITY_DOWN;
             this.boundaryReservation = boundaryReservation;
+            // Waiting candidates own only their boundary. Charge a source snapshot
+            // once, immediately before the selected work actually creates it.
+            boundaryReservation.completeResize(4096L + 64L * boundary.sectionCount() + sourceBindings.frozenPreparationBytes());
             var first = inputs.get(0); emitters = sourceBindings.freeze(boundary.sections(), recovering() ? offeredThrough : first.batch().targetTick());
             input = TopologyInbox.combine(inputs, first.batch().sequence(), first.batch().targetTick());
             for (var entry : inputs) mixing.addAll(entry.mixing());

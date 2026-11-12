@@ -1081,8 +1081,6 @@ public final class ContinuousAirSolver {
     }
 
     /** Newly retained scratch moves from this input's allowance to installed solver backing. */
-    boolean inputArraysFit(int records) { return loadEvents.length >= 2L * records && loadMergeScratch.length >= 2L * records; }
-
     void reserveInputArrays(int records, ThermalMemoryBudget.Reservation input, ThermalMemoryBudget.Reservation retained) {
         int count = Math.multiplyExact(records, 2);
         long added = 0, old = 0;

@@ -28,6 +28,7 @@ import com.teammoeg.chorda.client.cui.widgets.TextBox;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.town.TeamTown;
 import com.teammoeg.frostedheart.content.town.TownNamingModel;
+import com.teammoeg.frostedheart.content.town.client.TownClientUpdates;
 import com.teammoeg.frostedheart.content.town.network.TownNameEditRequestPacket;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
@@ -43,6 +44,8 @@ final class TownNameEditor extends TextBox {
     private boolean cancelPending;
     @Nullable
     private String pendingName;
+    private long pendingNameUpdateId;
+    private String cleanName = "";
 
     TownNameEditor(UILayer parent, Supplier<TeamTown> townSource) {
         super(parent);
@@ -71,15 +74,17 @@ final class TownNameEditor extends TextBox {
 
     @Override
     public void onEnterPressed() {
-        commit();
+        commit(true);
     }
 
     @Override
     public void render(GuiGraphics graphics, int x, int y, int width, int height, RenderingHint hint) {
         boolean focused = isFocused();
         if (!focused && focusedLastFrame) {
-            if (cancelPending) syncAuthoritativeName();
-            else commit();
+            if (cancelPending) {
+                pendingName = null;
+                syncAuthoritativeName();
+            } else commit(false);
             cancelPending = false;
         } else if (!focused) {
             syncAuthoritativeName();
@@ -103,13 +108,20 @@ final class TownNameEditor extends TextBox {
         tooltip.accept(Component.translatable("gui.frostedheart.town_manager.edit_town_name_hint"));
     }
 
-    private void commit() {
+    private void commit(boolean explicit) {
         TownNamingModel.normalizeTownName(getText()).ifPresent(name -> {
+            boolean edited = !name.equals(cleanName);
             setEditorText(name);
+            if (!explicit && !edited) return;
             TeamTown town = townSource.get();
-            if (name.equals(pendingName)) return;
-            if (pendingName == null && town != null && name.equals(town.getName())) return;
+            long updateId = TownClientUpdates.getNameUpdateId();
+            if (name.equals(pendingName) && updateId == pendingNameUpdateId) return;
+            if (town != null && name.equals(town.getName())) {
+                pendingName = null;
+                return;
+            }
             pendingName = name;
+            pendingNameUpdateId = updateId;
             FHNetwork.INSTANCE.sendToServer(new TownNameEditRequestPacket(name));
         });
     }
@@ -118,7 +130,7 @@ final class TownNameEditor extends TextBox {
         TeamTown town = townSource.get();
         if (town != null) {
             if (pendingName != null) {
-                if (!pendingName.equals(town.getName())) return;
+                if (TownClientUpdates.getNameUpdateId() == pendingNameUpdateId) return;
                 pendingName = null;
             }
             setEditorText(town.getName());
@@ -126,6 +138,8 @@ final class TownNameEditor extends TextBox {
     }
 
     private void setEditorText(String text) {
+        // Blur after Enter must not submit the same text over a newer remote rename.
+        cleanName = text;
         if (text.equals(getText())) return;
         setText(text, false);
     }

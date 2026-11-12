@@ -115,6 +115,13 @@ public final class TopologyInbox {
     }
     public long[] pendingSections() { return pages.keySet().toLongArray(); }
     public int pendingSectionCount() { return pages.size(); }
+    public void forEachPending(java.util.function.Consumer<ThermalInputBatch> visitor) {
+        for (var queue : pages.values()) {
+            if (queue.frozen != null) visitor.accept(queue.frozen.batch);
+            if (queue.older != null) visitor.accept(queue.older.batch);
+            for (var input : queue.recent) visitor.accept(input.batch);
+        }
+    }
     /** Coordinator-owned fair visitation; physical input ordering remains inside each PageQueue. */
     public long nextPendingSection() {
         long section = pages.firstLongKey(); pages.getAndMoveToLast(section); return section;

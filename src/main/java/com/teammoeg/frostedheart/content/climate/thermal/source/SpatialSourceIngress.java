@@ -263,8 +263,7 @@ public final class SpatialSourceIngress implements AutoCloseable {
                     var descriptor = owned != null ? owned.descriptor : offered == null ? null : offered.window.descriptor;
                     if (descriptor == null) continue;
                     for (int port = 0; port < descriptor.ports().length; port++) {
-                        var destination = bindings.checkpointTarget(descriptor, port).target();
-                        if (destination != null && ownsTarget.test(destination.position())) {
+                        if (bindings.airPortTargets(descriptor, port, ownsTarget)) {
                             through = Math.min(through, pendingThrough(source.id)); break;
                         }
                     }

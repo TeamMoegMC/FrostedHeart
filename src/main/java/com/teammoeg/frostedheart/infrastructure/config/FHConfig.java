@@ -26,7 +26,6 @@ import com.teammoeg.frostedheart.content.climate.FHTemperatureDifficulty;
 import com.teammoeg.frostedheart.content.climate.render.weather.WeatherRenderingMode;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.ClimateEventModel;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClockSource;
-import com.teammoeg.frostedheart.content.health.nutrition.NutritionScaleMigration;
 import com.teammoeg.frostedheart.content.town.model.TownModelParameters;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.biome.Biomes;
@@ -606,7 +605,6 @@ public class FHConfig {
 		}
 
 		public static class Nutrition {
-			public final ForgeConfigSpec.IntValue nutritionScaleVersion;
 			public final ForgeConfigSpec.ConfigValue<Double> waterReducingRate;
 			public final ForgeConfigSpec.IntValue weaknessEffectAmplifier;
 			public final ForgeConfigSpec.BooleanValue resetWaterLevelInDeath;
@@ -615,9 +613,6 @@ public class FHConfig {
 
 			Nutrition(ForgeConfigSpec.Builder builder) {
 				builder.push("Water & Nutrition");
-				nutritionScaleVersion = builder
-					.comment("Nutrition percentage-scale config version. Updated automatically.")
-					.defineInRange("nutritionScaleVersion", 1, 1, 2);
 				waterReducingRate = builder.comment("finalReducingValue = basicValue * waterReducingRate.(DoubleValue)")
 					.defineInRange("waterReducingRate", 1.0D, 0d, 1000D);
 				weaknessEffectAmplifier = builder
@@ -626,11 +621,11 @@ public class FHConfig {
 				resetWaterLevelInDeath = builder.comment("It decides if players' water level would reset in death.")
 					.define("resetWaterLevelInDeath", true);
 				nutritionConsumptionRate = builder
-					.comment("State points lost per hunger point. Version 1 values are migrated once on load.")
-					.defineInRange("nutritionConsumptionRate", 0.0025, 0, 1000);
+					.comment("Nutrition percentage points lost per hunger point.")
+					.defineInRange("nutritionConsumptionRate", 0.25, 0, 1000);
 				nutritionGainRate = builder
-					.comment("State points gained per effective hunger at a 100% food profile. Version 1 values are migrated once on load.")
-					.defineInRange("nutritionGainRate", 0.0025, 0, 40000);
+					.comment("Nutrition percentage points gained per effective hunger at a 100% food profile.")
+					.defineInRange("nutritionGainRate", 1.0, 0, 40000);
 				builder.pop();
 
 			}
@@ -2431,24 +2426,9 @@ public class FHConfig {
 				|| !ConfigMigrationSupport.isPersistent(config.getConfigData())) {
 			return;
 		}
-		boolean changed = migrateNutritionScale();
-		changed |= migrateResidentAttributeModel();
-		if (changed) {
+		if (migrateResidentAttributeModel()) {
 			((CommentedFileConfig) config.getConfigData()).save();
 		}
-	}
-
-	private static boolean migrateNutritionScale() {
-		if (SERVER.NUTRITION.nutritionScaleVersion.get() >= 2) {
-			return false;
-		}
-		NutritionScaleMigration.Rates rates = NutritionScaleMigration.fromVersionOne(
-				SERVER.NUTRITION.nutritionGainRate.get(),
-				SERVER.NUTRITION.nutritionConsumptionRate.get());
-		SERVER.NUTRITION.nutritionGainRate.set(rates.gainRate());
-		SERVER.NUTRITION.nutritionConsumptionRate.set(rates.consumptionRate());
-		SERVER.NUTRITION.nutritionScaleVersion.set(2);
-		return true;
 	}
 
 	private static boolean migrateResidentAttributeModel() {

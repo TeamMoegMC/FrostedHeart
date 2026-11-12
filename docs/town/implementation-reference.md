@@ -1,7 +1,8 @@
 # Town Implementation Reference
 
 > Status: Partial
-> Last verified: 2026-11-07 (assemble, 36 unified Forge cases, three real rendered building GUIs and sparse wire fields); 2026-10-23 (independent-process restart read)
+> Last verified: 2026-11-09 (39 unified Forge cases and real staffing/housing management client); 2026-11-07 (three real rendered building GUIs and sparse wire fields); 2026-10-23 (independent-process restart read)
+> Verification limit: The later 2026-11-09 editor-reply changes have source review only; the added `TownEditorClientChecks` have not been compiled or run.
 > Scope: State ownership, daily lifecycle, building extension, transport reservations, and town-data synchronization
 > Code anchors: `TeamTownData`, `TeamTown`, `ITownBuilding.CODEC`, `DataSyncCache`, `TownSync.ensureCurrent/requestFull`, `TownClientUpdates.pending`, `ObjectWriter.readWithType`, `TownTransportState`, `TownTransportSnapshot`, `TransportReservationModel`, `TransportEndpointKind`, `TransportAdmissionStatus`, `TownResourceUpdatePacket`, `WarehouseUpdatePacket`, `SimpleItemKey.writeTo/fromBuffer`, `WarehouseInterfaceBlockEntity`, `WarehouseInterfaceTransportView`
 
@@ -94,6 +95,8 @@ P2P bindings use a separate authority path: `TeamTown#bindOrRebindP2PTerminals`,
 ## Synchronization Invariants
 
 `ObservableTownMap`, object change listeners, and resource listeners feed independent persistence versions and the network change collection in `TeamTownData.DataSyncCache`. Server `tick()` prepares dirty warehouse topology before draining transport state, then flushes dirty keys through `TownBuildingUpdatePacket`, `TownResidentUpdatePacket`, and `TownResourceUpdatePacket`. Full `TeamTownDataS2CPacket` synchronization uses explicit PENDING/PRESENT/ABSENT states through TownSync; a connection needs a complete baseline before receiving management deltas.
+
+Building registration changes also synchronize the final authoritative staffing and housing plans, after the building records they reference. Only changed plans are sent; ordinary building updates retain authored order and guarantees without resending plans. Do not derive a missing staffing target from a newly received roster: the current employee count can already exceed a zero guarantee. The owning contract and recovery behavior are documented in [management views](persistence-and-runtime.md#管理视图).
 
 Building menus and the Mayor's Seal call `TownSync.ensureCurrent` to reuse a ready baseline. `requestFull` coalesces pending work until the server boundary; ordinary record changes no longer invalidate every player's baseline. `TownClientUpdates.currentTown` retains the current display during a same-holder refresh while `canApply`/`apply` suspend deltas until the new complete view installs. Ownership changes, confirmed absence and logout clear that display. Full-request reasons and the exceptional metadata path are documented in [the current synchronization contract](persistence-and-runtime.md#管理视图).
 

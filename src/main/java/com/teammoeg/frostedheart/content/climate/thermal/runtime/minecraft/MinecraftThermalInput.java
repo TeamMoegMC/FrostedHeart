@@ -759,10 +759,11 @@ public final class MinecraftThermalInput implements AutoCloseable {
         return true;
     }
 
-    /** Wait only for immutable input ownership, never for physical catch-up. */
+    /** Save committed state and pending input; main can take a queued control turn without running numerical work. */
     private <T> T awaitCheckpointCommand(CompletableFuture<T> future) {
         mailbox.controlChanged();
         while (!future.isDone()) {
+            if (mailbox.runCheckpointCommand()) continue;
             long revision = mailbox.progressRevision();
             drainCompletion();
             if (!future.isDone()) mailbox.awaitProgress(revision);
@@ -1122,6 +1123,12 @@ public final class MinecraftThermalInput implements AutoCloseable {
 
     static InfraredDisplayCache.Statistics infraredDisplayStatistics() {
         return infraredCapture == null ? new InfraredDisplayCache.Statistics(0, 0, 0) : infraredCapture.displayStatistics();
+    }
+
+    /** An open transfer must retain change tracking even when one WAN part takes many ticks. */
+    public static void keepInfraredTransferActive(ServerLevel level) {
+        MinecraftThermalInput input=active(level);
+        if(input!=null)input.queryPublication.noteInfraredRequest(level.getGameTime(),80);
     }
 
     public static double materialTemperature(ServerLevel level, BlockPos position) {

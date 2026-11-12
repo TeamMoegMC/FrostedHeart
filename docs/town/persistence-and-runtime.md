@@ -1,7 +1,7 @@
 # 队伍与城镇：保存、加载和运行边界
 
-- Status: Partial — 当前同步已通过36项统一Forge用例及三类建筑GUI真实渲染；独立进程迁移/重开沿用原记录，远程多客户端与长时规模性能未完整验证。
-- Last verified: 2026-11-07（同步、线格式、统一回归和本地真实GUI）；2026-10-23（独立进程最终read）
+- Status: Partial — 调度计划同步已通过39项统一Forge用例及岗位/住宅调度真实客户端验证；后续局部编辑回复修复仅做源码检查，待新增场景验证。三类建筑GUI与独立进程迁移/重开沿用原记录，远程多客户端与长时规模性能未完整验证。
+- Last verified: 2026-11-09（岗位/住宅计划同步、统一回归和真实镇长印章）；2026-11-07（三类建筑GUI）；2026-10-23（独立进程最终read）
 - Scope: 队伍组件、玩家居民模拟、AI 城镇、旧档迁移、自动经营和管理视图同步。
 - Code anchors: `CTeamDataManager`, `TeamDataHolder`, `PersistenceCoordinator`, `NbtRecordWriter`, `TownPersistenceAdapter`, `TownRuntimeManager`, `TownSettlement`, `AutoSettlementState`, `TownSync.ensureCurrent/requestFull`, `TownClientUpdates.pending/currentTown`, `ObjectWriter.readWithType`。
 
@@ -51,6 +51,12 @@ V1 `townSim` 显式为空表示没有模拟，不能从旧全局文件补回来�
 
 `TeamTownDataS2CPacket` 使用 PENDING / PRESENT / ABSENT 信封。完整经营数据和运输视图成功解码为候选后才安装。完整建筑视图使用 `MANAGEMENT_CODEC`，只包含可解释对象和 `buildingLoadIssues` 摘要；未解析原文仅留在磁盘。每连接先建立完整视图，之后才发送 `TownViewPacket` 增量或提示。库存、居民、普通建筑新增/修改/删除使用已有增量，脏键仍在同一服务器轮次合并。
 
+建筑注册变化调用 `TeamTownData.prepareAssignments`。`normalizeStaffingPlan` / `normalizeHousingPlan` 仅在权威计划实际变化时标记 `DataSyncCache.staffingPlanChanged` / `housingPlanChanged`；`TownSync.flushChanges` 先发送 `TownBuildingUpdatePacket`，再分别发送已有的 `TownStaffingPlanUpdatePacket` / `TownHousingPlanUpdatePacket`。同一轮多次建造、拆除或核心类型替换只同步最终计划；普通温度、产出报告和名册变化不重复发送未变计划。捕获异常保留相应脏标记，沿用现有恢复路径。
+
+客户端不能从新收到的建筑名册人数推断保障目标：建筑首次增量抵达时，服务端可能已经给它分配了 3 名员工，而玩家设置的保障人数仍为 0。漏发权威计划会使岗位和住宅页面的建筑列表为空或过期，即使居民住房、工作和配餐均已正确结算。只关闭重开镇长印章会复用同一完整视图基线，不能可靠修复；完整重连可重新取得当前计划。界面字段含义见 [岗位界面](town-model.md#224-玩家界面)。
+
+该回归的历史原因见 [2026-11-09 调查记录](../../diary/2026-11-09_19-51-00_town-scheduling-plan-sync-regression.md)：`763d8475b`（2026-10-26）将 getter 中的自动规范化迁到显式准备阶段，当时建拆建筑和打开 GUI 的全量同步仍补齐客户端计划；`fdacc2bc7`（2026-11-08）去掉普通建筑变化与打开 GUI 的重复全量同步，却未同时补发两种计划增量，使旧缺口可见。
+
 `TownSync.ensureCurrent`供建筑GUI、镇长印章和无城镇的经营状态查询复用：连接的holder与`TeamTownData`对象均未变化且已经就绪时不发送完整视图。登录、重生、换队、组件变化和客户端恢复请求使用`requestFull`；待处理请求在既有连接基线中合并，不重置正在进行的重试。完整捕获在Server END的`TownSync.tick`进行。`TownBuildingStore`元数据回调的布尔参数区分普通记录变化与增量未包含的管理元数据：维度确认、恢复摘要等少见变化仍可安排完整视图，普通建筑增删不再令整队基线失效。
 
 客户端`TownClientUpdates`将显示数据与增量接收资格分开。同一非空holder的PENDING只暂停增量应用，并保留当前`TeamTownData`用于显示，不触发整批GUI变更通知；新的完整候选解码完成后一次替换，再恢复增量。不同holder、未知归属、明确ABSENT和断开连接会清除旧显示。同镇更新没有第二份旧快照，也不重建现有GUI元素。服务器PENDING携带边界处解析出的真实holder，普通刷新不再先发`pending(null)`。重复同镇PENDING不会重新开始客户端退避。
@@ -68,3 +74,7 @@ V1 `townSim` 显式为空表示没有模拟，不能从旧全局文件补回来�
 2026-11-07最终安装包与统一回归使用`build/town-view-sync.init.gradle`，四个namespace为`frostedheart_town_view,frostedheart_buildings,frostedheart_persistence,frostedheart_warehouse_network`，36/36通过，见[统一日志](../../build/town-view-sync-release-20261107.log)。`TownViewSyncGameTests`含7项新检查；双ServerPlayer/EmbeddedChannel场景保持住宅菜单400tick，实际仓库菜单存入20次、建筑增删各一次，两连接各收到20资源增量和2建筑增量，完整信封均0。
 
 同一实现另由`TownViewClientValidation`在真实Minecraft客户端与集成服务器执行：住宅、狩猎站、矿场各600tick，第二个ServerPlayer通过EmbeddedChannel参加。5037个受检渲染帧数据空白0、库存存入21次；保留同镇PENDING画面并仅完成一次主动恢复。正常操作未产生额外全量安装；第二个连接完整信封0、资源增量22、建筑增量13。[结果和截图](../../build/town-view-client-20261107/result.json)、[客户端日志](../../build/town-view-client-20261107-r6.log)保留实际边界：这不是两台远程图形客户端或百人长期性能资格。
+
+2026-11-09 使用 [town-scheduling-validation.init.gradle](../../Scripts/town-scheduling-validation.init.gradle)，在上述四个 namespace 加入 `frostedheart_town_scheduling`，39/39 required 通过。[统一日志](../../build/town-scheduling-server-r3.log)包含真实连接上的权威计划、普通建筑更新不重发计划、核心类型替换、零保障就业/住房/配餐及既有城镇回归。`TownSchedulingClientValidation` 在真实图形客户端和集成服务器从空城镇基线开始建造、扫描并招募 3 人，保持原界面，经过鼠标滑条请求、次日结算、加建、拆除和同位置核心替换；844 渲染帧、额外完整视图安装 0，结果通过。建筑温度受控为 20 ℃，不据此推断低温、远程延迟或规模性能资格。[受控结果](validation/staffing-housing-client-2026-11-09.json)、[原始结果和截图](../../build/town-scheduling-after-r4/result.json)、[客户端日志](../../build/town-scheduling-after-r4.log)记录实际边界。
+
+随后补入 `TownEditorClientChecks`，由上述图形入口在原场景结束后执行。它在客户端组件中控制草稿和回包顺序，检查两种内容相同的计划回复、拖拽期间延后处理、连续改名、相同名字回复、回车后失焦、其他居民更新与子输入框失焦顺序；计划回复经过真实包编码/解码。用户要求本轮不 build，这些新增检查尚未编译或执行，旧结果文件不含 `editorReplyChecks`，不能作为本轮编辑回复修复的通过证据。字段含义和当前源码处理见 [名称编辑](town-model.md#213-玩家界面)与 [计划编辑](town-model.md#223-持久化迁移和联机编辑)。

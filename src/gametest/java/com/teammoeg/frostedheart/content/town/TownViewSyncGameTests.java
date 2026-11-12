@@ -428,9 +428,12 @@ public final class TownViewSyncGameTests {
 
     public static final class Probe {
         private final EmbeddedChannel channel;
-        private final int fullId, resourceId, buildingId, towerId;
+        private final int fullId, resourceId, buildingId, towerId, staffingId, housingId;
         public int full, pending, present, absent, resources, buildings, towers;
         public UUID lastHolder;
+        public TownStaffingPlan lastStaffingPlan;
+        public TownHousingPlan lastHousingPlan;
+        public int staffingPlans, housingPlans;
 
         Probe(EmbeddedChannel channel) {
             this.channel = channel;
@@ -438,6 +441,8 @@ public final class TownViewSyncGameTests {
             resourceId = discriminator(new TownResourceUpdatePacket(Map.of(), 0, TownTransportSnapshot.EMPTY));
             buildingId = discriminator(new TownBuildingUpdatePacket(Map.of(), Set.of()));
             towerId = discriminator(new TownTowerUpdatePacket((BlockPos) null));
+            staffingId = discriminator(new com.teammoeg.frostedheart.content.town.network.TownStaffingPlanUpdatePacket(TownStaffingPlan.EMPTY));
+            housingId = discriminator(new com.teammoeg.frostedheart.content.town.network.TownHousingPlanUpdatePacket(TownHousingPlan.EMPTY));
         }
 
         private static int discriminator(CMessage message) {
@@ -466,10 +471,22 @@ public final class TownViewSyncGameTests {
                     } else if (id == resourceId) resources++;
                     else if (id == buildingId) buildings++;
                     else if (id == towerId) towers++;
+                    else if (id == staffingId) {
+                        lastStaffingPlan = new com.teammoeg.frostedheart.content.town.network.TownStaffingPlanUpdatePacket(data).plan();
+                        staffingPlans++;
+                    } else if (id == housingId) {
+                        lastHousingPlan = new com.teammoeg.frostedheart.content.town.network.TownHousingPlanUpdatePacket(data).plan();
+                        housingPlans++;
+                    }
                 } finally { data.release(); }
             }
         }
 
-        public void clear() { full = pending = present = absent = resources = buildings = towers = 0; lastHolder = null; }
+        public void clear() {
+            full = pending = present = absent = resources = buildings = towers = staffingPlans = housingPlans = 0;
+            lastHolder = null;
+            lastStaffingPlan = null;
+            lastHousingPlan = null;
+        }
     }
 }

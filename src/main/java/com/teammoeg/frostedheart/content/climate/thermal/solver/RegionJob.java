@@ -17,7 +17,7 @@ final class RegionJob extends RegionWork {
     MinimumThermalModel.Preparation minimumLayout;
     RegionalQuerySnapshot.Restoration restoration;
     boolean numericalReady, solved;
-    boolean inputsReady, prepaidWorkspace;
+    boolean inputsReady;
     long capacityObserved = -1;
     long workspaceFloor;
     long transportBytes;
@@ -66,15 +66,8 @@ final class RegionJob extends RegionWork {
     @Override void release() {
         if (region.job == this && minimum == null && !qualityOnly()) region.solver.releaseStepInputs();
         loads = null; cursor = null; minimum = null; minimumLayout = null; restoration = null;
-        if (heatClaim != null) { heatClaim.close(); heatClaim.retainCleanup(reservation, prepaidWorkspace); heatClaim = null; }
+        if (heatClaim != null) { heatClaim.close(); heatClaim.retainCleanup(reservation); heatClaim = null; }
         heat = null;
-        if (prepaidWorkspace) {
-            if (qualityOnly() && reservation != null) {
-                if (region.accepted().field() != null && !region.accepted().field().minimumQuality()) region.releaseMinimumWorkspace();
-                else reservation.completeResize(MinimumRegionStep.workspaceBytes(region.accepted().field()));
-            }
-            reservation = null;
-        }
         super.release();
     }
 }

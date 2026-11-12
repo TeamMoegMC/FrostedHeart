@@ -38,6 +38,7 @@ public final class ContinuousAirGeometryCapacityProductionGameTests {
         var pocketSample = new QueryPublication.MutableSample();
         int[] advances = {0}, failures = {0}, missingReads = {0}, saves = {0}, unavailableRun = {0}, longestUnavailableRun = {0};
         long initialRefusals = MinecraftThermalInput.thermalBudgetRefusals();
+        long[] maximumHeapBytes = {0};
         helper.startSequence().thenIdle(240).thenWaitUntil(() -> {
             read(helper, control.above(), sample);
             helper.assertTrue(ContinuousAirProductionTiming.sourceField(sample) && span(helper, control.above()) == 1,
@@ -102,8 +103,11 @@ public final class ContinuousAirGeometryCapacityProductionGameTests {
                     saves[0]++;
                     FHMain.LOGGER.info("THERMAL_GEOMETRY_CAPACITY_NATIVE_SAVE,elapsedTicks={},saves={}", elapsed, saves[0]);
                 }
-                if (elapsed % 200 == 0) FHMain.LOGGER.info("THERMAL_GEOMETRY_CAPACITY_CONTROL,elapsedTicks={},sampleTick={},maximumAge={},failures={},advances={},admissionRefusals={},worker={}",
+                var jvm = Runtime.getRuntime();
+                maximumHeapBytes[0] = Math.max(maximumHeapBytes[0], jvm.totalMemory() - jvm.freeMemory());
+                if (elapsed % 200 == 0) FHMain.LOGGER.info("THERMAL_GEOMETRY_CAPACITY_CONTROL,elapsedTicks={},sampleTick={},maximumAge={},failures={},advances={},admissionRefusals={},heapBytes={},heapLimitBytes={},worker={}",
                         elapsed, tick, maximumAge[0], failures[0], advances[0], MinecraftThermalInput.thermalBudgetRefusals() - initialRefusals,
+                        jvm.totalMemory() - jvm.freeMemory(), jvm.maxMemory(),
                         MinecraftThermalInput.describeWorkerProgress(level));
             });
         }).thenIdle(OBSERVATION_TICKS + 1).thenExecute(() -> {
@@ -119,9 +123,13 @@ public final class ContinuousAirGeometryCapacityProductionGameTests {
             helper.assertTrue(advances[0] >= 20 && lastTick[0] >= firstTick[0] + OBSERVATION_TICKS - 100,
                     "Refusal and retry must preserve readable, advancing independent service: age=" + maximumAge[0]
                             + ",missingReads=" + missingReads[0] + ",failures=" + failures[0]);
-            FHMain.LOGGER.info("THERMAL_GEOMETRY_CAPACITY_PRODUCTION,sources={},advances={},maximumAge={},failures={},saves={},admissionRefusals={},rootBytes={},unavailableTicks={},longestUnavailableRun={}",
+            helper.assertTrue(missingReads[0] == 0 && failures[0] == 0,
+                    "Independent gameplay reads stay available throughout actual pressure: missing=" + missingReads[0]
+                            + ",failures=" + failures[0] + ",maximumAge=" + maximumAge[0]);
+            FHMain.LOGGER.info("THERMAL_GEOMETRY_CAPACITY_PRODUCTION,sources={},advances={},maximumAge={},failures={},saves={},admissionRefusals={},rootBytes={},unavailableTicks={},longestUnavailableRun={},rootPeakBytes={},maximumHeapBytes={}",
                     sources.length, advances[0], maximumAge[0], failures[0], saves[0], MinecraftThermalInput.thermalBudgetRefusals() - initialRefusals,
-                    MinecraftThermalInput.thermalBudgetUsedBytes(), missingReads[0], longestUnavailableRun[0]);
+                    MinecraftThermalInput.thermalBudgetUsedBytes(), missingReads[0], longestUnavailableRun[0],
+                    MinecraftThermalInput.thermalBudgetPeakBytes(), maximumHeapBytes[0]);
             if (observeIngress) {
                 var observed = com.teammoeg.frostedheart.content.climate.thermal.solver.RuntimeConvergenceObservation.snapshot();
                 helper.assertTrue(observed.unboundSnapshots() > 0 && observed.unboundDiskWrites() > 0 && observed.encodingFailures() == 0,

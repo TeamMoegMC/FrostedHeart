@@ -77,18 +77,14 @@ public class TransportStationBuilding extends AbstractTownResidentWorkBuilding {
 
         public TransportStationDailyReport {
             workerCount = Math.max(0, workerCount);
-            totalProductivity = finiteNonNegative(totalProductivity);
-            plannedCapacity = finiteNonNegative(plannedCapacity);
-            addedCapacity = Math.min(plannedCapacity, finiteNonNegative(addedCapacity));
+            totalProductivity = sanitize(totalProductivity);
+            plannedCapacity = sanitize(plannedCapacity);
+            addedCapacity = Math.min(plannedCapacity, sanitize(addedCapacity));
             stopReason = stopReason == null ? TownProductionStopReason.NONE : stopReason;
         }
 
-        /**
-         * The report's own copy of the outer {@code sanitize}. Calling an outer static method while this record's
-         * {@code EMPTY} is built would initialize {@link TransportStationBuilding}, whose {@code MAP_CODEC} reads this
-         * record's still-null {@code CODEC}: loading a save whose first touch is the report codec then crashed.
-         */
-        private static double finiteNonNegative(double value) {
+        // EMPTY must not initialize the enclosing building while this CODEC is still unset.
+        private static double sanitize(double value) {
             return Double.isFinite(value) ? Math.max(0.0, value) : 0.0;
         }
     }
@@ -102,8 +98,8 @@ public class TransportStationBuilding extends AbstractTownResidentWorkBuilding {
     ) {
         public TransportStationForecast {
             workerCount = Math.max(0, workerCount);
-            totalProductivity = sanitize(totalProductivity);
-            plannedCapacity = sanitize(plannedCapacity);
+            totalProductivity = TransportStationDailyReport.sanitize(totalProductivity);
+            plannedCapacity = TransportStationDailyReport.sanitize(plannedCapacity);
             stopReason = stopReason == null ? TownProductionStopReason.NONE : stopReason;
         }
     }
@@ -353,7 +349,4 @@ public class TransportStationBuilding extends AbstractTownResidentWorkBuilding {
         }
     }
 
-    private static double sanitize(double value) {
-        return Double.isFinite(value) ? Math.max(0.0, value) : 0.0;
-    }
 }

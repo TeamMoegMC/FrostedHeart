@@ -54,7 +54,21 @@ public final class ThermalDimensionMailbox implements AutoCloseable, ThermalWork
 
     public synchronized long progressRevision() { return progressRevision; }
     public synchronized boolean workPending() {
-        return engine.hasWork() || state == State.RUNNING || state == State.QUEUED;
+        if (state == State.CLOSED) return false;
+        // The coordinator and lifecycle closer mutate engine collections outside
+        // this monitor. Only inspect them while neither owns an executing turn.
+        return state == State.RUNNING || state == State.QUEUED || state == State.CLOSE_REQUESTED || engine.hasWork();
+    }
+
+    /**
+     * A save may copy committed state on main while the coordinator is queued.
+     * Keeping this monitor excludes execute() claiming that queued turn; its
+     * existing continuation remains queued and runs normally afterwards.
+     * Numerical helpers only own private candidates, and are never run here.
+     */
+    public synchronized boolean runCheckpointCommand() {
+        if (state == State.RUNNING || state == State.CLOSE_REQUESTED || state == State.CLOSED) return false;
+        return engine.processCheckpointCommandOnMain();
     }
 
     public synchronized void awaitProgress(long observed) {

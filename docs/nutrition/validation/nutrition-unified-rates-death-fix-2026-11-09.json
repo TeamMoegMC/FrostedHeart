@@ -1,0 +1,163 @@
+{
+  "status": "passed",
+  "verifiedDate": "2026-11-09",
+  "author": "Codex; OpenAI GPT-6; implementation collaborator",
+  "environment": {
+    "minecraft": "1.20.1",
+    "forge": "47.3.0",
+    "java": 17,
+    "modVersion": "0.7.13",
+    "source": "current working tree"
+  },
+  "scope": "Unified literal nutrition-rate configuration and real server-player death/respawn/menu lifecycle",
+  "requiredGameTests": {
+    "run": 2,
+    "passed": 2,
+    "namespaces": [
+      "frostedheart_nutrition_config",
+      "frostedheart_nutrition_lifecycle"
+    ]
+  },
+  "configuration": [
+    {
+      "case": "world-startup",
+      "consumption": 0.03,
+      "gain": 0.12
+    },
+    {
+      "repeatedReloads": 4,
+      "consumption": 0.25,
+      "gain": 1.0
+    },
+    {
+      "repeatedReloads": 4,
+      "consumption": 0.03,
+      "gain": 0.12
+    },
+    {
+      "repeatedReloads": 4,
+      "consumption": 0.17,
+      "gain": 2.75
+    },
+    {
+      "repeatedReloads": 4,
+      "consumption": 0.0,
+      "gain": 0.0
+    },
+    {
+      "repeatedReloads": 4,
+      "consumption": 0.0003,
+      "gain": 0.0003
+    },
+    {
+      "sourceMeal": {
+        "fat": 18.2,
+        "carbohydrate": 15.0,
+        "protein": 19.8,
+        "vegetable": 15.0
+      },
+      "packAfterOneHunger": {
+        "fat": 14.97,
+        "carbohydrate": 14.97,
+        "protein": 14.97,
+        "vegetable": 14.97
+      },
+      "case": "gameplay-values-preserved",
+      "sourceAfterOneHunger": {
+        "fat": 14.75,
+        "carbohydrate": 14.75,
+        "protein": 14.75,
+        "vegetable": 14.75
+      },
+      "packMeal": {
+        "fat": 15.384,
+        "carbohydrate": 15.0,
+        "protein": 15.576,
+        "vegetable": 15.0
+      }
+    },
+    {
+      "case": "remote-memory-config-unchanged"
+    }
+  ],
+  "lifecycle": [
+    {
+      "nutritionAfter101Ticks": {
+        "fat": 14.75,
+        "carbohydrate": 14.75,
+        "protein": 14.75,
+        "vegetable": 14.75
+      },
+      "case": "live-one-hunger"
+    },
+    {
+      "rate": 0.25,
+      "maxHealth": 10.0,
+      "menuFatEncoded": 1500,
+      "nutrition": {
+        "fat": 15.0,
+        "carbohydrate": 15.0,
+        "protein": 15.0,
+        "vegetable": 15.0
+      },
+      "case": "dead-wait-and-deferred-respawn-menu",
+      "deadFood": 11
+    },
+    {
+      "rate": 25.0,
+      "maxHealth": 10.0,
+      "menuFatEncoded": 1500,
+      "nutrition": {
+        "fat": 15.0,
+        "carbohydrate": 15.0,
+        "protein": 15.0,
+        "vegetable": 15.0
+      },
+      "case": "dead-wait-and-deferred-respawn-menu",
+      "deadFood": 11
+    },
+    {
+      "case": "abandoned-request-cleared-on-logout"
+    }
+  ],
+  "numericBaseline": {
+    "description": "Latest implementation after its intended single conversion; no balance redesign",
+    "source": {
+      "gain": 1.0,
+      "consumption": 0.25
+    },
+    "companionPack": {
+      "previousTemplateGain": 0.0003,
+      "previousTemplateConsumption": 0.0003,
+      "previousCorrectRuntimeGain": 0.12,
+      "previousCorrectRuntimeConsumption": 0.03,
+      "currentLiteralGain": 0.12,
+      "currentLiteralConsumption": 0.03
+    }
+  },
+  "freshWorldConfiguration": {
+    "nutritionGainRate": 0.12,
+    "nutritionConsumptionRate": 0.03
+  },
+  "nutritionScaleVersionPresent": false,
+  "companionRepository": {
+    "path": "D:/TheWinterRescue",
+    "file": "defaultconfigs/frostedheart-server.toml",
+    "otherParsedSettingsUnchanged": true,
+    "tomlParsing": "passed",
+    "gitDiffCheck": "passed"
+  },
+  "limitations": [
+    "Only unified configurations are supported, as explicitly requested; no legacy nutrition-rate conversion remains.",
+    "Player nutrition NBT compatibility remains separate and unchanged.",
+    "Existing-world overrides and already-lost nutrition are not reconstructed from a pack default template.",
+    "Physical-client rendering was not tested; real respawn events, NetworkHooks menu creation and data-slot values were tested on Forge.",
+    "Full compileGameTestJava is blocked by unrelated existing deposit-test compilation errors; the two new nutrition classes compiled and ran independently."
+  ],
+  "testSources": [
+    "src/gametest/java/com/teammoeg/frostedheart/infrastructure/config/NutritionConfigGameTests.java",
+    "src/gametest/java/com/teammoeg/frostedheart/content/health/NutritionLifecycleGameTests.java"
+  ],
+  "rawLog": "build/nutrition-investigation/unified-runtime.log",
+  "command": "gradlew.bat runGameTestServer -I build/nutrition-fix.init.gradle -PgameTestDirectory=build/nutrition-unified-pack-run -PgameTestNamespaces=frostedheart_nutrition_config,frostedheart_nutrition_lifecycle -x compileGameTestJava -x cleanResearchGameTestWorld --offline"
+}

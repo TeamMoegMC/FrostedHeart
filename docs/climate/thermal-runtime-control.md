@@ -1,7 +1,7 @@
 # 温度区域运行时：输入、任务与保存所有权
 
 - Status: `Current for the sole regional implementation and active-time service target; stated scenes validated at their listed allowances`
-- Last verified: `2026-11-08: on-demand minimum-summary experiment reverted after inconclusive performance; graph-deduplication prototype rejected; final rollback validation recorded in the linked baseline; defaults1000ms/s and128MiB`
+- Last verified: `2026-11-08: overload fix removes retained per-region minimum workspaces, adds fine-graph capacity preflight and caps over-target structural concurrency; 1024-source/1600-tick geometry-capacity cases pass at 6GiB heap and128MiB target; maintenance-save checkpoint handoffs are bounded per tick and reusable, 12 save/unload GameTests pass; on-demand minimum-summary experiment reverted after inconclusive performance; graph-deduplication prototype rejected; defaults1000ms/s and128MiB`
 - Scope: `SHARED_GRID输入接管、区域任务、资源准入、粗细计算、查询、v6保存与关闭`
 - Code anchors: `MinecraftThermalInput`, `MinecraftThermalInput.reportResourcePressure`, `ThermalDiagnostics.TRACE`, `ThermalMemoryBudget`, `ThermalWorkBudget.Account.activeNanos`, `ThermalWorkerPool.regionalWorkAllowanceNanos`, `RegionWorkPolicy`, `FHConfig.COMMON.THERMAL_RUNTIME.continuousAirWorkBudgetMsPerSecond`, `ThermalDimensionEngine`, `SpatialSourceTimeline`, `SpatialSourceIngress`, `SpatialHeatStore`, `AirLoadTable`, `AirFieldLayout`, `CoupledThermalOperator.ProjectionPreparation`, `RegionalAirRuntime`, `RegionalQualityControl`, `RegionJob`, `RegionBuild`, `RegionalWorkQueue`, `QueryPublication`, `RegionalQueryIndex`, `RegionalCheckpoint`, `ThermalPageHandle`, `ThermalSignatureTable.samePhysicalProperties`, `AirRouteValidity`
 
@@ -152,6 +152,10 @@ main用`ThermalInputEnvelope`一次交出按Page拆分的控制载荷和源窗�
 
 2026-10-27控制层改造使构建的128材料、8component等工作段成为内部检查点。同一次`CandidateBuild.run`在传入的截止时间内连续推进；`RegionWork.runSlice(deadline)`、拓扑准备、Claim、取消恢复和安装清理共用本次执行额度。`ThermalAssemblyTask.run()`从池中真正开始执行时取得约2ms，内联入口`run(deadline)`使用协调轮剩余时间。路由发现、实际输入/helper/容量等待及粗转细的投影暂停仍让出，`ACCOUNTING`仍由协调者汇总准入后才能进入安装。2ms是协作让出的目标，不能限制GC、抢占或一次不可分割操作的最坏墙钟时间。
 
+2026-11-09修正了协调轮的截止时间起点：`ThermalDimensionEngine.processWorkRound`完成必要边界刷新及就绪选择后，才为选中的一类工作取得2ms执行时间。此前前置扫描超过2ms时，数值队列收到的截止时间已经过期；确定性回归让前置阶段每轮实际占用3ms，旧实现连续120轮无法推进。前置处理和实际执行仍作为完整一轮由`ThermalWorkerPool.chargeService`计入原有共享额度；没有为每个工作类别分别叠加时间片。
+
+`SpatialSourceIngress.pendingFor`只判断物理空气端口是否进入目标区域，使用`WorkerPhysicalSourceBindings.airPortTargets`及协调者已有的`MutableAirTarget`。该检查不再创建保存用途的`PortDestination`、`SpatialHeatInput.Target`或临时目标对象；保存仍通过`checkpointTarget`取得不可变身份。辐射损失、缺失几何、已经归属区域的源及真实接收位置的边界含义保持一致。
+
 局部安装在调用发布器之前形成`RegionMembership`只读交接值，同一次协调调用立即使用；`regionsById`继续决定成员身份。`RegionalWorkQueue.replace(removed, added)`只取消被替换任务、按原优先级加入新任务，无关ready/waiting任务保留原位置。旧的`install(List)`、工作队列installed成员副本和全维度`advancementOrder`排序退出。必要全体区域/heartbeat只读快照和恢复遍历仍存在，不把局部安装宣称为严格O(局部变化)。
 
 上述[重复状态清理](../../diary/2026-10-29_23-38-00_thermal-development-history.md)生产净减35行，没有数值近似。首轮21项中20项通过，半空气邻区夹具因未清空上半部、实际探针为砂砾而失败；核对真实存档后补全夹具，原阈值/时限保持，仅重跑输入组8项全部通过。共21个不同检查项取得通过证据，两个运行均保存错误0、root0；不能称为21项同一轮全过。[验证摘要](validation/thermal-material-state-cleanup-2026-10-26.json)记录失败场景与各轮归属。
@@ -209,6 +213,18 @@ PreparedTopologyChange不再携带独立材料边/执行表列，RegionalTopolog
 已有目录/运输边界仍保留：每维度3200Pages、65536物理源、131072源节点，最多128个原版Checkpoint请求；`SpatialSourceTimeline`另允许最多两代源条目重叠。它们约束对象数量和在途工作，不是本轮证明可全部容纳于默认内存或维持40tick的服务承诺；其中源数量65536与已删除的活跃单元65536不是同一个限制。本轮没有为这些目录上限选定新的数值。
 
 真实源登记及有界生产记录、已接收的世界控制/结构更新、有限窗口交接、冻结几何和读者、已开工操作的实际数组替换、最低图转换、已完成结果发布、现存帧读取和当前Chunk保存使用`reserveCompletion/completeResize`或`Reservation.beforeAllocation`登记必要占用。**可以超过准入目标，全部仍计入used/peak；超出时不再启动新的可选细档工作；已经接收的世界更新仍在有限结构开工数内完成，并按需要转换粗档。** 所有权受实际窗口/记录数量、工作池和已开工任务、每维度一个Chunk封存及真实读者引用约束，实际内存仍随活跃世界和源数量增长；这不是一个固定总内存保障。任务之间不再互相借还额度。压力验收必须报告实际超出量。
+
+2026-11-08的过载修复在准备布局和复制父细档温场前，先按现有Scope的体积、边、材料接触计数检查细档图的准备空间；自动模式下空间不足直接构造最低模型。已安装且几何不变的区域继续复用。粗转细恢复也先做同一容量检查，目标已满时保留原粗档，容量可用后由原控制器继续恢复。`canReserve`仅是无副作用预检，真正分配仍需原有原子准入，不能据此绕过计费。
+
+root超过目标时，每维度最多允许一个新的结构准备占用完成空间；已经运行的任务正常完成，存档、卸载和退休继续使用原完成路径。目标以下仍允许工作池原有并发。该修改降低高压时的重复准备和临时重叠，不把128MiB改成硬上限，也不证明6GiB整合包堆的全部OOM来源已排除。
+
+`BoundaryCandidate`等待边界期间只为边界集合保留`4096 + 64 × sectionCount`字节额度；闭包计算的临时上界在计算前另外登记、计算后缩减。`FrozenSources`的准备额度在选中候选、实际构造`GeometryWork`时登记，且在`sourceBindings.freeze`之前完成。取消候选释放其边界额度；实际快照继续由开工任务持有。此前119个等待候选合计登记约58.9MiB，其中大部分是各自提前预留、尚无快照的全源快照上界；这个数值包含边界元数据，不能当作同等真实堆泄漏或精确的堆节省量。
+
+该批[过载回归](../../build/thermal-overload-capacity-final-20261108.log)在6GiB堆、1024真实热源、1600tick、128MiB目标下通过：准入拒绝1138次、root峰值245222650B、最大堆2220721472B、温度推进79次、最大年龄54tick、三次实际保存完成。[JFR分配采样](../../build/thermal-overload-capacity-final-profile-20261108.txt)包含启动阶段，不能将其最低堆占用当作游戏负载下的热系统存活量。之前同类场景[基线](../../diary/2026-11-05_19-15-43_thermal-resource-log-noise.md)为49085次拒绝。[最终复核](../../build/thermal-overload-capacity-verified-20261108.log)在相同条件下1/1通过：拒绝1997次、不可用tick 0、最大年龄26tick、root峰值245414472B、最大堆2110175528B、三次保存完成。回归只覆盖1600tick，不证明长期多人服务器的堆稳定性；实际整合包4～6GiB堆中剩余GB的持有者仍需OOM堆快照归因。
+
+最低模型的数值数组实际由`RegionJob/MinimumRegionStep`创建并在任务结束时丢弃；不再让每个闲置区域长期保留一份`minimumWorkspace`额度。现在该临时空间归实际任务持有，发布或取消后沿`RegionWork.release`释放，最低传热图转交给solver的占用仍独立保留，查询帧仍由发布器计费。这样避免仅因区域数量增长而堆积未对应闲置数组的完成额度，进而阻断本来放得下的细档工作；它不是把同等字节的真实堆内存从计账中删掉。源Claim的串流清理由Store持有，细档真实载荷的清理空间仍从任务额度拆分。
+
+数值任务已经落后超过20tick、活动成本超过本区域两倍额度时，允许小区域通过原`minimum`意图降级；不再仅因节点数少于最低模型上界而忽略实际推进过载。节点数量仍用于普通结构的成本预选与权重计算。该出口保留原样的时间前缀、源J、发布和恢复退避，避免细档摘要准备的固定成本在大量小区域场景中拖过40tick查询有效期。
 
 每个源登记不再向Store预付两份72条最大窗口。对当前两端口篝火，登记从50352B降为26896B；1024源为26.265625MiB，减少22.90625MiB登记余量。实际接管窗口和后续目标流另按持有量计费，因此这不是整个场景的堆内存节省承诺。producer自身有界运输及尾部的最大记录保障仍保留。
 
@@ -314,6 +330,8 @@ PreparedTopologyChange不再携带独立材料边/执行表列，RegionalTopolog
 
 关闭先结算真实helper和提交后清理，再释放源运输、Store、候选、区域工作空间和查询。`thermalBudgetUsedBytes()==0`仍是没有外部读者的完整退出条件。
 
+2026-11-08增设维护保存的有界交接：`saveChunkIfNeeded`不再走无界等待的`captureRegionalCheckpoint`，改走`captureMaintenanceCheckpoint`。该路径每tick共享`MAINTENANCE_SAVE_WAIT_BUDGET_NANOS`（5ms）等待预算，`ThermalDimensionMailbox.awaitProgress(observed,budgetNanos)`用`wait(millis,nanos)`切片，预算耗尽即返回false让原版下轮重排；未完成的`ChunkCapture`保存在`maintenanceCapture`里复用，不取消重建。目的仍是SAVE，写回与finish语义不变。producer的全维度唯一所有权由两道闸门保证：`pumpNativePreparation`在维护捕获或其延迟释放队列非空时让出，`captureMaintenanceCheckpoint`在仍有待释放producer时延期；`maintenanceCaptureReleases`在后续tick按`finished.isDone()`逐个`releaseProducer()`。强制路径（UNLOAD、`ChunkDataEvent.Save`、停服、失败恢复）不能延期，仍走同步交接，但先由`settleMaintenanceCaptureForBlockingHandoff()`结清维护捕获，`awaitCheckpointCommand`改为每5秒切片唤醒并打warn，不再静默挂死。该修改缩小主线程在保存上的最坏阻塞，不改动原版`IOWorker`/`ProcessorMailbox`的无界队列，也不给区块I/O增加背压；长期多人区块churn下的实际收益未验证。新增计数`maintenanceSaveWaitTimeouts`、`maintenanceSaveCaptureReuses`、`maintenanceCapturePending`、`maintenanceCaptureReleasePending`、`checkpointSlowHandoffs`随既有诊断字符串输出。
+
 此前清理删除了均温兜底、deadline配置、备用分块因子、plume注热、材料表面复用和matrix-free表面试验。共享细网格、局部材料边编译、支持搜索缓存、不可变布局复用、primitive循环及完成后释放scratch继续使用。旧函数布局的数学求值与存档投影仍有数据兼容用途，正式FUNCTIONS运行后端已退役。
 
 ## 验证状态
@@ -338,6 +356,10 @@ PreparedTopologyChange不再携带独立材料边/执行表列，RegionalTopolog
 
 直接投影删除的四份迭代向量和两份全局对角数组，按源码长度至少减少40B/空气节点的原驻留double暂存、48B/空气节点的构建峰值double载荷；细档暖启动还少一份4B/节点的contributions临时数组，其生命周期不同，不简单与上述峰值相加。数组头、扩容余量和片段矩阵未计入这些下界。这是代码存储量，不是JVM实测内存；本批没有整场CPU或分配对照。平稳推进本来就不调用PCG，收益主要落在结构重建和恢复细档，不能据此宣称普通每tick同幅度提速或新增百人资格。
 
+2026-11-08晚间[计账修复](../../diary/2026-11-08_23-16-00_thermal-overload-resource-accounting-fix.md)与[I/O侧有界交接](../../diary/2026-11-08_23-56-00_thermal-io-bounded-handoff.md)分两批落地。后者用Java17 `compileJava compileGameTestJava`编译通过（43s），`frostedheart_thermal_integration`、`frostedheart_native_checkpoint`、`frostedheart_checkpoint_isolation`、`frostedheart_concurrent_save`四个命名空间共12项GameTest全部通过（1m47s，[回归日志](../../build/io-backpressure-gametest-20261108.log)），日志内无热系统异常；配方/注册表缺失报错属于测试环境噪声，不影响required tests。该回归验证保存/卸载契约，不含长期多人区块churn或4GiB堆耗尽场景。
+
+另对用户提供的`gc-17884-2026-11-08_23-23-22.log`（4GiB G1堆，23:41–23:50可见区间）定量核对：GC后存活集在1300M/1279M/1297M/1307M/1314M/1228M之间小幅波动，Old regions 288→282→283、Humongous固定4，无单调增长；无Full GC、无to-space exhausted、无OOM，最大Young暂停46.193ms。堆在两次Young GC之间从约1.3GiB涨到3.6GiB，Eden约2.27GiB每约2分钟填满，说明是约19MiB/s的高分配率而非存活集泄漏；`gc,heap,exit`为正常退出、不是崩溃。这支持「排队滞留+瞬时分配尖峰顶穿4GiB余量」而非「累积泄漏」，但该日志始于uptime1063s、GC编号51，不覆盖22:24的OOM，不能替代hprof dominator tree归因。日志另有59143次`ThreadDump` safepoint（约100次/秒），非MC正常行为，需排查外部监控/探针。
+
 同一编译于2026-10-26完成[当前双基地性能测量](validation/thermal-performance-current-2026-10-26.json)：默认128MiB/250ms每秒，两个各128源基地与100温度消费者，2400tick/120.463s；CPU3.718s、热主线程P99 1.709ms、热线程累计分配3.583GB、热登记峰94.97MiB，监测期服务违规/容量拒绝0，观察全细档并关闭root0。该场景含实际关火/重燃，不是全程256源点燃；JFR采样开启，只有当前单次结果，不能计算版本提速率。首tick1.754s与温度保存最长46.151ms等待仍是已观察代价。热点和下一阶段0.1°C正常误差约束见[存储与性能说明](thermal-storage-optimization.md)，新近似尚未实施。
 
 随后用户要求继续清理并反复复查后才考虑优化。[材料残留批次](validation/thermal-material-cleanup-2026-10-26.json)在源码调用、构造不变量、任务交接和当前编译产物四轮核对后，删除Coupled旧材料列/等待备用路径、恒为0的快照等待偏移、不可达的粗档容量构造和无调用包装。生产133文件/44836→44746行，净减90行，新增类型0；数值公式、步长、精度、更新频率和粗档策略未改。统一主编译56s首过；存储6、源重放1、读者/材料生命周期3、粗细转换1共四组11项均首过，关闭root0，无编译后修改或重跑。相变完成、两次取消/一次发布、三名读者最后释放1321864B→0、两轮粗细/两checkpoint均通过；最大恢复跳变0.0043498497°C、能量误差2.98023224e-8J。
@@ -359,3 +381,8 @@ PreparedTopologyChange不再携带独立材料边/执行表列，RegionalTopolog
 历史失败、夹具修订和验收定义变化的摘要保留：原四连续旧结构交错条件未覆盖，最终改为一次真实独立提交、四个连续完整源窗口及原新鲜度/新房间时限；原分散卸载夹具受邻近强制票保留，修订后要求真实Unload事件和新实例；早期4GiB堆OOM与后续6GiB验证也不混为同一条件。此前[分散调查计划](../../diary/2026-10-29_23-38-00_thermal-development-history.md)仍在；原生成报告`build/thermal-simplification-verification-20261022.md`和`build/thermal-physical-validation-20261023.md`当前工作区已不可用。这些历史摘要不得作为当前代码的无条件资格。
 
 本轮未运行JUnit，未用Python修改代码，也未声称覆盖100个真实网络连接、所有整合包系统或任意长时硬件负载。
+
+
+2026-11-09的保存复核允许主线程在mailbox未执行协调回合时，独占执行既有checkpoint控制指令，读取Accepted与全部未消费J；现有排队续体继续保留，主线程不运行数值任务。保存控制先于结构边界刷新。SAVE使用既有主线程材料变更日志投影，不取消或等待数值候选；UNLOAD仍沿真实helper退出后的回收协议。没有新增后台存档延期机制或全局I/O拦截，也没有修改v6格式。
+
+[本轮验证与范围](validation/thermal-overload-and-persistence-2026-11-09.json)：4个热worker暂停60tick时，实际原版存盘、刷盘及磁盘NBT复读通过，保存耗时约21ms，未消费热量20160J与方块修改均写入。4GiB堆的三路票据切换运行12000tick，完成54次重载和57次卸载检查；关闭及GC后60个旧Chunk弱引用均释放、热系统root归零。该场景复用6个地点，没有模拟3名联网玩家持续生成新区块，且实际native checkpoint请求数为0，因此不能用于宣称原服务器OOM或全部卸载压力问题已解决。11月8日的千热源与恢复测试属于较早编译，最终存盘修改尚未完成完整并发回归矩阵。

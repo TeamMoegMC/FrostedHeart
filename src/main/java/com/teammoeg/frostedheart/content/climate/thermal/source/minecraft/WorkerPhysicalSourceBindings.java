@@ -530,6 +530,16 @@ public final class WorkerPhysicalSourceBindings implements ThermalSourceLedger.B
                         -1, target.generation(), 0, 0, descriptor.sourceId(), descriptor.generation()));
     }
 
+    /** Coordinator readiness needs only membership, not an immutable checkpoint destination. */
+    public boolean airPortTargets(SpatialSourceTimeline.Descriptor descriptor, int portIndex,
+            java.util.function.LongPredicate ownsTarget) {
+        var port = profile(descriptor.profile()).port(portIndex);
+        if (port.kind() != PortKind.AIR_FACE) return false;
+        int slot = pages.resolveAirFaceTarget(descriptor.x() + port.offsetX(), descriptor.y() + port.offsetY(),
+                descriptor.z() + port.offsetZ(), port.targetFace(), signatures, airTarget);
+        return slot >= 0 && ownsTarget.test(BlockPos.asLong(airTarget.blockX(), airTarget.blockY(), airTarget.blockZ()));
+    }
+
     private boolean rebind(SourceDescriptor source, ThermalSourceLedger ledger) {
         return rebind(source, ledger, false);
     }

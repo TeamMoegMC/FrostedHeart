@@ -132,7 +132,8 @@ public final class TownHousingPanel extends UIElement {
     private void sync(@Nullable TeamTown town) {
         if (town == null || dragged != null || editingTarget != null) return;
         TownHousingPlan plan = town.getHousingPlan();
-        if (plan.equals(observed)) return;
+        // A fresh reply must reset the draft even when its guarantees are unchanged.
+        if (plan == observed) return;
         observed = plan;
         draftOrder.clear();
         draftGuarantees.clear();

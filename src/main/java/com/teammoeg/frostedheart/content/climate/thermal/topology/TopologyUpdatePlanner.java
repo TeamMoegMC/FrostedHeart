@@ -187,6 +187,10 @@ public final class TopologyUpdatePlanner {
     }
 
     public RegionalContinuationBoundary continuationBoundary(LongSet seeds, boolean structuralInput) {
+        return continuationBoundary(seeds, structuralInput, it.unimi.dsi.fastutil.longs.LongSets.EMPTY_SET);
+    }
+
+    public RegionalContinuationBoundary continuationBoundary(LongSet seeds, boolean structuralInput, LongSet announcedSections) {
         boolean pending = airRoutes.hasPendingWork();
         boolean unresolved = airRoutes.discoveryIncomplete();
         if (!structuralInput && !pending) return RegionalContinuationBoundary.UNCHANGED;
@@ -214,7 +218,7 @@ public final class TopologyUpdatePlanner {
                             SectionPos.y(key) + TopologyView.DY[face], SectionPos.z(key) + TopologyView.DZ[face]);
                     // Query the existing indexes instead of copying the whole dimension for this walk.
                     if (!affected.contains(next) && (pages.hasCapturedSection(next)
-                            || draftsBySection.containsKey(next) || seeds.contains(next)
+                            || draftsBySection.containsKey(next) || seeds.contains(next) || announcedSections.contains(next)
                             || airRoutes.hasDependencySection(next))) {
                         affected.add(next);
                         queue.add(next);

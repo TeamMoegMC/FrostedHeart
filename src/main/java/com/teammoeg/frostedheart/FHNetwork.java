@@ -73,7 +73,7 @@ import com.teammoeg.frostedheart.item.snowsack.network.ToggleDeleteOverflowMessa
 
 public class FHNetwork extends CBaseNetwork {
     @Override
-    protected String protocolVersion(String modVersion) { return modVersion + ":town-view-1:building-data-3:town-ui-3"; }
+    protected String protocolVersion(String modVersion) { return modVersion + ":town-view-1:building-data-3:town-ui-3:infrared-stream-1"; }
 	private FHNetwork() {
 		super(FHMain.MODID);
 	}
@@ -207,5 +207,6 @@ public class FHNetwork extends CBaseNetwork {
         registerMessage("toggle_delete_overflow", ToggleDeleteOverflowMessage.class);
         registerMessage("open_snow_sack", C2SOpenSnowSackScreenMessage.class);
         registerMessage("town_snapshot_request", com.teammoeg.frostedheart.content.town.network.TownSnapshotRequestPacket.class);
+        registerMessage("infrared_continue_c2s", FHContinueInfraredViewPacket.class);
     }
 }
