@@ -31,7 +31,7 @@ public final class DepositGameTests {
         var noises = access.lookupOrThrow(Registries.NOISE);
         var all = Climate.Parameter.span(-2, 2);
         var biomes = access.registryOrThrow(Registries.BIOME);
-        var points = new Climate.ParameterList<>(List.of(
+        var points = new Climate.ParameterList<Holder<net.minecraft.world.level.biome.Biome>>(List.of(
                 Pair.of(new Climate.ParameterPoint(Climate.Parameter.span(-2, 0), all, all, all, all, all, 0), biomes.getHolderOrThrow(Biomes.PLAINS)),
                 Pair.of(new Climate.ParameterPoint(Climate.Parameter.span(0, 2), all, all, all, all, all, 0), biomes.getHolderOrThrow(Biomes.FOREST))));
         var wrapped = new DepositBiomeSource(points, biomes.getHolderOrThrow(Biomes.DRIPSTONE_CAVES));

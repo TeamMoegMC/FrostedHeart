@@ -356,6 +356,16 @@ public final class DepositClientValidation {
         stage = 4;
     }
 
+    private static Map<String, Integer> stateCounts(int[] counts) {
+        Map<String, Integer> result = new LinkedHashMap<>();
+        for (int i = 0; i < counts.length; i++) {
+            if (counts[i] > 0) {
+                result.put(BuiltInRegistries.BLOCK.getKey(BuiltInRegistries.BLOCK.byId(i)).toString(), counts[i]);
+            }
+        }
+        return result;
+    }
+
     private static int levelRandomTicks() {
         return Minecraft.getInstance().getSingleplayerServer().overworld().getGameRules().getInt(GameRules.RULE_RANDOMTICKING);
     }
