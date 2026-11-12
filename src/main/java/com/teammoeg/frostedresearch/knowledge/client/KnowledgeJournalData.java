@@ -59,6 +59,8 @@ public final class KnowledgeJournalData {
      */
     public record Requirement(String id, String type, Component title, int level, int count, int done, boolean satisfied,
                               boolean ready, List<Integer> slots, List<KnowledgeKey> bound, int duration) {
+        public boolean sample() { return type.equals("sample"); }
+
         public boolean evidence() {
             return type.equals("evidence");
         }

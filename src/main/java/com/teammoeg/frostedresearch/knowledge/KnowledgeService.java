@@ -434,6 +434,7 @@ public final class KnowledgeService {
      */
     public boolean requirementMet(ResearchHistory run, ProjectRequirement requirement) {
         return switch (requirement.type()) {
+            case SAMPLE -> requirement.sample().filter(value -> value.equals(run.samples().get(requirement.id()))).isPresent();
             case CALCULATION -> calculationsDone(run, requirement) >= requirement.count();
             case EXPERIMENT -> experimentsDone(run, requirement) >= requirement.count();
             case EVIDENCE -> {
@@ -447,6 +448,33 @@ public final class KnowledgeService {
     /**
      * Won games at or above the requirement's current level.
      */
+    public List<com.teammoeg.frostedresearch.knowledge.experiment.ResearchSampleBinding> sampleTargets(ResourceLocation experiment) {
+        List<com.teammoeg.frostedresearch.knowledge.experiment.ResearchSampleBinding> targets = new ArrayList<>();
+        state.research().values().stream().filter(ResearchHistory::open).sorted(Comparator.comparing(r -> r.id().toString())).forEach(run -> {
+            for (var requirement : requirements(run)) if (requirement.type() == ProjectRequirement.Type.SAMPLE && !requirementMet(run, requirement)
+                    && requirement.sample().filter(sample -> sample.experiment().equals(experiment)).isPresent())
+                targets.add(new com.teammoeg.frostedresearch.knowledge.experiment.ResearchSampleBinding(teamId(), run.id(), requirement.id(), experiment));
+        });
+        return List.copyOf(targets);
+    }
+
+    /** Consumes exactly one real bound sample, only after every current task/run/team check has passed. */
+    public OperationResult submitSample(UUID runId, String requirementId, net.minecraft.world.item.ItemStack stack) {
+        var run = state.research().get(runId);
+        var requirement = openRequirement(run, requirementId, ProjectRequirement.Type.SAMPLE);
+        if (requirement == null) return result(Status.NOT_FOUND, null);
+        if (requirementMet(run, requirement)) return result(Status.ALREADY_OWNED, null);
+        var sample = requirement.sample().orElse(null);
+        var binding = com.teammoeg.frostedresearch.knowledge.experiment.ResearchSampleBinding.read(stack).orElse(null);
+        if (sample == null || stack.isEmpty() || !net.minecraftforge.registries.ForgeRegistries.ITEMS.getKey(stack.getItem()).equals(sample.item()) || binding == null
+                || !binding.team().equals(teamId()) || !binding.run().equals(runId) || !binding.requirement().equals(requirementId)
+                || !binding.experiment().equals(sample.experiment())) return result(Status.INVALID_INPUT, null);
+        stack.shrink(1);
+        state.recordResearch(run.withSample(requirementId, sample));
+        notifyChanged();
+        return result(Status.SUCCESS, null);
+    }
+
     public static int calculationsDone(ResearchHistory run, ProjectRequirement requirement) {
         return (int) run.calculations().getOrDefault(requirement.id(), List.of()).stream()
                 .filter(level -> level >= requirement.level()).count();

@@ -1,0 +1,7 @@
+{
+  "parent": "frostedresearch:block/trial_kiln_base",
+  "textures": {
+    "wall": "minecraft:block/cracked_stone_bricks",
+    "front": "minecraft:block/cracked_stone_bricks"
+  }
+}

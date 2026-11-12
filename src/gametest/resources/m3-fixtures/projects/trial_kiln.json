@@ -1,0 +1,76 @@
+{
+  "title": "小炉配比试验",
+  "body": "在研究开始后，用4根木棍试烧均衡配比的小炉。收取完好样品，放入绘图台检视物槽并提交。坏炉可以帮助理解配比，但不计为必做任务。",
+  "results": [
+    "example:trial_kiln_finding"
+  ],
+  "access": {
+    "conditions": {
+      "idea": {
+        "kind": "idea",
+        "definition": "example:trial_kiln"
+      },
+      "clay": {
+        "kind": "observation",
+        "observation_type": "item",
+        "title": "检视黏土球",
+        "conditions": [
+          {
+            "field": "object",
+            "operator": "eq",
+            "value": {
+              "state": "known",
+              "type": "string",
+              "text": "minecraft:clay_ball"
+            }
+          }
+        ]
+      },
+      "sand": {
+        "kind": "observation",
+        "observation_type": "item",
+        "title": "检视沙",
+        "conditions": [
+          {
+            "field": "object",
+            "operator": "eq",
+            "value": {
+              "state": "known",
+              "type": "string",
+              "text": "minecraft:sand"
+            }
+          }
+        ]
+      }
+    },
+    "start_all": [
+      "idea",
+      "clay",
+      "sand"
+    ],
+    "groups": [
+      {
+        "id": "materials",
+        "reveal_any": [
+          "idea"
+        ],
+        "conditions": [
+          "idea",
+          "clay",
+          "sand"
+        ]
+      }
+    ]
+  },
+  "requirements": [
+    {
+      "id": "submit_intact",
+      "type": "sample",
+      "title": "提交本次试烧的完好小炉",
+      "sample": {
+        "experiment": "frostedresearch:trial_kiln",
+        "item": "frostedresearch:fired_trial_kiln"
+      }
+    }
+  ]
+}

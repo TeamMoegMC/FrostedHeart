@@ -23,3 +23,7 @@ M2：授予并入档 example:i 后，实际拾取纸、使用苹果、观察纸�
 也可在档案零选择匹配 field_zero，选择一份纸匹配 field_one，或用粘土球＋沙匹配 field_legacy，等待完成。
 example:smelting_finding 入档后会触发无联络规则的 learned_hint，并使 field_idea 联络减20tick。
 behavior_study 承接新想法。示例用于测试世界，开发 grant 不代表正式生存获取路线。
+
+M3-A：example:trial_kiln 想法（黏土球取得触发，chance=1）＋黏土球/沙观察入档后可开始同名项目。
+制作 frostedresearch:trial_kiln_balanced，持4木棍起烧，400tick后收取；把成功样放绘图台检视物槽，在研究页提交并正常完成，得到 trial_kiln_finding。
+另两种比例小炉也可直接制作，分别产坏样，但不要求提交或强制试烧。正式双成果/旧研究留 M3-B。

@@ -49,7 +49,7 @@ import static com.teammoeg.frostedresearch.knowledge.client.ui.KnowledgeUiTheme.
  */
 public final class KnowledgeLayer extends UILayer {
     private static final com.teammoeg.chorda.client.icon.CIcons.CTextureIcon DESK_INVENTORY = DrawDeskIcons.ALL.withUV(0, 0, 140, 203, 512, 512);
-    private static final Set<String> RESEARCH_ACTIONS = Set.of("START_RESEARCH", "SUBMIT_EVIDENCE", "CALCULATE",
+    private static final Set<String> RESEARCH_ACTIONS = Set.of("START_RESEARCH", "SUBMIT_SAMPLE", "SUBMIT_EVIDENCE", "CALCULATE",
             "STOP_CALCULATION", "COMPLETE_RESEARCH", "ABANDON_RESEARCH");
 
     private enum Page {INBOX, ARCHIVE, RELATIONS, HINTS, RESEARCH}
@@ -500,6 +500,12 @@ public final class KnowledgeLayer extends UILayer {
             }).setEnabled(false);
             return;
         }
+        if (requirement.sample()) {
+            button(x, y, w, 19, t("research.sample.submit"), false,
+                () -> send(Action.SUBMIT_SAMPLE, List.of(), run.id(), "", "", requirement.id()))
+                .tooltip(t("research.sample.explain"));
+            return;
+        }
         if (requirement.experiment()) {
             // Experiments run on an experiment table, which lists the team's experiments itself.
             button(x, y, w, 19, t("research.experiment.at_table"), true, () -> {
@@ -532,9 +538,9 @@ public final class KnowledgeLayer extends UILayer {
 
     private Component requirementLine(KnowledgeJournalData.Requirement r, boolean started, boolean selected) {
         Component title = r.title().getString().isBlank()
-                ? t(r.evidence() ? "research.evidence" : r.experiment() ? "research.experiment" : "research.calculation") : r.title();
+                ? t(r.sample() ? "research.sample" : r.evidence() ? "research.evidence" : r.experiment() ? "research.experiment" : "research.calculation") : r.title();
         if (!started) return t("research.line.plain", title);
-        Component progress = r.evidence()
+        Component progress = r.sample() ? t("research.sample.progress", r.done()) : r.evidence()
                 ? t(r.satisfied() ? "research.evidence.done" : r.ready() ? "research.evidence.ready_short" : "research.evidence.waiting")
                 : r.experiment() ? t("research.experiment.progress", r.done(), r.count())
                 : t("research.calculation.progress", r.done(), r.count());
@@ -543,6 +549,7 @@ public final class KnowledgeLayer extends UILayer {
 
     private List<Component> requirementDetails(KnowledgeJournalData.Requirement r) {
         List<Component> lines = new ArrayList<>();
+        if (r.sample()) { lines.add(t("research.sample.explain")); return lines; }
         if (r.experiment()) {
             lines.add(t("research.experiment.explain", r.duration() / 20));
             return lines;
@@ -972,6 +979,9 @@ public final class KnowledgeLayer extends UILayer {
             case "research.start.definition_unavailable" -> "research.state.unavailable";
             case "research.start.not_understood", "research.start.invalid_input", "research.start.not_found" -> "research.state.needs_knowledge";
             case "research.start.requirements_unmet" -> "research.state.no_steps";
+            case "research.sample_done" -> "research.requirement_done";
+            case "research.sample_submitted" -> "research.sample.submitted";
+            case "research.sample_missing" -> "research.sample.missing";
             case "research.evidence_submitted" -> "research.msg.evidence_submitted";
             case "research.evidence_missing" -> "research.msg.evidence_missing";
             case "research.calculation_started" -> "research.msg.calculation_started";

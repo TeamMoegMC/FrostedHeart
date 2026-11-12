@@ -212,7 +212,9 @@ public final class KnowledgeView {
         CompoundTag tag = requirement(requirement);
         boolean met = service.requirementMet(run, requirement);
         tag.putBoolean("satisfied", met);
-        if (requirement.type() == ProjectRequirement.Type.CALCULATION) {
+        if (requirement.type() == ProjectRequirement.Type.SAMPLE) {
+            tag.putInt("done", met ? 1 : 0);
+        } else if (requirement.type() == ProjectRequirement.Type.CALCULATION) {
             tag.putInt("done", Math.min(requirement.count(), KnowledgeService.calculationsDone(run, requirement)));
         } else if (requirement.type() == ProjectRequirement.Type.EXPERIMENT) {
             tag.putInt("done", Math.min(requirement.count(), KnowledgeService.experimentsDone(run, requirement)));

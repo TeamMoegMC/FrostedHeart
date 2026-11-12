@@ -197,7 +197,7 @@ research topic 内。类型效果结构见 [成果与权限](../research/results
 可运行数据见 [joint_study](example-datapack/data/example/frostedresearch/knowledge/projects/joint_study.json)
 及 [纯成果 followup](example-datapack/data/example/frostedresearch/knowledge/projects/followup.json)。M2 获取概率与短联络见上文；M4 阶段尚未实现。
 
-每项需求的 `id` 在项目内唯一，是进度身份：增删一项需求不会让其他需求的进度错位。`type` 取：
+每项需求的 `id` 在项目内唯一，是进度身份：增删一项需求不会让其他需求的进度错位。`type` 取（另有独立实物类型 sample，见[小炉与实物提交](trial-kilns-and-samples.md)）：
 
 | 类型            | 字段                                                    | 含义与校验                                                                                       |
 |---------------|-------------------------------------------------------|---------------------------------------------------------------------------------------------|
@@ -341,3 +341,5 @@ NBT。未列出的数据不会进入这次观察，物品本身不被消耗。
 想法/成果的 `title`、`body`、规则的 `hints` 和项目标题支持翻译键；语言资源由客户端资源包/模组提供。已有键由当前客户端语言解析，普通作者正文使用原文。请不要把定义
 ID、字段名或 JSON 规则说明当作玩家正文。示例包使用 `knowledge.knowledge_example.*` 键，模组提供中英文译文；包内 README
 保留作者说明，游戏正文只描述玩家看到或想到的内容。
+
+M3-A：ProjectRequirement.type=sample 使用 sample.experiment 与 sample.item，固定消耗1件绑定当前队伍/run/任务的真实物品；它不增加观察用途或模拟实验台计时。完整字段与例子见[小炉与实物提交](trial-kilns-and-samples.md)。

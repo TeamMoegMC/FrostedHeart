@@ -55,7 +55,7 @@ import net.minecraftforge.network.NetworkEvent;
 public final class KnowledgeWorkbenchActionPacket implements CMessage {
     public enum Action {
         REFRESH, LEARN, DELETE, PREVIEW_LINK, LINK, CANCEL_LINK, RETRIEVE, EXPORT, DREAM_TOPIC, DISCUSS,
-        START_RESEARCH, SUBMIT_EVIDENCE, CALCULATE, STOP_CALCULATION, COMPLETE_RESEARCH, ABANDON_RESEARCH
+        START_RESEARCH, SUBMIT_EVIDENCE, CALCULATE, STOP_CALCULATION, COMPLETE_RESEARCH, ABANDON_RESEARCH, SUBMIT_SAMPLE
     }
 
     public static final int REQUIREMENT_LIMIT = 64;
@@ -182,6 +182,12 @@ public final class KnowledgeWorkbenchActionPacket implements CMessage {
                     response.putString("message", invited ? "discussion.invited" : "discussion.unavailable");
                 }
                 case START_RESEARCH -> startResearch(service, results, response);
+                case SUBMIT_SAMPLE -> {
+                    var result = service.submitSample(run(), requirement, desk.getInventory().getStackInSlot(DrawingDeskTileEntity.EXAMINE_SLOT));
+                    if (result.succeeded()) { desk.setChanged(); desk.syncData(); }
+                    addResult(results, result, service);
+                    response.putString("message", result.succeeded() ? "research.sample_submitted" : result.status() == KnowledgeService.Status.ALREADY_OWNED ? "research.sample_done" : "research.sample_missing");
+                }
                 case SUBMIT_EVIDENCE -> {
                     OperationResult result = service.submitEvidence(run(), requirement);
                     addResult(results, result, service);

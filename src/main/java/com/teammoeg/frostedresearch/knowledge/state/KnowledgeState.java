@@ -38,7 +38,7 @@ public class KnowledgeState implements SpecialData {
     /**
      * Layout written by {@link #write()}; bump it together with a step in {@link #upgrade}.
      */
-    public static final int SCHEMA_VERSION = 3;
+    public static final int SCHEMA_VERSION = 4;
     public static final Codec<KnowledgeState> CODEC = CompoundTag.CODEC.xmap(KnowledgeState::read, KnowledgeState::write);
     private final KnowledgeArchive archive = new KnowledgeArchive();
     private final KnowledgeInbox inbox = new KnowledgeInbox();

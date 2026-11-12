@@ -92,6 +92,15 @@ public class FRContents {
 				.mapColor(MapColor.WOOD)
 				.sound(SoundType.WOOD)
 				.strength(2, 6)));
+        public static final RegistryObject<com.teammoeg.frostedresearch.knowledge.experiment.TrialKilnBlock> TRIAL_KILN_CLAY_RICH = trialKiln("trial_kiln_clay_rich", false);
+        public static final RegistryObject<com.teammoeg.frostedresearch.knowledge.experiment.TrialKilnBlock> TRIAL_KILN_SAND_RICH = trialKiln("trial_kiln_sand_rich", false);
+        public static final RegistryObject<com.teammoeg.frostedresearch.knowledge.experiment.TrialKilnBlock> TRIAL_KILN_BALANCED = trialKiln("trial_kiln_balanced", true);
+        private static RegistryObject<com.teammoeg.frostedresearch.knowledge.experiment.TrialKilnBlock> trialKiln(String id, boolean success) {
+            return register(id, () -> new com.teammoeg.frostedresearch.knowledge.experiment.TrialKilnBlock(BlockBehaviour.Properties.of()
+                .mapColor(MapColor.CLAY).sound(SoundType.GRAVEL).strength(0.7f).noOcclusion()
+                .lightLevel(state -> state.getValue(com.teammoeg.frostedresearch.knowledge.experiment.TrialKilnBlock.PHASE) == 1 ? 7 : 0), success));
+        }
+
 		// MECHANICAL_CALCULATOR
 		public static final RegistryObject<MechCalcBlock> MECHANICAL_CALCULATOR = CFunctionUtils.makeIf(CompatModule.isCreateLoaded(), ()->
 			register("mechanical_calculator", () -> new MechCalcBlock(
@@ -130,6 +139,9 @@ public class FRContents {
 				"research_note", () -> new ResearchNoteItem(new Item.Properties()));
 		public static final RegistryObject<UpgradePrototypeItem> UPGRADE_PROTOTYPE = REGISTER.register(
 			"upgrade_prototype", () -> new UpgradePrototypeItem(new Item.Properties().stacksTo(1)));
+        public static final RegistryObject<Item> FIRED_TRIAL_KILN = REGISTER.register("fired_trial_kiln", () -> new Item(new Item.Properties().stacksTo(1)));
+        public static final RegistryObject<Item> CRACKED_TRIAL_KILN = REGISTER.register("cracked_trial_kiln", () -> new Item(new Item.Properties().stacksTo(1)));
+
 		public static final RegistryObject<MagnifyingGlassItem> MAGNIFYING_GLASS = REGISTER.register(
 			"magnifying_glass", () -> new MagnifyingGlassItem(new Item.Properties().stacksTo(1)));
 	}
@@ -141,6 +153,10 @@ public class FRContents {
 			"drawing_desk", makeType(DrawingDeskTileEntity::new, Blocks.DRAWING_DESK::get));
 		public static final RegistryObject<BlockEntityType<ExperimentTableBlockEntity>> EXPERIMENT_TABLE = REGISTER.register(
 			"experiment_table", makeType(ExperimentTableBlockEntity::new, Blocks.EXPERIMENT_TABLE::get));
+        public static final RegistryObject<BlockEntityType<com.teammoeg.frostedresearch.knowledge.experiment.TrialKilnBlockEntity>> TRIAL_KILN = REGISTER.register(
+            "trial_kiln", makeType(com.teammoeg.frostedresearch.knowledge.experiment.TrialKilnBlockEntity::new,
+                Blocks.TRIAL_KILN_CLAY_RICH::get, Blocks.TRIAL_KILN_SAND_RICH::get, Blocks.TRIAL_KILN_BALANCED::get));
+
 		public static final RegistryObject<BlockEntityType<MechCalcTileEntity>> MECH_CALC = CFunctionUtils.makeIf(CompatModule.isCreateLoaded(),()->REGISTER.register(
 			"mechanical_calculator", makeType(MechCalcTileEntity::new, ()->Blocks.MECHANICAL_CALCULATOR.get())));
 

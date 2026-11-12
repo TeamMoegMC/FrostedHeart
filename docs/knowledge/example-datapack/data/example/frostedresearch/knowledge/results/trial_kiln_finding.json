@@ -1,0 +1,8 @@
+{
+  "title": "合适的小炉配比",
+  "body": "均衡配比的炉壁在试烧中保持完好。",
+  "result": {
+    "type": "finding",
+    "id": "example:trial_kiln_finding"
+  }
+}

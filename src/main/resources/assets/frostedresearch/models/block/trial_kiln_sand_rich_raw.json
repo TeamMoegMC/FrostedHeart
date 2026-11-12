@@ -1,0 +1,7 @@
+{
+  "parent": "frostedresearch:block/trial_kiln_base",
+  "textures": {
+    "wall": "minecraft:block/sand",
+    "front": "minecraft:block/sand"
+  }
+}

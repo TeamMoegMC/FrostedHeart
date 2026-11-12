@@ -1,0 +1,27 @@
+{
+  "title": "小炉配比试验",
+  "body": "尝试黏土与沙的不同比例。",
+  "acquisition": {
+    "chance": 1,
+    "triggers": [
+      {
+        "event": "frostedresearch:item_obtained",
+        "subject": {
+          "kind": "observation",
+          "observation_type": "item",
+          "conditions": [
+            {
+              "field": "object",
+              "operator": "eq",
+              "value": {
+                "state": "known",
+                "type": "string",
+                "text": "minecraft:clay_ball"
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

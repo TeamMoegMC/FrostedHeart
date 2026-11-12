@@ -16,7 +16,7 @@
 `chorda_data/<内部队伍 UUID>.nbt`。`data/TeamKnowledgeData` 是已有调用位置的薄封装，其实际状态由
 `knowledge/state/KnowledgeState` 保存。`TeamResearchData` 继续独立保存旧研究进度。
 
-存储格式为 `schema_version: 3`（`KnowledgeState.SCHEMA_VERSION`；`TeamKnowledgeData.CURRENT_SCHEMA_VERSION` 引用同一常量），重新定义了原有
+存储格式为 `schema_version: 4`（`KnowledgeState.SCHEMA_VERSION`；`TeamKnowledgeData.CURRENT_SCHEMA_VERSION` 引用同一常量），重新定义了原有
 knowledge 结构，没有从旧版四个 acquired-ID 集合迁移的逻辑。新源码中的 `findingIds()` 等旧式访问器从档案派生，不再形成另一份成果权威。
 `KnowledgeState.read` 先读取 `schema_version` 并交给 `KnowledgeState.upgrade`，这是存储格式迁移的唯一入口；版本 2 是知识系统的第一版布局；版本 3 把研究记录的单个 `idea` 迁移为去重排序的 `origins` 列表，保留 UUID、时间、结果与全部进度。迁移在副本上执行，已有 origins 优先；缺版本也兼容旧 idea。缺少来源而其他字段可读时保留进度与空来源。版本号高于当前值时按现有格式解码，`write()` 始终写入当前版本。
 
@@ -294,3 +294,10 @@ NBT 大小限制截断。绘图台回复只携带本次操作结果与联络候�
 `research complete` 是权限等级 2 的开发命令，跳过项目需求。它沿用该项目进行中的启动；没有时检查正常 access；纯成果入口无需想法参数，再调用
 `startResearch` / `completeResearch`，不会把研究项目当作新的知识元素或直接伪造成果权限。项目已完成且成果都在档案中时提示无法开始。示例操作见
 [playthrough.md](playthrough.md)。
+
+## M3-A 实物进度（schema 4）
+
+ResearchHistory.samples 为可选任务回执映射，记录 sample.experiment 与 sample.item；旧 v3 缺席读为空，既有进度不变。
+KnowledgeService.sampleTargets(experiment) 只列当前开放且未满足的 sample 任务；submitSample(run, requirement, stack)
+检查真实物品和 ResearchSampleBinding 后消耗1件并写回执；重复/错误样品不扣物。finishResearch 继续统一检查所有任务。
+更改绑定语义、设备生命周期与绘图台操作见[小炉与实物提交](trial-kilns-and-samples.md)。

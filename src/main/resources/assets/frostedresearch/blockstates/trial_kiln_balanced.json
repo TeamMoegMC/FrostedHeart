@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "phase=0": {
+      "model": "frostedresearch:block/trial_kiln_balanced_raw"
+    },
+    "phase=1": {
+      "model": "frostedresearch:block/trial_kiln_balanced_burning"
+    },
+    "phase=2": {
+      "model": "frostedresearch:block/trial_kiln_balanced_good"
+    },
+    "phase=3": {
+      "model": "frostedresearch:block/trial_kiln_balanced_bad"
+    }
+  }
+}

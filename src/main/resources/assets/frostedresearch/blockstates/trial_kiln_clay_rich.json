@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "phase=0": {
+      "model": "frostedresearch:block/trial_kiln_clay_rich_raw"
+    },
+    "phase=1": {
+      "model": "frostedresearch:block/trial_kiln_clay_rich_burning"
+    },
+    "phase=2": {
+      "model": "frostedresearch:block/trial_kiln_clay_rich_good"
+    },
+    "phase=3": {
+      "model": "frostedresearch:block/trial_kiln_clay_rich_bad"
+    }
+  }
+}

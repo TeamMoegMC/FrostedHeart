@@ -36,3 +36,6 @@ entry, legacy projects, observation uses, strict decoding and v2/v3 state round 
 
 M2 behavior and contact checks use `frostedresearch_m2` (`IdeaAcquisitionGameTests`), including real item pickup,
 crafting/furnace/container extraction, use/interaction bridges and repeated observation sessions; fixtures live under resources/m2-fixtures/.
+
+M3-A trial kiln and physical submission checks use `frostedresearch_m3` (`TrialKilnGameTests`), a separate `m3_trial_kiln` batch
+and trial_kiln_empty structure. They cover real loaded ticks, three ratios, lifecycle/settlement, sample binding and schema4 progress.

@@ -44,8 +44,8 @@ import java.util.*;
  */
 public record ProjectRequirement(String id, Type type, String title, int level, int count,
                                  List<LinkRule.Slot> inputs, List<LinkRule.CrossCondition> conditions,
-                                 List<Distinct> distinct, int duration, List<Material> materials, Space space) {
-    public enum Type {EVIDENCE, CALCULATION, EXPERIMENT}
+                                 List<Distinct> distinct, int duration, List<Material> materials, Space space, Optional<Sample> sample) {
+    public enum Type {EVIDENCE, CALCULATION, EXPERIMENT, SAMPLE}
 
     public static final int MAX_EVIDENCE_SLOTS = 8;
     public static final int MAX_EVIDENCE_CONDITIONS = 10;
@@ -70,7 +70,8 @@ public record ProjectRequirement(String id, Type type, String title, int level, 
             field(Distinct.CODEC.listOf(), "distinct", List.of()).forGetter(ProjectRequirement::distinct),
             field(Codec.INT, "duration", 0).forGetter(ProjectRequirement::duration),
             field(Material.CODEC.listOf(), "materials", List.of()).forGetter(ProjectRequirement::materials),
-            field(Space.CODEC, "space", Space.NONE).forGetter(ProjectRequirement::space)
+            field(Space.CODEC, "space", Space.NONE).forGetter(ProjectRequirement::space),
+            KnowledgeKey.strictOptionalField(Sample.CODEC, "sample").forGetter(ProjectRequirement::sample)
     ).apply(i, ProjectRequirement::new));
 
     /**
@@ -142,6 +143,20 @@ public record ProjectRequirement(String id, Type type, String title, int level, 
         }
     }
 
+    public record Sample(ResourceLocation experiment, ResourceLocation item) {
+        public static final Codec<Sample> CODEC = RecordCodecBuilder.create(i -> i.group(
+            ResourceLocation.CODEC.fieldOf("experiment").forGetter(Sample::experiment),
+            ResourceLocation.CODEC.fieldOf("item").forGetter(Sample::item)
+        ).apply(i, Sample::new));
+    }
+    public ProjectRequirement(String id, Type type, String title, int level, int count, List<LinkRule.Slot> inputs,
+            List<LinkRule.CrossCondition> conditions, List<Distinct> distinct, int duration, List<Material> materials, Space space) {
+        this(id, type, title, level, count, inputs, conditions, distinct, duration, materials, space, Optional.empty());
+    }
+    public static ProjectRequirement sample(String id, String title, ResourceLocation experiment, ResourceLocation item) {
+        return new ProjectRequirement(id, Type.SAMPLE, title, 0, 1, List.of(), List.of(), List.of(), 0, List.of(), Space.NONE, Optional.of(new Sample(experiment, item)));
+    }
+
     public ProjectRequirement {
         inputs = List.copyOf(inputs);
         conditions = List.copyOf(conditions);
@@ -186,7 +201,13 @@ public record ProjectRequirement(String id, Type type, String title, int level, 
         if (id.isBlank()) errors.add("Requirement id must not be blank");
         if (type != Type.EXPERIMENT && (duration != 0 || !materials.isEmpty() || !space.equals(Space.NONE)))
             errors.add(id + ": only experiments take duration, materials or space");
+        if (type != Type.SAMPLE && sample.isPresent()) errors.add(id + ": sample only applies to sample tasks");
         switch (type) {
+            case SAMPLE -> {
+                if (title.isBlank() || sample.isEmpty()) errors.add(id + ": sample needs title and sample definition");
+                if (level != 0 || count != 1 || !inputs.isEmpty() || !conditions.isEmpty() || !distinct.isEmpty()) errors.add(id + ": sample consumes one bound item, no slots/level/count override");
+                sample.ifPresent(value -> { if (!ForgeRegistries.ITEMS.containsKey(value.item())) errors.add(id + ": unknown sample item " + value.item()); });
+            }
             case CALCULATION -> {
                 if (level < 0 || level > MAX_CALCULATION_LEVEL)
                     errors.add(id + ": calculation level must be 0 to " + MAX_CALCULATION_LEVEL);
