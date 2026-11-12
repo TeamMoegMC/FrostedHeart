@@ -197,3 +197,7 @@ retain the M3 bridge semantics; neither temporary grants nor external results ma
 ## M5 自有炉生产接点
 
 `ControlledFurnaceBlockEntity.start` 的无 experiment 配方必须由当前 enabled Design 声明且 `ResearchHooks.canUseRecipe(team, recipe)` 允许。它不改变全局 unmanaged 策略或旧三方耐火砖工艺；遗忘仅阻止下一炉，已扣料批次继续交付。JEI 自有分类沿原投影刷新配方显隐。见 [控温实验炉](../knowledge/controlled-furnace.md)。
+
+## M6 备用run的临时来源
+
+`TechnologyAccessResolver` 与 `KnowledgeService` 共用 `ResearchRuns.standby`：必须有真实completed run且当前全部成果有效已学，才暂停同项目其余open run的TemporaryResearchSource。只暂停来源，不删除stage visit保存的temporary_recipes；遗忘或失效后重新投影恢复。外来成果不构造完成，跨项目/永久/旧研究来源继续取并集。KnowledgeState仍为schema5，旧完成承接规则不变。

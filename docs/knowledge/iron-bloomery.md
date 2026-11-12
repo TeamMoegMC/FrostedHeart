@@ -1,6 +1,6 @@
 # 冶铁炉正式内容与操作路线
 
-- Status: Partial：TWR 数据和脚本已静态核对；M4 FH 阶段/原型/兼容实现由并行工作负责，尚未联调。
+- Status: Verified：正式包单客户端及双客户端同队流程已验证；世界、材料和起始知识使用夹具，完整生存获取仍未实玩。
 - Last verified: 2026-11-12
 - Scope: iron_smelting 想法、iron_bloomery 两阶段项目、单 Design 双配方成果、铁材料触发标签和旧 iron 映射。
 - Anchors: [M4 采用决定](../../plans/2026-11-12_15-45-00_research-m4-stage-tuyere-interface-decisions.md)、[正式项目](../../../TheWinterRescue/kubejs/data/the_winter_rescue/frostedresearch/knowledge/projects/iron_bloomery.json)、[正式配方脚本](../../../TheWinterRescue/kubejs/server_scripts/src/recipes/shaped/new.js)、[风口脚本](../../../TheWinterRescue/kubejs/server_scripts/src/recipes/shapeless.js)。
@@ -25,9 +25,9 @@ airflow 阶段的 completion_recipes 只有 the_winter_rescue:research/prototype
 | main_bloomery | 4砂浆 + 4青铜板 + 1砂砖方块 → 1主冶铁炉 |
 | sandy_tuyere | 1砂砖方块 + 1青铜板 + 1砂浆 → 1正常风口 |
 
-new.js 只针对主冶铁炉选择稳定 ID，其他数组条目继续原索引。shapeless.js 通过 helper 的既有 id 参数固定风口 ID，其他索引不变；按产物清理正常风口全部原模组/conditional 路线，覆盖 sandy_tuyere 和 sandy_tuyere2，不仅移除一个旧 ID。主冶铁炉同样清理同产物旧路线。实际 RecipeManager 仍需检查清理结果与唯一正式路线，不能把静态过滤器视为运行证明。
+new.js 只针对主冶铁炉选择稳定 ID，其他数组条目继续原索引。shapeless.js 通过 helper 的既有 id 参数固定风口 ID，其他索引不变；按产物清理正常风口全部原模组/conditional 路线，覆盖 sandy_tuyere 和 sandy_tuyere2，不仅移除一个旧 ID。主冶铁炉同样清理同产物旧路线。正式客户端已核对实际 RecipeManager 中原型、正式风口和主冶铁炉的唯一配方及权限。
 
-旧 config/fhresearches/iron.json 保留。legacy_replacement 将 c520be3259914225 映射单 Design；按采用契约，旧 finished 或已领取该效果者获得双配方结果，只有 finished 获得 completed_credit。此为与并行 FH bridge 的数据契约，本文未运行迁移。
+旧 config/fhresearches/iron.json 保留。legacy_replacement 将 c520be3259914225 映射单 Design；旧 finished 或已领取该效果者获得双配方结果，只有 finished 获得 completed_credit。桥接、重复初始化、权限并集与独立进程重启见[M4服务端记录](../../diary/2026-11-12_17-27-52_research-m4-full-stage-tuyere-handoff.md)。
 
 ## 触发覆盖与材料证据
 
@@ -44,3 +44,7 @@ iron_materials 标签显式聚合 forge:ores/iron、raw_materials/iron、crushed
 砂砖烧成有原生 Charcoal Pit 陶窑路线，不依赖 IE blast furnace 或 Car Kiln：依赖 JAR 7748097 的 pottery_recipes/sandy_bricks.json 把 unfired_sandy_brick 烧成 sandy_brick_item（exp=0.3）。原生坯料配方被 TWR change.js 按同产物移除，正式保留的是5沙+4黏土球→4未烧砖；不能用原生1沙的数量计算正式材料。remove.js 移除的 charcoal_pit:sandy_bricks 是普通组块配方，不会移除陶窑烧制。TWR 组块配方为1砂浆+4 sandy_brick_item→2 charcoal_pit:sandy_brick。两批正式坯料共需10沙+8黏土球，烧成8单砖：4给collector，4加砂浆合成两个砂砖方块，其中一个用于原型，另需原型配方自身的1青铜板和1砂浆。IE blast furnace/Car Kiln 是替代烧成路径。Coke Oven 即使旧目录 parents 为空，实体仍需焦炉砖和工程锤；TWR 焦炉砖也使用已烧砂砖、砂浆及结构金属板，不能据无父项推断材料零门槛。
 
 主协调已将现有配方引用的 #forge:plates/iron、#forge:rods/iron、#forge:dusts/iron 补入 iron_materials.json，覆盖铁板、铁杆和铁粉；实际解析出的标签成员仍应集成时核对。
+
+## 客户端验证范围
+
+[单客户端](../../diary/2026-11-12_17-35-19_research-m4-client-fixed-pack-handoff.md)已通过风道、临时配方、原型放置、10tick风箱通气、现场新鲜观察和最终权限；[双客户端](../../diary/2026-11-12_19-04-00_research-m7-two-client-validation.md)进一步验证队友真实2×2合成及放置后离线、另一人继续、重连同步与重复操作不重复发奖。后一次固定M5产物的截图已显示完整管线和进出口箭头。这些操作使用实际客户端与网络端点，但材料和起始知识来自夹具，不表示原料获取、全套生存加工或物理键鼠手感已验收。

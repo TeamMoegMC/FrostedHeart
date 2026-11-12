@@ -45,13 +45,7 @@ public final class TrialKilnBlock extends BaseEntityBlock {
                 var service = KnowledgeService.forPlayer(server);
                 if (held.isEmpty()) {
                     var selected = kiln.cycleTarget(service);
-                    Component title = selected.map(binding -> {
-                        var run = service.state().research().get(binding.run());
-                        var project = KnowledgeDefinitions.current().projects().get(run.project());
-                        var requirement = project.requirement(binding.requirement()).orElseThrow();
-                        return Component.translatableWithFallback(project.title(), project.title()).append(" · ")
-                            .append(Component.translatableWithFallback(requirement.title(), requirement.title()));
-                    }).orElse(Component.empty());
+                    Component title = selected.map(service::targetLabel).orElse(Component.empty());
                     player.displayClientMessage(selected.isPresent() ? Component.translatable("message.frostedresearch.trial_kiln.target", title)
                         : Component.translatable("message.frostedresearch.trial_kiln.unbound"), true);
                 } else {

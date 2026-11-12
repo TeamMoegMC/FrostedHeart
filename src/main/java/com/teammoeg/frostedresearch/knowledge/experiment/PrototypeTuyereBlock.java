@@ -31,8 +31,8 @@ public final class PrototypeTuyereBlock extends BaseEntityBlock {
         if(hand!=InteractionHand.MAIN_HAND || !player.getItemInHand(hand).isEmpty()) return InteractionResult.PASS;
         if(player instanceof ServerPlayer server && level.getBlockEntity(pos) instanceof PrototypeTuyereBlockEntity prototype) {
             var service=KnowledgeService.forPlayer(server);var binding=prototype.cycle(service);
-            var title=binding.map(value -> KnowledgeDefinitions.current().projects().get(service.state().research().get(value.run()).project()).title()).orElse("");
-            player.displayClientMessage(binding.isPresent() ? Component.translatable("message.frostedresearch.tuyere.target",Component.translatableWithFallback(title,title)) : Component.translatable("message.frostedresearch.tuyere.no_targets"),true);
+            var title=binding.map(service::targetLabel).orElse(Component.empty());
+            player.displayClientMessage(binding.isPresent() ? Component.translatable("message.frostedresearch.tuyere.target",title) : Component.translatable("message.frostedresearch.tuyere.no_targets"),true);
         }return InteractionResult.sidedSuccess(level.isClientSide);
     }
     @Override public List<ItemStack> getDrops(BlockState state,LootParams.Builder builder) { return List.of(new ItemStack(this)); }

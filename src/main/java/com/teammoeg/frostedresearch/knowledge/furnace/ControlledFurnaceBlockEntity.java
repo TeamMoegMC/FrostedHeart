@@ -29,7 +29,12 @@ public final class ControlledFurnaceBlockEntity extends CBlockEntity implements 
     private boolean trial=true;
     private int temperature=1000,lockedTemperature=1000,remaining,duration;
     private ItemStack refund=ItemStack.EMPTY,planned=ItemStack.EMPTY,pending=ItemStack.EMPTY;
-    private ResearchSampleBinding binding;
+    private ResearchSampleBinding binding,selectedTarget;
+    private Component targetTitle=Component.empty();
+    private int targetCount;
+    private List<ResearchSampleBinding> targetOptions=List.of();
+    private long targetsRevision=-1,targetsDefinitions=-1;
+    private Object targetsRecipes;
     private String message="idle",outcome="complete";
     public ControlledFurnaceBlockEntity(BlockPos pos,BlockState state){super(FRContents.BlockEntityTypes.CONTROLLED_FURNACE.get(),pos,state);}
     public ItemStackHandler inventory(){return inventory;}
@@ -42,6 +47,30 @@ public final class ControlledFurnaceBlockEntity extends CBlockEntity implements 
     public String message(){return message;}
     public boolean busy(){return !refund.isEmpty() || !pending.isEmpty();}
     public Optional<ResearchSampleBinding> binding(){return Optional.ofNullable(binding);}
+    public Optional<ResearchSampleBinding> selectedTarget(){return Optional.ofNullable(selectedTarget);}
+    public Component targetTitle(){return targetTitle;}
+    public int targetCount(){return targetCount;}
+    /** Recompute on knowledge/definition/recipe changes, not on each menu broadcast. */
+    public void refreshTargets(ServerPlayer player){
+        if(!claim(player) || level==null || level.isClientSide)return;
+        var service=KnowledgeService.forPlayer(player);
+        long revision=service.state().mutationRevision(),definitions=KnowledgeDefinitions.current().revision();
+        Object recipes=level.getRecipeManager();
+        if(targetsRevision==revision && targetsDefinitions==definitions && targetsRecipes==recipes)return;
+        targetsRevision=revision;targetsDefinitions=definitions;targetsRecipes=recipes;
+        java.util.Set<net.minecraft.resources.ResourceLocation> experiments=new HashSet<>();
+        level.getRecipeManager().getAllRecipesFor(FRContents.Recipes.CONTROLLED_FIRING.get()).forEach(r -> r.experiment().ifPresent(experiments::add));
+        targetOptions=service.observationTargets(experiments);targetCount=targetOptions.size();
+        if((selectedTarget==null || !targetOptions.contains(selectedTarget)) && targetCount==1)selectedTarget=targetOptions.get(0);
+        targetTitle=selectedTarget!=null && (targetOptions.contains(selectedTarget) || busy()) ? service.targetLabel(selectedTarget) : Component.empty();
+        changed();
+    }
+    public Optional<ResearchSampleBinding> cycleTarget(ServerPlayer player){
+        refreshTargets(player);
+        if(!claim(player) || busy() || targetOptions.isEmpty())return Optional.empty();
+        int current=selectedTarget==null?-1:targetOptions.indexOf(selectedTarget);selectedTarget=targetOptions.get((current+1)%targetOptions.size());
+        targetTitle=KnowledgeService.forPlayer(player).targetLabel(selectedTarget);changed();return selectedTarget();
+    }
     public boolean claim(ServerPlayer player){
         UUID current=CTeamDataManager.get(player).getId();
         if(team==null){team=current;changed();}return team.equals(current);
@@ -60,11 +89,16 @@ public final class ControlledFurnaceBlockEntity extends CBlockEntity implements 
         if(!claim(player))return say("not_owned");
         if(busy())return say("busy");
         if(!inventory.getStackInSlot(2).isEmpty())return say("output_full");
+        refreshTargets(player);
         var service=KnowledgeService.forPlayer(player);
+        if(trial && targetCount>1 && (selectedTarget==null || !targetOptions.contains(selectedTarget)))return say("choose_target");
         boolean eligible=false;
         for(var recipe:recipes()){
             ResearchSampleBinding target=null;
-            if(trial){var targets=service.observationTargets(recipe.experiment().orElseThrow());if(targets.isEmpty())continue;target=targets.get(0);}
+            if(trial){
+                if(selectedTarget==null || !targetOptions.contains(selectedTarget) || !recipe.experiment().orElseThrow().equals(selectedTarget.experiment()))continue;
+                target=selectedTarget;
+            }
             else if(!managed(recipe) || !ResearchHooks.canUseRecipe(team,recipe))continue;
             eligible=true;
             if(!recipe.matches(inventory.getStackInSlot(0),inventory.getStackInSlot(1)))continue;
@@ -112,12 +146,17 @@ public final class ControlledFurnaceBlockEntity extends CBlockEntity implements 
         n.putString("outcome",outcome);n.putInt("remaining",remaining);n.putInt("duration",duration);n.putString("message",message);
         if(!desc){n.put("refund",refund.save(new CompoundTag()));n.put("planned",planned.save(new CompoundTag()));n.put("pending",pending.save(new CompoundTag()));
             if(binding!=null)n.put("binding",ResearchSampleBinding.CODEC.encodeStart(net.minecraft.nbt.NbtOps.INSTANCE,binding).result().orElseThrow());}
+        if(selectedTarget!=null)n.put("selected_target",ResearchSampleBinding.CODEC.encodeStart(net.minecraft.nbt.NbtOps.INSTANCE,selectedTarget).result().orElseThrow());
+        n.putString("target_title",Component.Serializer.toJson(targetTitle));n.putInt("target_count",targetCount);
         n.putBoolean("busy",busy());
     }
     private boolean clientBusy;
     @Override public void readCustomNBT(CompoundTag n,boolean desc){
         if(!desc){inventory.deserializeNBT(n.getCompound("inventory"));refund=ItemStack.of(n.getCompound("refund"));planned=ItemStack.of(n.getCompound("planned"));pending=ItemStack.of(n.getCompound("pending"));
             binding=ResearchSampleBinding.CODEC.parse(net.minecraft.nbt.NbtOps.INSTANCE,n.getCompound("binding")).result().orElse(null);}
+        selectedTarget=n.contains("selected_target") ? ResearchSampleBinding.CODEC.parse(net.minecraft.nbt.NbtOps.INSTANCE,n.get("selected_target")).result().orElse(null) : binding;
+        targetTitle=n.getString("target_title").isBlank()?Component.empty():Component.Serializer.fromJson(n.getString("target_title"));
+        if(targetTitle==null)targetTitle=Component.empty();targetCount=n.getInt("target_count");targetsRevision=-1;
         team=n.hasUUID("team")?n.getUUID("team"):null;trial=!n.contains("trial") || n.getBoolean("trial");
         temperature=n.contains("temperature")?Math.max(600,Math.min(1400,n.getInt("temperature"))):1000;
         outcome=n.contains("outcome")?n.getString("outcome"):"complete";lockedTemperature=n.getInt("locked_temperature");remaining=n.getInt("remaining");duration=n.getInt("duration");message=n.getString("message");clientBusy=n.getBoolean("busy");

@@ -71,6 +71,7 @@ public final class KnowledgeLayer extends UILayer {
     private KnowledgeKey.Kind kind = KnowledgeKey.Kind.OBSERVATION;
     private KnowledgeKey focused;
     private String focusedProject;
+    private final Map<String,String> selectedRuns=new HashMap<>();
     private int hintIndex = -1, candidateIndex, requirementIndex;
     private boolean organize, details, history, filterOpen;
     private String query = "", statusFilter = "", subtype = "", partner = "", draftTitle = "", draftRemarks = "";
@@ -456,6 +457,11 @@ public final class KnowledgeLayer extends UILayer {
             () -> send(Action.RESET_AIRFLOW,List.of(),airflowRun,"","",airflowTask)).setEnabled(!airflowBoard.getBoolean("won"));
         button(x+w/2+2,bottom-27,w/2-2,20,t("research.airflow_back"),true,() -> {airflowOpen=false;rebuild();});
     }
+    private KnowledgeJournalData.Run selectedRun(String project) {
+        var run=data.openRun(project,selectedRuns.get(project));
+        if(run!=null)selectedRuns.put(project,run.id());
+        return run;
+    }
     private void buildResearchReading(int x, int w, int bottom) {
         if(airflowOpen) { buildAirflowReading(x,w,bottom);return; }
         var project = researchProject(focusedProject);
@@ -467,7 +473,7 @@ public final class KnowledgeLayer extends UILayer {
             reading.text(List.of(Component.translatable("knowledge.frostedresearch.research.legacy_completed"), Component.translatable("knowledge.frostedresearch.research.legacy_completed_explain")));
             return;
         }
-        var run = data.openRun(project.id());
+        var run = selectedRun(project.id());
         if (mode == Mode.ABANDON && run != null) {
             reading.text(List.of(t("research.abandon.question"), t("research.abandon.explain")));
             button(x, bottom - 21, w / 2 - 3, 19, t("research.abandon.confirm"), false, () -> {
@@ -481,7 +487,17 @@ public final class KnowledgeLayer extends UILayer {
             });
             return;
         }
+        var choices=data.openRuns(project.id());
+        if(run!=null && choices.size()>1) {
+            int index=choices.indexOf(run),row=reading.getY();
+            button(x,row,20,19,Component.literal("‹"),true,()->{selectedRuns.put(project.id(),choices.get(Math.floorMod(index-1,choices.size())).id());requirementIndex=0;rebuild();});
+            button(x+24,row,w-48,19,KnowledgeJournalData.runLabel(run),true,()->{}).setEnabled(false);
+            button(x+w-20,row,20,19,Component.literal("›"),true,()->{selectedRuns.put(project.id(),choices.get((index+1)%choices.size()).id());requirementIndex=0;rebuild();});
+            reading.setPosAndSize(x,row+23,w,Math.max(20,reading.getHeight()-23));
+        }
         List<Component> paragraphs = new ArrayList<>();
+        long standby=data.runs.stream().filter(r -> r.project().equals(project.id()) && r.status().equals("standby")).count();
+        if(standby>0)paragraphs.add(t("research.standby",standby));
         if (!project.body().getString().isBlank()) paragraphs.add(project.body());
         if (!project.outputTitles().isEmpty()) {
             paragraphs.add(t("graph.expected_results"));
@@ -671,7 +687,8 @@ public final class KnowledgeLayer extends UILayer {
     }
 
     private Component researchState(KnowledgeJournalData.Project project) {
-        var run = data.openRun(project.id());
+        var run = selectedRun(project.id());
+        if(project.startStatus().equals("ALREADY_OWNED"))return t("research.state.completed");
         if (project.startStatus().equals("LEGACY_COMPLETED")) return Component.translatable("knowledge.frostedresearch.research.legacy_completed");
         if (run != null)
             return !run.requirements().isEmpty() && run.requirements().stream().allMatch(KnowledgeJournalData.Requirement::satisfied)

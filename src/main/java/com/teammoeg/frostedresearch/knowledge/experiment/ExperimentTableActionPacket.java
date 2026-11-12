@@ -53,22 +53,25 @@ public record ExperimentTableActionPacket(BlockPos pos, Action action, String ru
     @Override
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
-            ServerPlayer player = context.get().getSender();
-            ExperimentTableBlockEntity table = player == null ? null : table(player);
-            if (table == null) return;
-            switch (action) {
-                case SELECT -> {
-                    UUID id = uuid(run);
-                    if (id != null) table.select(player, id, requirement);
-                }
-                case CHECK -> table.check(player);
-                case START -> table.start(player);
-                case STOP -> table.stop();
-            }
-            table.setChanged();
-            table.syncData();
+            ServerPlayer player=context.get().getSender();
+            if(player!=null)apply(player);
         });
         context.get().setPacketHandled(true);
+    }
+
+    /** Execute the clicked target, never a different teammate's newly selected experiment. */
+    public void apply(ServerPlayer player) {
+        var table=table(player);if(table==null)return;
+        if(action!=Action.SELECT && (!java.util.Objects.equals(table.run(),uuid(run)) || !table.requirement().equals(requirement))) {
+            table.syncData();return;
+        }
+        switch(action) {
+            case SELECT -> {UUID id=uuid(run);if(id!=null)table.select(player,id,requirement);}
+            case CHECK -> table.check(player);
+            case START -> table.start(player);
+            case STOP -> table.stop();
+        }
+        table.setChanged();table.syncData();
     }
 
     private ExperimentTableBlockEntity table(ServerPlayer player) {

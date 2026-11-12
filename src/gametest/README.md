@@ -56,6 +56,19 @@ The two-process `frostedresearch_m4_restart` check uses `-Pm4RestartPhase=write`
 `-PgameTestDirectory`. Exact commands, verified results and startup-failure pitfalls are recorded in the
 [M4 handoff](../../diary/2026-11-12_17-27-52_research-m4-full-stage-tuyere-handoff.md).
 
+M5 controlled-furnace checks use `-Pm5Tests` and namespace `frostedresearch_m5`;
+see the [M5 handoff](../../diary/2026-11-12_18-10-45_research-m5-controlled-furnace-handoff.md) for the minimum run command and separate-process checks.
+
+M6 merged-run checks use `frostedresearch_m6`; device selection checks use `frostedresearch_m6_devices` from
+`src/m5/`, enabled by `-Pm5Tests` without Charcoal Pit. With Java 17, the minimum Windows command is:
+
+```powershell
+.\gradlew.bat runGameTestServer -Pm5Tests '-PgameTestNamespaces=frostedresearch_m6,frostedresearch_m6_devices' '-PgameTestDirectory=build/m6-gametest'
+```
+
+The [merged-run contract](../../docs/knowledge/state-and-api.md#m6-合并记录排序与备用进度) owns the rules;
+exact validation scope and evidence belong in the [M6 handoff](../../diary/2026-11-12_19-32-38_research-m6-merged-runs-final-handoff.md).
+
 Client checks use the opt-in `runM3cClient` task or the separate `m3cValidationJar` helper for an isolated full-pack
 instance. Normal `jar` excludes the helper. See the [M3-C handoff](../../diary/2026-11-12_16-58-51_research-m3c-client-prism-handoff.md)
 for setup, evidence paths and the distinction between callback tests, full-pack loading and physical input.

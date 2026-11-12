@@ -110,8 +110,8 @@ public final class TechnologyAccessResolver {
         addResultSources(knowledge, catalog, recipeSources, multiblockSources, blockSources);
         addLegacySources(legacy, recipeSources, multiblockSources, blockSources);
         var server=net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer();
-        for(var run:knowledge.research().values()) {
-            if(!run.open() || LegacyResearchBridge.completedCredit(legacy,run.project())) continue;
+        for(var run:ResearchRuns.sorted(knowledge)) {
+            if(!run.open() || ResearchRuns.standby(knowledge,run) || LegacyResearchBridge.completedCredit(legacy,run.project())) continue;
             var project=KnowledgeDefinitions.current().projects().get(run.project());
             if(project==null) continue;
             run.stageState().visits().forEach((stageId,visit) -> project.stage(stageId).ifPresent(stage -> {

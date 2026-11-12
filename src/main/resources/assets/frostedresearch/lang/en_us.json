@@ -765,5 +765,11 @@
   "gui.frostedresearch.furnace.overfired": "Overfired: cracked bricks. Lower the next batch temperature.",
   "gui.frostedresearch.furnace.jei_duration": "Firing: %s seconds",
   "gui.frostedresearch.furnace.jei_failure": "Outside the window: cracked bricks",
-  "gui.frostedresearch.furnace.batch": "This mode: %s x %s + %s x %s, %s ticks."
+  "gui.frostedresearch.furnace.batch": "This mode: %s x %s + %s x %s, %s ticks.",
+  "gui.frostedresearch.journal.research.run_number": "Record %s",
+  "gui.frostedresearch.journal.research.run_tasks": "Record %s · %s/%s tasks",
+  "gui.frostedresearch.journal.research.run_progress": "Record %s · %s · %s/%s tasks",
+  "gui.frostedresearch.journal.research.standby": "%s other records are kept as standby progress. Their tasks and temporary recipes pause while the completed results remain learned and valid; forgetting a result resumes them.",
+  "gui.frostedresearch.furnace.choose_target": "Multiple open records: click to choose this batch target.",
+  "gui.frostedresearch.experiment.message.standby": "Completed results are active. This standby record keeps its progress."
 }

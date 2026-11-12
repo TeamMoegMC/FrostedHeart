@@ -16,7 +16,7 @@ public final class ControlledFurnaceBlock extends CBlock implements CEntityBlock
     @Override public Supplier<BlockEntityType<ControlledFurnaceBlockEntity>> getBlock(){return FRContents.BlockEntityTypes.CONTROLLED_FURNACE;}
     @Override public InteractionResult use(BlockState s,Level l,BlockPos pos,Player p,InteractionHand hand,BlockHitResult hit){
         if(!l.isClientSide && hand==InteractionHand.MAIN_HAND && l.getBlockEntity(pos) instanceof ControlledFurnaceBlockEntity furnace){
-            if(furnace.claim((ServerPlayer)p)){furnace.syncData();NetworkHooks.openScreen((ServerPlayer)p,furnace,pos);}
+            if(furnace.claim((ServerPlayer)p)){furnace.refreshTargets((ServerPlayer)p);furnace.syncData();NetworkHooks.openScreen((ServerPlayer)p,furnace,pos);}
             else p.displayClientMessage(net.minecraft.network.chat.Component.translatable("gui.frostedresearch.furnace.not_owned"),true);
         }return InteractionResult.sidedSuccess(l.isClientSide);
     }

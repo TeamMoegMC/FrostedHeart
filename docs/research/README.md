@@ -1,7 +1,7 @@
 # Frosted Research
 
 - Status: `Current`
-- Last verified: `2026-09-08` (knowledge integration verified against source)
+- Last verified: `2026-11-12` (legacy catalogue and new-project boundaries verified against source)
 - Scope: Legacy research progression, result catalogue, technology access projections, physical prototype shell, and the
   integration with the independent knowledge system
 - Code anchors: [`FHResearch`](../../src/main/java/com/teammoeg/frostedresearch/FHResearch.java), [`ResearchCatalog`](../../src/main/java/com/teammoeg/frostedresearch/ResearchCatalog.java), [`ResearchResultCatalog`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/ResearchResultCatalog.java), [`TeamResearchData`](../../src/main/java/com/teammoeg/frostedresearch/data/TeamResearchData.java), [`TeamKnowledgeData`](../../src/main/java/com/teammoeg/frostedresearch/data/TeamKnowledgeData.java), [`TechnologyAccessResolver`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/TechnologyAccessResolver.java), [`ResearchHooks`](../../src/main/java/com/teammoeg/frostedresearch/ResearchHooks.java)
@@ -9,9 +9,9 @@
 ## What Is This System?
 
 Frosted Research contains the existing team research progression and an
-independent [knowledge system](../knowledge/README.md). The configuration catalogue still owns the playable research
-graph. Knowledge now provides observations, ideas, results, the shared inbox/archive, linking, notes, and hints; its
-active results feed the existing technology access projection. These research documents own the legacy project workflow
+independent [knowledge system](../knowledge/README.md). The configuration catalogue owns the retained legacy research
+graph; datapack projects now provide staged research and physical experiments. Knowledge supplies observations, ideas,
+results, the shared inbox/archive, linking, notes, and hints; its active results and temporary project grants feed the existing technology access projection. These research documents own the legacy project workflow
 and its integration points.
 
 ## What Is Authoritative?
@@ -35,6 +35,7 @@ Read in this order:
 5. [gameplay-and-integrations.md](gameplay-and-integrations.md) — drawing desk, experiment sources, unlock enforcement, APIs, events, commands, and optional mods.
 6. [research-ui.md](research-ui.md) — archive UI, graph layout, navigation, and client refresh behavior.
 7. [known-risks.md](known-risks.md) — confirmed defects, explicit boundaries, and validation gaps.
+8. [legacy-content-disposition.md](legacy-content-disposition.md) — the 81 retained definitions, two replacements, and old-progress handoff.
 
 For observations, ideas, knowledge results, inbox learning, notes, links, and hints, start
 at [Knowledge](../knowledge/README.md). Intended changes belong in `plans/` and open design choices in `discussion/`;

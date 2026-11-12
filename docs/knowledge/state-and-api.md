@@ -192,8 +192,8 @@ START/LINK 完成入口仍服务端重新判定，不相信客户端进度。
 | 方法                                                     | 行为                                                                                                        |
 |--------------------------------------------------------|-----------------------------------------------------------------------------------------------------------|
 | `researchStartStatus(project)` / `projectAccess(project)`                   | 返回 `LEARNABLE` 或不能开始的原因：定义不存在、未发现或缺少开始知识、已有进行中的启动（`ACTIVE`）、已完成且全部成果都在档案中（`ALREADY_OWNED`）                |
-| `startResearch(project)`（旧起源参数重载仅为兼容）                         | 状态为 `LEARNABLE` 时记录新启动并返回 UUID。每队每个项目同时最多一次进行中的启动；完成后只有当某项成果不在档案中（例如被忘记）才能再次启动                         |
-| `openRun(project)`                                     | 该项目进行中的启动                                                                                                 |
+| `startResearch(project)`（旧起源参数重载仅为兼容）                         | 状态为 `LEARNABLE` 时记录新启动并返回 UUID。普通开始入口不重复创建 open run；显式 merge 可保留同项目多份记录。真实完成且全部成果有效已学时优先完成，否则可继续已有进度或按正常规则重开                         |
+| `openRun(project)`                                     | 按创建时间、UUID稳定排序的首份可推进记录；`openRuns(project)` 返回全部可推进记录                                      |
 | `submitEvidence(run, requirement)`                     | 在档案与来件的全部观察中寻找一组满足该证据需求的互异记录，并保存其副本。搜索至多尝试 `EVIDENCE_SEARCH_STEPS = 20000` 个候选，找不到返回 `NO_MATCH`         |
 | `submitEvidence(run, requirement, keys)`               | 按给定记录精确绑定，每个槽位一份                                                                                          |
 | `calculationLevel(run, requirement)`                   | 该计算需求仍需要的纸牌局难度；已满足或启动已结束时为空                                                                               |
@@ -353,3 +353,13 @@ ObservationSessions完成真实采样后，在preview/receive之前调用observe
 旧平铺run改成多阶段时，仅首阶段同ID任务进入活动进度。其余旧计算/证据/实验/样品原值存于可选
 stage_state.legacy_progress（LegacyStageProgress），不改写原任务ID，不把它们算成未来阶段的新工作；codec往返保留。
 这是schema5内部的迁移档案字段，不新增TWR定义字段。legacy_superseded既有run及合并承接回执都会清本run的pending proof。
+
+## M6 合并记录排序与备用进度
+
+`ResearchRuns.ORDER` 统一按 `ResearchHistory.time` 升序，再按 UUID 字符串升序；`KnowledgeService.openRun/openRuns`、snapshot、`KnowledgeJournalData`、sampleTargets/observationTargets使用同一规则。显式 merge 仍按 UUID 保存全部不同记录，不重排持久存储、不改 schema 5，不新增持久序号。
+
+`ResearchRuns.completed(state,project)` 要求已有该项目的真实 completed run，且当前项目全部成果为档案中有效已学知识。外来成果即便全部学会也不伪造完成。此时 `projectAccess` 优先 ALREADY_OWNED，其余原有 open run 由统一 `standby`/`runActive` 规则暂停：不能提交任务、推进/完成阶段或获得临时来源。历史数据和已提交进度原样保留；snapshot 状态为 standby，仍包含阶段/进度供历史展示；项目 completed 标志与当前有效完成规则一致，遗忘/失效后不再以历史完成标志盖住恢复的阶段，客户端不将其视为 open 任务。遗忘任一成果或成果定义失效时，同一备用记录和临时来源恢复；恢复定义后若成果又有效，备用进度再次暂停。
+
+研究页只在多份可推进记录时提供本地选择。序号从全部同项目记录的同一排序派生，无 UUID 文案；选择 ID 仅存在客户端，操作仍携带已有 run UUID。缺失/放弃的选择稳定回退到首份，暂时没有可推进记录时保留本地选择以便恢复。放弃只作用于明确选中的 run，不批量清除其它记录。旧 legacy_completed/legacy_superseded 回执仍优先，故意遗忘旧承接成果不重导入。
+
+知识 merge 不搬迁世界设备，不重写未提交样品的 team/run/task/experiment。旧队伍绑定不能当作新队伍实物使用，须重新绑定或制作；已提交到研究历史的进度随 UUID 保留。设备的具体选择和已投料批次见 [控温炉](controlled-furnace.md) 与 [小炉样品](trial-kilns-and-samples.md)。

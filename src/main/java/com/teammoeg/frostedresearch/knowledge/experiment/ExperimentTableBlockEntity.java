@@ -144,6 +144,7 @@ public class ExperimentTableBlockEntity extends CBlockEntity implements CTickabl
     }
 
     public void check(ServerPlayer player) {
+        if(KnowledgeService.forPlayer(player).standby(run)){message="standby";return;}
         var definition = target(KnowledgeService.forPlayer(player));
         if (definition.isEmpty()) {
             clearTarget("unavailable");
@@ -157,6 +158,7 @@ public class ExperimentTableBlockEntity extends CBlockEntity implements CTickabl
      * Starts when every condition and material is present, consuming the materials.
      */
     public boolean start(ServerPlayer player) {
+        if(KnowledgeService.forPlayer(player).standby(run)){message="standby";return false;}
         var definition = target(KnowledgeService.forPlayer(player));
         if (definition.isEmpty()) {
             clearTarget("unavailable");
@@ -217,6 +219,13 @@ public class ExperimentTableBlockEntity extends CBlockEntity implements CTickabl
         var service = service();
         // Without the owner team's data there is nothing to judge against; keep the run and look again next check.
         if (service.isEmpty()) return;
+        if(service.get().standby(run)) {
+            if(status!=Status.IDLE && (status!=Status.PAUSED || !message.equals("standby"))) {
+                status=Status.PAUSED;message="standby";setChanged();syncData();
+            }
+            return;
+        }
+        if(message.equals("standby"))message="";
         var definition = target(service.get());
         if (definition.isEmpty()) {
             clearTarget("unavailable");

@@ -1,6 +1,6 @@
 # 土制冶炼炉：正式整合包路线
 
-- Status: `Partial`：TWR 正式定义与配方脚本已完成静态核对，FH 桥接已通过服务端测试；完整包加载与真实生存尚待验证。
+- Status: `Verified`：正式包加载、实物提交、成果权限及旧入口已验证；材料使用测试夹具，不表示完整生存通关。
 - Last verified: `2026-11-12`
 - Scope: TWR `earthen_smelting` 想法、`earthen_smelter` 项目、两项成果及小炉提交路线。
 - Code/data anchors: [小炉与实物提交](trial-kilns-and-samples.md)、[正式项目](../../../TheWinterRescue/kubejs/data/the_winter_rescue/frostedresearch/knowledge/projects/earthen_smelter.json)、[正式想法](../../../TheWinterRescue/kubejs/data/the_winter_rescue/frostedresearch/knowledge/ideas/earthen_smelting.json)、[合金配方](../../../TheWinterRescue/kubejs/server_scripts/src/recipes_types/immersiveengineering/alloy.js)。
@@ -20,10 +20,10 @@
 ## 定义与权限边界
 
 - 正式定义位于 TWR `kubejs/data/the_winter_rescue/frostedresearch/knowledge/`，随 KubeJS 数据加载；不依赖手动装知识示例包。
-- `the_winter_rescue:research/alloy_kiln_minerals` 标签收录当前合金脚本的四种矿物输入标签：铜/锡 `raw_materials` 和 `crushed_raw_materials`。`kiln_dust` 是配料；石、沙、玻璃原料和黄铜配方中的金属锭不作为本项目矿物获取触发。有效配方及标签成员仍需实际 RecipeManager 核对。
+- `the_winter_rescue:research/alloy_kiln_minerals` 标签收录当前合金脚本的四种矿物输入标签：铜/锡 `raw_materials` 和 `crushed_raw_materials`。`kiln_dust` 是配料；石、沙、玻璃原料和黄铜配方中的金属锭不作为本项目矿物获取触发。正式客户端已核对实际 RecipeManager 中唯一的炉砖配方及其材料、产量。
 - 想法 `acquisition.required=[]`；黏土球/沙物品观察是 optional 条件，不阻止获取或联络。未指定 `chance`，沿用 M2 服务器配置：源码默认 `knowledgeBehaviorChance=0.15`，每项已掌握 optional 加 `knowledgeBehaviorOptionalBonus=0.1`，上限 1。联络源码默认 200 tick，每项 optional 减 20 tick，最少 20 tick；配置可修改这些值。零输入规则只输出此想法，不初始授予想法，也不自动公开全部想法。
 - `access.start_all` 引用局部条件 `idea`、`clay_material`、`sand_material`；观察按 `item` 的 `object` 匹配，不存在固定观察定义 ID。
 - `earthen_smelter_design` 为 Design，只解锁稳定 recipe ID；`earthen_smelter_construction` 为 Construction，只解锁 `immersiveengineering:multiblocks/alloy_smelter`。本项目的想法和两成果均为 `understanding=[]`，行为/联络和完成研究通过 `produce` 正常自动学入档；不会要求先使用尚未解锁的设备，也不额外要求手动学习一次成果。
 - 项目声明 `legacy_replacement` 对应旧 `alloy_kiln` 和原两项 effect nonce；旧 JSON 保留。旧完成承接两成果，旧部分投入只授予想法，原投入留存；映射撤除可继续旧路线。详见[状态与 API](state-and-api.md)及[桥接验证记录](../../diary/2026-11-12_15-29-57_research-m3b-legacy-bridge-handoff.md)。
 
-当前验证只证明数据、文案及脚本结构一致；完整包加载、JEI、真实槽位操作、成果权限、旧档承接及下游生存生产仍是集成验收项。
+正式客户端已验证正常槽位提交消耗一件、完成前后配方和成型权限变化、旧入口承接；见[M3客户端记录](../../diary/2026-11-12_16-58-51_research-m3c-client-prism-handoff.md)。成型验证调用真实IE事件，不等于手摆多方块挥锤。世界、材料及初始知识使用夹具，完整采集和下游生产仍未实玩；不以这些记录代替生存体验。

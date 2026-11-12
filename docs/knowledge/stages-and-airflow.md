@@ -73,3 +73,7 @@ $env:JAVA_HOME='C:/Program Files/Java/jdk-17.0.2'
 风道九格保留原有 JournalButton 坐标、30×30 尺寸和点击操作；其上只渲染、不接管输入的 UIElement 按 N/E/S/W=1/2/4/8 从中心画四像素宽管道到格边，墙为暗色块，中行左右显示入口/出口箭头；成功后管线改 ACCENT 色。无新贴图或游戏规则变动。
 
 该绘制改动已通过本轮生产编译；实际截图与点击由 M5/M7 客户端接续，不能用服务端 GameTest 替代画面验收。
+
+## M6 合并后的备用记录
+
+所有run入口按ResearchRuns.ORDER（创建时间+UUID）排序。M4原型的既有空手cycle仍选择实际绑定，目标文案附同项目记录序号、阶段和任务，可区分合入的进度。若该项目已有真实完成run且全部成果有效已学，其余open run按统一standby暂停；原阶段/任务/proof事实保留，推进和TemporaryResearchSource停用，遗忘成果后恢复。不同项目的临时来源与永久来源仍取并集。知识merge不重写世界原型或未提交样品的队伍绑定，需重新绑定或制作。

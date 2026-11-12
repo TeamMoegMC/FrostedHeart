@@ -46,7 +46,9 @@ public final class RefractoryObservationIndex {
         var extraItems=TagKey.create(Registries.ITEM,EXTRA);var extraBlocks=TagKey.create(Registries.BLOCK,EXTRA);
         for(Item item:ForgeRegistries.ITEMS)if(item.builtInRegistryHolder().is(extraItems))foundItems.add(ForgeRegistries.ITEMS.getKey(item));
         for(var block:ForgeRegistries.BLOCKS)if(block.builtInRegistryHolder().is(extraBlocks))foundBlocks.add(ForgeRegistries.BLOCKS.getKey(block));
+        boolean changed=!items.equals(foundItems) || !blocks.equals(foundBlocks) || !KnowledgeDefinitions.current().observationUses().containsKey(USE);
         items=Set.copyOf(foundItems);blocks=Set.copyOf(foundBlocks);
+        if(!changed)return;
         KnowledgeDefinitions.registerObservationUse(USE,new ObservationUse(){
             @Override public boolean matches(Observation o){return RefractoryObservationIndex.matches(o);}
             @Override public Optional<Boolean> equivalent(Observation a,Observation b){return Optional.of(a.type()==b.type() && a.object().equals(b.object()));}

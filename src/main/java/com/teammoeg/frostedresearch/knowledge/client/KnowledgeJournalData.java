@@ -85,7 +85,10 @@ public final class KnowledgeJournalData {
                 tag.getList("temporary_recipes",Tag.TAG_STRING).stream().map(Tag::getAsString).toList());
         }
     }
-    public record Run(String id, String project, Component title, String status, List<KnowledgeKey> origins, List<Requirement> requirements, Stage stage) {
+    public record Run(String id, String project, Component title, String status, List<KnowledgeKey> origins, List<Requirement> requirements, Stage stage, long time, int number, int copies) {
+        public Run(String id,String project,Component title,String status,List<KnowledgeKey> origins,List<Requirement> requirements,Stage stage) {
+            this(id,project,title,status,origins,requirements,stage,0,1,1);
+        }
         public boolean open() {
             return status.equals("open");
         }
@@ -132,10 +135,10 @@ public final class KnowledgeJournalData {
             relationships.add(new Relation(r.getString("id"), title, origins, List.copyOf(results),
                     !abandoned && r.getBoolean("active"), true, r.getString("project"), abandoned));
             String status = r.getString("status").isBlank() ? r.getBoolean("completed") ? "completed" : "open" : r.getString("status");
-            runs.add(new Run(r.getString("id"), r.getString("project"), title, status, origins, requirements(r.getList("requirements", Tag.TAG_COMPOUND)),Stage.read(r.getCompound("stage"))));
+            runs.add(new Run(r.getString("id"), r.getString("project"), title, status, origins, requirements(r.getList("requirements", Tag.TAG_COMPOUND)),Stage.read(r.getCompound("stage")),r.getLong("time"),Math.max(1,r.getInt("run_number")),Math.max(1,r.getInt("run_copies"))));
         }
         relations = List.copyOf(relationships);
-        this.runs = List.copyOf(runs);
+        this.runs = runs.stream().sorted(com.teammoeg.frostedresearch.knowledge.ResearchRuns.order(Run::time,Run::id)).toList();
         List<Project> projects = new ArrayList<>();
         for (Tag raw : snapshot.getList("projects", Tag.TAG_COMPOUND)) {
             CompoundTag project = (CompoundTag) raw;
@@ -209,8 +212,19 @@ public final class KnowledgeJournalData {
         return runs.stream().filter(run -> run.id().equals(id)).findFirst().orElse(null);
     }
 
-    public Run openRun(String project) {
-        return runs.stream().filter(run -> run.open() && run.project().equals(project)).findFirst().orElse(null);
+    public List<Run> openRuns(String project) {
+        return runs.stream().filter(run -> run.open() && run.project().equals(project)).toList();
+    }
+    public Run openRun(String project) { return openRun(project,null); }
+    public Run openRun(String project,String selected) {
+        var options=openRuns(project);
+        return options.stream().filter(r -> r.id().equals(selected)).findFirst().orElse(options.isEmpty()?null:options.get(0));
+    }
+    public static Component runLabel(Run run) {
+        long done=run.requirements().stream().filter(Requirement::satisfied).count();
+        return run.stage().title().getString().isBlank()
+            ? KnowledgePresentation.t("research.run_tasks",run.number(),done,run.requirements().size())
+            : KnowledgePresentation.t("research.run_progress",run.number(),run.stage().title(),done,run.requirements().size());
     }
 
     public Entry entry(KnowledgeKey key) {

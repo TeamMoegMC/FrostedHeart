@@ -1,6 +1,6 @@
 # 普通耐火砖与控温炉正式路线
 
-- Status: Partial：TWR 定义/配方/语言已静态核对；FH 控温炉、serializer 和现场观察接点待并行实现集成，未运行客户端。
+- Status: Verified：FH实现与正式数据已核对，29项服务端测试及独立进程保存/恢复通过；完整客户端入口正在验证，完整生存采集未实玩。
 - Last verified: 2026-11-12
 - Scope: refractory_firing 想法、refractory_brick 项目、controlled_refractory_production 单 Design；只增加自有炉批量工艺。
 - Anchors: [M5 采用决定](../../plans/2026-11-12_16-00-00_research-m5-controlled-furnace-decisions.md)、[正式项目](../../../TheWinterRescue/kubejs/data/the_winter_rescue/frostedresearch/knowledge/projects/refractory_brick.json)、[批量配方](../../../TheWinterRescue/kubejs/data/the_winter_rescue/recipes/research/refractory_brick_batch.json)。
@@ -19,6 +19,8 @@
 
 数量只按当前 TWR 生效替代定义计算：营火由 shaped/new.js 的2稻草+2原木制作；冻高岭土/冻铝土矿在 melt_kaolin/melt_bauxite 营火解冻配方中每块200tick得4原料。树桩 hammer_dig 将铝土矿破为 crushed_raw_bauxite，磨盘每份至少2铝土矿粉；高岭土可直接磨至少1粉。因此单次手混的保证基础用量是4高岭土、2铝土矿（破碎后研磨）和1黏土球，不把随机额外粉计入最低需求。工具路线已有树桩（2原木+2石）、磨盘（3石类+1原版石+1木棍）、石锤（2石类+木杆+线），不含耐火砖/铁。实际生成、采集、营火点火和材料供应仍待正式包生存验证。
 
+**磨盘仍受旧研究约束，并非公开工具。** [millstone定义](../../../TheWinterRescue/config/fhresearches/millstone.json)启动需2石头、1木炭和默认1级灵感；再提交3石头与1煤，两项线索分别提供75%和25%进度，可以完成而不做纸笔小游戏。探索首次到达的新区域可获得旧灵感（`InsightHandler`、`TeamResearchData.onAreaVisited`；区域尺度由 `insightAreaRange` 配置，默认128）。这条旧前置不依赖耐火砖成品；新系统的想法与旧灵感等级是不同机制。
+
 现有 Create 搅拌同样9份原料得3 fire_clay_ball，保留其效率优势。陶窑 the_winter_rescue:pottery_recipes/fire_brick、IE高炉索引2、工业窑首项及4单砖+砂浆→2砖块的旧工艺原样保留。依赖 JAR Charcoal Pit 7748097 的原生 pottery 数据也已读取；本路线的数量以 TWR 当前替代配方为准，不从被替换的原生配方推算。新成果不解锁高耐火砖、工业窑砖或IE高炉；旧 blast_furnace 两效果、三线索、mixer父项及 generator_T2/simple_machines下游无改动。
 
 ## 数据和集成边界
@@ -27,4 +29,4 @@
 
 唯一 Design 目标为 the_winter_rescue:research/refractory_brick_batch。trial 配方带 experiment=frostedresearch:refractory_trial，batch 无 experiment；二者类型都是 frostedresearch:controlled_firing。炉子和手混配方公开，不依赖旧研究，不填写 legacy_replacement。
 
-当前静态检查时未找到 frostedresearch:controlled_furnace、cracked_refractory_brick 和 controlled_firing 的生产注册，均由并行 FH 实现负责；项目schema/索引/观察绑定也须真实加载器与机制联调。这里只证明正式数据自洽，不代表配方已运行或生存完成。
+`frostedresearch:controlled_furnace`、`cracked_refractory_brick` 和 `controlled_firing` 已在生产注册，温度结算、取消/拆除、堵塞输出、观察绑定、参考路径冻结和重启恢复见[M5服务端记录](../../diary/2026-11-12_18-10-45_research-m5-controlled-furnace-handoff.md)。客户端和实际生存结论另行记录，不用服务端测试替代。

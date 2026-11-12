@@ -95,7 +95,7 @@ public final class ExperimentTableScreen extends MenuPrimaryLayer<ExperimentTabl
             if (run.open())
                 for (var requirement : run.requirements())
                     if (requirement.experiment() && !requirement.satisfied())
-                        list.add(new Option(run.id(), requirement.id(), t("option", run.title(), requirement.title())));
+                        list.add(new Option(run.id(), requirement.id(), t("option", run.copies()>1 ? run.title().copy().append(" · ").append(KnowledgeJournalData.runLabel(run)) : run.title(), requirement.title())));
         options = List.copyOf(list);
         var table = table();
         for (int i = 0; i < options.size(); i++)
@@ -126,6 +126,7 @@ public final class ExperimentTableScreen extends MenuPrimaryLayer<ExperimentTabl
         if (serial != KnowledgeClientState.serial()) reloadOptions();
         var table = table();
         Option option = options.isEmpty() ? null : options.get(index);
+        Option tableTarget=table.run()==null ? null : new Option(table.run().toString(),table.requirement(),Component.empty());
         int width = WIDTH - RIGHT - 14;
         if (options.size() > 1) {
             button(RIGHT, 30, 20, 18, Component.literal("‹"), true, () -> {
@@ -167,7 +168,7 @@ public final class ExperimentTableScreen extends MenuPrimaryLayer<ExperimentTabl
         button(RIGHT, 182, third, 19, t("check"), true, () -> send(Action.CHECK, option)).setEnabled(option != null);
         button(RIGHT + third + 4, 182, third, 19, t("start"), false, () -> send(Action.START, option))
                 .tooltip(t("start.help")).setEnabled(option != null && idle && table.report().ok());
-        button(RIGHT + 2 * third + 8, 182, width - 2 * third - 8, 19, t("stop"), true, () -> send(Action.STOP, option))
+        button(RIGHT + 2 * third + 8, 182, width - 2 * third - 8, 19, t("stop"), true, () -> send(Action.STOP, tableTarget))
                 .tooltip(t("stop.help")).setEnabled(!idle);
     }
 

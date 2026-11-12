@@ -323,7 +323,7 @@ public final class KnowledgeService {
     }
 
     public void initialize() {
-        for (var run : List.copyOf(state.research().values())) if (run.open()) {
+        for (var run : ResearchRuns.sorted(state)) if (runActive(run)) {
             var prepared=ResearchStages.update(this,run);
             if(!prepared.equals(run)) {
                 var definition=KnowledgeDefinitions.current().projects().get(run.project());
@@ -371,8 +371,8 @@ public final class KnowledgeService {
 
     /**
      * Whether the team can begin this project from its current knowledge: {@code LEARNABLE}, or the reason it cannot. A team
-     * has at most one open run per project, and a completed project starts again only while one of its results is
-     * missing from the archive.
+     * starts at most one run through the normal action; an explicit merge may retain several. A real completed
+     * project takes priority while all current results are valid learned knowledge; other open history is standby.
      */
     public Optional<KnowledgeKey> matchKnowledge(com.teammoeg.frostedresearch.knowledge.definition.KnowledgeCondition condition) {
         if (condition.kind() != KnowledgeKey.Kind.OBSERVATION) {
@@ -411,9 +411,8 @@ public final class KnowledgeService {
             discovered = !sources.isEmpty(); met = discovered;
             if (discovered) origins.add(sources.get(0));
         }
-        Status status = definition == null ? Status.DEFINITION_UNAVAILABLE : legacyCompleted(project) ? Status.LEGACY_COMPLETED : openRun(project).isPresent() ? Status.ACTIVE
-            : state.research().values().stream().anyMatch(run -> run.completed() && run.project().equals(project))
-                && definition.results().stream().allMatch(result -> state.archive().contains(KnowledgeKey.result(result))) ? Status.ALREADY_OWNED
+        Status status = definition == null ? Status.DEFINITION_UNAVAILABLE : legacyCompleted(project) ? Status.LEGACY_COMPLETED : ResearchRuns.completed(state,project) ? Status.ALREADY_OWNED
+            : openRun(project).isPresent() ? Status.ACTIVE
             : !discovered ? Status.NOT_FOUND : !met ? Status.NOT_UNDERSTOOD : Status.LEARNABLE;
         return new ProjectAccessEvaluation(discovered || legacyCompleted(project), Map.copyOf(witnesses), Set.copyOf(groups), Set.copyOf(revealed),
             sources.stream().distinct().toList(), origins.stream().distinct().sorted(Comparator.comparing(KnowledgeKey::toString)).toList(), status);
@@ -445,7 +444,31 @@ public final class KnowledgeService {
     }
 
     public Optional<ResearchHistory> openRun(ResourceLocation project) {
-        return state.research().values().stream().filter(run -> run.open() && run.project().equals(project)).findFirst();
+        return openRuns(project).stream().findFirst();
+    }
+
+    public List<ResearchHistory> openRuns(ResourceLocation project) {
+        return ResearchRuns.project(state,project).stream().filter(this::runActive).toList();
+    }
+    public boolean standby(UUID run) { return ResearchRuns.standby(state,state.research().get(run)); }
+    public boolean runActive(ResearchHistory run) {
+        return run!=null && run.open() && !legacyCompleted(run.project()) && !ResearchRuns.standby(state,run);
+    }
+    /** Human-facing device target; ordinal derives from the same history order as the journal. */
+    public net.minecraft.network.chat.Component targetLabel(com.teammoeg.frostedresearch.knowledge.experiment.ResearchSampleBinding binding) {
+        var run=state.research().get(binding.run());
+        if(run==null) return net.minecraft.network.chat.Component.empty();
+        var definition=KnowledgeDefinitions.current().projects().get(run.project());
+        if(definition==null) return net.minecraft.network.chat.Component.empty();
+        var title=net.minecraft.network.chat.Component.translatableWithFallback(definition.title(),definition.title());
+        if(ResearchRuns.project(state,run.project()).size()>1)
+            title.append(" · ").append(net.minecraft.network.chat.Component.translatable("gui.frostedresearch.journal.research.run_number",ResearchRuns.number(state,run)));
+        var prepared=ResearchStages.prepare(this,run);
+        ResearchStages.current(prepared).filter(stage -> !stage.title().isBlank()).ifPresent(stage ->
+            title.append(" · ").append(net.minecraft.network.chat.Component.translatableWithFallback(stage.title(),stage.title())));
+        definition.requirement(binding.requirement()).filter(r -> !r.title().isBlank()).ifPresent(r ->
+            title.append(" · ").append(net.minecraft.network.chat.Component.translatableWithFallback(r.title(),r.title())));
+        return title;
     }
 
     /**
@@ -477,7 +500,7 @@ public final class KnowledgeService {
      */
     public List<com.teammoeg.frostedresearch.knowledge.experiment.ResearchSampleBinding> sampleTargets(ResourceLocation experiment) {
         List<com.teammoeg.frostedresearch.knowledge.experiment.ResearchSampleBinding> targets = new ArrayList<>();
-        state.research().values().stream().filter(run -> run.open() && !legacyCompleted(run.project())).sorted(Comparator.comparing(r -> r.id().toString())).forEach(run -> {
+        ResearchRuns.sorted(state).stream().filter(this::runActive).forEach(run -> {
             for (var requirement : requirements(run)) if (requirement.type() == ProjectRequirement.Type.SAMPLE && !requirementMet(run, requirement)
                     && requirement.sample().filter(sample -> sample.experiment().equals(experiment)).isPresent())
                 targets.add(new com.teammoeg.frostedresearch.knowledge.experiment.ResearchSampleBinding(teamId(), run.id(), requirement.id(), experiment));
@@ -536,7 +559,7 @@ public final class KnowledgeService {
      */
     public boolean requirementsMet(UUID runId) {
         ResearchHistory run = state.research().get(runId);
-        if (run == null || !run.open() || legacyCompleted(run.project())) return false;
+        if (!runActive(run)) return false;
         run=ResearchStages.update(this,run);
         if(!ResearchStages.available(run) || !ResearchStages.last(run)) return false;
         var project=KnowledgeDefinitions.current().projects().get(run.project());
@@ -616,18 +639,21 @@ public final class KnowledgeService {
     }
 
     public List<com.teammoeg.frostedresearch.knowledge.experiment.ResearchSampleBinding> observationTargets(ResourceLocation experiment) {
+        return observationTargets(java.util.Set.of(experiment));
+    }
+    public List<com.teammoeg.frostedresearch.knowledge.experiment.ResearchSampleBinding> observationTargets(java.util.Set<ResourceLocation> experiments) {
         var targets=new ArrayList<com.teammoeg.frostedresearch.knowledge.experiment.ResearchSampleBinding>();
-        state.research().values().stream().filter(run -> run.open() && !legacyCompleted(run.project())).sorted(Comparator.comparing(r -> r.id().toString())).forEach(run -> {
+        ResearchRuns.sorted(state).stream().filter(this::runActive).forEach(run -> {
             for(var requirement:requirements(run)) if(requirement.type()==ProjectRequirement.Type.OBSERVATION && !requirementMet(run,requirement)
-                && requirement.observation().filter(o -> o.teamCurrentRun() && o.experiment().filter(experiment::equals).isPresent()).isPresent())
-                targets.add(new com.teammoeg.frostedresearch.knowledge.experiment.ResearchSampleBinding(teamId(),run.id(),requirement.id(),experiment));
+                && requirement.observation().filter(o -> o.teamCurrentRun() && o.experiment().filter(experiments::contains).isPresent()).isPresent())
+                targets.add(new com.teammoeg.frostedresearch.knowledge.experiment.ResearchSampleBinding(teamId(),run.id(),requirement.id(),requirement.observation().orElseThrow().experiment().orElseThrow()));
         });return List.copyOf(targets);
     }
     /** Fresh sampling only. Received notes/archive entries never call this world-action endpoint. */
     public void observeResearchTarget(ServerPlayer player,Observation observation,net.minecraft.core.BlockPos liveBlock,net.minecraft.world.item.ItemStack liveStack) {
         if(!KnowledgeDataAPI.getData(player).team().getId().equals(teamId())) return;
-        for(var run:List.copyOf(state.research().values())) {
-            if(!run.open() || legacyCompleted(run.project())) continue;
+        for(var run:ResearchRuns.sorted(state)) {
+            if(!runActive(run)) continue;
             for(var requirement:requirements(run)) {
                 if(requirement.type()!=ProjectRequirement.Type.OBSERVATION || requirementMet(run,requirement)) continue;
                 var task=requirement.observation().orElseThrow();
@@ -668,7 +694,7 @@ public final class KnowledgeService {
     }
     public OperationResult advanceStage(UUID runId,String expectedStage) {
         var run=state.research().get(runId);
-        if(run==null || !run.open() || legacyCompleted(run.project())) return result(Status.NOT_FOUND,null);
+        if(!runActive(run)) return result(Status.NOT_FOUND,null);
         run=ResearchStages.update(this,run);
         if(!run.stageState().current().equals(expectedStage) || !ResearchStages.available(run) || ResearchStages.last(run)
             || !run.stageState().visits().get(expectedStage).ready()) return result(Status.REQUIREMENTS_UNMET,null);
@@ -680,7 +706,7 @@ public final class KnowledgeService {
     }
 
     private ProjectRequirement openRequirement(ResearchHistory run, String requirementId, ProjectRequirement.Type type) {
-        if (run == null || !run.open() || legacyCompleted(run.project())) return null;
+        if (!runActive(run)) return null;
         return requirements(run).stream().filter(r -> r.id().equals(requirementId) && r.type() == type).findFirst().orElse(null);
     }
 
@@ -715,7 +741,7 @@ public final class KnowledgeService {
 
     public List<OperationResult> completeResearch(UUID run, List<ResourceLocation> results) {
         ResearchHistory history = state.research().get(run);
-        if (history == null || !history.open() || legacyCompleted(history.project()) || results.isEmpty()) return List.of();
+        if (!runActive(history) || results.isEmpty()) return List.of();
         var definition = KnowledgeDefinitions.current().projects().get(history.project());
         if (definition == null || !new HashSet<>(definition.results()).equals(new HashSet<>(results))) return List.of();
         List<KnowledgeKey> keys = results.stream().distinct().map(KnowledgeKey::result).toList();

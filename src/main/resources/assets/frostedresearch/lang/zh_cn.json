@@ -765,5 +765,11 @@
   "gui.frostedresearch.furnace.overfired": "过烧：温度偏高，得到碎裂耐火砖。降低下一炉温度再试。",
   "gui.frostedresearch.furnace.jei_duration": "烧制 %s 秒",
   "gui.frostedresearch.furnace.jei_failure": "温窗外产出右侧碎砖",
-  "gui.frostedresearch.furnace.batch": "本模式：%s × %s + %s × %s，%s刻。"
+  "gui.frostedresearch.furnace.batch": "本模式：%s × %s + %s × %s，%s刻。",
+  "gui.frostedresearch.journal.research.run_number": "记录 %s",
+  "gui.frostedresearch.journal.research.run_tasks": "记录 %s · 已完成 %s/%s 项",
+  "gui.frostedresearch.journal.research.run_progress": "记录 %s · %s · %s/%s 项",
+  "gui.frostedresearch.journal.research.standby": "另有 %s 份备用进度已保留。当前成果有效，备用任务与临时配方暂停；遗忘成果后可继续。",
+  "gui.frostedresearch.furnace.choose_target": "有多份进行中记录，请点击选择本炉任务目标。",
+  "gui.frostedresearch.experiment.message.standby": "已有有效完成成果，本份备用进度暂停并保留。"
 }

@@ -77,7 +77,7 @@ public final class KnowledgeView {
         view.put("hints", hints);
         ListTag research = new ListTag();
         List<KnowledgeElement> pool = service.evidencePool();
-        service.state().research().values().forEach(record -> {
+        ResearchRuns.sorted(service.state()).forEach(record -> {
             CompoundTag tag = new CompoundTag();
             tag.putString("id", record.id().toString());
             tag.putString("project", record.project().toString());
@@ -85,10 +85,12 @@ public final class KnowledgeView {
             if (project != null) tag.putString("title", project.title());
             tag.put("origins", KnowledgeState.encode(KnowledgeKey.CODEC.listOf(), visibleOrigins(service, record, evaluation.apply(record.project()))));
             tag.putLong("time", record.time());
+            tag.putInt("run_number",ResearchRuns.number(service.state(),record));
+            tag.putInt("run_copies",ResearchRuns.project(service.state(),record.project()).size());
             tag.putBoolean("completed", record.completed());
-            tag.putBoolean("active", evaluation.apply(record.project()).discovered() || record.open());
+            tag.putBoolean("active", !service.standby(record.id()) && (evaluation.apply(record.project()).discovered() || service.runActive(record)));
             tag.put("results", KnowledgeState.encode(KnowledgeKey.CODEC.listOf(), record.results()));
-            tag.putString("status", service.legacyCompleted(record.project()) && record.open() ? "legacy_superseded" : record.open() ? "open" : record.completed() ? "completed" : "abandoned");
+            tag.putString("status", service.legacyCompleted(record.project()) && record.open() ? "legacy_superseded" : service.standby(record.id()) ? "standby" : record.open() ? "open" : record.completed() ? "completed" : "abandoned");
             if (record.open()) {
                 ListTag requirements = new ListTag();
                 for (ProjectRequirement requirement : service.requirements(record))
@@ -106,9 +108,6 @@ public final class KnowledgeView {
                 disclosed.put(id, access.sources());
         });
         ListTag projects = new ListTag();
-        Set<net.minecraft.resources.ResourceLocation> completedProjects = new HashSet<>();
-        service.state().research().values().stream().filter(ResearchHistory::completed)
-                .forEach(run -> completedProjects.add(run.project()));
         disclosed.forEach((id, origins) -> {
             var definition = KnowledgeDefinitions.current().projects().get(id);
             if (definition == null) return;
@@ -117,7 +116,7 @@ public final class KnowledgeView {
             project.putString("title", definition.title());
             project.put("sources", KnowledgeState.encode(KnowledgeKey.CODEC.listOf(), origins));
             project.putBoolean("active", evaluation.apply(id).discovered() || service.openRun(id).isPresent());
-            project.putBoolean("completed", completedProjects.contains(id) || service.legacyCompleted(id));
+            project.putBoolean("completed", ResearchRuns.completed(service.state(),id) || service.legacyCompleted(id));
             if (service.legacyCompleted(id)) project.putString("completion_source", "legacy");
             project.putString("body", definition.body());
             ListTag requirements = new ListTag();

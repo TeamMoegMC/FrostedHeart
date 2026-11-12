@@ -2,7 +2,7 @@
 
 - Time: 2026-11-12 18:33:11 +08:00
 - Authors: Codex / OpenAI GPT-6 Astra；主协调采用，独立设计对话只读复核
-- Status: ready；等待M5客户端产物固定后实施，不是当前已完成行为。
+- Status: completed；FH源码、最终16项定向复验和生产jar已完成；真实客户端UI/最终包完整流程接续验收。
 - Scope: 显式知识合并后的记录选择、实验目标和备用进度；不改普通入队语义，不升级KnowledgeState schema5。
 
 ## 已确认的问题
@@ -25,4 +25,4 @@ KnowledgeState.merge按UUID保留目标和来源两边的记录。KnowledgeServi
 
 ## Outcome
 
-待实施。81项旧目录继续按既有处置：alloy_kiln/iron替换，其余79项保留原状态（含两个既有停用条目），新耐火砖不替换blast_furnace。
+实施者：Codex / OpenAI；FH M6生产与服务端验证。32项相关回归在19:11:34全部通过；其后的快照completed标志及两处同台P2均重新编译，并在19:23:39通过最终16项定向检查。正常jar/reobfJar在本次JVM短超时重试后成功，生产/测试源码已冻结、Gradle窗口交还客户端。精确源码边界、日志、产物与清单见 [M6最终交接](../diary/2026-11-12_19-32-38_research-m6-merged-runs-final-handoff.md)。81项旧目录继续按既有处置：alloy_kiln/iron替换，其余79项保留原状态（含两个既有停用条目），新耐火砖不替换blast_furnace。
