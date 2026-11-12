@@ -301,3 +301,37 @@ ResearchHistory.samples 为可选任务回执映射，记录 sample.experiment �
 KnowledgeService.sampleTargets(experiment) 只列当前开放且未满足的 sample 任务；submitSample(run, requirement, stack)
 检查真实物品和 ResearchSampleBinding 后消耗1件并写回执；重复/错误样品不扣物。finishResearch 继续统一检查所有任务。
 更改绑定语义、设备生命周期与绘图台操作见[小炉与实物提交](trial-kilns-and-samples.md)。
+
+## 旧研究承接与完成等价查询（M3-B）
+
+[`LegacyResearchBridge`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/LegacyResearchBridge.java)
+仅在当前有效 `legacy_replacement` 存在时接替旧入口。`KnowledgeService.initialize` 在队伍加载、登录和最终数据包
+同步时执行 reconcile；没有逐 tick 重试。最终 OnDatapackSyncEvent 全局分支先刷新映射有效性，即使零在线玩家也执行；
+ServerStarted 也刷新最终目标，ServerStopped 清理静态缓存。配方可用性改变不需要知识定义 revision 改变。
+旧定义 JSON 可以继续保留，桥接不删除定义或旧记录。
+
+- 旧 raw finished=true：使用正常 `KnowledgeService.learn` 和来源 `legacy_research:<旧ID>` 承接两成果，
+  不要求旧 effectData 已领取；不会调用 grantEffects、发旧实物奖励或创建 ResearchHistory。
+- 仅有某个 effectData=true：只导入对应成果，不宣告项目完成。
+- 未完成但 active=true、committed>0 或有已完成 clue：原材料投入、点数和线索全保留，一次 produce 新想法，
+  正常入档失败时保留来件；不折算为实验、样品或新项目完成。
+- `TeamResearchData.variants["frostedresearch:legacy_replacements"][<项目ID>]` 保存 imported_results 字符串集合、
+  completed_credit 与 partial_idea_granted。成果仅在成功/确实已入档后写回执，取消的成果在下次生命周期重试；
+  已导入再主动遗忘不会重新强发。completed_credit 只来自旧 finished，是承接凭据，不能当作实验历史。
+
+带 completed_credit 的当前有效替换项目可见，`start_status=LEGACY_COMPLETED`、`completion_source=legacy`，
+即使没有想法也显示“旧研究承接完成”并免重复启动。已有真实 open run 保留，视图状态为 legacy_superseded；
+它不再接受计算、实验、样品或证据提交，也不能伪造完成。原始历史不会删掉。
+
+旧项目的 commitItem、服务端 setCurrentResearch、doResearch、两种 setClueCompleted、checkResearchComplete
+统一拒绝正常推进；初始化/重载清除旧当前选择并解除线索订阅，但不清 active/committed/clueData。
+显式行政 setResearchFinished 仍保留原语义。
+
+`isPrerequisiteCompleted(team, legacyId)` 判定为旧 raw finished，或当前有效映射的真实 completed run 加两成果
+均有效入档。单靠外来两成果只能获得技术权限，不能伪装完成来开旧后继。旧 Research.isUnlocked 和 commitItem
+都用这一等价查询；客户端消费服务端 legacy_replacements 中的 effective_completed，不自行推断。
+新成果遗忘/学习和真实完成通过 TeamResearchService.sync 使权限与旧父项投影一起刷新；真实旧来源仍独立保留。
+
+移除映射/新包后，旧入口与原进度恢复；回执保留但当前不投影为新完成，不做反向迁移。
+`KnowledgeService.merge(TeamDataHolder)` 同时合并知识和这一个回执子键的集合/布尔并集，管理 merge 命令使用此入口。
+仅合并 KnowledgeState 的重载不带旧数据，供已有纯知识调用使用。其它 variants 不受回执合并影响。

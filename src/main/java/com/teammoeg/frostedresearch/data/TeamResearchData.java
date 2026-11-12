@@ -38,6 +38,7 @@ import com.teammoeg.chorda.dataholders.SpecialDataHolder;
 import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
 import com.teammoeg.chorda.util.RecipeUtils;
 import com.teammoeg.frostedresearch.FHResearch;
+import com.teammoeg.frostedresearch.knowledge.LegacyResearchBridge;
 import com.teammoeg.frostedresearch.FRMain;
 import com.teammoeg.frostedresearch.FRNetwork;
 import com.teammoeg.frostedresearch.UnlockList;
@@ -213,7 +214,7 @@ public class TeamResearchData implements SpecialData {
 		Supplier<Research> rs = getCurrentResearch();
 		Research r=rs.get();
 		if (r!=null) {
-			return this.getData(r).canResearch();
+			return !LegacyResearchBridge.isReplaced(r.getId()) && this.getData(r).canResearch();
 		}
 		return false;
 	}
@@ -221,22 +222,23 @@ public class TeamResearchData implements SpecialData {
 	public void setHolder(SpecialDataHolder holder) {
 	}
 
-	/**
-	 * Clear current research.
-	 *
-	 * @param sync send update packet
-	 */
+    /** Clears only a replaced selection, including a persisted ID whose old definition is absent. */
+    public void clearReplacedSelection(TeamDataHolder team) {
+        if (activeResearchId != null && LegacyResearchBridge.isReplaced(activeResearchId)) {
+            clearCurrentResearch(team, true);
+            if (team != null) TeamResearchService.sync(team);
+        }
+    }
+
+	/** Clear current selection and detach its clues; optionally notify online members. */
 	public void clearCurrentResearch(TeamDataHolder team, boolean sync) {
 		if (activeResearchId == null) return;
 		Research r = FHResearch.getResearch(activeResearchId);
 		activeResearchId = null;
-		if (r != null)
-			if (team != null) {
-				for (Clue c : r.getClues())
-					c.end(team, r);
-				if (sync)
-					team.sendToOnline(FRNetwork.INSTANCE,new FHChangeActiveResearchPacket());
-			}
+        if (team != null) {
+            if (r != null) for (Clue c : r.getClues()) c.end(team, r);
+            if (sync) team.sendToOnline(FRNetwork.INSTANCE, new FHChangeActiveResearchPacket());
+        }
 	}
 
 	/**
@@ -265,6 +267,7 @@ public class TeamResearchData implements SpecialData {
 		return points;
 	}
 	public long doResearch(TeamDataHolder team,Research r, long points) {
+        if (LegacyResearchBridge.isReplaced(r.getId())) return points;
 		if (points < 0) {
 			throw new IllegalArgumentException("Research points cannot be negative: " + points);
 		}
@@ -280,9 +283,10 @@ public class TeamResearchData implements SpecialData {
 		});
 	}
 	public boolean commitItem(ServerPlayer player, TeamDataHolder team, Research research) {
+        if (LegacyResearchBridge.isReplaced(research.getId())) return false;
 		if (research.isInCompletable()) return false;
 		for (Research par : research.getParents()) {
-			if (!getData(par).isCompleted()) {
+			if (!LegacyResearchBridge.isPrerequisiteCompleted(team, par.getId())) {
 				return false;
 			}
 		}
@@ -303,6 +307,7 @@ public class TeamResearchData implements SpecialData {
 	}
 
 	public void setClueCompleted(TeamDataHolder team, Research par, int clue, boolean trig) {
+        if (LegacyResearchBridge.isReplaced(par.getId())) return;
 
 		Clue cl = par.getClues().get(clue);
 		if (cl != null) {
@@ -318,6 +323,7 @@ public class TeamResearchData implements SpecialData {
 	}
 
 	public void setClueCompleted(TeamDataHolder team, Research par, Clue clue, boolean trig) {
+        if (LegacyResearchBridge.isReplaced(par.getId())) return;
 		if (isClueCompleted(par, clue) == trig) return;
 		getData(par).setClueTriggered(clue.getNonce(), trig);
 		if (trig)
@@ -339,6 +345,7 @@ public class TeamResearchData implements SpecialData {
 	}
 
 	public boolean checkResearchComplete(TeamDataHolder team, Research r) {
+        if (LegacyResearchBridge.isReplaced(r.getId())) return false;
 		ResearchData rd = getData(r);
 		if (rd.finished)
 			return false;
@@ -490,6 +497,8 @@ public class TeamResearchData implements SpecialData {
 		}
 		return rnd;
 	}
+
+	public Optional<ResearchData> getExistingData(String id) { return Optional.ofNullable(rdata.get(id)); }
 
 	/** Read-only lookup used by projections that must not create empty history records. */
 	public Optional<ResearchData> getExistingData(Research research) {
@@ -662,6 +671,7 @@ public class TeamResearchData implements SpecialData {
 	 * @param r value to set current research to.
 	 */
 	public void setCurrentResearch(TeamDataHolder team, Research r) {
+        if (r == null || LegacyResearchBridge.isReplaced(r.getId())) return;
 		ResearchData rd = this.getData(r);
 		if (rd.active && !rd.finished) {
 			if (!r.getId().equals(this.activeResearchId)) {
@@ -795,6 +805,7 @@ public class TeamResearchData implements SpecialData {
 
 	public void initResearch(TeamDataHolder team) {
 		reconcileDefinitions();
+        clearReplacedSelection(team);
 		unlocklists.values().forEach(UnlockList::clear);
 		restoreGrantedUnlocks(team);
 

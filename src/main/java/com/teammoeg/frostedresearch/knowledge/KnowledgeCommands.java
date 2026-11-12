@@ -64,7 +64,7 @@ public final class KnowledgeCommands {
         root.then(Commands.literal("merge").requires(s -> s.hasPermission(2)).then(Commands.argument("source_team", UuidArgument.uuid()).executes(c -> {
             var source = com.teammoeg.frostedresearch.api.KnowledgeDataAPI.getData(UuidArgument.getUuid(c, "source_team"));
             if (source.isEmpty()) return feedback(c, "NOT_FOUND");
-            KnowledgeService.forPlayer(c.getSource().getPlayerOrException()).merge(source.get().get());
+            KnowledgeService.forPlayer(c.getSource().getPlayerOrException()).merge(source.get().team());
             return feedback(c, "SUCCESS");
         })));
         root.then(Commands.literal("research").requires(source -> source.hasPermission(2))

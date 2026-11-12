@@ -152,6 +152,16 @@ public final class KnowledgeLayer extends UILayer {
         }
     }
 
+    public void openLegacyProject(String project) {
+        refreshSnapshot();
+        if (researchProject(project) != null) openResearch(project);
+        else {
+            switchPage(Page.RESEARCH);
+            notice = t("research.legacy_guide"); noticeTicks = 160;
+            rebuild();
+        }
+    }
+
     public void opened() {
         refreshSnapshot();
         send(Action.REFRESH, List.of(), "", "", "");
@@ -408,6 +418,10 @@ public final class KnowledgeLayer extends UILayer {
             reading.text(List.of(t(researchProjects().isEmpty() ? "research.empty" : "research.choose")));
             return;
         }
+        if (project.startStatus().equals("LEGACY_COMPLETED")) {
+            reading.text(List.of(t("research.legacy_completed"), t("research.legacy_completed_explain")));
+            return;
+        }
         var run = data.openRun(project.id());
         if (mode == Mode.ABANDON && run != null) {
             reading.text(List.of(t("research.abandon.question"), t("research.abandon.explain")));
@@ -588,6 +602,7 @@ public final class KnowledgeLayer extends UILayer {
 
     private Component researchState(KnowledgeJournalData.Project project) {
         var run = data.openRun(project.id());
+        if (project.startStatus().equals("LEGACY_COMPLETED")) return t("research.legacy_completed");
         if (run != null)
             return !run.requirements().isEmpty() && run.requirements().stream().allMatch(KnowledgeJournalData.Requirement::satisfied)
                 ? t("research.state.completable") : t("research.state.open", run.requirements().stream().filter(KnowledgeJournalData.Requirement::satisfied).count(), run.requirements().size());

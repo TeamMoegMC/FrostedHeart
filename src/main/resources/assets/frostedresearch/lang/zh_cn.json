@@ -707,5 +707,12 @@
   "gui.frostedresearch.journal.research.sample.explain": "把本次研究的完好小炉放入绘图台工具页的检视物槽，再返回研究页提交。消耗1件；旧样、坏样或其他研究的样品不能提交。",
   "gui.frostedresearch.journal.research.sample.progress": "%s/1 件",
   "gui.frostedresearch.journal.research.sample.submitted": "试样已提交",
-  "gui.frostedresearch.journal.research.sample.missing": "检视物槽中没有符合本次研究的试样"
+  "gui.frostedresearch.journal.research.sample.missing": "检视物槽中没有符合本次研究的试样",
+  "knowledge.frostedresearch.research.legacy_completed": "旧研究承接完成",
+  "knowledge.frostedresearch.research.legacy_completed_explain": "已承认此前研究，无需重复启动或完成实验；已有实验记录保留。",
+  "knowledge.frostedresearch.research.legacy_replaced": "此研究已由知识项目接替。请进入知识页查看新路线。",
+  "knowledge.frostedresearch.research.legacy_open": "前往知识页",
+  "knowledge.frostedresearch.research.legacy_guide": "先检视身边材料，将观察入档，再沿想法查找新研究。",
+  "knowledge.frostedresearch.research.legacy_partial": "已有思路已承接，需验证新试样。",
+  "knowledge.frostedresearch.research.legacy_replaced_short": "已由知识项目接替"
 }

@@ -88,7 +88,7 @@ public final class KnowledgeView {
             tag.putBoolean("completed", record.completed());
             tag.putBoolean("active", evaluation.apply(record.project()).discovered() || record.open());
             tag.put("results", KnowledgeState.encode(KnowledgeKey.CODEC.listOf(), record.results()));
-            tag.putString("status", record.open() ? "open" : record.completed() ? "completed" : "abandoned");
+            tag.putString("status", service.legacyCompleted(record.project()) && record.open() ? "legacy_superseded" : record.open() ? "open" : record.completed() ? "completed" : "abandoned");
             if (record.open()) {
                 ListTag requirements = new ListTag();
                 for (ProjectRequirement requirement : service.requirements(record))
@@ -116,7 +116,8 @@ public final class KnowledgeView {
             project.putString("title", definition.title());
             project.put("sources", KnowledgeState.encode(KnowledgeKey.CODEC.listOf(), origins));
             project.putBoolean("active", evaluation.apply(id).discovered() || service.openRun(id).isPresent());
-            project.putBoolean("completed", completedProjects.contains(id));
+            project.putBoolean("completed", completedProjects.contains(id) || service.legacyCompleted(id));
+            if (service.legacyCompleted(id)) project.putString("completion_source", "legacy");
             project.putString("body", definition.body());
             ListTag requirements = new ListTag();
             definition.requirements().forEach(requirement -> requirements.add(requirement(requirement)));
@@ -136,6 +137,7 @@ public final class KnowledgeView {
             projects.add(project);
         });
         view.put("projects", projects);
+        view.put("legacy_replacements", service.legacyProjection());
         ListTag history = new ListTag();
         service.state().acquisitions().forEach(entry -> {
             CompoundTag tag = new CompoundTag();

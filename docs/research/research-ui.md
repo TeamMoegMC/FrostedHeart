@@ -209,3 +209,12 @@ Runtime FPS, allocation, and draw-call performance claims still require in-game 
 Static observation windows restart if the render key or projection inputs actually change during observation (for example, an asynchronous definition sync or resize). With unchanged inputs the driver still requires zero geometry/title rebuilds. The final 2026-11-05 run needed no restarts.
 
 The client route also moves the camera four rank columns away, requires previously offscreen projects to enter view, and checks that returning restores the same project IDs without redoing their title layouts. A normal `Minecraft#reloadResourcePacks` call with the selected language unchanged must publish a new `Language` instance, advance `ResearchArchiveViewCache#presentationRevision`, refresh visible title layouts and preserve the camera. `farPanNewNodes`, `farPanReturnTitleRebuilds`, `sameLanguageReloadPassed` and `resourceReloadTitleRebuilds` record those observations.
+
+## Legacy replacement entries (verified 2026-11-12)
+
+An entry covered by an active `ProjectDefinition.legacy_replacement` is marked ↗ in the archive list. Its summary and
+workspace explain the replacement, completion credit or carried-forward idea, and route to the Knowledge page.
+The workspace offers no old activation, points or clue actions. Undiscovered new projects show discovery guidance;
+the old entry cannot disclose their hidden requirements. Every knowledge snapshot refreshes the archive's prerequisite
+and workspace caches using the server's `legacy_replacements.effective_completed` projection. See the owning
+[workbench behavior](../knowledge/workbench.md#旧研究接替入口m3-b) and [state contract](../knowledge/state-and-api.md#旧研究承接与完成等价查询m3-b).

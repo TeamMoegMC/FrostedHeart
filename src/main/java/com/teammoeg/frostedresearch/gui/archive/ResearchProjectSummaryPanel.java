@@ -178,7 +178,8 @@ final class ResearchProjectSummaryPanel extends UIElement {
         int headerWidth = Math.max(1, width - 43);
         String title = getFont().plainSubstrByWidth(view.title(), headerWidth);
         String category = getFont().plainSubstrByWidth(view.categoryTitle(), headerWidth);
-        Component status = view.completed()
+        Component status = com.teammoeg.frostedresearch.knowledge.client.LegacyResearchClient.replaced(view.research().getId())
+                ? Component.translatable("knowledge.frostedresearch.research.legacy_replaced_short") : view.completed()
                 ? COMPLETED
                 : view.active()
                 ? IN_PROGRESS

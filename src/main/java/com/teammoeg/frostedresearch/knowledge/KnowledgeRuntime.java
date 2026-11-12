@@ -88,6 +88,7 @@ public final class KnowledgeRuntime {
         // The player-targeted form fires before PlayerLoggedInEvent, while a first-time
         // player's FTB team does not exist yet. Login sends knowledge after team setup.
         if (event.getPlayer() != null) return;
+        LegacyResearchBridge.refreshDefinitions();
         // A reload targets already logged-in players, with the final tags installed. The marks below become one
         // snapshot per team at the end of the tick.
         java.util.Set<java.util.UUID> sent = new java.util.HashSet<>();
@@ -101,7 +102,13 @@ public final class KnowledgeRuntime {
     }
 
     @SubscribeEvent
+    public static void started(net.minecraftforge.event.server.ServerStartedEvent event) {
+        LegacyResearchBridge.refreshDefinitions();
+    }
+
+    @SubscribeEvent
     public static void stopped(ServerStoppedEvent event) {
+        LegacyResearchBridge.clear();
         KnowledgeDiscussion.clear();
         KnowledgeLinkSessions.clear();
         TeamResearchService.clear();

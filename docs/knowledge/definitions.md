@@ -343,3 +343,28 @@ ID、字段名或 JSON 规则说明当作玩家正文。示例包使用 `knowled
 保留作者说明，游戏正文只描述玩家看到或想到的内容。
 
 M3-A：ProjectRequirement.type=sample 使用 sample.experiment 与 sample.item，固定消耗1件绑定当前队伍/run/任务的真实物品；它不增加观察用途或模拟实验台计时。完整字段与例子见[小炉与实物提交](trial-kilns-and-samples.md)。
+
+## 旧研究的可选替换映射（M3-B）
+
+`ProjectDefinition.legacy_replacement` 缺席时不影响旧路线。格式固定为：
+
+```json
+"legacy_replacement": {
+  "research": "alloy_kiln",
+  "effects": {
+    "350c485a4b92425c": "the_winter_rescue:earthen_smelter_design",
+    "1bb68ce233ef4f21": "the_winter_rescue:earthen_smelter_construction"
+  },
+  "partial_idea": "the_winter_rescue:earthen_smelting"
+}
+```
+
+这是静态的一项旧研究到新项目的映射，不是通用迁移脚本。`research` 是旧 JSON 文件名得到的字符串 ID，
+`effects` 的键是旧效果 nonce；必须有两个不同、属于本项目 results 的成果，分别为 Design 与 Construction。
+两成果必须启用、understanding 为空；Design 的每个 recipe 必须在当前服务器 RecipeManager 中存在，
+Construction 的每个 multiblock 必须能由 IE `MultiblockHandler.getByUniqueName` 解析；partial_idea 也必须存在且启用。
+同一旧 ID 多重映射停用该 ID 的替换并告警。缺任一映射定义或目标时记录诊断，保留旧入口；最终 recipes/tags、
+队伍加载与登录重新核对。映射成果/想法引用缺席属于桥接局部不可用，不以保留上一快照的方式留住已失效替换。
+其他项目引用错误仍遵守现有原子重载验证。
+
+运行时桥接和回执语义见 [状态与 API](state-and-api.md#旧研究承接与完成等价查询m3-b)。

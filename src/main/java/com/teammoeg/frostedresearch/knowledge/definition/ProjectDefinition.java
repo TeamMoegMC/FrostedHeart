@@ -32,13 +32,14 @@ import java.util.Optional;
  * A project with its results and research requirements; progress lives in each research run.
  */
 public record ProjectDefinition(String title, String body, List<ResourceLocation> results,
-                                List<ProjectRequirement> requirements, Optional<ProjectAccess> access) {
+                                List<ProjectRequirement> requirements, Optional<ProjectAccess> access, Optional<LegacyReplacement> legacyReplacement) {
     public static final Codec<ProjectDefinition> CODEC = RecordCodecBuilder.create(i -> i.group(
             Codec.STRING.optionalFieldOf("title", "").forGetter(ProjectDefinition::title),
             Codec.STRING.optionalFieldOf("body", "").forGetter(ProjectDefinition::body),
             ResourceLocation.CODEC.listOf().fieldOf("results").forGetter(ProjectDefinition::results),
             ProjectRequirement.field(ProjectRequirement.CODEC.listOf(), "requirements", List.of()).forGetter(ProjectDefinition::requirements),
-            com.teammoeg.frostedresearch.knowledge.model.KnowledgeKey.strictOptionalField(ProjectAccess.CODEC, "access").forGetter(ProjectDefinition::access)
+            com.teammoeg.frostedresearch.knowledge.model.KnowledgeKey.strictOptionalField(ProjectAccess.CODEC, "access").forGetter(ProjectDefinition::access),
+            com.teammoeg.frostedresearch.knowledge.model.KnowledgeKey.strictOptionalField(LegacyReplacement.CODEC, "legacy_replacement").forGetter(ProjectDefinition::legacyReplacement)
     ).apply(i, ProjectDefinition::new));
 
     public ProjectDefinition {
@@ -47,7 +48,11 @@ public record ProjectDefinition(String title, String body, List<ResourceLocation
     }
 
     public ProjectDefinition(String title, String body, List<ResourceLocation> results, List<ProjectRequirement> requirements) {
-        this(title, body, results, requirements, Optional.empty());
+        this(title, body, results, requirements, Optional.empty(), Optional.empty());
+    }
+
+    public ProjectDefinition(String title, String body, List<ResourceLocation> results, List<ProjectRequirement> requirements, Optional<ProjectAccess> access) {
+        this(title, body, results, requirements, access, Optional.empty());
     }
 
     public ProjectDefinition(String title, List<ResourceLocation> results) {

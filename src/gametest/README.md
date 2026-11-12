@@ -39,3 +39,13 @@ crafting/furnace/container extraction, use/interaction bridges and repeated obse
 
 M3-A trial kiln and physical submission checks use `frostedresearch_m3` (`TrialKilnGameTests`), a separate `m3_trial_kiln` batch
 and trial_kiln_empty structure. They cover real loaded ticks, three ratios, lifecycle/settlement, sample binding and schema4 progress.
+
+`LegacyResearchBridgeGameTests` (`frostedresearch_m3b`) uses separate synchronous batches for legacy import/retry,
+new-run prerequisite and permission projection, replaced-entry guards/removal recovery, knowledge/receipt merge,
+formal companion JSON codecs/references, and zero-online final recipe reload/start lifecycle.
+It uses actual server teams, RecipeManager and IE multiblock registration. Codec round trips are persistence checks,
+not an independent-process restart claim.
+
+`src/gametest/resources/m3b-formal-fixtures/` contains the five earthen-smelter knowledge JSON files copied verbatim
+from the companion pack on 2026-11-12 for codec/reference checks. Their stable recipe ID is asserted; the test does
+not claim that a full KubeJS pack runtime registered that recipe. Keep fixtures aligned when the formal contract changes.

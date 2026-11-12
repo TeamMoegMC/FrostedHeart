@@ -707,5 +707,12 @@
   "gui.frostedresearch.journal.research.sample.explain": "Place the intact sample from this run in the desk examination slot on Tools, then return here to submit. Consumes one; old, broken or other-run samples do not qualify.",
   "gui.frostedresearch.journal.research.sample.progress": "%s/1 item",
   "gui.frostedresearch.journal.research.sample.submitted": "Sample submitted",
-  "gui.frostedresearch.journal.research.sample.missing": "No matching sample for this run in the examination slot"
+  "gui.frostedresearch.journal.research.sample.missing": "No matching sample for this run in the examination slot",
+  "knowledge.frostedresearch.research.legacy_completed": "Legacy research carried forward",
+  "knowledge.frostedresearch.research.legacy_completed_explain": "Your earlier research is recognized. No further experiment is required; existing runs remain as records.",
+  "knowledge.frostedresearch.research.legacy_replaced": "This research has been replaced by a knowledge project. Open Knowledge to follow the new route.",
+  "knowledge.frostedresearch.research.legacy_open": "Open Knowledge",
+  "knowledge.frostedresearch.research.legacy_guide": "Inspect the materials around you, learn their observations and follow your ideas in Knowledge.",
+  "knowledge.frostedresearch.research.legacy_partial": "Your earlier ideas have been carried forward. Validate the new sample to continue.",
+  "knowledge.frostedresearch.research.legacy_replaced_short": "Replaced by a knowledge project"
 }

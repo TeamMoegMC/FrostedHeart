@@ -84,13 +84,13 @@ final class ResearchArchiveViewCache {
         for (String parentId : research.getParentIds()) {
             View parentView = viewsById.get(parentId);
             if (parentView != null) {
-                if (!parentView.completed()) {
+                if (!parentView.completed() && !com.teammoeg.frostedresearch.knowledge.client.LegacyResearchClient.completed(parentId)) {
                     return false;
                 }
                 continue;
             }
             Research parent = FHResearch.getResearch(parentId);
-            if (parent != null && !teamData.getData(parent).isCompleted()) {
+            if (parent != null && !teamData.getData(parent).isCompleted() && !com.teammoeg.frostedresearch.knowledge.client.LegacyResearchClient.completed(parentId)) {
                 return false;
             }
         }
@@ -165,11 +165,11 @@ final class ResearchArchiveViewCache {
         }
 
         Component name() {
-            return presentation.name;
+            return com.teammoeg.frostedresearch.knowledge.client.LegacyResearchClient.replaced(research.getId()) ? presentation.name.copy().append(" ↗") : presentation.name;
         }
 
         String title() {
-            return presentation.title;
+            return com.teammoeg.frostedresearch.knowledge.client.LegacyResearchClient.replaced(research.getId()) ? presentation.title + " ↗" : presentation.title;
         }
 
         String lowercaseSearchText() {

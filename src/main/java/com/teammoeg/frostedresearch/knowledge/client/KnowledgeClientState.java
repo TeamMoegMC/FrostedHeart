@@ -44,6 +44,10 @@ public final class KnowledgeClientState {
     public static void setSnapshot(CompoundTag value) {
         snapshot = value.copy();
         serial++;
+        var minecraft = Minecraft.getInstance();
+        if (minecraft.screen instanceof com.teammoeg.chorda.client.cui.screenadapter.CUIScreen cui
+            && cui.getPrimaryLayer() instanceof com.teammoeg.frostedresearch.gui.drawdesk.DrawDeskScreen desk)
+            desk.onResearchProgressChanged(null);
         KnowledgeLayer layer = KnowledgeScreen.current();
         if (layer != null) layer.refreshSnapshot();
     }

@@ -175,6 +175,18 @@ final class ResearchProjectWorkspace extends UIElement {
             drawCloseButton(graphics, x, y, width);
             return;
         }
+        if (com.teammoeg.frostedresearch.knowledge.client.LegacyResearchClient.replaced(research.getId())) {
+            graphics.drawString(getFont(), research.getName(), x + 12, y + 12, ResearchArchiveLayer.COLOR_INK, false);
+            drawCloseButton(graphics, x, y, width);
+            int lineY = y + 50;
+            var replacement = com.teammoeg.frostedresearch.knowledge.client.LegacyResearchClient.replacement(research.getId());
+            String message = replacement.getBoolean("completed_credit") ? "legacy_completed" : replacement.getBoolean("partial_idea_granted") ? "legacy_partial" : "legacy_replaced";
+            for (var line : getFont().split(Component.translatable("knowledge.frostedresearch.research." + message), width - 24)) {
+                graphics.drawString(getFont(), line, x + 12, lineY, ResearchArchiveLayer.COLOR_INK, false); lineY += 12;
+            }
+            graphics.drawString(getFont(), Component.translatable("knowledge.frostedresearch.research.legacy_open"), x + 12, y + height - 20, ResearchArchiveLayer.COLOR_TEAL, false);
+            return;
+        }
         WorkspaceRenderSnapshot renderSnapshot = renderSnapshotFor(research);
         scroll = Math.min(scroll, maxScroll(renderSnapshot));
 
@@ -368,6 +380,10 @@ final class ResearchProjectWorkspace extends UIElement {
         if (localY >= 8 && localY <= 27 && localX >= getWidth() - 26) {
             state.setProjectWorkspaceOpen(false);
             navigationChanged.run();
+            return true;
+        }
+        if (research != null && com.teammoeg.frostedresearch.knowledge.client.LegacyResearchClient.replaced(research.getId())) {
+            if (localY >= getHeight() - FOOTER_HEIGHT) com.teammoeg.frostedresearch.knowledge.client.LegacyResearchClient.open(research.getId());
             return true;
         }
         if (research != null && localY >= 8 && localY <= 27

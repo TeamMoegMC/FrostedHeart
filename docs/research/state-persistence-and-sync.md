@@ -1,8 +1,8 @@
 # Research State, Persistence, And Synchronization
 
 - Status: `Current`
-- Last verified: `2026-09-08` (knowledge integration verified against source)
-- Scope: Legacy research state and synchronization, plus its integration with the independent schema-2 knowledge
+- Last verified: `2026-11-12` (M3-B replacement bridge; older sections retain their existing scope)
+- Scope: Legacy research state and synchronization, plus its integration with the independent schema-4 knowledge
   component
 - Code anchors: [`TeamResearchData`](../../src/main/java/com/teammoeg/frostedresearch/data/TeamResearchData.java), [`TeamKnowledgeData`](../../src/main/java/com/teammoeg/frostedresearch/data/TeamKnowledgeData.java), [`KnowledgeSyncSnapshot`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/KnowledgeSyncSnapshot.java), [`KnowledgeSnapshotPacket`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/network/KnowledgeSnapshotPacket.java), [`ResearchNetworkCodec`](../../src/main/java/com/teammoeg/frostedresearch/network/ResearchNetworkCodec.java), [`FRNetwork`](../../src/main/java/com/teammoeg/frostedresearch/FRNetwork.java)
 
@@ -298,3 +298,13 @@ See [knowledge state and API](../knowledge/state-and-api.md).
 - Definition, clue, and effect ordering may change without changing saved/network identity.
 - Back up before editor rename/delete, reset, complete-all, or data transfer commands.
 - Test both login and `/reload`, including players whose archive is already open.
+
+## Optional legacy replacement bridge
+
+`ProjectDefinition.legacy_replacement` can replace a legacy entry without deleting its JSON or changing raw progress.
+`LegacyResearchBridge` imports recorded completion/effect facts into knowledge, stores only namespaced receipts in
+`TeamResearchData.variants`, and never invents new experiment history or replays old rewards. Replaced legacy entries
+reject normal activation, selection, points and clue completion. Removing a mapping restores the old route and retained
+progress. Parent checks accept raw old completion or a real new completed run with both active mapped results;
+knowledge snapshots carry the equivalent client projection. See the owning [bridge state/API contract](../knowledge/state-and-api.md#旧研究承接与完成等价查询m3-b)
+and [mapping format](../knowledge/definitions.md#旧研究的可选替换映射m3-b).

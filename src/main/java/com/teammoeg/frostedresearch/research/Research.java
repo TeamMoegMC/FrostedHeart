@@ -661,7 +661,7 @@ public class Research implements FHRegisteredItem {
     @OnlyIn(Dist.CLIENT)
     public boolean isUnlocked() {
         for (Research parent : this.getParents()) {
-            if (!parent.getData().isCompleted()) {
+            if (!parent.getData().isCompleted() && !com.teammoeg.frostedresearch.knowledge.client.LegacyResearchClient.completed(parent.getId())) {
                 return false;
             }
         }
@@ -676,7 +676,7 @@ public class Research implements FHRegisteredItem {
      */
     public boolean isUnlocked(TeamDataHolder t) {
         for (Research parent : this.getParents()) {
-            if (!parent.getData(t).isCompleted()) {
+            if (!com.teammoeg.frostedresearch.knowledge.LegacyResearchBridge.isPrerequisiteCompleted(t, parent.getId())) {
                 return false;
             }
         }

@@ -2,7 +2,7 @@
 
 - Time: `2026-11-11 23:38:07 +08:00`
 - Authors: `项目所有者提出玩法设计；Codex（OpenAI GPT-6 Astra）整理计划；GPT-6 Luna 协助只读核对实现。`
-- Status: `in-progress`：2026-11-12 M0 基线、M1/M2 实现与服务端回归已完成；M2手动联络回环兼容修复亦通过定向测试。新界面、材料可达性与实际游玩随后续阶段验证，下一阶段为 M3。下文“建议默认规则”不是已经确认的玩法。
+- Status: `in-progress`：2026-11-12 M0 基线、M1/M2、M3-A 小炉与实物提交、M3-B 旧进度承接及 TWR 正式内容已实现，27项服务端必需测试通过。当前进行 M3 客户端/正式包联调与 M4 接口设计；尚未证明完整生存可玩。阶段证据与提交见[协调记录](2026-11-12_13-00-00_research-development-coordination.md)。下文未注明已采用的“建议默认规则”仍是实施建议。
 - Scope: FrostedHeart 的知识、研究、实验、界面和存档；TheWinterRescue 的研究内容、配方、引导及旧进度衔接。
 - Related: [改版要点](2026-11-11_22-20-43_research-system-architecture-revision.md)、[讨论记录](../discussion/2026-11-08_23-34-23_research-design-revision-draft.md)、[原始设计，只读](../design/knowledge_research.md)、[知识系统](../docs/knowledge/README.md)、[现有研究系统](../docs/research/README.md)。
 

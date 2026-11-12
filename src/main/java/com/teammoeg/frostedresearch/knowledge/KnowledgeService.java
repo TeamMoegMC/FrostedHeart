@@ -46,7 +46,7 @@ public final class KnowledgeService {
     public enum Status {
         SUCCESS, LEARNABLE, ACTIVE, ALREADY_OWNED, ALREADY_RECEIVED, NO_NEW_DIFFERENCE, NO_USE,
         NOT_UNDERSTOOD, DEFINITION_UNAVAILABLE, CAPACITY, CANCELLED, NOT_FOUND, INVALID_INPUT, NO_MATCH, NO_HINT, DAILY_LIMIT,
-        REQUIREMENTS_UNMET
+        REQUIREMENTS_UNMET, LEGACY_COMPLETED
     }
 
     /**
@@ -323,6 +323,7 @@ public final class KnowledgeService {
     }
 
     public void initialize() {
+        if (team != null) LegacyResearchBridge.reconcile(team, this);
         boolean reconciled = state.reconcileHints(KnowledgeDefinitions.current().links());
         if (state.initialized() || KnowledgeDefinitions.current().revision() == 0) {
             if (reconciled) notifyChanged();
@@ -337,6 +338,16 @@ public final class KnowledgeService {
     /**
      * Team system explicitly requests this migration; joining/leaving never calls it.
      */
+    public boolean legacyCompleted(ResourceLocation project) {
+        return team != null && LegacyResearchBridge.completedCredit(team.getData(FRSpecialDataTypes.RESEARCH_DATA), project);
+    }
+    public net.minecraft.nbt.ListTag legacyProjection() {
+        return team == null ? new net.minecraft.nbt.ListTag() : LegacyResearchBridge.projection(team);
+    }
+    public void merge(TeamDataHolder source) {
+        if (team != null) LegacyResearchBridge.mergeReceipts(team.getData(FRSpecialDataTypes.RESEARCH_DATA), source.getData(FRSpecialDataTypes.RESEARCH_DATA));
+        merge(source.getData(FRSpecialDataTypes.KNOWLEDGE_DATA));
+    }
     public void merge(KnowledgeState source) {
         state.merge(source);
         notifyChanged();
@@ -384,11 +395,11 @@ public final class KnowledgeService {
             discovered = !sources.isEmpty(); met = discovered;
             if (discovered) origins.add(sources.get(0));
         }
-        Status status = definition == null ? Status.DEFINITION_UNAVAILABLE : openRun(project).isPresent() ? Status.ACTIVE
+        Status status = definition == null ? Status.DEFINITION_UNAVAILABLE : legacyCompleted(project) ? Status.LEGACY_COMPLETED : openRun(project).isPresent() ? Status.ACTIVE
             : state.research().values().stream().anyMatch(run -> run.completed() && run.project().equals(project))
                 && definition.results().stream().allMatch(result -> state.archive().contains(KnowledgeKey.result(result))) ? Status.ALREADY_OWNED
             : !discovered ? Status.NOT_FOUND : !met ? Status.NOT_UNDERSTOOD : Status.LEARNABLE;
-        return new ProjectAccessEvaluation(discovered, Map.copyOf(witnesses), Set.copyOf(groups), Set.copyOf(revealed),
+        return new ProjectAccessEvaluation(discovered || legacyCompleted(project), Map.copyOf(witnesses), Set.copyOf(groups), Set.copyOf(revealed),
             sources.stream().distinct().toList(), origins.stream().distinct().sorted(Comparator.comparing(KnowledgeKey::toString)).toList(), status);
     }
 
@@ -450,7 +461,7 @@ public final class KnowledgeService {
      */
     public List<com.teammoeg.frostedresearch.knowledge.experiment.ResearchSampleBinding> sampleTargets(ResourceLocation experiment) {
         List<com.teammoeg.frostedresearch.knowledge.experiment.ResearchSampleBinding> targets = new ArrayList<>();
-        state.research().values().stream().filter(ResearchHistory::open).sorted(Comparator.comparing(r -> r.id().toString())).forEach(run -> {
+        state.research().values().stream().filter(run -> run.open() && !legacyCompleted(run.project())).sorted(Comparator.comparing(r -> r.id().toString())).forEach(run -> {
             for (var requirement : requirements(run)) if (requirement.type() == ProjectRequirement.Type.SAMPLE && !requirementMet(run, requirement)
                     && requirement.sample().filter(sample -> sample.experiment().equals(experiment)).isPresent())
                 targets.add(new com.teammoeg.frostedresearch.knowledge.experiment.ResearchSampleBinding(teamId(), run.id(), requirement.id(), experiment));
@@ -509,7 +520,7 @@ public final class KnowledgeService {
      */
     public boolean requirementsMet(UUID runId) {
         ResearchHistory run = state.research().get(runId);
-        if (run == null || !run.open()) return false;
+        if (run == null || !run.open() || legacyCompleted(run.project())) return false;
         List<ProjectRequirement> requirements = requirements(run);
         return !requirements.isEmpty() && requirements.stream().allMatch(requirement -> requirementMet(run, requirement));
     }
@@ -583,7 +594,7 @@ public final class KnowledgeService {
     }
 
     private ProjectRequirement openRequirement(ResearchHistory run, String requirementId, ProjectRequirement.Type type) {
-        if (run == null || !run.open()) return null;
+        if (run == null || !run.open() || legacyCompleted(run.project())) return null;
         return requirements(run).stream().filter(r -> r.id().equals(requirementId) && r.type() == type).findFirst().orElse(null);
     }
 
@@ -617,7 +628,7 @@ public final class KnowledgeService {
 
     public List<OperationResult> completeResearch(UUID run, List<ResourceLocation> results) {
         ResearchHistory history = state.research().get(run);
-        if (history == null || !history.open() || results.isEmpty()) return List.of();
+        if (history == null || !history.open() || legacyCompleted(history.project()) || results.isEmpty()) return List.of();
         var definition = KnowledgeDefinitions.current().projects().get(history.project());
         if (definition == null || !new HashSet<>(definition.results()).equals(new HashSet<>(results))) return List.of();
         List<KnowledgeKey> keys = results.stream().distinct().map(KnowledgeKey::result).toList();
