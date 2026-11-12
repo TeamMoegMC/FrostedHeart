@@ -30,8 +30,6 @@ import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.content.agriculture.Fertilizer;
 import com.teammoeg.frostedheart.content.health.food.CannedFoodItem;
 import com.teammoeg.frostedheart.content.health.food.FHSoupItem;
-import com.teammoeg.frostedheart.content.climate.player.thermalitem.WarmStoneItem;
-import com.teammoeg.frostedheart.content.climate.player.thermalitem.WearableThermalProfile;
 import com.teammoeg.frostedheart.content.steamenergy.debug.HeatDebugItem;
 import com.teammoeg.frostedheart.content.town.transport.device.FreightRouteCardItem;
 import com.teammoeg.frostedheart.content.utility.*;
@@ -1893,13 +1891,13 @@ thinner.png
             
             .register();
     public static final ItemEntry<LeatherWaterBagItem> LEATHER_WATER_BAG = REGISTRATE
-            .item("leather_water_bag", p -> new LeatherWaterBagItem(new Item.Properties().stacksTo(1).setNoRepair(), 1000))
+            .item("leather_water_bag", p -> new LeatherWaterBagItem(new Item.Properties(), 1000))
             .tag(CPTags.Items.CONTAINER)
             .model(FHBlockStateGen.existingItemModel())
             .lang("Leather Water Bag")
             .register();
     public static final ItemEntry<IronBottleItem> IRON_BOTTLE = REGISTRATE
-            .item("iron_bottle", p -> new IronBottleItem(new Item.Properties().stacksTo(1).setNoRepair(), 1000))
+            .item("iron_bottle", p -> new IronBottleItem(new Item.Properties(), 1000))
             .tag(CPTags.Items.CONTAINER)
             .model(FHBlockStateGen.existingItemModel())
             .lang("Iron Bottle")

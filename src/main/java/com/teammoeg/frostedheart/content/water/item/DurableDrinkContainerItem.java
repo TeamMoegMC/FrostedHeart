@@ -23,11 +23,26 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 
 public class DurableDrinkContainerItem extends DrinkContainerItem {
-    public DurableDrinkContainerItem( Properties properties, int capacity) {
-        super( properties.defaultDurability(capacity), capacity);
+    public DurableDrinkContainerItem(Properties properties, int capacity) {
+        super(properties.stacksTo(1), capacity);
     }
+
+    public int getFluidAmount(ItemStack stack) {
+        return stack.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).map(t->t.getFluidInTank(0).getAmount()).orElse(0);
+    }
+
     @Override
-	public int getDamage(ItemStack stack) {
-		return capacity-stack.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).map(t->t.getFluidInTank(0).getAmount()).orElse(0);
-	}
+    public int getBarColor(ItemStack stack) {
+        return 0xff7cbeff;
+    }
+
+    @Override
+    public int getBarWidth(ItemStack stack) {
+        return Math.round(13*(float)getFluidAmount(stack) / capacity);
+    }
+
+    @Override
+    public boolean isBarVisible(ItemStack stack) {
+        return getFluidAmount(stack) > 0;
+    }
 }
