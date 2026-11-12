@@ -180,3 +180,16 @@ sent.
   requirements. Full new research execution remains a separate integration; the knowledge API records starts/completions
   and preserves produced results.
 - Existing third-party execution boundaries remain explicit integrations rather than automatic global interception.
+
+## Temporary stage recipe sources (M4, verified 2026-11-12)
+
+`AccessSource.TemporaryResearchSource(project, run, stage)` is an independent recipe source. All declared stage
+`completion_recipes` are managed even before a team starts; a ready visit grants its recorded recipes until that
+run completes, is abandoned or receives legacy completion credit. Sources are unioned with results, legacy grants
+and other open runs. No stage mutates a global unlock list. The dedicated prototype-tuyere product is indexed on
+final recipe reload so its recipe stays managed if its project definition is removed. Missing content retains saved
+facts but contributes no current source. See [stage state and lifecycle](../knowledge/stages-and-airflow.md).
+
+Legacy mappings now accept a nonempty set of Design/Construction targets, including one Design owning both the
+ordinary tuyere and bloomery recipes. Completion/effect facts, per-result receipts and prerequisite equivalence
+retain the M3 bridge semantics; neither temporary grants nor external results manufacture completion history.

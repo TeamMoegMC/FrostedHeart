@@ -1,0 +1,13 @@
+modLoader="javafml"
+loaderVersion="[47,)"
+license="GPLv3"
+[[mods]]
+modId="research_validation"
+version="1.0"
+displayName="Research Client Validation (TEST ONLY)"
+[[dependencies.research_validation]]
+modId="frostedresearch"
+mandatory=true
+versionRange="[0,)"
+ordering="AFTER"
+side="CLIENT"

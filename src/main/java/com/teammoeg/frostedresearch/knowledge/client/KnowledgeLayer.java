@@ -49,7 +49,7 @@ import static com.teammoeg.frostedresearch.knowledge.client.ui.KnowledgeUiTheme.
  */
 public final class KnowledgeLayer extends UILayer {
     private static final com.teammoeg.chorda.client.icon.CIcons.CTextureIcon DESK_INVENTORY = DrawDeskIcons.ALL.withUV(0, 0, 140, 203, 512, 512);
-    private static final Set<String> RESEARCH_ACTIONS = Set.of("START_RESEARCH", "SUBMIT_SAMPLE", "SUBMIT_EVIDENCE", "CALCULATE",
+    private static final Set<String> RESEARCH_ACTIONS = Set.of("ADVANCE_STAGE", "START_RESEARCH", "SUBMIT_SAMPLE", "SUBMIT_EVIDENCE", "CALCULATE",
             "STOP_CALCULATION", "COMPLETE_RESEARCH", "ABANDON_RESEARCH");
 
     private enum Page {INBOX, ARCHIVE, RELATIONS, HINTS, RESEARCH}
@@ -157,7 +157,7 @@ public final class KnowledgeLayer extends UILayer {
         if (researchProject(project) != null) openResearch(project);
         else {
             switchPage(Page.RESEARCH);
-            notice = t("research.legacy_guide"); noticeTicks = 160;
+            notice = Component.translatable("knowledge.frostedresearch.research.legacy_guide"); noticeTicks = 160;
             rebuild();
         }
     }
@@ -412,14 +412,34 @@ public final class KnowledgeLayer extends UILayer {
     /**
      * A project's aims and requirements, with the actions its open run allows. The server judges every action.
      */
+    private CompoundTag airflowBoard = new CompoundTag();
+    private String airflowRun="", airflowTask="";
+    private boolean airflowOpen;
+    private void buildAirflowReading(int x,int w,int bottom) {
+        reading.text(List.of(t("research.airflow_explain"),t(airflowBoard.getBoolean("won") ? "research.airflow_won" : "research.airflow_rotate")));
+        reading.setHeight(Math.max(20,reading.getHeight()-140));
+        int[] masks=airflowBoard.getIntArray("masks");
+        int left=x+(w-96)/2,top=bottom-132;
+        for(int cell=0;cell<9;cell++) {
+            final int chosen=cell;int mask=masks.length==9 ? masks[cell] : 0;
+            String shape=switch(mask) { case 5 -> "│";case 10 -> "─";case 3 -> "└";case 6 -> "┌";case 12 -> "┐";case 9 -> "┘";default -> "■"; };
+            button(left+(cell%3)*32,top+(cell/3)*32,30,30,Component.literal(shape),false,
+                () -> send(Action.ROTATE_AIRFLOW,List.of(),airflowRun,Integer.toString(chosen),"",airflowTask))
+                .setEnabled(mask!=0 && !airflowBoard.getBoolean("won"));
+        }
+        button(x,bottom-27,w/2-2,20,t("research.airflow_reset"),true,
+            () -> send(Action.RESET_AIRFLOW,List.of(),airflowRun,"","",airflowTask)).setEnabled(!airflowBoard.getBoolean("won"));
+        button(x+w/2+2,bottom-27,w/2-2,20,t("research.airflow_back"),true,() -> {airflowOpen=false;rebuild();});
+    }
     private void buildResearchReading(int x, int w, int bottom) {
+        if(airflowOpen) { buildAirflowReading(x,w,bottom);return; }
         var project = researchProject(focusedProject);
         if (project == null) {
             reading.text(List.of(t(researchProjects().isEmpty() ? "research.empty" : "research.choose")));
             return;
         }
         if (project.startStatus().equals("LEGACY_COMPLETED")) {
-            reading.text(List.of(t("research.legacy_completed"), t("research.legacy_completed_explain")));
+            reading.text(List.of(Component.translatable("knowledge.frostedresearch.research.legacy_completed"), Component.translatable("knowledge.frostedresearch.research.legacy_completed_explain")));
             return;
         }
         var run = data.openRun(project.id());
@@ -459,7 +479,19 @@ public final class KnowledgeLayer extends UILayer {
             }
         }
         var requirements = run != null ? run.requirements() : project.requirements();
-        if (requirements.isEmpty()) paragraphs.add(t("research.no_steps"));
+        var displayed=run!=null ? run : data.runs.stream().filter(r -> r.project().equals(project.id()) && r.status().equals("completed")).reduce((a,b) -> b).orElse(null);
+        if(displayed!=null && !displayed.stage().id().isBlank()) {
+            paragraphs.add(displayed.stage().title());paragraphs.add(displayed.stage().objective());paragraphs.add(displayed.stage().method());
+            paragraphs.addAll(displayed.stage().conclusions());
+            if(run!=null && !run.stage().available()) paragraphs.add(t("research.stage_unavailable"));
+            if(run!=null && !run.stage().recipes().isEmpty()) {
+                paragraphs.add(t("research.temporary_recipes"));
+                var level=net.minecraft.client.Minecraft.getInstance().level;
+                if(level!=null) for(String recipe:run.stage().recipes()) level.getRecipeManager().byKey(new net.minecraft.resources.ResourceLocation(recipe))
+                    .map(r -> r.getResultItem(level.registryAccess())).filter(stack -> !stack.isEmpty()).ifPresent(stack -> paragraphs.add(stack.getHoverName()));
+            }
+        }
+        if (requirements.isEmpty()) paragraphs.add(t(project.staged() ? project.completed() ? "research.state.completed" : run==null ? "research.stage_after_start" : "research.stage_ready" : "research.no_steps"));
         else {
             paragraphs.add(t("research.requirements"));
             requirementIndex = Math.floorMod(requirementIndex, requirements.size());
@@ -469,7 +501,7 @@ public final class KnowledgeLayer extends UILayer {
         }
         reading.text(paragraphs);
         if (run == null) {
-            boolean startable = project.startStatus().equals("LEARNABLE") && !requirements.isEmpty();
+            boolean startable = project.startStatus().equals("LEARNABLE") && (project.staged() || !requirements.isEmpty());
             button(x, bottom - 23, w, 20, t("research.start"), false,
                     () -> send(Action.START_RESEARCH, List.of(), project.id(), "", ""))
                     .tooltip(startable ? t("research.start") : researchState(project)).setEnabled(startable);
@@ -499,8 +531,11 @@ public final class KnowledgeLayer extends UILayer {
             }
             requirementAction(requirement, run, ax, bottom - 45, aw);
         }
-        button(x, bottom - 22, w / 2 - 3, 19, t("research.complete"), false, () -> send(Action.COMPLETE_RESEARCH, List.of(), run.id(), "", ""))
-                .setEnabled(!requirements.isEmpty() && requirements.stream().allMatch(KnowledgeJournalData.Requirement::satisfied));
+        boolean staged=!run.stage().id().isBlank();
+        button(x, bottom - 22, w / 2 - 3, 19, t(staged && !run.stage().last() ? "research.advance_stage" : "research.complete"), false,
+                () -> { if(staged && !run.stage().last()) send(Action.ADVANCE_STAGE,List.of(),run.id(),"","",run.stage().id());
+                        else send(Action.COMPLETE_RESEARCH,List.of(),run.id(),"",""); })
+                .setEnabled(staged ? run.stage().available() && run.stage().ready() : !requirements.isEmpty() && requirements.stream().allMatch(KnowledgeJournalData.Requirement::satisfied));
         button(x + w / 2 + 2, bottom - 22, w / 2 - 2, 19, t("research.abandon"), true, () -> {
             mode = Mode.ABANDON;
             rebuild();
@@ -512,6 +547,13 @@ public final class KnowledgeLayer extends UILayer {
         if (requirement.satisfied()) {
             button(x, y, w, 19, t("research.requirement_done"), true, () -> {
             }).setEnabled(false);
+            return;
+        }
+        if (requirement.type().equals("observation") || requirement.type().equals("minigame")) {
+            if(requirement.type().equals("minigame")) button(x,y,w,19,t("research.airflow_start"),false,() -> {
+                airflowRun=run.id();airflowTask=requirement.id();airflowBoard=new CompoundTag();airflowOpen=true;
+                send(Action.START_AIRFLOW,List.of(),run.id(),"","",requirement.id());rebuild();
+            });else button(x,y,w,19,t("research.observe_target"),true,() -> {}).setEnabled(false);
             return;
         }
         if (requirement.sample()) {
@@ -552,9 +594,10 @@ public final class KnowledgeLayer extends UILayer {
 
     private Component requirementLine(KnowledgeJournalData.Requirement r, boolean started, boolean selected) {
         Component title = r.title().getString().isBlank()
-                ? t(r.sample() ? "research.sample" : r.evidence() ? "research.evidence" : r.experiment() ? "research.experiment" : "research.calculation") : r.title();
+                ? t(r.type().equals("minigame") ? "research.airflow_start" : r.type().equals("observation") ? "research.observe_target" : r.sample() ? "research.sample" : r.evidence() ? "research.evidence" : r.experiment() ? "research.experiment" : "research.calculation") : r.title();
+        if(r.optional()) title=title.copy().append(t("research.optional"));
         if (!started) return t("research.line.plain", title);
-        Component progress = r.sample() ? t("research.sample.progress", r.done()) : r.evidence()
+        Component progress = r.type().equals("minigame") || r.type().equals("observation") ? t(r.satisfied() ? "research.requirement_done" : "research.task_waiting") : r.sample() ? t("research.sample.progress", r.done()) : r.evidence()
                 ? t(r.satisfied() ? "research.evidence.done" : r.ready() ? "research.evidence.ready_short" : "research.evidence.waiting")
                 : r.experiment() ? t("research.experiment.progress", r.done(), r.count())
                 : t("research.calculation.progress", r.done(), r.count());
@@ -563,6 +606,8 @@ public final class KnowledgeLayer extends UILayer {
 
     private List<Component> requirementDetails(KnowledgeJournalData.Requirement r) {
         List<Component> lines = new ArrayList<>();
+        if(!r.method().getString().isBlank()) lines.add(r.method());
+        if(r.type().equals("minigame") || r.type().equals("observation")) { lines.add(t(r.type().equals("minigame") ? "research.airflow_explain" : "research.observe_target"));return lines; }
         if (r.sample()) { lines.add(t("research.sample.explain")); return lines; }
         if (r.experiment()) {
             lines.add(t("research.experiment.explain", r.duration() / 20));
@@ -602,12 +647,12 @@ public final class KnowledgeLayer extends UILayer {
 
     private Component researchState(KnowledgeJournalData.Project project) {
         var run = data.openRun(project.id());
-        if (project.startStatus().equals("LEGACY_COMPLETED")) return t("research.legacy_completed");
+        if (project.startStatus().equals("LEGACY_COMPLETED")) return Component.translatable("knowledge.frostedresearch.research.legacy_completed");
         if (run != null)
             return !run.requirements().isEmpty() && run.requirements().stream().allMatch(KnowledgeJournalData.Requirement::satisfied)
                 ? t("research.state.completable") : t("research.state.open", run.requirements().stream().filter(KnowledgeJournalData.Requirement::satisfied).count(), run.requirements().size());
         if (project.completed() && !project.startStatus().equals("LEARNABLE")) return t("research.state.completed");
-        if (project.requirements().isEmpty()) return t("research.state.no_steps");
+        if (project.requirements().isEmpty() && !project.staged()) return t("research.state.no_steps");
         return t(switch (project.startStatus()) {
             case "LEARNABLE" -> "research.state.ready";
             case "ALREADY_OWNED" -> "research.state.completed";
@@ -906,6 +951,7 @@ public final class KnowledgeLayer extends UILayer {
     }
 
     public void receiveReply(CompoundTag payload) {
+        if(payload.contains("airflow")) { airflowBoard=payload.getCompound("airflow").copy();rebuild();return; }
         if (payload.contains("link_state")) {
             linkState = payload.getString("link_state"); linkElapsed = payload.getInt("link_elapsed"); linkDuration = payload.getInt("link_duration");
             if (linkState.equals("completed") || linkState.equals("cancelled")) {
@@ -975,6 +1021,7 @@ public final class KnowledgeLayer extends UILayer {
     }
 
     private static Component message(String token) {
+        if(token.equals("research.start.legacy_completed")) return Component.translatable("knowledge.frostedresearch.research.legacy_completed");
         return t(switch (token) {
             case "note.not_observable" -> "tools.note_not_observable";
             case "retrieve.received" -> "tools.received";
@@ -1002,6 +1049,7 @@ public final class KnowledgeLayer extends UILayer {
             case "research.calculation_started" -> "research.msg.calculation_started";
             case "research.calculation_prepare" -> "research.msg.calculation_prepare";
             case "research.calculation_stopped" -> "research.msg.calculation_stopped";
+            case "research.stage_advanced" -> "research.stage_advanced";
             case "research.completed" -> "research.msg.completed";
             case "research.unmet" -> "research.msg.unmet";
             case "research.abandoned" -> "research.msg.abandoned";

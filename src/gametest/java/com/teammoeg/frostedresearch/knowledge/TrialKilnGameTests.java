@@ -175,7 +175,7 @@ public final class TrialKilnGameTests {
                 && desk.getInventory().getStackInSlot(DrawingDeskTileEntity.EXAMINE_SLOT).isEmpty(), "submission consumes the desk's actual examination-slot stack");
             var repeat = good.copy(); h.assertTrue(service.submitSample(run, "submit_intact", repeat).status() == KnowledgeService.Status.ALREADY_OWNED && repeat.getCount() == 1, "repeat click does not consume again");
             var restored = KnowledgeState.read(service.state().write());
-            h.assertTrue(restored.research().get(run).equals(service.state().research().get(run)) && KnowledgeState.SCHEMA_VERSION == 4, "schema4 round trip preserves sample receipt and prior progress");
+            h.assertTrue(restored.research().get(run).equals(service.state().research().get(run)) && KnowledgeState.SCHEMA_VERSION == 5, "schema5 round trip preserves schema4 sample receipt and prior progress");
             CompoundTag old = service.state().write(); old.putInt("schema_version", 3); old.getList("research", Tag.TAG_COMPOUND).getCompound(0).remove("samples");
             var legacy = KnowledgeState.read(old).research().get(run);
             h.assertTrue(legacy.samples().isEmpty() && legacy.origins().equals(service.state().research().get(run).origins()), "v3 missing sample progress defaults empty without dropping the run");

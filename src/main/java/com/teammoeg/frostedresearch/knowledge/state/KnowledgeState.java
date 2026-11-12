@@ -38,7 +38,7 @@ public class KnowledgeState implements SpecialData {
     /**
      * Layout written by {@link #write()}; bump it together with a step in {@link #upgrade}.
      */
-    public static final int SCHEMA_VERSION = 4;
+    public static final int SCHEMA_VERSION = 5;
     public static final Codec<KnowledgeState> CODEC = CompoundTag.CODEC.xmap(KnowledgeState::read, KnowledgeState::write);
     private final KnowledgeArchive archive = new KnowledgeArchive();
     private final KnowledgeInbox inbox = new KnowledgeInbox();
@@ -308,6 +308,7 @@ public class KnowledgeState implements SpecialData {
         CompoundTag copy = tag.copy();
         for (Tag raw : copy.getList("research", Tag.TAG_COMPOUND)) {
             CompoundTag run = (CompoundTag) raw;
+            if(version<5 && !run.contains("stage_state")) run.put("stage_state",encode(StageRunState.CODEC,StageRunState.legacy()));
             if (!run.contains("origins") && run.contains("idea")) {
                 ListTag origins = new ListTag(); origins.add(run.get("idea").copy()); run.put("origins", origins);
             }

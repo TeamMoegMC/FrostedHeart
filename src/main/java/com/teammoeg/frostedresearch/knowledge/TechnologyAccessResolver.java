@@ -83,6 +83,9 @@ public final class TechnologyAccessResolver {
     public static TechnologyAccessProjection project(TeamKnowledgeData knowledge, TeamResearchData legacy) {
         ResearchResultCatalog.Snapshot catalog = ResearchResultCatalog.current();
         Set<ResourceLocation> managedRecipes = new LinkedHashSet<>(catalog.managedRecipes());
+        managedRecipes.addAll(TemporaryResearchRecipes.managed());
+        KnowledgeDefinitions.current().projects().values().forEach(p -> p.orderedStages().forEach(stage -> managedRecipes.addAll(stage.completionRecipes())));
+        knowledge.research().values().forEach(run -> run.stageState().visits().values().forEach(v -> managedRecipes.addAll(v.temporaryRecipes())));
         Set<ResourceLocation> managedMultiblocks = new LinkedHashSet<>(catalog.managedMultiblocks());
         Set<ResourceLocation> managedBlocks = new LinkedHashSet<>(catalog.managedBlocks());
         com.teammoeg.frostedresearch.knowledge.definition.KnowledgeDefinitions.current().results().values().forEach(definition -> {
@@ -106,6 +109,17 @@ public final class TechnologyAccessResolver {
         Map<ResourceLocation, List<AccessSource>> blockSources = new LinkedHashMap<>();
         addResultSources(knowledge, catalog, recipeSources, multiblockSources, blockSources);
         addLegacySources(legacy, recipeSources, multiblockSources, blockSources);
+        var server=net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer();
+        for(var run:knowledge.research().values()) {
+            if(!run.open() || LegacyResearchBridge.completedCredit(legacy,run.project())) continue;
+            var project=KnowledgeDefinitions.current().projects().get(run.project());
+            if(project==null) continue;
+            run.stageState().visits().forEach((stageId,visit) -> project.stage(stageId).ifPresent(stage -> {
+                if(!visit.ready() || !ResearchStages.availableVisit(run,stageId)) return;
+                for(var recipe:visit.temporaryRecipes()) if(stage.completionRecipes().contains(recipe) && server!=null && server.getRecipeManager().byKey(recipe).isPresent())
+                    add(recipeSources,recipe,new AccessSource.TemporaryResearchSource(run.project(),run.id(),stageId));
+            }));
+        }
         return TechnologyAccessProjection.create(managedRecipes, managedMultiblocks, managedBlocks,
                 recipeSources, multiblockSources, blockSources);
     }

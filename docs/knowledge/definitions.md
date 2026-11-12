@@ -360,11 +360,27 @@ M3-A：ProjectRequirement.type=sample 使用 sample.experiment 与 sample.item�
 ```
 
 这是静态的一项旧研究到新项目的映射，不是通用迁移脚本。`research` 是旧 JSON 文件名得到的字符串 ID，
-`effects` 的键是旧效果 nonce；必须有两个不同、属于本项目 results 的成果，分别为 Design 与 Construction。
-两成果必须启用、understanding 为空；Design 的每个 recipe 必须在当前服务器 RecipeManager 中存在，
+`effects` 的键是旧效果 nonce；effects 必须非空，目标属于本项目 results，允许 Design、Construction 或二者组合；同一 Design 可承载多条生产配方。
+映射成果必须启用、understanding 为空；Design 的每个 recipe 必须在当前服务器 RecipeManager 中存在，
 Construction 的每个 multiblock 必须能由 IE `MultiblockHandler.getByUniqueName` 解析；partial_idea 也必须存在且启用。
 同一旧 ID 多重映射停用该 ID 的替换并告警。缺任一映射定义或目标时记录诊断，保留旧入口；最终 recipes/tags、
 队伍加载与登录重新核对。映射成果/想法引用缺席属于桥接局部不可用，不以保留上一快照的方式留住已失效替换。
 其他项目引用错误仍遵守现有原子重载验证。
 
 运行时桥接和回执语义见 [状态与 API](state-and-api.md#旧研究承接与完成等价查询m3-b)。
+
+## 有序阶段（M4）
+
+项目可写 stages，不能同时写非空顶层 requirements。无 stages 的项目继续按 main 单阶段执行。
+每阶段声明 id/title/objective/method/conclusion、tasks、variants、completion_recipes；任务为
+`{requirement: ProjectRequirement, optional: false, method: ""}`。任务ID在整个项目内唯一。
+变体为 `{id, when?: {knowledge_all: KnowledgeCondition[], tasks_all: string[]}, omit_tasks: string[], method?: string}`；
+最后无when的项是默认路径，按作者顺序首命中，省略的任务必须属于本阶段，tasks_all只能引用先前阶段可选任务。
+全部阶段的证据、观察谓词及变体参考知识都会登记观察用途，不等进入阶段才允许观察入档。
+
+新增任务：minigame 的 game 固定 frostedresearch:airflow；observation 的 observation 包含 condition、可选experiment、
+team_current_run（缺省false）。有experiment须team_current_run=true；只接受新鲜采样动作，不能靠学来件/旧笔记完成。
+当前队伍样品沿用ResearchSampleBinding四字段，无个人owner；world试件使用位置proof，不把它塞入知识字段。
+
+铜/青铜和碳燃料任选组仍使用已有物品tag谓词，start_all在两组之间取AND；没有新增OR表达式。
+阶段行为、保存与客户端披露见 [阶段与风道](stages-and-airflow.md)。

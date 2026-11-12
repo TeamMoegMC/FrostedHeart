@@ -14,10 +14,14 @@ public record KnowledgeCondition(KnowledgeKey.Kind kind, Optional<ResourceLocati
         KnowledgeKey.KIND_CODEC.fieldOf("kind").forGetter(KnowledgeCondition::kind),
         KnowledgeKey.strictOptionalField(ResourceLocation.CODEC, "definition").forGetter(KnowledgeCondition::definition),
         KnowledgeKey.strictOptionalField(KnowledgeKey.enumCodec(Observation.Type.class), "observation_type").forGetter(KnowledgeCondition::observationType),
-        ProjectRequirement.field(FieldCondition.CODEC.listOf(), "conditions", List.of()).forGetter(KnowledgeCondition::conditions),
-        ProjectRequirement.field(Codec.STRING, "title", "").forGetter(KnowledgeCondition::title),
-        ProjectRequirement.field(Codec.STRING, "hint", "").forGetter(KnowledgeCondition::hint)
+        field(FieldCondition.CODEC.listOf(), "conditions", List.of()).forGetter(KnowledgeCondition::conditions),
+        field(Codec.STRING, "title", "").forGetter(KnowledgeCondition::title),
+        field(Codec.STRING, "hint", "").forGetter(KnowledgeCondition::hint)
     ).apply(i, KnowledgeCondition::new));
+    // Do not initialize ProjectRequirement from this codec: observation tasks refer back to KnowledgeCondition.
+    private static <T> com.mojang.serialization.MapCodec<T> field(Codec<T> codec,String name,T fallback) {
+        return KnowledgeKey.strictOptionalField(codec,name).xmap(value -> value.orElse(fallback),Optional::of);
+    }
     public KnowledgeCondition { conditions = List.copyOf(new LinkedHashSet<>(conditions)); }
     public LinkRule.Slot slot() { return new LinkRule.Slot("knowledge", kind, definition, observationType, conditions); }
     public SlotPattern pattern() { return new SlotPattern(List.of(slot()), List.of()); }

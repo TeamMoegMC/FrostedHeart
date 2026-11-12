@@ -67,7 +67,7 @@ ProjectRequirement 增加独立 type=sample，例如：
 检查全部通过后，同次操作扣1件并写任务回执；任务已满足或 run 已关闭时不再扣物。之后点击正常完成研究按钮取得项目成果。
 仅本次完好样必交，坏炉不强制计数；不要求三组全部试烧。
 
-ResearchHistory.samples 保存任务 ID 到 {experiment,item} 的回执。存储 schema_version=4，v3以及更旧存档缺这个可选映射时
+ResearchHistory.samples 保存任务 ID 到 {experiment,item} 的回执。存储 schema_version=5，v3以及更旧存档缺这个可选映射时
 读为空，不改变既有 origins/证据/演算/实验进度；v2单 idea 到 origins 的兼容继续保留。所有 with*/完成复制保留 samples，放弃清空任务进度。
 若作者后来改变该任务的实验或物品，旧回执不会自动满足改变后的要求。
 
@@ -79,3 +79,6 @@ ResearchHistory.samples 保存任务 ID 到 {experiment,item} 的回执。存储
 
 TrialKilnGameTests 使用独立批次，验证加载中的400tick、三结果、燃料与拆除、BE NBT重建、一次结算、实际槽位消耗与绑定回归；
 真实客户端视觉/键鼠、跨进程重启、正式 TWR 生存材料路线仍需后续验收。
+
+M4将KnowledgeState版本升至5；本页样品绑定与samples回执契约保持原样，schema4记录继续读取。
+阶段项目的小炉候选只取当前选定任务；尚未进入的阶段不会提前绑定，离开的阶段不接受旧样品回调。

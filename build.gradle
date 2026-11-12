@@ -146,6 +146,19 @@ minecraft {
             }
         }
 
+        m3cClient {
+            parent minecraft.runs.client
+            client true
+            workingDirectory file('build/m3c-client-run')
+            property 'frostedresearch.uiValidation', 'false'
+            property 'forge.logging.console.level', 'info'
+            property 'frostedresearch.m3cValidation', 'true'
+            property 'frostedresearch.m3cRoot', rootDir.absolutePath
+            mods { frostedheart { source sourceSets.noDatagen; source sourceSets.main; source sourceSets.client; source sourceSets.gameTest } }
+            jvmArg '-Xmx3G'
+            jvmArg '-XX:ActiveProcessorCount=4'
+        }
+
         server {
             workingDirectory project.file('run')
             property 'mixin.env.remapRefMap', 'true'
@@ -720,5 +733,62 @@ publishing {
             name = "COS"
             url = "http://127.0.0.1:9999"
         }
+    }
+}
+
+// M3-C opt-in test helper for the existing isolated Prism instance. Never included by ordinary jar.
+sourceSets {
+    m3cValidation {
+        java.srcDirs = ['src/m3c/java']
+        compileClasspath += sourceSets.main.output + sourceSets.gameTest.output + sourceSets.gameTest.compileClasspath
+    }
+}
+tasks.named('compileM3cValidationJava') { dependsOn compileGameTestJava }
+tasks.register('m3cValidationJar', Jar) {
+    dependsOn compileM3cValidationJava, processGameTestResources
+    archiveBaseName = 'research-client-validation'
+    archiveVersion = 'm3c'
+    from(sourceSets.gameTest.output) { include 'com/teammoeg/frostedresearch/validation/M3ClientValidation*.class'; include 'm1-fixtures/**'; include 'm3b-formal-fixtures/**' }
+    from sourceSets.m3cValidation.output
+    from('src/gametest/resources/m3c-validation')
+    finalizedBy 'reobfM3cValidationJar'
+}
+reobf { m3cValidationJar {} }
+tasks.register('prepareM3cClientCatalog', Sync) {
+    from 'src/gametest/catalog'
+    from('../TheWinterRescue/config/fhresearches') { include 'alloy_kiln.json' }
+    into 'build/m3c-client-run/config/fhresearches'
+}
+tasks.matching { it.name == 'runM3cClient' }.configureEach {
+    dependsOn prepareM3cClientCatalog
+    doFirst { delete file('build/m3c-dev/result.json') }
+    doLast {
+        def result = file('build/m3c-dev/result.json')
+        if (!result.isFile() || new groovy.json.JsonSlurper().parse(result).status != 'passed')
+            throw new GradleException('M3 client validation failed; see build/m3c-dev.')
+    }
+}
+
+// M4 dedicated integration: the real bellows mod is normally clientRuntimeOnly in this workspace.
+if (providers.gradleProperty('m4CharcoalPitTests').isPresent()) {
+    dependencies { runtimeOnly fg.deobf("curse.maven:charcoal-pit-reloaded-534602:7748097") }
+    sourceSets {
+        m4Integration {
+            java.srcDirs = ['src/m4/java']
+            resources.srcDirs = ['src/m4/resources']
+            compileClasspath += sourceSets.main.output + sourceSets.gameTest.output + sourceSets.gameTest.compileClasspath
+            runtimeClasspath += output + sourceSets.gameTest.runtimeClasspath
+        }
+    }
+    tasks.named('compileM4IntegrationJava') { dependsOn compileJava, compileGameTestJava }
+    minecraft.runs.gameTestServer {
+        property 'frostedresearch.m4RestartPhase', providers.gradleProperty('m4RestartPhase').getOrElse('write')
+        mods { frostedheart { source sourceSets.m4Integration } }
+    }
+    tasks.matching { it.name == 'runGameTestServer' }.configureEach {
+        dependsOn compileM4IntegrationJava, processM4IntegrationResources
+    }
+    if (providers.gradleProperty('m4RestartPhase').getOrElse('write') == 'read') {
+        tasks.named('cleanResearchGameTestWorld') { enabled = false }
     }
 }

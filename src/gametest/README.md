@@ -49,3 +49,13 @@ not an independent-process restart claim.
 `src/gametest/resources/m3b-formal-fixtures/` contains the five earthen-smelter knowledge JSON files copied verbatim
 from the companion pack on 2026-11-12 for codec/reference checks. Their stable recipe ID is asserted; the test does
 not claim that a full KubeJS pack runtime registered that recipe. Keep fixtures aligned when the formal contract changes.
+
+M4 stage checks use `frostedresearch_m4`. Real bellows integration additionally requires `-Pm4CharcoalPitTests`
+and namespace `frostedresearch_m4_cp`; its sources and formal fixtures are isolated under `src/m4/`.
+The two-process `frostedresearch_m4_restart` check uses `-Pm4RestartPhase=write` then `read` with the same
+`-PgameTestDirectory`. Exact commands, verified results and startup-failure pitfalls are recorded in the
+[M4 handoff](../../diary/2026-11-12_17-27-52_research-m4-full-stage-tuyere-handoff.md).
+
+Client checks use the opt-in `runM3cClient` task or the separate `m3cValidationJar` helper for an isolated full-pack
+instance. Normal `jar` excludes the helper. See the [M3-C handoff](../../diary/2026-11-12_16-58-51_research-m3c-client-prism-handoff.md)
+for setup, evidence paths and the distinction between callback tests, full-pack loading and physical input.

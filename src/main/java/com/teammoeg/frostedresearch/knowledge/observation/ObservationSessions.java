@@ -188,6 +188,8 @@ public final class ObservationSessions {
                 : entity == null ? ObservationSampling.block(player, session.block()) : ObservationSampling.entity(player, entity);
         com.teammoeg.frostedresearch.knowledge.IdeaAcquisitionService.emit(player,
             com.teammoeg.frostedresearch.knowledge.IdeaAcquisitionService.OBSERVATION_COMPLETED, java.util.Optional.of(KnowledgeElement.observation(record)));
+        KnowledgeService.forPlayer(player).observeResearchTarget(player,record,
+            record.type()==Observation.Type.BLOCK ? session.block() : null,currentItem);
         preview(player, record, AcquisitionSource.of("player_observation", player), true);
     }
 

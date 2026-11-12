@@ -95,6 +95,7 @@ public final class KnowledgeView {
                     requirements.add(progress(service, record, requirement, pool));
                 tag.put("requirements", requirements);
             }
+            tag.put("stage", stage(service,record));
             research.add(tag);
         });
         view.put("research", research);
@@ -120,7 +121,8 @@ public final class KnowledgeView {
             if (service.legacyCompleted(id)) project.putString("completion_source", "legacy");
             project.putString("body", definition.body());
             ListTag requirements = new ListTag();
-            definition.requirements().forEach(requirement -> requirements.add(requirement(requirement)));
+            if(definition.stages().isEmpty()) definition.requirements().forEach(requirement -> requirements.add(requirement(requirement)));
+            project.putBoolean("staged", !definition.stages().isEmpty());
             project.put("requirements", requirements);
             project.putString("start_status", evaluation.apply(id).startStatus().name());
             accessView(service, id, project, evaluation.apply(id));
@@ -194,6 +196,29 @@ public final class KnowledgeView {
         project.put("groups", groups);
     }
 
+    private static CompoundTag stage(KnowledgeService service,ResearchHistory raw) {
+        var run=ResearchStages.prepare(service,raw);var tag=new CompoundTag();
+        var project=KnowledgeDefinitions.current().projects().get(run.project());
+        if(project==null || project.stages().isEmpty()) return tag;
+        tag.putString("id",run.stageState().current());tag.putBoolean("available",ResearchStages.available(run));
+        tag.putBoolean("last",ResearchStages.last(run));
+        ResearchStages.current(run).ifPresent(stage -> {
+            tag.putString("title",stage.title());tag.putString("objective",stage.objective());
+            var visit=run.stageState().visits().get(stage.id());
+            if(visit!=null) {
+                tag.putBoolean("ready",visit.ready());
+                tag.putString("method",stage.variants().stream().filter(v -> v.id().equals(visit.variant())).findFirst().flatMap(v -> v.method()).orElse(stage.method()));
+            }
+        });
+        var conclusions=new ListTag();var recipes=new ListTag();
+        for(String id:run.stageState().order()) {
+            var visit=run.stageState().visits().get(id);if(visit==null || !visit.ready()) continue;
+            project.stage(id).ifPresent(stage -> { if(!stage.conclusion().isBlank()) conclusions.add(StringTag.valueOf(stage.conclusion())); });
+            visit.temporaryRecipes().forEach(recipe -> recipes.add(StringTag.valueOf(recipe.toString())));
+        }
+        tag.put("conclusions",conclusions);tag.put("temporary_recipes",recipes);return tag;
+    }
+
     private static CompoundTag requirement(ProjectRequirement requirement) {
         CompoundTag tag = new CompoundTag();
         tag.putString("id", requirement.id());
@@ -212,9 +237,15 @@ public final class KnowledgeView {
     private static CompoundTag progress(KnowledgeService service, ResearchHistory run, ProjectRequirement requirement,
                                         List<KnowledgeElement> pool) {
         CompoundTag tag = requirement(requirement);
+        var stageRun=ResearchStages.prepare(service,run);
+        ResearchStages.tasks(stageRun).stream().filter(t -> t.requirement().id().equals(requirement.id())).findFirst().ifPresent(task -> {
+            tag.putBoolean("optional",task.optional());tag.putString("method",task.method());
+        });
         boolean met = service.requirementMet(run, requirement);
         tag.putBoolean("satisfied", met);
-        if (requirement.type() == ProjectRequirement.Type.SAMPLE) {
+        if (requirement.type() == ProjectRequirement.Type.MINIGAME || requirement.type() == ProjectRequirement.Type.OBSERVATION) {
+            tag.putInt("done",met ? 1 : 0);
+        } else if (requirement.type() == ProjectRequirement.Type.SAMPLE) {
             tag.putInt("done", met ? 1 : 0);
         } else if (requirement.type() == ProjectRequirement.Type.CALCULATION) {
             tag.putInt("done", Math.min(requirement.count(), KnowledgeService.calculationsDone(run, requirement)));

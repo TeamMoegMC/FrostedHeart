@@ -76,6 +76,26 @@ public class DrawingDeskTileEntity extends CBlockEntity implements MenuProvider 
     /**
      * Knowledge research run and calculation requirement the current game counts toward; null serves the legacy research.
      */
+    private final com.teammoeg.frostedresearch.knowledge.game.AirflowGame airflow = new com.teammoeg.frostedresearch.knowledge.game.AirflowGame();
+    private com.teammoeg.frostedresearch.knowledge.experiment.ResearchSampleBinding airflowTarget;
+    public CompoundTag airflowView() { return airflow.view(); }
+    public boolean startAirflow(ServerPlayer player,UUID run,String task) {
+        var service=com.teammoeg.frostedresearch.knowledge.KnowledgeService.forPlayer(player);
+        if(!service.taskAvailable(run,task,com.teammoeg.frostedresearch.knowledge.definition.ProjectRequirement.Type.MINIGAME)) return false;
+        var target=new com.teammoeg.frostedresearch.knowledge.experiment.ResearchSampleBinding(service.teamId(),run,task,new net.minecraft.resources.ResourceLocation("frostedresearch:airflow"));
+        if(!target.equals(airflowTarget)) { airflowTarget=target;airflow.reset(player.getRandom());setChanged(); }
+        return true;
+    }
+    public boolean rotateAirflow(ServerPlayer player,UUID run,String task,int cell,boolean reset) {
+        var service=com.teammoeg.frostedresearch.knowledge.KnowledgeService.forPlayer(player);
+        if(airflowTarget==null || !airflowTarget.team().equals(service.teamId()) || !airflowTarget.run().equals(run)
+            || !airflowTarget.requirement().equals(task) || !service.taskAvailable(run,task,com.teammoeg.frostedresearch.knowledge.definition.ProjectRequirement.Type.MINIGAME)) return false;
+        var record=service.state().research().get(run);
+        if(record.stageState().completedTasks().contains(task)) return false;
+        if(reset) airflow.reset(player.getRandom());else if(!airflow.rotate(cell)) return false;
+        if(airflow.won()) service.recordMinigameWin(run,task,airflowTarget.experiment());
+        setChanged();return true;
+    }
     private UUID calculationRun;
     private String calculationRequirement = "";
     private int calculationLevel = -1;
@@ -196,6 +216,8 @@ public class DrawingDeskTileEntity extends CBlockEntity implements MenuProvider 
 
     @Override
     public void readCustomNBT(CompoundTag nbt, boolean descPacket) {
+        if(nbt.contains("airflow_game")) airflow.load(nbt.getCompound("airflow_game"));
+        airflowTarget=nbt.contains("airflow_target") ? com.teammoeg.frostedresearch.knowledge.experiment.ResearchSampleBinding.CODEC.parse(net.minecraft.nbt.NbtOps.INSTANCE,nbt.get("airflow_target")).result().orElse(null) : null;
         if (nbt.contains("gamedata"))
             game.load(nbt.getCompound("gamedata"));
         if (nbt.hasUUID("calculation_run")) {
@@ -255,6 +277,8 @@ public class DrawingDeskTileEntity extends CBlockEntity implements MenuProvider 
 
     @Override
     public void writeCustomNBT(CompoundTag nbt, boolean descPacket) {
+        nbt.put("airflow_game",airflow.save());
+        if(airflowTarget!=null) nbt.put("airflow_target",com.teammoeg.frostedresearch.knowledge.experiment.ResearchSampleBinding.CODEC.encodeStart(net.minecraft.nbt.NbtOps.INSTANCE,airflowTarget).result().orElseThrow());
         nbt.put("gamedata", game.serialize());
         if (calculationRun != null) {
             nbt.putUUID("calculation_run", calculationRun);

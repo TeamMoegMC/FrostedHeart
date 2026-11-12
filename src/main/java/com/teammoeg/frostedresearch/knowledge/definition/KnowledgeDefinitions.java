@@ -121,7 +121,29 @@ public final class KnowledgeDefinitions {
                 }));
             });
             Set<String> requirements = new HashSet<>();
-            for (var requirement : p.requirements()) {
+            if(!p.stages().isEmpty() && !p.requirements().isEmpty()) errors.add(id+": stages and top-level requirements cannot coexist");
+            Set<String> stageIds=new HashSet<>(), previousOptional=new HashSet<>();
+            for(var stage:p.orderedStages()) {
+                if(stage.id().isBlank() || !stageIds.add(stage.id())) errors.add(id+": duplicate/blank stage id "+stage.id());
+                Set<String> taskIds=new HashSet<>();stage.tasks().forEach(t -> taskIds.add(t.requirement().id()));
+                Set<String> variants=new HashSet<>();
+                for(int n=0;n<stage.variants().size();n++) {
+                    var variant=stage.variants().get(n);
+                    if(variant.id().isBlank() || !variants.add(variant.id())) errors.add(id+": duplicate/blank variant");
+                    if(!taskIds.containsAll(variant.omitTasks())) errors.add(id+": variant omits unknown task");
+                    if(variant.when().isEmpty() && n!=stage.variants().size()-1) errors.add(id+": default variant must be last");
+                    variant.when().ifPresent(when -> {
+                        if(!previousOptional.containsAll(when.tasksAll())) errors.add(id+": tasks_all must refer to prior optional tasks");
+                        when.knowledgeAll().forEach(c -> {
+                            c.validate(errors);
+                            c.definition().ifPresent(def -> { if(c.kind()==KnowledgeKey.Kind.IDEA ? !s.ideas.containsKey(def) : !resultExists(s,def)) errors.add(id+": variant references missing knowledge "+def); });
+                        });
+                    });
+                }
+                if(!stage.variants().isEmpty() && stage.variants().get(stage.variants().size()-1).when().isPresent()) errors.add(id+": variants require a final default");
+                stage.tasks().stream().filter(StageDefinition.Task::optional).map(t -> t.requirement().id()).forEach(previousOptional::add);
+            }
+            for (var requirement : p.allRequirements()) {
                 if (!requirements.add(requirement.id())) errors.add(id + ": duplicate requirement id " + requirement.id());
                 List<String> local = new ArrayList<>();
                 requirement.validate(local);
@@ -211,12 +233,17 @@ public final class KnowledgeDefinitions {
             List<SlotPattern> patterns = new ArrayList<>();
             links.values().stream().filter(r -> r.inputs().stream().anyMatch(s -> s.kind() == KnowledgeKey.Kind.OBSERVATION))
                     .map(LinkRule::pattern).forEach(patterns::add);
-            projects.values().forEach(project -> project.requirements().stream()
+            projects.values().forEach(project -> project.allRequirements().stream()
                     .filter(r -> r.type() == ProjectRequirement.Type.EVIDENCE).map(ProjectRequirement::pattern).forEach(patterns::add));
             projects.values().forEach(project -> project.access().ifPresent(access -> access.conditions().values().stream()
                 .filter(c -> c.kind() == KnowledgeKey.Kind.OBSERVATION).map(KnowledgeCondition::pattern).forEach(patterns::add)));
             ideas.values().stream().flatMap(idea -> idea.acquisition().allConditions().stream())
                 .filter(c -> c.kind() == KnowledgeKey.Kind.OBSERVATION).map(KnowledgeCondition::pattern).forEach(patterns::add);
+            projects.values().forEach(p -> {
+                p.allRequirements().forEach(r -> r.observation().ifPresent(o -> patterns.add(o.condition().pattern())));
+                p.orderedStages().forEach(stage -> stage.variants().forEach(v -> v.when().ifPresent(when -> when.knowledgeAll().stream()
+                    .filter(c -> c.kind()==KnowledgeKey.Kind.OBSERVATION).map(KnowledgeCondition::pattern).forEach(patterns::add))));
+            });
             this.observationPatterns = List.copyOf(patterns);
             Map<ResourceLocation, Map<ResourceLocation, IdeaDefinition>> events = new HashMap<>();
             ideas.forEach((id, idea) -> { if (idea.enabled()) idea.acquisition().triggers().forEach(trigger ->

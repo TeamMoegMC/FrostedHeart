@@ -47,7 +47,11 @@ public final class KnowledgeJournalData {
 
     public record Project(String id, Component title, List<KnowledgeKey> sources, List<Component> outputTitles,
                           boolean active, boolean completed, Component body, List<Requirement> requirements,
-                          String startStatus, String openRun, List<AccessCondition> accessConditions, List<AccessGroup> groups) {
+                          String startStatus, String openRun, List<AccessCondition> accessConditions, List<AccessGroup> groups, boolean staged) {
+        public Project(String id,Component title,List<KnowledgeKey> sources,List<Component> outputTitles,boolean active,boolean completed,
+                Component body,List<Requirement> requirements,String startStatus,String openRun,List<AccessCondition> accessConditions,List<AccessGroup> groups) {
+            this(id,title,sources,outputTitles,active,completed,body,requirements,startStatus,openRun,accessConditions,groups,false);
+        }
         public Project(String id, Component title, List<KnowledgeKey> sources, List<Component> outputTitles, boolean active, boolean completed) {
             this(id, title, sources, outputTitles, active, completed, Component.empty(), List.of(), "", "", List.of(), List.of());
         }
@@ -58,7 +62,7 @@ public final class KnowledgeJournalData {
      * evidence slot; {@code ready} says a full set can be submitted now.
      */
     public record Requirement(String id, String type, Component title, int level, int count, int done, boolean satisfied,
-                              boolean ready, List<Integer> slots, List<KnowledgeKey> bound, int duration) {
+                              boolean ready, List<Integer> slots, List<KnowledgeKey> bound, int duration, boolean optional, Component method) {
         public boolean sample() { return type.equals("sample"); }
 
         public boolean evidence() {
@@ -73,7 +77,15 @@ public final class KnowledgeJournalData {
     /**
      * A research run: {@code status} is open, completed or abandoned; open runs carry their requirement progress.
      */
-    public record Run(String id, String project, Component title, String status, List<KnowledgeKey> origins, List<Requirement> requirements) {
+    public record Stage(String id,Component title,Component objective,Component method,boolean ready,boolean last,boolean available,List<Component> conclusions,List<String> recipes) {
+        static Stage read(CompoundTag tag) {
+            return new Stage(tag.getString("id"),KnowledgePresentation.text(tag.getString("title")),KnowledgePresentation.text(tag.getString("objective")),
+                KnowledgePresentation.text(tag.getString("method")),tag.getBoolean("ready"),tag.getBoolean("last"),tag.getBoolean("available"),
+                tag.getList("conclusions",Tag.TAG_STRING).stream().map(t -> KnowledgePresentation.text(t.getAsString())).toList(),
+                tag.getList("temporary_recipes",Tag.TAG_STRING).stream().map(Tag::getAsString).toList());
+        }
+    }
+    public record Run(String id, String project, Component title, String status, List<KnowledgeKey> origins, List<Requirement> requirements, Stage stage) {
         public boolean open() {
             return status.equals("open");
         }
@@ -120,7 +132,7 @@ public final class KnowledgeJournalData {
             relationships.add(new Relation(r.getString("id"), title, origins, List.copyOf(results),
                     !abandoned && r.getBoolean("active"), true, r.getString("project"), abandoned));
             String status = r.getString("status").isBlank() ? r.getBoolean("completed") ? "completed" : "open" : r.getString("status");
-            runs.add(new Run(r.getString("id"), r.getString("project"), title, status, origins, requirements(r.getList("requirements", Tag.TAG_COMPOUND))));
+            runs.add(new Run(r.getString("id"), r.getString("project"), title, status, origins, requirements(r.getList("requirements", Tag.TAG_COMPOUND)),Stage.read(r.getCompound("stage"))));
         }
         relations = List.copyOf(relationships);
         this.runs = List.copyOf(runs);
@@ -138,7 +150,7 @@ public final class KnowledgeJournalData {
             projects.add(new Project(project.getString("id"), KnowledgePresentation.text(project.getString("title")), List.copyOf(origins),
                     List.copyOf(outputs), project.getBoolean("active"), project.getBoolean("completed"),
                     KnowledgePresentation.text(project.getString("body")), requirements(project.getList("requirements", Tag.TAG_COMPOUND)),
-                    project.getString("start_status"), project.getString("open_run"), accessConditions(project), accessGroups(project)));
+                    project.getString("start_status"), project.getString("open_run"), accessConditions(project), accessGroups(project),project.getBoolean("staged")));
         }
         this.projects = List.copyOf(projects);
         Map<String, Component> hints = new LinkedHashMap<>();
@@ -188,7 +200,7 @@ public final class KnowledgeJournalData {
             }
             result.add(new Requirement(tag.getString("id"), tag.getString("type"), KnowledgePresentation.text(tag.getString("title")),
                     tag.getInt("level"), tag.getInt("count"), tag.getInt("done"), tag.getBoolean("satisfied"), tag.getBoolean("ready"),
-                    List.copyOf(slots), List.copyOf(bound), tag.getInt("duration")));
+                    List.copyOf(slots), List.copyOf(bound), tag.getInt("duration"),tag.getBoolean("optional"),KnowledgePresentation.text(tag.getString("method"))));
         }
         return List.copyOf(result);
     }

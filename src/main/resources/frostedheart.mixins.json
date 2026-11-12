@@ -6,6 +6,7 @@
   "refmap": "chorda.refmap.json",
   "plugin": "com.teammoeg.frostedheart.mixin.FrostedHeartMixinPlugin",
   "mixins": [
+    "charcoalpit.BlockBellowsMixin_ResearchTrial",
     "caupona.CauponaBonemealableBlockMixin_CheckTemp",
     "create.HandCrankBlockMixin",
     "create.OpenEndedPipeMixin_HotSpring",

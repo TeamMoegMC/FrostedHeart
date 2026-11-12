@@ -2,7 +2,7 @@
 
 - Status: `Current`
 - Last verified: `2026-11-12` (M3-B replacement bridge; older sections retain their existing scope)
-- Scope: Legacy research state and synchronization, plus its integration with the independent schema-4 knowledge
+- Scope: Legacy research state and synchronization, plus its integration with the independent schema-5 knowledge
   component
 - Code anchors: [`TeamResearchData`](../../src/main/java/com/teammoeg/frostedresearch/data/TeamResearchData.java), [`TeamKnowledgeData`](../../src/main/java/com/teammoeg/frostedresearch/data/TeamKnowledgeData.java), [`KnowledgeSyncSnapshot`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/KnowledgeSyncSnapshot.java), [`KnowledgeSnapshotPacket`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/network/KnowledgeSnapshotPacket.java), [`ResearchNetworkCodec`](../../src/main/java/com/teammoeg/frostedresearch/network/ResearchNetworkCodec.java), [`FRNetwork`](../../src/main/java/com/teammoeg/frostedresearch/FRNetwork.java)
 
@@ -308,3 +308,9 @@ reject normal activation, selection, points and clue completion. Removing a mapp
 progress. Parent checks accept raw old completion or a real new completed run with both active mapped results;
 knowledge snapshots carry the equivalent client projection. See the owning [bridge state/API contract](../knowledge/state-and-api.md#旧研究承接与完成等价查询m3-b)
 and [mapping format](../knowledge/definitions.md#旧研究的可选替换映射m3-b).
+
+M4 adds optional `ResearchHistory.stage_state` and upgrades the knowledge component to schema5. Legacy research
+itself stays schema2 and its variants/bridge receipts are preserved. New stage/proof lifecycle is owned by
+[knowledge state/API](../knowledge/state-and-api.md#阶段状态与新鲜观察m4); pending trial positions live in each dimension's
+`frostedresearch_pending_trials.dat`, with only team/run/task/experiment identity. Ordinary Charcoal Pit tuyeres
+remain ordinary blocks without block entities.

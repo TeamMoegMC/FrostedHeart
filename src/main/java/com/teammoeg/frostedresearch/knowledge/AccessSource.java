@@ -25,7 +25,7 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.resources.ResourceLocation;
 
 /** One independently valid reason why a knowledge or technology target is available. */
-public sealed interface AccessSource permits AccessSource.ResultSource, AccessSource.LegacySource {
+public sealed interface AccessSource permits AccessSource.ResultSource, AccessSource.LegacySource, AccessSource.TemporaryResearchSource {
     Codec<AccessSource> CODEC = Codec.STRING.dispatch("kind", AccessSource::kind, AccessSource::codecFor);
 
     String kind();
@@ -34,6 +34,7 @@ public sealed interface AccessSource permits AccessSource.ResultSource, AccessSo
         return switch (kind) {
             case "result" -> ResultSource.CODEC;
             case "legacy" -> LegacySource.CODEC;
+            case "temporary_research" -> TemporaryResearchSource.CODEC;
             default -> throw new IllegalArgumentException("Unknown access source kind: " + kind);
         };
     }
@@ -62,5 +63,13 @@ public sealed interface AccessSource permits AccessSource.ResultSource, AccessSo
         public String kind() {
             return "legacy";
         }
+    }
+    record TemporaryResearchSource(ResourceLocation project,java.util.UUID run,String stage) implements AccessSource {
+        static final Codec<TemporaryResearchSource> CODEC=RecordCodecBuilder.create(i -> i.group(
+            ResourceLocation.CODEC.fieldOf("project").forGetter(TemporaryResearchSource::project),
+            net.minecraft.core.UUIDUtil.CODEC.fieldOf("run").forGetter(TemporaryResearchSource::run),
+            Codec.STRING.fieldOf("stage").forGetter(TemporaryResearchSource::stage)
+        ).apply(i,TemporaryResearchSource::new));
+        public String kind() { return "temporary_research"; }
     }
 }

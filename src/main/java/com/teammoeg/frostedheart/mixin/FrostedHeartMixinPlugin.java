@@ -50,6 +50,7 @@ public class FrostedHeartMixinPlugin implements IMixinConfigPlugin, MixinPluginS
         if (mixinClassName.contains("com.teammoeg.frostedheart.mixin.client.curios")) {
             return classPresent("top.theillusivec4.curios.common.network.server.sync.SPacketSyncStack");
         }
+        if (mixinClassName.contains(".charcoalpit.")) return net.minecraftforge.fml.loading.FMLLoader.getLoadingModList().getModFileById("charcoal_pit") != null;
         return true;
     }
 

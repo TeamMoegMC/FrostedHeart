@@ -30,11 +30,11 @@ TWR 已从原 `1.20` HEAD `2d0fefd349f65f3118828c9712f68a8c0782ab75` 新建本�
 | M3-A 设备与提交 | 同 M1-B 对话 | 6.1 Sol / high | 已提交a565d4180，21项必需测试通过；未改TWR |
 | M3-B FH桥接 | `01a1ce93-2841-7c62-9bb6-6b1a792bf77e` | 6.1 Sol / high | 已提交81452c69e；27项服务端必需测试通过 |
 | M3-B TWR内容 | `01a1ce22-3250-7123-943d-cad6bb11304a` | 6.1 Sol / medium | 已提交3501a9276；13项正式内容改动，静态验证通过 |
-| M3-C客户端/整合验证 | 同 M1-B 对话 | 6.1 Sol / high | 已分派；独占构建，复用隔离Prism实例 |
+| M3-C客户端/整合验证 | 同 M1-B 对话 | 6.1 Sol / high | 正式Prism流程passed，实际配方/槽位/权限/旧入口通过；翻译缺陷交M4修复 |
 | M4-A阶段/原型接口 | 同 M1-A 对话 | Astra / high | 已交付并复核，补齐两组开始观察、同队协作，无个人owner |
 | M6目录准备 | 同正式内容对话 | 6 Luna / medium | 已交付；两项替换、79项保留，其中banner/improve_energy仍按原停用状态 |
-| M4 FH实施 | 同M3-B FH对话 | 6.1 Sol / high | 16:06起独占构建，实施阶段/游戏/原型；M3C使用已固定产物 |
-| M4 TWR内容 | 同正式内容对话 | 6.1 Sol / medium | 实施冶铁正式数据、配方与文案 |
+| M4 FH实施 | 同M3-B FH对话 | 6.1 Sol / high | 实现完成：38项、独立write/read各1项、无CharcoalPit4项通过；固定M4客户端已开始运行 |
+| M4 TWR内容 | 同正式内容对话 | 6.1 Sol / medium | 12项内容已完成静态验证；材料链经主协调更正，待FH联调提交 |
 | M5-A控温炉接口 | 同M1-A对话 | Astra / high | 已交付：保留旧工业制砖，新研究解锁自有炉批量生产 |
 | M5–M7实施 | 待分派 | 按阶段 | 前置完成后持续执行 |
 
@@ -64,6 +64,18 @@ M1/M2/M3-A已复核提交，M3-B实现及27项服务端回归完成。主协调�
 M3采用的首版实施默认（已向用户说明，仍可调整）：黏土/沙3:1、1:3、2:2，4木棍与400tick试烧；只强制提交本次成功样。三配方直接可制作，不提前依赖M4临时权限；开始需要想法加黏土/沙观察条件；最终分别产出Design与Construction成果。观察使用access局部条件，不能伪造静态观察知识ID。
 
 独立Prism实例已准备：`D:\games\minecraft\prismlauncher\instances\The-Winter-Rescue-Research-Playtest-20261112`，60个模组、57个正式服务端脚本、81项正式研究定义，没有saves，尚未换入当前FH构建或启动。之后复用该副本，详见[准备记录](../diary/2026-11-12_14-03-16_research-isolated-playtest-preparation.md)。
+
+## M3-C完成与M4验证中的注意事项
+
+- M3-C正式完整包模式已通过，原始证据在隔离实例 `.minecraft/build/m3c-formal/`，另复制到本仓 `build/m3c-formal/`；详见[交接](../diary/2026-11-12_16-58-51_research-m3c-client-prism-handoff.md)。真实C2S槽位提交与正常完成权限通过；IE总线成型事件验证不等于手摆结构挥锤。
+- M3知识页旧承接文案有gui/knowledge翻译前缀不一致，已交M4修复并后续客户端复核。固定M3产物保留，不因M4源码继续开发而冒称已包含修复。
+- M4初次所谓30项通过经主协调复核撤回：该轮数据包加载前CODEC循环初始化，Gradle仍退出成功。之后可选mixin过早加载Block及专用测试带入Oculus亦已定位；必须取得本轮真实测试通过标志才计入完成，不以BUILD SUCCESSFUL代替。
+- M4材料数量以[主协调更正](../diary/2026-11-12_16-40-10_research-m4-material-review.md)为准；保留旧配方，新增触发覆盖铁板/杆/粉。
+- M4/M5接口和M6目录准备已提交 `4f9dab0ce`。M4生产与TWR正式内容仍待实测后集中选择性提交。
+
+## M4服务端交付
+
+[最终交接](../diary/2026-11-12_17-27-52_research-m4-full-stage-tuyere-handoff.md)已由主协调复核：m4-validation-5.log明确38/38，通过后两独立JVM分别写入、读取1/1，无CharcoalPit4/4；均核对实际测试完成标志。M4生产jar与辅助驱动合并编译通过，固定版本及TWR数据保存在build/m4-artifacts，隔离Prism已开始M4客户端流程。M3-C测试源码与本轮M4核心一并选择性保存回退点，后续客户端验收另记。
 
 ## Outcome
 

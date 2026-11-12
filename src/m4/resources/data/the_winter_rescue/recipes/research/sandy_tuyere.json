@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "charcoal_pit:sandy_brick"
+    },
+    {
+      "tag": "forge:plates/bronze"
+    },
+    {
+      "item": "frostedheart:mortar"
+    }
+  ],
+  "result": {
+    "item": "charcoal_pit:sandy_tuyere"
+  }
+}

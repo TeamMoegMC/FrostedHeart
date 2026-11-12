@@ -40,7 +40,7 @@ import java.util.stream.Collectors;
  */
 public record ResearchHistory(UUID id, ResourceLocation project, List<KnowledgeKey> origins, long time, boolean completed,
                               List<KnowledgeKey> results, boolean abandoned, Map<String, List<Integer>> calculations,
-                              Map<String, Map<String, Observation>> evidence, Map<String, Integer> experiments, Map<String, com.teammoeg.frostedresearch.knowledge.definition.ProjectRequirement.Sample> samples) {
+                              Map<String, Map<String, Observation>> evidence, Map<String, Integer> experiments, Map<String, com.teammoeg.frostedresearch.knowledge.definition.ProjectRequirement.Sample> samples, StageRunState stageState) {
     public static final Codec<ResearchHistory> CODEC = RecordCodecBuilder.create(i -> i.group(
             UUIDUtil.CODEC.fieldOf("id").forGetter(ResearchHistory::id),
             ResourceLocation.CODEC.fieldOf("project").forGetter(ResearchHistory::project),
@@ -53,9 +53,10 @@ public record ResearchHistory(UUID id, ResourceLocation project, List<KnowledgeK
             progress(Codec.INT.listOf(), "calculations").forGetter(ResearchHistory::calculations),
             progress(Codec.unboundedMap(Codec.STRING, Observation.CODEC), "evidence").forGetter(ResearchHistory::evidence),
             progress(Codec.INT, "experiments").forGetter(ResearchHistory::experiments),
-            progress(com.teammoeg.frostedresearch.knowledge.definition.ProjectRequirement.Sample.CODEC, "samples").forGetter(ResearchHistory::samples)
-    ).apply(i, (id, project, origins, idea, time, completed, results, abandoned, calculations, evidence, experiments, samples) ->
-        new ResearchHistory(id, project, origins.orElseGet(() -> legacyOrigins(idea)), time, completed, results, abandoned, calculations, evidence, experiments, samples)));
+            progress(com.teammoeg.frostedresearch.knowledge.definition.ProjectRequirement.Sample.CODEC, "samples").forGetter(ResearchHistory::samples),
+            KnowledgeKey.strictOptionalField(StageRunState.CODEC,"stage_state").forGetter(r -> Optional.of(r.stageState()))
+    ).apply(i, (id, project, origins, idea, time, completed, results, abandoned, calculations, evidence, experiments, samples, stages) ->
+        new ResearchHistory(id, project, origins.orElseGet(() -> legacyOrigins(idea)), time, completed, results, abandoned, calculations, evidence, experiments, samples, stages.orElseGet(StageRunState::legacy))));
 
     private static List<KnowledgeKey> legacyOrigins(Optional<KnowledgeKey> idea) {
         if (idea.isEmpty()) com.teammoeg.frostedresearch.FRMain.LOGGER.warn("Research run has no origins or legacy idea; preserving its progress with empty origins");
@@ -83,6 +84,21 @@ public record ResearchHistory(UUID id, ResourceLocation project, List<KnowledgeK
     }
 
     public ResearchHistory(UUID id, ResourceLocation project, List<KnowledgeKey> origins, long time, boolean completed,
+            List<KnowledgeKey> results, boolean abandoned, Map<String,List<Integer>> calculations,
+            Map<String,Map<String,Observation>> evidence, Map<String,Integer> experiments,
+            Map<String,com.teammoeg.frostedresearch.knowledge.definition.ProjectRequirement.Sample> samples) {
+        this(id,project,origins,time,completed,results,abandoned,calculations,evidence,experiments,samples,StageRunState.legacy());
+    }
+    public ResearchHistory retainTasks(Set<String> ids) {
+        return new ResearchHistory(id,project,origins,time,completed,results,abandoned,
+            LegacyStageProgress.select(calculations,ids,true),LegacyStageProgress.select(evidence,ids,true),
+            LegacyStageProgress.select(experiments,ids,true),LegacyStageProgress.select(samples,ids,true),stageState);
+    }
+    public ResearchHistory withStages(StageRunState stages) {
+        return new ResearchHistory(id,project,origins,time,completed,results,abandoned,calculations,evidence,experiments,samples,stages);
+    }
+
+    public ResearchHistory(UUID id, ResourceLocation project, List<KnowledgeKey> origins, long time, boolean completed,
                            List<KnowledgeKey> results) {
         this(id, project, origins, time, completed, results, false, Map.of(), Map.of(), Map.of(), Map.of());
     }
@@ -100,31 +116,31 @@ public record ResearchHistory(UUID id, ResourceLocation project, List<KnowledgeK
         List<Integer> levels = new ArrayList<>(next.getOrDefault(requirement, List.of()));
         levels.add(level);
         next.put(requirement, levels);
-        return new ResearchHistory(id, project, origins, time, completed, results, abandoned, next, evidence, experiments, samples);
+        return new ResearchHistory(id, project, origins, time, completed, results, abandoned, next, evidence, experiments, samples, stageState);
     }
 
     public ResearchHistory withEvidence(String requirement, Map<String, Observation> binding) {
         Map<String, Map<String, Observation>> next = new HashMap<>(evidence);
         next.put(requirement, binding);
-        return new ResearchHistory(id, project, origins, time, completed, results, abandoned, calculations, next, experiments, samples);
+        return new ResearchHistory(id, project, origins, time, completed, results, abandoned, calculations, next, experiments, samples, stageState);
     }
 
     public ResearchHistory withExperiment(String requirement) {
         Map<String, Integer> next = new HashMap<>(experiments);
         next.merge(requirement, 1, Integer::sum);
-        return new ResearchHistory(id, project, origins, time, completed, results, abandoned, calculations, evidence, next, samples);
+        return new ResearchHistory(id, project, origins, time, completed, results, abandoned, calculations, evidence, next, samples, stageState);
     }
 
     public ResearchHistory withSample(String requirement, com.teammoeg.frostedresearch.knowledge.definition.ProjectRequirement.Sample sample) {
         var next = new HashMap<>(samples); next.put(requirement, sample);
-        return new ResearchHistory(id, project, origins, time, completed, results, abandoned, calculations, evidence, experiments, next);
+        return new ResearchHistory(id, project, origins, time, completed, results, abandoned, calculations, evidence, experiments, next, stageState);
     }
 
     public ResearchHistory completedWith(List<KnowledgeKey> outputs) {
-        return new ResearchHistory(id, project, origins, time, true, outputs, abandoned, calculations, evidence, experiments, samples);
+        return new ResearchHistory(id, project, origins, time, true, outputs, abandoned, calculations, evidence, experiments, samples, stageState);
     }
 
     public ResearchHistory abandon() {
-        return new ResearchHistory(id, project, origins, time, completed, results, true, Map.of(), Map.of(), Map.of(), Map.of());
+        return new ResearchHistory(id, project, origins, time, completed, results, true, Map.of(), Map.of(), Map.of(), Map.of(), new StageRunState(stageState.order(),stageState.current(),Map.of(),Set.of()));
     }
 }

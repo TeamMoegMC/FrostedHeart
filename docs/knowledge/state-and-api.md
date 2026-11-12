@@ -16,7 +16,7 @@
 `chorda_data/<内部队伍 UUID>.nbt`。`data/TeamKnowledgeData` 是已有调用位置的薄封装，其实际状态由
 `knowledge/state/KnowledgeState` 保存。`TeamResearchData` 继续独立保存旧研究进度。
 
-存储格式为 `schema_version: 4`（`KnowledgeState.SCHEMA_VERSION`；`TeamKnowledgeData.CURRENT_SCHEMA_VERSION` 引用同一常量），重新定义了原有
+存储格式为 `schema_version: 5`（`KnowledgeState.SCHEMA_VERSION`；`TeamKnowledgeData.CURRENT_SCHEMA_VERSION` 引用同一常量），重新定义了原有
 knowledge 结构，没有从旧版四个 acquired-ID 集合迁移的逻辑。新源码中的 `findingIds()` 等旧式访问器从档案派生，不再形成另一份成果权威。
 `KnowledgeState.read` 先读取 `schema_version` 并交给 `KnowledgeState.upgrade`，这是存储格式迁移的唯一入口；版本 2 是知识系统的第一版布局；版本 3 把研究记录的单个 `idea` 迁移为去重排序的 `origins` 列表，保留 UUID、时间、结果与全部进度。迁移在副本上执行，已有 origins 优先；缺版本也兼容旧 idea。缺少来源而其他字段可读时保留进度与空来源。版本号高于当前值时按现有格式解码，`write()` 始终写入当前版本。
 
@@ -335,3 +335,21 @@ ServerStarted 也刷新最终目标，ServerStopped 清理静态缓存。配方�
 移除映射/新包后，旧入口与原进度恢复；回执保留但当前不投影为新完成，不做反向迁移。
 `KnowledgeService.merge(TeamDataHolder)` 同时合并知识和这一个回执子键的集合/布尔并集，管理 merge 命令使用此入口。
 仅合并 KnowledgeState 的重载不带旧数据，供已有纯知识调用使用。其它 variants 不受回执合并影响。
+
+## 阶段状态与新鲜观察（M4）
+
+ResearchHistory新增stage_state（StageRunState），保存order/current/visits/completed_tasks；旧四类进度maps和samples不变。
+KnowledgeState.upgrade对schema4及更早记录补main占位，定义暂缺时延后填任务；read/write不会靠缺内容删进度。
+有序多阶段旧存档首次采用首阶段，只有同ID任务保留原进度，不按进度百分比跳过；保存顺序不跟随定义重排。
+
+KnowledgeService统一当前选定任务的计算、证据、实验和样品提交；新recordMinigameWin/recordObservationTask也走同一进度更新。
+任务成功同次服务操作记录ready及completion_recipes；advanceStage(run,expectedStage)单独手动推进，最后finishResearch产出成果。
+临时来源TemporaryResearchSource按project/run/stage归属，与成果/旧来源/其它run取并集，结束只撤自身。
+
+ObservationSessions完成真实采样后，在preview/receive之前调用observeResearchTarget；现场BlockPos或已核验ItemStack只用于本次动作。
+试验样品读取既有ResearchSampleBinding；世界试件查询PendingResearchProofs，均核对当前队伍/run/task/experiment。
+无需接受或学习观察，重复记录、主动丢弃或来件容量不决定任务成功。详见 [阶段与风道](stages-and-airflow.md)。
+
+旧平铺run改成多阶段时，仅首阶段同ID任务进入活动进度。其余旧计算/证据/实验/样品原值存于可选
+stage_state.legacy_progress（LegacyStageProgress），不改写原任务ID，不把它们算成未来阶段的新工作；codec往返保留。
+这是schema5内部的迁移档案字段，不新增TWR定义字段。legacy_superseded既有run及合并承接回执都会清本run的pending proof。

@@ -37,24 +37,21 @@ public final class LegacyResearchBridge {
         active = Map.copyOf(next); revision = defs.revision();
     }
     private static String problem(ProjectDefinition p, LegacyReplacement m) {
-        if (m.research().isBlank() || m.effects().keySet().stream().anyMatch(String::isBlank) || m.effects().size() != 2 || new HashSet<>(m.effects().values()).size() != 2 || !p.results().containsAll(m.effects().values())) return "requires two distinct mapped project results";
+        if (m.research().isBlank() || m.effects().keySet().stream().anyMatch(String::isBlank) || m.effects().isEmpty() || !p.results().containsAll(m.effects().values())) return "requires nonempty mapped project results";
         var idea = KnowledgeDefinitions.current().ideas().get(m.partialIdea());
         if (idea == null || !idea.enabled()) return "partial idea unavailable: " + m.partialIdea();
-        boolean design = false, construction = false;
         var server = ServerLifecycleHooks.getCurrentServer();
         if (server == null) return "recipes not ready";
         for (var id : m.effects().values()) {
             var d = KnowledgeDefinitions.current().results().get(id);
             if (d == null || !d.enabled() || !d.understanding().isEmpty()) return "mapped result unavailable or requires understanding: " + id;
             if (d.result() instanceof ResearchResult.Design r) {
-                design = !r.recipes().isEmpty();
-                if (!design || r.recipes().stream().anyMatch(t -> server.getRecipeManager().byKey(t).isEmpty())) return "recipe target unavailable: " + id;
+                if (r.recipes().isEmpty() || r.recipes().stream().anyMatch(t -> server.getRecipeManager().byKey(t).isEmpty())) return "recipe target unavailable: " + id;
             } else if (d.result() instanceof ResearchResult.Construction r) {
-                construction = !r.multiblocks().isEmpty();
-                if (!construction || r.multiblocks().stream().anyMatch(t -> MultiblockHandler.getByUniqueName(t) == null)) return "multiblock target unavailable: " + id;
-            } else return "requires Design and Construction: " + id;
+                if (r.multiblocks().isEmpty() || r.multiblocks().stream().anyMatch(t -> MultiblockHandler.getByUniqueName(t) == null)) return "multiblock target unavailable: " + id;
+            } else return "requires Design or Construction: " + id;
         }
-        return design && construction ? null : "requires Design and Construction";
+        return null;
     }
     public static Map<String, ResourceLocation> replacements() {
         if (revision != KnowledgeDefinitions.current().revision()) refreshDefinitions();
@@ -85,7 +82,11 @@ public final class LegacyResearchBridge {
                 }
             });
             ListTag list = new ListTag(); imported.forEach(id -> list.add(StringTag.valueOf(id))); tag.put("imported_results", list);
-            if (raw.isCompleted()) tag.putBoolean("completed_credit", true);
+            if (raw.isCompleted()) {
+                tag.putBoolean("completed_credit", true);
+                service.state().research().values().stream().filter(run -> run.open() && run.project().equals(e.getValue()))
+                    .forEach(run -> com.teammoeg.frostedresearch.knowledge.experiment.PendingResearchProofs.removeRun(run.id()));
+            }
             if (!raw.isCompleted() && !tag.getBoolean("partial_idea_granted") && (raw.isActive() || raw.getCommitted() > 0 || raw.getClueData().values().stream().anyMatch(ClueData::isCompleted))) {
                 service.produce(KnowledgeElement.idea(m.partialIdea()), source);
                 var query = service.query(KnowledgeKey.idea(m.partialIdea()));

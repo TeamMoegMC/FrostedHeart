@@ -95,6 +95,8 @@ public class FRContents {
         public static final RegistryObject<com.teammoeg.frostedresearch.knowledge.experiment.TrialKilnBlock> TRIAL_KILN_CLAY_RICH = trialKiln("trial_kiln_clay_rich", false);
         public static final RegistryObject<com.teammoeg.frostedresearch.knowledge.experiment.TrialKilnBlock> TRIAL_KILN_SAND_RICH = trialKiln("trial_kiln_sand_rich", false);
         public static final RegistryObject<com.teammoeg.frostedresearch.knowledge.experiment.TrialKilnBlock> TRIAL_KILN_BALANCED = trialKiln("trial_kiln_balanced", true);
+        public static final RegistryObject<com.teammoeg.frostedresearch.knowledge.experiment.PrototypeTuyereBlock> PROTOTYPE_TUYERE = register("prototype_tuyere", () -> new com.teammoeg.frostedresearch.knowledge.experiment.PrototypeTuyereBlock(
+            BlockBehaviour.Properties.of().mapColor(MapColor.TERRACOTTA_ORANGE).sound(SoundType.STONE).strength(1.5f)));
         private static RegistryObject<com.teammoeg.frostedresearch.knowledge.experiment.TrialKilnBlock> trialKiln(String id, boolean success) {
             return register(id, () -> new com.teammoeg.frostedresearch.knowledge.experiment.TrialKilnBlock(BlockBehaviour.Properties.of()
                 .mapColor(MapColor.CLAY).sound(SoundType.GRAVEL).strength(0.7f).noOcclusion()
@@ -157,6 +159,8 @@ public class FRContents {
             "trial_kiln", makeType(com.teammoeg.frostedresearch.knowledge.experiment.TrialKilnBlockEntity::new,
                 Blocks.TRIAL_KILN_CLAY_RICH::get, Blocks.TRIAL_KILN_SAND_RICH::get, Blocks.TRIAL_KILN_BALANCED::get));
 
+        public static final RegistryObject<BlockEntityType<com.teammoeg.frostedresearch.knowledge.experiment.PrototypeTuyereBlockEntity>> PROTOTYPE_TUYERE = REGISTER.register(
+            "prototype_tuyere", makeType(com.teammoeg.frostedresearch.knowledge.experiment.PrototypeTuyereBlockEntity::new, Blocks.PROTOTYPE_TUYERE::get));
 		public static final RegistryObject<BlockEntityType<MechCalcTileEntity>> MECH_CALC = CFunctionUtils.makeIf(CompatModule.isCreateLoaded(),()->REGISTER.register(
 			"mechanical_calculator", makeType(MechCalcTileEntity::new, ()->Blocks.MECHANICAL_CALCULATOR.get())));
 

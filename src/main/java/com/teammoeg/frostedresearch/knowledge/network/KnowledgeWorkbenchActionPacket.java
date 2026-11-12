@@ -55,7 +55,7 @@ import net.minecraftforge.network.NetworkEvent;
 public final class KnowledgeWorkbenchActionPacket implements CMessage {
     public enum Action {
         REFRESH, LEARN, DELETE, PREVIEW_LINK, LINK, CANCEL_LINK, RETRIEVE, EXPORT, DREAM_TOPIC, DISCUSS,
-        START_RESEARCH, SUBMIT_EVIDENCE, CALCULATE, STOP_CALCULATION, COMPLETE_RESEARCH, ABANDON_RESEARCH, SUBMIT_SAMPLE
+        START_RESEARCH, SUBMIT_EVIDENCE, CALCULATE, STOP_CALCULATION, COMPLETE_RESEARCH, ABANDON_RESEARCH, SUBMIT_SAMPLE, ADVANCE_STAGE, START_AIRFLOW, ROTATE_AIRFLOW, RESET_AIRFLOW
     }
 
     public static final int REQUIREMENT_LIMIT = 64;
@@ -181,6 +181,20 @@ public final class KnowledgeWorkbenchActionPacket implements CMessage {
                     boolean invited = keys.size() == 1 && partner != null && KnowledgeDiscussion.invite(player, partner, keys.get(0));
                     response.putString("message", invited ? "discussion.invited" : "discussion.unavailable");
                 }
+                case START_AIRFLOW, ROTATE_AIRFLOW, RESET_AIRFLOW -> {
+                    boolean accepted;
+                    if(action==Action.START_AIRFLOW) accepted=desk.startAirflow(player,run(),requirement);
+                    else {
+                        int cell=-1;try { cell=Integer.parseInt(title); } catch(NumberFormatException ignored) {}
+                        accepted=desk.rotateAirflow(player,run(),requirement,cell,action==Action.RESET_AIRFLOW);
+                    }
+                    if(accepted || action==Action.START_AIRFLOW) response.put("airflow",desk.airflowView());
+                    response.putString("message",accepted ? "research.airflow_updated" : "research.unchanged");
+                }
+                case ADVANCE_STAGE -> {
+                    var result=service.advanceStage(run(),requirement);addResult(results,result,service);
+                    response.putString("message",result.succeeded() ? "research.stage_advanced" : "research.unmet");
+                }
                 case START_RESEARCH -> startResearch(service, results, response);
                 case SUBMIT_SAMPLE -> {
                     var result = service.submitSample(run(), requirement, desk.getInventory().getStackInSlot(DrawingDeskTileEntity.EXAMINE_SLOT));
@@ -252,7 +266,7 @@ public final class KnowledgeWorkbenchActionPacket implements CMessage {
         }
         var definition = com.teammoeg.frostedresearch.knowledge.definition.KnowledgeDefinitions.current().projects().get(project);
         KnowledgeService.Status status = service.researchStartStatus(project);
-        if (definition != null && definition.requirements().isEmpty()) status = KnowledgeService.Status.REQUIREMENTS_UNMET;
+        if (definition != null && definition.stages().isEmpty() && definition.requirements().isEmpty()) status = KnowledgeService.Status.REQUIREMENTS_UNMET;
         if (status == KnowledgeService.Status.LEARNABLE && service.startResearch(project).isPresent())
             status = KnowledgeService.Status.SUCCESS;
         addResult(results, new OperationResult(status, null), service);

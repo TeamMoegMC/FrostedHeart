@@ -6,6 +6,7 @@
   "refmap": "chorda.refmap.json",
   "plugin": "",
   "mixins": [
+    "minecraft.research.LevelChunkMixin_ResearchProof",
     "create.MixinMechanicalCraftingRecipe",
     "create.MechanicalCrafterBlockEntityMixin",
     "create.RecipeGridHandlerMixin",

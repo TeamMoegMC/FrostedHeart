@@ -44,8 +44,8 @@ import java.util.*;
  */
 public record ProjectRequirement(String id, Type type, String title, int level, int count,
                                  List<LinkRule.Slot> inputs, List<LinkRule.CrossCondition> conditions,
-                                 List<Distinct> distinct, int duration, List<Material> materials, Space space, Optional<Sample> sample) {
-    public enum Type {EVIDENCE, CALCULATION, EXPERIMENT, SAMPLE}
+                                 List<Distinct> distinct, int duration, List<Material> materials, Space space, Optional<Sample> sample, Optional<ResourceLocation> game, Optional<ObservationTask> observation) {
+    public enum Type {EVIDENCE, CALCULATION, EXPERIMENT, SAMPLE, MINIGAME, OBSERVATION}
 
     public static final int MAX_EVIDENCE_SLOTS = 8;
     public static final int MAX_EVIDENCE_CONDITIONS = 10;
@@ -71,7 +71,9 @@ public record ProjectRequirement(String id, Type type, String title, int level, 
             field(Codec.INT, "duration", 0).forGetter(ProjectRequirement::duration),
             field(Material.CODEC.listOf(), "materials", List.of()).forGetter(ProjectRequirement::materials),
             field(Space.CODEC, "space", Space.NONE).forGetter(ProjectRequirement::space),
-            KnowledgeKey.strictOptionalField(Sample.CODEC, "sample").forGetter(ProjectRequirement::sample)
+            KnowledgeKey.strictOptionalField(Sample.CODEC, "sample").forGetter(ProjectRequirement::sample),
+            KnowledgeKey.strictOptionalField(ResourceLocation.CODEC,"game").forGetter(ProjectRequirement::game),
+            KnowledgeKey.strictOptionalField(ObservationTask.CODEC,"observation").forGetter(ProjectRequirement::observation)
     ).apply(i, ProjectRequirement::new));
 
     /**
@@ -143,6 +145,17 @@ public record ProjectRequirement(String id, Type type, String title, int level, 
         }
     }
 
+    public record ObservationTask(KnowledgeCondition condition,Optional<ResourceLocation> experiment,boolean teamCurrentRun) {
+        public static final Codec<ObservationTask> CODEC=RecordCodecBuilder.create(i -> i.group(
+            KnowledgeCondition.CODEC.fieldOf("condition").forGetter(ObservationTask::condition),
+            KnowledgeKey.strictOptionalField(ResourceLocation.CODEC,"experiment").forGetter(ObservationTask::experiment),
+            field(Codec.BOOL,"team_current_run",false).forGetter(ObservationTask::teamCurrentRun)
+        ).apply(i,ObservationTask::new));
+    }
+    public ProjectRequirement(String id,Type type,String title,int level,int count,List<LinkRule.Slot> inputs,
+            List<LinkRule.CrossCondition> conditions,List<Distinct> distinct,int duration,List<Material> materials,Space space,Optional<Sample> sample) {
+        this(id,type,title,level,count,inputs,conditions,distinct,duration,materials,space,sample,Optional.empty(),Optional.empty());
+    }
     public record Sample(ResourceLocation experiment, ResourceLocation item) {
         public static final Codec<Sample> CODEC = RecordCodecBuilder.create(i -> i.group(
             ResourceLocation.CODEC.fieldOf("experiment").forGetter(Sample::experiment),
@@ -202,7 +215,21 @@ public record ProjectRequirement(String id, Type type, String title, int level, 
         if (type != Type.EXPERIMENT && (duration != 0 || !materials.isEmpty() || !space.equals(Space.NONE)))
             errors.add(id + ": only experiments take duration, materials or space");
         if (type != Type.SAMPLE && sample.isPresent()) errors.add(id + ": sample only applies to sample tasks");
+        if (type != Type.MINIGAME && game.isPresent()) errors.add(id+": game only applies to minigame");
+        if (type != Type.OBSERVATION && observation.isPresent()) errors.add(id+": observation only applies to observation tasks");
         switch (type) {
+            case MINIGAME, OBSERVATION -> {
+                if (level!=0 || count!=1 || !inputs.isEmpty() || !conditions.isEmpty() || !distinct.isEmpty()) errors.add(id+": task takes one fresh success");
+                if (type==Type.MINIGAME && (game.isEmpty() || !game.get().equals(new ResourceLocation("frostedresearch:airflow")))) errors.add(id+": unsupported minigame");
+                if (type==Type.OBSERVATION) {
+                    if (observation.isEmpty()) errors.add(id+": observation definition required");
+                    else {
+                        observation.get().condition().validate(errors);
+                        if (observation.get().condition().kind()!=KnowledgeKey.Kind.OBSERVATION) errors.add(id+": observation predicate required");
+                        if (observation.get().teamCurrentRun()!=observation.get().experiment().isPresent()) errors.add(id+": experiment requires team_current_run");
+                    }
+                }
+            }
             case SAMPLE -> {
                 if (title.isBlank() || sample.isEmpty()) errors.add(id + ": sample needs title and sample definition");
                 if (level != 0 || count != 1 || !inputs.isEmpty() || !conditions.isEmpty() || !distinct.isEmpty()) errors.add(id + ": sample consumes one bound item, no slots/level/count override");

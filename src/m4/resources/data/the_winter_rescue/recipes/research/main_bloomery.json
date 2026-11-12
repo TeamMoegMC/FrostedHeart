@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "ABA",
+    "BCB",
+    "ABA"
+  ],
+  "key": {
+    "A": {
+      "item": "frostedheart:mortar"
+    },
+    "B": {
+      "tag": "forge:plates/bronze"
+    },
+    "C": {
+      "item": "charcoal_pit:sandy_brick"
+    }
+  },
+  "result": {
+    "item": "charcoal_pit:main_bloomery"
+  }
+}
