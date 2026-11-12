@@ -1,6 +1,6 @@
 # 普通耐火砖与控温炉正式路线
 
-- Status: Verified：FH实现与正式数据已核对，29项服务端测试及独立进程保存/恢复通过；完整客户端入口正在验证，完整生存采集未实玩。
+- Status: Verified：FH实现、正式数据、29项服务端测试、独立进程保存/恢复及完整客户端入口/实验通过；材料使用夹具，完整生存采集未实玩。
 - Last verified: 2026-11-12
 - Scope: refractory_firing 想法、refractory_brick 项目、controlled_refractory_production 单 Design；只增加自有炉批量工艺。
 - Anchors: [M5 采用决定](../../plans/2026-11-12_16-00-00_research-m5-controlled-furnace-decisions.md)、[正式项目](../../../TheWinterRescue/kubejs/data/the_winter_rescue/frostedresearch/knowledge/projects/refractory_brick.json)、[批量配方](../../../TheWinterRescue/kubejs/data/the_winter_rescue/recipes/research/refractory_brick_batch.json)。
@@ -29,4 +29,6 @@
 
 唯一 Design 目标为 the_winter_rescue:research/refractory_brick_batch。trial 配方带 experiment=frostedresearch:refractory_trial，batch 无 experiment；二者类型都是 frostedresearch:controlled_firing。炉子和手混配方公开，不依赖旧研究，不填写 legacy_replacement。
 
-`frostedresearch:controlled_furnace`、`cracked_refractory_brick` 和 `controlled_firing` 已在生产注册，温度结算、取消/拆除、堵塞输出、观察绑定、参考路径冻结和重启恢复见[M5服务端记录](../../diary/2026-11-12_18-10-45_research-m5-controlled-furnace-handoff.md)。客户端和实际生存结论另行记录，不用服务端测试替代。
+`frostedresearch:controlled_furnace`、`cracked_refractory_brick` 和 `controlled_firing` 已在生产注册，温度结算、取消/拆除、堵塞输出、观察绑定、参考路径冻结和重启恢复见[M5服务端记录](../../diary/2026-11-12_18-10-45_research-m5-controlled-furnace-handoff.md)。
+
+[最终客户端](../../diary/2026-11-12_20-12-00_research-m5-m6-client-validation.md)从无想法开始，经过实际10秒联络、三项N观察/保留/学习、正常工作台合成与炉操作，完成试验并实际产出16砖批量；验证JEI权限、进入后参考冻结与重开时精确提示，以及中英文教程。材料、地面和第二轮遗忘等使用夹具，不表示从采集开始的完整生存通关。多记录设备选择也有实际CUI验收，详见同一记录。

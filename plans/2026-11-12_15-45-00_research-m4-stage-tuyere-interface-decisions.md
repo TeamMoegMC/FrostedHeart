@@ -2,7 +2,7 @@
 
 - Time: `2026-11-12 15:45:00 +08:00`
 - Authors: `Codex / OpenAI，M4-A 只读接口调查`
-- Status: `completed`（设计交付，待 Sol 实施；不是已实现功能）
+- Status: `completed`（设计已实施并经服务端、单/双客户端验证；下文保留设计时上下文）
 - Scope: 最小多阶段执行、可选任务/知识路径、风道小游戏、临时配方、独立原型试吹与同队本次成果观察、旧 iron 衔接。
 - Related: [开发计划 M4/M5/M6](2026-11-11_23-38-07_research-system-playable-development-plan.md)、[最新架构摘要](2026-11-11_22-20-43_research-system-architecture-revision.md)、[M3-B 交接](../diary/2026-11-12_15-29-57_research-m3b-legacy-bridge-handoff.md)。
 
@@ -205,3 +205,7 @@ M4 原型是专用方块配方，最终正式鼓风口是另一配方：临时�
 不实现通用阶段图引擎、质量评分、真实流体模拟、临时物品销毁、把正常鼓风口替换为自定义“看似正常”方块、全局观察历史扫描或任意奖励事务框架。以上默认可直接实施；无须等待常规参数确认。
 
 修订记录（2026-11-12，主协调实施决定）：项目开始改为想法＋铜/青铜观察组＋煤/木炭/焦炭观察组；获取想法的optional与项目required分开配置。试验只绑定team/run/task/experiment，允许绑定队伍任意当前成员观察，移除个人归属与放置者身份限制。实际blow接点和阶段冻结规则不变。
+
+## Outcome
+
+M4阶段、风道、临时配方、原型通气和正式内容已交付；真实双客户端验证了队友离线后的继续与重连同步。当前接口见[阶段与风道](../docs/knowledge/stages-and-airflow.md)，玩法及证据见[冶铁炉](../docs/knowledge/iron-bloomery.md)。

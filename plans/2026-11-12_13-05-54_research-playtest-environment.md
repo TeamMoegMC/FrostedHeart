@@ -2,7 +2,7 @@
 
 - Time: `2026-11-12 13:05:54 +08:00`
 - Authors: `Codex / OpenAI GPT-6 Luna medium；只读验收环境调查`
-- Status: `ready`；调查和交接已完成，客户端验收尚未运行。
+- Status: `completed`；本准备已落实为独立Playtest/Peer实例，下文调查数据保留其原时点。
 - Scope: M3/M7 正式整合包新世界验收环境；PrismLauncher 本地实例、FrostedHeart 开发运行和 TheWinterRescue 数据。
 - Related: [完整开发计划 M7](2026-11-11_23-38-07_research-system-playable-development-plan.md)、[M0 内容基线](2026-11-12_12-36-00_research-m0-content-baseline.md)、[M0 交接](../diary/2026-11-12_12-40-00_research-m0-baseline-handoff.md)。
 
@@ -110,3 +110,7 @@ Copy-Item -LiteralPath $newJar -Destination (Join-Path $testGame 'mods')
 - 所选实例是开发实例，不能证明已导出的发布包状态。调查时实例中的 TWR 数据比工作仓少一个脚本（`warm_stone.js`）；准备流程会将当前仓库的 `kubejs/` 和 `config/fhresearches/` 覆盖到隔离副本。M3/M6 每次交接时都要重新核对这两个目录，不沿用调查时的数量。
 - 本次没有启动客户端或世界，也没有构建；材料路线、新内容加载和持久化尚未验证。当前交付仅为环境准备调查。
 - 后续 M3/M7 步骤：使用进程级 Java 17 构建当前 FH JAR；创建并填充隔离 Prism 副本；创建新世界；检查启动日志及研究定义的实际加载；验证配方与材料可达性、项目推进；保存退出并重新进入同一隔离世界确认进度保留；随后完成 M7 双客户端、服务器重启和下游生产检查。
+
+## Outcome
+
+隔离实例已用于M3/M4/M5/M6正式客户端和M7双客户端验证；用户Development、旧存档与Prism网络保持原样。后续实际范围见[最终客户端记录](../diary/2026-11-12_20-12-00_research-m5-m6-client-validation.md)；完整生存仍是独立待办，不重做本环境调查。

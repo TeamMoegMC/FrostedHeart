@@ -2,7 +2,7 @@
 
 - Time: `2026-11-12 16:00:00 +08:00`
 - Authors: `Codex / OpenAI，只读调查与实施设计`
-- Status: `completed`（设计交付，待实施；未运行游戏验证）
+- Status: `completed`（设计已实施，服务端/重启及正式客户端完整流程通过；下文保留设计时上下文）
 - Scope: 新增普通耐火砖研究、自有控温炉、下一阶段提示分支；沿用已定稿 M4 stages/OBSERVATION，不替换旧高炉研究。
 - Related: [M4 接口及协作修订](2026-11-12_15-45-00_research-m4-stage-tuyere-interface-decisions.md)、[总计划 M5](2026-11-11_23-38-07_research-system-playable-development-plan.md)。
 
@@ -107,3 +107,7 @@ Design定义缺席但批量recipe仍在时，不能因TechnologyAccessProjection
 6. **reload与性能**：直接配方索引正确识别Ingredient标签、BlockItem、重复/空结果；A含砖而B只含A时B不自动纳入；特殊机器只按补充tag；标签/配方重载、零在线启动后索引与观察用途刷新；观察时不遍历配方。仅检查新schema、定向服务端与正式包游玩，不重复整套无关迁移调查。
 
 本次只读正式配方/研究、FH权限/观察源码与本地依赖（Charcoal Pit、IE、II），没有构建、客户端、Git或运行时recipe导出。自动生成ID的工业工艺明确未冒认稳定ID；新配方ID是实施决定。最终方案按主协调最新指示选择“新增有价值生产能力、保留旧工艺”，不需要假定旧玩家曾烧过砖来做无证据迁移。
+
+## Outcome
+
+M5已在正式包落地，真实客户端完成联络、N观察入档、试烧、16砖批量与参考分支。当前操作和验证范围见[耐火砖](../docs/knowledge/refractory-brick.md)；本设计调查时的未实施状态已由后续记录取代。

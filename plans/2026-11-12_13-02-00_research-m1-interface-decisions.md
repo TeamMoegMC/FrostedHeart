@@ -2,7 +2,7 @@
 
 - Time: `2026-11-12 13:02:00 +08:00`
 - Authors: `Codex / OpenAI，M1-A 接口调查与交接`
-- Status: `completed`（接口调查交付；以下均为 M1-B 待实现决定，不是当前功能）
+- Status: `completed`（设计交付并已实施；下文保留设计时上下文，当前规则以docs为准）
 - Scope: FH 知识条件、项目发现/开始/披露、多来源历史、观察用途、服务端视图与知识 UI；不实现 M2 事件概率/联络计时或 M4 阶段引擎。
 - Related: [最新架构摘要](2026-11-11_22-20-43_research-system-architecture-revision.md)、[开发计划 M1](2026-11-11_23-38-07_research-system-playable-development-plan.md)、[M0 内容基线](2026-11-12_12-36-00_research-m0-content-baseline.md)、[M0 交接](../diary/2026-11-12_12-40-00_research-m0-baseline-handoff.md)、[知识文档入口](../docs/knowledge/README.md)。
 
@@ -239,3 +239,7 @@ M1-A 已给出可实现的最小数据/API、旧格式与存档兼容、观察�
 文档自检：两段 JSON 通过解析，开始/披露组引用均能解析到条件；6 个相对 Markdown 文档链接存在。这只是拟定数据和交接文件的一致性检查，不表示当前加载器支持新字段或 M1 行为已通过测试。
 
 后续修订（2026-11-12，主协调转达用户明确规则）：未知必要条件改为逐项占位，允许展示数量与要求结构；共享条件去重，组只作来源关联展示。同步更新服务端视图、UI、示例解释和验收，取代原先整组单占位及隐藏成员数的建议。其余推荐默认不变。
+
+## Outcome
+
+M1已实施并提交23b08d3c1，接口经后续阶段回归与正式客户端使用。当前格式见[定义](../docs/knowledge/definitions.md)，验证与回退点见[协调记录](2026-11-12_13-00-00_research-development-coordination.md)。

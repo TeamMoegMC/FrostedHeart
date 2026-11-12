@@ -2,7 +2,7 @@
 
 - Time: 2026-11-12 15:47:14 +08:00
 - Authors: Codex / OpenAI GPT-6 Luna；M6 只读准备
-- Status: ready；核对与执行清单，尚非 M6 迁移验收。
+- Status: completed；目录处置已落实并有对应机制验证，当前目录由docs维护。
 - Scope: TWR config/fhresearches/*.json 旧目录、三条新研究线的父子关系/权限交接；不实施迁移。
 - Related: [M0 旧目录](2026-11-12_12-34-00_research-m0-legacy-catalog.md)、[M3 合金炉桥接](2026-11-12_14-00-00_research-m3-legacy-alloy-kiln-bridge.md)、[M3-B 玩家路线](../docs/knowledge/earthen-smelter.md)、[M6 总计划](2026-11-11_23-38-07_research-system-playable-development-plan.md)。
 
@@ -131,3 +131,7 @@ Get-ChildItem config/fhresearches -Filter '*.json' | ForEach-Object BaseName | W
 ~~~
 
 M0 已证明本次 ID 集合相同；命令不启动游戏。实际权限来源、RecipeManager 与迁移行为需要对应 FH GameTest/正式包存档副本验证。此准备只记录事实与 M6 建议；除 M3 桥接已有测试外，不表示 M4/M5 或 81 项迁移已实施。
+
+## Outcome
+
+81项逐项处置、两项替换映射和验证范围已转入[当前目录文档](../docs/research/legacy-content-disposition.md)。其余79项保留原定义（含两个原停用条目），新耐火砖沿新增路线；没有把目录核对冒称81项人工通关。

@@ -2,7 +2,7 @@
 
 - Time: `2026-11-12 13:40:36 +08:00`
 - Authors: `Codex / OpenAI GPT-6.1 Sol medium；独立内容准备`
-- Status: `ready`；供主协调采用，尚未实施或实测。
+- Status: `completed`；已采用并实施，当前操作由docs中的正式路线维护。
 - Scope: 仅 M3 的三组小炉、材料、试烧、提交和正式解锁；不改 M1/M2 框架，不设计 M4/M5。
 - Related: [总计划 M3](2026-11-11_23-38-07_research-system-playable-development-plan.md)、[M0 内容卡](2026-11-12_12-36-00_research-m0-content-baseline.md)。
 
@@ -57,3 +57,7 @@
 主协调补充源码证据（2026-11-12）：`kubejs/server_scripts/src/recipes_types/charcoal_pit/pottery.js` 已有三份 copperLike 加一份 tinLike 在 orekiln 产出4青铜锭的配方，输入允许铜/锡原矿和碎矿，故青铜并非必须先用正式合金炉获得。青铜锭经 tree_stump 配方压板；工程锤使用结构金属锭、木杆、advanced_string，后者在 item_tags.js 中允许原版线、皮条或铜线。这补全了源码层的候选材料路线，窑坑及工具实际获取仍需正式包游玩验证。
 
 本次实施默认已采用 **3:1、1:3、2:2；4 木棍/400 tick；仅本次成功样必交**。后续实施需覆盖三组试烧、拆除/收取一次性结算、保存重载、当前 `run` 绑定与提交消耗，以及 Design 配方和 Construction 成型两个成果。本次仅新增并修订此计划，未改生产/TWR 数据或其他文档，未构建、启动客户端或执行 Git 操作。
+
+## Outcome
+
+M3-A/B机制与正式内容已完成，正式客户端已通过实物提交和权限变化。当前材料与操作见[土制冶炼炉](../docs/knowledge/earthen-smelter.md)，本卡保留设计时记录，不作为未实施任务重复执行。

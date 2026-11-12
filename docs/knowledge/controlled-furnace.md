@@ -1,6 +1,6 @@
 # 控温实验炉与耐火制品观察索引
 
-- Status: `Current`（M5基线29项及独立进程保存；M6最终16项验证新目标选择、完成标志和同台交错操作；实际客户端界面另验）
+- Status: `Current`（M5基线29项及独立进程保存；M6最终16项验证新目标选择、完成标志和同台交错操作；实际客户端的正常试烧、批量、JEI、目标选择及新启动端点均通过，见[客户端记录](../../diary/2026-11-12_20-12-00_research-m5-m6-client-validation.md)）
 - Last verified: `2026-11-12`
 - Scope: 自有控温炉、普通耐火砖批次、队伍本次试验样、配方直接制品观察用途。整合包正式路线由 [refractory-brick.md](refractory-brick.md) 维护。
 - Code anchors: `ControlledFiringRecipe`、`ControlledFurnaceBlockEntity`、`ControlledFurnaceMenu`、`ControlledFurnaceScreen`、`ControlledFiringCategory`、`RefractoryObservationIndex`、`ObservationSessions`。
