@@ -118,8 +118,8 @@ public final class KnowledgeNodeSheet extends UILayer {
             }
             paragraphs.add(t(node.completed() ? "graph.research_done" : "graph.research_waiting"));
             if (node.project() != null) {
-                paragraphs.add(t("graph.related_ideas"));
-                for (var idea : node.project().ideas()) paragraphs.add(data.title(idea));
+                paragraphs.add(t("graph.related_sources"));
+                for (var idea : node.project().sources()) paragraphs.add(data.title(idea));
                 paragraphs.add(t("graph.expected_results"));
                 paragraphs.addAll(node.project().outputTitles());
             } else if (node.link() != null) {

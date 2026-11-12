@@ -1,7 +1,7 @@
 # 知识定义、观察快照与联络规则
 
 - Status: `Current`
-- Last verified: `2026-09-08`
+- Last verified: `2026-11-12`
 - Scope: 知识身份、不可变观察、独立想法/成果定义、项目关系与研究需求、物品检索规则、服务端联络匹配及观察用途判定。
 - Code anchors: [
   `KnowledgeElement`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/model/KnowledgeElement.java)、[
@@ -139,6 +139,30 @@ research topic 内。类型效果结构见 [成果与权限](../research/results
 `title`、`body` 默认为空；`results` 必填，至少一项且必须存在；`requirements` 默认为空。没有需求的项目只能由研究系统接口或开发指令完成，
 玩家在研究页无法开始它。
 
+### 项目发现、开始与披露（M1）
+
+[`KnowledgeCondition`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/definition/KnowledgeCondition.java)
+复用 `LinkRule.Slot` / `FieldCondition` 匹配，仅查询有效档案；来件不等于掌握。
+条件必填 kind；idea/result 必填 definition；observation 必填 observation_type，可带 conditions 数组、title 与 hint。
+观察按 item/block/entity 及字段/标签匹配，不接受固定 record_id / entity_instance 作为前置。
+
+项目可选 [`ProjectAccess`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/definition/ProjectAccess.java) `access`：
+
+- `conditions`：局部名 → KnowledgeCondition；相同谓词的别名在加载时合并，文案取局部名字典序第一项。
+- `start_all`：开始必须全部掌握的条件名，默认 []；只检查作者列出的条件，不展开想法获取或 understanding 前置。
+- `discover_any`：额外发现入口，默认 []；并入 start_all 中的全部 idea 条件形成发现集合，任一掌握即可发现。
+- `groups`：`id`、`reveal_any`、`conditions`、可选 `unknown_hint`；组的任一揭示条件掌握后公开组引用的关联。组不添加开始要求。
+
+缺席 access 的旧项目保持任一有效 IdeaDefinition.projects 来源可发现并启动；显式 access 不使用旧 projects 补门槛。
+显式空 access 无发现入口，不因 start_all 空而公开。字段存在但类型错误会报告加载错误，保留上一份定义快照。
+必要条件未被组覆盖时补一个发现集合揭示的组，生成 ID 避开已有 default 名。
+
+所有必要条件逐项显示；未知项各有占位，即使已拥有 C，只属于未揭示 J 组的 C 仍不公开关联。
+共享 B 在所有组间只有一行，组引用该行；数量与要求结构可见。公开的非必要条件标为参考，不阻止开始。
+观察条件的全部用途（包括未发现项目、参考和揭示条件）逐项注册为单槽 pattern，不增加独立证据份数。
+可运行数据见 [joint_study](example-datapack/data/example/frostedresearch/knowledge/projects/joint_study.json)
+及 [纯成果 followup](example-datapack/data/example/frostedresearch/knowledge/projects/followup.json)。M2 获取概率、M4 阶段尚未实现。
+
 每项需求的 `id` 在项目内唯一，是进度身份：增删一项需求不会让其他需求的进度错位。`type` 取：
 
 | 类型            | 字段                                                    | 含义与校验                                                                                       |
@@ -264,7 +288,7 @@ NBT。未列出的数据不会进入这次观察，物品本身不被消耗。
 
 ## 当前用途、差异与重载
 
-`Snapshot.hasObservationUse` 判断观察能否匹配任何已注册用途的局部输入：含观察槽位的联络规则、所有项目的证据需求槽位，或外部
+`Snapshot.hasObservationUse` 判断观察能否匹配任何已注册用途的局部输入：含观察槽位的联络规则、所有项目的证据需求槽位、全部 access.conditions 的独立单槽用途，或外部
 `ObservationUse`。不要求队伍已拥有完整组合。证据需求与联络规则一样参与 `addsObservationDifference`，同一需求中的重复槽位会保留所需数量的独立记录。
 
 `addsObservationDifference` 先排除相同原始 UUID；对不同 UUID

@@ -1,7 +1,7 @@
 # 知识状态、API 与生命周期
 
 - Status: `Current`（源码与本轮自动化测试核对；游戏内视觉与多人联机流程尚未人工验收）
-- Last verified: `2026-09-08`
+- Last verified: `2026-11-12`
 - Scope: 队伍知识身份、档案、来件、学习与忘记、理解与休眠、联络、历史、联想、队伍迁移、权限桥接及同步
 - Code anchors: [`KnowledgeService`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/KnowledgeService.java)、[
   `KnowledgeState`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/state/KnowledgeState.java)、[
@@ -16,17 +16,16 @@
 `chorda_data/<内部队伍 UUID>.nbt`。`data/TeamKnowledgeData` 是已有调用位置的薄封装，其实际状态由
 `knowledge/state/KnowledgeState` 保存。`TeamResearchData` 继续独立保存旧研究进度。
 
-存储格式为 `schema_version: 2`（`KnowledgeState.SCHEMA_VERSION`；`TeamKnowledgeData.CURRENT_SCHEMA_VERSION` 引用同一常量），重新定义了原有
+存储格式为 `schema_version: 3`（`KnowledgeState.SCHEMA_VERSION`；`TeamKnowledgeData.CURRENT_SCHEMA_VERSION` 引用同一常量），重新定义了原有
 knowledge 结构，没有从旧版四个 acquired-ID 集合迁移的逻辑。新源码中的 `findingIds()` 等旧式访问器从档案派生，不再形成另一份成果权威。
-`KnowledgeState.read` 先读取 `schema_version` 并交给 `KnowledgeState.upgrade`，这是存储格式迁移的唯一入口；版本 2 是知识系统的第一版布局，
-目前没有迁移步骤。缺少版本号或版本号高于当前值时按现有格式宽松解码，`write()` 始终写入当前版本。
+`KnowledgeState.read` 先读取 `schema_version` 并交给 `KnowledgeState.upgrade`，这是存储格式迁移的唯一入口；版本 2 是知识系统的第一版布局；版本 3 把研究记录的单个 `idea` 迁移为去重排序的 `origins` 列表，保留 UUID、时间、结果与全部进度。迁移在副本上执行，已有 origins 优先；缺版本也兼容旧 idea。缺少来源而其他字段可读时保留进度与空来源。版本号高于当前值时按现有格式解码，`write()` 始终写入当前版本。
 
 | 保存项            | 含义                                           |
 |----------------|----------------------------------------------|
 | `archive`      | `KnowledgeArchive` 已学习条目，按 `KnowledgeKey` 索引 |
 | `inbox`        | `KnowledgeInbox` 已收到、尚未学习的条目，独立于档案           |
 | `links`        | 以规则 ID 去重的首次实际联络，保存输出、命名输入绑定和时间              |
-| `research`     | 每次启动的 UUID、项目定义 ID、实际起源想法、完成状态与输出            |
+| `research`     | 每次启动的 UUID、项目定义 ID、实际来源知识列表 `origins`、完成状态与输出            |
 | `acquisitions` | 实际获得经历；不会补造外部知识的推导关系                         |
 | `hints`        | 已揭示的提示键或原文，同一内容不重复累计                         |
 | `daily`        | 梦境及玩家与讨论对象的逐日额度                              |
@@ -138,14 +137,14 @@ codec 错误而不是异常。`ObservationSampling` 把非有限的坐标与温�
 
 ### 研究启动记录
 
-`ResearchHistory` 是一次启动：实际起源想法、启动时间、`completed` / `abandoned` 状态、完成时的成果，以及按需求 `id` 保存的进度——
+`ResearchHistory` 是一次启动：实际来源知识列表 `origins`、启动时间、`completed` / `abandoned` 状态、完成时的成果，以及按需求 `id` 保存的进度——
 `calculations` 记录每局获胜的难度，`evidence` 记录每个槽位提交的观察副本，`experiments` 记录每项实验完成的次数。空进度不写入存档；进度存在但无法解码时整条启动记录按
 [无法解码的条目](#无法解码的条目) 隔离，不会以丢失证据的样子加载。
 
 | 方法                                                     | 行为                                                                                                        |
 |--------------------------------------------------------|-----------------------------------------------------------------------------------------------------------|
-| `researchStartStatus(project, idea)`                   | 返回 `LEARNABLE` 或不能开始的原因：定义不存在、想法无效或未声明该项目、已有进行中的启动（`ACTIVE`）、已完成且全部成果都在档案中（`ALREADY_OWNED`）                |
-| `startResearch(project, idea)`                         | 状态为 `LEARNABLE` 时记录新启动并返回 UUID。每队每个项目同时最多一次进行中的启动；完成后只有当某项成果不在档案中（例如被忘记）才能再次启动                         |
+| `researchStartStatus(project)` / `projectAccess(project)`                   | 返回 `LEARNABLE` 或不能开始的原因：定义不存在、未发现或缺少开始知识、已有进行中的启动（`ACTIVE`）、已完成且全部成果都在档案中（`ALREADY_OWNED`）                |
+| `startResearch(project)`（旧起源参数重载仅为兼容）                         | 状态为 `LEARNABLE` 时记录新启动并返回 UUID。每队每个项目同时最多一次进行中的启动；完成后只有当某项成果不在档案中（例如被忘记）才能再次启动                         |
 | `openRun(project)`                                     | 该项目进行中的启动                                                                                                 |
 | `submitEvidence(run, requirement)`                     | 在档案与来件的全部观察中寻找一组满足该证据需求的互异记录，并保存其副本。搜索至多尝试 `EVIDENCE_SEARCH_STEPS = 20000` 个候选，找不到返回 `NO_MATCH`         |
 | `submitEvidence(run, requirement, keys)`               | 按给定记录精确绑定，每个槽位一份                                                                                          |
@@ -161,7 +160,7 @@ codec 错误而不是异常。`ObservationSampling` 把非有限的坐标与温�
 进度每次按当前定义判断：证据副本必须仍能完整绑定当前槽位与条件，计算只计难度不低于当前 `level` 的胜局，实验按完成次数与当前 `count` 比较。作者修改需求后，玩家可能需要重新提交。
 证据可以来自档案或来件，提交不消耗观察；之后删除来件或忘记档案条目不影响已提交的副本。同一观察可以用于不同项目，同一需求内各槽位必须是不同记录。
 
-每个启动记录只有一个实际起源想法，完成重复调用不会重新产出。获得成果失败时保留来件，研究关系仍属于实际历史。居民参与与原型数值升级尚未实现，
+每个启动记录只有一个实际来源知识列表 `origins`，完成重复调用不会重新产出。获得成果失败时保留来件，研究关系仍属于实际历史。居民参与与原型数值升级尚未实现，
 见 [研究项目执行计划](../../plans/2026-10-18_23-42-16_knowledge-research-project-execution.md)。
 
 ## 梦境、讨论与暗示
@@ -221,7 +220,7 @@ codec 错误而不是异常。`ObservationSampling` 把非有限的坐标与温�
 服务端 `KnowledgeView`
 包含档案、来件、已揭示暗示、实际联络、实际研究和获得经历。未发现规则的全部输入条件不进入快照。正常图谱中的联络必须仍能以历史绑定满足当前规则，并且其实际输入/输出有效；历史视图可以查看失效路径和忘记后的引用。数据包重载不重新编造历史绑定。
 
-可见快照还包含 `projects`：仅列出档案中想法已经公开的项目、可用来源与成果说明，供未启动项目展示。它与 `research`
+可见快照还包含 `projects`：列出当前 access 发现的项目，以及已有历史的项目；active 只表示当前发现或存在 open run，纯历史项目在普通视图隐藏。包含经过组披露裁剪的 sources、access_conditions、groups 与成果说明，供未启动项目展示。它与 `research`
 中的实际启动/完成记录分开。项目完成后的多项成果共用一次最终快照，分别保留其学习事件和结果。
 
 `KnowledgeSnapshotPacket` 将 `KnowledgeSyncSnapshot`（`catalog_revision`、发现投影 `knowledge`、权限投影 `technology` 与可见视图
@@ -244,6 +243,6 @@ NBT 大小限制截断。绘图台回复只携带本次操作结果与联络候�
 忘记它的一项成果即可。指令生成历史观察由 `Observation` API 明确提供内容和 `command_generated`
 来源，不会使用一个缺乏历史内容的裸 UUID 伪造观察。
 
-`research complete` 是权限等级 2 的开发命令，跳过项目需求。它沿用该项目进行中的启动；没有时要求队伍拥有能启动它的起源想法，再调用
+`research complete` 是权限等级 2 的开发命令，跳过项目需求。它沿用该项目进行中的启动；没有时检查正常 access；纯成果入口无需想法参数，再调用
 `startResearch` / `completeResearch`，不会把研究项目当作新的知识元素或直接伪造成果权限。项目已完成且成果都在档案中时提示无法开始。示例操作见
 [playthrough.md](playthrough.md)。

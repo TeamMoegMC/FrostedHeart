@@ -421,6 +421,22 @@ public final class KnowledgeLayer extends UILayer {
             paragraphs.add(t("graph.expected_results"));
             paragraphs.addAll(project.outputTitles());
         }
+        if (!project.accessConditions().isEmpty()) {
+            paragraphs.add(t("research.access"));
+            Map<String, Integer> rowNumbers = new LinkedHashMap<>();
+            project.accessConditions().forEach(row -> rowNumbers.put(row.id(), rowNumbers.size() + 1));
+            for (var row : project.accessConditions()) {
+                Component label = row.hidden() ? t("research.unknown_knowledge") : row.title();
+                paragraphs.add(Component.literal(rowNumbers.get(row.id()) + ". " + (row.hidden() ? "? " : row.met() ? "✓ " : "○ ")).append(label)
+                    .append(row.required() ? Component.empty() : t("research.reference")));
+                if (!row.hidden() && !row.hint().getString().isBlank()) paragraphs.add(row.hint());
+                if (!row.met() && !row.inboxKeys().isEmpty()) paragraphs.add(t("research.inbox_available"));
+            }
+            for (var group : project.groups()) {
+                paragraphs.add(t("research.access_group", group.conditions().stream().map(rowNumbers::get).filter(Objects::nonNull).map(Object::toString).collect(java.util.stream.Collectors.joining(", "))));
+                if (group.hidden() && !group.hint().getString().isBlank()) paragraphs.add(group.hint());
+            }
+        }
         var requirements = run != null ? run.requirements() : project.requirements();
         if (requirements.isEmpty()) paragraphs.add(t("research.no_steps"));
         else {
@@ -434,9 +450,15 @@ public final class KnowledgeLayer extends UILayer {
         if (run == null) {
             boolean startable = project.startStatus().equals("LEARNABLE") && !requirements.isEmpty();
             button(x, bottom - 23, w, 20, t("research.start"), false,
-                    () -> send(Action.START_RESEARCH, project.origin() == null ? List.of() : List.of(project.origin()), project.id(), "", ""))
+                    () -> send(Action.START_RESEARCH, List.of(), project.id(), "", ""))
                     .tooltip(startable ? t("research.start") : researchState(project)).setEnabled(startable);
-            reading.setHeight(Math.max(20, reading.getHeight() - 21));
+            var inboxKey = project.accessConditions().stream().filter(row -> !row.met()).flatMap(row -> row.inboxKeys().stream()).findFirst();
+            if (inboxKey.isPresent()) {
+                button(x, bottom - 45, w, 19, t("research.inbox_available"), true, () -> {
+                    switchPage(Page.INBOX); focused = inboxKey.get(); rebuild();
+                });
+            }
+            reading.setHeight(Math.max(20, reading.getHeight() - (inboxKey.isPresent() ? 45 : 21)));
             return;
         }
         if (!requirements.isEmpty()) {
@@ -536,13 +558,13 @@ public final class KnowledgeLayer extends UILayer {
      * Projects disclosed by archived ideas, followed by open runs whose idea has since left the archive.
      */
     private List<KnowledgeJournalData.Project> researchProjects() {
-        List<KnowledgeJournalData.Project> projects = new ArrayList<>(data.projects);
+        List<KnowledgeJournalData.Project> projects = new ArrayList<>(data.projects.stream().filter(p -> p.active() || history).toList());
         Set<String> known = new HashSet<>();
         projects.forEach(project -> known.add(project.id()));
         for (var run : data.runs)
             if (run.open() && known.add(run.project()))
-                projects.add(new KnowledgeJournalData.Project(run.project(), run.title(), List.of(run.idea()), List.of(), true, false,
-                        Component.empty(), run.requirements(), null, "", run.id()));
+                projects.add(new KnowledgeJournalData.Project(run.project(), run.title(), run.origins(), List.of(), true, false,
+                        Component.empty(), run.requirements(), "", run.id(), List.of(), List.of()));
         return projects;
     }
 
@@ -553,14 +575,15 @@ public final class KnowledgeLayer extends UILayer {
     private Component researchState(KnowledgeJournalData.Project project) {
         var run = data.openRun(project.id());
         if (run != null)
-            return t("research.state.open", run.requirements().stream().filter(KnowledgeJournalData.Requirement::satisfied).count(), run.requirements().size());
+            return !run.requirements().isEmpty() && run.requirements().stream().allMatch(KnowledgeJournalData.Requirement::satisfied)
+                ? t("research.state.completable") : t("research.state.open", run.requirements().stream().filter(KnowledgeJournalData.Requirement::satisfied).count(), run.requirements().size());
         if (project.completed() && !project.startStatus().equals("LEARNABLE")) return t("research.state.completed");
         if (project.requirements().isEmpty()) return t("research.state.no_steps");
         return t(switch (project.startStatus()) {
             case "LEARNABLE" -> "research.state.ready";
             case "ALREADY_OWNED" -> "research.state.completed";
             case "DEFINITION_UNAVAILABLE" -> "research.state.unavailable";
-            default -> "research.state.needs_idea";
+            default -> "research.state.needs_knowledge";
         });
     }
 
@@ -932,7 +955,8 @@ public final class KnowledgeLayer extends UILayer {
             case "research.start.active" -> "research.msg.running";
             case "research.start.already_owned" -> "research.state.completed";
             case "research.start.definition_unavailable" -> "research.state.unavailable";
-            case "research.start.not_understood", "research.start.invalid_input" -> "research.state.needs_idea";
+            case "research.start.not_understood", "research.start.invalid_input", "research.start.not_found" -> "research.state.needs_knowledge";
+            case "research.start.requirements_unmet" -> "research.state.no_steps";
             case "research.evidence_submitted" -> "research.msg.evidence_submitted";
             case "research.evidence_missing" -> "research.msg.evidence_missing";
             case "research.calculation_started" -> "research.msg.calculation_started";

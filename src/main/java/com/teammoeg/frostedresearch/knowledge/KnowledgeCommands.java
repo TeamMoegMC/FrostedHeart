@@ -108,18 +108,10 @@ public final class KnowledgeCommands {
         if (definition == null) return feedback(context, "UNKNOWN_PROJECT");
         var player = context.getSource().getPlayerOrException();
         var service = KnowledgeService.forPlayer(player);
-        KnowledgeKey origin = service.state().archive().entries().keySet().stream()
-                .filter(key -> key.kind() == KnowledgeKey.Kind.IDEA && service.isActive(key))
-                .filter(key -> requestedIdea == null || key.definitionId().equals(requestedIdea))
-                .filter(key -> KnowledgeDefinitions.current().ideas().get(key.definitionId()).projects().contains(project))
-                .sorted(Comparator.comparing(KnowledgeKey::id)).findFirst().orElse(null);
-        if (origin == null) {
-            context.getSource().sendFailure(Component.translatable("knowledge.frostedresearch.command.project_needs_idea"));
-            return 0;
-        }
-        // A team has one open run per project; reuse it whatever idea began it.
+        // Existing runs retain their start permission after sources are forgotten.
         UUID run = service.openRun(project).map(com.teammoeg.frostedresearch.knowledge.state.ResearchHistory::id)
-                .orElseGet(() -> service.startResearch(project, origin).orElse(null));
+                .orElseGet(() -> requestedIdea == null ? service.startResearch(project).orElse(null)
+                    : service.startResearch(project, KnowledgeKey.idea(requestedIdea)).orElse(null));
         if (run == null) {
             context.getSource().sendFailure(Component.translatable("knowledge.frostedresearch.command.project_unavailable"));
             return 0;

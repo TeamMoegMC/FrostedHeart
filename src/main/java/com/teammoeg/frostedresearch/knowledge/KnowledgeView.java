@@ -38,6 +38,9 @@ public final class KnowledgeView {
     }
 
     public static CompoundTag create(KnowledgeService service) {
+        Map<net.minecraft.resources.ResourceLocation, KnowledgeService.ProjectAccessEvaluation> evaluations = new HashMap<>();
+        java.util.function.Function<net.minecraft.resources.ResourceLocation, KnowledgeService.ProjectAccessEvaluation> evaluation =
+            id -> evaluations.computeIfAbsent(id, service::projectAccess);
         CompoundTag view = new CompoundTag();
         view.putLong("revision", service.state().mutationRevision());
         view.putLong("definitions_revision", KnowledgeDefinitions.current().revision());
@@ -80,9 +83,10 @@ public final class KnowledgeView {
             tag.putString("project", record.project().toString());
             var project = KnowledgeDefinitions.current().projects().get(record.project());
             if (project != null) tag.putString("title", project.title());
-            tag.put("idea", KnowledgeState.encode(KnowledgeKey.CODEC, record.idea()));
+            tag.put("origins", KnowledgeState.encode(KnowledgeKey.CODEC.listOf(), visibleOrigins(service, record, evaluation.apply(record.project()))));
             tag.putLong("time", record.time());
             tag.putBoolean("completed", record.completed());
+            tag.putBoolean("active", evaluation.apply(record.project()).discovered() || record.open());
             tag.put("results", KnowledgeState.encode(KnowledgeKey.CODEC.listOf(), record.results()));
             tag.putString("status", record.open() ? "open" : record.completed() ? "completed" : "abandoned");
             if (record.open()) {
@@ -94,14 +98,12 @@ public final class KnowledgeView {
             research.add(tag);
         });
         view.put("research", research);
-        // Only projects disclosed by learned ideas are visible before a research run exists.
         Map<net.minecraft.resources.ResourceLocation, List<KnowledgeKey>> disclosed = new LinkedHashMap<>();
-        for (KnowledgeKey key : service.state().archive().entries().keySet()) {
-            if (key.kind() != KnowledgeKey.Kind.IDEA) continue;
-            var idea = KnowledgeDefinitions.current().ideas().get(key.definitionId());
-            if (idea != null) for (var project : idea.projects())
-                disclosed.computeIfAbsent(project, ignored -> new ArrayList<>()).add(key);
-        }
+        KnowledgeDefinitions.current().projects().keySet().stream().sorted(Comparator.comparing(Object::toString)).forEach(id -> {
+            var access = evaluation.apply(id);
+            if (access.discovered() || service.state().research().values().stream().anyMatch(run -> run.project().equals(id)))
+                disclosed.put(id, access.sources());
+        });
         ListTag projects = new ListTag();
         Set<net.minecraft.resources.ResourceLocation> completedProjects = new HashSet<>();
         service.state().research().values().stream().filter(ResearchHistory::completed)
@@ -112,17 +114,15 @@ public final class KnowledgeView {
             CompoundTag project = new CompoundTag();
             project.putString("id", id.toString());
             project.putString("title", definition.title());
-            project.put("ideas", KnowledgeState.encode(KnowledgeKey.CODEC.listOf(), origins));
-            project.putBoolean("active", origins.stream().anyMatch(service::isActive));
+            project.put("sources", KnowledgeState.encode(KnowledgeKey.CODEC.listOf(), origins));
+            project.putBoolean("active", evaluation.apply(id).discovered() || service.openRun(id).isPresent());
             project.putBoolean("completed", completedProjects.contains(id));
             project.putString("body", definition.body());
             ListTag requirements = new ListTag();
             definition.requirements().forEach(requirement -> requirements.add(requirement(requirement)));
             project.put("requirements", requirements);
-            KnowledgeKey origin = origins.stream().filter(key -> service.researchStartStatus(id, key) == KnowledgeService.Status.LEARNABLE)
-                    .min(Comparator.comparing(KnowledgeKey::id)).orElse(origins.stream().filter(service::isActive).findFirst().orElse(null));
-            if (origin != null) project.put("origin", KnowledgeState.encode(KnowledgeKey.CODEC, origin));
-            project.putString("start_status", service.researchStartStatus(id, origin).name());
+            project.putString("start_status", evaluation.apply(id).startStatus().name());
+            accessView(service, id, project, evaluation.apply(id));
             service.openRun(id).ifPresent(run -> project.putString("open_run", run.id().toString()));
             ListTag outputs = new ListTag();
             for (var result : definition.results()) {
@@ -146,6 +146,50 @@ public final class KnowledgeView {
         });
         view.put("acquisitions", history);
         return view;
+    }
+
+    private static List<KnowledgeKey> visibleOrigins(KnowledgeService service, ResearchHistory run, KnowledgeService.ProjectAccessEvaluation evaluation) {
+        var definition = KnowledgeDefinitions.current().projects().get(run.project());
+        if (definition == null) return List.of();
+        if (definition.access().isEmpty()) return run.origins();
+        return run.origins().stream().filter(key -> evaluation.revealedConditions().stream()
+            .map(definition.access().get().conditions()::get).filter(Objects::nonNull)
+            .anyMatch(c -> c.matches(service.describe(key)))).toList();
+    }
+
+    private static void accessView(KnowledgeService service, net.minecraft.resources.ResourceLocation id, CompoundTag project, KnowledgeService.ProjectAccessEvaluation evaluation) {
+        var definition = KnowledgeDefinitions.current().projects().get(id);
+        if (definition.access().isEmpty()) return;
+        var access = definition.access().get();
+        Map<String, String> rowIds = new LinkedHashMap<>();
+        access.conditions().keySet().forEach(name -> rowIds.put(name, "condition_" + rowIds.size()));
+        ListTag rows = new ListTag();
+        access.conditions().forEach((name, c) -> {
+            boolean required = access.startAll().contains(name), hidden = !evaluation.revealedConditions().contains(name);
+            if (!required && hidden) return;
+            String rowId = rowIds.get(name);
+            CompoundTag row = new CompoundTag(); row.putString("id", rowId);
+            row.putBoolean("required", required); row.putBoolean("hidden", hidden);
+            if (!hidden) {
+                KnowledgeKey key = evaluation.witnesses().get(name);
+                String title = c.title();
+                if (title.isBlank() && c.definition().isPresent()) title = service.describe(new KnowledgeKey(c.kind(), c.definition().get().toString())).title();
+                row.putString("title", title); row.putString("hint", c.hint()); row.putBoolean("met", key != null);
+                if (key != null) row.put("key", KnowledgeState.encode(KnowledgeKey.CODEC, key));
+                row.put("inbox_keys", KnowledgeState.encode(KnowledgeKey.CODEC.listOf(), service.state().inbox().entries().values().stream()
+                    .filter(e -> c.matches(e.element())).map(e -> e.element().key()).sorted(Comparator.comparing(Object::toString)).limit(8).toList()));
+            }
+            rows.add(row);
+        });
+        project.put("access_conditions", rows);
+        ListTag groups = new ListTag();
+        for (var group : access.groups()) {
+            CompoundTag tag = new CompoundTag(); tag.putString("id", "group_" + groups.size());
+            tag.putBoolean("hidden", !evaluation.revealedGroups().contains(group.id())); tag.putString("unknown_hint", group.unknownHint());
+            ListTag refs = new ListTag(); group.conditions().stream().map(rowIds::get).filter(Objects::nonNull).forEach(n -> refs.add(StringTag.valueOf(n)));
+            tag.put("conditions", refs); groups.add(tag);
+        }
+        project.put("groups", groups);
     }
 
     private static CompoundTag requirement(ProjectRequirement requirement) {

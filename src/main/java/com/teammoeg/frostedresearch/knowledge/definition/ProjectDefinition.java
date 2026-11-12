@@ -32,17 +32,22 @@ import java.util.Optional;
  * A project with its results and research requirements; progress lives in each research run.
  */
 public record ProjectDefinition(String title, String body, List<ResourceLocation> results,
-                                List<ProjectRequirement> requirements) {
+                                List<ProjectRequirement> requirements, Optional<ProjectAccess> access) {
     public static final Codec<ProjectDefinition> CODEC = RecordCodecBuilder.create(i -> i.group(
             Codec.STRING.optionalFieldOf("title", "").forGetter(ProjectDefinition::title),
             Codec.STRING.optionalFieldOf("body", "").forGetter(ProjectDefinition::body),
             ResourceLocation.CODEC.listOf().fieldOf("results").forGetter(ProjectDefinition::results),
-            ProjectRequirement.field(ProjectRequirement.CODEC.listOf(), "requirements", List.of()).forGetter(ProjectDefinition::requirements)
+            ProjectRequirement.field(ProjectRequirement.CODEC.listOf(), "requirements", List.of()).forGetter(ProjectDefinition::requirements),
+            com.teammoeg.frostedresearch.knowledge.model.KnowledgeKey.strictOptionalField(ProjectAccess.CODEC, "access").forGetter(ProjectDefinition::access)
     ).apply(i, ProjectDefinition::new));
 
     public ProjectDefinition {
         results = List.copyOf(results);
         requirements = List.copyOf(requirements);
+    }
+
+    public ProjectDefinition(String title, String body, List<ResourceLocation> results, List<ProjectRequirement> requirements) {
+        this(title, body, results, requirements, Optional.empty());
     }
 
     public ProjectDefinition(String title, List<ResourceLocation> results) {

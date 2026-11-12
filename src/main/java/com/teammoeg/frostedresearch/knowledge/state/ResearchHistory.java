@@ -38,13 +38,14 @@ import java.util.stream.Collectors;
  * observations bound to each slot and {@code experiments} the number of finished experiments, all keyed by requirement
  * id. An abandoned run keeps its record but no progress.
  */
-public record ResearchHistory(UUID id, ResourceLocation project, KnowledgeKey idea, long time, boolean completed,
+public record ResearchHistory(UUID id, ResourceLocation project, List<KnowledgeKey> origins, long time, boolean completed,
                               List<KnowledgeKey> results, boolean abandoned, Map<String, List<Integer>> calculations,
                               Map<String, Map<String, Observation>> evidence, Map<String, Integer> experiments) {
     public static final Codec<ResearchHistory> CODEC = RecordCodecBuilder.create(i -> i.group(
             UUIDUtil.CODEC.fieldOf("id").forGetter(ResearchHistory::id),
             ResourceLocation.CODEC.fieldOf("project").forGetter(ResearchHistory::project),
-            KnowledgeKey.CODEC.fieldOf("idea").forGetter(ResearchHistory::idea),
+            KnowledgeKey.strictOptionalField(KnowledgeKey.CODEC.listOf(), "origins").forGetter(r -> Optional.of(r.origins())),
+            KnowledgeKey.CODEC.optionalFieldOf("idea").forGetter(r -> Optional.empty()),
             Codec.LONG.fieldOf("time").forGetter(ResearchHistory::time),
             Codec.BOOL.fieldOf("completed").forGetter(ResearchHistory::completed),
             KnowledgeKey.CODEC.listOf().fieldOf("results").forGetter(ResearchHistory::results),
@@ -52,7 +53,13 @@ public record ResearchHistory(UUID id, ResourceLocation project, KnowledgeKey id
             progress(Codec.INT.listOf(), "calculations").forGetter(ResearchHistory::calculations),
             progress(Codec.unboundedMap(Codec.STRING, Observation.CODEC), "evidence").forGetter(ResearchHistory::evidence),
             progress(Codec.INT, "experiments").forGetter(ResearchHistory::experiments)
-    ).apply(i, ResearchHistory::new));
+    ).apply(i, (id, project, origins, idea, time, completed, results, abandoned, calculations, evidence, experiments) ->
+        new ResearchHistory(id, project, origins.orElseGet(() -> legacyOrigins(idea)), time, completed, results, abandoned, calculations, evidence, experiments)));
+
+    private static List<KnowledgeKey> legacyOrigins(Optional<KnowledgeKey> idea) {
+        if (idea.isEmpty()) com.teammoeg.frostedresearch.FRMain.LOGGER.warn("Research run has no origins or legacy idea; preserving its progress with empty origins");
+        return idea.map(List::of).orElse(List.of());
+    }
 
     /**
      * Empty progress is not written. Present progress that fails to decode makes the whole run unreadable, so
@@ -64,6 +71,7 @@ public record ResearchHistory(UUID id, ResourceLocation project, KnowledgeKey id
     }
 
     public ResearchHistory {
+        origins = origins.stream().distinct().sorted(Comparator.comparing(KnowledgeKey::toString)).toList();
         results = List.copyOf(results);
         calculations = calculations.entrySet().stream()
                 .collect(Collectors.toUnmodifiableMap(Map.Entry::getKey, e -> List.copyOf(e.getValue())));
@@ -72,9 +80,13 @@ public record ResearchHistory(UUID id, ResourceLocation project, KnowledgeKey id
         experiments = Map.copyOf(experiments);
     }
 
-    public ResearchHistory(UUID id, ResourceLocation project, KnowledgeKey idea, long time, boolean completed,
+    public ResearchHistory(UUID id, ResourceLocation project, List<KnowledgeKey> origins, long time, boolean completed,
                            List<KnowledgeKey> results) {
-        this(id, project, idea, time, completed, results, false, Map.of(), Map.of(), Map.of());
+        this(id, project, origins, time, completed, results, false, Map.of(), Map.of(), Map.of());
+    }
+
+    public ResearchHistory(UUID id, ResourceLocation project, KnowledgeKey idea, long time, boolean completed, List<KnowledgeKey> results) {
+        this(id, project, List.of(idea), time, completed, results);
     }
 
     public boolean open() {
@@ -86,26 +98,26 @@ public record ResearchHistory(UUID id, ResourceLocation project, KnowledgeKey id
         List<Integer> levels = new ArrayList<>(next.getOrDefault(requirement, List.of()));
         levels.add(level);
         next.put(requirement, levels);
-        return new ResearchHistory(id, project, idea, time, completed, results, abandoned, next, evidence, experiments);
+        return new ResearchHistory(id, project, origins, time, completed, results, abandoned, next, evidence, experiments);
     }
 
     public ResearchHistory withEvidence(String requirement, Map<String, Observation> binding) {
         Map<String, Map<String, Observation>> next = new HashMap<>(evidence);
         next.put(requirement, binding);
-        return new ResearchHistory(id, project, idea, time, completed, results, abandoned, calculations, next, experiments);
+        return new ResearchHistory(id, project, origins, time, completed, results, abandoned, calculations, next, experiments);
     }
 
     public ResearchHistory withExperiment(String requirement) {
         Map<String, Integer> next = new HashMap<>(experiments);
         next.merge(requirement, 1, Integer::sum);
-        return new ResearchHistory(id, project, idea, time, completed, results, abandoned, calculations, evidence, next);
+        return new ResearchHistory(id, project, origins, time, completed, results, abandoned, calculations, evidence, next);
     }
 
     public ResearchHistory completedWith(List<KnowledgeKey> outputs) {
-        return new ResearchHistory(id, project, idea, time, true, outputs, abandoned, calculations, evidence, experiments);
+        return new ResearchHistory(id, project, origins, time, true, outputs, abandoned, calculations, evidence, experiments);
     }
 
     public ResearchHistory abandon() {
-        return new ResearchHistory(id, project, idea, time, completed, results, true, Map.of(), Map.of(), Map.of());
+        return new ResearchHistory(id, project, origins, time, completed, results, true, Map.of(), Map.of(), Map.of());
     }
 }

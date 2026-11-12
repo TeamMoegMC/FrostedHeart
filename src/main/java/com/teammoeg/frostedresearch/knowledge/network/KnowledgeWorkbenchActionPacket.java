@@ -231,12 +231,10 @@ public final class KnowledgeWorkbenchActionPacket implements CMessage {
             response.putString("message", "research.unchanged");
             return;
         }
-        KnowledgeKey origin = keys.isEmpty() ? service.state().archive().entries().keySet().stream()
-                .filter(key -> key.kind() == KnowledgeKey.Kind.IDEA)
-                .filter(key -> service.researchStartStatus(project, key) == KnowledgeService.Status.LEARNABLE)
-                .min(java.util.Comparator.comparing(KnowledgeKey::id)).orElse(null) : keys.get(0);
-        KnowledgeService.Status status = service.researchStartStatus(project, origin);
-        if (status == KnowledgeService.Status.LEARNABLE && service.startResearch(project, origin).isPresent())
+        var definition = com.teammoeg.frostedresearch.knowledge.definition.KnowledgeDefinitions.current().projects().get(project);
+        KnowledgeService.Status status = service.researchStartStatus(project);
+        if (definition != null && definition.requirements().isEmpty()) status = KnowledgeService.Status.REQUIREMENTS_UNMET;
+        if (status == KnowledgeService.Status.LEARNABLE && service.startResearch(project).isPresent())
             status = KnowledgeService.Status.SUCCESS;
         addResult(results, new OperationResult(status, null), service);
         response.putString("message", "research.start." + status.name().toLowerCase(java.util.Locale.ROOT));

@@ -1,0 +1,41 @@
+{
+  "title": "冶炼记录整理",
+  "body": "根据已有成果继续整理记录。",
+  "results": [
+    "example:followup_finding"
+  ],
+  "access": {
+    "conditions": {
+      "previous": {
+        "kind": "result",
+        "definition": "example:smelting_finding"
+      }
+    },
+    "discover_any": [
+      "previous"
+    ],
+    "start_all": [
+      "previous"
+    ],
+    "groups": [
+      {
+        "id": "mainline",
+        "reveal_any": [
+          "previous"
+        ],
+        "conditions": [
+          "previous"
+        ]
+      }
+    ]
+  },
+  "requirements": [
+    {
+      "id": "summarize",
+      "type": "calculation",
+      "title": "整理成果",
+      "level": 0,
+      "count": 1
+    }
+  ]
+}

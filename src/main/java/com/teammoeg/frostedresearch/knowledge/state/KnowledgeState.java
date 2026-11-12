@@ -38,7 +38,7 @@ public class KnowledgeState implements SpecialData {
     /**
      * Layout written by {@link #write()}; bump it together with a step in {@link #upgrade}.
      */
-    public static final int SCHEMA_VERSION = 2;
+    public static final int SCHEMA_VERSION = 3;
     public static final Codec<KnowledgeState> CODEC = CompoundTag.CODEC.xmap(KnowledgeState::read, KnowledgeState::write);
     private final KnowledgeArchive archive = new KnowledgeArchive();
     private final KnowledgeInbox inbox = new KnowledgeInbox();
@@ -301,11 +301,18 @@ public class KnowledgeState implements SpecialData {
 
     /**
      * The one place for stored-layout migrations: add steps here, oldest first, that rewrite a copy of {@code tag}
-     * from {@code version} up to {@link #SCHEMA_VERSION}. Version 2 is the first knowledge-system layout, so there are
-     * none yet. A missing or newer version is decoded as it is; whatever the current codecs cannot read is set aside.
+     * from {@code version} up to {@link #SCHEMA_VERSION}. Version 3 replaces the single idea with origins;
+     * unversioned legacy runs receive the same local conversion. Unreadable fields remain preserved by Reader.
      */
     private static CompoundTag upgrade(CompoundTag tag, int version) {
-        return tag;
+        CompoundTag copy = tag.copy();
+        for (Tag raw : copy.getList("research", Tag.TAG_COMPOUND)) {
+            CompoundTag run = (CompoundTag) raw;
+            if (!run.contains("origins") && run.contains("idea")) {
+                ListTag origins = new ListTag(); origins.add(run.get("idea").copy()); run.put("origins", origins);
+            }
+        }
+        return copy;
     }
 
     public static <T> Tag encode(Codec<T> codec, T value) {

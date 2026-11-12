@@ -29,3 +29,7 @@ session; they do not verify physical OS input delivery. Player controls are desc
 [observations and notes](../../docs/knowledge/observations-and-notes.md).
 
 For the shared thermal comparison baseline, run [`scripts/run-thermal-baseline.ps1`](../../scripts/run-thermal-baseline.ps1). The [baseline reference](../../docs/climate/thermal-validation-baseline.md) owns its scene list, recorded configuration, clocks and result interpretation.
+
+Project access checks use namespace `frostedresearch_m1` (`ProjectAccessGameTests`), with deliberate fixtures under
+`resources/m1-fixtures/`. They exercise disclosure, learned-only prerequisites, author exceptions, result/observation
+entry, legacy projects, observation uses, strict decoding and v2/v3 state round trips. Keep runtime directories under build.

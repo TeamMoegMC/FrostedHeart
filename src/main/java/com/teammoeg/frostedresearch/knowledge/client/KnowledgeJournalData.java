@@ -45,11 +45,11 @@ public final class KnowledgeJournalData {
         }
     }
 
-    public record Project(String id, Component title, List<KnowledgeKey> ideas, List<Component> outputTitles,
+    public record Project(String id, Component title, List<KnowledgeKey> sources, List<Component> outputTitles,
                           boolean active, boolean completed, Component body, List<Requirement> requirements,
-                          KnowledgeKey origin, String startStatus, String openRun) {
-        public Project(String id, Component title, List<KnowledgeKey> ideas, List<Component> outputTitles, boolean active, boolean completed) {
-            this(id, title, ideas, outputTitles, active, completed, Component.empty(), List.of(), null, "", "");
+                          String startStatus, String openRun, List<AccessCondition> accessConditions, List<AccessGroup> groups) {
+        public Project(String id, Component title, List<KnowledgeKey> sources, List<Component> outputTitles, boolean active, boolean completed) {
+            this(id, title, sources, outputTitles, active, completed, Component.empty(), List.of(), "", "", List.of(), List.of());
         }
     }
 
@@ -71,7 +71,7 @@ public final class KnowledgeJournalData {
     /**
      * A research run: {@code status} is open, completed or abandoned; open runs carry their requirement progress.
      */
-    public record Run(String id, String project, Component title, String status, KnowledgeKey idea, List<Requirement> requirements) {
+    public record Run(String id, String project, Component title, String status, List<KnowledgeKey> origins, List<Requirement> requirements) {
         public boolean open() {
             return status.equals("open");
         }
@@ -107,8 +107,7 @@ public final class KnowledgeJournalData {
         List<Run> runs = new ArrayList<>();
         for (Tag raw : snapshot.getList("research", Tag.TAG_COMPOUND)) {
             CompoundTag r = (CompoundTag) raw;
-            KnowledgeKey idea = key(r.get("idea"));
-            if (idea == null) continue;
+            List<KnowledgeKey> origins = keys(r.getList("origins", Tag.TAG_COMPOUND));
             List<KnowledgeKey> results = new ArrayList<>();
             for (Tag result : r.getList("results", Tag.TAG_COMPOUND)) {
                 var k = key(result);
@@ -116,10 +115,10 @@ public final class KnowledgeJournalData {
             }
             Component title = r.getString("title").isBlank() ? KnowledgePresentation.t("research") : KnowledgePresentation.text(r.getString("title"));
             boolean abandoned = r.getString("status").equals("abandoned");
-            relationships.add(new Relation(r.getString("id"), title, List.of(idea), List.copyOf(results),
-                    !abandoned && entry(idea) != null && entry(idea).active(), true, r.getString("project"), abandoned));
+            relationships.add(new Relation(r.getString("id"), title, origins, List.copyOf(results),
+                    !abandoned && r.getBoolean("active"), true, r.getString("project"), abandoned));
             String status = r.getString("status").isBlank() ? r.getBoolean("completed") ? "completed" : "open" : r.getString("status");
-            runs.add(new Run(r.getString("id"), r.getString("project"), title, status, idea, requirements(r.getList("requirements", Tag.TAG_COMPOUND))));
+            runs.add(new Run(r.getString("id"), r.getString("project"), title, status, origins, requirements(r.getList("requirements", Tag.TAG_COMPOUND))));
         }
         relations = List.copyOf(relationships);
         this.runs = List.copyOf(runs);
@@ -127,7 +126,7 @@ public final class KnowledgeJournalData {
         for (Tag raw : snapshot.getList("projects", Tag.TAG_COMPOUND)) {
             CompoundTag project = (CompoundTag) raw;
             List<KnowledgeKey> origins = new ArrayList<>();
-            for (Tag origin : project.getList("ideas", Tag.TAG_COMPOUND)) {
+            for (Tag origin : project.getList("sources", Tag.TAG_COMPOUND)) {
                 var key = key(origin);
                 if (key != null) origins.add(key);
             }
@@ -137,7 +136,7 @@ public final class KnowledgeJournalData {
             projects.add(new Project(project.getString("id"), KnowledgePresentation.text(project.getString("title")), List.copyOf(origins),
                     List.copyOf(outputs), project.getBoolean("active"), project.getBoolean("completed"),
                     KnowledgePresentation.text(project.getString("body")), requirements(project.getList("requirements", Tag.TAG_COMPOUND)),
-                    key(project.get("origin")), project.getString("start_status"), project.getString("open_run")));
+                    project.getString("start_status"), project.getString("open_run"), accessConditions(project), accessGroups(project)));
         }
         this.projects = List.copyOf(projects);
         Map<String, Component> hints = new LinkedHashMap<>();
@@ -146,6 +145,32 @@ public final class KnowledgeJournalData {
             hints.putIfAbsent(text.getString().strip(), text);
         }
         this.hints = List.copyOf(hints.values());
+    }
+
+    public record AccessCondition(String id, boolean required, boolean hidden, Component title, Component hint,
+            boolean met, KnowledgeKey key, List<KnowledgeKey> inboxKeys) {}
+    public record AccessGroup(String id, boolean hidden, Component hint, List<String> conditions) {}
+    private static List<KnowledgeKey> keys(ListTag list) {
+        return list.stream().map(KnowledgeJournalData::key).filter(Objects::nonNull).toList();
+    }
+    private static List<AccessCondition> accessConditions(CompoundTag project) {
+        List<AccessCondition> rows = new ArrayList<>();
+        for (Tag raw : project.getList("access_conditions", Tag.TAG_COMPOUND)) {
+            CompoundTag t = (CompoundTag) raw;
+            rows.add(new AccessCondition(t.getString("id"), t.getBoolean("required"), t.getBoolean("hidden"),
+                KnowledgePresentation.text(t.getString("title")), KnowledgePresentation.text(t.getString("hint")),
+                t.getBoolean("met"), key(t.get("key")), keys(t.getList("inbox_keys", Tag.TAG_COMPOUND))));
+        }
+        return List.copyOf(rows);
+    }
+    private static List<AccessGroup> accessGroups(CompoundTag project) {
+        List<AccessGroup> groups = new ArrayList<>();
+        for (Tag raw : project.getList("groups", Tag.TAG_COMPOUND)) {
+            CompoundTag t = (CompoundTag) raw;
+            groups.add(new AccessGroup(t.getString("id"), t.getBoolean("hidden"), KnowledgePresentation.text(t.getString("unknown_hint")),
+                t.getList("conditions", Tag.TAG_STRING).stream().map(Tag::getAsString).toList()));
+        }
+        return List.copyOf(groups);
     }
 
     private static List<Requirement> requirements(ListTag list) {

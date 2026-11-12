@@ -105,6 +105,13 @@ public final class KnowledgeDefinitions {
         s.projects.forEach((id, p) -> {
             if (p.results().isEmpty()) errors.add(id + ": project must produce at least one result");
             for (var result : p.results()) if (!resultExists(s, result)) errors.add(id + ": missing result " + result);
+            p.access().ifPresent(access -> {
+                access.validate().forEach(error -> errors.add(id + ": access: " + error));
+                access.conditions().values().forEach(c -> c.definition().ifPresent(def -> {
+                    if (c.kind() == KnowledgeKey.Kind.IDEA ? !s.ideas.containsKey(def) : !resultExists(s, def))
+                        errors.add(id + ": access: missing knowledge " + def);
+                }));
+            });
             Set<String> requirements = new HashSet<>();
             for (var requirement : p.requirements()) {
                 if (!requirements.add(requirement.id())) errors.add(id + ": duplicate requirement id " + requirement.id());
@@ -197,6 +204,8 @@ public final class KnowledgeDefinitions {
                     .map(LinkRule::pattern).forEach(patterns::add);
             projects.values().forEach(project -> project.requirements().stream()
                     .filter(r -> r.type() == ProjectRequirement.Type.EVIDENCE).map(ProjectRequirement::pattern).forEach(patterns::add));
+            projects.values().forEach(project -> project.access().ifPresent(access -> access.conditions().values().stream()
+                .filter(c -> c.kind() == KnowledgeKey.Kind.OBSERVATION).map(KnowledgeCondition::pattern).forEach(patterns::add)));
             this.observationPatterns = List.copyOf(patterns);
         }
 

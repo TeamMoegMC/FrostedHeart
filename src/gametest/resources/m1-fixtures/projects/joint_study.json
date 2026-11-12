@@ -1,0 +1,108 @@
+{
+  "title": "材料研究",
+  "body": "汇集不同思路，再整理实验记录。",
+  "results": [
+    "example:joint_finding"
+  ],
+  "access": {
+    "conditions": {
+      "i": {
+        "kind": "idea",
+        "definition": "example:i"
+      },
+      "j": {
+        "kind": "idea",
+        "definition": "example:j"
+      },
+      "a": {
+        "kind": "observation",
+        "observation_type": "item",
+        "title": "检视粘土球",
+        "conditions": [
+          {
+            "field": "object",
+            "operator": "eq",
+            "value": {
+              "state": "known",
+              "type": "string",
+              "text": "minecraft:clay_ball"
+            }
+          }
+        ]
+      },
+      "b": {
+        "kind": "observation",
+        "observation_type": "item",
+        "title": "检视沙",
+        "conditions": [
+          {
+            "field": "object",
+            "operator": "eq",
+            "value": {
+              "state": "known",
+              "type": "string",
+              "text": "minecraft:sand"
+            }
+          }
+        ]
+      },
+      "c": {
+        "kind": "observation",
+        "observation_type": "item",
+        "title": "检视木炭",
+        "conditions": [
+          {
+            "field": "object",
+            "operator": "eq",
+            "value": {
+              "state": "known",
+              "type": "string",
+              "text": "minecraft:charcoal"
+            }
+          }
+        ]
+      }
+    },
+    "start_all": [
+      "i",
+      "j",
+      "a",
+      "b",
+      "c"
+    ],
+    "groups": [
+      {
+        "id": "from_i",
+        "reveal_any": [
+          "i"
+        ],
+        "conditions": [
+          "i",
+          "a",
+          "b"
+        ]
+      },
+      {
+        "id": "from_j",
+        "reveal_any": [
+          "j"
+        ],
+        "conditions": [
+          "j",
+          "b",
+          "c"
+        ],
+        "unknown_hint": "还需要另一种思路。"
+      }
+    ]
+  },
+  "requirements": [
+    {
+      "id": "tabulate",
+      "type": "calculation",
+      "title": "整理记录",
+      "level": 0,
+      "count": 1
+    }
+  ]
+}

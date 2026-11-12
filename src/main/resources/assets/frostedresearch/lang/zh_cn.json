@@ -672,5 +672,13 @@
   "knowledge.knowledge_example.links.automation.hint": "传讯与炉火之间，也许还有一条路。",
   "knowledge.knowledge_example.links.feedback.hint": "沿着传讯的路线，回头看看最初的拉杆。",
   "knowledge.knowledge_example.links.materials_revisited.hint": "带着炉火与支撑的心得，再看最初的材料。",
-  "knowledge.knowledge_example.links.mechanisms_revisited.hint": "回声札记也许能让你重新理解拨杆。"
+  "knowledge.knowledge_example.links.mechanisms_revisited.hint": "回声札记也许能让你重新理解拨杆。",
+  "gui.frostedresearch.journal.research.access": "开始所需知识",
+  "gui.frostedresearch.journal.research.unknown_knowledge": "未知知识",
+  "gui.frostedresearch.journal.research.reference": "（相关参考，不影响开始）",
+  "gui.frostedresearch.journal.research.inbox_available": "查看已收到的知识",
+  "gui.frostedresearch.journal.research.access_group": "来源关联：第 %s 项",
+  "gui.frostedresearch.journal.research.state.needs_knowledge": "尚缺开始知识；未知要求需要继续探索",
+  "gui.frostedresearch.journal.research.state.completable": "任务已齐，可完成",
+  "gui.frostedresearch.journal.graph.related_sources": "发现来源"
 }

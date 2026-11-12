@@ -1,7 +1,7 @@
 # 观察、实物检索与研究笔记
 
 - Status: `Current`
-- Last verified: `2026-11-11`（本轮源码核对手持观察遮罩；其余行为沿用 2026-11-09 验证，客户端实际操作验收另见开发记录）
+- Last verified: `2026-11-12`（M1 观察用途核对；手持遮罩实际操作验收仍另列）
 - Scope: 世界、手持与容器观察、放大镜、间接记录预览、研究笔记身份和物品检索；不包含后续研究项目的证据提交规则。
 - Code anchors: [
   `ObservationSampling`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/observation/ObservationSampling.java)、[
@@ -117,3 +117,13 @@ UUID。方法本身不填充历史记录的缺失信息，也不自动收入来�
 观察聚焦与记录预览使用 Chorda `PrimaryLayer` / `CUIScreenWrapper`，纸页和按钮框沿用研究 UI 素材。按键提示读取实际
 KeyMapping，并以物理按住状态驱动手势。主页面只显示物件译名、合并日期/地点和少量环境描述，精确位置与温度放入可展开详情，不显示原始
 UUID、游戏刻或 NBT。笔记物品名也使用可读的知识或物件名称。界面细节与缓存策略以 [workbench.md](workbench.md) 为准。
+
+## 项目知识条件与任务观察的边界（M1）
+
+`KnowledgeCondition.pattern()` 为一项存在性条件提供单槽用途。Snapshot 遍历所有项目的 access.conditions，
+不按项目可见性过滤；隐藏的后续用途仍可使观察入档并保留有意义的差异。同一观察可同时满足不同前置，
+无需提交多份。原有 evidence 多槽、distinct 与跨字段规则继续控制独立证据。
+
+完成观察动作不等于知识已入档；任务使用的观察副本也不授予知识。以后阶段系统应从有效采样动作读取任务上下文，
+不能仅监听 learn 成功；本阶段未新增任务事件总线或阶段加载器。后续系统须在加载定义时注册全部潜在观察用途，
+可复用 KnowledgeCondition.pattern 或已有 registerObservationUse，不等到阶段解锁才登记。

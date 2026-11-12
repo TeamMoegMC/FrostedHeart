@@ -317,27 +317,76 @@ public final class KnowledgeService {
     }
 
     /**
-     * Whether the team can begin this project from this idea now: {@code LEARNABLE}, or the reason it cannot. A team
+     * Whether the team can begin this project from its current knowledge: {@code LEARNABLE}, or the reason it cannot. A team
      * has at most one open run per project, and a completed project starts again only while one of its results is
      * missing from the archive.
      */
+    public Optional<KnowledgeKey> matchKnowledge(com.teammoeg.frostedresearch.knowledge.definition.KnowledgeCondition condition) {
+        if (condition.kind() != KnowledgeKey.Kind.OBSERVATION) {
+            return condition.definition().map(id -> new KnowledgeKey(condition.kind(), id.toString())).filter(this::isActive);
+        }
+        return state.archive().entries().values().stream().map(KnowledgeEntry::element)
+            .filter(e -> e.key().kind() == KnowledgeKey.Kind.OBSERVATION && condition.matches(e) && isActive(e.key())).map(KnowledgeElement::key)
+            .sorted(Comparator.comparing(KnowledgeKey::toString)).findFirst();
+    }
+
+    public record ProjectAccessEvaluation(boolean discovered, Map<String, KnowledgeKey> witnesses,
+            Set<String> revealedGroups, Set<String> revealedConditions, List<KnowledgeKey> sources,
+            List<KnowledgeKey> origins, Status startStatus) {}
+
+    public ProjectAccessEvaluation projectAccess(ResourceLocation project) {
+        var definition = KnowledgeDefinitions.current().projects().get(project);
+        Map<String, KnowledgeKey> witnesses = new LinkedHashMap<>();
+        Set<String> groups = new HashSet<>(), revealed = new HashSet<>();
+        List<KnowledgeKey> sources = new ArrayList<>(), origins = new ArrayList<>();
+        boolean discovered = false, met = false;
+        if (definition != null && definition.access().isPresent()) {
+            var access = definition.access().get();
+            access.conditions().forEach((name, condition) -> matchKnowledge(condition).ifPresent(key -> witnesses.put(name, key)));
+            for (String name : access.discovery()) if (witnesses.containsKey(name)) sources.add(witnesses.get(name));
+            discovered = !sources.isEmpty();
+            met = access.startAll().stream().allMatch(witnesses::containsKey);
+            for (var group : access.groups()) if (group.revealAny().stream().anyMatch(witnesses::containsKey)) {
+                groups.add(group.id()); revealed.addAll(group.conditions());
+            }
+            sources.removeIf(key -> revealed.stream().noneMatch(n -> key.equals(witnesses.get(n))));
+            origins.addAll(access.discovery().stream().map(witnesses::get).filter(Objects::nonNull).toList());
+            origins.addAll(access.startAll().stream().map(witnesses::get).filter(Objects::nonNull).toList());
+        } else if (definition != null) {
+            KnowledgeDefinitions.current().ideas().entrySet().stream().filter(e -> e.getValue().projects().contains(project))
+                .map(e -> KnowledgeKey.idea(e.getKey())).filter(this::isActive).sorted(Comparator.comparing(KnowledgeKey::id)).forEach(sources::add);
+            discovered = !sources.isEmpty(); met = discovered;
+            if (discovered) origins.add(sources.get(0));
+        }
+        Status status = definition == null ? Status.DEFINITION_UNAVAILABLE : openRun(project).isPresent() ? Status.ACTIVE
+            : state.research().values().stream().anyMatch(run -> run.completed() && run.project().equals(project))
+                && definition.results().stream().allMatch(result -> state.archive().contains(KnowledgeKey.result(result))) ? Status.ALREADY_OWNED
+            : !discovered ? Status.NOT_FOUND : !met ? Status.NOT_UNDERSTOOD : Status.LEARNABLE;
+        return new ProjectAccessEvaluation(discovered, Map.copyOf(witnesses), Set.copyOf(groups), Set.copyOf(revealed),
+            sources.stream().distinct().toList(), origins.stream().distinct().sorted(Comparator.comparing(KnowledgeKey::toString)).toList(), status);
+    }
+
+    public Status researchStartStatus(ResourceLocation project) { return projectAccess(project).startStatus(); }
+
     public Status researchStartStatus(ResourceLocation project, KnowledgeKey idea) {
         var definition = KnowledgeDefinitions.current().projects().get(project);
-        if (definition == null) return Status.DEFINITION_UNAVAILABLE;
-        if (idea == null || idea.kind() != KnowledgeKey.Kind.IDEA || !query(idea).active()) return Status.NOT_UNDERSTOOD;
-        var origin = KnowledgeDefinitions.current().ideas().get(idea.definitionId());
-        if (origin == null || !origin.projects().contains(project)) return Status.INVALID_INPUT;
-        if (openRun(project).isPresent()) return Status.ACTIVE;
-        boolean completed = state.research().values().stream().anyMatch(run -> run.completed() && run.project().equals(project));
-        if (completed && definition.results().stream().allMatch(result -> state.archive().contains(KnowledgeKey.result(result))))
-            return Status.ALREADY_OWNED;
-        return Status.LEARNABLE;
+        if (definition != null && definition.access().isEmpty() && idea != null) {
+            if (idea.kind() != KnowledgeKey.Kind.IDEA || !isActive(idea)) return Status.NOT_UNDERSTOOD;
+            var origin = KnowledgeDefinitions.current().ideas().get(idea.definitionId());
+            if (origin == null || !origin.projects().contains(project)) return Status.INVALID_INPUT;
+        }
+        return researchStartStatus(project);
     }
+
+    public Optional<UUID> startResearch(ResourceLocation project) { return startResearch(project, null); }
 
     public Optional<UUID> startResearch(ResourceLocation project, KnowledgeKey idea) {
         if (researchStartStatus(project, idea) != Status.LEARNABLE) return Optional.empty();
+        var evaluation = projectAccess(project);
+        var definition = KnowledgeDefinitions.current().projects().get(project);
+        List<KnowledgeKey> origins = definition.access().isEmpty() && idea != null ? List.of(idea) : evaluation.origins();
         UUID id = UUID.randomUUID();
-        state.recordResearch(new ResearchHistory(id, project, idea, time, false, List.of()));
+        state.recordResearch(new ResearchHistory(id, project, origins, time, false, List.of()));
         notifyChanged();
         return Optional.of(id);
     }

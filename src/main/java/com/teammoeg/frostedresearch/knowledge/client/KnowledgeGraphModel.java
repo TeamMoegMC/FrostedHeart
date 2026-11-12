@@ -76,7 +76,7 @@ public final class KnowledgeGraphModel {
             String id = projectId(project.id());
             seeds.put(id, new Seed(id, Kind.PROJECT, project.title(), new ItemStack(Items.WRITABLE_BOOK), null,
                     null, project, null, project.active(), project.completed()));
-            for (KnowledgeKey origin : project.ideas()) {
+            for (KnowledgeKey origin : project.sources()) {
                 String from = addKnowledge(seeds, data, origin, history);
                 if (from == null) continue;
                 boolean actual = actualOrigins.contains(new Origin(project.id(), origin));
