@@ -2,7 +2,7 @@
 
 - Time: `2026-11-11 23:38:07 +08:00`
 - Authors: `项目所有者提出玩法设计；Codex（OpenAI GPT-6 Astra）整理计划；GPT-6 Luna 协助只读核对实现。`
-- Status: `in-progress`：2026-11-12 开展 M0，已恢复完整测试编译并通过研究定向基线；M0 材料可达性与客户端/人工验收仍有待办，M1–M7 未实施。下文“建议默认规则”不是已经确认的玩法。
+- Status: `in-progress`：2026-11-12 M0 基线已交接，M1-A 接口方案完成，M1-B 实现进行中；材料可达性与实际游玩待办随后续阶段验证，M2–M7 尚待实施。下文“建议默认规则”不是已经确认的玩法。
 - Scope: FrostedHeart 的知识、研究、实验、界面和存档；TheWinterRescue 的研究内容、配方、引导及旧进度衔接。
 - Related: [改版要点](2026-11-11_22-20-43_research-system-architecture-revision.md)、[讨论记录](../discussion/2026-11-08_23-34-23_research-design-revision-draft.md)、[原始设计，只读](../design/knowledge_research.md)、[知识系统](../docs/knowledge/README.md)、[现有研究系统](../docs/research/README.md)。
 
@@ -91,6 +91,8 @@
 **完成条件：** 三项目各有从现有生存进度进入的材料路线；基本编译/测试入口可用；第三方设备接口的可行性有源码或实际验证依据。尚待细化的参数列在内容卡上，不用占位指令冒充获取路线。
 
 ## 6. M1：知识条件、项目发现与开始
+
+2026-11-12：[接口决定与验收](2026-11-12_13-02-00_research-m1-interface-decisions.md)已完成；当前进入实现。对话、回退点与后续进度见[开发协调记录](2026-11-12_13-00-00_research-development-coordination.md)。
 
 ### 数据与判定
 
