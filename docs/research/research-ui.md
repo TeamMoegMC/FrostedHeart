@@ -1,11 +1,13 @@
 # Research Progress And UI
 
 - Status: `Current`
-- Last verified: `2026-11-05` (native labels, rigid panning over 320 rendered frames and 397,120 translated text pixels)
+- Last verified: `2026-11-13` (shared project frame source review; native-label and rigid-panning visual evidence remains from November 5; shared-frame visual acceptance pending)
 - Scope: Implemented research completion semantics, responsive drawing-desk archive, continuous graph zoom, readable localized names, project dialog, clue routing, and refresh boundaries
 - Code anchors: [`Research`](../../src/main/java/com/teammoeg/frostedresearch/research/Research.java), [`ResearchData`](../../src/main/java/com/teammoeg/frostedresearch/data/ResearchData.java), [`TeamResearchData`](../../src/main/java/com/teammoeg/frostedresearch/data/TeamResearchData.java), [`DrawDeskScreen`](../../src/main/java/com/teammoeg/frostedresearch/gui/drawdesk/DrawDeskScreen.java), [`ResearchArchiveLayer`](../../src/main/java/com/teammoeg/frostedresearch/gui/archive/ResearchArchiveLayer.java), [`ResearchArchiveViewCache`](../../src/main/java/com/teammoeg/frostedresearch/gui/archive/ResearchArchiveViewCache.java), [`ResearchGraphViewport`](../../src/main/java/com/teammoeg/frostedresearch/gui/archive/ResearchGraphViewport.java), [`ResearchProjectWorkspace`](../../src/main/java/com/teammoeg/frostedresearch/gui/archive/ResearchProjectWorkspace.java), [`ResearchGraphLayoutEngine`](../../src/main/java/com/teammoeg/frostedresearch/gui/archive/graph/ResearchGraphLayoutEngine.java), [`CIconBatch`](../../src/main/java/com/teammoeg/chorda/client/icon/CIconBatch.java), `PanZoomViewport`, `UILayer`
 
 ## Current Player Surface
+
+The legacy workspace and [datapack project details](../knowledge/workbench.md) now share `ResearchProjectFrame.drawPanel`, `drawTab`, `HEADER_HEIGHT = 35` and `TAB_HEIGHT = 20`. This reuses the original `TechIcons.DIALOG` artwork and tab styling without adapting new staged projects into legacy `Research` objects. The legacy dialog retains its detail/theory/experiment semantics, fixed preferred size, graph navigation, control packets and progress model. New projects use their own description/knowledge/stage-task tabs in the larger journal-sized area.
 
 `DrawDeskScreen` keeps independent drawing-desk and research archive CUI layers, plus the lazily
 created [knowledge journal layer](../knowledge/workbench.md). In drawing-desk mode, its root remains `387 x 203`;

@@ -53,8 +53,8 @@ import java.util.Objects;
 
 /** Project detail, theory, and experiment workspace shown beside or over the graph. */
 final class ResearchProjectWorkspace extends UIElement {
-    private static final int HEADER_HEIGHT = 35;
-    private static final int TAB_HEIGHT = 20;
+    private static final int HEADER_HEIGHT = ResearchProjectFrame.HEADER_HEIGHT;
+    private static final int TAB_HEIGHT = ResearchProjectFrame.TAB_HEIGHT;
     private static final int FOOTER_HEIGHT = 27;
     private static final int CLUE_ROW_HEIGHT = 43;
     private static final ResearchWorkspaceState.ProjectTab[] PROJECT_TABS =
@@ -167,7 +167,7 @@ final class ResearchProjectWorkspace extends UIElement {
         graphics.fill(archiveX, archiveY,
                 archiveX + archive.getWidth(), archiveY + archive.getHeight(),
                 0x990C0D0C);
-        TechIcons.DIALOG.draw(graphics, x, y, width, height);
+        ResearchProjectFrame.drawPanel(graphics, x, y, width, height);
 
         if (research == null) {
             graphics.drawString(getFont(), SELECT_PROJECT,
@@ -220,12 +220,9 @@ final class ResearchProjectWorkspace extends UIElement {
         for (int i = 0; i < PROJECT_TABS.length; i++) {
             int tabX = x + i * tabWidth;
             boolean selected = PROJECT_TABS[i] == state.projectTab();
-            graphics.fill(tabX, y, i == PROJECT_TABS.length - 1 ? x + width : tabX + tabWidth,
-                    y + TAB_HEIGHT,
-                    selected ? ResearchArchiveLayer.COLOR_TEAL : ResearchArchiveLayer.COLOR_PAPER_DARK);
             TabRenderData tab = tabs.get(i);
-            graphics.drawString(getFont(), tab.title, tabX + tab.xOffset, y + 6,
-                    selected ? 0xFFF8F1DE : ResearchArchiveLayer.COLOR_INK, false);
+            ResearchProjectFrame.drawTab(graphics, getFont(), tab.title, tabX, y,
+                    i == PROJECT_TABS.length - 1 ? width - i * tabWidth : tabWidth, selected);
         }
     }
 

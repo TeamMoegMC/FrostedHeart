@@ -26,6 +26,7 @@ import com.teammoeg.chorda.client.cui.widgets.TextBox;
 import com.teammoeg.frostedresearch.FRNetwork;
 import com.teammoeg.frostedresearch.blocks.DrawingDeskTileEntity;
 import com.teammoeg.frostedresearch.gui.TechIcons;
+import com.teammoeg.frostedresearch.gui.archive.ResearchProjectFrame;
 import com.teammoeg.frostedresearch.gui.drawdesk.*;
 import com.teammoeg.frostedresearch.knowledge.client.ui.*;
 import com.teammoeg.frostedresearch.knowledge.model.*;
@@ -72,6 +73,7 @@ public final class KnowledgeLayer extends UILayer {
     private KnowledgeKey focused;
     private String focusedProject;
     private boolean projectDetails, chooseOpeningPage;
+    private int projectTab;
     private final Map<String,String> selectedRuns=new HashMap<>();
     private int hintIndex = -1, candidateIndex, requirementIndex;
     private boolean organize, details, history, filterOpen;
@@ -219,16 +221,29 @@ public final class KnowledgeLayer extends UILayer {
             buildTools();
             return;
         }
-        buildHeader();
         if (page == Page.RESEARCH && projectDetails) {
-            reading.setPosAndSize(18, layout.header() + 38, getWidth() - 36,
-                    Math.max(25, layout.bottom() - layout.header() - 45));
+            var project = researchProject(focusedProject);
+            var frame = new ResearchProjectFrame(this, project == null ? t("page.research") : project.title(),
+                    project == null ? Component.empty() : researchState(project),
+                    List.of(t("research.tab.description"), t("research.tab.knowledge"), t("research.tab.tasks")),
+                    projectTab, tab -> {
+                        projectTab = tab;
+                        mode = Mode.READ;
+                        airflowOpen = false;
+                        rebuild();
+                    }, this::closeProjectDetails);
+            frame.setPosAndSize(0, 0, getWidth(), getHeight());
+            add(frame);
+            int contentTop = ResearchProjectFrame.CONTENT_TOP + 8;
+            reading.setPosAndSize(12, contentTop, getWidth() - 24,
+                    Math.max(25, getHeight() - 14 - contentTop));
             reading.color(INK);
             reading.setVisible(true);
             add(reading);
-            buildResearchReading(18, getWidth() - 36, layout.bottom());
+            buildResearchReading(12, getWidth() - 24, getHeight() - 10);
             return;
         }
+        buildHeader();
         if (page == Page.RELATIONS) {
             buildGraphPage();
             return;
@@ -514,17 +529,12 @@ public final class KnowledgeLayer extends UILayer {
             button(x, bottom - 23, w, 20, t("research.details"), false, () -> {
                 chooseOpeningPage = false;
                 projectDetails = true;
+                projectTab = 0;
                 rebuild();
             });
             reading.setHeight(Math.max(20, reading.getHeight() - 23));
             return;
         }
-        button(x + w - 76, layout.header() + 8, 76, 19, t("research.back_to_list"), true, () -> {
-            projectDetails = false;
-            airflowOpen = false;
-            mode = Mode.READ;
-            rebuild();
-        });
         if (project.startStatus().equals("LEGACY_COMPLETED")) {
             reading.text(List.of(Component.translatable("knowledge.frostedresearch.research.legacy_completed"), Component.translatable("knowledge.frostedresearch.research.legacy_completed_explain")));
             return;
@@ -554,12 +564,12 @@ public final class KnowledgeLayer extends UILayer {
         List<Component> paragraphs = new ArrayList<>();
         long standby=data.runs.stream().filter(r -> r.project().equals(project.id()) && r.status().equals("standby")).count();
         if(standby>0)paragraphs.add(t("research.standby",standby));
-        if (!project.body().getString().isBlank()) paragraphs.add(project.body());
-        if (!project.outputTitles().isEmpty()) {
+        if (projectTab == 0) paragraphs.add(project.body().getString().isBlank() ? researchState(project) : project.body());
+        if (projectTab == 0 && !project.outputTitles().isEmpty()) {
             paragraphs.add(t("graph.expected_results"));
             paragraphs.addAll(project.outputTitles());
         }
-        if (!project.accessConditions().isEmpty()) {
+        if (projectTab == 1 && !project.accessConditions().isEmpty()) {
             paragraphs.add(t("research.access"));
             Map<String, Integer> rowNumbers = new LinkedHashMap<>();
             project.accessConditions().forEach(row -> rowNumbers.put(row.id(), rowNumbers.size() + 1));
@@ -577,7 +587,7 @@ public final class KnowledgeLayer extends UILayer {
         }
         var requirements = run != null ? run.requirements() : project.requirements();
         var displayed=run!=null ? run : data.runs.stream().filter(r -> r.project().equals(project.id()) && r.status().equals("completed")).reduce((a,b) -> b).orElse(null);
-        if(displayed!=null && !displayed.stage().id().isBlank()) {
+        if(projectTab == 2 && displayed!=null && !displayed.stage().id().isBlank()) {
             paragraphs.add(displayed.stage().title());paragraphs.add(displayed.stage().objective());paragraphs.add(displayed.stage().method());
             paragraphs.addAll(displayed.stage().conclusions());
             if(run!=null && !run.stage().available()) paragraphs.add(t("research.stage_unavailable"));
@@ -588,8 +598,9 @@ public final class KnowledgeLayer extends UILayer {
                     .map(r -> r.getResultItem(level.registryAccess())).filter(stack -> !stack.isEmpty()).ifPresent(stack -> paragraphs.add(stack.getHoverName()));
             }
         }
-        if (requirements.isEmpty()) paragraphs.add(t(project.staged() ? project.completed() ? "research.state.completed" : run==null ? "research.stage_after_start" : "research.stage_ready" : "research.no_steps"));
-        else {
+        if (projectTab == 1 && project.accessConditions().isEmpty()) paragraphs.add(t("research.access_none"));
+        if (projectTab == 2 && requirements.isEmpty()) paragraphs.add(t(project.staged() ? project.completed() ? "research.state.completed" : run==null ? "research.stage_after_start" : "research.stage_ready" : "research.no_steps"));
+        else if (projectTab == 2) {
             paragraphs.add(t("research.requirements"));
             requirementIndex = Math.floorMod(requirementIndex, requirements.size());
             for (int i = 0; i < requirements.size(); i++)
@@ -611,7 +622,12 @@ public final class KnowledgeLayer extends UILayer {
             reading.setHeight(Math.max(20, reading.getHeight() - (inboxKey.isPresent() ? 45 : 21)));
             return;
         }
-        if (!requirements.isEmpty()) {
+        if (projectTab != 2) {
+            button(x, bottom - 45, w, 19, t("research.tab.tasks"), true, () -> {
+                projectTab = 2;
+                rebuild();
+            });
+        } else if (!requirements.isEmpty()) {
             var requirement = requirements.get(requirementIndex);
             int ax = x, aw = w;
             if (requirements.size() > 1) {
@@ -766,6 +782,7 @@ public final class KnowledgeLayer extends UILayer {
         switchPage(Page.RESEARCH);
         focusedProject = project;
         projectDetails = true;
+        projectTab = 0;
         rowsDirty = true;
         rebuild();
     }
@@ -987,6 +1004,12 @@ public final class KnowledgeLayer extends UILayer {
         rebuild();
     }
 
+    private void closeProjectDetails() {
+        projectDetails = airflowOpen = false;
+        mode = Mode.READ;
+        rebuild();
+    }
+
     public boolean goBack() {
         chooseOpeningPage = false;
         if (nodeSheet.isVisible()) {
@@ -1012,9 +1035,7 @@ public final class KnowledgeLayer extends UILayer {
             return true;
         }
         if (projectDetails) {
-            projectDetails = false;
-            airflowOpen = false;
-            rebuild();
+            closeProjectDetails();
             return true;
         }
         if (!selected.isEmpty()) {
@@ -1067,6 +1088,7 @@ public final class KnowledgeLayer extends UILayer {
     }
 
     public void receiveReply(CompoundTag payload) {
+        if (projectDetails && payload.getString("message").equals("research.start.success")) projectTab = 2;
         if(payload.contains("airflow")) { airflowBoard=payload.getCompound("airflow").copy();rebuild();return; }
         if (payload.contains("link_state")) {
             linkState = payload.getString("link_state"); linkElapsed = payload.getInt("link_elapsed"); linkDuration = payload.getInt("link_duration");
@@ -1195,6 +1217,7 @@ public final class KnowledgeLayer extends UILayer {
 
     @Override
     public void drawBackground(GuiGraphics g, int x, int y, int w, int h, RenderingHint hint) {
+        if (page == Page.RESEARCH && projectDetails && mode != Mode.TOOLS) return;
         drawPaper(g, x, y, w, h);
         if (mode == Mode.TOOLS) {
             DESK_INVENTORY.draw(g, x, y, 140, 203);
@@ -1210,14 +1233,13 @@ public final class KnowledgeLayer extends UILayer {
         g.drawString(getFont(), t("title"), x + 18, y + 17, INK, false);
         rule(g, x + 14, y + layout.header() + 1, w - 28);
         if (page == Page.RELATIONS) return;
-        boolean fullProject = page == Page.RESEARCH && projectDetails;
-        if (!fullProject) g.fill(x + layout.rightX() - 9, y + layout.header() + 8, x + layout.rightX() - 8, y + layout.bottom(), PAPER_DARK);
+        g.fill(x + layout.rightX() - 9, y + layout.header() + 8, x + layout.rightX() - 8, y + layout.bottom(), PAPER_DARK);
         var project = page == Page.RESEARCH ? researchProject(focusedProject) : null;
         Component title = mode == Mode.CANDIDATES ? t("link.possibilities") : mode == Mode.DELETE ? t("delete.title") : mode == Mode.THINK ? t("think")
                 : mode == Mode.ABANDON ? t("research.abandon.title") : page == Page.HINTS ? t("page.hints")
                 : page == Page.RESEARCH ? project == null ? t("page.research") : project.title()
                 : data.entry(focused) == null ? t("reading.title") : data.entry(focused).title();
-        g.drawString(getFont(), Language.getInstance().getVisualOrder(getFont().substrByWidth(title, fullProject ? w - 122 : layout.rightWidth())), x + (fullProject ? 18 : layout.rightX()), y + layout.header() + 12, INK, false);
+        g.drawString(getFont(), Language.getInstance().getVisualOrder(getFont().substrByWidth(title, layout.rightWidth())), x + layout.rightX(), y + layout.header() + 12, INK, false);
     }
 
     @Override

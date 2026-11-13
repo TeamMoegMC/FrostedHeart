@@ -773,5 +773,9 @@
   "gui.frostedresearch.furnace.choose_target": "有多份进行中记录，请点击选择本炉任务目标。",
   "gui.frostedresearch.experiment.message.standby": "已有有效完成成果，本份备用进度暂停并保留。",
   "gui.frostedresearch.journal.research.details": "查看研究详情",
-  "gui.frostedresearch.journal.research.back_to_list": "返回研究列表"
+  "gui.frostedresearch.journal.research.back_to_list": "返回研究列表",
+  "gui.frostedresearch.journal.research.tab.description": "研究说明",
+  "gui.frostedresearch.journal.research.tab.knowledge": "前置知识",
+  "gui.frostedresearch.journal.research.tab.tasks": "阶段任务",
+  "gui.frostedresearch.journal.research.access_none": "本项目没有额外的前置知识条件。"
 }

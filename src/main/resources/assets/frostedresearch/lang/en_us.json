@@ -773,5 +773,9 @@
   "gui.frostedresearch.furnace.choose_target": "Multiple open records: click to choose this batch target.",
   "gui.frostedresearch.experiment.message.standby": "Completed results are active. This standby record keeps its progress.",
   "gui.frostedresearch.journal.research.details": "Research details",
-  "gui.frostedresearch.journal.research.back_to_list": "Back to projects"
+  "gui.frostedresearch.journal.research.back_to_list": "Back to projects",
+  "gui.frostedresearch.journal.research.tab.description": "Description",
+  "gui.frostedresearch.journal.research.tab.knowledge": "Knowledge",
+  "gui.frostedresearch.journal.research.tab.tasks": "Stage tasks",
+  "gui.frostedresearch.journal.research.access_none": "This project has no additional knowledge prerequisites."
 }
