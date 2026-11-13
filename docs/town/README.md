@@ -6,6 +6,9 @@ Town management covers residents, housing, work, production, storage, nutrition,
 |---|---|---|
 | [town-model.md](town-model.md) | Mechanics, formulas, simulator, and balance evidence | Transitional |
 | [hybrid-simulation-architecture.md](hybrid-simulation-architecture.md) | Citizen behavior, movement, rendering, synchronization, and persistence | Transitional |
+| [town-cache-tick-performance.md](town-cache-tick-performance.md) | Main-server tick CPU/wall budget after section TTL caching | Current |
+| [town-path-world-performance.md](town-path-world-performance.md) | Natural-world connectivity timing, section waits/repeated copies and blocked-entrance control | Current |
+| [citizen-road-performance.md](citizen-road-performance.md) | Real managed-citizen road load, fixed-camera measurements, JFR and software-rendering limits | Current |
 | [citizen-rendering-at-scale.md](citizen-rendering-at-scale.md) | Current 1,000-visible render pipeline, Flywheel instancing backend, validation contract, and remaining rollout path | Transitional |
 | [implementation-reference.md](implementation-reference.md) | State ownership, lifecycle, extension points, and town-data synchronization | Partial |
 | [persistence-and-runtime.md](persistence-and-runtime.md) | Team-owned checkpoints, migration, settlement completion and full-view recovery | Partial |

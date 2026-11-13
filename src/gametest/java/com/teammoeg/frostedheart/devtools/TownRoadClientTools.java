@@ -22,6 +22,8 @@ import net.minecraft.world.level.block.state.properties.*;
 /** Opt-in agent bridge fixture and observations; never included in production builds. */
 public final class TownRoadClientTools {
     public static CompletableFuture<Map<String,Object>> run(Minecraft mc, String action) {
+        if (action.startsWith("path")) return TownPathPerformance.run(mc, action);
+        if (action.startsWith("perf")) return TownRoadPerformance.run(mc, action);
         var future = new CompletableFuture<Map<String,Object>>();
         if (mc.getSingleplayerServer()==null || mc.player==null) { future.completeExceptionally(new IllegalStateException("singleplayer world required")); return future; }
         UUID playerId=mc.player.getUUID();

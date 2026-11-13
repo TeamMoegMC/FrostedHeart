@@ -49,3 +49,9 @@ The 28 cases cover component policy, entrance radii, building-port transfers, se
 local support/headroom checks, ladders, stairs and packet metadata. With the opt-in agent client bridge, create a disposable empty
 singleplayer town and use `roads setup`, `roads populate`, `roads status` for a rendered fixture and observations.
 The [citizen rendering contract](../../docs/town/citizen-rendering-at-scale.md#客户端道路站位与攀爬2026-11-13) owns the behavior and validation limits.
+
+
+Section snapshot TTL checks use `frostedheart_section_cache`. Run it with the existing road suites:
+`./gradlew --offline runGameTestServer -PgameTestNamespaces=frostedheart_town_connectivity,frostedheart_citizen_roads,frostedheart_section_cache -PgameTestDirectory=build/town-section-cache-gametest`.
+The deterministic clock cases cover fresh/grace/hard-expiry boundaries, dirty deadlines, FIFO deduplication, coalesced cold readers,
+capacity eviction, invalidation, failure and rollback. Two real-level cases exercise the state-write mixin and section-edge dirty propagation.

@@ -1,0 +1,8 @@
+// Use together with -I Scripts/dev_client_bridge.init.gradle. Contains only profiling mixin resources, no GameTest dimensions.
+allprojects {
+    afterEvaluate {
+        sourceSets.agentBridge.resources.srcDirs = ["$rootDir/src/gametest/roadprobe-resources"]
+        minecraft.runs.client.args '-mixin.config=frostedheart.town-path-probe.mixins.json'
+        minecraft.runs.client.jvmArg("-Xmx${project.findProperty('townPathHeap') ?: '4G'}")
+    }
+}

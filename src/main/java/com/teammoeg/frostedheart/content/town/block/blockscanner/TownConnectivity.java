@@ -13,22 +13,22 @@ public final class TownConnectivity {
     private static final AbstractWorld.BlockType[] TYPES = AbstractWorld.BlockType.values();
     public static final int MAX_DISTANCE = 60;
     public static final int INTERVAL_TICKS = 1200;
-    public static final int SECTIONS_PER_TICK = 2;
+    public static final int SECTIONS_PER_TICK = TownSectionSnapshots.SECTIONS_PER_TICK;
     private static final ExecutorService WORKERS = Executors.newFixedThreadPool(2, task -> {
         Thread thread = new Thread(task, "town-connectivity");
         thread.setDaemon(true);
         return thread;
     });
-    private record Request(SectionPos section, CompletableFuture<byte[]> result) {}
     private static final class Batch {
-        final Queue<Request> requests = new ConcurrentLinkedQueue<>();
+        final SectionSnapshotCache cache;
         final Map<BlockPos, AbstractTownBuilding> buildings;
         final Map<BlockPos, List<BlockPos>> entrances;
         final BlockPos tower;
         final Object dimension;
         volatile boolean cancelled;
         CompletableFuture<Result> result;
-        Batch(Map<BlockPos, AbstractTownBuilding> buildings, BlockPos tower, Object dimension) {
+        Batch(Map<BlockPos, AbstractTownBuilding> buildings, BlockPos tower, Object dimension, SectionSnapshotCache cache) {
+            this.cache = cache;
             this.buildings = new HashMap<>(buildings);
             this.entrances = new HashMap<>();
             buildings.forEach((pos, building) -> this.entrances.put(pos, building.getRoadEntrances()));
@@ -75,22 +75,6 @@ public final class TownConnectivity {
             publish(new Result(Set.of(), List.of()));
         }
         if (batch != null) {
-            LoadedTownWorld world = new LoadedTownWorld(level);
-            for (int count = 0; count < SECTIONS_PER_TICK; count++) {
-                Request request = batch.requests.poll();
-                if (request == null) break;
-                byte[] cells = new byte[4096];
-                Arrays.fill(cells, (byte) AbstractWorld.BlockType.WALL.ordinal());
-                SectionPos section = request.section();
-                if (!batch.cancelled && level.getChunkSource().getChunkNow(section.x(), section.z()) != null) {
-                    BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
-                    for (int y = 0; y < 16; y++) for (int z = 0; z < 16; z++) for (int x = 0; x < 16; x++) {
-                        pos.set(section.minBlockX() + x, section.minBlockY() + y, section.minBlockZ() + z);
-                        cells[(y << 8) | (z << 4) | x] = (byte) world.getPathBlockType(pos).ordinal();
-                    }
-                }
-                request.result().complete(cells);
-            }
             if (!batch.result.isDone()) return;
             try {
                 Result result = batch.result.join();
@@ -109,25 +93,33 @@ public final class TownConnectivity {
             nextScan = level.getGameTime() + (changed ? 0 : INTERVAL_TICKS);
         }
         if (buildings.isEmpty() || level.getGameTime() < nextScan) return;
-        Batch started = new Batch(buildings, tower == null ? null : tower.immutable(), level.dimension());
+        Batch started = new Batch(buildings, tower == null ? null : tower.immutable(), level.dimension(), TownSectionSnapshots.get(level));
         batch = started;
         started.result = CompletableFuture.supplyAsync(() -> calculate(started), WORKERS);
     }
 
     private static final class Snapshot implements AbstractWorld {
         private final Batch batch;
-        private final Map<SectionPos, byte[]> sections = new HashMap<>();
-        Snapshot(Batch batch) { this.batch = batch; }
-        public BlockType getBlockType(BlockPos pos) {
-            if (batch.cancelled) throw new CancellationException();
-            byte[] cells = sections.computeIfAbsent(SectionPos.of(pos), section -> {
-                CompletableFuture<byte[]> result = new CompletableFuture<>();
-                batch.requests.add(new Request(section, result));
-                // A retired town/server must not retain a worker indefinitely.
-                try { return result.get(30, TimeUnit.SECONDS); }
-                catch (Exception failure) { throw new CompletionException(failure); }
-            });
-            return TYPES[cells[((pos.getY() & 15) << 8) | ((pos.getZ() & 15) << 4) | (pos.getX() & 15)]];
+        private record Local(SectionSnapshotCache.Snapshot snapshot,long checkedUntil,long expiryObserved) {}
+        private final Map<SectionPos,Local> sections=new HashMap<>();
+        Snapshot(Batch batch){this.batch=batch;}
+        public BlockType getBlockType(BlockPos pos){
+            if(batch.cancelled)throw new CancellationException();
+            SectionPos section=SectionPos.of(pos);Local local=sections.get(section);long now=batch.cache.currentTick();
+            if(local==null||local.snapshot().retired()||now>=local.checkedUntil()
+                    ||(local.snapshot().expiresAt()<local.expiryObserved()&&now>=local.snapshot().expiresAt())){
+                var snapshot=load(section);now=batch.cache.currentTick();
+                long check=snapshot.missing()?now+1:Math.min(snapshot.removeAt(),snapshot.expiresAt()>now?snapshot.expiresAt():now+1);
+                local=new Local(snapshot,check,snapshot.expiresAt());sections.put(section,local);
+            }
+            return TYPES[local.snapshot().valueAt(((pos.getY()&15)<<8)|((pos.getZ()&15)<<4)|(pos.getX()&15))];
+        }
+        private SectionSnapshotCache.Snapshot load(SectionPos section){
+            if(batch.cancelled)throw new CancellationException();
+            CompletableFuture<SectionSnapshotCache.Snapshot> result=batch.cache.request(section.asLong());
+            try{return result.get(30,TimeUnit.SECONDS);}
+            catch(InterruptedException failure){Thread.currentThread().interrupt();throw new CompletionException(failure);}
+            catch(ExecutionException|TimeoutException failure){throw new CompletionException(failure);}
         }
         public int getMaxY(BlockPos pos) { return pos.getY() + 2; }
     }

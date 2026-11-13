@@ -30,6 +30,7 @@ Apart from the bridge class, the client has the same mods and data as a plain ./
     screenshot [name]              save a PNG of the next frame and return its path
     wait <ticks>                   wait for game ticks
     roads setup|populate|status    disposable town-road fixture / real residents / rendering observations
+    roads path ...                natural-world path timing (requires town-path-profile.init.gradle)
     quit                           close the client
 """
 import argparse
