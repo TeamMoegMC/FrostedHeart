@@ -9,6 +9,8 @@
 
 The legacy workspace and [datapack project details](../knowledge/workbench.md) now share `ResearchProjectFrame.drawPanel`, `drawTab`, `HEADER_HEIGHT = 35` and `TAB_HEIGHT = 20`. This reuses the original `TechIcons.DIALOG` artwork and tab styling without adapting new staged projects into legacy `Research` objects. The legacy dialog retains its detail/theory/experiment semantics, fixed preferred size, graph navigation, control packets and progress model. New projects use their own description/knowledge/stage-task tabs in the larger journal-sized area.
 
+The knowledge journal is now the drawing desk's root surface. Escape on its main page closes the container, including when the search field has focus or tray entries are selected. Detail and editing pages retain local back navigation. The legacy drawing surface and archive return to the journal when backing out.
+
 `DrawDeskScreen` keeps independent drawing-desk and research archive CUI layers, plus the lazily
 created [knowledge journal layer](../knowledge/workbench.md). In drawing-desk mode, its root remains `387 x 203`;
 `DrawDeskLayer` owns the drawing game, help, progress summary, item examination action, and inventory slots. In archive

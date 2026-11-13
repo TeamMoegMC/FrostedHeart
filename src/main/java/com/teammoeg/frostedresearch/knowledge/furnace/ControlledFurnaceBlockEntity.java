@@ -19,7 +19,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.items.ItemStackHandler;
 import java.util.*;
 
-/** Loaded ticks only; one durable batch owns either refundable clay or a finished output, never both. */
+/** Loaded ticks only; one durable batch owns either refundable input or a finished output, never both. */
 public final class ControlledFurnaceBlockEntity extends CBlockEntity implements CTickableBlockEntity,MenuProvider {
     private final ItemStackHandler inventory=new ItemStackHandler(3){
         @Override protected void onContentsChanged(int slot){setChanged();}
@@ -105,7 +105,7 @@ public final class ControlledFurnaceBlockEntity extends CBlockEntity implements 
             refund=inventory.extractItem(0,recipe.input().getCount(),false);
             inventory.extractItem(1,recipe.fuel().getCount(),false);
             lockedTemperature=temperature;outcome=temperature<recipe.temperatureMin()?"underfired":temperature>recipe.temperatureMax()?"overfired":"complete";remaining=duration=recipe.duration();planned=recipe.outcome(lockedTemperature);binding=target;
-            if(binding!=null && planned.is(recipe.result().getItem()))binding.write(planned);
+            if(binding!=null && outcome.equals("complete"))binding.write(planned);
             return say("running");
         }
         return say(eligible ? "materials" : trial ? "no_trial" : "need_design");

@@ -9,7 +9,7 @@ import net.minecraftforge.network.NetworkEvent;
 import java.util.Optional;
 import java.util.function.Supplier;
 
-/** The ordinary CUI start carries the mode/target that was displayed when its button was built. */
+/** The container start button carries the mode/target displayed when clicked. */
 public record ControlledFurnaceStartPacket(int containerId,BlockPos pos,boolean trial,Optional<ResearchSampleBinding> target) implements CMessage {
     public ControlledFurnaceStartPacket(FriendlyByteBuf b){
         this(b.readVarInt(),b.readBlockPos(),b.readBoolean(),b.readOptional(in -> new ResearchSampleBinding(in.readUUID(),in.readUUID(),in.readUtf(64),in.readResourceLocation())));

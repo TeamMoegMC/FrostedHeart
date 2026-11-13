@@ -76,6 +76,66 @@ public final class ControlledFurnaceGameTests {
     static UUID firing(Actor a){var run=begin(a);a.service().advanceStage(run,"prepare");return run;}
     static ControlledFurnaceBlockEntity furnace(GameTestHelper h,BlockPos pos){h.setBlock(pos,FRContents.Blocks.CONTROLLED_FURNACE.get());return (ControlledFurnaceBlockEntity)h.getBlockEntity(pos);}
     static void fill(ControlledFurnaceBlockEntity f,int clay,int fuel){f.inventory().setStackInSlot(0,new ItemStack(item("frostedheart:fire_clay_ball"),clay));f.inventory().setStackInSlot(1,new ItemStack(Items.CHARCOAL,fuel));}
+
+    @GameTest(batch="m5_generic_firing",template="trial_kiln_empty",timeoutTicks=100)
+    public static void otherExperimentMaterialsCountsAndProductionUseSameFurnace(GameTestHelper h){
+        var manager=h.getLevel().getRecipeManager();var original=List.copyOf(manager.getRecipes());
+        try(var scope=new Scope()){
+            install();var a=scope.actor(h);
+            var idea=id("ceramic_idea");var project=id("ceramic_study");var design=id("ceramic_design");var experiment=id("ceramic_trial");
+            var trialId=id("research/ceramic_trial");var productionId=id("research/ceramic_production");
+            var task=ProjectRequirement.CODEC.parse(JsonOps.INSTANCE,JsonParser.parseString("""
+                {"id":"observe_ceramic","type":"observation","title":"Observe this ceramic sample",
+                 "observation":{"experiment":"the_winter_rescue:ceramic_trial","team_current_run":true,
+                  "condition":{"kind":"observation","observation_type":"item","conditions":[
+                    {"field":"object","operator":"eq","value":{"state":"known","type":"string","text":"minecraft:brick"}}]}}}
+                """)).getOrThrow(false,e->{});
+            var definitions=KnowledgeDefinitions.current();var ideas=new HashMap<>(definitions.ideas());
+            ideas.put(idea,new IdeaDefinition("Ceramics","",List.of(),List.of(project),true));
+            var projects=new HashMap<>(definitions.projects());projects.put(project,new ProjectDefinition("Ceramics","",List.of(design),List.of(task)));
+            var results=new HashMap<>(definitions.results());results.put(design,new ResultDefinition(new ResearchResult.Design(design,List.of(productionId)),"Ceramic design","",List.of(),true));
+            var snapshot=new KnowledgeDefinitions.Snapshot(0,ideas,results,definitions.links(),Map.of(),projects,List.of());
+            h.assertTrue(KnowledgeDefinitions.validate(snapshot).isEmpty(),"a second experiment uses the ordinary knowledge definitions");
+            KnowledgeDefinitions.install(snapshot);
+            var trial=new ControlledFiringRecipe.Serializer().fromJson(trialId,JsonParser.parseString("""
+                {"input":{"item":"minecraft:clay_ball","count":2},"fuel":{"item":"minecraft:coal"},
+                 "result":{"item":"minecraft:brick","count":3},"failure":{"item":"minecraft:brick"},
+                 "temperature_min":900,"temperature_max":950,"duration":20,"experiment":"the_winter_rescue:ceramic_trial"}
+                """).getAsJsonObject());
+            var production=new ControlledFiringRecipe(productionId,new ItemStack(Items.CLAY_BALL,4),new ItemStack(Items.CHARCOAL,2),900,950,30,
+                    new ItemStack(Items.BRICK,6),new ItemStack(Items.FLINT,2),Optional.empty());
+            var recipes=new ArrayList<Recipe<?>>(original);recipes.add(trial);recipes.add(production);manager.replaceRecipes(recipes);
+            var buffer=new net.minecraft.network.FriendlyByteBuf(io.netty.buffer.Unpooled.buffer());
+            try{
+                var serializer=new ControlledFiringRecipe.Serializer();serializer.toNetwork(buffer,trial);var decoded=serializer.fromNetwork(trialId,buffer);
+                h.assertTrue(decoded.input().is(Items.CLAY_BALL) && decoded.fuel().is(Items.COAL) && decoded.result().getCount()==3 && decoded.failure().getCount()==1,
+                        "generic materials and independent output counts survive recipe synchronization");
+            }finally{buffer.release();}
+            var service=a.service();service.learn(KnowledgeElement.idea(idea),SOURCE,KnowledgeService.Grant.NORMAL);
+            var run=service.startResearch(project).orElseThrow();var f=furnace(h,new BlockPos(1,1,1));f.claim(a.player);
+            f.mode();f.inventory().setStackInSlot(0,new ItemStack(Items.CLAY_BALL,4));f.inventory().setStackInSlot(1,new ItemStack(Items.CHARCOAL,2));
+            h.assertTrue(f.start(a.player).equals("need_design") && f.inventory().getStackInSlot(0).getCount()==4,"a generic production recipe still needs its Design");
+            f.mode();temp(f,1000);f.inventory().setStackInSlot(0,new ItemStack(Items.CLAY_BALL,2));f.inventory().setStackInSlot(1,new ItemStack(Items.COAL));
+            h.assertTrue(f.start(a.player).equals("running"),"same machine accepts the other experiment and coal fuel");ticks(f,20);
+            var failed=f.inventory().getStackInSlot(2);
+            h.assertTrue(failed.is(Items.BRICK) && failed.getCount()==1 && ResearchSampleBinding.read(failed).isEmpty(),"failure sharing the success item never gets a successful-sample binding");
+            f.inventory().setStackInSlot(2,ItemStack.EMPTY);temp(f,900);f.inventory().setStackInSlot(0,new ItemStack(Items.CLAY_BALL,2));f.inventory().setStackInSlot(1,new ItemStack(Items.COAL));
+            h.assertTrue(f.start(a.player).equals("running"),"second trial starts");ticks(f,20);var output=f.inventory().getStackInSlot(2);
+            h.assertTrue(output.getCount()==3 && ResearchSampleBinding.read(output).orElseThrow().experiment().equals(experiment),"successful output binds the other experiment ID");
+            var observation=ItemRetrieval.observe(a.player,output).observation().orElseThrow();service.observeResearchTarget(a.player,observation,null,output);
+            h.assertTrue(service.requirementsMet(run),"fresh observation completes the other experiment task");
+            var completed=service.finishResearch(run);
+            h.assertTrue(!completed.isEmpty() && completed.stream().allMatch(KnowledgeService.OperationResult::succeeded),"the other experiment produces its Design normally");
+            f.inventory().setStackInSlot(2,ItemStack.EMPTY);f.mode();f.inventory().setStackInSlot(0,new ItemStack(Items.CLAY_BALL,4));f.inventory().setStackInSlot(1,new ItemStack(Items.CHARCOAL,2));
+            h.assertTrue(f.start(a.player).equals("running"),"its own Design enables production");ticks(f,30);
+            h.assertTrue(f.inventory().getStackInSlot(2).is(Items.BRICK) && f.inventory().getStackInSlot(2).getCount()==6
+                    && ResearchSampleBinding.read(f.inventory().getStackInSlot(2)).isEmpty(),"independent production count with no experiment binding");
+            var menu=new ControlledFurnaceMenu(1,a.player.getInventory(),f);
+            h.assertTrue(menu.slots.size()==39 && menu.getSlot(3).x==ControlledFurnaceMenu.INVENTORY_X && menu.getSlot(3).y==ControlledFurnaceMenu.HOTBAR_Y
+                    && menu.getSlot(12).y==ControlledFurnaceMenu.INVENTORY_Y && !menu.getSlot(2).mayPlace(new ItemStack(Items.BRICK)),"native inventory has 27 main slots, 9 hotbar slots and a take-only output");
+            h.succeed();
+        }finally{manager.replaceRecipes(original);}
+    }
     static void temp(ControlledFurnaceBlockEntity f,int temp){while(f.temperature()!=temp)f.adjust(Integer.compare(temp,f.temperature()));}
     static void ticks(ControlledFurnaceBlockEntity f,int n){for(int i=0;i<n;i++)f.tick();}
     static void guard(Scope scope,Runnable r){try{r.run();}catch(RuntimeException|Error e){scope.close();throw e;}}

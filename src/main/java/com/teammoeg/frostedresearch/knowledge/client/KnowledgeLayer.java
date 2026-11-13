@@ -1060,11 +1060,6 @@ public final class KnowledgeLayer extends UILayer {
             closeProjectDetails();
             return true;
         }
-        if (!selected.isEmpty()) {
-            selected.clear();
-            rebuild();
-            return true;
-        }
         return false;
     }
 

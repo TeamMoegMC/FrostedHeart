@@ -54,7 +54,7 @@ public class FRClient {
 	@SubscribeEvent
 	public static void initScreen(FMLClientSetupEvent event) {
 		registerCUIScreen(FRContents.MenuTypes.DRAW_DESK.get(), DrawDeskScreen::new);
-		registerCUIScreen(FRContents.MenuTypes.CONTROLLED_FURNACE.get(), com.teammoeg.frostedresearch.knowledge.client.experiment.ControlledFurnaceScreen::new);
+		MenuScreens.register(FRContents.MenuTypes.CONTROLLED_FURNACE.get(), com.teammoeg.frostedresearch.knowledge.client.experiment.ControlledFurnaceScreen::new);
 		registerCUIScreen(FRContents.MenuTypes.EXPERIMENT_TABLE.get(), com.teammoeg.frostedresearch.knowledge.client.experiment.ExperimentTableScreen::new);
 	}
 

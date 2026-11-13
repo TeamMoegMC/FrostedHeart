@@ -66,7 +66,7 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
 		workspaceState = new ResearchWorkspaceState(openContext);
 		workspaceState.selectResearch(ClientResearchData.last);
 		navigation = new StatefulResearchNavigationController(
-			openContext, workspaceState, () -> closeGui(true));
+			openContext, workspaceState, () -> closeGui(false));
 	}
 
 	@Override
@@ -273,34 +273,31 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
 	public void back() {
         if (knowledgeOpen) {
             if (!knowledge.goBack()) {
-                knowledgeOpen = false;
-                applyWorkspaceSurface();
+                closeGui(false);
             }
             return;
         }
 		if (navigation.back()) {
-			applyWorkspaceSurface();
+			if (workspaceState.surface() == ResearchWorkspaceState.Surface.DRAWING_DESK) showKnowledge();
+			else applyWorkspaceSurface();
 			return;
 		}
-		super.back();
+		showKnowledge();
 	}
 
 	@Override
 	public boolean onKeyPressed(int keyCode, int scanCode, int modifier) {
-		if (super.onKeyPressed(keyCode, scanCode, modifier)) {
-			return true;
-		}
         if (knowledgeOpen && CInputHelper.isEsc(keyCode)) {
             back();
             return true;
         }
-		if (CInputHelper.isEsc(keyCode)
-				&& workspaceState.surface() == ResearchWorkspaceState.Surface.RESEARCH_ARCHIVE) {
-			if (navigation.back()) {
-				applyWorkspaceSurface();
-				return true;
-			}
+		if (super.onKeyPressed(keyCode, scanCode, modifier)) {
+			return true;
 		}
+        if (CInputHelper.isEsc(keyCode)) {
+            back();
+            return true;
+        }
 		return false;
 	}
 

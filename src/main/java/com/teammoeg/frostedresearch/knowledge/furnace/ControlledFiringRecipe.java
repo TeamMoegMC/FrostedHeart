@@ -22,12 +22,6 @@ public record ControlledFiringRecipe(ResourceLocation id, ItemStack input, ItemS
         if(input.isEmpty() || fuel.isEmpty() || result.isEmpty() || failure.isEmpty() || duration<1
             || temperatureMin<600 || temperatureMax>1400 || temperatureMin>temperatureMax)
             throw new IllegalArgumentException("Invalid controlled firing batch");
-        if(!new ResourceLocation("frostedheart:fire_clay_ball").equals(ForgeRegistries.ITEMS.getKey(input.getItem()))
-            || !new ResourceLocation("minecraft:charcoal").equals(ForgeRegistries.ITEMS.getKey(fuel.getItem()))
-            || !new ResourceLocation("frostedheart:refractory_brick").equals(ForgeRegistries.ITEMS.getKey(result.getItem()))
-            || failure.getItem()!=FRContents.Items.CRACKED_REFRACTORY_BRICK.get()
-            || result.getCount()!=input.getCount() || failure.getCount()!=input.getCount())
-            throw new IllegalArgumentException("Controlled furnace only fires ordinary refractory clay batches");
     }
     @Override public ItemStack input(){return input.copy();}
     @Override public ItemStack fuel(){return fuel.copy();}

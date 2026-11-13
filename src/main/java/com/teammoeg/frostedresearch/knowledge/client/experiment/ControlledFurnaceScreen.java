@@ -1,54 +1,130 @@
 package com.teammoeg.frostedresearch.knowledge.client.experiment;
-import com.teammoeg.chorda.client.RenderingHint;
-import com.teammoeg.chorda.client.cui.base.MenuPrimaryLayer;
-import com.teammoeg.frostedresearch.knowledge.client.ui.*;
-import com.teammoeg.frostedresearch.knowledge.furnace.*;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.network.chat.Component;
-import java.util.*;
 
-/** Current temperature is latched; adjustment applies to the next batch. */
-public final class ControlledFurnaceScreen extends MenuPrimaryLayer<ControlledFurnaceMenu>{
-    private final JournalText text=new JournalText(this);private int signature;
-    public ControlledFurnaceScreen(ControlledFurnaceMenu menu){super(menu);setTheme(KnowledgeUiTheme.INSTANCE);}
-    static Component t(String k,Object... a){return Component.translatable("gui.frostedresearch.furnace."+k,a);}
-    @Override public boolean onInit(){setSize(450,220);return super.onInit();}
-    private void button(int x,int y,int width,String key,int action){
-        JournalButton b=new JournalButton(this,t(key),false,()->Minecraft.getInstance().gameMode.handleInventoryButtonClick(menu.containerId,action));
-        b.setPosAndSize(x,y,width,20);add(b);
+import com.teammoeg.frostedresearch.FRNetwork;
+import com.teammoeg.frostedresearch.knowledge.experiment.ResearchSampleBinding;
+import com.teammoeg.frostedresearch.knowledge.furnace.ControlledFurnaceMenu;
+import com.teammoeg.frostedresearch.knowledge.furnace.ControlledFurnaceStartPacket;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.Tooltip;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.locale.Language;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.player.Inventory;
+
+import java.util.List;
+import java.util.Optional;
+
+/** General controlled-firing machine, using native container input and vanilla GUI artwork. */
+public final class ControlledFurnaceScreen extends AbstractContainerScreen<ControlledFurnaceMenu> {
+    private static final ResourceLocation PANEL = new ResourceLocation("minecraft", "textures/gui/demo_background.png");
+    private static final ResourceLocation FURNACE = new ResourceLocation("minecraft", "textures/gui/container/furnace.png");
+    private Button mode, target, start, cancel;
+    private boolean displayedTrial;
+    private Optional<ResearchSampleBinding> displayedTarget = Optional.empty();
+
+    public ControlledFurnaceScreen(ControlledFurnaceMenu menu, Inventory inventory, Component title) {
+        super(menu, inventory, title);
+        imageWidth = 276;
+        imageHeight = 232;
+        inventoryLabelX = ControlledFurnaceMenu.INVENTORY_X;
+        inventoryLabelY = ControlledFurnaceMenu.INVENTORY_Y - 12;
     }
-    @Override public void addChildUIElements(){
-        var f=menu.getBlock();button(150,30,100,f.trial()?"trial":"production",2);
-        button(260,30,40,"minus",0);button(304,30,40,"plus",1);
-        boolean displayedTrial=f.trial();var displayedTarget=f.selectedTarget();
-        JournalButton start=new JournalButton(this,t("start"),false,()->com.teammoeg.frostedresearch.FRNetwork.INSTANCE.sendToServer(
-            new ControlledFurnaceStartPacket(menu.containerId,f.getBlockPos(),displayedTrial,displayedTarget)));
-        start.setPosAndSize(150,183,100,20);add(start);button(260,183,100,"cancel",4);
-        List<Component> lines=new ArrayList<>(List.of(t("next",f.temperature()),t("process",f.lockedTemperature()),
-            t("progress",Math.max(0,f.duration()-f.remaining()),f.duration()),t(f.message())));
-        for(var recipe:f.recipes())lines.add(t("batch",recipe.input().getCount(),recipe.input().getHoverName(),recipe.fuel().getCount(),recipe.fuel().getHoverName(),recipe.duration()));
-        int textTop=60;
-        if(f.trial()) {
-            if(f.targetCount()>1 && !f.displayedBusy()) {
-                JournalButton target=new JournalButton(this,f.targetTitle().getString().isBlank()?t("choose_target"):f.targetTitle(),true,
-                    ()->Minecraft.getInstance().gameMode.handleInventoryButtonClick(menu.containerId,5));
-                target.setPosAndSize(150,60,285,19);target.tooltip(f.targetTitle().getString().isBlank()?t("choose_target"):f.targetTitle());add(target);textTop=83;
-            }else if(!f.targetTitle().getString().isBlank())lines.add(0,f.targetTitle());
+
+    private static Component t(String key, Object... arguments) {
+        return Component.translatable("gui.frostedresearch.furnace." + key, arguments);
+    }
+
+    private Button button(int x, int y, int width, Component label, Runnable action) {
+        return addRenderableWidget(Button.builder(label, ignored -> action.run())
+                .bounds(leftPos + x, topPos + y, width, 20).build());
+    }
+
+    private void action(int id) {
+        minecraft.gameMode.handleInventoryButtonClick(menu.containerId, id);
+    }
+
+    @Override
+    protected void init() {
+        super.init();
+        mode = button(8, 21, 95, Component.empty(), () -> action(2));
+        mode.setTooltip(Tooltip.create(t("mode_help")));
+        target = button(109, 21, 159, Component.empty(), () -> action(5));
+        button(216, 43, 24, Component.literal("−"), () -> action(0)).setTooltip(Tooltip.create(t("minus")));
+        button(244, 43, 24, Component.literal("+"), () -> action(1)).setTooltip(Tooltip.create(t("plus")));
+        start = button(8, 112, 68, t("start"), () -> FRNetwork.INSTANCE.sendToServer(
+                new ControlledFurnaceStartPacket(menu.containerId, menu.getBlock().getBlockPos(), displayedTrial, displayedTarget)));
+        cancel = button(80, 112, 68, t("cancel"), () -> action(4));
+        cancel.setTooltip(Tooltip.create(t("cancel_help")));
+        updateControls();
+    }
+
+    private void updateControls() {
+        var furnace = menu.getBlock();
+        displayedTrial = furnace.trial();
+        displayedTarget = furnace.selectedTarget();
+        mode.setMessage(t(displayedTrial ? "trial" : "production"));
+        mode.active = !furnace.displayedBusy();
+        Component label = !displayedTrial ? t("no_target") : furnace.targetTitle().getString().isBlank()
+                ? t("choose_target") : furnace.targetTitle();
+        if (!label.equals(target.getMessage())) {
+            target.setMessage(label);
+            target.setTooltip(Tooltip.create(label));
         }
-        lines.add(t("rules"));text.text(lines);
-        text.setPosAndSize(150,textTop,285,175-textTop);add(text);
+        target.active = displayedTrial && furnace.targetCount() > 1 && !furnace.displayedBusy();
+        start.active = !furnace.displayedBusy();
+        cancel.active = furnace.displayedBusy() && furnace.remaining() > 0;
     }
-    @Override public void alignWidgets(){}
-    @Override public void tick(){var f=menu.getBlock();int now=Objects.hash(f.trial(),f.temperature(),f.lockedTemperature(),f.remaining()/20,f.message(),f.targetTitle(),f.targetCount(),f.displayedBusy());if(now!=signature){signature=now;refresh();}super.tick();}
-    private static void drawSlot(GuiGraphics g,int x,int y){
-        g.fill(x-1,y-1,x+17,y+17,KnowledgeUiTheme.MUTED);
-        g.fill(x,y,x+16,y+16,KnowledgeUiTheme.PAPER_DARK);
+
+    @Override
+    protected void containerTick() {
+        super.containerTick();
+        updateControls();
     }
-    @Override public void drawBackground(GuiGraphics g,int x,int y,int w,int h,RenderingHint hint){
-        KnowledgeUiTheme.drawPaper(g,x,y,w,h);
-        g.drawString(getFont(),Component.translatable("block.frostedresearch.controlled_furnace"),x+150,y+12,KnowledgeUiTheme.INK,false);
-        String[] labels={"input","fuel","output"};for(int i=0;i<3;i++){int[] p=ControlledFurnaceMenu.POSITIONS[i];g.drawString(getFont(),t(labels[i]),x+p[0]-5,y+18,KnowledgeUiTheme.INK,false);drawSlot(g,x+p[0],y+p[1]);}
-        for(int i=0;i<36;i++){int p=i<9?i+27:i-9;int sx=x+10+(p%6)*17,sy=y+93+(p/6)*17;drawSlot(g,sx,sy);}
+
+    @Override
+    protected void renderBg(GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
+        graphics.blitNineSliced(PANEL, leftPos, topPos, imageWidth, imageHeight, 4, 248, 166, 0, 0);
+        for (var slot : menu.slots)
+            graphics.blit(FURNACE, leftPos + slot.x - 1, topPos + slot.y - 1, 55, 16, 18, 18);
+        graphics.blit(FURNACE, leftPos + 132, topPos + 90, 79, 34, 24, 17);
+        var furnace = menu.getBlock();
+        if (furnace.duration() > 0) {
+            int progress = Math.min(24, Math.max(0, (int) (24L * (furnace.duration() - furnace.remaining()) / furnace.duration())));
+            if (progress > 0) graphics.blit(FURNACE, leftPos + 132, topPos + 90, 176, 14, progress, 16);
+        }
+    }
+
+    private void line(GuiGraphics graphics, Component text, int x, int y, int width, int color) {
+        graphics.drawString(font, Language.getInstance().getVisualOrder(font.substrByWidth(text, width)), x, y, color, false);
+    }
+
+    @Override
+    protected void renderLabels(GuiGraphics graphics, int mouseX, int mouseY) {
+        super.renderLabels(graphics, mouseX, mouseY);
+        var furnace = menu.getBlock();
+        line(graphics, t("next", furnace.temperature()), 8, 47, 200, 0x404040);
+        line(graphics, t("process", furnace.lockedTemperature()), 8, 61, 260, 0x666666);
+        String[] labels = {"input", "fuel", "output"};
+        for (int i = 0; i < labels.length; i++) {
+            Component text = t(labels[i]);
+            graphics.drawString(font, text, ControlledFurnaceMenu.POSITIONS[i][0] + 8 - font.width(text) / 2, 77, 0x404040, false);
+        }
+        line(graphics, t(furnace.message()), 156, 118, 112, 0x404040);
+    }
+
+    @Override
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        renderBackground(graphics);
+        super.render(graphics, mouseX, mouseY, partialTick);
+        renderTooltip(graphics, mouseX, mouseY);
+        if (isHovering(156, 112, 112, 20, mouseX, mouseY))
+            graphics.renderTooltip(font, t(menu.getBlock().message()), mouseX, mouseY);
+        else if (isHovering(130, 88, 28, 22, mouseX, mouseY)) {
+            var furnace = menu.getBlock();
+            graphics.renderComponentTooltip(font, List.of(
+                    t("progress", Math.max(0, furnace.duration() - furnace.remaining()), furnace.duration()), t("rules")), mouseX, mouseY);
+        }
     }
 }
