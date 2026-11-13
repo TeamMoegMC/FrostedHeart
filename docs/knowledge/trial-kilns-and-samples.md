@@ -1,7 +1,7 @@
 # 小炉试烧与研究实物提交
 
 - Status: `Current`（源码与 Forge GameTest 验证范围见最新开发记录；客户端画面、生存获取和独立进程重启另验）
-- Last verified: `2026-11-12`
+- Last verified: `2026-11-14`（提交入口扩展为玩家主背包/快捷栏与绘图台物件槽）
 - Scope: M3-A 三组小炉、固定燃料试烧、收取/拆除/保存、当前 run 样品绑定与绘图台实物提交；不包含 TWR 正式解锁或旧研究迁移。
 - Code anchors: [TrialKilnBlock](../../src/main/java/com/teammoeg/frostedresearch/knowledge/experiment/TrialKilnBlock.java)、[TrialKilnBlockEntity](../../src/main/java/com/teammoeg/frostedresearch/knowledge/experiment/TrialKilnBlockEntity.java)、[ResearchSampleBinding](../../src/main/java/com/teammoeg/frostedresearch/knowledge/experiment/ResearchSampleBinding.java)、[ProjectRequirement](../../src/main/java/com/teammoeg/frostedresearch/knowledge/definition/ProjectRequirement.java)、[KnowledgeService.submitSample](../../src/main/java/com/teammoeg/frostedresearch/knowledge/KnowledgeService.java)。
 
@@ -62,8 +62,8 @@ ProjectRequirement 增加独立 type=sample，例如：
 起烧绑定仅含 team、run、requirement、experiment，结果物品以 ResearchSample 标签保存这四项，不复制全量世界/玩家 NBT。
 坏样即使带绑定也不符合指定的成功物品 ID；未绑定样、旧 run 样、错误队伍/任务/实验的样品不扣除。
 
-在绘图台工具页，把实际试样放入检视物槽；无需点击检视或记入知识档案。返回研究页选中实物任务，
-点击“提交试样（消耗1件）”。SUBMIT_SAMPLE 只发送 run 与任务 ID，服务器直接检查该桌实际槽位的物品与当前开放任务。
+把实际试样留在玩家主背包或快捷栏，打开绘图台研究详情，选中实物任务，点击“提交试样（消耗1件）”即可；也可继续使用绘图台工具页的检视物槽。无需点击检视或记入知识档案。
+SUBMIT_SAMPLE仍只发送run与任务ID，服务端先尝试桌上实际物品，再按玩家Inventory.items的顺序查找36格主背包/快捷栏；不遍历装备、副手、鼠标携带物或嵌套容器。桌上无效样不会挡住背包中的合格样。
 检查全部通过后，同次操作扣1件并写任务回执；任务已满足或 run 已关闭时不再扣物。之后点击正常完成研究按钮取得项目成果。
 仅本次完好样必交，坏炉不强制计数；不要求三组全部试烧。
 
@@ -74,7 +74,7 @@ ResearchHistory.samples 保存任务 ID 到 {experiment,item} 的回执。存储
 ## 示例与验收边界
 
 [example:trial_kiln](example-datapack/data/example/frostedresearch/knowledge/projects/trial_kiln.json) 是完整的独立示例：
-实际取得黏土球可按 M2 得到想法，黏土球与沙观察入档后开始，起烧均衡小炉，收取成功样，放检视物槽提交，再正常完成获得 Finding。
+实际取得黏土球可按 M2 得到想法，黏土球与沙观察入档后开始，起烧均衡小炉，收取成功样留在背包或放检视物槽提交，再正常完成获得 Finding。
 示例包不自动加载；也可用开发 grant 验证入口，但不把命令授予当作生存获取证明。正式 Design/Construction、IE 配方/成型权限和旧研究桥接留 M3-B。
 
 TrialKilnGameTests 使用独立批次，验证加载中的400tick、三结果、燃料与拆除、BE NBT重建、一次结算、实际槽位消耗与绑定回归；

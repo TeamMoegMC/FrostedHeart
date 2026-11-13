@@ -198,8 +198,11 @@ public final class KnowledgeWorkbenchActionPacket implements CMessage {
                 }
                 case START_RESEARCH -> startResearch(service, results, response);
                 case SUBMIT_SAMPLE -> {
-                    var result = service.submitSample(run(), requirement, desk.getInventory().getStackInSlot(DrawingDeskTileEntity.EXAMINE_SLOT));
-                    if (result.succeeded()) { desk.setChanged(); desk.syncData(); }
+                    var result = service.submitSample(run(), requirement, desk.getInventory().getStackInSlot(DrawingDeskTileEntity.EXAMINE_SLOT), player.getInventory().items);
+                    if (result.succeeded()) {
+                        desk.setChanged(); desk.syncData();
+                        player.getInventory().setChanged(); player.containerMenu.broadcastChanges();
+                    }
                     addResult(results, result, service);
                     response.putString("message", result.succeeded() ? "research.sample_submitted" : result.status() == KnowledgeService.Status.ALREADY_OWNED ? "research.sample_done" : "research.sample_missing");
                 }

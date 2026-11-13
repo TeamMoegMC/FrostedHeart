@@ -151,6 +151,38 @@ public final class TrialKilnGameTests {
     }
 
     @GameTest(batch = "m3_trial_kiln", template = "trial_kiln_empty", timeoutTicks = 40)
+    public static void realPlayerInventorySamplesAndDeskPriorityConsumeOnlyOnce(GameTestHelper h) {
+        var previous = KnowledgeDefinitions.current(); install();
+        try (var actor = new PlayerFixture(h)) {
+            for (int slot : new int[]{0, 9, 35}) {
+                var service = service(); var run = begin(service, actor.player);
+                var binding = service.sampleTargets(TrialKilnBlockEntity.EXPERIMENT).get(0);
+                var good = FRContents.Items.FIRED_TRIAL_KILN.get().getDefaultInstance(); binding.write(good);
+                var wrong = good.copy(); new ResearchSampleBinding(binding.team(), UUID.randomUUID(), binding.requirement(), binding.experiment()).write(wrong);
+                var badDesk = FRContents.Items.CRACKED_TRIAL_KILN.get().getDefaultInstance(); binding.write(badDesk);
+                actor.player.getInventory().clearContent();
+                actor.player.getInventory().setItem(1, wrong);
+                actor.player.getInventory().setItem(slot, good);
+                var extra = good.copy(); actor.player.getInventory().setItem(slot == 35 ? 40 : 20, extra);
+                h.assertTrue(service.submitSample(run, "submit_intact", badDesk, actor.player.getInventory().items).succeeded(), "actual hotbar/main inventory stack submits from slot " + slot);
+                h.assertTrue(good.isEmpty() && extra.getCount() == 1 && wrong.getCount() == 1 && badDesk.getCount() == 1,
+                        "only the first matching current-run sample is consumed; wrong desk and wrong-run items remain");
+                h.assertTrue(service.submitSample(run, "submit_intact", badDesk, actor.player.getInventory().items).status() == KnowledgeService.Status.ALREADY_OWNED
+                        && extra.getCount() == 1, "duplicate submission does not fall through and consume another sample");
+            }
+            var service = service(); var run = begin(service, actor.player); var binding = service.sampleTargets(TrialKilnBlockEntity.EXPERIMENT).get(0);
+            var deskSample = FRContents.Items.FIRED_TRIAL_KILN.get().getDefaultInstance(); binding.write(deskSample);
+            var carriedSample = deskSample.copy(); actor.player.getInventory().clearContent(); actor.player.getInventory().setItem(9, carriedSample);
+            h.assertTrue(service.submitSample(run, "submit_intact", deskSample, actor.player.getInventory().items).succeeded()
+                    && deskSample.isEmpty() && carriedSample.getCount() == 1, "a valid desk sample retains priority over the player's inventory");
+            var missingService = service(); var missingRun = begin(missingService, actor.player);
+            h.assertTrue(!missingService.submitSample(missingRun, "submit_intact", ItemStack.EMPTY, actor.player.getInventory().items).succeeded()
+                    && carriedSample.getCount() == 1, "a leftover sample from another run is not consumed when no matching item exists");
+            h.succeed();
+        } finally { KnowledgeDefinitions.install(previous); }
+    }
+
+    @GameTest(batch = "m3_trial_kiln", template = "trial_kiln_empty", timeoutTicks = 40)
     public static void sampleSubmissionBindsRunTeamAndRequirementAndRoundTrips(GameTestHelper h) {
         var previous = KnowledgeDefinitions.current(); install();
         try (var actor = new PlayerFixture(h)) {

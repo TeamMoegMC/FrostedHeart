@@ -300,6 +300,7 @@ NBT 大小限制截断。绘图台回复只携带本次操作结果与联络候�
 ResearchHistory.samples 为可选任务回执映射，记录 sample.experiment 与 sample.item；旧 v3 缺席读为空，既有进度不变。
 KnowledgeService.sampleTargets(experiment) 只列当前开放且未满足的 sample 任务；submitSample(run, requirement, stack)
 检查真实物品和 ResearchSampleBinding 后消耗1件并写回执；重复/错误样品不扣物。finishResearch 继续统一检查所有任务。
+`submitSample(run, requirement, deskStack, inventory)` 为绘图台入口增加候选集合：先尝试桌面物品，仅在物品不匹配时继续查找玩家主背包/快捷栏实际堆栈。首次成功、任务已完成或run不可用时立即返回，不继续扣其它物品。原单堆栈接口保留；没有新增存档或网络请求字段。
 更改绑定语义、设备生命周期与绘图台操作见[小炉与实物提交](trial-kilns-and-samples.md)。
 
 ## 旧研究承接与完成等价查询（M3-B）

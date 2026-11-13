@@ -514,6 +514,19 @@ public final class KnowledgeService {
     }
 
     /** Consumes exactly one real bound sample, only after every current task/run/team check has passed. */
+    public OperationResult submitSample(UUID runId, String requirementId, net.minecraft.world.item.ItemStack deskStack,
+                                        Iterable<net.minecraft.world.item.ItemStack> inventory) {
+        OperationResult result = submitSample(runId, requirementId, deskStack);
+        if (result.status() != Status.INVALID_INPUT) return result;
+        for (var stack : inventory) {
+            if (stack.isEmpty()) continue;
+            result = submitSample(runId, requirementId, stack);
+            if (result.status() != Status.INVALID_INPUT) return result;
+        }
+        return result;
+    }
+
+    /** Direct-stack API retained for devices and existing callers. */
     public OperationResult submitSample(UUID runId, String requirementId, net.minecraft.world.item.ItemStack stack) {
         var run = state.research().get(runId);
         var requirement = openRequirement(run, requirementId, ProjectRequirement.Type.SAMPLE);
