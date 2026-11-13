@@ -771,5 +771,7 @@
   "gui.frostedresearch.journal.research.run_progress": "Record %s · %s · %s/%s tasks",
   "gui.frostedresearch.journal.research.standby": "%s other records are kept as standby progress. Their tasks and temporary recipes pause while the completed results remain learned and valid; forgetting a result resumes them.",
   "gui.frostedresearch.furnace.choose_target": "Multiple open records: click to choose this batch target.",
-  "gui.frostedresearch.experiment.message.standby": "Completed results are active. This standby record keeps its progress."
+  "gui.frostedresearch.experiment.message.standby": "Completed results are active. This standby record keeps its progress.",
+  "gui.frostedresearch.journal.research.details": "Research details",
+  "gui.frostedresearch.journal.research.back_to_list": "Back to projects"
 }

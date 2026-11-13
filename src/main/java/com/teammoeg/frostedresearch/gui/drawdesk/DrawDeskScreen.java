@@ -54,6 +54,7 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
 	private ResearchArchiveLayer archive;
     private com.teammoeg.frostedresearch.knowledge.client.KnowledgeLayer knowledge;
     private boolean knowledgeOpen;
+    private boolean initialSurfaceOpened;
 	private final Map<AbstractWidget, WidgetState> hiddenExternalWidgets = new IdentityHashMap<>();
 
 	public DrawDeskScreen(DrawDeskContainer cx) {
@@ -93,6 +94,10 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
 	@Override
 	public boolean onInit() {
 		this.setSize(DRAWING_DESK_WIDTH, DRAWING_DESK_HEIGHT);
+		if (!initialSurfaceOpened) {
+			initialSurfaceOpened = true;
+			showKnowledge();
+		} else applyWorkspaceSurface();
 		return super.onInit();
 	}
 

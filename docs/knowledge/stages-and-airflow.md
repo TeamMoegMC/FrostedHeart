@@ -1,11 +1,13 @@
 # 有序阶段、临时配方与风道试验
 
 - Status: `Current`（源码、38项完整服务端验证、独立进程重启及缺依赖检查；实际客户端待主协调验证）
-- Last verified: `2026-11-12`
+- Last verified: `2026-11-13`（原型模型/邻面遮挡按源码核对；本次外观待游戏内验收，阶段测试为11月12日结果）
 - Scope: 有序研究阶段、变体固定、临时配方、绘图台风道、队伍试吹对象关联；正式整合包路线由 iron-bloomery.md 说明。
 - Code anchors: `StageDefinition`、`StageRunState`、`ResearchStages`、`KnowledgeService.advanceStage`、`AirflowGame`、`TuyereTrials`、`PendingResearchProofs`。
 
 ## 阶段和任务
+
+鼓风口原型的模型外轮廓覆盖完整 16×16×16 方块范围，保留中央风孔；注册使用 `noOcclusion()`，避免镂空模型把相邻地面等方块的面错误遮掉。该外观修正不改变试吹、绑定或碰撞逻辑。
 
 `ProjectDefinition.stages` 与非空顶层 requirements 互斥；旧平铺任务适配为 main 单阶段，不增加推进点击。
 阶段包含 id/title/objective/method/conclusion、tasks、variants、completion_recipes。

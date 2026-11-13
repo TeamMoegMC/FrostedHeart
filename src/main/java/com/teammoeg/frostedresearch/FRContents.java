@@ -98,7 +98,7 @@ public class FRContents {
         public static final RegistryObject<com.teammoeg.frostedresearch.knowledge.experiment.TrialKilnBlock> TRIAL_KILN_SAND_RICH = trialKiln("trial_kiln_sand_rich", false);
         public static final RegistryObject<com.teammoeg.frostedresearch.knowledge.experiment.TrialKilnBlock> TRIAL_KILN_BALANCED = trialKiln("trial_kiln_balanced", true);
         public static final RegistryObject<com.teammoeg.frostedresearch.knowledge.experiment.PrototypeTuyereBlock> PROTOTYPE_TUYERE = register("prototype_tuyere", () -> new com.teammoeg.frostedresearch.knowledge.experiment.PrototypeTuyereBlock(
-            BlockBehaviour.Properties.of().mapColor(MapColor.TERRACOTTA_ORANGE).sound(SoundType.STONE).strength(1.5f)));
+            BlockBehaviour.Properties.of().mapColor(MapColor.TERRACOTTA_ORANGE).sound(SoundType.STONE).strength(1.5f).noOcclusion()));
         private static RegistryObject<com.teammoeg.frostedresearch.knowledge.experiment.TrialKilnBlock> trialKiln(String id, boolean success) {
             return register(id, () -> new com.teammoeg.frostedresearch.knowledge.experiment.TrialKilnBlock(BlockBehaviour.Properties.of()
                 .mapColor(MapColor.CLAY).sound(SoundType.GRAVEL).strength(0.7f).noOcclusion()
