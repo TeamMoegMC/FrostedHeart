@@ -41,7 +41,16 @@ import net.minecraft.resources.ResourceLocation;
 public class FakeCitizenRenderer extends MobRenderer<FakeCitizenEntity, PlayerModel<FakeCitizenEntity>> {
 
 	public FakeCitizenRenderer(EntityRendererProvider.Context ctx) {
-		super(ctx, new PlayerModel<>(ctx.bakeLayer(ModelLayers.PLAYER), false), 0.5F);
+		super(ctx, new PlayerModel<FakeCitizenEntity>(ctx.bakeLayer(ModelLayers.PLAYER), false) {
+            @Override public void setupAnim(FakeCitizenEntity entity, float swing, float amount, float age, float yaw, float pitch) {
+                super.setupAnim(entity, swing, amount, age, yaw, pitch);
+                if (entity.roadClimbing) {
+                    float phase = (float) Math.sin(entity.level().getGameTime() * .2) * .15f;
+                    leftArm.xRot = -2.2f + phase; rightArm.xRot = -2.2f - phase;
+                    leftLeg.xRot = phase * 2; rightLeg.xRot = -phase * 2;
+                }
+            }
+        }, 0.5F);
 	}
 
 	@Override

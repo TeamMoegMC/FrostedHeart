@@ -23,12 +23,15 @@ public final class TownConnectivity {
     private static final class Batch {
         final Queue<Request> requests = new ConcurrentLinkedQueue<>();
         final Map<BlockPos, AbstractTownBuilding> buildings;
+        final Map<BlockPos, List<BlockPos>> entrances;
         final BlockPos tower;
         final Object dimension;
         volatile boolean cancelled;
         CompletableFuture<Result> result;
         Batch(Map<BlockPos, AbstractTownBuilding> buildings, BlockPos tower, Object dimension) {
             this.buildings = new HashMap<>(buildings);
+            this.entrances = new HashMap<>();
+            buildings.forEach((pos, building) -> this.entrances.put(pos, building.getRoadEntrances()));
             this.tower = tower;
             this.dimension = dimension;
         }
@@ -50,12 +53,16 @@ public final class TownConnectivity {
     private Batch batch;
     private long nextScan;
     private Map<BlockPos, AbstractTownBuilding> observedBuildings = Map.of();
+    private Map<BlockPos, List<BlockPos>> observedEntrances = Map.of();
     private BlockPos observedTower;
     private Object observedDimension;
 
     public void tick(ServerLevel level, BlockPos tower, Map<BlockPos, AbstractTownBuilding> buildings) {
-        if (!Objects.equals(tower, observedTower) || !Objects.equals(level.dimension(), observedDimension)
+        Map<BlockPos, List<BlockPos>> currentEntrances = new HashMap<>();
+        buildings.forEach((pos, building) -> currentEntrances.put(pos, building.getRoadEntrances()));
+        if (!currentEntrances.equals(observedEntrances) || !Objects.equals(tower, observedTower) || !Objects.equals(level.dimension(), observedDimension)
                 || !observedBuildings.equals(buildings)) {
+            observedEntrances = currentEntrances;
             observedTower = tower;
             observedDimension = level.dimension();
             observedBuildings = new HashMap<>(buildings);
@@ -137,8 +144,14 @@ public final class TownConnectivity {
         return positions;
     }
 
+    private static List<BlockPos> entrances(AbstractWorld world, BlockPos core, Map<BlockPos, List<BlockPos>> ports) {
+        List<BlockPos> declared = ports.getOrDefault(core, List.of());
+        return declared.isEmpty() ? entrances(world, core)
+                : declared.stream().filter(pos -> RoomPathfinder.canStandAt(world, pos)).toList();
+    }
+
     private static Result calculate(Batch batch) {
-        return calculateView(batch.buildings.keySet(), batch.tower, () -> new Snapshot(batch), () -> batch.cancelled);
+        return calculateView(batch.buildings.keySet(), batch.tower, () -> new Snapshot(batch), () -> batch.cancelled, batch.entrances);
     }
 
     static Set<BlockPos> calculate(Set<BlockPos> buildings, BlockPos tower,
@@ -148,11 +161,20 @@ public final class TownConnectivity {
 
     static Result calculateView(Set<BlockPos> buildings, BlockPos tower,
             java.util.function.Supplier<AbstractWorld> worlds, java.util.function.BooleanSupplier cancelled) {
+        return calculateView(buildings, tower, worlds, cancelled, Map.of());
+    }
+
+    static Result calculateView(Set<BlockPos> buildings, BlockPos tower,
+            java.util.function.Supplier<AbstractWorld> worlds, java.util.function.BooleanSupplier cancelled,
+            Map<BlockPos, List<BlockPos>> ports) {
         if (cancelled.getAsBoolean()) return new Result(Set.of(), List.of());
         List<Route> routes = new ArrayList<>();
         List<BlockPos> nodes = new ArrayList<>(buildings);
         nodes.sort(BlockPos::compareTo);
         if (tower != null) nodes.add(tower);
+        Map<BlockPos, Integer> entranceRadii = new HashMap<>();
+        for (BlockPos node : nodes) entranceRadii.put(node, ports.getOrDefault(node, List.of()).stream()
+                .mapToInt(node::distManhattan).max().orElse(2));
         int[] parents = new int[nodes.size()];
         for (int i = 0; i < parents.length; i++) parents[i] = i;
         for (int source = 0; source < nodes.size(); source++) {
@@ -160,15 +182,15 @@ public final class TownConnectivity {
             Map<BlockPos, List<Integer>> targets = new HashMap<>();
             for (int target = source + 1; target < nodes.size(); target++) {
                 if (find(parents, source) == find(parents, target)) continue;
-                if (nodes.get(source).distManhattan(nodes.get(target)) > 2 * MAX_DISTANCE + 4) continue;
-                for (BlockPos entrance : entrances(world, nodes.get(target)))
+                if (nodes.get(source).distManhattan(nodes.get(target)) > 2 * MAX_DISTANCE + entranceRadii.get(nodes.get(source)) + entranceRadii.get(nodes.get(target))) continue;
+                for (BlockPos entrance : entrances(world, nodes.get(target), ports))
                     targets.computeIfAbsent(entrance, key -> new ArrayList<>()).add(target);
             }
             if (targets.isEmpty()) continue;
             ArrayDeque<BlockPos> queue = new ArrayDeque<>();
             Map<BlockPos, Integer> distances = new HashMap<>();
             Map<BlockPos, BlockPos> previous = new HashMap<>();
-            for (BlockPos pos : entrances(world, nodes.get(source))) {
+            for (BlockPos pos : entrances(world, nodes.get(source), ports)) {
                 if (distances.putIfAbsent(pos, 0) == null) queue.add(pos);
             }
             final int sourceIndex = source;

@@ -29,6 +29,7 @@ Apart from the bridge class, the client has the same mods and data as a plain ./
     screen                         describe the open screen: vanilla widgets, container slots, CUI element tree
     screenshot [name]              save a PNG of the next frame and return its path
     wait <ticks>                   wait for game ticks
+    roads setup|populate|status    disposable town-road fixture / real residents / rendering observations
     quit                           close the client
 """
 import argparse

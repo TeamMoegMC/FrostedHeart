@@ -23,18 +23,18 @@ import net.minecraftforge.fml.common.Mod;
 @Mod.EventBusSubscriber(modid = FHMain.MODID, value = Dist.CLIENT)
 public final class TownRoadRenderer {
     private static final UUID UNKNOWN = new UUID(0, 0);
-    private static UUID version = UNKNOWN;
+    private static UUID version = UNKNOWN, holder;
     private static ResourceLocation dimension;
     private static Map<BlockPos, Integer> floors = Map.of();
     private static Set<BlockPos> connected = Set.of(), working = Set.of();
     private static boolean hasView;
     private static int requestTicks;
     public static void reset() {
-        version = UNKNOWN; dimension = null; floors = Map.of(); connected = Set.of(); working = Set.of(); hasView = false; requestTicks = 0;
+        version = UNKNOWN; holder = null; dimension = null; floors = Map.of(); connected = Set.of(); working = Set.of(); hasView = false; requestTicks = 0;
     }
     public static void accept(TownRoadViewPacket packet) {
         var level = Minecraft.getInstance().level;
-        if (!RoomZoneRenderer.visible || level == null || !packet.dimension.equals(level.dimension().location())
+        if (level == null || !packet.dimension.equals(level.dimension().location())
                 || !TownClientUpdates.isCurrentHolder(packet.holder)) return;
         Map<BlockPos, Integer> cells = new HashMap<>();
         packet.view.routes().forEach(route -> {
@@ -42,16 +42,23 @@ public final class TownRoadRenderer {
             route.steps().forEach(pos -> cells.merge(pos, status, Math::max));
         });
         floors = Map.copyOf(cells); connected = packet.view.connected(); working = packet.view.working();
-        version = packet.version; dimension = packet.dimension; hasView = true;
+        holder = packet.holder; version = packet.version; dimension = packet.dimension; hasView = true;
+    }
+    public static boolean matches(UUID id) { return hasView && java.util.Objects.equals(holder, id); }
+    public static boolean nearRoad(BlockPos pos) {
+        for (int dy = -1; dy <= 1; dy++) for (int dx = -1; dx <= 1; dx++) for (int dz = -1; dz <= 1; dz++)
+            if (floors.containsKey(pos.offset(dx, dy, dz))) return true;
+        return false;
     }
     @SubscribeEvent
     public static void tick(TickEvent.ClientTickEvent event) {
         if (event.phase != TickEvent.Phase.END) return;
         var mc = Minecraft.getInstance();
-        if (!RoomZoneRenderer.visible || mc.level == null || mc.getConnection() == null) { reset(); return; }
+        if (mc.level == null || mc.getConnection() == null) { reset(); return; }
         if (dimension != null && !dimension.equals(mc.level.dimension().location())) reset();
+        if (!RoomZoneRenderer.visible && com.teammoeg.frostedheart.content.town.citizen.client.ClientCitizenCache.values().isEmpty()) return;
         if (TownClientUpdates.currentTown().isEmpty()) return;
-        if (requestTicks-- > 0) return;
+        if (--requestTicks > 0) return;
         requestTicks = 40;
         FHNetwork.INSTANCE.sendToServer(new TownRoadViewRequestPacket(version));
     }

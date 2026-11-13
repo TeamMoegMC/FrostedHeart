@@ -54,6 +54,8 @@ import net.minecraftforge.network.NetworkHooks;
  * extra network traffic.
  */
 public class FakeCitizenEntity extends Mob {
+    public boolean roadClimbing;
+
 
 	/** 关联的模拟居民稳定 id / Associated simulated citizen stable id */
 	private int citizenId = -1;

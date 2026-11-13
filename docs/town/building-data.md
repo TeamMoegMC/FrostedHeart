@@ -129,7 +129,7 @@ store 以 `changeVersion` 与 `encodedVersion` 判断单栋缓存是否过期。
 
 ## 道路连接与能量塔（2026-11-13）
 
-状态：已实现，编译及 17 项 GameTest 通过；尚未进行完整城镇游戏场景验收。代码锚点：`TownConnectivity`、
+状态：已实现，编译及 18 项连通性、10 项居民道路 GameTest 通过；尚未进行完整城镇游戏场景验收。代码锚点：`TownConnectivity`、
 `RoomPathfinder.getNeighbors`、`AbstractTownBuilding.isBuildingWorkable`、`TeamTownData.tick`。
 
 先计算建筑之间的连通集群，再选择可工作集群。只以当前队伍在城镇所在维度的能量塔作为塔端点，
@@ -137,7 +137,7 @@ store 以 `changeVersion` 与 `encodedVersion` 判断单栋缓存是否过期。
 若没有任何集群连到本队塔（包括无塔、塔不可达），仅建筑数量最多的集群具备工作条件。
 数量相同时，选择包含按 `BlockPos.compareTo` 排序首个控制方块的集群，避免随机切换。
 集群资格不替代建筑原有的结构、温度、光照等工作条件。
-连接端点取控制方块水平相邻、上下各一格范围内可站立的位置；通行判定复用房间的
+连接端点优先取结构扫描得到的全部门入口，同建筑全部入口默认互通；尚无入口数据时回退到控制方块水平相邻、上下各一格范围内可站立的位置。通行判定复用房间的
 碰撞分类、两格身高、一步台阶与梯子规则。城镇连接快照中的所有 `DoorBlock`（含木门、铁门、上下半部）
 均视为空气，不受开关状态影响；房间密闭性扫描仍使用原始碰撞分类，不改变房间边界。
 每段路径最多 60 次相邻移动；它是路径步数，不是直线距离。建筑之间通过并查集合并，
@@ -161,7 +161,7 @@ store 以 `changeVersion` 与 `encodedVersion` 判断单栋缓存是否过期。
 虚拟地形边界测试：`TownConnectivityGameTests` 使用生产 `calculate` 实现，测试 60/61 步、
 建筑中继、头部净空、墙壁、60 级连续台阶、梯子、悬空、空城镇及取消；真实方块分类测试覆盖
 木门/铁门、上下半部和开关状态。水平台阶移动一步可改变两个坐标，因此候选筛选的曼哈顿距离上限
-为 `2 * MAX_DISTANCE + 4`；最终仍由 BFS 步数限制决定是否连通。
+为 `2 * MAX_DISTANCE + 两端入口到控制方块的最大曼哈顿偏移`（回退端点每端偏移上限 2）；最终仍由 BFS 步数限制决定是否连通。
 执行：`./gradlew --offline runGameTestServer -PgameTestNamespaces=frostedheart_town_connectivity
 -PgameTestDirectory=build/town-connectivity-gametest`（写为一行）。
 
@@ -175,7 +175,7 @@ store 以 `changeVersion` 与 `encodedVersion` 判断单栋缓存是否过期。
 
 客户端仅在区域视图开启期间每 40 tick 发 `TownRoadViewRequestPacket`，携带已知版本 UUID；
 服务端解析发送者所属城镇，只返回同维度且版本变化的 `TownRoadViewPacket`。
-连接结果及路线变化才更新版本。关闭视图停止请求并释放缓存；断线、切换维度、切换城镇或安装全量城镇快照时清理旧缓存。
+连接结果及路线变化才更新版本。关闭视图后，若仍有居民则继续为居民站位请求数据；无居民且视图关闭时停止请求。断线、切换维度、切换城镇或安装全量城镇快照时清理旧缓存。
 返回包携带所属城镇、维度和版本，客户端在当前连接及城镇一致时应用。
 
 每次合并集群只保留一条 BFS 最短见证路径，因此最多保存“节点数减集群数”条边。

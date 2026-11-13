@@ -254,6 +254,19 @@ public final class TownConnectivityGameTests {
     }
 
     @GameTest(template = "phase0a_empty")
+    public static void declaredEntrancesAccountForLargeBuildingOffsets(GameTestHelper helper) {
+        World world = new World();
+        for (int x = 1; x <= 61; x++) for (int dy = 0; dy <= 2; dy++) world.air(x, x + dy, 0);
+        BlockPos first = new BlockPos(-15, -15, 0), second = new BlockPos(77, 77, 0);
+        var view = TownConnectivity.calculateView(Set.of(first, second), null, () -> world, () -> false,
+                Map.of(first, java.util.List.of(new BlockPos(1, 1, 0)), second, java.util.List.of(new BlockPos(61, 61, 0))));
+        helper.assertTrue(view.working().equals(Set.of(first, second)) && view.routes().size() == 1
+                && view.routes().get(0).steps().size() == 61,
+                "controller distance must include each building's entrance offset; no indoor route is required");
+        helper.succeed();
+    }
+
+    @GameTest(template = "phase0a_empty")
     public static void emptyAndCancelled(GameTestHelper helper) {
         World world = new World(); world.corridor(12);
         helper.assertTrue(world.solve(Set.of(), new BlockPos(12, 1, 0)).isEmpty(), "empty town must have no connected buildings");

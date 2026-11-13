@@ -107,11 +107,28 @@ public class TownSimData implements CitizenContainer, ITownResidentListener {
 	private transient ServerLevel activeLevel;
 	/** 玩家镇门面（transient）；AI 镇没有可扫描住宅布局，保持 null。 */
 	private transient TeamTown activeTown;
+    private final transient com.teammoeg.frostedheart.content.town.citizen.nav.TownRoadNavigation roads =
+            new com.teammoeg.frostedheart.content.town.citizen.nav.TownRoadNavigation();
+    @Override public com.teammoeg.frostedheart.content.town.citizen.nav.TownRoadNavigation roadNavigation() {
+        if (activeTown == null) return null;
+        var data = activeTown.getTownData().orElse(null);
+        if (data == null) return null;
+        roads.update(data.connectivityView());
+        return roads;
+    }
+    @Override public BlockPos workBuildingPosition(int index) {
+        return activeTown == null ? null : activeTown.getResident(new UUID(sim.uuidHi[index], sim.uuidLo[index]))
+                .map(Resident::getWorkPos).orElse(null);
+    }
+    @Override public java.util.UUID roadTownId() {
+        return activeTown == null ? null : activeTown.getTownData().map(d -> d.roadOwnerId()).orElse(null);
+    }
 	/** 全量对账期间延迟床位重排，避免逐居民重复排序。 */
 	private transient boolean reconcilingResidents;
     private transient Map<UUID, Integer> reconcilingIds;
 
     public void detach() {
+        roads.clear();
         if (activeSched != null) activeSched.detachContainer(this);
         if (activeTown != null) activeTown.getTownData().ifPresent(data -> data.setResidentListener(null));
         activeSched = null;
@@ -798,6 +815,7 @@ public class TownSimData implements CitizenContainer, ITownResidentListener {
 
 	@Override
 	public void onSleepEntered(int index) {
+        roads.remove(sim.id[index]);
 		long bedPosition = resolveBedPosition(index);
 		if (isUsableBed(bedPosition)) {
 			BlockPos bed = BlockPos.of(bedPosition);
@@ -847,6 +865,7 @@ public class TownSimData implements CitizenContainer, ITownResidentListener {
 
 	@Override
 	public void onDataRemoved(int citizenId) {
+        roads.remove(citizenId);
 		tradeData.remove(citizenId);
 		nameCache.remove(citizenId);
 	}

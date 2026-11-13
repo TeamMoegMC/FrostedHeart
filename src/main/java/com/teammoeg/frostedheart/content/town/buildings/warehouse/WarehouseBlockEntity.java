@@ -53,6 +53,7 @@ public class WarehouseBlockEntity extends AbstractTownBuildingBlockEntity<Wareho
         if (room == null) {
             return StructureScanResult.DATA_UNAVAILABLE;
         }
+        building.setRoadEntrances(room.doors);
         if (room.doors.isEmpty()) {
             room = room.withValidity(false);
         }

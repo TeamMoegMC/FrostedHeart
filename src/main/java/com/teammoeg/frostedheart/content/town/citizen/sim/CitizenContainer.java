@@ -48,6 +48,9 @@ public interface CitizenContainer {
 	 * @return 模拟数据 / the sim data
 	 */
 	CitizenSim sim();
+    default com.teammoeg.frostedheart.content.town.citizen.nav.TownRoadNavigation roadNavigation() { return null; }
+    default BlockPos workBuildingPosition(int index) { return null; }
+    default java.util.UUID roadTownId() { return null; }
 
 	/**
 	 * 返回居民用于返家导航的入口。默认回退到持久化的 X/Z 家锚点；城镇容器

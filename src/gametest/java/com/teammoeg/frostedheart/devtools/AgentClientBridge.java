@@ -252,6 +252,14 @@ public final class AgentClientBridge {
         String rest = space < 0 ? "" : line.substring(space + 1).strip();
         String[] args = rest.isEmpty() ? new String[0] : rest.split("\\s+");
         switch (verb) {
+            case "roads" -> {
+                var result = TownRoadClientTools.run(Minecraft.getInstance(), rest);
+                job.timeout = 1200;
+                job.tick = (mc, j) -> {
+                    if (!result.isDone()) return false;
+                    j.out.put("roads", result.join()); return true;
+                };
+            }
             case "state" -> job.tick = (mc, j) -> true;
             case "wait" -> {
                 int ticks = Integer.parseInt(arg(args, 0, "ticks"));

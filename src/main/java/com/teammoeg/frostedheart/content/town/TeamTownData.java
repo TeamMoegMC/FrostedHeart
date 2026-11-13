@@ -630,6 +630,8 @@ public class TeamTownData implements com.teammoeg.chorda.dataholders.PersistentC
     }
 
     public TownBuildingStore getBuildingStore() { return buildingStore; }
+    public java.util.UUID roadOwnerId() { return buildingOwner == null ? null : buildingOwner.getId(); }
+
     TeamDataHolder buildingOwner() { return buildingOwner; }
     void removeBuildingPlans(BlockPos pos) {
         staffingPlan = staffingPlan.withoutBuilding(pos);

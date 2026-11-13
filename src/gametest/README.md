@@ -41,3 +41,11 @@ workload in [`Scripts/run-thermal-oom-repro.py`](../../Scripts/run-thermal-oom-r
 The [memory evidence reference](../../docs/climate/thermal-server-memory-evidence.md)
 records the confirmed reference defect, heap analysis, configuration differences,
 and limits on attributing the original remote OOM.
+
+
+Town connectivity and citizen road navigation checks use namespaces `frostedheart_town_connectivity,frostedheart_citizen_roads`:
+`./gradlew --offline runGameTestServer -PgameTestNamespaces=frostedheart_town_connectivity,frostedheart_citizen_roads -PgameTestDirectory=build/citizen-road-gametest`.
+The 28 cases cover component policy, entrance radii, building-port transfers, server-side vertical movement and dynamic obstacles,
+local support/headroom checks, ladders, stairs and packet metadata. With the opt-in agent client bridge, create a disposable empty
+singleplayer town and use `roads setup`, `roads populate`, `roads status` for a rendered fixture and observations.
+The [citizen rendering contract](../../docs/town/citizen-rendering-at-scale.md#客户端道路站位与攀爬2026-11-13) owns the behavior and validation limits.

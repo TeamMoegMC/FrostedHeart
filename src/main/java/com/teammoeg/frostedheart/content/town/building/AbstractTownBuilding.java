@@ -58,6 +58,10 @@ public abstract class AbstractTownBuilding implements ITownBuilding,ITownSpaceOc
 
     // Runtime topology is rebuilt after loading, never persisted.
     private transient boolean connectedToTower;
+    private transient java.util.List<BlockPos> roadEntrances = java.util.List.of();
+    public void setRoadEntrances(java.util.List<BlockPos> entrances) {
+        roadEntrances = entrances.stream().map(BlockPos::immutable).distinct().sorted().toList();
+    }
     private transient boolean connectivityWorkable;
 
     public void setConnectivityWorkable(boolean value) {
