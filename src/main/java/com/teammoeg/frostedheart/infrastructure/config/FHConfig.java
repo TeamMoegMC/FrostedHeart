@@ -236,7 +236,7 @@ public class FHConfig {
 	 * 
 	 */
 	public static class Common {
-		public final ForgeConfigSpec.IntValue sledSnowGraceTicks;
+		public final ForgeConfigSpec.IntValue sledGroundTransitionTicks;
 		public static class ThermalRuntime {
 			public final ForgeConfigSpec.DoubleValue airHeatCapacityJPerBlockK;
 			public final ForgeConfigSpec.BooleanValue continuousAirNativeCheckpoint;
@@ -319,9 +319,9 @@ public class FHConfig {
 
 		Common(ForgeConfigSpec.Builder builder) {
 			builder.push("Sled");
-			sledSnowGraceTicks = builder
-				.comment("Ticks to keep treating a sled as on snow after detecting snow. 20 ticks = 1 second; 0 disables the grace period.")
-				.defineInRange("sledSnowGraceTicks", 10, 0, Integer.MAX_VALUE);
+			sledGroundTransitionTicks = builder
+				.comment("Ticks to smoothly transition sled ground friction and forward acceleration. 20 ticks = 1 second; 0 switches immediately.")
+				.defineInRange("sledGroundTransitionTicks", 10, 0, Integer.MAX_VALUE);
 			builder.pop();
 			THERMAL_RUNTIME = new ThermalRuntime(builder);
 

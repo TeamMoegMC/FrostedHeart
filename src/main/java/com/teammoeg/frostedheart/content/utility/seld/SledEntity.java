@@ -108,8 +108,7 @@ public class SledEntity extends Entity {
     //friction
     private float landFriction;
     private GroundStatus groundStatus;
-    private int snowGraceTicksRemaining;
-    private boolean onSnowWithGrace;
+    private final SledGroundTransition groundTransition = new SledGroundTransition();
 
     //cached references. both updated every tick
     @Nullable
@@ -495,15 +494,10 @@ public class SledEntity extends Entity {
 
         var newStatus = GroundStatus.computeFriction(this);
         this.groundStatus = newStatus.getFirst();
-        int graceTicks = com.teammoeg.frostedheart.infrastructure.config.FHConfig.COMMON.sledSnowGraceTicks.get();
-        this.onSnowWithGrace = this.groundStatus.onSnow()
-                || Math.min(this.snowGraceTicksRemaining, graceTicks) > 0;
-        if (this.groundStatus.onSnow()) {
-            this.snowGraceTicksRemaining = graceTicks;
-        } else {
-            this.snowGraceTicksRemaining = Math.max(0, Math.min(this.snowGraceTicksRemaining, graceTicks) - 1);
-        }
-        this.landFriction = newStatus.getSecond();
+        float acceleration = this.groundStatus.onSnow() ? (this.hasPuller() ? 0.017f : 0.015f) : 0.037f;
+        this.groundTransition.update(this.groundStatus.touchingGround(), newStatus.getSecond(), acceleration,
+                com.teammoeg.frostedheart.infrastructure.config.FHConfig.COMMON.sledGroundTransitionTicks.get());
+        this.landFriction = this.groundTransition.friction();
 
         //movement stuff start
 
@@ -820,7 +814,7 @@ public class SledEntity extends Entity {
     }
 
     public boolean isOnSnow() {
-        return this.onSnowWithGrace;
+        return this.groundStatus != null && this.groundStatus.onSnow();
     }
 
     public GroundStatus getCurrentStatus() {
@@ -913,12 +907,7 @@ public class SledEntity extends Entity {
 
             this.setYRot(this.getYRot() + this.deltaRotation);
             if (this.inputUp) {
-                if (this.isOnSnow()) {
-                    //forward_acceleration_with_wolf  ,  forward_acceleration
-                    double acceleration = hasWolf ? 0.017 : 0.015;
-                    powah += acceleration;//0.04F;
-                } else //forward_acceleration_when_not_on_snow
-                    powah += 0.03700000047683716;
+                powah += this.groundTransition.acceleration();
             }
 
             //brake straight when pressing down
