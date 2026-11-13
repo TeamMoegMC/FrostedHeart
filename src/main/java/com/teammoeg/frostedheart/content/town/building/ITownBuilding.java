@@ -36,7 +36,7 @@ import net.minecraft.server.level.ServerLevel;
  * handle the work logic of town building.
  */
 public interface ITownBuilding {
-    public static final Codec<ITownBuilding> CODEC = CodecUtil.dispatch(ITownBuilding.class)
+    public static final Codec<ITownBuilding> BASE_CODEC = CodecUtil.dispatch(ITownBuilding.class)
             .typeLazy("house", HouseBuilding.class, () -> HouseBuilding.CODEC)
             .typeLazy("huntingBase", HuntingBaseBuilding.class, () -> HuntingBaseBuilding.CODEC)
             .typeLazy("mine", MineBuilding.class, () -> MineBuilding.CODEC)
@@ -52,6 +52,20 @@ public interface ITownBuilding {
      * check if this building is workable.
      * @return true if workable
      */
+    Codec<ITownBuilding> CODEC = com.mojang.serialization.codecs.RecordCodecBuilder.create(instance -> instance.group(
+            BASE_CODEC.fieldOf("building").forGetter((ITownBuilding value) -> value),
+            Codec.BOOL.fieldOf("connectedToTower").forGetter(value ->
+                    value instanceof AbstractTownBuilding building && building.isConnectedToTower()),
+            Codec.BOOL.fieldOf("connectivityWorkable").forGetter(value ->
+                    value instanceof AbstractTownBuilding building && building.isConnectivityWorkable())
+    ).apply(instance, (value, connected, working) -> {
+        if (value instanceof AbstractTownBuilding building) {
+            building.setConnectedToTower(connected);
+            building.setConnectivityWorkable(working);
+        }
+        return value;
+    }));
+
     boolean isBuildingWorkable();
 
     /**

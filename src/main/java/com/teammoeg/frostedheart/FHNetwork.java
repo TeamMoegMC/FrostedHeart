@@ -139,6 +139,8 @@ public class FHNetwork extends CBaseNetwork {
         // ITown Messages
         registerMessage("team_town_data_s2c", TeamTownDataS2CPacket.class);
         registerMessage("town_building_update", TownBuildingUpdatePacket.class);
+        registerMessage("town_road_view_request", com.teammoeg.frostedheart.content.town.network.TownRoadViewRequestPacket.class);
+        registerMessage("town_road_view", com.teammoeg.frostedheart.content.town.network.TownRoadViewPacket.class);
         registerMessage("town_resident_update", TownResidentUpdatePacket.class);
         registerMessage("town_resource_update", TownResourceUpdatePacket.class);
         registerMessage("town_operational_status_request", TownOperationalStatusRequestPacket.class);

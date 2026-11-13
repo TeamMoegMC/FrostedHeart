@@ -393,6 +393,7 @@ public final class TownSettlement {
         data.reloadMaxCapacity();
 
         data.buildings.values().stream()
+                .filter(AbstractTownBuilding::isConnectivityWorkable)
                 .filter(AbstractTownBuilding::shouldRunDailySettlement)
                 .filter(building -> !(building instanceof HouseBuilding))
                 .sorted(Comparator.comparingInt(AbstractTownBuilding::getWorkPriority).reversed()

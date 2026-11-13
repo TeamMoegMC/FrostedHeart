@@ -971,7 +971,15 @@ public class TeamTownData implements com.teammoeg.chorda.dataholders.PersistentC
         }
     }
 
-    public void tick(ServerLevel level, TeamDataHolder teamData) { TownSync.tick(this, level, teamData); }
+    private final transient com.teammoeg.frostedheart.content.town.block.blockscanner.TownConnectivity connectivity =
+            new com.teammoeg.frostedheart.content.town.block.blockscanner.TownConnectivity();
+
+    public com.teammoeg.frostedheart.content.town.block.blockscanner.TownConnectivity connectivityView() { return connectivity; }
+
+    public void tick(ServerLevel level, TeamDataHolder teamData) {
+        connectivity.tick(level, townGenerator(teamData).map(g -> g.actualPos).orElse(null), buildings);
+        TownSync.tick(this, level, teamData);
+    }
 
     private void flushChanges(ServerLevel level, TeamDataHolder teamData) { TownSync.flushChanges(this, level, teamData); }
 

@@ -67,6 +67,14 @@ final class LoadedTownWorld implements LevelReader, AbstractWorld {
         return chunk == null ? Blocks.BARRIER.defaultBlockState() : chunk.getBlockState(position);
     }
 
+    BlockType getPathBlockType(BlockPos position) {
+        return isPathDoor(getBlockState(position)) ? BlockType.AIR : getBlockType(position);
+    }
+
+    static boolean isPathDoor(BlockState state) {
+        return state.getBlock() instanceof net.minecraft.world.level.block.DoorBlock;
+    }
+
     @Override
     public BlockType getBlockType(BlockPos position) {
         BlockState state = getBlockState(position);

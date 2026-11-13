@@ -224,7 +224,7 @@
   "key.frostedheart.health": "打开饮食均衡",
   "key.frostedheart.open_wheel_menu": "打开轮盘菜单",
   "key.frostedheart.drink": "喝水",
-  "key.frostedheart.building_area": "切换建筑区域显示",
+  "key.frostedheart.building_area": "切换建筑区域与道路显示",
   "manual.frostedheart.main": "能量塔",
   "message.frostedheart.disallowed_mods": "服务器拒绝连接：你的客户端包含禁止使用的模组",
   "message.frostedheart.not_authorized": "登录失败，请重启游戏或更新整合包再试。",

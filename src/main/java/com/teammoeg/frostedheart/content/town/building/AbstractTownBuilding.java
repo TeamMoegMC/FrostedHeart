@@ -56,6 +56,24 @@ public abstract class AbstractTownBuilding implements ITownBuilding,ITownSpaceOc
      */
     private boolean initialized = false;
 
+    // Runtime topology is rebuilt after loading, never persisted.
+    private transient boolean connectedToTower;
+    private transient boolean connectivityWorkable;
+
+    public void setConnectivityWorkable(boolean value) {
+        if (connectivityWorkable != value) {
+            connectivityWorkable = value;
+            fireAvailabilityChange();
+        }
+    }
+
+    public void setConnectedToTower(boolean value) {
+        if (connectedToTower != value) {
+            connectedToTower = value;
+            fireAvailabilityChange();
+        }
+    }
+
     private boolean isStructureValid = false;
 
     private OccupiedZoneInfo occupiedVolume = OccupiedZoneInfo.EMPTY;
@@ -214,7 +232,7 @@ public abstract class AbstractTownBuilding implements ITownBuilding,ITownSpaceOc
 
     @Override
     public boolean isBuildingWorkable(){
-        return initialized && !occupiedVolume.isOverlapped() && isStructureValid;
+        return connectivityWorkable && initialized && !occupiedVolume.isOverlapped() && isStructureValid;
     }
 
     @Override
