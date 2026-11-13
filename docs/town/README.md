@@ -3,6 +3,7 @@
 Town management covers residents, housing, work, production, storage, nutrition, heating, daily settlement, citizen presence, and the Mayor's Seal.
 
 | Document | Scope | Status |
+| [labor-dispatch.md](labor-dispatch.md) | 基础工人派遣与 Labor 池 | Partial |
 |---|---|---|
 | [town-model.md](town-model.md) | Mechanics, formulas, simulator, and balance evidence | Transitional |
 | [hybrid-simulation-architecture.md](hybrid-simulation-architecture.md) | Citizen behavior, movement, rendering, synchronization, and persistence | Transitional |

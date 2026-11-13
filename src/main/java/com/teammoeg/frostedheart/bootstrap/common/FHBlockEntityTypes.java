@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart.bootstrap.common;
 
+import com.teammoeg.frostedheart.content.town.buildings.dispatch.*;
 import com.google.common.collect.ImmutableSet;
 import com.simibubi.create.content.kinetics.base.HalfShaftInstance;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntityRenderer;
@@ -168,6 +169,10 @@ public class FHBlockEntityTypes {
     public static final RegistryObject<BlockEntityType<HuntingBaseBlockEntity>> HUNTING_BASE = REGISTER.register(
             "hunting_base", makeType(HuntingBaseBlockEntity::new, FHBlocks.HUNTING_BASE::get)
     );
+    public static final RegistryObject<BlockEntityType<LaborDispatchBlockEntity>> LABOR_DISPATCH = REGISTER.register(
+            "labor_dispatch", makeType(LaborDispatchBlockEntity::new, FHBlocks.LABOR_DISPATCH::get)
+    );
+
     public static final RegistryObject<BlockEntityType<TransportStationBlockEntity>> TRANSPORT_STATION = REGISTER.register(
             "transport_station", makeType(TransportStationBlockEntity::new, FHBlocks.TRANSPORT_STATION::get)
     );

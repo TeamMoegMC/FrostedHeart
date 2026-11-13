@@ -75,6 +75,7 @@ public class FHScreens {
         registerCUIScreen(FHMenuTypes.MINE_BASE.get(), MineBaseScreen::new);
         registerCUIScreen(FHMenuTypes.HUNTING_BASE.get(), HuntingBaseScreen::new);
         registerCUIScreen(FHMenuTypes.TRANSPORT_STATION.get(), TransportStationScreen::new);
+        registerCUIScreen(FHMenuTypes.LABOR_DISPATCH.get(), com.teammoeg.frostedheart.content.town.buildings.dispatch.LaborDispatchScreen::new);
         registerCUIScreen(FHMenuTypes.RESEARCH_INSTITUTE.get(), ResearchInstituteScreen::new);
         registerCUIScreen(FHMenuTypes.MINE.get(), MineScreen::new);
         registerCUIScreen(FHMenuTypes.WAREHOUSE_INTERFACE.get(), WarehouseInterfaceScreen::new);

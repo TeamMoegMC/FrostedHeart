@@ -22,6 +22,7 @@ public final class TownBuildingTypes {
     public static final int VERSION = 1;
     private static long resourceGeneration;
     private static final List<Type<?>> TYPES = List.of(
+            new Type<>("laborDispatch", com.teammoeg.frostedheart.content.town.buildings.dispatch.LaborDispatchBuilding.class, () -> com.teammoeg.frostedheart.content.town.buildings.dispatch.LaborDispatchBuilding.MAP_CODEC, null),
             new Type<>("house", HouseBuilding.class, () -> HouseBuilding.MAP_CODEC, () -> HouseBuilding.DailyReport.CODEC),
             new Type<>("huntingBase", HuntingBaseBuilding.class, () -> HuntingBaseBuilding.MAP_CODEC, () -> HuntingBaseBuilding.HuntingDailyReport.CODEC),
             new Type<>("mine", MineBuilding.class, () -> MineBuilding.MAP_CODEC, null),

@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart.bootstrap.common;
 
+import com.teammoeg.frostedheart.content.town.buildings.dispatch.*;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.logic.IMultiblockState;
 import com.teammoeg.frostedheart.content.town.buildings.house.HouseBlockEntity;
 import com.teammoeg.frostedheart.content.town.buildings.house.HouseMenu;
@@ -123,6 +124,9 @@ public class FHMenuTypes {
 			register(MineBaseBlockEntity.class, "mine_base", MineBaseMenu::new);
 	public static final RegistryObject<MenuType<HuntingBaseMenu>> HUNTING_BASE =
 			register(HuntingBaseBlockEntity.class, "hunting_base", HuntingBaseMenu::new);
+	public static final RegistryObject<MenuType<LaborDispatchMenu>> LABOR_DISPATCH =
+			register(LaborDispatchBlockEntity.class, "labor_dispatch", LaborDispatchMenu::new);
+
 	public static final RegistryObject<MenuType<TransportStationMenu>> TRANSPORT_STATION =
 			register(TransportStationBlockEntity.class, "transport_station", TransportStationMenu::new);
 	public static final RegistryObject<MenuType<ResearchInstituteMenu>> RESEARCH_INSTITUTE =

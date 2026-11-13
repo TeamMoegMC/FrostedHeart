@@ -980,6 +980,12 @@ public class TeamTownData implements com.teammoeg.chorda.dataholders.PersistentC
 
     public void tick(ServerLevel level, TeamDataHolder teamData) {
         connectivity.tick(level, townGenerator(teamData).map(g -> g.actualPos).orElse(null), buildings);
+        int dispatchWorkers = buildings.values().stream()
+                .filter(com.teammoeg.frostedheart.content.town.buildings.dispatch.LaborDispatchBuilding.class::isInstance)
+                .map(com.teammoeg.frostedheart.content.town.buildings.dispatch.LaborDispatchBuilding.class::cast)
+                .mapToInt(building -> building.availableWorkers(createTeamTown())).sum();
+        teamData.getData(FHSpecialDataTypes.LABOUR_DATA).setExtraProviderValue(
+                com.teammoeg.frostedheart.content.robotics.LaborTypes.WORKER, dispatchWorkers);
         TownSync.tick(this, level, teamData);
     }
 

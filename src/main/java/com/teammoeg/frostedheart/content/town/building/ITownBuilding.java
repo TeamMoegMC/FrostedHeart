@@ -43,6 +43,7 @@ public interface ITownBuilding {
             .typeLazy("mineBase", MineBaseBuilding.class, () -> MineBaseBuilding.CODEC)
             .typeLazy("warehouse", WarehouseBuilding.class, () -> WarehouseBuilding.CODEC)
             .typeLazy("transportStation", TransportStationBuilding.class, () -> TransportStationBuilding.CODEC)
+            .typeLazy("laborDispatch", com.teammoeg.frostedheart.content.town.buildings.dispatch.LaborDispatchBuilding.class, () -> com.teammoeg.frostedheart.content.town.buildings.dispatch.LaborDispatchBuilding.CODEC)
             .typeLazy("researchInstitute", ResearchInstituteBuilding.class, () -> ResearchInstituteBuilding.CODEC)
             // 按字符串key分发（写盘存 "house"/"mine" 等名称），解码时兼容旧存档的整数索引。
             // 新增建筑类型时可任意位置插入，不再受注册顺序约束。

@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart.bootstrap.common;
 
+import com.teammoeg.frostedheart.content.town.buildings.dispatch.*;
 import com.google.common.collect.ImmutableMap;
 import com.simibubi.create.AllTags;
 import com.teammoeg.caupona.CPTags;
@@ -2471,6 +2472,15 @@ public class FHBlocks {
             .transform(axeOnly())
             .simpleItem()
             .lang("Hunting Base")
+            .register();
+
+    public static final BlockEntry<LaborDispatchBlock> LABOR_DISPATCH = REGISTRATE
+            .block("labor_dispatch", LaborDispatchBlock::new)
+            .properties(t -> AbstractTownBuildingBlock.TOWN_BUILDING_CORE_BLOCK_BASE_PROPERTY)
+            .tag(FHTags.Blocks.TOWN_BLOCKS.tag)
+            .transform(axeOnly())
+            .simpleItem()
+            .lang("Labor Dispatch Agency")
             .register();
 
     public static final BlockEntry<TransportStationBlock> TRANSPORT_STATION = REGISTRATE
