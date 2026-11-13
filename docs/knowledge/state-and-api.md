@@ -1,7 +1,7 @@
 # 知识状态、API 与生命周期
 
 - Status: `Current`（源码与本轮自动化测试核对；游戏内视觉与多人联机流程尚未人工验收）
-- Last verified: `2026-11-12`
+- Last verified: `2026-11-13`（联络候选按档案/来件过滤；其余验证见各节）
 - Scope: 队伍知识身份、档案、来件、学习与忘记、理解与休眠、联络、历史、联想、队伍迁移、权限桥接及同步
 - Code anchors: [`KnowledgeService`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/KnowledgeService.java)、[
   `KnowledgeState`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/state/KnowledgeState.java)、[
@@ -79,9 +79,9 @@ codec 错误而不是异常。`ObservationSampling` 把非有限的坐标与温�
 | `query(key)`                                   | 分别返回 `inArchive`、`inInbox`、`active` 与状态原因 |
 | `isActive(key)`                                | 当前是否具有有效的档案知识；不使用来件或历史替代                  |
 | `canExport(key)`                               | 检查源条目、可传播性及扩展权限；不消耗笔记                     |
-| `previewLinks(keys)`                           | 返回当前选择完整命中的全部规则及实际绑定，不修改状态                |
+| `previewLinks(keys)`                           | 返回当前选择完整命中且输出想法不在档案/来件的规则及实际绑定，不修改状态 |
 | `link(ruleId, keys)`                           | 内部完成接口；只匹配指定规则、检查必要前置、记录实际关系并产生想法                      |
-| `candidateLinks(limit)`                        | 面向研究所的候选查询；只用有效档案输入，按槽位筛选和回溯，每条规则返回首个可行绑定 |
+| `candidateLinks(limit)`                        | 面向研究所的候选查询；过滤档案/来件已有的输出想法，只用有效档案输入，每条规则返回首个可行绑定 |
 | `merge(sourceState)`                           | 由队伍系统明确发起的知识合并；加入、退出队伍不调用                 |
 
 `Grant.NORMAL` 检查独立理解条件。`Grant.INITIAL` 与 `Grant.COMMAND` 明确标记特殊来源，跳过理解条件，仍经由定义/用途判断、状态提交、事件与同步。初始知识来自

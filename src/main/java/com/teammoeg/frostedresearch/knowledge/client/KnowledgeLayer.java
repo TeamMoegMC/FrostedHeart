@@ -198,6 +198,7 @@ public final class KnowledgeLayer extends UILayer {
             chooseOpeningResearch();
             chooseOpeningPage = false;
         }
+        pruneLinkCandidates();
         graphDirty = true;
         refreshInspectedPresence();
         Set<KnowledgeKey> retained = new HashSet<>();
@@ -754,6 +755,27 @@ public final class KnowledgeLayer extends UILayer {
         return projects;
     }
 
+    private List<KnowledgeJournalData.Project> orderedResearchProjects() {
+        var projects = researchProjects();
+        Set<String> running = data.runs.stream().filter(KnowledgeJournalData.Run::open)
+                .map(KnowledgeJournalData.Run::project).collect(java.util.stream.Collectors.toSet());
+        projects.sort(Comparator.comparingInt(project -> researchOrder(project, running)));
+        return projects;
+    }
+
+    private static int researchOrder(KnowledgeJournalData.Project project, Set<String> running) {
+        if (project.startStatus().equals("ALREADY_OWNED") || project.startStatus().equals("LEGACY_COMPLETED")) return 3;
+        if (running.contains(project.id())) return 0;
+        if (project.startStatus().equals("LEARNABLE") && (project.staged() || !project.requirements().isEmpty())) return 1;
+        return project.completed() ? 3 : 2;
+    }
+
+    private void pruneLinkCandidates() {
+        candidates.removeIf(candidate -> candidate.contains("output") && data.entry(
+                new KnowledgeKey(KnowledgeKey.Kind.IDEA, candidate.getString("output"))) != null);
+        candidateIndex = Math.min(candidateIndex, Math.max(0, candidates.size() - 1));
+    }
+
     private KnowledgeJournalData.Project researchProject(String id) {
         return id == null ? null : researchProjects().stream().filter(project -> project.id().equals(id)).findFirst().orElse(null);
     }
@@ -926,7 +948,7 @@ public final class KnowledgeLayer extends UILayer {
                     rows.add(new JournalList.Row(entry.key(), entry.title(), page == Page.INBOX ? KnowledgePresentation.status(entry.status()) : entry.summary().isEmpty() ? KnowledgePresentation.subtype(entry.subtype()) : entry.summary().get(0), entry.icon(), false, values.size() > 1 ? 1 : 0));
             }
         } else if (page == Page.RESEARCH) {
-            for (var project : researchProjects())
+            for (var project : orderedResearchProjects())
                 if (project.title().getString().toLowerCase(Locale.ROOT).contains(needle))
                     rows.add(new JournalList.Row(project.id(), project.title(), researchState(project), new ItemStack(Items.WRITABLE_BOOK), false));
         } else {
@@ -1132,6 +1154,7 @@ public final class KnowledgeLayer extends UILayer {
             candidates.clear();
             for (Tag raw : payload.getList("candidates", Tag.TAG_COMPOUND)) candidates.add((CompoundTag) raw);
             candidateIndex = 0;
+            pruneLinkCandidates();
             mode = Mode.CANDIDATES;
             if (candidates.isEmpty()) feedback.add(t("link.empty"));
         }

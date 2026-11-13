@@ -97,7 +97,7 @@ public final class IdeaAcquisitionGameTests {
             for (var key : keys) service.learn(KnowledgeElement.result(key.definitionId()), SOURCE, KnowledgeService.Grant.NORMAL);
             int entries = service.state().archive().entries().size(), acquisitions = service.state().acquisitions().size();
             MinecraftForge.EVENT_BUS.addListener(listener);
-            h.assertTrue(service.previewLinks(keys).size() == 2 && service.candidateLinks(10).size() == 2, "known output remains a manual candidate through both rules");
+            h.assertTrue(service.previewLinks(keys).isEmpty() && service.candidateLinks(10).isEmpty(), "archived outputs are hidden through both candidate APIs");
             UUID player = UUID.randomUUID();
             h.assertTrue(KnowledgeLinkSessions.start(player, 1, BlockPos.ZERO, service, rule, keys, 0) == KnowledgeService.Status.SUCCESS, "known output can enter normal manual wait");
             h.assertTrue(KnowledgeLinkSessions.advance(player, service, 200).state().equals("completed"), "original materials loop completes normally");
@@ -112,6 +112,7 @@ public final class IdeaAcquisitionGameTests {
             var inbox = service(); inbox.receive(KnowledgeElement.idea(target.definitionId()), SOURCE);
             for (var key : keys) inbox.learn(KnowledgeElement.result(key.definitionId()), SOURCE, KnowledgeService.Grant.NORMAL);
             int inboxAcquisitions = inbox.state().acquisitions().size();
+            h.assertTrue(inbox.previewLinks(keys).isEmpty() && inbox.candidateLinks(10).isEmpty(), "received outputs are hidden before learning too");
             h.assertTrue(inbox.link(rule, keys).status() == KnowledgeService.Status.ALREADY_RECEIVED && inbox.state().links().containsKey(rule), "received output also permits a manual path");
             h.assertTrue(inbox.query(target).inInbox() && !inbox.query(target).inArchive() && inbox.state().acquisitions().size() == inboxAcquisitions,
                 "received output is not silently relearned or duplicated by a manual path");

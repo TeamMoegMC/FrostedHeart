@@ -149,6 +149,7 @@ public final class KnowledgeWorkbenchActionPacket implements CMessage {
                         KnowledgeElement output = service.describe(KnowledgeKey.idea(match.rule().output()));
                         CompoundTag candidate = new CompoundTag();
                         candidate.putString("rule", match.ruleId().toString());
+                        candidate.putString("output", match.rule().output().toString());
                         candidate.putString("title", output.title());
                         candidate.putString("body", output.body());
                         candidates.add(candidate);

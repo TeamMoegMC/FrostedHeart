@@ -283,12 +283,17 @@ public final class KnowledgeService {
     public List<LinkMatcher.Match> previewLinks(List<KnowledgeKey> keys) {
         if (keys.size() > 5 || new HashSet<>(keys).size() != keys.size() || keys.stream().anyMatch(k -> !query(k).active()))
             return List.of();
-        return LinkMatcher.match(keys.stream().map(k -> state.archive().entries().get(k).element()).toList(), KnowledgeDefinitions.current().links()).stream().filter(this::linkAllowed).toList();
+        return LinkMatcher.match(keys.stream().map(k -> state.archive().entries().get(k).element()).toList(), KnowledgeDefinitions.current().links()).stream().filter(this::linkCandidate).toList();
     }
 
     public List<LinkMatcher.Match> candidateLinks(int limit) {
         if (limit <= 0) return List.of();
-        return LinkMatcher.candidates(state.archive().entries().values().stream().map(KnowledgeEntry::element).filter(e -> isActive(e.key())).toList(), KnowledgeDefinitions.current().links(), Integer.MAX_VALUE).stream().filter(this::linkAllowed).limit(limit).toList();
+        return LinkMatcher.candidates(state.archive().entries().values().stream().map(KnowledgeEntry::element).filter(e -> isActive(e.key())).toList(), KnowledgeDefinitions.current().links(), Integer.MAX_VALUE).stream().filter(this::linkCandidate).limit(limit).toList();
+    }
+
+    private boolean linkCandidate(LinkMatcher.Match match) {
+        KnowledgeKey output = KnowledgeKey.idea(match.rule().output());
+        return !state.archive().contains(output) && !state.inbox().contains(output) && linkAllowed(match);
     }
 
     private boolean linkAllowed(LinkMatcher.Match match) {
