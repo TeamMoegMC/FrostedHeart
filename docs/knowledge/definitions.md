@@ -1,7 +1,7 @@
 # 知识定义、观察快照与联络规则
 
 - Status: `Current`
-- Last verified: `2026-11-12`
+- Last verified: `2026-11-14`（联络独立前置与辅助知识）
 - Scope: 知识身份、不可变观察、独立想法/成果定义、项目关系与研究需求、物品检索规则、服务端联络匹配及观察用途判定。
 - Code anchors: [
   `KnowledgeElement`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/model/KnowledgeElement.java)、[
@@ -31,14 +31,14 @@
 
 `required` 和 `optional` 均复用 KnowledgeCondition，默认空；triggers 默认空。每个 trigger 必填 event，subject 可选，
 缺席表示只匹配事件 ID。有多个入口时 OR；同一次操作命中几个入口也只为该想法抽一次概率。
-全部 required 仅限制行为和联络；不限制外部 receive / produce / learn，understanding 继续只负责学习。
+acquisition.required 限制行为触发；没有单独配置前置的旧联络规则也继承它。不限制外部 receive / produce / learn，understanding 继续只负责学习。
 subject 描述当次行为载荷，required / optional 查询有效档案；不把两者混成同一种事件判断。
 chance 可按想法指定 [0,1]，未指定用服务器 knowledgeBehaviorChance。概率与等待公式见 [API 文档](state-and-api.md#m2-行为事件与短联络)。
 
 内置事件 ID：`frostedresearch:item_obtained`、`item_used`、`block_interacted`、`observation_completed`、`knowledge_learned`。
 前三者载荷为对应 item/block Observation，观察完成为当次采样，学习为入档的 KnowledgeElement；
 `example:field_work` 这类外部事件可不带载荷，或带同一有类型元素。无联络规则的想法仍可行为获得。
-全部 required / optional / trigger.subject 观察条件加入单槽用途索引，包括隐藏想法。
+全部 acquisition.required / optional / trigger.subject，以及联络的 required_knowledge / optional_knowledge 观察条件加入单槽用途索引，包括隐藏想法。
 
 LinkRule.inputs 仍必填，作者可显式给 0–5 槽。0 槽表示明确配置的零输入候选，1 槽只需一份札记；
 旧 2–5 槽仍按互异身份与原跨字段条件完整匹配。不会从全部想法自动生成候选目录。
@@ -244,6 +244,16 @@ NBT。未列出的数据不会进入这次观察，物品本身不被消耗。
 
 ## 联络规则
 
+每条 LinkRule 可独立配置 `required_knowledge` 和 `optional_knowledge`，两者都是 KnowledgeCondition 数组：
+
+- `inputs`：必须摆到桌面的已学会知识，精确匹配；顺序无关，不消耗。
+- `required_knowledge`：额外必须掌握的档案知识，不用放到桌面。
+- `optional_knowledge`：只减少等待时间的档案知识，缺少不阻挡联络，也不用放到桌面。
+
+后两字段分别在省略时继承输出想法的 acquisition.required / optional，兼容旧数据；显式 `[]` 表示本路径没有该类知识。新正式规则显式声明两字段，所以联络门槛与事件门槛可以不同。同一想法的不同联络路径也可有不同辅助知识。项目启动仍由 ProjectAccess.start_all 独立配置，不会自动从配方生成。
+
+例如砂砖单砖和砂砖方块放入物品标签 `the_winter_rescue:research/sandy_bricks`；观察槽位使用 `object` 的 `tag` 条件即可接受二者任一种。观察只保存对象身份，匹配时查询当前标签，不把标签复制进观察。相同写法适用于触发 subject、辅助知识和项目 access；同一个条件内多个 conditions 是 AND，OR 替代物用同一个标签表达。
+
 ```json
 {
   "inputs": [
@@ -303,7 +313,7 @@ NBT。未列出的数据不会进入这次观察，物品本身不被消耗。
 }
 ```
 
-`inputs` 必须有 2 至 5 个槽位；`name` 在规则内唯一。想法/成果槽位写为
+`inputs` 必须显式声明，可有 0 至 5 个槽位；`name` 在规则内唯一。想法/成果槽位写为
 `{"name":"idea","kind":"idea","definition":"example:seasons"}`，不能读取观察字段。观察槽位可省略 `observation_type`
 ，但匹配对象标签时必须声明对象类型。
 

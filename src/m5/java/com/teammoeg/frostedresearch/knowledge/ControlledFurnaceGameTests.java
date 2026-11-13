@@ -70,7 +70,7 @@ public final class ControlledFurnaceGameTests {
     }
     static UUID begin(Actor a){
         var s=a.service();s.learn(KnowledgeElement.idea(IDEA),SOURCE,KnowledgeService.Grant.NORMAL);
-        for(String id:List.of("frostedheart:kaolin","frostedheart:bauxite","minecraft:clay_ball"))s.learn(ItemRetrieval.observe(a.player,new ItemStack(item(id))),SOURCE,KnowledgeService.Grant.NORMAL);
+        for(String id:List.of("charcoal_pit:sandy_brick_item","frostedheart:kaolin","frostedheart:bauxite","minecraft:clay_ball"))s.learn(ItemRetrieval.observe(a.player,new ItemStack(item(id))),SOURCE,KnowledgeService.Grant.NORMAL);
         return s.startResearch(PROJECT).orElseThrow();
     }
     static UUID firing(Actor a){var run=begin(a);a.service().advanceStage(run,"prepare");return run;}
@@ -256,6 +256,19 @@ public final class ControlledFurnaceGameTests {
             var events=List.of(IdeaAcquisitionService.ITEM_OBTAINED,IdeaAcquisitionService.OBSERVATION_COMPLETED,IdeaAcquisitionService.OBSERVATION_COMPLETED,RefractoryObservationIndex.EVENT);
             for(int i=0;i<4;i++){var s=new KnowledgeService(UUID.randomUUID(),new KnowledgeState(),1,()->{});IdeaAcquisitionService.fire(s,List.of(new IdeaAcquisitionService.Signal(events.get(i),KnowledgeElement.observation(obs.get(i)))),()->0);
                 h.assertTrue(s.query(KnowledgeKey.idea(IDEA)).inArchive(),"each formal trigger can independently acquire the idea: "+i);}
+            for(String brick:List.of("charcoal_pit:sandy_brick_item","charcoal_pit:sandy_brick")){
+                var s=new KnowledgeService(UUID.randomUUID(),new KnowledgeState(),1,()->{});
+                var record=ItemRetrieval.observe(a.player,new ItemStack(item(brick)));
+                s.learn(record,SOURCE,KnowledgeService.Grant.NORMAL);
+                var keys=List.of(record.key());
+                h.assertTrue(s.matchLink(id("refractory_firing"),keys).isPresent(),"real sandy-brick tag accepts either form without raw-material auxiliaries");
+                h.assertTrue(KnowledgeLinkSessions.duration(s,KnowledgeDefinitions.current().links().get(id("refractory_firing")))==200,"brick-only link costs ten seconds");
+                s.learn(KnowledgeElement.idea(IDEA),SOURCE,KnowledgeService.Grant.NORMAL);
+                h.assertTrue(s.startResearch(PROJECT).isEmpty(),"idea and mandatory link input do not waive project raw-material knowledge");
+                for(String material:List.of("frostedheart:kaolin","frostedheart:bauxite","minecraft:clay_ball"))
+                    s.learn(ItemRetrieval.observe(a.player,new ItemStack(item(material))),SOURCE,KnowledgeService.Grant.NORMAL);
+                h.assertTrue(s.startResearch(PROJECT).isPresent(),"both real sandy-brick forms satisfy the formal project prerequisite");
+            }
             h.succeed();
         }
     }

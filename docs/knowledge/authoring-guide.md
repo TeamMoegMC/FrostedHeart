@@ -1,7 +1,7 @@
 # 编写研究内容
 
 - Status: `Verified`：本页核对 M1–M5 已实现格式与服务端测试；各正式项目的客户端及游玩验证范围见其操作文档。
-- Last verified: `2026-11-12`
+- Last verified: `2026-11-14`
 - Scope: 数据包内容作者的入口与可复制范例，不替代完整字段参考。
 - Code anchors: [ProjectDefinition](../../src/main/java/com/teammoeg/frostedresearch/knowledge/definition/ProjectDefinition.java)、[StageDefinition](../../src/main/java/com/teammoeg/frostedresearch/knowledge/definition/StageDefinition.java)、[IdeaAcquisitionService.emit](../../src/main/java/com/teammoeg/frostedresearch/knowledge/IdeaAcquisitionService.java)。
 
@@ -15,6 +15,7 @@
 | 两阶段、小游戏与原型 | [冶铁炉](../../../TheWinterRescue/kubejs/data/the_winter_rescue/frostedresearch/knowledge/projects/iron_bloomery.json) | 阶段任务、临时配方、观察任务和最终 Design |
 | 多个想法共同开启 | [joint_study](example-datapack/data/example/frostedresearch/knowledge/projects/joint_study.json) | 开始条件、逐项披露组、对应想法定义 |
 | 成果承接下一研究 | [followup](example-datapack/data/example/frostedresearch/knowledge/projects/followup.json) | 成果入口及开始条件；不必强加想法 |
+| 联络与事件使用不同前置 | [正式联络规则](../../../TheWinterRescue/kubejs/data/the_winter_rescue/frostedresearch/knowledge/links/) | inputs 是必要桌面记录；required_knowledge / optional_knowledge 独立配置，详见[定义参考](definitions.md#联络规则) |
 | 行为获取想法 | [field_idea](example-datapack/data/example/frostedresearch/knowledge/ideas/field_idea.json) | acquisition.required/optional/triggers；学习条件仍是 understanding |
 | 知识影响下一阶段提示 | [耐火砖](../../../TheWinterRescue/kubejs/data/the_winter_rescue/frostedresearch/knowledge/projects/refractory_brick.json) | 有序 variants、参考知识与默认路径；进入阶段时固定 |
 | 可选任务减少后续任务 | [阶段格式](stages-and-airflow.md)、[可执行的阶段测试](../../src/gametest/java/com/teammoeg/frostedresearch/knowledge/StageResearchGameTests.java) | when.tasks_all 与 omit_tasks；不改变最终成果 |

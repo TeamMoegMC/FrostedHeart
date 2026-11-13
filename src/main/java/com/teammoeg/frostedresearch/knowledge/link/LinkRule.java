@@ -23,6 +23,7 @@ package com.teammoeg.frostedresearch.knowledge.link;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedresearch.knowledge.model.*;
+import com.teammoeg.frostedresearch.knowledge.definition.KnowledgeCondition;
 import net.minecraft.resources.ResourceLocation;
 
 import java.util.*;
@@ -31,22 +32,38 @@ import java.util.*;
  * 数据包联络规则。局域槽位绑定互异知识身份，顺序不参与规则语义。
  */
 public record LinkRule(List<Slot> inputs, List<CrossCondition> conditions, ResourceLocation output,
-                       List<String> hints) {
+                       List<String> hints, Optional<List<KnowledgeCondition>> requiredKnowledge,
+                       Optional<List<KnowledgeCondition>> optionalKnowledge) {
     public static final Codec<LinkRule> CODEC = RecordCodecBuilder.create(i -> i.group(
             Slot.CODEC.listOf().fieldOf("inputs").forGetter(LinkRule::inputs),
             CrossCondition.CODEC.listOf().optionalFieldOf("conditions", List.of()).forGetter(LinkRule::conditions),
             ResourceLocation.CODEC.fieldOf("output").forGetter(LinkRule::output),
-            Codec.STRING.listOf().optionalFieldOf("hints", List.of()).forGetter(LinkRule::hints)
+            Codec.STRING.listOf().optionalFieldOf("hints", List.of()).forGetter(LinkRule::hints),
+            KnowledgeKey.strictOptionalField(KnowledgeCondition.CODEC.listOf(), "required_knowledge").forGetter(LinkRule::requiredKnowledge),
+            KnowledgeKey.strictOptionalField(KnowledgeCondition.CODEC.listOf(), "optional_knowledge").forGetter(LinkRule::optionalKnowledge)
     ).apply(i, LinkRule::new));
 
     public LinkRule {
         inputs = List.copyOf(inputs);
         conditions = List.copyOf(conditions);
         hints = List.copyOf(hints);
+        requiredKnowledge = requiredKnowledge.map(List::copyOf);
+        optionalKnowledge = optionalKnowledge.map(List::copyOf);
+    }
+
+    /** Omitted route prerequisites retain existing datapack behavior. Explicit [] means none. */
+    public LinkRule(List<Slot> inputs, List<CrossCondition> conditions, ResourceLocation output, List<String> hints) {
+        this(inputs, conditions, output, hints, Optional.empty(), Optional.empty());
     }
 
     public LinkRule(List<Slot> inputs, List<CrossCondition> conditions, ResourceLocation output) {
         this(inputs, conditions, output, List.of());
+    }
+
+    public List<KnowledgeCondition> knowledgeConditions() {
+        List<KnowledgeCondition> all = new ArrayList<>(requiredKnowledge.orElse(List.of()));
+        all.addAll(optionalKnowledge.orElse(List.of()));
+        return List.copyOf(all);
     }
 
     public SlotPattern pattern() {
@@ -58,6 +75,7 @@ public record LinkRule(List<Slot> inputs, List<CrossCondition> conditions, Resou
         if (inputs.size() > 5) errors.add("Link rules allow 0 to 5 explicitly declared input slots");
         if (conditions.size() > 5) errors.add("Link rules allow at most 5 cross conditions");
         validateBindings(inputs, conditions, errors);
+        knowledgeConditions().forEach(c -> c.validate(errors));
         return errors;
     }
 

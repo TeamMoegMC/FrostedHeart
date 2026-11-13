@@ -79,7 +79,7 @@ public final class TuyereResearchGameTests {
     }
     static void learnMaterials(Actor a,Item metal,Item fuel) {
         var service=a.service();service.learn(KnowledgeElement.idea(IDEA),SOURCE,KnowledgeService.Grant.NORMAL);
-        for(var item:List.of(metal,fuel)) service.learn(ItemRetrieval.observe(a.player,new ItemStack(item)),SOURCE,KnowledgeService.Grant.NORMAL);
+        for(var item:List.of(Items.RAW_IRON,metal,fuel)) service.learn(ItemRetrieval.observe(a.player,new ItemStack(item)),SOURCE,KnowledgeService.Grant.NORMAL);
     }
     static UUID begin(Actor actor) {
         learnMaterials(actor,Items.COPPER_INGOT,Items.CHARCOAL);return actor.service().startResearch(PROJECT).orElseThrow();
@@ -107,7 +107,12 @@ public final class TuyereResearchGameTests {
             h.assertTrue(service.startResearch(PROJECT).isEmpty(),"idea alone lacks both observation groups");
             var copper=ItemRetrieval.observe(actor.player,new ItemStack(Items.COPPER_INGOT));service.receive(copper,SOURCE);
             service.learn(ItemRetrieval.observe(actor.player,new ItemStack(Items.COAL)),SOURCE,KnowledgeService.Grant.NORMAL);
+            var link=KnowledgeDefinitions.current().links().get(IDEA);
+            h.assertTrue(KnowledgeLinkSessions.duration(service,link)==200,"mandatory fuel and inbox metal do not discount the link");
             h.assertTrue(service.startResearch(PROJECT).isEmpty(),"metal in inbox does not satisfy access");service.learnInbox(copper.key());
+            h.assertTrue(service.startResearch(PROJECT).isEmpty(),"raw iron observation is also required to start");
+            service.learn(ItemRetrieval.observe(actor.player,new ItemStack(Items.RAW_IRON)),SOURCE,KnowledgeService.Grant.NORMAL);
+            h.assertTrue(KnowledgeLinkSessions.duration(service,link)==180,"learned copper/bronze gives the one optional discount");
             UUID run=service.startResearch(PROJECT).orElseThrow();
             h.assertTrue(!TechnologyAccessResolver.project(actor.team).recipe(PROTOTYPE).allowed(),"prototype managed before airflow success");
             var desk=desk(h,new BlockPos(1,1,1));h.assertTrue(desk.startAirflow(actor.player,run,"airflow_win"),"formal minigame target starts");
@@ -212,6 +217,7 @@ public final class TuyereResearchGameTests {
             for(var metal:List.of(Items.COPPER_INGOT,bronze)) for(var fuel:List.of(Items.COAL,Items.CHARCOAL,coke)) {
                 var service=new KnowledgeService(UUID.randomUUID(),new KnowledgeState(),1,() -> {});
                 service.learn(KnowledgeElement.idea(IDEA),SOURCE,KnowledgeService.Grant.NORMAL);
+                service.learn(ItemRetrieval.observe(actor.player,new ItemStack(Items.RAW_IRON)),SOURCE,KnowledgeService.Grant.NORMAL);
                 service.learn(ItemRetrieval.observe(actor.player,new ItemStack(metal)),SOURCE,KnowledgeService.Grant.NORMAL);
                 h.assertTrue(service.startResearch(PROJECT).isEmpty(),"metal alone still lacks fuel group");
                 service.learn(ItemRetrieval.observe(actor.player,new ItemStack(fuel)),SOURCE,KnowledgeService.Grant.NORMAL);

@@ -1,7 +1,7 @@
 # 控温实验炉
 
 - Status: `Current`（11月13日16项服务端回归通过，含第二种材料/实验和同台交错操作；Playtest实际打开原生GUI、调温和切换生产模式通过；此前完整客户端试烧/批量证据仍为旧CUI）
-- Last verified: `2026-11-13`（原生GUI实际显示和按钮检查、通用物料服务端回归；详见[当轮记录](../../diary/2026-11-13_23-12-00_research-root-journal-and-general-furnace-gui.md)）
+- Last verified: `2026-11-14`（本轮正式砂砖前置与服务端回归；11月13日原生GUI实际显示和按钮检查、通用物料服务端回归；详见[当轮记录](../../diary/2026-11-13_23-12-00_research-root-journal-and-general-furnace-gui.md)）
 - Scope: 通用控温加工设备、按配方指定的试验/生产批次、队伍本次试验样；另记录既有耐火制品观察索引。整合包当前耐火砖路线由 [refractory-brick.md](refractory-brick.md) 维护。
 - Code anchors: `ControlledFiringRecipe`、`ControlledFurnaceBlockEntity`、`ControlledFurnaceMenu`、`ControlledFurnaceScreen`、`ControlledFiringCategory`、`RefractoryObservationIndex`、`ObservationSessions`。
 
@@ -50,7 +50,7 @@ TWR 当前耐火砖试验为1坯料+1木炭、400tick，生产为16坯料+2木�
 
 ## 本地验证
 
-定向测试和正式内容 fixture 在 `src/m5`，只在 `-Pm5Tests` 时加入服务器，不进入生产 JAR。不引入 Charcoal Pit，runtime 仅继承 `gameTest.runtimeClasspath`。命名空间 `frostedresearch_m5`；真实重启单独使用 `frostedresearch_m5_restart` 和相同运行目录，先 `-Pm5RestartPhase=write` 再 read。read 保留先前 world。
+定向测试和正式内容 fixture 在 `src/m5`，只在 `-Pm5Tests` 时加入服务器，不进入生产 JAR。正式项目的砂砖观察前置依赖 Charcoal Pit，因此此测试开关也加载真实 Charcoal Pit 服务端依赖；普通生产构建不受此测试开关影响。命名空间 `frostedresearch_m5`；真实重启单独使用 `frostedresearch_m5_restart` 和相同运行目录，先 `-Pm5RestartPhase=write` 再 read。read 保留先前 world。
 
 本轮命令和实际通过数记录在交接 diary；只认当轮 `GAME TESTS COMPLETE` / `All N required tests passed`，不以进程退出码代替。正式 TWR/KubeJS 全包、生存材料获取及实际界面/JEI 键鼠由后续客户端验收，不由服务端 fixture 冒充。
 

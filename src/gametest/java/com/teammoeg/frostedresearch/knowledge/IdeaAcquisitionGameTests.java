@@ -69,27 +69,87 @@ public final class IdeaAcquisitionGameTests {
                 UUID.randomUUID(), Observation.Type.ITEM, new ResourceLocation(name), Map.of(), Observation.Source.command(), Optional.empty()));
         var clay = observe.apply("minecraft:clay_ball");
         var sand = observe.apply("minecraft:sand");
-        var earthen = rules.get("earthen_smelting").pattern();
-        h.assertTrue(LinkMatcher.bindExact(List.of(clay, sand), earthen, TagLookup.NONE).isPresent(), "clay plus sand produces the earthen idea");
-        h.assertTrue(LinkMatcher.bindExact(List.of(sand, clay), earthen, TagLookup.NONE).isPresent(), "desk order does not matter");
-        h.assertTrue(LinkMatcher.bindExact(List.of(clay), earthen, TagLookup.NONE).isEmpty(), "one missing observation cannot match");
-        var refractory = rules.get("refractory_firing").pattern();
-        var kaolin = observe.apply("frostedheart:kaolin"); var bauxite = observe.apply("frostedheart:bauxite");
-        h.assertTrue(LinkMatcher.bindExact(List.of(kaolin, bauxite, clay), refractory, TagLookup.NONE).isPresent(), "three refractory material observations match");
-        h.assertTrue(LinkMatcher.bindExact(List.of(kaolin, bauxite), refractory, TagLookup.NONE).isEmpty(), "refractory link needs the clay observation too");
-        // Inject tag membership: this checks the authored OR groups, not modpack registry loading.
+        var copper = observe.apply("minecraft:raw_copper");
+        var earthen = rules.get("earthen_smelting");
+        h.assertTrue(LinkMatcher.bindExact(List.of(copper), earthen.pattern(), TagLookup.NONE).isPresent(), "raw copper alone is sufficient for linking");
+        h.assertTrue(LinkMatcher.bindExact(List.of(clay, sand), earthen.pattern(), TagLookup.NONE).isEmpty(), "auxiliary records cannot replace raw copper");
+        h.assertTrue(LinkMatcher.bindExact(List.of(copper, clay), earthen.pattern(), TagLookup.NONE).isEmpty(), "auxiliaries belong in the archive, not the exact tray inputs");
+        // Inject real authored tag members: this tests predicates, not full-pack registration.
         TagLookup tags = (type, field, value, tag) -> type == Observation.Type.ITEM && field.equals("object") && switch (tag.toString()) {
-            case "the_winter_rescue:research/iron_copper_or_bronze" -> Set.of("minecraft:copper_ingot", "m2:bronze_ingot").contains(value.toString());
             case "the_winter_rescue:research/iron_carbon_fuel" -> Set.of("minecraft:coal", "minecraft:charcoal", "immersiveengineering:coal_coke").contains(value.toString());
+            case "the_winter_rescue:research/sandy_bricks" -> Set.of("charcoal_pit:sandy_brick_item", "charcoal_pit:sandy_brick").contains(value.toString());
             default -> false;
         };
-        var iron = rules.get("iron_smelting").pattern();
-        for (String metal : List.of("minecraft:copper_ingot", "m2:bronze_ingot"))
-            for (String fuel : List.of("minecraft:coal", "minecraft:charcoal", "immersiveengineering:coal_coke"))
-                h.assertTrue(LinkMatcher.bindExact(List.of(observe.apply(metal), observe.apply(fuel)), iron, tags).isPresent(), "each metal/fuel alternative matches");
-        h.assertTrue(LinkMatcher.bindExact(List.of(observe.apply("minecraft:iron_ingot"), observe.apply("minecraft:coal")), iron, tags).isEmpty(), "iron pickup may inspire an idea but is not the copper/bronze link input");
+        var iron = rules.get("iron_smelting");
+        for (String fuel : List.of("minecraft:coal", "minecraft:charcoal", "immersiveengineering:coal_coke")) {
+            var rawIron = observe.apply("minecraft:raw_iron"); var carbon = observe.apply(fuel);
+            h.assertTrue(LinkMatcher.bindExact(List.of(rawIron, carbon), iron.pattern(), tags).isPresent(), "raw iron and each fuel alternative match");
+            h.assertTrue(LinkMatcher.bindExact(List.of(carbon, rawIron), iron.pattern(), tags).isPresent(), "desk order is irrelevant");
+        }
+        h.assertTrue(LinkMatcher.bindExact(List.of(observe.apply("minecraft:raw_iron")), iron.pattern(), tags).isEmpty(), "iron link still needs fuel");
+        var refractory = rules.get("refractory_firing");
+        for (String brick : List.of("charcoal_pit:sandy_brick_item", "charcoal_pit:sandy_brick"))
+            h.assertTrue(LinkMatcher.bindExact(List.of(observe.apply(brick)), refractory.pattern(), tags).isPresent(), "either sandy brick form matches");
+        h.assertTrue(LinkMatcher.bindExact(List.of(observe.apply("frostedheart:kaolin"), observe.apply("frostedheart:bauxite"), clay), refractory.pattern(), tags).isEmpty(), "raw materials are auxiliary, not the mandatory brick");
+        var previous = KnowledgeDefinitions.current();
+        try {
+            install(Map.of(earthen.output(), definition(IdeaAcquisition.NONE), iron.output(), definition(IdeaAcquisition.NONE),
+                refractory.output(), definition(IdeaAcquisition.NONE)), Map.of(id("formal_earthen"), earthen,
+                    id("formal_iron"), iron, id("formal_refractory"), refractory));
+            var service = service(); service.learn(copper, SOURCE, KnowledgeService.Grant.NORMAL);
+            h.assertTrue(service.matchLink(id("formal_earthen"), List.of(copper.key())).isPresent()
+                && KnowledgeLinkSessions.duration(service, earthen) == 200, "mandatory-only link works and costs ten seconds");
+            service.receive(clay, SOURCE);
+            h.assertTrue(KnowledgeLinkSessions.duration(service, earthen) == 200, "inbox auxiliary does not reduce cost");
+            service.learnInbox(clay.key());
+            h.assertTrue(KnowledgeLinkSessions.duration(service, earthen) == 180, "one learned auxiliary saves one second");
+            service.learn(sand, SOURCE, KnowledgeService.Grant.NORMAL);
+            h.assertTrue(KnowledgeLinkSessions.duration(service, earthen) == 160, "both auxiliaries save two seconds");
+            var bare = service();
+            h.assertTrue(KnowledgeLinkSessions.duration(bare, refractory) == 200, "refractory base wait is ten seconds");
+            for (String material : List.of("frostedheart:kaolin", "frostedheart:bauxite", "minecraft:clay_ball"))
+                bare.learn(observe.apply(material), SOURCE, KnowledgeService.Grant.NORMAL);
+            h.assertTrue(KnowledgeLinkSessions.duration(bare, refractory) == 140, "three refractory auxiliaries save three seconds");
+        } finally { KnowledgeDefinitions.install(previous); }
         h.succeed();
     }
+    @GameTest(template = "empty", timeoutTicks = 40)
+    public static void linkKnowledgeOverridesBehaviorWithoutChangingLegacyRules(GameTestHelper h) {
+        var previous = KnowledgeDefinitions.current();
+        try {
+            var behavior = acquisition(List.of(trigger(id("signal"), null)), List.of(idea("event_gate")), List.of(idea("event_bonus")));
+            var explicit = new LinkRule(List.of(), List.of(), id("target"), List.of(),
+                Optional.of(List.of(idea("link_gate"))), Optional.of(List.of(idea("link_bonus"), item("glass"))));
+            var noGate = new LinkRule(List.of(), List.of(), id("target"), List.of(), Optional.of(List.of()), Optional.of(List.of()));
+            var legacy = new LinkRule(List.of(), List.of(), id("target"));
+            install(Map.of(id("target"), definition(behavior), id("event_gate"), definition(IdeaAcquisition.NONE),
+                id("event_bonus"), definition(IdeaAcquisition.NONE), id("link_gate"), definition(IdeaAcquisition.NONE),
+                id("link_bonus"), definition(IdeaAcquisition.NONE)), Map.of(id("explicit"), explicit, id("none"), noGate, id("legacy"), legacy));
+            var s = service(); UUID player = UUID.randomUUID();
+            IdeaAcquisitionService.fire(s, List.of(new IdeaAcquisitionService.Signal(id("signal"), Optional.empty())), () -> 0);
+            h.assertTrue(!s.isActive(KnowledgeKey.idea(id("target"))), "behavior is gated by its own required knowledge");
+            h.assertTrue(s.matchLink(id("none"), List.of()).isPresent() && s.matchLink(id("legacy"), List.of()).isEmpty(), "explicit empty gate overrides while legacy inherits");
+            learn(s, "link_gate"); learn(s, "event_bonus");
+            h.assertTrue(s.matchLink(id("explicit"), List.of()).isPresent(), "link can run without the event prerequisite");
+            h.assertTrue(KnowledgeLinkSessions.duration(s, explicit) == 200, "event bonus does not reduce explicit link cost");
+            learn(s, "link_bonus");
+            h.assertTrue(KnowledgeLinkSessions.duration(s, explicit) == 180 && KnowledgeLinkSessions.duration(s, noGate) == 200, "route auxiliary and explicit no-auxiliary override are independent");
+            var glass = new Observation(UUID.randomUUID(), Observation.Type.ITEM, new ResourceLocation("minecraft:glass"), Map.of(), Observation.Source.command(), Optional.empty());
+            h.assertTrue(KnowledgeDefinitions.current().hasObservationUse(glass), "link-only auxiliary observation is indexed as useful");
+            KnowledgeLinkSessions.start(player, 1, BlockPos.ZERO, s, id("explicit"), List.of(), 0);
+            h.assertTrue(KnowledgeLinkSessions.session(player).orElseThrow().duration() == 180, "actual session uses rule-specific duration");
+            s.forget(KnowledgeKey.idea(id("link_gate")));
+            h.assertTrue(KnowledgeLinkSessions.advance(player, s, 200).state().equals("cancelled"), "link gate is rechecked during wait");
+            learn(s, "event_gate");
+            IdeaAcquisitionService.fire(s, List.of(new IdeaAcquisitionService.Signal(id("signal"), Optional.empty())), () -> 0);
+            h.assertTrue(s.isActive(KnowledgeKey.idea(id("target"))), "event works without link prerequisites");
+            for (String field : List.of("required_knowledge", "optional_knowledge"))
+                h.assertTrue(LinkRule.CODEC.parse(JsonOps.INSTANCE, JsonParser.parseString("{\"inputs\":[],\"output\":\"m2:target\",\"" + field + "\":true}")).error().isPresent(), "invalid route knowledge is not silently ignored");
+            h.assertTrue(LinkRule.CODEC.parse(JsonOps.INSTANCE, LinkRule.CODEC.encodeStart(JsonOps.INSTANCE, explicit).result().orElseThrow()).result().orElseThrow().equals(explicit), "route prerequisites survive codec round trip");
+            h.succeed();
+        } finally { KnowledgeLinkSessions.clear(); KnowledgeDefinitions.install(previous); }
+    }
+
     @GameTest(template = "empty", timeoutTicks = 40)
     public static void authoredExamplesAndStrictAcquisitionFields(GameTestHelper h) {
         Map<ResourceLocation, IdeaDefinition> ideas = new HashMap<>();

@@ -47,7 +47,7 @@ It uses actual server teams, RecipeManager and IE multiblock registration. Codec
 not an independent-process restart claim.
 
 `src/gametest/resources/m3b-formal-fixtures/` contains the five earthen-smelter knowledge JSON files copied verbatim
-from the companion pack on 2026-11-12 for codec/reference checks. Their stable recipe ID is asserted; the test does
+from the companion pack on 2026-11-12, with link/project fixtures refreshed on 2026-11-14 for codec/reference checks. Their stable recipe ID is asserted; the test does
 not claim that a full KubeJS pack runtime registered that recipe. Keep fixtures aligned when the formal contract changes.
 
 M4 stage checks use `frostedresearch_m4`. Real bellows integration additionally requires `-Pm4CharcoalPitTests`
@@ -57,10 +57,10 @@ The two-process `frostedresearch_m4_restart` check uses `-Pm4RestartPhase=write`
 [M4 handoff](../../diary/2026-11-12_17-27-52_research-m4-full-stage-tuyere-handoff.md).
 
 M5 controlled-furnace checks use `-Pm5Tests` and namespace `frostedresearch_m5`;
-see the [M5 handoff](../../diary/2026-11-12_18-10-45_research-m5-controlled-furnace-handoff.md) for the minimum run command and separate-process checks.
+This includes the real Charcoal Pit runtime because formal project access now requires a sandy brick observation; see the [M5 handoff](../../diary/2026-11-12_18-10-45_research-m5-controlled-furnace-handoff.md) for the minimum run command and separate-process checks.
 
 M6 merged-run checks use `frostedresearch_m6`; device selection checks use `frostedresearch_m6_devices` from
-`src/m5/`, enabled by `-Pm5Tests` without Charcoal Pit. With Java 17, the minimum Windows command is:
+`src/m5/`, enabled by `-Pm5Tests`. This switch also loads Charcoal Pit for the formal sandy-brick observation prerequisite. With Java 17, the minimum Windows command is:
 
 ```powershell
 .\gradlew.bat runGameTestServer -Pm5Tests '-PgameTestNamespaces=frostedresearch_m6,frostedresearch_m6_devices' '-PgameTestDirectory=build/m6-gametest'

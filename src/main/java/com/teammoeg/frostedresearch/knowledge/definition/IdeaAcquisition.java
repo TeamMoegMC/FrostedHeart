@@ -6,7 +6,7 @@ import com.teammoeg.frostedresearch.knowledge.model.KnowledgeKey;
 import net.minecraft.resources.ResourceLocation;
 import java.util.*;
 
-/** Acquisition gates apply to behavior and linking, never to external grants or learning. */
+/** Behavior gates; legacy links inherit them unless they declare route-specific knowledge. */
 public record IdeaAcquisition(List<Trigger> triggers, List<KnowledgeCondition> required,
         List<KnowledgeCondition> optional, Optional<Double> chance) {
     public static final IdeaAcquisition NONE = new IdeaAcquisition(List.of(), List.of(), List.of(), Optional.empty());

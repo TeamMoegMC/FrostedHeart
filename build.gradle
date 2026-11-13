@@ -770,8 +770,11 @@ tasks.matching { it.name == 'runM3cClient' }.configureEach {
 }
 
 // M4 dedicated integration: the real bellows mod is normally clientRuntimeOnly in this workspace.
-if (providers.gradleProperty('m4CharcoalPitTests').isPresent()) {
+// M5 formal access now also observes Charcoal Pit sandy bricks.
+if (providers.gradleProperty('m4CharcoalPitTests').isPresent() || providers.gradleProperty('m5Tests').isPresent()) {
     dependencies { runtimeOnly fg.deobf("curse.maven:charcoal-pit-reloaded-534602:7748097") }
+}
+if (providers.gradleProperty('m4CharcoalPitTests').isPresent()) {
     sourceSets {
         m4Integration {
             java.srcDirs = ['src/m4/java']
@@ -793,7 +796,7 @@ if (providers.gradleProperty('m4CharcoalPitTests').isPresent()) {
     }
 }
 
-// M5 controlled furnace integration uses only the existing dedicated-server runtime.
+// M5 controlled furnace integration includes the formal sandy-brick prerequisite above.
 if (providers.gradleProperty('m5Tests').isPresent()) {
     sourceSets {
         m5Integration {

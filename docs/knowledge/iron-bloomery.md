@@ -1,20 +1,20 @@
 # 冶铁炉正式内容与操作路线
 
 - Status: Verified：正式包单客户端及双客户端同队流程已验证；世界、材料和起始知识使用夹具，完整生存获取仍未实玩。
-- Last verified: 2026-11-13（正式联络组合核对；此前风道/原型的客户端证据仍为原验证范围）
+- Last verified: 2026-11-14（联络改为粗铁+燃料必要、铜/青铜锭辅助；此前客户端证据范围不变）
 - Scope: iron_smelting 想法、iron_bloomery 两阶段项目、单 Design 双配方成果、铁材料触发标签和旧 iron 映射。
 - Anchors: [M4 采用决定](../../plans/2026-11-12_15-45-00_research-m4-stage-tuyere-interface-decisions.md)、[正式项目](../../../TheWinterRescue/kubejs/data/the_winter_rescue/frostedresearch/knowledge/projects/iron_bloomery.json)、[正式配方脚本](../../../TheWinterRescue/kubejs/server_scripts/src/recipes/shaped/new.js)、[风口脚本](../../../TheWinterRescue/kubejs/server_scripts/src/recipes/shapeless.js)。
 
 ## 玩家路线
 
-1. 获取铁矿或常见铁制品可产生构想。也可先用普通观察键观察铜锭或青铜锭中的任一种，再观察煤、木炭或焦炭中的任一种；保留并学习两项物品观察，在绘图台「档案」把这两份记录放到桌面联络。此组合默认等待8秒，以界面计时为准；不再提供本项目的空桌面入口。构想正常自动入档，集齐构想和两项观察后开始研究。观察是匹配档案物品对象，不存在固定观察知识 ID。
+1. 获取铁矿或常见铁制品可产生构想。也可学会粗铁及煤、木炭或焦炭中的任一种物品观察，在绘图台「档案」把这两份记录放到桌面联络，默认10秒。学会铜锭或青铜锭观察可减少1秒，无需放到桌面；燃料是必要输入，不另算时间减免。构想正常自动入档，开始项目仍需构想、粗铁、铜/青铜锭与一种燃料观察全部掌握。观察是匹配档案物品对象，不存在固定观察知识 ID。
 2. 在绘图台连通风道，免纸笔、无评分。通关立即临时开放原型配方，点击进入试吹阶段。原型用1砂砖方块、1青铜板、1砂浆制作；阶段开始后放在风箱出风侧前方一格，使其绑定本队本次任务。若提前放置，进入阶段后重新放置。普通风箱仍按原公开配方制作：4防腐木、2防腐木台阶、3皮革；没有新增研究锁。
 3. 操作风箱并等待实际吹气，原型转为真实砂质鼓风口；不用预先建造冶铁炉。绑定队伍任意当前成员现场完成该方块的新鲜观察即可完成任务，不要求观察者是放置者，不要求把观察保留/入档。手持风口、旧笔记或别处普通风口不算。试件丢失可重制、重放、重吹，不重玩已经通过的风道。
 4. 手动完成研究，单 Design 正常自动入档，永久开放主冶铁炉和砂质鼓风口配方；只有确实留在来件未学时才手动学习。原型配方到本 run 结束即撤回；已造物品不删除，但旧试件不顶替新 run。
 
 ## 正式数据与权限
 
-知识定义位于 TWR kubejs/data/the_winter_rescue/frostedresearch/knowledge/。想法为 the_winter_rescue:iron_smelting，项目为 iron_bloomery，结果为 iron_bloomery_design。想法 acquisition.required=[]；两个 optional 是合并标签 iron_copper_or_bronze、iron_carbon_fuel 的物品观察。项目 start_all=[idea,copper_or_bronze,carbon_fuel]，两组之间 AND、各组标签成员之间 OR。未指定 chance，沿用 M2 服务器概率/optional 加成和联络时长配置。
+知识定义位于 TWR kubejs/data/the_winter_rescue/frostedresearch/knowledge/。想法为 the_winter_rescue:iron_smelting，项目为 iron_bloomery，结果为 iron_bloomery_design。想法 acquisition.required=[]；两个 optional 是合并标签 iron_copper_or_bronze、iron_carbon_fuel 的物品观察。项目 start_all=[idea,copper_or_bronze,carbon_fuel,raw_iron]。组间 AND、标签成员 OR。联络 inputs 为 minecraft:raw_iron 与 carbon_fuel，required_knowledge=[]，optional_knowledge 仅 copper_or_bronze；因此联络缺少金属锭知识可用10秒，补齐后9秒。行为 optional 保持原两项，只影响行为概率。未指定 chance，沿用 M2 服务器概率/optional 加成和联络时长配置。
 
 airflow 阶段的 completion_recipes 只有 the_winter_rescue:research/prototype_tuyere；专用配方产出 frostedresearch:prototype_tuyere，原型必须由 FH 临时权限管理，不能因尚无人开始项目而默认为公开。trial 的 observe_tuyere 是 observation 任务，experiment=frostedresearch:tuyere_trial、team_current_run=true、对象为 block charcoal_pit:sandy_tuyere。数据未增加个人 owner 条件或额外阶段/变体。
 

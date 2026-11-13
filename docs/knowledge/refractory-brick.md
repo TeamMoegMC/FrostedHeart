@@ -1,13 +1,13 @@
 # 普通耐火砖与控温炉正式路线
 
 - Status: Verified：FH实现、正式数据、29项服务端测试、独立进程保存/恢复及完整客户端入口/实验通过；材料使用夹具，完整生存采集未实玩。
-- Last verified: 2026-11-13（正式联络组合服务端匹配验证通过，客户端新入口待重走；此前实验与批量生产的验证范围见文末）
+- Last verified: 2026-11-14（砂砖必要、三原料辅助的联络配置；新入口客户端待重走）
 - Scope: refractory_firing 想法、refractory_brick 项目、controlled_refractory_production 单 Design；只增加自有炉批量工艺。
 - Anchors: [M5 采用决定](../../plans/2026-11-12_16-00-00_research-m5-controlled-furnace-decisions.md)、[正式项目](../../../TheWinterRescue/kubejs/data/the_winter_rescue/frostedresearch/knowledge/projects/refractory_brick.json)、[批量配方](../../../TheWinterRescue/kubejs/data/the_winter_rescue/recipes/research/refractory_brick_batch.json)。
 
 ## 开始与试烧
 
-获取高岭土、铝土矿或耐火黏土球，观察普通/高耐火砖物品或方块，或观察直接配方含砖的制品，都可触发构想。主动联络则先观察高岭土、铝土矿、黏土球，保留并手动学习记录，再在绘图台「档案」把这三份物品观察放到桌面联络；此组合默认等待7秒，以界面计时为准，不再提供本项目的零输入入口。构想正常自动入档，集齐构想和三项观察后开始研究。现成砖观察既是行为构想入口，也能提供后续参考，但获取构想和开始项目都不要求先有这项观察。
+获取高岭土、铝土矿或耐火黏土球，观察普通/高耐火砖物品或方块，或观察直接配方含砖的制品，都可触发构想。主动联络则先观察砂砖单砖或砂砖方块物品，学会后只把这份记录放到桌面，默认10秒。高岭土、铝土矿、黏土球观察是联络辅助，各减1秒；只需学会，不放到桌面。三项辅助齐全时7秒。构想正常自动入档，开始项目仍需构想、砂砖及三项原料观察全部掌握。砂砖通过 research/sandy_bricks 物品标签接受 charcoal_pit:sandy_brick_item 或 charcoal_pit:sandy_brick 任一种。现成耐火砖观察既是行为构想入口，也能提供后续参考，但获取构想和开始项目都不要求先有这项观察。
 
 准备阶段没有必需任务。准备好材料后手动进入烧制阶段，温度提示在进入时冻结：没有参考砖观察，提示在1000–1200°C中部试验、建议1100°C；有普通/高耐火砖 item 或 block 观察，提示精确1050–1150°C。进入后再补参考知识不改变本阶段提示；两条路径材料、时长与最终成果相同，均可第一次成功。
 
@@ -25,7 +25,7 @@
 
 ## 数据和集成边界
 
-正式知识资源在 TWR kubejs/data/the_winter_rescue/frostedresearch/knowledge/。三项原料观察分别出现在 acquisition.optional 与 access.start_all；参考砖只在 firing.variants 的 knowledge_all，按 item、block、默认顺序选首个成立路径。直接含砖制品事件是 frostedresearch:refractory_component_observed；索引只算一跳，特殊机器可通过 research/refractory_products_extra 的 item/block 标签补充，目前两标签为空。refractory_bricks 标签含普通/高耐火砖和可选存在的 II 炉砖，只用于触发/提示，不能改变控温炉产物。
+正式知识资源在 TWR kubejs/data/the_winter_rescue/frostedresearch/knowledge/。三项原料观察分别出现在 acquisition.optional、联络 optional_knowledge 与 access.start_all；联络 required_knowledge=[]，inputs 与项目 start_all 另要求砂砖物品观察。参考砖只在 firing.variants 的 knowledge_all，按 item、block、默认顺序选首个成立路径。直接含砖制品事件是 frostedresearch:refractory_component_observed；索引只算一跳，特殊机器可通过 research/refractory_products_extra 的 item/block 标签补充，目前两标签为空。refractory_bricks 标签含普通/高耐火砖和可选存在的 II 炉砖，只用于触发/提示，不能改变控温炉产物。
 
 唯一 Design 目标为 the_winter_rescue:research/refractory_brick_batch。trial 配方带 experiment=frostedresearch:refractory_trial，batch 无 experiment；二者类型都是 frostedresearch:controlled_firing。炉子和手混配方公开，不依赖旧研究，不填写 legacy_replacement。
 
@@ -33,4 +33,4 @@
 
 [最终客户端](../../diary/2026-11-12_20-12-00_research-m5-m6-client-validation.md)从无想法开始，经过实际10秒联络、三项N观察/保留/学习、正常工作台合成与炉操作，完成试验并实际产出16砖批量；验证JEI权限、进入后参考冻结与重开时精确提示，以及中英文教程。材料、地面和第二轮遗忘等使用夹具，不表示从采集开始的完整生存通关。多记录设备选择也有实际CUI验收，详见同一记录。
 
-上段11月12日证据的联络入口为当时的零输入规则。现已改成先学会三项观察再放到桌面联络；实验和权限规则未变。旧 M5 自动客户端演示的零输入开场不能直接作为新入口验收，需按新顺序重走。
+上段11月12日证据的联络入口为当时的零输入规则。现已改成先学会砂砖物品观察并放到桌面联络，三项原料仅作为联络辅助、仍是项目开始条件；实验和权限规则未变。旧 M5 自动客户端演示的零输入开场不能直接作为新入口验收，需按新顺序重走。

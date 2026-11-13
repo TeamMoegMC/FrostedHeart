@@ -1,7 +1,7 @@
 # 知识状态、API 与生命周期
 
 - Status: `Current`（源码与本轮自动化测试核对；游戏内视觉与多人联机流程尚未人工验收）
-- Last verified: `2026-11-13`（联络候选按档案/来件过滤；其余验证见各节）
+- Last verified: `2026-11-14`（联络按所选规则计算独立前置与等待；其余验证见各节）
 - Scope: 队伍知识身份、档案、来件、学习与忘记、理解与休眠、联络、历史、联想、队伍迁移、权限桥接及同步
 - Code anchors: [`KnowledgeService`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/KnowledgeService.java)、[
   `KnowledgeState`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/state/KnowledgeState.java)、[
@@ -143,7 +143,7 @@ codec 错误而不是异常。`ObservationSampling` 把非有限的坐标与温�
 | knowledgeLinkMinimumTicks = 20 | 最短等待，1–72000 tick，并不超过基础等待 |
 
 行为概率 p = min(1, p0 + n × bonus)，p0 为想法 chance 或基础配置；n 为有效档案中满足的 optional 项数。
-联络等待 ticks = max(min(base, minimum), base − n × reduction)。可选知识不需要摆在桌面上；等待在开始时固定，
+联络等待 ticks = max(min(base, minimum), base − n × reduction)，这里 n 取所选 LinkRule.optional_knowledge 的已掌握项数；字段省略时继承想法 acquisition.optional。required_knowledge 同理独立于行为 required，省略才继承。KnowledgeLinkSessions.duration(service, rule) 与实际 start 使用同一所选规则；保留的 duration(service, output) 只计算旧式想法默认耗时。可选知识不需要摆在桌面上；等待在开始时固定，
 中途得到更多参考不改变本次时间，必要知识与所选规则则持续校验。合法等待完成不抽概率。
 
 物品获得桥接只有两处：实际 ItemPickupEvent 的取得堆叠，以及 AbstractContainerMenu.clicked 前后背包＋光标＋玩家工作网格原料的

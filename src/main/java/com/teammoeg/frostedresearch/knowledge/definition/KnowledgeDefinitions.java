@@ -152,6 +152,10 @@ public final class KnowledgeDefinitions {
         });
         s.links.forEach((id, rule) -> {
             rule.validate().forEach(error -> errors.add(id + ": " + error));
+            rule.knowledgeConditions().forEach(c -> c.definition().ifPresent(def -> {
+                if (c.kind() == KnowledgeKey.Kind.IDEA ? !s.ideas.containsKey(def) : !resultExists(s, def))
+                    errors.add(id + ": link missing knowledge " + def);
+            }));
             if (!s.ideas.containsKey(rule.output())) errors.add(id + ": missing output idea " + rule.output());
             for (var slot : rule.inputs())
                 slot.definition().ifPresent(def -> {
@@ -238,6 +242,8 @@ public final class KnowledgeDefinitions {
             projects.values().forEach(project -> project.access().ifPresent(access -> access.conditions().values().stream()
                 .filter(c -> c.kind() == KnowledgeKey.Kind.OBSERVATION).map(KnowledgeCondition::pattern).forEach(patterns::add)));
             ideas.values().stream().flatMap(idea -> idea.acquisition().allConditions().stream())
+                .filter(c -> c.kind() == KnowledgeKey.Kind.OBSERVATION).map(KnowledgeCondition::pattern).forEach(patterns::add);
+            links.values().stream().flatMap(rule -> rule.knowledgeConditions().stream())
                 .filter(c -> c.kind() == KnowledgeKey.Kind.OBSERVATION).map(KnowledgeCondition::pattern).forEach(patterns::add);
             projects.values().forEach(p -> {
                 p.allRequirements().forEach(r -> r.observation().ifPresent(o -> patterns.add(o.condition().pattern())));

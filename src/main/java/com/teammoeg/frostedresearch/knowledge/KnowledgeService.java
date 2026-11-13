@@ -297,7 +297,9 @@ public final class KnowledgeService {
     }
 
     private boolean linkAllowed(LinkMatcher.Match match) {
-        return IdeaAcquisitionService.requiredMet(this, match.rule().output());
+        var idea = KnowledgeDefinitions.current().ideas().get(match.rule().output());
+        return idea != null && idea.enabled() && match.rule().requiredKnowledge().orElse(idea.acquisition().required())
+            .stream().allMatch(c -> matchKnowledge(c).isPresent());
     }
 
     /** Check one selected rule without enumerating candidates, used by transient waits. */

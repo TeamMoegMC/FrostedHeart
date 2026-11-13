@@ -5,6 +5,7 @@ import com.teammoeg.frostedresearch.FRMain;
 import com.teammoeg.frostedresearch.FRNetwork;
 import com.teammoeg.frostedresearch.gui.drawdesk.DrawDeskContainer;
 import com.teammoeg.frostedresearch.knowledge.model.KnowledgeKey;
+import com.teammoeg.frostedresearch.knowledge.link.LinkRule;
 import com.teammoeg.frostedresearch.knowledge.network.KnowledgeWorkbenchReplyPacket;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -26,16 +27,25 @@ public final class KnowledgeLinkSessions {
     private static final Map<UUID, Session> SESSIONS = new HashMap<>();
     public static Optional<Session> session(UUID player) { return Optional.ofNullable(SESSIONS.get(player)); }
     public static int duration(KnowledgeService service, ResourceLocation output) {
+        return duration(IdeaAcquisitionService.optionalCount(service, output));
+    }
+    public static int duration(KnowledgeService service, LinkRule rule) {
+        int optional = rule.optionalKnowledge().map(conditions -> (int) conditions.stream()
+            .filter(c -> service.matchKnowledge(c).isPresent()).count())
+            .orElseGet(() -> IdeaAcquisitionService.optionalCount(service, rule.output()));
+        return duration(optional);
+    }
+    private static int duration(int optional) {
         int base = FRConfig.SERVER.knowledgeLinkTicks.get();
         return Math.max(Math.min(base, FRConfig.SERVER.knowledgeLinkMinimumTicks.get()), base
-            - IdeaAcquisitionService.optionalCount(service, output) * FRConfig.SERVER.knowledgeLinkOptionalReduction.get());
+            - optional * FRConfig.SERVER.knowledgeLinkOptionalReduction.get());
     }
     public static KnowledgeService.Status start(UUID player, int menu, BlockPos desk, KnowledgeService service,
             ResourceLocation rule, List<KnowledgeKey> keys, long now) {
         if (SESSIONS.containsKey(player)) return KnowledgeService.Status.ACTIVE;
         var match = service.matchLink(rule, keys).orElse(null);
         if (match == null) return KnowledgeService.Status.NO_MATCH;
-        SESSIONS.put(player, new Session(service.teamId(), menu, desk, rule, keys, now, duration(service, match.rule().output())));
+        SESSIONS.put(player, new Session(service.teamId(), menu, desk, rule, keys, now, duration(service, match.rule())));
         return KnowledgeService.Status.SUCCESS;
     }
     public static boolean cancel(UUID player) { return SESSIONS.remove(player) != null; }
