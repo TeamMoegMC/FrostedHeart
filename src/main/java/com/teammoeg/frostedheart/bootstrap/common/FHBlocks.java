@@ -2479,6 +2479,7 @@ public class FHBlocks {
             .properties(t -> AbstractTownBuildingBlock.TOWN_BUILDING_CORE_BLOCK_BASE_PROPERTY)
             .tag(FHTags.Blocks.TOWN_BLOCKS.tag)
             .transform(axeOnly())
+            .blockstate(FHBlockStateGen.simpleCubeAll("transport_station"))
             .simpleItem()
             .lang("Labor Dispatch Agency")
             .register();

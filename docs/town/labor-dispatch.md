@@ -14,3 +14,5 @@
 2026-11-13：`LaborDispatchGameTests.supplyPersistenceAndWithdrawal` 在真实 Forge GameTest 服务器通过（1/1）。覆盖核心方块实体注册、合格居民计数、建筑 Codec 和 `ITownBuilding.BASE_CODEC` 往返、居民健康失效、建筑失效、城镇 tick 清除旧供给、真实拆除核心注销建筑。命令：`bash gradlew --offline runGameTestServer -PgameTestNamespaces=frostedheart_labor_dispatch -PgameTestDirectory=build/labor-dispatch-gametest --console=plain`。
 
 本用例直接构造有效建筑状态，未覆盖完整房间扫描、每日自动分配、非零工人池到机器等级的完整链路、客户端界面或独立进程重启读档。
+
+生成资源：`FHBlocks.LABOR_DISPATCH` 显式使用 `FHBlockStateGen.simpleCubeAll("transport_station")`，使 datagen 与运行时一致复用货运站贴图。2026-11-13 完整离线 `runData` 验证成功。
