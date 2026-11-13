@@ -1,0 +1,9 @@
+{
+  "type": "frostedheart:armor_temp",
+  "factor": 100.0,
+  "heat_proof": 0.7,
+  "item": "minecraft:netherite_chestplate",
+  "slot": "torso",
+  "weight": 5.1157894,
+  "wind_proof": 1.0
+}

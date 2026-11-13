@@ -143,6 +143,9 @@ public class ClimateCommonEvents {
 
         if (data != null) {
             SlotKey ecs = EquipmentSlotType.fromVanilla(event.getSlotType());
+            if (data.weight() != 0)
+                event.addModifier(FHAttributes.EQUIPMENT_WEIGHT.get(),
+                        ecs.createAttribute(data.weight(), Operation.ADDITION));
             if (data.getInsulation() != 0)
                 event.addModifier(FHAttributes.INSULATION.get(),
                         ecs.createAttribute(data.getInsulation(), Operation.ADDITION));
