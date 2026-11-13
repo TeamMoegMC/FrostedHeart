@@ -51,6 +51,45 @@ public final class IdeaAcquisitionGameTests {
             return codec.parse(JsonOps.INSTANCE, JsonParser.parseReader(reader)).getOrThrow(false, error -> {});
         } catch (java.io.IOException e) { throw new IllegalStateException(e); }
     }
+
+    @GameTest(batch = "formal_material_links", template = "empty", timeoutTicks = 40)
+    public static void formalMaterialCombinationsReplaceEmptyDesk(GameTestHelper h) {
+        Map<String, LinkRule> rules = new HashMap<>();
+        for (String name : List.of("earthen_smelting", "iron_smelting", "refractory_firing")) {
+            try (var reader = new java.io.InputStreamReader(Objects.requireNonNull(
+                    IdeaAcquisitionGameTests.class.getResourceAsStream("/formal-link-fixtures/" + name + ".json")), java.nio.charset.StandardCharsets.UTF_8)) {
+                var rule = LinkRule.CODEC.parse(JsonOps.INSTANCE, JsonParser.parseReader(reader)).getOrThrow(false, error -> {});
+                h.assertTrue(rule.validate().isEmpty(), name + " formal link validates");
+                h.assertTrue(rule.output().equals(new ResourceLocation("the_winter_rescue", name)), "output remains the authored idea");
+                h.assertTrue(LinkMatcher.bindExact(List.of(), rule.pattern(), TagLookup.NONE).isEmpty(), "empty desk must not match " + name);
+                rules.put(name, rule);
+            } catch (java.io.IOException e) { throw new IllegalStateException(e); }
+        }
+        java.util.function.Function<String, KnowledgeElement> observe = name -> KnowledgeElement.observation(new Observation(
+                UUID.randomUUID(), Observation.Type.ITEM, new ResourceLocation(name), Map.of(), Observation.Source.command(), Optional.empty()));
+        var clay = observe.apply("minecraft:clay_ball");
+        var sand = observe.apply("minecraft:sand");
+        var earthen = rules.get("earthen_smelting").pattern();
+        h.assertTrue(LinkMatcher.bindExact(List.of(clay, sand), earthen, TagLookup.NONE).isPresent(), "clay plus sand produces the earthen idea");
+        h.assertTrue(LinkMatcher.bindExact(List.of(sand, clay), earthen, TagLookup.NONE).isPresent(), "desk order does not matter");
+        h.assertTrue(LinkMatcher.bindExact(List.of(clay), earthen, TagLookup.NONE).isEmpty(), "one missing observation cannot match");
+        var refractory = rules.get("refractory_firing").pattern();
+        var kaolin = observe.apply("frostedheart:kaolin"); var bauxite = observe.apply("frostedheart:bauxite");
+        h.assertTrue(LinkMatcher.bindExact(List.of(kaolin, bauxite, clay), refractory, TagLookup.NONE).isPresent(), "three refractory material observations match");
+        h.assertTrue(LinkMatcher.bindExact(List.of(kaolin, bauxite), refractory, TagLookup.NONE).isEmpty(), "refractory link needs the clay observation too");
+        // Inject tag membership: this checks the authored OR groups, not modpack registry loading.
+        TagLookup tags = (type, field, value, tag) -> type == Observation.Type.ITEM && field.equals("object") && switch (tag.toString()) {
+            case "the_winter_rescue:research/iron_copper_or_bronze" -> Set.of("minecraft:copper_ingot", "m2:bronze_ingot").contains(value.toString());
+            case "the_winter_rescue:research/iron_carbon_fuel" -> Set.of("minecraft:coal", "minecraft:charcoal", "immersiveengineering:coal_coke").contains(value.toString());
+            default -> false;
+        };
+        var iron = rules.get("iron_smelting").pattern();
+        for (String metal : List.of("minecraft:copper_ingot", "m2:bronze_ingot"))
+            for (String fuel : List.of("minecraft:coal", "minecraft:charcoal", "immersiveengineering:coal_coke"))
+                h.assertTrue(LinkMatcher.bindExact(List.of(observe.apply(metal), observe.apply(fuel)), iron, tags).isPresent(), "each metal/fuel alternative matches");
+        h.assertTrue(LinkMatcher.bindExact(List.of(observe.apply("minecraft:iron_ingot"), observe.apply("minecraft:coal")), iron, tags).isEmpty(), "iron pickup may inspire an idea but is not the copper/bronze link input");
+        h.succeed();
+    }
     @GameTest(template = "empty", timeoutTicks = 40)
     public static void authoredExamplesAndStrictAcquisitionFields(GameTestHelper h) {
         Map<ResourceLocation, IdeaDefinition> ideas = new HashMap<>();
