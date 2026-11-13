@@ -33,6 +33,10 @@ public class BodyPartData {
     private static final float[] TRIPLE_SLOT_FACTORS = {
             0.1F, 0.2F, 0.3F, 0.4F
     };
+    private static final double[][] EQUIPMENT_WEIGHT_FACTORS = {
+            {}, {1.0D}, {1.1D, 1.7D},
+            {1.5D, 2.3D, 3.5D}, {1.8D, 3.0D, 4.8D, 7.0D}
+    };
     public final ItemStackHandler clothes;
 	double bodyEnergyOffsetJ;
     float exposureTemperatureC = 37.0F;
@@ -138,7 +142,7 @@ public class BodyPartData {
 			heatProof += outerWeight * radiant;
 			windProof += outerWeight * wind;
 			waterResistance += outerWeight * wind;
-			equipmentWeight += weight;
+			equipmentWeight += weight * EQUIPMENT_WEIGHT_FACTORS[layerCount][layer];
 			layer++;
 		}
 		for (int slot = 0; slot < clothes.getSlots(); slot++) {
@@ -152,7 +156,7 @@ public class BodyPartData {
 			heatProof += outerWeight * armor.getHeatProof();
 			windProof += outerWeight * armor.getFluidResistance();
 			waterResistance += outerWeight * armor.getFluidResistance();
-			equipmentWeight += armor.weight();
+			equipmentWeight += armor.weight() * EQUIPMENT_WEIGHT_FACTORS[layerCount][layer];
 			layer++;
 		}
 		result.set(insulation, heatProof, windProof, waterResistance, equipmentWeight);

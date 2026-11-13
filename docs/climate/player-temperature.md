@@ -374,6 +374,26 @@ slowness and mining fatigue may have other owners and retain their original
 expiry behavior. Heavy equipment adds/updates its effect only after checking
 the current instance; removing the weight clears the effect.
 
+Equipment weight (verified 2026-11-13, source defaults): `BodyPartData.fillClothData`
+counts occupied valid layers per body part, outer equipment first, then occupied
+lining slots in order; gaps do not select a heavier multiplier. The outer-to-inner
+weight factors are `[1]`, `[1.1, 1.7]`, `[1.5, 2.3, 3.5]`, and
+`[1.8, 3, 4.8, 7]` for one through four layers. These are separate from insulation
+factors. `ClimateCommonEvents.insulationDataAttr` exposes data-defined outer
+armor weight as an additive attribute, matching lining data.
+
+`FHRecipeProvider` defines full five-part clothing base totals: hay/straw and
+wool 1.1, rabbit/kelp/gambeson 3.6, wolf 4.5, fox 5.4, hide/buff coat 7.2,
+and polar bear 11.2. Per-part base weight is total times body area. Polar bear
+armor is accepted by the `inner_linning` item tag. Vanilla leather/chainmail/gold/
+iron/diamond/netherite four-piece sets have explicit totals 3.6/5.4/6.3/7.2/9/10.8,
+normalized over their combined area 0.95. Other armor retains the existing fallback.
+Weight is a gameplay unit. Total weight at most 10 has no heavy-load effect;
+above 10, amplifier is `floor((weight - 10) / 5)` (displayed level amplifier + 1).
+Iron plus full hay/wool is approximately 9.7515; hide plus wool 9.79; hide plus
+rabbit 13.518; reversed rabbit plus hide 15.75 (one lining glove,
+using the inner set glove; hands cannot wear two lining gloves); polar bear alone 11.2.
+
 Direct severe-exposure injury uses `getExposureTemperatureC` and clothing
 transmission, preserving the ±100/150/200/250°C bands. The expected hit count
 scales with real elapsed seconds rather than the number of configured updates.
