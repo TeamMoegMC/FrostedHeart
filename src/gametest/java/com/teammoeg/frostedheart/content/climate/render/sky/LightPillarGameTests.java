@@ -144,6 +144,11 @@ public final class LightPillarGameTests {
      * to about 1e-4 radians.
      */
     private static final double WALL_ANGLE_TOLERANCE = 2.0e-4;
+    private static final double OPEN_CAP = LightPillarShelter.OPEN_CAP;
+    /**
+     * Stands for no section where a test expects a change to queue none.
+     */
+    private static final long NO_SECTION = Long.MIN_VALUE;
     /**
      * Cell angles in degrees whose atlas layout the cell tests check.
      */
@@ -926,9 +931,9 @@ public final class LightPillarGameTests {
             for (double centerOverVisible : new double[]{1.01, 1.5, 10.0, 1.0e3, 1.0e6}) {
                 double ribbonEdge = halfAngle + Math.sqrt(2.0 * Math.log(centerOverVisible)) * spread;
                 double edgeShare = LightPillarOptics.lateralProfile(ribbonEdge, spread, halfAngle) / center;
-                helper.assertTrue(edgeShare <= (1.0 + 1.0e-9) / centerOverVisible, "At the ribbon's edge the profile of a "
-                        + "light " + 2.0 * halfAngleSpreads + " spreads wide shows " + edgeShare + " of its center, "
-                        + "above the visible share " + 1.0 / centerOverVisible);
+                helper.assertTrue(edgeShare <= (1.0 + 1.0e-9) / centerOverVisible, "At the ribbon's edge the "
+                        + "profile of a light " + 2.0 * halfAngleSpreads + " spreads wide shows " + edgeShare
+                        + " of its center, above the visible share " + 1.0 / centerOverVisible);
             }
         }
 
@@ -1001,11 +1006,11 @@ public final class LightPillarGameTests {
     public static void lightClustersMergeLightsThatTouch(GameTestHelper helper) {
         LightPillarClusters clusters = new LightPillarClusters();
         clusters.beginSection(2, 4, -1);
-        clusters.addLight(34, 65, -15, 65.625, false, false, 0.5F, 0.25F, 0.125F);
-        clusters.addLight(33, 65, -15, 65.625, false, false, 1.0F, 0.5F, 0.25F);
-        clusters.addLight(36, 65, -15, 65.625, false, false, 1.0F, 1.0F, 1.0F);
-        clusters.addLight(40, 65, -15, 65.5, false, false, 0.0F, 0.0F, 1.0F);
-        clusters.addLight(41, 66, -14, 66.5, false, false, 0.0F, 0.0F, 1.0F);
+        clusters.addLight(34, 65, -15, 65.625, false, false, OPEN_CAP, 0.5F, 0.25F, 0.125F);
+        clusters.addLight(33, 65, -15, 65.625, false, false, OPEN_CAP, 1.0F, 0.5F, 0.25F);
+        clusters.addLight(36, 65, -15, 65.625, false, false, OPEN_CAP, 1.0F, 1.0F, 1.0F);
+        clusters.addLight(40, 65, -15, 65.5, false, false, OPEN_CAP, 0.0F, 0.0F, 1.0F);
+        clusters.addLight(41, 66, -14, 66.5, false, false, OPEN_CAP, 0.0F, 0.0F, 1.0F);
         clusters.endSection();
         helper.assertTrue(clusters.count() == 3, "Two touching torches, one 2 blocks away, and two touching "
                 + "diagonally give " + clusters.count() + " clusters instead of 3");
@@ -1026,7 +1031,8 @@ public final class LightPillarGameTests {
         helper.assertTrue(clusters.red(pair) == 1.5F && clusters.green(pair) == 0.75F && clusters.blue(pair) == 0.375F,
                 "The pair has the strengths " + clusters.red(pair) + " " + clusters.green(pair) + " "
                         + clusters.blue(pair) + " instead of 1.5 0.75 0.375");
-        helper.assertTrue(clusters.shelterX(pair) == 33 && clusters.shelterZ(pair) == -15 && !clusters.isFullBlock(pair),
+        helper.assertTrue(clusters.shelterX(pair) == 33 && clusters.shelterZ(pair) == -15
+                        && !clusters.isFullBlock(pair),
                 "The pair's shelter is read at " + clusters.shelterX(pair) + " " + clusters.shelterZ(pair)
                         + " instead of at its first light, 33 -15, which lies as near its middle as the other");
         helper.assertTrue(clusters.x(apart) == 36.5 && clusters.halfExtentX(apart) == 0.0
@@ -1047,10 +1053,10 @@ public final class LightPillarGameTests {
         floors.beginSection(0, 0, 0);
         for (int x = 2; x <= 4; x++) {
             for (int z = 6; z <= 8; z++) {
-                floors.addLight(x, 3, z, 4.0, true, true, 1.0F, 1.0F, 1.0F);
+                floors.addLight(x, 3, z, 4.0, true, true, OPEN_CAP, 1.0F, 1.0F, 1.0F);
             }
         }
-        floors.addLight(5, 3, 7, 3.625, false, false, 1.0F, 1.0F, 1.0F);
+        floors.addLight(5, 3, 7, 3.625, false, false, OPEN_CAP, 1.0F, 1.0F, 1.0F);
         floors.endSection();
         int floor = clusterWithKey(floors, BlockPos.asLong(2, 3, 6));
         // Glowstone fills x and z from 2 to 5 and the torch beside it adds the point 5.5 along x:
@@ -1069,12 +1075,12 @@ public final class LightPillarGameTests {
         LightPillarClusters row = new LightPillarClusters();
         row.beginSection(0, 0, 0);
         for (int x = 6; x <= 15; x++) {
-            row.addLight(x, 3, 1, 3.625, false, false, 1.0F, 1.0F, 1.0F);
+            row.addLight(x, 3, 1, 3.625, false, false, OPEN_CAP, 1.0F, 1.0F, 1.0F);
         }
         row.endSection();
         row.beginSection(1, 0, 0);
         for (int x = 16; x <= 19; x++) {
-            row.addLight(x, 3, 1, 3.625, false, false, 1.0F, 1.0F, 1.0F);
+            row.addLight(x, 3, 1, 3.625, false, false, OPEN_CAP, 1.0F, 1.0F, 1.0F);
         }
         row.endSection();
         int westPart = clusterWithKey(row, BlockPos.asLong(6, 3, 1));
@@ -1088,11 +1094,11 @@ public final class LightPillarGameTests {
 
         LightPillarClusters rescanned = new LightPillarClusters();
         rescanned.beginSection(2, 4, -1);
-        rescanned.addLight(41, 66, -14, 66.5, false, false, 0.0F, 0.0F, 1.0F);
-        rescanned.addLight(40, 65, -15, 65.5, false, false, 0.0F, 0.0F, 1.0F);
-        rescanned.addLight(36, 65, -15, 65.625, false, false, 1.0F, 1.0F, 1.0F);
-        rescanned.addLight(33, 65, -15, 65.625, false, false, 1.0F, 0.5F, 0.25F);
-        rescanned.addLight(34, 65, -15, 65.625, false, false, 0.5F, 0.25F, 0.125F);
+        rescanned.addLight(41, 66, -14, 66.5, false, false, OPEN_CAP, 0.0F, 0.0F, 1.0F);
+        rescanned.addLight(40, 65, -15, 65.5, false, false, OPEN_CAP, 0.0F, 0.0F, 1.0F);
+        rescanned.addLight(36, 65, -15, 65.625, false, false, OPEN_CAP, 1.0F, 1.0F, 1.0F);
+        rescanned.addLight(33, 65, -15, 65.625, false, false, OPEN_CAP, 1.0F, 0.5F, 0.25F);
+        rescanned.addLight(34, 65, -15, 65.625, false, false, OPEN_CAP, 0.5F, 0.25F, 0.125F);
         rescanned.endSection();
         for (int cluster = 0; cluster < clusters.count(); cluster++) {
             int same = clusterWithKey(rescanned, clusters.key(cluster));
@@ -1104,11 +1110,11 @@ public final class LightPillarGameTests {
                             + "lights are added in another order");
         }
         rescanned.beginSection(2, 4, -1);
-        rescanned.addLight(33, 65, -15, 65.625, false, false, 1.0F, 0.5F, 0.25F);
-        rescanned.addLight(34, 65, -15, 65.625, false, false, 0.5F, 0.25F, 0.125F);
-        rescanned.addLight(36, 65, -15, 65.625, false, false, 1.0F, 1.0F, 1.0F);
-        rescanned.addLight(40, 65, -15, 65.5, false, false, 0.0F, 0.0F, 1.0F);
-        rescanned.addLight(41, 66, -14, 66.5, false, false, 0.0F, 0.0F, 1.0F);
+        rescanned.addLight(33, 65, -15, 65.625, false, false, OPEN_CAP, 1.0F, 0.5F, 0.25F);
+        rescanned.addLight(34, 65, -15, 65.625, false, false, OPEN_CAP, 0.5F, 0.25F, 0.125F);
+        rescanned.addLight(36, 65, -15, 65.625, false, false, OPEN_CAP, 1.0F, 1.0F, 1.0F);
+        rescanned.addLight(40, 65, -15, 65.5, false, false, OPEN_CAP, 0.0F, 0.0F, 1.0F);
+        rescanned.addLight(41, 66, -14, 66.5, false, false, OPEN_CAP, 0.0F, 0.0F, 1.0F);
         rescanned.endSection();
         helper.assertTrue(rescanned.count() == 3 && rescanned.sectionCount() == 1
                         && clusterWithKey(rescanned, pairKey) >= 0,
@@ -1118,7 +1124,7 @@ public final class LightPillarGameTests {
         assertDistinctKeys(helper, rescanned, " after walking the section again");
 
         clusters.beginSection(3, 4, -1);
-        clusters.addLight(56, 70, -10, 71.0, false, false, 1.0F, 1.0F, 1.0F);
+        clusters.addLight(56, 70, -10, 71.0, false, false, OPEN_CAP, 1.0F, 1.0F, 1.0F);
         clusters.endSection();
         long otherKey = BlockPos.asLong(56, 70, -10);
         helper.assertTrue(clusters.count() == 4 && clusters.sectionCount() == 2,
@@ -1127,7 +1133,7 @@ public final class LightPillarGameTests {
         helper.assertTrue(clusterWithKey(clusters, otherKey) >= 0,
                 "The second section has no cluster with the key " + BlockPos.of(otherKey).toShortString());
         clusters.beginSection(2, 4, -1);
-        clusters.addLight(34, 65, -15, 66.0, false, false, 1.0F, 1.0F, 1.0F);
+        clusters.addLight(34, 65, -15, 66.0, false, false, OPEN_CAP, 1.0F, 1.0F, 1.0F);
         clusters.endSection();
         helper.assertTrue(clusterWithKey(clusters, pairKey) < 0,
                 "The pair " + BlockPos.of(pairKey).toShortString() + " is still there after its section was walked "
@@ -1163,12 +1169,12 @@ public final class LightPillarGameTests {
         LightPillarClusters column = new LightPillarClusters();
         for (int sectionY = -4; sectionY <= 3; sectionY++) {
             column.beginSection(5, sectionY, 7);
-            column.addLight(5 * 16 + 8, sectionY * 16 + 8, 7 * 16 + 8, sectionY * 16 + 9.0, false, false, 1.0F, 1.0F,
-                    1.0F);
+            column.addLight(5 * 16 + 8, sectionY * 16 + 8, 7 * 16 + 8, sectionY * 16 + 9.0, false, false, OPEN_CAP,
+                    1.0F, 1.0F, 1.0F);
             column.endSection();
         }
         column.beginSection(6, 0, 7);
-        column.addLight(6 * 16 + 8, 8, 7 * 16 + 8, 9.0, false, false, 1.0F, 1.0F, 1.0F);
+        column.addLight(6 * 16 + 8, 8, 7 * 16 + 8, 9.0, false, false, OPEN_CAP, 1.0F, 1.0F, 1.0F);
         column.endSection();
         helper.assertTrue(column.count() == 9 && column.sectionCount() == 9,
                 "The column and its neighbor give " + column.count() + " clusters in " + column.sectionCount()
@@ -1193,8 +1199,8 @@ public final class LightPillarGameTests {
         }
         for (int sectionY = -4; sectionY <= 3; sectionY++) {
             column.beginSection(5, sectionY, 7);
-            column.addLight(5 * 16 + 8, sectionY * 16 + 8, 7 * 16 + 8, sectionY * 16 + 9.0, false, false, 1.0F, 1.0F,
-                    1.0F);
+            column.addLight(5 * 16 + 8, sectionY * 16 + 8, 7 * 16 + 8, sectionY * 16 + 9.0, false, false, OPEN_CAP,
+                    1.0F, 1.0F, 1.0F);
             column.endSection();
         }
         helper.assertTrue(column.count() == 9, "The filled column has " + column.count() + " clusters, not 9");
@@ -1211,6 +1217,157 @@ public final class LightPillarGameTests {
                     + BlockPos.of(removedKey).toShortString() + " of its section at y " + sectionY);
         }
         helper.succeed();
+    }
+
+    @GameTest(template = "phase0a_empty", timeoutTicks = 100)
+    public static void lightClustersSplitWhereTheirCapsDiffer(GameTestHelper helper) {
+        // Glowstone in a row along x under a porch roof at 69, a ceiling at 73, and open sky:
+        LightPillarClusters clusters = new LightPillarClusters();
+        clusters.beginSection(0, 4, 0);
+        double[] floorCaps = {69.0, 69.0, 73.0, 73.0, 73.0, OPEN_CAP, OPEN_CAP};
+        for (int light = 0; light < floorCaps.length; light++) {
+            clusters.addLight(2 + light, 65, 3, 66.0, true, true, floorCaps[light], 1.0F, 1.0F, 1.0F);
+        }
+        clusters.endSection();
+        int porch = clusterWithKey(clusters, BlockPos.asLong(2, 65, 3));
+        int house = clusterWithKey(clusters, BlockPos.asLong(4, 65, 3));
+        int open = clusterWithKey(clusters, BlockPos.asLong(7, 65, 3));
+        helper.assertTrue(clusters.count() == 3 && porch >= 0 && house >= 0 && open >= 0,
+                "A row of glowstone under a porch roof, a ceiling, and open sky gives " + clusters.count()
+                        + " clusters instead of one under each");
+        helper.assertTrue(clusters.lightCount(porch) == 2 && clusters.x(porch) == 3.0
+                        && clusters.lightCount(house) == 3 && clusters.x(house) == 5.5
+                        && clusters.lightCount(open) == 2 && clusters.x(open) == 8.0,
+                "The parts of the row hold " + clusters.lightCount(porch) + ", " + clusters.lightCount(house)
+                        + " and " + clusters.lightCount(open) + " lights around " + clusters.x(porch) + ", "
+                        + clusters.x(house) + " and " + clusters.x(open)
+                        + " instead of 2, 3 and 2 around 3, 5.5 and 8");
+
+        // Torches in a row under a stair roof whose ceiling rises by a block over each and falls again:
+        LightPillarClusters stairs = new LightPillarClusters();
+        stairs.beginSection(1, 4, 0);
+        double[] stairCaps = {70.0, 71.0, 72.0, 71.0, 70.0};
+        for (int light = 0; light < stairCaps.length; light++) {
+            stairs.addLight(18 + light, 65, 3, 65.625, false, false, stairCaps[light], 1.0F, 1.0F, 1.0F);
+        }
+        stairs.endSection();
+        helper.assertTrue(stairs.count() == 5, "5 torches under a stair roof give " + stairs.count()
+                + " clusters instead of 5, since no two torches that touch have the same ceiling");
+        for (int light = 0; light < stairCaps.length; light++) {
+            int alone = clusterWithKey(stairs, BlockPos.asLong(18 + light, 65, 3));
+            helper.assertTrue(alone >= 0 && stairs.lightCount(alone) == 1, "The torch at x " + (18 + light)
+                    + " under a stair roof is not alone in its cluster");
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "phase0a_empty", timeoutTicks = 100)
+    public static void lightClustersQueueTheSectionsReadingAChangedCap(GameTestHelper helper) {
+        LightPillarWorkQueue queue = new LightPillarWorkQueue();
+        queue.onColumnLoaded(ChunkPos.asLong(1, 2));
+        queue.startTracking(-4, 24);
+        queue.onColumnLit(ChunkPos.asLong(1, 2));
+        drainSections(helper, queue, 24, "after the chunk column was lit");
+
+        // In the chunk column 1 2, a torch under a roof at 70, one under a roof at 90 in the section above, an open
+        // torch, glowstone at the chunk's east and south edges whose top is covered, with a cap at 99 from its side
+        // columns, and two glowstone blocks side by side under a roof at 116:
+        LightPillarClusters clusters = new LightPillarClusters();
+        clusters.beginSection(1, 4, 2);
+        clusters.addLight(20, 65, 36, 65.625, false, false, 70.0, 1.0F, 1.0F, 1.0F);
+        clusters.addLight(26, 66, 44, 66.625, false, false, 90.0, 1.0F, 1.0F, 1.0F);
+        clusters.endSection();
+        clusters.beginSection(1, 5, 2);
+        clusters.addLight(24, 81, 36, 81.625, false, false, OPEN_CAP, 1.0F, 1.0F, 1.0F);
+        clusters.endSection();
+        clusters.beginSection(1, 6, 2);
+        clusters.addLight(31, 97, 40, 98.0, true, true, 99.0, 1.0F, 1.0F, 1.0F);
+        clusters.addLight(28, 97, 47, 98.0, true, true, 99.0, 1.0F, 1.0F, 1.0F);
+        clusters.endSection();
+        clusters.beginSection(1, 7, 2);
+        clusters.addLight(20, 113, 36, 114.0, true, true, 116.0, 1.0F, 1.0F, 1.0F);
+        clusters.addLight(21, 113, 36, 114.0, true, true, 116.0, 1.0F, 1.0F, 1.0F);
+        clusters.endSection();
+        long roofed = SectionPos.asLong(1, 4, 2);
+        long open = SectionPos.asLong(1, 5, 2);
+        long walled = SectionPos.asLong(1, 6, 2);
+        long floor = SectionPos.asLong(1, 7, 2);
+
+        assertCapChangeQueues(helper, clusters, queue, 20, 68, 36, roofed, "between a torch and its roof");
+        assertCapChangeQueues(helper, clusters, queue, 20, 70, 36, roofed, "at the roof of a torch");
+        assertCapChangeQueues(helper, clusters, queue, 20, 71, 36, NO_SECTION, "above the roof of a torch");
+        assertCapChangeQueues(helper, clusters, queue, 20, 65, 36, NO_SECTION, "at a torch");
+        assertCapChangeQueues(helper, clusters, queue, 21, 68, 36, NO_SECTION, "beside a torch");
+        assertCapChangeQueues(helper, clusters, queue, 26, 88, 44, roofed,
+                "in the section above a torch, below its roof");
+        assertCapChangeQueues(helper, clusters, queue, 24, 120, 36, open, "2 sections above an open torch");
+        assertCapChangeQueues(helper, clusters, queue, 24, 81, 36, NO_SECTION, "at an open torch");
+        assertCapChangeQueues(helper, clusters, queue, 32, 98, 40, walled,
+                "across the chunk border in a side column of glowstone");
+        assertCapChangeQueues(helper, clusters, queue, 30, 99, 40, walled, "at the cap in a side column of glowstone");
+        assertCapChangeQueues(helper, clusters, queue, 33, 98, 40, NO_SECTION, "2 columns from glowstone");
+        assertCapChangeQueues(helper, clusters, queue, 31, 100, 40, NO_SECTION, "above the cap of glowstone");
+        assertCapChangeQueues(helper, clusters, queue, 28, 98, 48, walled,
+                "across the chunk border in the south side column of glowstone");
+        assertCapChangeQueues(helper, clusters, queue, 22, 115, 36, floor,
+                "in the east side column of the second of two glowstone blocks");
+        assertCapChangeQueues(helper, clusters, queue, 19, 116, 36, floor,
+                "at the cap in the west side column of the first of two glowstone blocks");
+        assertCapChangeQueues(helper, clusters, queue, 23, 115, 36, NO_SECTION, "2 columns from two glowstone blocks");
+        assertCapChangeQueues(helper, clusters, queue, 20, 117, 36, NO_SECTION,
+                "above the cap of two glowstone blocks");
+
+        queue.onColumnLoaded(ChunkPos.asLong(2, 2));
+        helper.assertTrue(queue.onColumnLit(ChunkPos.asLong(2, 2)),
+                "The chunk column beside the glowstone does not report that it waited for its light");
+        int besideQueued = clusters.queueSectionsReadingCapsIn(2, 2, queue);
+        helper.assertTrue(besideQueued == 1, "Lighting the chunk column beside the glowstone queues " + besideQueued
+                + " sections beside it instead of the glowstone's");
+        drainSections(helper, queue, 25, "after lighting the chunk column beside the glowstone");
+        int northQueued = clusters.queueSectionsReadingCapsIn(1, 1, queue);
+        helper.assertTrue(northQueued == 0, "Lighting the chunk column north of the lights queues " + northQueued
+                + " sections, though none reads its cap there");
+        int southQueued = clusters.queueSectionsReadingCapsIn(1, 3, queue);
+        helper.assertTrue(southQueued == 1, "Lighting the chunk column south of the lights queues " + southQueued
+                + " sections instead of the glowstone's at the south edge");
+        drainSections(helper, queue, 1, "after lighting the chunk column south of the lights");
+
+        int everyQueued = clusters.queueEverySection(queue);
+        helper.assertTrue(everyQueued == 4, "Queueing every section with clusters queues " + everyQueued
+                + " instead of 4");
+        drainSections(helper, queue, 4, "after queueing every section with clusters");
+
+        // Removing the section of the roofed torches moves the others to other indices:
+        clusters.removeSection(1, 4, 2);
+        assertCapChangeQueues(helper, clusters, queue, 20, 68, 36, NO_SECTION,
+                "under the roof of a torch whose section was removed");
+        assertCapChangeQueues(helper, clusters, queue, 30, 99, 40, walled,
+                "at the cap in a side column of glowstone, after another section was removed");
+        assertCapChangeQueues(helper, clusters, queue, 24, 120, 36, open,
+                "2 sections above an open torch, after another section was removed");
+
+        queue.stopTracking();
+        helper.assertTrue(clusters.queueSectionsReadingCapAt(24, 120, 36, queue) == 0
+                        && clusters.queueSectionsReadingCapsIn(2, 2, queue) == 0,
+                "A queue that does not track takes sections for changed caps");
+        helper.succeed();
+    }
+
+    /**
+     * Asserts that a change of how high the block at the block coordinates stops light queues the section, and only
+     * it, or none for NO_SECTION.
+     */
+    private static void assertCapChangeQueues(GameTestHelper helper, LightPillarClusters clusters,
+            LightPillarWorkQueue queue, int blockX, int blockY, int blockZ, long expectedSection, String where) {
+        int queued = clusters.queueSectionsReadingCapAt(blockX, blockY, blockZ, queue);
+        String change = "A change at " + blockX + " " + blockY + " " + blockZ + " " + where;
+        if (expectedSection == NO_SECTION) {
+            helper.assertTrue(queued == 0, change + " queues " + queued + " sections instead of none");
+        } else {
+            helper.assertTrue(queued == 1 && queue.nextSection() && queue.takenSection() == expectedSection,
+                    change + " queues " + queued + " sections instead of only " + describeSection(expectedSection));
+        }
+        drainSections(helper, queue, 0, "after the change " + where);
     }
 
     @GameTest(template = "phase0a_empty", timeoutTicks = 100)
@@ -1496,10 +1653,10 @@ public final class LightPillarGameTests {
         long farKey = BlockPos.asLong(49, 1, 1);
         LightPillarClusters clusters = new LightPillarClusters();
         clusters.beginSection(0, 0, 0);
-        clusters.addLight(1, 1, 1, 2.0, false, false, 1.0F, 1.0F, 1.0F);
+        clusters.addLight(1, 1, 1, 2.0, false, false, OPEN_CAP, 1.0F, 1.0F, 1.0F);
         clusters.endSection();
         clusters.beginSection(3, 0, 0);
-        clusters.addLight(3 * 16 + 1, 1, 1, 2.0, false, false, 1.0F, 1.0F, 1.0F);
+        clusters.addLight(3 * 16 + 1, 1, 1, 2.0, false, false, OPEN_CAP, 1.0F, 1.0F, 1.0F);
         clusters.endSection();
         helper.assertTrue(clusterWithKey(clusters, nearKey) >= 0 && clusterWithKey(clusters, farKey) >= 0,
                 "The clusters do not have the keys of their lights");
@@ -2198,7 +2355,7 @@ public final class LightPillarGameTests {
 
         LightPillarClusters clusters = new LightPillarClusters();
         clusters.beginSection(0, 3, 0);
-        clusters.addLight(0, 63, 0, 64.0, false, false, 1.0F, 1.0F, 1.0F);
+        clusters.addLight(0, 63, 0, 64.0, false, false, OPEN_CAP, 1.0F, 1.0F, 1.0F);
         clusters.endSection();
         LightPillarSelection selection = new LightPillarSelection();
         selection.choose(clusters, 3.5, 64.6, 0.5, 1000.0, WIDE_CHUNK_RADIUS);
@@ -2275,8 +2432,8 @@ public final class LightPillarGameTests {
         horizons.update(selection, columns, 40.0, 1_000_000);
 
         clusters.beginSection(0, 3, 0);
-        clusters.addLight(0, 63, 0, 64.0, false, false, 1.0F, 1.0F, 1.0F);
-        clusters.addLight(1, 63, 0, 64.0, false, false, 1.0F, 1.0F, 1.0F);
+        clusters.addLight(0, 63, 0, 64.0, false, false, OPEN_CAP, 1.0F, 1.0F, 1.0F);
+        clusters.addLight(1, 63, 0, 64.0, false, false, OPEN_CAP, 1.0F, 1.0F, 1.0F);
         clusters.endSection();
         selection.choose(clusters, 3.5, 64.6, 0.5, 1000.0, WIDE_CHUNK_RADIUS);
         horizons.update(selection, columns, 40.0, 0);
@@ -2309,7 +2466,7 @@ public final class LightPillarGameTests {
         });
         LightPillarClusters clusters = new LightPillarClusters();
         clusters.beginSection(0, 3, 0);
-        clusters.addLight(0, 63, 0, 64.0, false, false, 1.0F, 1.0F, 1.0F);
+        clusters.addLight(0, 63, 0, 64.0, false, false, OPEN_CAP, 1.0F, 1.0F, 1.0F);
         clusters.endSection();
         LightPillarSelection selection = new LightPillarSelection();
         selection.choose(clusters, 3.5, 64.6, 0.5, 1000.0, WIDE_CHUNK_RADIUS);
@@ -3194,7 +3351,7 @@ public final class LightPillarGameTests {
                 continue;
             }
             clusters.beginSection(light, 0, 0);
-            clusters.addLight(16 * light + 8, 0, 0, 1.0, false, false, 1.0F, 1.0F, 1.0F);
+            clusters.addLight(16 * light + 8, 0, 0, 1.0, false, false, OPEN_CAP, 1.0F, 1.0F, 1.0F);
             clusters.endSection();
         }
     }
@@ -3578,7 +3735,7 @@ public final class LightPillarGameTests {
                 SectionPos.blockToSectionCoord(lightBlock.getY()),
                 SectionPos.blockToSectionCoord(lightBlock.getZ()));
         clusters.addLight(lightBlock.getX(), lightBlock.getY(), lightBlock.getZ(), lightBlock.getY() + topOffset,
-                false, false, 1.0F, 1.0F, 1.0F);
+                false, false, OPEN_CAP, 1.0F, 1.0F, 1.0F);
         clusters.endSection();
         LightPillarSelection selection = new LightPillarSelection();
         selection.choose(clusters, lightBlock.getX() + 3.5, lightBlock.getY() + 1.6, lightBlock.getZ() + 0.5, 1000.0,
@@ -3641,7 +3798,7 @@ public final class LightPillarGameTests {
                 SectionPos.blockToSectionCoord(lightBlock.getY()),
                 SectionPos.blockToSectionCoord(lightBlock.getZ()));
         clusters.addLight(lightBlock.getX(), lightBlock.getY(), lightBlock.getZ(), lightBlock.getY() + topOffset,
-                fullBlock, fullBlock, 1.0F, 1.0F, 1.0F);
+                fullBlock, fullBlock, OPEN_CAP, 1.0F, 1.0F, 1.0F);
         clusters.endSection();
         LightPillarSelection selection = new LightPillarSelection();
         selection.choose(clusters, lightBlock.getX() + 3.5, lightBlock.getY() + 1.6, lightBlock.getZ() + 0.5, 1000.0,

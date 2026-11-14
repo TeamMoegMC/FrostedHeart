@@ -44,11 +44,12 @@ import java.util.Locale;
 
 /**
  * Passes the changes in the client world that light pillars depend on, as hooks report them, to a
- * LightPillarWorkQueue and to the LightPillarShelter, so nothing has to poll the world. Block changes come from ClientLevel.setBlocksDirty, sky light
- * computed on the client from ClientChunkCache.onLightUpdate, sky light received from the server from
- * ClientPacketListener.readSectionList, and chunk columns from the Forge chunk events. The hooks only queue, and the
- * client tick takes the work. The queue follows the level of the latest hook call, and it queues sections only while
- * LightPillarSources tracks. Client thread only.
+ * LightPillarWorkQueue and to the LightPillarShelter, so nothing has to poll the world. Changes of what stops light
+ * also queue the sections whose clusters read their cap there, as LightPillarClusters finds them. Block changes come
+ * from ClientLevel.setBlocksDirty, sky light computed on the client from ClientChunkCache.onLightUpdate, sky light
+ * received from the server from ClientPacketListener.readSectionList, and chunk columns from the Forge chunk events.
+ * The hooks only queue, and the client tick takes the work. The queue follows the level of the latest hook call, and
+ * it queues sections only while LightPillarSources tracks. Client thread only.
  */
 @OnlyIn(Dist.CLIENT)
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
@@ -98,6 +99,10 @@ public final class LightPillarWorldChanges {
         if (queue.onBlockChanged(pos.asLong(), oldState, newState)) {
             currentSecond.sectionsQueuedByBlocks++;
         }
+        if (!LightPillarSources.shelter().occluders().stopsTheSame(oldState, newState)) {
+            currentSecond.sectionsQueuedByCaps += LightPillarSources.clusters().queueSectionsReadingCapAt(pos.getX(),
+                    pos.getY(), pos.getZ(), queue);
+        }
         LightPillarSources.shelter().onBlockChanged(pos.getX(), pos.getY(), pos.getZ(), oldState, newState);
     }
 
@@ -130,6 +135,8 @@ public final class LightPillarWorldChanges {
         }
         if (wasWaiting) {
             currentSecond.columnsLit++;
+            currentSecond.sectionsQueuedByCaps += LightPillarSources.clusters().queueSectionsReadingCapsIn(chunkX,
+                    chunkZ, queue);
         }
         for (int index = 0; index < lightSectionCount; index++) {
             if (dataMask.get(index) || emptyMask.get(index)) {
@@ -226,13 +233,13 @@ public final class LightPillarWorldChanges {
             return "World changes are not tracked while the calculated sky is not drawn";
         }
         return String.format(Locale.ROOT,
-                "World changes in the last second: %d blocks with %d at lights queuing %d sections, sky light in %d "
-                        + "sections computed and %d received queuing %d sections, %d chunks loaded, %d lit, "
-                        + "%d unloaded; %d chunks loaded in all",
+                "World changes in the last second: %d blocks with %d at lights queuing %d sections and %d more for "
+                        + "their caps, sky light in %d sections computed and %d received queuing %d sections, "
+                        + "%d chunks loaded, %d lit, %d unloaded; %d chunks loaded in all",
                 lastSecond.blocksChanged, lastSecond.changesAtLights, lastSecond.sectionsQueuedByBlocks,
-                lastSecond.skyLightSectionsComputed, lastSecond.skyLightSectionsReceived,
-                lastSecond.sectionsQueuedByLight, lastSecond.columnsLoaded, lastSecond.columnsLit,
-                lastSecond.columnsUnloaded, queue.loadedColumnCount());
+                lastSecond.sectionsQueuedByCaps, lastSecond.skyLightSectionsComputed,
+                lastSecond.skyLightSectionsReceived, lastSecond.sectionsQueuedByLight, lastSecond.columnsLoaded,
+                lastSecond.columnsLit, lastSecond.columnsUnloaded, queue.loadedColumnCount());
     }
 
     /**
@@ -269,6 +276,7 @@ public final class LightPillarWorldChanges {
         private int blocksChanged;
         private int changesAtLights;
         private int sectionsQueuedByBlocks;
+        private int sectionsQueuedByCaps;
         private int skyLightSectionsComputed;
         private int skyLightSectionsReceived;
         private int sectionsQueuedByLight;
@@ -280,6 +288,7 @@ public final class LightPillarWorldChanges {
             blocksChanged = other.blocksChanged;
             changesAtLights = other.changesAtLights;
             sectionsQueuedByBlocks = other.sectionsQueuedByBlocks;
+            sectionsQueuedByCaps = other.sectionsQueuedByCaps;
             skyLightSectionsComputed = other.skyLightSectionsComputed;
             skyLightSectionsReceived = other.skyLightSectionsReceived;
             sectionsQueuedByLight = other.sectionsQueuedByLight;
@@ -292,6 +301,7 @@ public final class LightPillarWorldChanges {
             blocksChanged = 0;
             changesAtLights = 0;
             sectionsQueuedByBlocks = 0;
+            sectionsQueuedByCaps = 0;
             skyLightSectionsComputed = 0;
             skyLightSectionsReceived = 0;
             sectionsQueuedByLight = 0;

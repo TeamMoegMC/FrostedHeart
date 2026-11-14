@@ -276,15 +276,7 @@ public final class LightPillarShelter {
         double z = originZ[slot];
         int lightX = Mth.floor(x);
         int lightZ = Mth.floor(z);
-        double cap = readCap(columns, lightX, lightZ, top);
-        if (fullBlocks[slot] && cap == Mth.ceil(top)) {
-            cap = Double.NEGATIVE_INFINITY;
-            for (int side = 0; side < SIDE_OFFSETS_X.length; side++) {
-                cap = Math.max(cap, readCap(columns, lightX + SIDE_OFFSETS_X[side], lightZ + SIDE_OFFSETS_Z[side],
-                        top));
-            }
-        }
-        caps[slot] = cap;
+        caps[slot] = readLightCap(columns, lightX, lightZ, top, fullBlocks[slot]);
         int flameY = Mth.floor(top);
         for (int column = 0; column < RIM_COLUMNS; column++) {
             wallTops[column] = readWallTop(columns, lightX + RIM_OFFSETS_X[column], lightZ + RIM_OFFSETS_Z[column],
@@ -339,6 +331,23 @@ public final class LightPillarShelter {
             farthest = Math.min(farthest, Math.max(first, second));
         }
         return nearest <= farthest ? nearest : NO_HIT;
+    }
+
+    /**
+     * The cap of a light with its top at the height in the column at the block coordinates, as a world height or
+     * OPEN_CAP: its own column's, or for a full block whose top is covered the highest of its 4 side columns' caps.
+     */
+    static double readLightCap(LightPillarHorizons.Columns columns, int lightX, int lightZ, double top,
+            boolean fullBlock) {
+        double cap = readCap(columns, lightX, lightZ, top);
+        if (fullBlock && cap == Mth.ceil(top)) {
+            cap = Double.NEGATIVE_INFINITY;
+            for (int side = 0; side < SIDE_OFFSETS_X.length; side++) {
+                cap = Math.max(cap, readCap(columns, lightX + SIDE_OFFSETS_X[side], lightZ + SIDE_OFFSETS_Z[side],
+                        top));
+            }
+        }
+        return cap;
     }
 
     private static double readCap(LightPillarHorizons.Columns columns, int columnX, int columnZ, double top) {

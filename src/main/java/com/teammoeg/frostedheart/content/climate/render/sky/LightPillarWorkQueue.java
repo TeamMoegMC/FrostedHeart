@@ -33,7 +33,9 @@ import net.minecraft.world.level.block.state.BlockState;
  * until the light arrives every block reads full sky light, and then every section of it is queued.
  * After that a section is queued when its sky light changes, together with the section below, whose top layer reads
  * the light of the blocks above it, and when a block that shows pillars appears, goes away, or changes its block or
- * its emission. Sections are queued only while tracking, each at most once until it is taken, and unloaded columns are
+ * its emission. LightPillarClusters also queues the sections whose clusters read their cap at a changed block or in a
+ * column that got its light, and every section with clusters when the block tags change.
+ * Sections are queued only while tracking, each at most once until it is taken, and unloaded columns are
  * kept until taken so their clusters can be dropped. Loaded columns are kept also while not tracking, so tracking can
  * start at any time. Not thread safe.
  */
@@ -171,7 +173,11 @@ public final class LightPillarWorkQueue {
         }
     }
 
-    private boolean queueSection(long section) {
+    /**
+     * Queues a section while tracking, unless it lies outside the level, its column is not loaded or waits for its
+     * light, or it is queued already. Returns whether it was newly queued.
+     */
+    public boolean queueSection(long section) {
         if (!tracking) {
             return false;
         }
@@ -228,6 +234,20 @@ public final class LightPillarWorkQueue {
 
     public boolean isTracking() {
         return tracking;
+    }
+
+    /**
+     * The height of the level's lowest section, as given when tracking started.
+     */
+    public int lowestSectionY() {
+        return lowestSectionY;
+    }
+
+    /**
+     * The number of the level's sections, as given when tracking started.
+     */
+    public int sectionCount() {
+        return sectionCount;
     }
 
     public int queuedSectionCount() {

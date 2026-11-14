@@ -22,23 +22,29 @@ package com.teammoeg.frostedheart.content.climate.render.sky;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
+import net.minecraft.util.Mth;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.chunk.DataLayer;
 
 import javax.annotation.Nullable;
 import java.util.Arrays;
 
 /**
- * The lights that can show pillars, merged into clusters of lights that touch, kept per chunk section.
+ * The lights that can show pillars, merged into clusters of lights that touch and share a cap, kept per chunk section.
  * The lights of a section are added between beginSection and endSection, which replaces every cluster the section had.
  * Lights touch when their blocks differ by at most 1 along every axis, and a cluster holds the lights of the section
- * that touch each other, so lights in different sections never merge.
+ * that touch each other through lights with the same cap, as LightPillarShelter.readLightCap reads it, so lights in
+ * different sections never merge, and neither do lights under roofs of different heights or under a roof and open sky.
  * A cluster holds the summed strength of its lights per channel, their count, the height of their highest top, and
  * their extent across: a light that fills its block spans it, and any other light is a point at its block's center.
  * The cluster stands at the middle of that extent across and at the height of its lights' center weighted by their
  * summed strength. Its shelter is read at the light with the highest top nearest to its middle, whose full block flag
  * it carries. Its key is the packed position of its first light in the order of y, then z, then x, so it stays while
- * its lights do not change. Removing a cluster moves the last one into its index, so indices are only valid until the
- * next change.
+ * its lights and their caps do not change. Removing a cluster moves the last one into its index, so indices are only
+ * valid until the next change.
+ * A cluster also keeps the box of blocks its lights read their cap from: their columns, widened by 1 for a cluster
+ * with a full block, from the lowest block above a light's top up to the cap's block, or without end where it is open.
+ * A change of how high a block stops light inside the box can move the cap, so its section has to be walked again.
  */
 public final class LightPillarClusters {
     /**
@@ -60,6 +66,8 @@ public final class LightPillarClusters {
     private static final int[] EARLIER_OFFSETS_X = {-1, 0, 1, -1, 0, 1, -1, 0, 1, -1, 0, 1, -1};
     private static final int[] EARLIER_OFFSETS_Y = {-1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, 0, 0};
     private static final int[] EARLIER_OFFSETS_Z = {-1, -1, -1, 0, 0, 0, 1, 1, 1, -1, -1, -1, 0};
+    private static final int[] SIDE_OFFSETS_X = {1, -1, 0, 0};
+    private static final int[] SIDE_OFFSETS_Z = {0, 0, 1, -1};
 
     /**
      * The lights added since the section began, by the order they were added, and the light at each block of the
@@ -68,6 +76,7 @@ public final class LightPillarClusters {
     private final int[] lightAtBlock = new int[SECTION_BLOCKS];
     private final int[] lightBlocks = new int[SECTION_BLOCKS];
     private final double[] lightTops = new double[SECTION_BLOCKS];
+    private final double[] lightCaps = new double[SECTION_BLOCKS];
     private final boolean[] lightFullBlocks = new boolean[SECTION_BLOCKS];
     private final boolean[] lightSpansBlocks = new boolean[SECTION_BLOCKS];
     private final float[] lightRed = new float[SECTION_BLOCKS];
@@ -89,6 +98,8 @@ public final class LightPillarClusters {
     private final float[] groupGreen = new float[SECTION_BLOCKS];
     private final float[] groupBlue = new float[SECTION_BLOCKS];
     private final int[] groupCounts = new int[SECTION_BLOCKS];
+    private final int[] groupLowestCapY = new int[SECTION_BLOCKS];
+    private final boolean[] groupHasFullBlocks = new boolean[SECTION_BLOCKS];
     private final int[] groupShelterLights = new int[SECTION_BLOCKS];
     private final double[] groupShelterDistances = new double[SECTION_BLOCKS];
     private final long[] removedKeys = new long[SECTION_BLOCKS];
@@ -102,6 +113,11 @@ public final class LightPillarClusters {
      */
     private final Long2IntOpenHashMap sectionFirstClusters = new Long2IntOpenHashMap(INITIAL_SECTIONS);
     private final Long2IntOpenHashMap clusterIndices = new Long2IntOpenHashMap(INITIAL_CLUSTERS);
+    /**
+     * The number of clusters in each chunk column that has any, so a block change in a column without clusters
+     * needs no look at its sections.
+     */
+    private final Long2IntOpenHashMap columnClusterCounts = new Long2IntOpenHashMap(INITIAL_SECTIONS);
     private long[] keys = new long[INITIAL_CLUSTERS];
     private long[] sections = new long[INITIAL_CLUSTERS];
     private int[] nextInSection = new int[INITIAL_CLUSTERS];
@@ -119,6 +135,12 @@ public final class LightPillarClusters {
     private int[] shelterX = new int[INITIAL_CLUSTERS];
     private int[] shelterZ = new int[INITIAL_CLUSTERS];
     private boolean[] fullBlocks = new boolean[INITIAL_CLUSTERS];
+    private int[] capLowestX = new int[INITIAL_CLUSTERS];
+    private int[] capHighestX = new int[INITIAL_CLUSTERS];
+    private int[] capLowestY = new int[INITIAL_CLUSTERS];
+    private int[] capHighestY = new int[INITIAL_CLUSTERS];
+    private int[] capLowestZ = new int[INITIAL_CLUSTERS];
+    private int[] capHighestZ = new int[INITIAL_CLUSTERS];
     private int size;
 
     public LightPillarClusters() {
@@ -171,11 +193,11 @@ public final class LightPillarClusters {
 
     /**
      * Adds a light at the block, which must lie in the section begun last, with the height of its top, from which its
-     * light leaves, whether it is a full block, whether it spans its block across the view, and its strength per
-     * channel. A second light at the same block is left out.
+     * light leaves, whether it is a full block, whether it spans its block across the view, its cap as a world height
+     * or LightPillarShelter.OPEN_CAP, and its strength per channel. A second light at the same block is left out.
      */
     public void addLight(int blockX, int blockY, int blockZ, double lightTop, boolean fullBlock, boolean spansBlock,
-            float red, float green, float blue) {
+            double cap, float red, float green, float blue) {
         int block = blockIndex(blockX & (SECTION_SIZE - 1), blockY & (SECTION_SIZE - 1), blockZ & (SECTION_SIZE - 1));
         if (lightAtBlock[block] != NO_INDEX) {
             return;
@@ -184,6 +206,7 @@ public final class LightPillarClusters {
         lightAtBlock[block] = light;
         lightBlocks[light] = block;
         lightTops[light] = lightTop;
+        lightCaps[light] = cap;
         lightFullBlocks[light] = fullBlock;
         lightSpansBlocks[light] = spansBlock;
         lightRed[light] = red;
@@ -193,7 +216,8 @@ public final class LightPillarClusters {
     }
 
     /**
-     * Ends the section begun last and replaces its clusters with one for each group of its lights that touch.
+     * Ends the section begun last and replaces its clusters with one for each group of its lights that touch through
+     * lights with the same cap.
      */
     public void endSection() {
         removeSection(sectionX, sectionY, sectionZ);
@@ -238,7 +262,7 @@ public final class LightPillarClusters {
                 continue;
             }
             int other = lightAtBlock[blockIndex(neighborX, neighborY, neighborZ)];
-            if (other != NO_INDEX) {
+            if (other != NO_INDEX && lightCaps[other] == lightCaps[light]) {
                 joinGroups(light, other);
             }
         }
@@ -282,6 +306,8 @@ public final class LightPillarClusters {
         groupGreen[group] = 0.0F;
         groupBlue[group] = 0.0F;
         groupCounts[group] = 0;
+        groupLowestCapY[group] = Integer.MAX_VALUE;
+        groupHasFullBlocks[group] = false;
         groupShelterLights[group] = NO_INDEX;
         groupShelterDistances[group] = Double.POSITIVE_INFINITY;
     }
@@ -304,6 +330,8 @@ public final class LightPillarClusters {
         groupGreen[group] += lightGreen[light];
         groupBlue[group] += lightBlue[light];
         groupCounts[group]++;
+        groupLowestCapY[group] = Math.min(groupLowestCapY[group], Mth.ceil(lightTops[light]));
+        groupHasFullBlocks[group] |= lightFullBlocks[light];
     }
 
     /**
@@ -351,6 +379,15 @@ public final class LightPillarClusters {
         shelterX[cluster] = originX + (shelterBlock & (SECTION_SIZE - 1));
         shelterZ[cluster] = originZ + ((shelterBlock / SECTION_SIZE) & (SECTION_SIZE - 1));
         fullBlocks[cluster] = lightFullBlocks[shelterLight];
+        // The columns under an extent run from the floor of its lowest edge to one below the ceiling of its highest:
+        int sideReach = groupHasFullBlocks[group] ? 1 : 0;
+        capLowestX[cluster] = originX + Mth.floor(groupLowestX[group]) - sideReach;
+        capHighestX[cluster] = originX + Mth.ceil(groupHighestX[group]) - 1 + sideReach;
+        capLowestZ[cluster] = originZ + Mth.floor(groupLowestZ[group]) - sideReach;
+        capHighestZ[cluster] = originZ + Mth.ceil(groupHighestZ[group]) - 1 + sideReach;
+        capLowestY[cluster] = groupLowestCapY[group];
+        double cap = lightCaps[group];
+        capHighestY[cluster] = cap == LightPillarShelter.OPEN_CAP ? Integer.MAX_VALUE : Mth.floor(cap);
     }
 
     /**
@@ -382,8 +419,107 @@ public final class LightPillarClusters {
     public void clear() {
         sectionFirstClusters.clear();
         clusterIndices.clear();
+        columnClusterCounts.clear();
         size = 0;
         resetLights();
+    }
+
+    /**
+     * Queues the sections with a cluster that reads its cap at the block, after the block changed how high it stops
+     * light. They lie at or below the block's section, in its chunk column or, through the side columns of a full
+     * block, in a chunk column beside it. Returns how many sections were newly queued.
+     */
+    public int queueSectionsReadingCapAt(int blockX, int blockY, int blockZ, LightPillarWorkQueue queue) {
+        if (size == 0 || !queue.isTracking()) {
+            return 0;
+        }
+        int chunkX = SectionPos.blockToSectionCoord(blockX);
+        int chunkZ = SectionPos.blockToSectionCoord(blockZ);
+        int queued = queueColumnReadingCapAt(chunkX, chunkZ, blockX, blockY, blockZ, queue);
+        for (int side = 0; side < SIDE_OFFSETS_X.length; side++) {
+            int sideChunkX = SectionPos.blockToSectionCoord(blockX + SIDE_OFFSETS_X[side]);
+            int sideChunkZ = SectionPos.blockToSectionCoord(blockZ + SIDE_OFFSETS_Z[side]);
+            if (sideChunkX != chunkX || sideChunkZ != chunkZ) {
+                queued += queueColumnReadingCapAt(sideChunkX, sideChunkZ, blockX, blockY, blockZ, queue);
+            }
+        }
+        return queued;
+    }
+
+    private int queueColumnReadingCapAt(int chunkX, int chunkZ, int blockX, int blockY, int blockZ,
+            LightPillarWorkQueue queue) {
+        if (!columnClusterCounts.containsKey(ChunkPos.asLong(chunkX, chunkZ))) {
+            return 0;
+        }
+        int queued = 0;
+        int highestSectionY = Math.min(SectionPos.blockToSectionCoord(blockY),
+                queue.lowestSectionY() + queue.sectionCount() - 1);
+        for (int sectionY = highestSectionY; sectionY >= queue.lowestSectionY(); sectionY--) {
+            long section = SectionPos.asLong(chunkX, sectionY, chunkZ);
+            for (int cluster = sectionFirstClusters.get(section); cluster != NO_INDEX;
+                    cluster = nextInSection[cluster]) {
+                if (blockX >= capLowestX[cluster] && blockX <= capHighestX[cluster]
+                        && blockZ >= capLowestZ[cluster] && blockZ <= capHighestZ[cluster]
+                        && blockY >= capLowestY[cluster] && blockY <= capHighestY[cluster]) {
+                    if (queue.queueSection(section)) {
+                        queued++;
+                    }
+                    break;
+                }
+            }
+        }
+        return queued;
+    }
+
+    /**
+     * Queues the sections beside the chunk column at the chunk coordinates with a cluster that reads its cap in it,
+     * through the side columns of a full block, once the column's blocks can be read. Returns how many sections were
+     * newly queued.
+     */
+    public int queueSectionsReadingCapsIn(int chunkX, int chunkZ, LightPillarWorkQueue queue) {
+        if (size == 0 || !queue.isTracking()) {
+            return 0;
+        }
+        int lowestX = SectionPos.sectionToBlockCoord(chunkX);
+        int lowestZ = SectionPos.sectionToBlockCoord(chunkZ);
+        int highestX = lowestX + SECTION_SIZE - 1;
+        int highestZ = lowestZ + SECTION_SIZE - 1;
+        int queued = 0;
+        for (int side = 0; side < SIDE_OFFSETS_X.length; side++) {
+            int sideChunkX = chunkX + SIDE_OFFSETS_X[side];
+            int sideChunkZ = chunkZ + SIDE_OFFSETS_Z[side];
+            if (!columnClusterCounts.containsKey(ChunkPos.asLong(sideChunkX, sideChunkZ))) {
+                continue;
+            }
+            for (int sectionY = queue.lowestSectionY(); sectionY < queue.lowestSectionY() + queue.sectionCount();
+                    sectionY++) {
+                long section = SectionPos.asLong(sideChunkX, sectionY, sideChunkZ);
+                for (int cluster = sectionFirstClusters.get(section); cluster != NO_INDEX;
+                        cluster = nextInSection[cluster]) {
+                    if (capHighestX[cluster] >= lowestX && capLowestX[cluster] <= highestX
+                            && capHighestZ[cluster] >= lowestZ && capLowestZ[cluster] <= highestZ) {
+                        if (queue.queueSection(section)) {
+                            queued++;
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+        return queued;
+    }
+
+    /**
+     * Queues every section with a cluster, after what stops light changed. Returns how many were newly queued.
+     */
+    public int queueEverySection(LightPillarWorkQueue queue) {
+        int queued = 0;
+        for (int cluster = 0; cluster < size; cluster++) {
+            if (queue.queueSection(sections[cluster])) {
+                queued++;
+            }
+        }
+        return queued;
     }
 
     /**
@@ -404,6 +540,7 @@ public final class LightPillarClusters {
         }
         sectionFirstClusters.put(section, cluster);
         clusterIndices.put(key, cluster);
+        columnClusterCounts.addTo(ChunkPos.asLong(SectionPos.x(section), SectionPos.z(section)), 1);
         return cluster;
     }
 
@@ -425,6 +562,12 @@ public final class LightPillarClusters {
         shelterX = Arrays.copyOf(shelterX, capacity);
         shelterZ = Arrays.copyOf(shelterZ, capacity);
         fullBlocks = Arrays.copyOf(fullBlocks, capacity);
+        capLowestX = Arrays.copyOf(capLowestX, capacity);
+        capHighestX = Arrays.copyOf(capHighestX, capacity);
+        capLowestY = Arrays.copyOf(capLowestY, capacity);
+        capHighestY = Arrays.copyOf(capHighestY, capacity);
+        capLowestZ = Arrays.copyOf(capLowestZ, capacity);
+        capHighestZ = Arrays.copyOf(capHighestZ, capacity);
     }
 
     /**
@@ -436,6 +579,10 @@ public final class LightPillarClusters {
             return;
         }
         unlink(cluster);
+        long column = ChunkPos.asLong(SectionPos.x(sections[cluster]), SectionPos.z(sections[cluster]));
+        if (columnClusterCounts.addTo(column, -1) <= 1) {
+            columnClusterCounts.remove(column);
+        }
         size--;
         if (cluster == size) {
             return;
@@ -458,6 +605,12 @@ public final class LightPillarClusters {
         shelterX[cluster] = shelterX[last];
         shelterZ[cluster] = shelterZ[last];
         fullBlocks[cluster] = fullBlocks[last];
+        capLowestX[cluster] = capLowestX[last];
+        capHighestX[cluster] = capHighestX[last];
+        capLowestY[cluster] = capLowestY[last];
+        capHighestY[cluster] = capHighestY[last];
+        capLowestZ[cluster] = capLowestZ[last];
+        capHighestZ[cluster] = capHighestZ[last];
         if (previousInSection[cluster] != NO_INDEX) {
             nextInSection[previousInSection[cluster]] = cluster;
         } else {
