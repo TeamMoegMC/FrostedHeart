@@ -85,6 +85,15 @@ public final class PageSignatures {
     }
 
     /** Immutable internal payload shared with worker and Page publication. */
+    public PageSignatures withBricksFrom(PageSignatures source, long mask) {
+        Object[] next = bricks.clone();
+        while (mask != 0) {
+            int brick = Long.numberOfTrailingZeros(mask); mask &= mask - 1;
+            next[brick] = source.bricks[brick];
+        }
+        return new PageSignatures(next);
+    }
+
     public Object brickPayload(int baseBrickIndex) {
         requireBrickIndex(baseBrickIndex);
         return bricks[baseBrickIndex];

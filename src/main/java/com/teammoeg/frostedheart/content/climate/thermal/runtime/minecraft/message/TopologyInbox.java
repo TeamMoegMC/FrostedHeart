@@ -55,6 +55,8 @@ public final class TopologyInbox {
         }
     }
     private final Long2ObjectLinkedOpenHashMap<PageQueue> pages = new Long2ObjectLinkedOpenHashMap<>();
+    private long revision;
+    public long revision() { return revision; }
     private final it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap<LongOpenHashSet> byChunk = new it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap<>();
     private PageQueue queue(long section) {
         var queue = pages.get(section);
@@ -75,9 +77,9 @@ public final class TopologyInbox {
     /** Coalesce only an unfrozen Page descriptor; source windows keep their own ordered owners. */
     public static ThermalPageInput merge(ThermalPageInput first, ThermalPageInput next) {
         var handle = next.handle() == null ? first.handle() : next.handle();
-        var a = new Input(handle, first.payload(), new LongOpenHashSet(), true);
-        var b = new Input(handle, next.payload(), new LongOpenHashSet(), true);
-        var builder = new PageBuilder(a);
+        var a = new Input(handle, first.payload(), new LongOpenHashSet(), false);
+        var b = new Input(handle, next.payload(), new LongOpenHashSet(), false);
+        var builder = new PageBuilder(a, false);
         builder.merge(b);
         return new ThermalPageInput(first.section(), builder.build().batch());
     }
@@ -86,8 +88,10 @@ public final class TopologyInbox {
     public void receive(ThermalPageInput fragment, LongFunction<ThermalPageHandle> handles) {
         var handle = fragment.handle();
         if (handle == null) handle = handles.apply(fragment.section());
-        if (handle != null) queue(fragment.section()).enqueue(
-                new Input(handle, fragment.payload(), LongSets.EMPTY_SET, false));
+        if (handle != null) {
+            queue(fragment.section()).enqueue(new Input(handle, fragment.payload(), LongSets.EMPTY_SET, false));
+            revision++;
+        }
     }
 
     public boolean receiveMixing(long generation, long sequence, long tick, LongSet newlyChangedMixing,
@@ -104,6 +108,7 @@ public final class TopologyInbox {
             var built = entry.getValue().build();
             queue(entry.getLongKey()).enqueue(built);
         }
+        if (!grouped.isEmpty()) revision++;
         return !grouped.isEmpty();
     }
 
@@ -113,13 +118,97 @@ public final class TopologyInbox {
         Input first = queue == null ? null : queue.first();
         return first == null ? Long.MAX_VALUE : first.batch.targetTick();
     }
+    /** Inspect all queued controls: an optional storage request may precede a physical change. */
+    public long firstTick(long section, java.util.function.Predicate<Input> eligible) {
+        PageQueue queue = pages.get(section);
+        return queue == null ? Long.MAX_VALUE : nextTick(queue, Long.MIN_VALUE, eligible);
+    }
+    private static long nextTick(PageQueue queue, long after, java.util.function.Predicate<Input> eligible) {
+        long tick = Long.MAX_VALUE;
+        if (queue.frozen != null && queue.frozen.batch.targetTick() > after && eligible.test(queue.frozen)) tick = queue.frozen.batch.targetTick();
+        if (queue.older != null && queue.older.batch.targetTick() > after && eligible.test(queue.older)) tick = Math.min(tick, queue.older.batch.targetTick());
+        for (var input : queue.recent) if (input.batch.targetTick() > after && eligible.test(input)) tick = Math.min(tick, input.batch.targetTick());
+        return tick;
+    }
     public long[] pendingSections() { return pages.keySet().toLongArray(); }
     public int pendingSectionCount() { return pages.size(); }
-    public void forEachPending(java.util.function.Consumer<ThermalInputBatch> visitor) {
+    public Input earliestPendingInput() {
+        Input first = null;
         for (var queue : pages.values()) {
-            if (queue.frozen != null) visitor.accept(queue.frozen.batch);
-            if (queue.older != null) visitor.accept(queue.older.batch);
-            for (var input : queue.recent) visitor.accept(input.batch);
+            Input next = queue.first();
+            if (next != null && (first == null || next.batch.targetTick() < first.batch.targetTick()
+                    || next.batch.targetTick() == first.batch.targetTick() && next.batch.sequence() < first.batch.sequence())) first = next;
+        }
+        return first;
+    }
+    /** Preserve Page order; a frozen private preparation can yield to its own retirement. */
+    public Input earliestSchedulableInput(java.util.function.Predicate<Input> eligible) {
+        Input first = null;
+        for (var queue : pages.values()) {
+            Input next = queue.older != null ? queue.older : queue.recent.peekFirst();
+            if (queue.frozen != null) {
+                next = null;
+                if (queue.older != null && retires(queue.older, queue.frozen.page) && eligible.test(queue.older)) next = queue.older;
+                if (next == null) for (var pending : queue.recent)
+                    if (retires(pending, queue.frozen.page) && eligible.test(pending)) { next = pending; break; }
+            }
+            if (next != null && eligible.test(next) && (first == null || next.batch.targetTick() < first.batch.targetTick()
+                    || next.batch.targetTick() == first.batch.targetTick() && next.batch.sequence() < first.batch.sequence())) first = next;
+        }
+        return first;
+    }
+    /** Optional storage demand may wait while later physical events update already paid space. */
+    public Input earliestSchedulableInput(java.util.function.Predicate<Input> eligible, java.util.function.Predicate<Input> optional) {
+        Input first = null;
+        for (var queue : pages.values()) {
+            Input next = schedulable(queue, eligible, optional);
+            if (next != null && (first == null || next.batch.targetTick() < first.batch.targetTick()
+                    || next.batch.targetTick() == first.batch.targetTick() && next.batch.sequence() < first.batch.sequence())) first = next;
+        }
+        return first;
+    }
+    private static Input schedulable(PageQueue queue, java.util.function.Predicate<Input> eligible,
+            java.util.function.Predicate<Input> optional) {
+        if (queue.frozen != null && !optional.test(queue.frozen)) {
+            if (queue.older != null && retires(queue.older, queue.frozen.page) && eligible.test(queue.older)) return queue.older;
+            for (var input : queue.recent) if (retires(input, queue.frozen.page) && eligible.test(input)) return input;
+            return null;
+        }
+        if (queue.older != null) {
+            if (eligible.test(queue.older)) return queue.older;
+            if (!optional.test(queue.older)) return null;
+        }
+        for (var input : queue.recent) {
+            if (eligible.test(input)) return input;
+            if (!optional.test(input)) break;
+        }
+        return null;
+    }
+    private static boolean retires(Input input, ThermalPageHandle page) {
+        for (var retirement : input.batch.retirements()) if (retirement.page() == page) return true;
+        return false;
+    }
+    public long firstTickAfter(long tick) {
+        long first = Long.MAX_VALUE;
+        for (var queue : pages.values()) {
+            var input = queue.first();
+            if (input != null && input.batch.targetTick() > tick) first = Math.min(first, input.batch.targetTick());
+        }
+        return first;
+    }
+    public long firstTickAfter(long tick, java.util.function.Predicate<Input> eligible) {
+        long first = Long.MAX_VALUE;
+        for (var queue : pages.values()) first = Math.min(first, nextTick(queue, tick, eligible));
+        return first;
+    }
+    public void forEachPending(java.util.function.Consumer<ThermalInputBatch> visitor) {
+        forEachPendingInput(input -> visitor.accept(input.batch));
+    }
+    public void forEachPendingInput(java.util.function.Consumer<Input> visitor) {
+        for (var queue : pages.values()) {
+            if (queue.frozen != null) visitor.accept(queue.frozen);
+            if (queue.older != null) visitor.accept(queue.older);
+            for (var input : queue.recent) visitor.accept(input);
         }
     }
     /** Coordinator-owned fair visitation; physical input ordering remains inside each PageQueue. */
@@ -133,17 +222,118 @@ public final class TopologyInbox {
     }
 
     public List<Input> freeze(LongSet sections, long tick, long sequence) {
+        return freeze(sections, tick, sequence, ignored -> true);
+    }
+    /** One producer cut is already bounded at capture; preserve its tick, sequence and Page order. */
+    public List<Input> freeze(long tick, long sequence, java.util.function.Predicate<Input> eligible) {
+        return freeze(pages.keySet(), tick, sequence, eligible);
+    }
+    public List<Input> freeze(long tick, long sequence, java.util.function.Predicate<Input> eligible,
+            java.util.function.Predicate<Input> optional) {
+        var selected = new ArrayList<Input>();
+        for (var queue : pages.values()) {
+            if (queue.frozen != null) continue;
+            var input = schedulable(queue, value -> value.batch.targetTick() == tick
+                    && value.batch.sequence() == sequence && eligible.test(value), optional);
+            if (input == null) continue;
+            if (queue.older == input) queue.older = null; else queue.recent.remove(input);
+            queue.frozen = input; selected.add(input);
+        }
+        return selected;
+    }
+    public List<Input> freeze(LongSet sections, long tick, long sequence, java.util.function.Predicate<Input> eligible) {
         var selected = new ArrayList<Input>();
         for (long section : sections) {
             PageQueue queue = pages.get(section);
             if (queue == null || queue.frozen != null) continue;
             Input first = queue.first();
-            if (first == null || first.batch.targetTick() != tick || first.batch.sequence() != sequence) continue;
+            if (first == null || first.batch.targetTick() != tick || first.batch.sequence() != sequence || !eligible.test(first)) continue;
             if (queue.older != null) { queue.frozen = first; queue.older = null; }
             else queue.frozen = queue.recent.removeFirst();
             selected.add(queue.frozen);
         }
         return selected;
+    }
+
+    /** Keep unpaid expansion in this same Page queue while installing its real event on represented cells. */
+    public void separateFrozenGrowth(List<Input> inputs, java.util.function.LongUnaryOperator represented,
+            java.util.function.Predicate<Input> optional) {
+        for (int index = 0; index < inputs.size(); index++) {
+            var input = inputs.get(index); var batch = input.batch;
+            if (batch.admissions().length != 0 || batch.retirements().length != 0 || batch.residencyUpdates().length == 0) continue;
+            long current = represented.applyAsLong(input.page.sectionKey());
+            if (current == 0) continue;
+            boolean expands = false;
+            for (var update : batch.residencyUpdates()) expands |= (update.residentBrickMask() & ~current) != 0;
+            if (!expands) continue;
+            // A residency-only request is already optional and should not be split repeatedly.
+            if (optional.test(input)) continue;
+            var retained = new ThermalInputBatch.PageResidencyUpdate[batch.residencyUpdates().length];
+            for (int updateIndex = 0; updateIndex < retained.length; updateIndex++) {
+                var update = batch.residencyUpdates()[updateIndex];
+                retained[updateIndex] = new ThermalInputBatch.PageResidencyUpdate(update.page(), update.geometryRevision(),
+                        update.residentBrickMask() & current, update.sourceSeedMask() & current, update.signatures(),
+                        update.dormantAir(), update.dormantMaterials());
+            }
+            var physical = new Input(input.page, new ThermalInputBatch(batch.dimensionGeneration(), batch.sequence(), batch.targetTick(),
+                    batch.admissions(), batch.retirements(), retained, batch.geometry(), batch.environmentUpdates(), batch.phaseAcks(),
+                    batch.farFieldConductanceScale(), batch.phaseIntents()), input.mixing, input.aggregated);
+            var growth = new Input(input.page, new ThermalInputBatch(batch.dimensionGeneration(), batch.sequence(), batch.targetTick(),
+                    ThermalInputBatch.NO_ADMISSIONS, ThermalInputBatch.NO_RETIREMENTS, batch.residencyUpdates(), ResolvedGeometryBatch.EMPTY,
+                    ThermalInputBatch.NO_ENVIRONMENT_UPDATES, ThermalInputBatch.NO_PHASE_ACKS, batch.farFieldConductanceScale()), LongSets.EMPTY_SET, input.aggregated);
+            var queue = pages.get(input.page.sectionKey()); queue.frozen = physical; queue.enqueue(growth);
+            inputs.set(index, physical); revision++;
+        }
+    }
+
+    /** A private preparation yielded; its physical input rejoins the same bounded Page queue. */
+    public void returnFrozen(List<Input> inputs) {
+        returnFrozen(inputs, ignored -> false);
+    }
+    public void returnFrozen(List<Input> inputs, java.util.function.Predicate<Input> optional) {
+        for (var input : inputs) {
+            var queue = pages.get(input.page.sectionKey());
+            if (queue == null || queue.frozen != input) continue;
+            queue.frozen = null;
+            boolean storageOnly = optional.test(input);
+            // Retirement ends this owner's storage demand. Keep its real event
+            // tick instead of folding it into the older optional request's cut.
+            if (!storageOnly || !hasRetirement(queue, input.page, Long.MAX_VALUE)) queue.enqueue(input);
+            if (!storageOnly) foldThroughRetirement(queue, input.page, Long.MAX_VALUE);
+            revision++;
+        }
+    }
+
+    private static boolean foldThroughRetirement(PageQueue queue, ThermalPageHandle page, long tick) {
+        if (queue.first() == null || retires(queue.first(), page) || !hasRetirement(queue, page, tick)) return false;
+        var pending = new ArrayList<Input>(3);
+        if (queue.older != null) pending.add(queue.older);
+        pending.addAll(queue.recent);
+        int retirement = -1;
+        for (int index = 0; index < pending.size(); index++)
+            if (pending.get(index).batch.targetTick() <= tick && retires(pending.get(index), page)) { retirement = index; break; }
+        if (retirement < 0) return false;
+        // No private growth/admission must commit before this same owner can retire.
+        var merged = new PageBuilder(pending.get(0));
+        for (int index = 1; index <= retirement; index++) merged.merge(pending.get(index));
+        queue.older = null; queue.recent.clear(); queue.enqueue(merged.build());
+        for (int index = retirement + 1; index < pending.size(); index++) queue.enqueue(pending.get(index));
+        return true;
+    }
+
+    private static boolean hasRetirement(PageQueue queue, ThermalPageHandle page, long tick) {
+        if (queue.older != null && queue.older.batch.targetTick() <= tick && retires(queue.older, page)) return true;
+        for (var pending : queue.recent) if (pending.batch.targetTick() <= tick && retires(pending, page)) return true;
+        return false;
+    }
+
+    /** A never-installed owner can disappear without first obtaining a live Page slot. */
+    public void collapseUninstalledRetirements(java.util.function.LongPredicate installed, long tick) {
+        for (var entry : pages.long2ObjectEntrySet()) {
+            var queue = entry.getValue(); var first = queue.first();
+            if (queue.frozen == null && first != null && !installed.test(entry.getLongKey())
+                    && foldThroughRetirement(queue, first.page, tick)) revision++;
+        }
     }
 
     public void complete(List<Input> completed) {
@@ -152,6 +342,7 @@ public final class TopologyInbox {
             PageQueue queue = pages.get(section);
             if (queue == null || queue.frozen != input) continue;
             queue.frozen = null;
+            revision++;
             if (queue.older == null && queue.recent.isEmpty()) {
                 pages.remove(section);
                 var indexed = byChunk.get(chunk(section));
@@ -197,7 +388,7 @@ public final class TopologyInbox {
         for (var halo : input.halos()) into.addHalo(halo.page(), halo.geometryRevision(), halo.halo());
     }
 
-    public void clear() { pages.clear(); byChunk.clear(); }
+    public void clear() { pages.clear(); byChunk.clear(); revision++; }
 
     private record Material(int previous, int next, byte cause) { }
     private record MaterialAt(int block, Material material) { }

@@ -14,7 +14,9 @@ import net.minecraft.world.level.ChunkPos;
 /**
  * Accepted heat is owned by a world target. Region ownership is only a routing
  * index; rebuilding a numerical region never copies or retires this payload.
- * All mutation is on the dimension coordinator.
+ * The coordinator is the sole writer. Its short mutations use this monitor so
+ * ordinary saves can copy original J together with Accepted under Store -> publication.
+ * Scheduler-only reads do not acquire the monitor or participate in saving.
  */
 public final class SpatialHeatStore {
     private static final int EXACT_RECORDS = 64;
@@ -28,9 +30,9 @@ public final class SpatialHeatStore {
     }
     private static final class Stream {
         SpatialHeatInput.Target target;
-        final ArrayDeque<Span> exact = new ArrayDeque<>();
+        final ArrayDeque<Span> exact = new ArrayDeque<>(2);
         final Summary positive = new Summary(), negative = new Summary();
-        final ArrayDeque<Span> prefix = new ArrayDeque<>();
+        final ArrayDeque<Span> prefix = new ArrayDeque<>(2);
         Owner owner;
         Stream previous, next;
         Claim claim;
@@ -81,14 +83,23 @@ public final class SpatialHeatStore {
         int targets, records;
         Owner(long id) { this.id = id; }
     }
+    /** One Chunk owns both unbound windows and resolved streams throughout their handoff. */
+    private static final class ChunkInputs {
+        final Long key;
+        final java.util.LinkedHashSet<Stream> streams = new java.util.LinkedHashSet<>();
+        final java.util.LinkedHashSet<SourceInputWindow> windows = new java.util.LinkedHashSet<>();
+        ChunkInputs(long key) { this.key = key; }
+        boolean empty() { return streams.isEmpty() && windows.isEmpty(); }
+    }
 
     private final LinkedHashMap<SpatialHeatInput.Target, Stream> streams = new LinkedHashMap<>();
     private final Long2ObjectOpenHashMap<Owner> owners = new Long2ObjectOpenHashMap<>();
-    private final Long2ObjectOpenHashMap<java.util.LinkedHashSet<Stream>> chunks = new Long2ObjectOpenHashMap<>();
+    private final Long2ObjectOpenHashMap<ChunkInputs> chunks = new Long2ObjectOpenHashMap<>();
     private final ArrayDeque<Claim> retiring = new ArrayDeque<>();
     private final ArrayDeque<Stream> routingReady = new ArrayDeque<>();
     private final java.util.Set<SourceInputWindow> sourceWindows = new java.util.LinkedHashSet<>();
-    private final Long2ObjectOpenHashMap<java.util.Set<SourceInputWindow>> sourceChunks = new Long2ObjectOpenHashMap<>();
+    private final java.util.Set<Long> retainedChunks = java.util.concurrent.ConcurrentHashMap.newKeySet();
+    private int chunkHighWater;
     private long sourceBytes;
     private int routingHighWater;
     private LongConsumer changed = ignored -> { };
@@ -98,51 +109,71 @@ public final class SpatialHeatStore {
 
     public void onPendingChanged(LongConsumer listener) { changed = listener; }
     public void onClaimInvalidated(LongConsumer listener) { invalidatedClaim = listener; }
+    /** Main reads only published membership; all payload collections remain coordinator-owned. */
+    public boolean hasRetainedInputInChunk(long chunk) { return retainedChunks.contains(chunk); }
+    private ChunkInputs inputsInChunk(long key) {
+        var chunk = chunks.get(key);
+        if (chunk == null) {
+            chunk = new ChunkInputs(key); chunks.put(key, chunk); retainedChunks.add(chunk.key);
+            chunkHighWater = Math.max(chunkHighWater, chunks.size());
+        }
+        return chunk;
+    }
+    private void pendingChanged(long chunk) {
+        var inputs = chunks.get(chunk);
+        if (inputs != null && inputs.empty()) { chunks.remove(chunk); retainedChunks.remove(inputs.key); }
+        changed.accept(chunk);
+    }
     private static long chunk(SpatialHeatInput.Target target) {
         return ChunkPos.asLong(BlockPos.getX(target.position()) >> 4, BlockPos.getZ(target.position()) >> 4);
     }
 
     /** The caller has reserved the complete bounded window before this ownership transfer. */
-    public SourceInputWindow acceptSourceWindow(SpatialSourceTimeline.Window producer, long sequence, int ordinal,
+    public synchronized SourceInputWindow acceptSourceWindow(SpatialSourceTimeline.Window producer, long sequence, int ordinal,
             SpatialHeatInput.Target[] origins, ThermalSourceLedger ledger) {
         var owned = new SourceInputWindow(producer, sequence, ordinal, origins);
         sourceWindows.add(owned);
         for (var target : origins) if (target != null)
-            sourceChunks.computeIfAbsent(chunk(target), ignored -> new java.util.LinkedHashSet<>()).add(owned);
+            inputsInChunk(chunk(target)).windows.add(owned);
         sourceBytes += owned.retainedBytes();
         owned.accept(producer, ledger);
         pendingJ += owned.pendingEnergyJ();
-        for (var target : origins) if (target != null) changed.accept(chunk(target));
+        for (var target : origins) if (target != null) pendingChanged(chunk(target));
         producer.close();
         return owned;
     }
 
     /** A binding prefix moves J out of its original source window, without producing it again. */
-    public void bindSourcePrefix(SourceInputWindow window, long through, ThermalSourceLedger ledger,
-            ThermalSourceLedger.BindingUpdates bindings, CutLoadBuffer output) {
+    public synchronized void bindSourcePrefix(SourceInputWindow window, long through, ThermalSourceLedger ledger,
+            ThermalSourceLedger.BindingUpdates bindings, ThermalSourceLedger.HeatConsumer output) {
+        bindSourcePrefix(window, through, ledger, bindings, output, true);
+    }
+    public synchronized void bindSourcePrefix(SourceInputWindow window, long through, ThermalSourceLedger ledger,
+            ThermalSourceLedger.BindingUpdates bindings, ThermalSourceLedger.HeatConsumer output, boolean applyControl) {
         double previous = window.pendingEnergyJ();
-        ledger.bindSpatialPrefix(window, through, bindings, output);
-        pendingJ -= previous - window.pendingEnergyJ();
+        try { ledger.bindSpatialPrefix(window, through, bindings, output, applyControl); }
+        finally { pendingJ -= previous - window.pendingEnergyJ(); }
         for (int port = 0; port < window.portCount(); port++) {
             var target = window.origin(port);
-            if (target != null) changed.accept(chunk(target));
+            if (target != null) pendingChanged(chunk(target));
         }
         if (window.complete()) {
             sourceWindows.remove(window); sourceBytes -= window.retainedBytes();
             for (int port = 0; port < window.portCount(); port++) {
                 var target = window.origin(port); if (target == null) continue;
-                var indexed = sourceChunks.get(chunk(target));
-                if (indexed != null) { indexed.remove(window); if (indexed.isEmpty()) sourceChunks.remove(chunk(target)); }
+                var indexed = chunks.get(chunk(target));
+                if (indexed != null) indexed.windows.remove(window);
+                pendingChanged(chunk(target));
             }
         }
     }
 
-    public void receive(long ownerId, SpatialHeatInput.Target target, long from, long to, double joules) {
+    public synchronized void receive(long ownerId, SpatialHeatInput.Target target, long from, long to, double joules) {
         if (joules == 0) return;
         var stream = streams.get(target);
         if (stream == null) {
             stream = new Stream(target); streams.put(target, stream);
-            chunks.computeIfAbsent(chunk(target), ignored -> new java.util.LinkedHashSet<>()).add(stream);
+            inputsInChunk(chunk(target)).streams.add(stream);
         }
         if (stream.claim != null && !stream.claim.closed && (from < stream.claim.through || from == to && from == stream.claim.through))
             invalidatedClaim.accept(stream.owner.id);
@@ -152,18 +183,19 @@ public final class SpatialHeatStore {
         recordsChanged(stream, previous);
         streamHighWater = Math.max(streamHighWater, streams.size());
         if (ownerId == 0) enqueueRouting(stream);
-        changed.accept(chunk(target));
+        pendingChanged(chunk(target));
     }
 
-    public void receiveUnrouted(SpatialHeatInput input) {
+    public synchronized void receiveUnrouted(SpatialHeatInput input) {
         for (int i = 0; i < input.size(); i++) {
-            var target = input.target(i);
-            var existing = streams.get(target);
-            // A resolved world identity does not become unresolved when a late prefix arrives.
-            // Its numerical owner cancels an overlapping private claim before accepting that prefix.
-            long owner = existing == null || existing.owner == null ? 0 : existing.owner.id;
-            receive(owner, target, input.fromTick(i), input.toTick(i), input.energyJ(i));
+            receiveUnrouted(input.target(i), input.fromTick(i), input.toTick(i), input.energyJ(i));
         }
+    }
+    public synchronized void receiveUnrouted(SpatialHeatInput.Target target, long from, long to, double joules) {
+        var existing = streams.get(target);
+        // A resolved world identity does not become unresolved when a late prefix arrives.
+        long owner = existing == null || existing.owner == null ? 0 : existing.owner.id;
+        receive(owner, target, from, to, joules);
     }
 
     private void recordsChanged(Stream stream, int previous) {
@@ -172,7 +204,7 @@ public final class SpatialHeatStore {
         liveRecords += change; recordHighWater = Math.max(recordHighWater, liveRecords);
     }
 
-    public void remapOwner(long ownerId, java.util.function.ToLongFunction<SpatialHeatInput.Target> ownerAt,
+    public synchronized void remapOwner(long ownerId, java.util.function.ToLongFunction<SpatialHeatInput.Target> ownerAt,
             java.util.function.UnaryOperator<SpatialHeatInput.Target> unresolvedIdentity) {
         var owner = owners.get(ownerId);
         for (var stream = owner == null ? null : owner.first; stream != null;) {
@@ -191,9 +223,8 @@ public final class SpatialHeatStore {
         if (existing == null) {
             streams.remove(key); stream.target = target; streams.put(target, stream);
             if (chunk(key) != chunk(target)) {
-                var previous = chunks.get(chunk(key)); previous.remove(stream);
-                if (previous.isEmpty()) chunks.remove(chunk(key));
-                chunks.computeIfAbsent(chunk(target), ignored -> new java.util.LinkedHashSet<>()).add(stream);
+                chunks.get(chunk(key)).streams.remove(stream);
+                inputsInChunk(chunk(target)).streams.add(stream);
             }
             enqueueRouting(stream);
         } else if (existing != stream) {
@@ -206,11 +237,10 @@ public final class SpatialHeatStore {
             for (var span : stream.exact) existing.append(span);
             recordsChanged(existing, before);
             liveRecords -= stream.recordCount(); unlink(stream); streams.remove(key);
-            var indexed = chunks.get(chunk(key)); indexed.remove(stream);
-            if (indexed.isEmpty()) chunks.remove(chunk(key));
+            chunks.get(chunk(key)).streams.remove(stream);
             enqueueRouting(existing);
         }
-        changed.accept(chunk(key)); changed.accept(chunk(target));
+        pendingChanged(chunk(key)); pendingChanged(chunk(target));
     }
 
     private void assign(Stream stream, long ownerId) {
@@ -241,12 +271,13 @@ public final class SpatialHeatStore {
     public int records(long ownerId) { var owner = owners.get(ownerId); return owner == null ? 0 : owner.records; }
     public double pendingEnergyJ() { return pendingJ; }
     public int targetCount() { return streams.size() + sourceWindows.size(); }
-    public long retainedBytes() { return 1024L + sourceBytes + 128L * streamHighWater + 1920L * streams.size() + 64L * liveRecords + 16L * routingHighWater; }
+    public long retainedBytes() { return 1024L + sourceBytes + 128L * streamHighWater + 512L * chunkHighWater
+            + 1920L * streams.size() + 64L * liveRecords + 16L * routingHighWater; }
     public long firstPendingInChunk(long chunk) {
         var entries = chunks.get(chunk); long first = Long.MAX_VALUE;
-        var unbound = sourceChunks.get(chunk);
-        if (unbound != null) for (var window : unbound) first = Math.min(first, window.through());
-        if (entries != null) for (var stream : entries) {
+        if (entries == null) return first;
+        for (var window : entries.windows) first = Math.min(first, window.through());
+        for (var stream : entries.streams) {
             first = Math.min(first, stream.firstTick());
             if (stream.claim != null && !stream.claim.accepted) first = Math.min(first, stream.claim.from);
         }
@@ -256,7 +287,7 @@ public final class SpatialHeatStore {
     public boolean hasCleanup() { return !retiring.isEmpty(); }
 
     /** Numerical acceptance changes one watermark. Payload retirement uses the next work slices. */
-    public void advanceCleanup(int maximumTargets) {
+    public synchronized void advanceCleanup(int maximumTargets) {
         while (maximumTargets-- > 0 && !retiring.isEmpty()) {
             var claim = retiring.peekFirst();
             if (claim.cleanupTarget == claim.touched.size()) {
@@ -270,11 +301,10 @@ public final class SpatialHeatStore {
     }
 
     public void collectChunk(long chunk, RecordConsumer consumer) {
-        var unbound = sourceChunks.get(chunk);
-        if (unbound != null) for (var window : unbound) window.collectChunk(chunk, consumer);
         var entries = chunks.get(chunk);
         if (entries == null) return;
-        for (var stream : entries) collectStream(stream, consumer);
+        for (var window : entries.windows) window.collectChunk(chunk, consumer);
+        for (var stream : entries.streams) collectStream(stream, consumer);
     }
     private static void collectStream(Stream stream, RecordConsumer consumer) {
             long from = Long.MAX_VALUE, to = Long.MIN_VALUE; double positive = 0, negative = 0;
@@ -315,14 +345,14 @@ public final class SpatialHeatStore {
     public boolean containsUnrouted(SpatialHeatInput.Target target) {
         var stream = streams.get(target); return stream != null && stream.owner != null && stream.owner.id == 0;
     }
-    public void retry(SpatialHeatInput.Target target) {
+    public synchronized void retry(SpatialHeatInput.Target target) {
         var stream = streams.get(target); if (stream != null) enqueueRouting(stream);
     }
-    public void retryChunk(long chunk) {
-        var entries = chunks.get(chunk); if (entries != null) for (var stream : entries) enqueueRouting(stream);
+    public synchronized void retryChunk(long chunk) {
+        var entries = chunks.get(chunk); if (entries != null) for (var stream : entries.streams) enqueueRouting(stream);
     }
-    public void geometryChanged() { geometryChanged(ignored -> { }); }
-    public void geometryChanged(java.util.function.Consumer<SpatialHeatInput.Target> classify) {
+    public synchronized void geometryChanged() { geometryChanged(ignored -> { }); }
+    public synchronized void geometryChanged(java.util.function.Consumer<SpatialHeatInput.Target> classify) {
         var owner = owners.get(0);
         for (var stream = owner == null ? null : owner.first; stream != null; stream = stream.next) {
             classify.accept(stream.target); enqueueRouting(stream);
@@ -355,6 +385,19 @@ public final class SpatialHeatStore {
     public boolean pendingThrough(SpatialHeatInput.Target target, long tick) {
         var stream = streams.get(target);
         if (stream == null || stream.owner == null || stream.owner.id != 0) return false;
+        return pendingThrough(stream, tick);
+    }
+    public boolean pendingThrough(long ownerId, long tick) {
+        return pendingThrough(ownerId, tick, ignored -> true);
+    }
+    public boolean pendingThrough(long ownerId, long tick, java.util.function.Predicate<SpatialHeatInput.Target> included) {
+        var owner = owners.get(ownerId);
+        if (owner == null) return false;
+        for (var stream = owner.first; stream != null; stream = stream.next)
+            if (included.test(stream.target) && pendingThrough(stream, tick)) return true;
+        return false;
+    }
+    private boolean pendingThrough(Stream stream, long tick) {
         if (!stream.positive.empty() && (stream.positive.from < tick || stream.positive.from == tick && stream.positive.to == tick)) return true;
         if (!stream.negative.empty() && (stream.negative.from < tick || stream.negative.from == tick && stream.negative.to == tick)) return true;
         return dueScan.any(stream.prefix, tick) || dueScan.any(stream.exact, tick);
@@ -366,7 +409,7 @@ public final class SpatialHeatStore {
                 + ":queued=" + stream.routingQueued + ":first=" + stream.exact.peekFirst()
                 + ":prefix=" + stream.prefix.peekFirst() + ":records=" + stream.recordCount();
     }
-    public void route(Receiver receiver, int maximumRecords) {
+    public synchronized void route(Receiver receiver, int maximumRecords) {
         int targets = Math.min(routingReady.size(), maximumRecords);
         while (targets-- > 0 && maximumRecords > 0) {
             var stream = routingReady.removeFirst(); stream.routingQueued = false;
@@ -405,7 +448,7 @@ public final class SpatialHeatStore {
             }
             if (stream.empty()) releaseEmpty(stream);
             else if (maximumRecords == 0) enqueueRouting(stream);
-            changed.accept(chunk(key)); receiver.afterAttempt(key);
+            pendingChanged(chunk(key)); receiver.afterAttempt(key);
         }
         if (streams.isEmpty() && sourceWindows.isEmpty()) pendingJ = 0;
     }
@@ -431,53 +474,60 @@ public final class SpatialHeatStore {
         public Retarget(long section, long generation) {
             this.section = section; this.generation = generation;
             var entries = chunks.get(ChunkPos.asLong(net.minecraft.core.SectionPos.x(section), net.minecraft.core.SectionPos.z(section)));
-            selected = entries == null ? java.util.List.of() : new ArrayList<>(entries);
+            selected = entries == null ? java.util.List.of() : new ArrayList<>(entries.streams);
         }
         public boolean run(int maximum) {
-            int end = Math.min(selected.size(), cursor + maximum);
-            while (cursor < end) {
-                var stream = selected.get(cursor++); var key = stream.target;
-                if (streams.get(key) != stream || stream.owner == null || stream.owner.id != 0) continue;
-                long block = key.position();
-                if (net.minecraft.core.SectionPos.asLong(BlockPos.getX(block) >> 4, BlockPos.getY(block) >> 4, BlockPos.getZ(block) >> 4) != section
-                        || key.minimumPageGeneration() > generation || key.generation() != 0 && key.generation() != generation) continue;
-                var target = new SpatialHeatInput.Target(block, key.face(), -1, 0, 0, 0, 0, 0, key.materialStateId(), generation + 1);
-                if (stream.claim != null) {
-                    if (!stream.claim.closed) { cursor--; return false; }
-                    stream.claim.releaseStream(stream);
+            synchronized (SpatialHeatStore.this) {
+                int end = Math.min(selected.size(), cursor + maximum);
+                while (cursor < end) {
+                    var stream = selected.get(cursor++); var key = stream.target;
+                    if (streams.get(key) != stream || stream.owner == null || stream.owner.id != 0) continue;
+                    long block = key.position();
+                    if (net.minecraft.core.SectionPos.asLong(BlockPos.getX(block) >> 4, BlockPos.getY(block) >> 4, BlockPos.getZ(block) >> 4) != section
+                            || key.minimumPageGeneration() > generation || key.generation() != 0 && key.generation() != generation) continue;
+                    var target = new SpatialHeatInput.Target(block, key.face(), -1, 0, 0, 0, 0, 0, key.materialStateId(), generation + 1);
+                    if (stream.claim != null) {
+                        if (!stream.claim.closed) { cursor--; return false; }
+                        stream.claim.releaseStream(stream);
+                    }
+                    changeTarget(stream, target);
                 }
-                changeTarget(stream, target);
+                return cursor == selected.size();
             }
-            return cursor == selected.size();
         }
     }
 
     public int checkpointRecordsInChunk(long chunk) {
         var entries = chunks.get(chunk);
-        int count = entries == null ? 0 : 2 * entries.size();
-        var unbound = sourceChunks.get(chunk);
-        if (unbound != null) for (var window : unbound)
+        if (entries == null) return 0;
+        int count = 2 * entries.streams.size();
+        for (var window : entries.windows)
             // Saves copy every retained span at its original outlet.
             count += window.size * window.portCount();
         return count;
     }
     public int targetsInChunk(long chunk) {
-        var entries = chunks.get(chunk); var unbound = sourceChunks.get(chunk);
-        int count = entries == null ? 0 : entries.size();
-        if (unbound != null) for (var window : unbound) count += window.portCount();
+        var entries = chunks.get(chunk);
+        if (entries == null) return 0;
+        int count = entries.streams.size();
+        for (var window : entries.windows) count += window.portCount();
         return count;
     }
     public int unboundWindowsInChunk(long chunk) {
-        var windows = sourceChunks.get(chunk); int count = 0;
-        if (windows != null) for (var window : windows) if (window.hasHeat()) count++;
+        var entries = chunks.get(chunk); int count = 0;
+        if (entries != null) for (var window : entries.windows) if (window.hasHeat()) count++;
         return count;
     }
 
     @FunctionalInterface
     public interface RecordConsumer { void accept(SpatialHeatInput.Target target, long from, long to, double joules); }
-    public Claim claim(long ownerId, long from, long through) { return claim(ownerId, from, through, null); }
-    public Claim claim(long ownerId, long from, long through, RecordConsumer consumer) {
-        return new Claim(owners.get(ownerId), from, through, consumer);
+    public synchronized Claim claim(long ownerId, long from, long through) { return claim(ownerId, from, through, null); }
+    public synchronized Claim claim(long ownerId, long from, long through, RecordConsumer consumer) {
+        return new Claim(owners.get(ownerId), from, through, target -> true, consumer);
+    }
+    public synchronized Claim claim(long ownerId, long from, long through,
+            java.util.function.Predicate<SpatialHeatInput.Target> included, RecordConsumer consumer) {
+        return new Claim(owners.get(ownerId), from, through, included, consumer);
     }
 
     /** Freezes at most the existing owner's tail. Later input can only enter its unfrozen suffix. */
@@ -494,11 +544,12 @@ public final class SpatialHeatStore {
         private int allocatedRecords;
         private ThermalMemoryBudget.Reservation retention;
         private RecordConsumer consumer;
+        private java.util.function.Predicate<SpatialHeatInput.Target> included;
         private final boolean streamed;
         private boolean prepared;
-        private Claim(Owner owner, long from, long through, RecordConsumer consumer) {
+        private Claim(Owner owner, long from, long through, java.util.function.Predicate<SpatialHeatInput.Target> included, RecordConsumer consumer) {
             this.from = from; this.through = through; preparingOwner = owner;
-            this.consumer = consumer;
+            this.consumer = consumer; this.included = included;
             streamed = consumer != null;
             if (owner != null) {
                 if (owner.preparing != null && !owner.preparing.closed && owner.preparing.input == null)
@@ -511,34 +562,38 @@ public final class SpatialHeatStore {
         public boolean prepare(long deadline) {
             if (prepared) return true;
             do {
-                if (cursor == null) {
-                    input = builder.freeze();
-                    prepared = true;
-                    consumer = null;
-                    if (preparingOwner != null && preparingOwner.preparing == this) preparingOwner.preparing = null;
-                    return true;
+                synchronized (SpatialHeatStore.this) {
+                    if (cursor == null) {
+                        input = builder.freeze();
+                        prepared = true;
+                        consumer = null;
+                        included = null;
+                        if (preparingOwner != null && preparingOwner.preparing == this) preparingOwner.preparing = null;
+                        return true;
+                    }
+                    var current = cursor;
+                    cursor = current == stop ? null : current.next;
+                    if (!included.test(current.target)) continue;
+                    if (current.claim != null && current.claim != this) {
+                        if (!current.claim.closed) throw new IllegalStateException("Heat target already claimed");
+                        current.claim.releaseStream(current);
+                    }
+                    int previousRecords = current.recordCount();
+                    current.claim = this; current.claimed = new ArrayList<>(2); touched.add(current);
+                    freeze(current, current.prefix);
+                    if (!current.positive.empty()) {
+                        Span span = current.positive.take(); if (!freeze(current, span)) current.prefix.addLast(span);
+                    }
+                    if (!current.negative.empty()) {
+                        Span span = current.negative.take(); if (!freeze(current, span)) current.prefix.addLast(span);
+                    }
+                    int count = current.exact.size();
+                    while (count-- > 0) {
+                        Span span = current.exact.removeFirst();
+                        if (!freeze(current, span)) current.exact.addLast(span);
+                    }
+                    recordsChanged(current, previousRecords);
                 }
-                var current = cursor;
-                cursor = current == stop ? null : current.next;
-                if (current.claim != null && current.claim != this) {
-                    if (!current.claim.closed) throw new IllegalStateException("Heat target already claimed");
-                    current.claim.releaseStream(current);
-                }
-                int previousRecords = current.recordCount();
-                current.claim = this; current.claimed = new ArrayList<>(); touched.add(current);
-                freeze(current, current.prefix);
-                if (!current.positive.empty()) {
-                    Span span = current.positive.take(); if (!freeze(current, span)) current.prefix.addLast(span);
-                }
-                if (!current.negative.empty()) {
-                    Span span = current.negative.take(); if (!freeze(current, span)) current.prefix.addLast(span);
-                }
-                int count = current.exact.size();
-                while (count-- > 0) {
-                    Span span = current.exact.removeFirst();
-                    if (!freeze(current, span)) current.exact.addLast(span);
-                }
-                recordsChanged(current, previousRecords);
             } while (System.nanoTime() < deadline);
             return false;
         }
@@ -569,31 +624,45 @@ public final class SpatialHeatStore {
             if (input == null) throw new IllegalStateException("Heat prefix preparation is incomplete");
             return input;
         }
+        public double energyJ() { return joules; }
+        public double energyJInChunk(long chunk) {
+            double total = 0;
+            for (var stream : touched) if (stream.claim == this && chunk(stream.target) == chunk) total += stream.claimedJ;
+            return total;
+        }
         /** The job can release its numerical scratch while this bounded retirement still owns records. */
         public void retainCleanup(ThermalMemoryBudget.Reservation jobScratch) {
-            input = null; builder.release();
-            // The minimum consumer never builds an O(records) payload. Its held
-            // span references and retirement metadata stay in the store's charge.
-            if (streamed || retention != null || touched.isEmpty() || jobScratch == null) return;
-            long bytes = 512L + 128L * touched.size() + 48L * allocatedRecords;
-            retention = jobScratch.split(bytes);
+            synchronized (SpatialHeatStore.this) {
+                input = null; builder.release();
+                // A streaming consumer never builds an O(records) payload. Its held
+                // span references and retirement metadata stay in the store's charge.
+                if (streamed || retention != null || touched.isEmpty() || jobScratch == null) return;
+                long bytes = 512L + 128L * touched.size() + 48L * allocatedRecords;
+                retention = jobScratch.split(bytes);
+            }
         }
 
         /** Called only as part of the matching Accepted publication. */
         public void accepted() {
-            if (closed) throw new IllegalStateException("Heat prefix already retired");
-            closed = accepted = true;
-            consumer = null;
-            pendingJ -= joules;
-            retiring.addLast(this);
+            synchronized (SpatialHeatStore.this) {
+                if (closed) throw new IllegalStateException("Heat prefix already retired");
+                closed = accepted = true;
+                consumer = null;
+                included = null;
+                pendingJ -= joules;
+                retiring.addLast(this);
+            }
         }
 
         @Override public void close() {
-            if (closed) return;
-            closed = true;
-            consumer = null;
-            if (preparingOwner != null && preparingOwner.preparing == this) preparingOwner.preparing = null;
-            retiring.addLast(this);
+            synchronized (SpatialHeatStore.this) {
+                if (closed) return;
+                closed = true;
+                consumer = null;
+                included = null;
+                if (preparingOwner != null && preparingOwner.preparing == this) preparingOwner.preparing = null;
+                retiring.addLast(this);
+            }
         }
 
         private void releaseStream(Stream stream) {
@@ -610,7 +679,7 @@ public final class SpatialHeatStore {
             }
             stream.claim = null; stream.claimed = null; stream.claimedJ = 0; stream.claimedRecords = 0;
             recordsChanged(stream, previousRecords);
-            changed.accept(chunk(stream.target));
+            pendingChanged(chunk(stream.target));
         }
     }
 
@@ -620,16 +689,15 @@ public final class SpatialHeatStore {
         if (!stream.empty() || !streams.remove(stream.target, stream)) return;
         unlink(stream);
         var indexed = chunks.get(chunk(stream.target));
-        indexed.remove(stream); if (indexed.isEmpty()) chunks.remove(chunk(stream.target));
+        indexed.streams.remove(stream);
+        pendingChanged(chunk(stream.target));
     }
 
-    public void retireChunk(long chunk, ObjDoubleConsumer<SpatialHeatInput.Target> settle) {
-        var unbound = sourceChunks.get(chunk);
-        if (unbound != null) for (var window : unbound) pendingJ -= window.exportChunk(chunk, settle);
-        changed.accept(chunk);
+    public synchronized void retireChunk(long chunk, ObjDoubleConsumer<SpatialHeatInput.Target> settle) {
         var indexed = chunks.get(chunk);
         if (indexed == null) return;
-        var iterator = indexed.iterator();
+        for (var window : indexed.windows) pendingJ -= window.exportChunk(chunk, settle);
+        var iterator = indexed.streams.iterator();
         while (iterator.hasNext()) {
             var stream = iterator.next();
             if (stream.claim != null) {
@@ -639,13 +707,14 @@ public final class SpatialHeatStore {
             settle.accept(stream.target, stream.pendingJ); pendingJ -= stream.pendingJ;
             liveRecords -= stream.recordCount(); unlink(stream); streams.remove(stream.target); iterator.remove();
         }
-        chunks.remove(chunk); changed.accept(chunk);
+        pendingChanged(chunk);
         if (streams.isEmpty() && sourceWindows.isEmpty()) pendingJ = 0;
     }
 
-    public void clear() {
+    public synchronized void clear() {
         for (var claim : retiring) if (claim.retention != null) claim.retention.close();
         streams.clear(); owners.clear(); chunks.clear(); retiring.clear(); routingReady.clear(); pendingJ = 0; liveRecords = 0;
-        sourceWindows.clear(); sourceChunks.clear(); sourceBytes = 0;
+        sourceWindows.clear(); sourceBytes = 0;
+        retainedChunks.clear();
     }
 }

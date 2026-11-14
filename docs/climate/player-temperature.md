@@ -27,6 +27,24 @@ player logic, food-rate independence, and spring contact/recovery. The
 selected normal-difficulty cold/wind outcome targets were met; full pack
 gameplay and all difficulty levels retain their separate validation scope.
 
+## Clothing attribute sampling cost (2026-11-13)
+
+`BodyPartData.fillClothData` reads `ItemStack.getAttributeModifiers(part.slot)`
+once per equipped item in that clothing sample, then uses the same Forge result
+for insulation, wind, radiation and equipment weight. The next sample asks Forge
+again; there is no persistent cache, new invalidation protocol, cadence change or
+body-formula change. The previous four calls each rebuilt the event-derived map.
+
+`equipmentThermalPropertiesUseOneFreshAttributeSnapshot` uses a real equipped
+stack and Forge event, checks one event per sample, all modifier operations and
+layer weights, then changes NBT on the same stack and checks the next result.
+The initial control observed four events; the final 100-case combination passed,
+including the existing player and heating-equipment checks. In the subsequent
+100-client mixed run, the outermost player update averaged 0.656358 to
+0.486493 ms per server tick; whole main-thread mean improved only 1.87% and
+remains unqualified. The [validation receipt](validation/thermal-cell-enthalpy-validation-2026-11-14.json#/records/thermal-local-unload-clothing-2026-11-13)
+records exact scope, workload differences and the incomplete original objective.
+
 ## Player-Facing Values
 
 The temperature orb shows sampled Thermal Air plus a fixed-reference equivalent

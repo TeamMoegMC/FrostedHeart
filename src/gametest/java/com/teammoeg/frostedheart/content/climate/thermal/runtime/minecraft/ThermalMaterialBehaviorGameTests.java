@@ -406,7 +406,8 @@ public final class ThermalMaterialBehaviorGameTests {
         final MinecraftThermalProfiles.Snapshot profiles = MinecraftThermalProfiles.prepare();
         final ThermalCellArena arena = new ThermalCellArena(256);
         final ThermalMemoryBudget budget = new ThermalMemoryBudget(64L << 20);
-        final QueryPublication query = QueryPublication.createRegional(budget.createCategory(), 64);
+        final QueryPublication query;
+        final com.teammoeg.frostedheart.content.climate.thermal.solver.TiledThermalField fixed;
         final ThermalDimensionEngine engine;
         final MaterialStateAccess material;
         final LinkedHashMap<Long, ThermalPageHandle> pages = new LinkedHashMap<>();
@@ -414,16 +415,37 @@ public final class ThermalMaterialBehaviorGameTests {
         long sequence, tick;
 
         Simulation(GameTestHelper helper, BlockPos origin, int sizeX, int sizeY, int sizeZ, double natural) {
+            this(helper, origin, sizeX, sizeY, sizeZ, natural, false);
+        }
+
+        Simulation(GameTestHelper helper, BlockPos origin, int sizeX, int sizeY, int sizeZ, double natural, boolean captureSky) {
+            this(helper, origin, sizeX, sizeY, sizeZ, natural, captureSky, 0, null, Double.POSITIVE_INFINITY);
+        }
+
+        Simulation(GameTestHelper helper, BlockPos origin, int sizeX, int sizeY, int sizeZ, double natural,
+                boolean captureSky, int maximumPages) {
+            this(helper, origin, sizeX, sizeY, sizeZ, natural, captureSky, 0, null, Double.POSITIVE_INFINITY, maximumPages);
+        }
+
+        Simulation(GameTestHelper helper, BlockPos origin, int sizeX, int sizeY, int sizeZ, double natural, boolean captureSky, long initialTick, java.util.function.LongFunction<DormantChunkThermalState> restored, double halfLife) {
+            this(helper, origin, sizeX, sizeY, sizeZ, natural, captureSky, initialTick, restored, halfLife, 64);
+        }
+
+        Simulation(GameTestHelper helper, BlockPos origin, int sizeX, int sizeY, int sizeZ, double natural, boolean captureSky, long initialTick, java.util.function.LongFunction<DormantChunkThermalState> restored, double halfLife, int maximumPages) {
             this.helper = helper;
+            tick = initialTick;
             level = helper.getLevel();
             capture = new MinecraftSignatureCapture(level, profiles.states(), profiles.signatures());
             var tuning = profiles.tuning();
-            engine = new ThermalDimensionEngine(1, 0, arena, profiles.signatures(), profiles.materials(),
+            fixed = new com.teammoeg.frostedheart.content.climate.thermal.solver.TiledThermalField(budget,
+                    profiles.signatures(), profiles.materials(), tuning.airHeatCapacityJPerBlockK(), tuning.airMixingWPerBlockK(), 0, maximumPages, initialTick);
+            query = QueryPublication.createFixed(budget.createCategory(), maximumPages, fixed);
+            engine = new ThermalDimensionEngine(1, initialTick, arena, profiles.signatures(), profiles.materials(),
                     new ThermalTopologyParameters(tuning.airHeatCapacityJPerBlockK(), 0, tuning.airMixingWPerBlockK(),
                             new BuoyancyConductance.Parameters(.25, 4, 10), 1024, 8),
                     new FarFieldSettings(tuning.farFieldConductanceWPerK(), 32), tuning.campfire(),
-                    ThermalDimensionLimits.sharedGrid(64, 128), query, budget.createCategory(), 1e-5);
-            material = ThermalLoadedWorldGameTests.read(engine, "regional");
+                    ThermalDimensionLimits.sharedGrid(maximumPages, 128), query, budget.createCategory());
+            material = engine;
             LinkedHashMap<Long, Long> masks = new LinkedHashMap<>();
             for (int x = 0; x < sizeX; x += 4) for (int y = 0; y < sizeY; y += 4) for (int z = 0; z < sizeZ; z += 4) {
                 BlockPos position = origin.offset(x, y, z);
@@ -436,8 +458,28 @@ public final class ThermalMaterialBehaviorGameTests {
             for (var entry : masks.entrySet()) {
                 ThermalPageHandle page = new ThermalPageHandle(entry.getKey(), 1);
                 pages.put(entry.getKey(), page);
+                byte[] sectionSky = sky;
+                if (captureSky) {
+                    sectionSky = new byte[256];
+                    int x0 = SectionPos.sectionToBlockCoord(SectionPos.x(entry.getKey()));
+                    int y0 = SectionPos.sectionToBlockCoord(SectionPos.y(entry.getKey()));
+                    int z0 = SectionPos.sectionToBlockCoord(SectionPos.z(entry.getKey()));
+                    var chunk = level.getChunk(SectionPos.x(entry.getKey()), SectionPos.z(entry.getKey()));
+                    for (int x = 0; x < 16; x++) for (int z = 0; z < 16; z++) {
+                        int exposedY = chunk.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x0 + x, z0 + z);
+                        sectionSky[x | z << 4] = (byte) Math.max(0, Math.min(16, exposedY - y0));
+                    }
+                }
+                var saved = restored == null ? null : restored.apply(net.minecraft.world.level.ChunkPos.asLong(SectionPos.x(entry.getKey()), SectionPos.z(entry.getKey())));
+                int sectionY = SectionPos.y(entry.getKey());
+                var savedAir = saved == null ? null : saved.air(sectionY);
+                var savedMaterial = saved == null ? null : saved.materials(sectionY);
+                double rate = com.teammoeg.frostedheart.content.climate.thermal.persistence.DormantThermalCooling.rate(halfLife);
                 admissions[index++] = new ThermalInputBatch.PageAdmission(page, 0, entry.getValue(), entry.getValue(),
-                        capture.captureBricks(entry.getKey(), null, capture.unresolvedPage(), entry.getValue()), natural, sky, null);
+                        capture.captureBricks(entry.getKey(), null, capture.unresolvedPage(), entry.getValue()), natural, sectionSky,
+                        savedAir == null ? null : new ThermalInputBatch.DormantAirCut(savedAir, natural,
+                                com.teammoeg.frostedheart.content.climate.thermal.persistence.DormantThermalCooling.factor(savedAir.savedGameTick(), initialTick, rate), initialTick, rate),
+                        savedMaterial == null ? null : new ThermalInputBatch.DormantMaterialCut(savedMaterial, initialTick, natural, rate));
             }
             process(admissions, ResolvedGeometryBatch.EMPTY, ThermalInputBatch.NO_PHASE_ACKS);
         }
@@ -456,7 +498,10 @@ public final class ThermalMaterialBehaviorGameTests {
             return brick.firstSlot() + (brick.blockLayout() == null ? 0 : brick.blockLayout().nodeAt(block));
         }
         ResolvedGeometryBatch change(BlockPos position, BlockState next, byte cause) {
-            int previous = profiles.states().signatureId(level.getBlockState(position));
+            return change(position, level.getBlockState(position), next, cause);
+        }
+        ResolvedGeometryBatch change(BlockPos position, BlockState before, BlockState next, byte cause) {
+            int previous = profiles.states().signatureId(before);
             level.setBlockAndUpdate(position, next);
             var page = page(position);
             var geometry = new ResolvedGeometryBatch.Builder();
@@ -466,17 +511,16 @@ public final class ThermalMaterialBehaviorGameTests {
             return geometry.buildAndReset();
         }
         double totalEnergy() {
-            double energy = 0;
-            for (int slot = arena.nextLiveSlot(0); slot >= 0; slot = arena.nextLiveSlot(slot + 1)) energy += enthalpyJ(slot);
-            return energy;
+            return fixed.totalEnthalpyJ();
         }
         double enthalpyJ(int slot) {
             if (arena.isMaterialCell(slot)) {
                 var sample = new MaterialSample(); material.readMaterial(slot, sample); return sample.enthalpyJ();
             }
-            var sample = new QueryPublication.MutableSample();
-            helper.assertTrue(query.tryRead(slot, arena.lifecycleGeneration(slot), 0, sample), "committed Air must be readable");
-            return arena.capacityJPerK(slot) * sample.temperatureC();
+            var sample = new com.teammoeg.frostedheart.content.climate.thermal.solver.TiledThermalField.Sample();
+            long position = BlockPos.asLong(arena.minimum(slot, 0), arena.minimum(slot, 1), arena.minimum(slot, 2));
+            helper.assertTrue(fixed.read(position, false, sample), "Committed Air uses its world cell address");
+            return sample.enthalpyJ();
         }
         double temperatureC(int slot, double referenceC) {
             var sample = new MaterialSample(); material.readMaterial(slot, sample); return sample.temperatureC();

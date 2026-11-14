@@ -2,7 +2,6 @@
 package com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft;
 
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.content.climate.thermal.solver.ContinuousAirSolver;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClimate;
 import com.teammoeg.frostedheart.content.climate.thermal.query.ThermalEnvironmentSample;
@@ -39,7 +38,7 @@ public final class ContinuousAirPrecisionProductionGameTests {
         BlockPos near = fire.above();
         ContinuousAirProductionTiming.observe(helper, "precision_room", new BlockPos[]{near, near.east(3)}, 2600);
         FHMain.LOGGER.info("THERMAL_PRECISION_START,trial={},startedTick={},fire={},dayTime={},seed={}",
-                ContinuousAirSolver.TRANSPORT_TOLERANCE_C, startedTick, fire, level.getDayTime(), level.getSeed());
+                1e-3, startedTick, fire, level.getDayTime(), level.getSeed());
         var nearSample = new ThermalEnvironmentSample();
         var farSample = new ThermalEnvironmentSample();
         double[] peakRise = {0}, retainedRise = {Double.NaN}, previousRise = {Double.NaN};
@@ -73,7 +72,7 @@ public final class ContinuousAirPrecisionProductionGameTests {
                 }
                 previousRise[0] = rise;
                 FHMain.LOGGER.info("THERMAL_PRECISION_TRACE,toleranceC={},elapsedTicks={},worldTick={},sampleTick={},farSampleTick={},nearC={},farC={},riseC={},floorC={},naturalC={},wind={},climateSec={},basisTerms={},geometry={}",
-                        ContinuousAirSolver.TRANSPORT_TOLERANCE_C, elapsed, level.getGameTime(), nearSample.airSampleTick(), farSample.airSampleTick(),
+                        1e-3, elapsed, level.getGameTime(), nearSample.airSampleTick(), farSample.airSampleTick(),
                         nearC, farC, rise, WorldTemperature.material(level, fire.below()),
                         WorldTemperature.naturalAir(level, near), WorldClimate.getWind(level), WorldClimate.getSec(level),
                         nearSample.airBasisTerms(), MinecraftThermalInput.describeAirRead(level, near).split(",", 2)[0]);
@@ -93,7 +92,7 @@ public final class ContinuousAirPrecisionProductionGameTests {
                         "Small cooling must continue rather than repeatedly accept the old temperature; retained="
                                 + retainedRise[0] + ",final=" + rise + ",downwardSamples=" + downwardSamples[0]);
                 FHMain.LOGGER.info("THERMAL_PRECISION_RESULT,trial={},peakRiseC={},retainedRiseC={},finalRiseC={},coolingSamples={},downwardSamples={},stalledSamples={},worker={}",
-                        ContinuousAirSolver.TRANSPORT_TOLERANCE_C, peakRise[0], retainedRise[0], rise, coolingSamples[0], downwardSamples[0], stalledSamples[0],
+                        1e-3, peakRise[0], retainedRise[0], rise, coolingSamples[0], downwardSamples[0], stalledSamples[0],
                         MinecraftThermalInput.describeWorkerProgress(level));
                 ThermalConvergenceScenes.force(helper, origin, 8, false);
                 helper.succeed();

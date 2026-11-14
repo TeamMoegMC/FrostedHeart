@@ -89,6 +89,11 @@ final class AirRouteCompiler {
     }
 
     void recordBacking(AirBackingMeter meter) {
+        recordDirectoryBacking(meter);
+        recordComponentBacking(meter);
+    }
+
+    void recordDirectoryBacking(AirBackingMeter meter) {
         meter.container(atPosition, atPosition.size(), 16); meter.container(bySection, bySection.size(), 16);
         meter.container(edgesByBrick, edgesByBrick.size(), 16); meter.container(components, components.size(), 8);
         meter.container(pending, components.size(), 8); meter.container(seeds, seeds.size(), 8);
@@ -100,6 +105,9 @@ final class AirRouteCompiler {
             meter.container(slices, slices.size(), 8);
             for (var slice : slices) { meter.objectOnce(slice, 32); meter.array(slice.indexes.elements()); }
         }
+    }
+
+    void recordComponentBacking(AirBackingMeter meter) {
         for (var component : components) component.recordBacking(meter);
     }
 
@@ -189,7 +197,6 @@ final class AirRouteCompiler {
     boolean discoveryIncomplete() { return !pending.isEmpty() || !seeds.isEmpty(); }
     int capturedPositionCount() { return atPosition.size() + (committed == null ? 0 : committed.atPosition.size() - removedPositions); }
     int dependencySectionCount() { return bySection.size() + (committed == null ? 0 : committed.bySection.size()); }
-    int componentCountBound() { return components.size() + (committed == null ? 0 : committed.components.size()); }
     long pendingSectionCountBound() {
         long count = dirtyBricks.size() + (long) seeds.size();
         for (var component : pending) if (component.alive) count += component.dependencies.size();
@@ -215,23 +222,6 @@ final class AirRouteCompiler {
         }
         for (Component component : pending) if (component.alive)
             for (long key : component.dependencies.keySet()) if (sections.add(key)) queue.add(key);
-    }
-
-    /** Read-only transitive dependency closure, including routes with only one Air port. */
-    void expandAffectedSections(LongOpenHashSet sections, LongArrayList queue) {
-        var visited = new ObjectOpenHashSet<Component>();
-        for (int index = 0; index < queue.size(); index++) {
-            long section = queue.getLong(index);
-            if (committed != null) expandSection(committed.bySection.get(section), sections, queue, visited);
-            expandSection(bySection.get(section), sections, queue, visited);
-        }
-    }
-    private void expandSection(ObjectOpenHashSet<Component> affected, LongOpenHashSet sections,
-            LongArrayList queue, ObjectOpenHashSet<Component> visited) {
-        if (affected == null) return;
-        for (Component component : affected) if (component.alive && !removed.contains(component) && visited.add(component))
-            for (long dependency : component.dependencies.keySet())
-                if (sections.add(dependency)) queue.add(dependency);
     }
 
     void beginCut() {
@@ -261,7 +251,7 @@ final class AirRouteCompiler {
         return at(position).validity;
     }
 
-    void invalidate(ThermalInputBatch batch) {
+    void invalidate(ThermalInputBatch batch, TopologyView view) {
         changedSections.clear();
         for (var admission : batch.admissions()) changedSections.add(admission.page().sectionKey());
         for (var retirement : batch.retirements())
@@ -272,8 +262,8 @@ final class AirRouteCompiler {
             changedSections.add(batch.geometry().page(index).sectionKey());
         for (var halo : batch.geometry().halos()) {
             changedSections.add(halo.page().sectionKey());
-            for (long position : halo.halo().positions()) changedSections.add(section(position));
         }
+        view.collectChangedHaloSections(changedSections);
         for (long section : changedSections) {
             var affected = inSection(section);
             for (Component component : affected.toArray(Component[]::new)) discard(component);

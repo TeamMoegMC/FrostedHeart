@@ -82,7 +82,7 @@ public final class ThermalDimensionMailbox implements AutoCloseable, ThermalWork
     public synchronized ThermalCompletion peekCompletion() { return completions.peekFirst(); }
 
     public void acknowledgeCompletion(long sequence) {
-        boolean terminal;
+        boolean terminal, closeImmediately = false;
         RoundWake releasedSlot = null;
         synchronized (this) {
             var completion = completions.peekFirst();
@@ -90,14 +90,19 @@ public final class ThermalDimensionMailbox implements AutoCloseable, ThermalWork
                 throw new IllegalStateException("thermal completion ACK does not own the mailbox");
             completions.removeFirst();
             terminal = completion.status() == ThermalCompletion.Status.ENGINE_FAILED;
-            if (terminal) state = State.CLOSE_REQUESTED;
+            if (terminal) {
+                closeImmediately = state != State.RUNNING;
+                state = State.CLOSE_REQUESTED;
+            }
             else if (state == State.AWAITING_ACK && engine.hasWork()) {
                 state = State.QUEUED;
                 schedule();
             } else if (state == State.AWAITING_ACK && completions.isEmpty()) state = State.IDLE;
             else if (state == State.QUEUED && waitingRound != null) releasedSlot = waitingRound;
         }
-        if (terminal) workers.executeLifecycle(this::closeEngine);
+        if (terminal) {
+            if (closeImmediately) workers.executeLifecycle(this::closeEngine);
+        }
         else if (releasedSlot != null) releasedSlot.request(false);
     }
 
@@ -137,6 +142,7 @@ public final class ThermalDimensionMailbox implements AutoCloseable, ThermalWork
     private void execute() {
         boolean closing;
         synchronized (this) {
+            if (state == State.CLOSED) return;
             closing = state == State.CLOSE_REQUESTED;
             if (!closing) {
                 if (state != State.QUEUED) throw new IllegalStateException("thermal coordinator lost its queued turn");
@@ -179,11 +185,21 @@ public final class ThermalDimensionMailbox implements AutoCloseable, ThermalWork
             }
         }
         if (closing) closeEngine();
-        else if (again) schedule();
+        else if (again) {
+            var observer = com.teammoeg.frostedheart.content.climate.thermal.solver.ThermalDiagnostics.observer;
+            try { if (observer != null) observer.coordinatorReleased(engine); }
+            finally { schedule(); }
+        }
         else if (wake != null) {
-            RoundWake ready = wake;
-            engine.whenRoundReady(() -> ready.request(false));
-            ready.request(true);
+            synchronized (this) {
+                // Closing and main-thread checkpoint control may take the queued
+                // engine after the executing turn is released. Register readiness
+                // under the same ownership gate before either can mutate it.
+                if (state != State.QUEUED || waitingRound != wake) return;
+                RoundWake ready = wake;
+                engine.whenRoundReady(() -> ready.request(false));
+                ready.request(true);
+            }
         }
     }
 
@@ -225,8 +241,12 @@ public final class ThermalDimensionMailbox implements AutoCloseable, ThermalWork
             throw failure;
         }
         if (!complete) {
-            synchronized (this) { closingEngineRound = false; }
-            engine.whenRoundReady(() -> workers.executeLifecycle(this::closeEngine));
+            synchronized (this) {
+                closingEngineRound = false;
+                // An immediate readiness callback can queue the next closer;
+                // it must not claim the engine until registration finishes.
+                engine.whenRoundReady(() -> workers.executeLifecycle(this::closeEngine));
+            }
             return;
         }
         synchronized (this) {

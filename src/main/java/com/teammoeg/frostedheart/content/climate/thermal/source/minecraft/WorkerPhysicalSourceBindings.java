@@ -45,6 +45,7 @@ import it.unimi.dsi.fastutil.longs.LongSets;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
+import net.minecraft.world.level.ChunkPos;
 
 import java.util.Arrays;
 import java.util.Objects;
@@ -108,7 +109,7 @@ public final class WorkerPhysicalSourceBindings implements ThermalSourceLedger.B
      * Geometry remains owned by the topology plan for the duration of this build.
      */
     public FrozenSources freeze() {
-        return freezeSources(sources.values());
+        return freezeSources(sources.values(), null, Long.MAX_VALUE);
     }
 
     public FrozenSources freeze(LongSet sections, long tick) {
@@ -122,10 +123,10 @@ public final class WorkerPhysicalSourceBindings implements ThermalSourceLedger.B
                 if (source != null && source.birthTick <= tick) entries.add(source);
             }
         }
-        return freezeSources(entries);
+        return freezeSources(entries, sections, tick);
     }
 
-    private FrozenSources freezeSources(java.util.Collection<SourceDescriptor> selected) {
+    private FrozenSources freezeSources(java.util.Collection<SourceDescriptor> selected, LongSet sections, long tick) {
         int count = 0;
         for (var source : selected) if (source.emitting)
             for (int port = 0; port < source.profile.portCount(); port++)
@@ -160,7 +161,7 @@ public final class WorkerPhysicalSourceBindings implements ThermalSourceLedger.B
         var frozen = new FrozenSources(positions, faces, bySection,
                 new LongOpenHashSet(mixingChanges.keySet()), mixingRevision, signatures);
         var diagnostics = com.teammoeg.frostedheart.content.climate.thermal.solver.ThermalDiagnostics.observer;
-        if (diagnostics != null) diagnostics.sourceFrozen(this, frozen);
+        if (diagnostics != null) diagnostics.sourceFrozen(this, frozen, sections, tick);
         return frozen;
     }
 
@@ -259,9 +260,14 @@ public final class WorkerPhysicalSourceBindings implements ThermalSourceLedger.B
 
     public long mixingRevision() { return mixingRevision; }
     public boolean mixingChangedAfter(long revision, java.util.function.LongPredicate section) {
-        for (var entry : mixingChanges.long2LongEntrySet()) if (entry.getLongValue() > revision) {
-            long block = entry.getLongKey();
-            if (section.test(sectionKey(BlockPos.getX(block), BlockPos.getY(block), BlockPos.getZ(block)))) return true;
+        if (revision >= mixingRevision) return false;
+        var entries = mixingChanges.long2LongEntrySet().fastIterator();
+        while (entries.hasNext()) {
+            var entry = entries.next();
+            if (entry.getLongValue() > revision) {
+                long block = entry.getLongKey();
+                if (section.test(sectionKey(BlockPos.getX(block), BlockPos.getY(block), BlockPos.getZ(block)))) return true;
+            }
         }
         return false;
     }
@@ -282,10 +288,14 @@ public final class WorkerPhysicalSourceBindings implements ThermalSourceLedger.B
         }
     }
 
-    public LongOpenHashSet mixingChangesAfter(long revision) {
+    public LongSet mixingChangesAfter(long revision) {
+        if (revision >= mixingRevision) return LongSets.EMPTY_SET;
         var changed = new LongOpenHashSet();
-        for (var entry : mixingChanges.long2LongEntrySet())
+        var entries = mixingChanges.long2LongEntrySet().fastIterator();
+        while (entries.hasNext()) {
+            var entry = entries.next();
             if (entry.getLongValue() > revision) changed.add(entry.getLongKey());
+        }
         return changed;
     }
 
@@ -293,10 +303,15 @@ public final class WorkerPhysicalSourceBindings implements ThermalSourceLedger.B
         for (long position : positions)
             if (mixingChanges.containsKey(position) && mixingChanges.get(position) <= throughRevision) mixingChanges.remove(position);
         var diagnostics = com.teammoeg.frostedheart.content.climate.thermal.solver.ThermalDiagnostics.observer;
-        if (diagnostics != null) diagnostics.sourceCommitted(this, throughRevision, mixingChanges);
+        if (diagnostics != null) diagnostics.sourceCommitted(this, throughRevision, positions, mixingChanges);
     }
 
     public void collectMixingSources(AirMixingRegion region) {
+        collectMixingSources(region, Long.MAX_VALUE);
+    }
+
+    /** Match the geometry snapshot's source birth cut without allocating another snapshot. */
+    public void collectMixingSources(AirMixingRegion region, long tick) {
         if (sourcesBySection.isEmpty()) return;
         for (int x = region.minX() >> 4; x <= (region.maxX() >> 4); x++) {
             for (int y = region.minY() >> 4; y <= (region.maxY() >> 4); y++) {
@@ -307,7 +322,7 @@ public final class WorkerPhysicalSourceBindings implements ThermalSourceLedger.B
                     var iterator = indexed.iterator();
                     while (iterator.hasNext()) {
                         SourceDescriptor source = sources.get(iterator.nextLong());
-                        if (!source.emitting) continue;
+                        if (!source.emitting || source.birthTick > tick) continue;
                         for (int i = 0; i < source.profile.portCount(); i++) {
                             Port port = source.profile.port(i);
                             if (port.kind() != PortKind.AIR_FACE || port.powerShare() == 0)
@@ -364,7 +379,12 @@ public final class WorkerPhysicalSourceBindings implements ThermalSourceLedger.B
     /** An emitter and its actual outlet participate in the same structural handoff. */
     public RegionalContinuationBoundary includeBoundOutlets(RegionalContinuationBoundary boundary) {
         var sections = new LongOpenHashSet();
-        for (var source : sources.values()) for (int index = 0; index < source.bindings.length; index++) {
+        for (var source : sources.values()) collectBoundOutlets(source.sourceId, boundary, sections);
+        return boundary.including(sections);
+    }
+    public void collectBoundOutlets(long sourceId, RegionalContinuationBoundary boundary, LongSet sections) {
+        var source = sources.get(sourceId); if (source == null) return;
+        for (int index = 0; index < source.bindings.length; index++) {
             var binding = source.bindings[index];
             if (binding == null || binding.kind() != SourceBinding.Kind.AIR_STENCIL) continue;
             var port = source.profile.port(index);
@@ -373,7 +393,6 @@ public final class WorkerPhysicalSourceBindings implements ThermalSourceLedger.B
             long target = sectionKey(BlockPos.getX(block), BlockPos.getY(block), BlockPos.getZ(block));
             if (boundary.affects(origin) || boundary.affects(target)) { sections.add(origin); sections.add(target); }
         }
-        return boundary.including(sections);
     }
 
     /** Both the original face and the current routed destination constrain recording. */
@@ -513,18 +532,31 @@ public final class WorkerPhysicalSourceBindings implements ThermalSourceLedger.B
                 (byte) (port.targetFace().ordinal() + 6), -1, 0, 0, 0, descriptor.sourceId(), descriptor.generation());
     }
 
-    /** Read the current world destination without recording or advancing a source. */
-    public com.teammoeg.frostedheart.content.climate.thermal.source.SpatialSourceTimeline.PortDestination checkpointTarget(
-            com.teammoeg.frostedheart.content.climate.thermal.source.SpatialSourceTimeline.Descriptor descriptor, int portIndex) {
+    private final WorkerPageStore.MutableAirTarget checkpointAirTarget = new WorkerPageStore.MutableAirTarget();
+
+    /** Checkpoint callers hold the Store/publication transaction or exclusive coordinator ownership. */
+    public SpatialSourceTimeline.PortDestination checkpointTarget(SpatialSourceTimeline.Descriptor descriptor, int portIndex) {
+        return checkpointTarget(descriptor, portIndex, 0, false);
+    }
+
+    /** Resolve all candidates, but allocate immutable destinations only for the Chunk being saved. */
+    public SpatialSourceTimeline.PortDestination checkpointTarget(SpatialSourceTimeline.Descriptor descriptor, int portIndex, long chunk) {
+        return checkpointTarget(descriptor, portIndex, chunk, true);
+    }
+
+    private SpatialSourceTimeline.PortDestination checkpointTarget(SpatialSourceTimeline.Descriptor descriptor, int portIndex,
+            long chunk, boolean local) {
         var port = profile(descriptor.profile()).port(portIndex);
+        long origin = ChunkPos.asLong(descriptor.x() >> 4, descriptor.z() >> 4);
         if (port.kind() != PortKind.AIR_FACE)
-            return com.teammoeg.frostedheart.content.climate.thermal.source.SpatialSourceTimeline.PortDestination.loss(true);
-        var target = new WorkerPageStore.MutableAirTarget();
+            return local && origin != chunk ? null : SpatialSourceTimeline.PortDestination.loss(true);
+        var target = checkpointAirTarget;
         int slot = pages.resolveAirFaceTarget(descriptor.x() + port.offsetX(), descriptor.y() + port.offsetY(),
                 descriptor.z() + port.offsetZ(), port.targetFace(), signatures, target);
-        if (slot < 0) return com.teammoeg.frostedheart.content.climate.thermal.source.SpatialSourceTimeline.PortDestination.loss(
-                slot != WorkerPageStore.PORT_TOPOLOGY_UNAVAILABLE);
-        return com.teammoeg.frostedheart.content.climate.thermal.source.SpatialSourceTimeline.PortDestination.thermal(
+        if (slot < 0) return local && origin != chunk ? null
+                : SpatialSourceTimeline.PortDestination.loss(slot != WorkerPageStore.PORT_TOPOLOGY_UNAVAILABLE);
+        if (local && ChunkPos.asLong(target.blockX() >> 4, target.blockZ() >> 4) != chunk) return null;
+        return SpatialSourceTimeline.PortDestination.thermal(
                 new com.teammoeg.frostedheart.content.climate.thermal.source.SpatialHeatInput.Target(
                         BlockPos.asLong(target.blockX(), target.blockY(), target.blockZ()), (byte) target.face().ordinal(),
                         -1, target.generation(), 0, 0, descriptor.sourceId(), descriptor.generation()));
@@ -538,6 +570,20 @@ public final class WorkerPhysicalSourceBindings implements ThermalSourceLedger.B
         int slot = pages.resolveAirFaceTarget(descriptor.x() + port.offsetX(), descriptor.y() + port.offsetY(),
                 descriptor.z() + port.offsetZ(), port.targetFace(), signatures, airTarget);
         return slot >= 0 && ownsTarget.test(BlockPos.asLong(airTarget.blockX(), airTarget.blockY(), airTarget.blockZ()));
+    }
+
+    /** Save ownership includes both the declared air port and its current resolved destination. */
+    public boolean airPortsTouchChunk(SpatialSourceTimeline.Descriptor descriptor, long chunk) {
+        var sourceProfile = profile(descriptor.profile());
+        for (int index = 0; index < descriptor.ports().length; index++) {
+            var port = sourceProfile.port(index);
+            if (port.kind() != PortKind.AIR_FACE) continue;
+            int x = descriptor.x() + port.offsetX(), y = descriptor.y() + port.offsetY(), z = descriptor.z() + port.offsetZ();
+            if (ChunkPos.asLong(x >> 4, z >> 4) == chunk) return true;
+            int slot = pages.resolveAirFaceTarget(x, y, z, port.targetFace(), signatures, airTarget);
+            if (slot >= 0 && ChunkPos.asLong(airTarget.blockX() >> 4, airTarget.blockZ() >> 4) == chunk) return true;
+        }
+        return false;
     }
 
     private boolean rebind(SourceDescriptor source, ThermalSourceLedger ledger) {

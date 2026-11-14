@@ -639,8 +639,12 @@ public final class ThermalInfraredGameTests {
         int node=brick.blockLayout().nodeAt((p.getX()&3)|(p.getZ()&3)<<2|(p.getY()&3)<<4);
         if(node<0 || (brick.blockLayout().materialNodeMask() & 1L<<node)==0) return Double.NaN;
         QueryPublication queries=read(input,"queryPublication"); var sample=new QueryPublication.MutableSample();
-        return queries.tryRead(brick.firstSlot()+node,brick.arenaGeneration(),publication.topologyGeneration(),sample)
-                ? sample.temperatureC() : Double.NaN;
+        var reader = new QueryPublication.ReadCursor();
+        try {
+            return queries.beginRead(reader) && reader.tryRead(publication,
+                    (p.getX() & 15) | (p.getZ() & 15) << 4 | (p.getY() & 15) << 8, publication.topologyGeneration(), sample)
+                    ? sample.temperatureC() : Double.NaN;
+        } finally { reader.clear(); }
     }
     private static double rawAir(MinecraftThermalInput input, BlockPos p) {
         MinecraftPageManager pages=read(input,"pages"); var owner=pages.loadedSectionOrAttach(SectionPos.asLong(p));
@@ -650,7 +654,7 @@ public final class ThermalInfraredGameTests {
         if(slot<0) return Double.NaN;
         var brick=publication.brickAt(p.getX()&15,p.getY()&15,p.getZ()&15);
         QueryPublication queries=read(input,"queryPublication"); var sample=new QueryPublication.MutableSample();
-        return queries.tryRead(slot,brick.arenaGeneration(),publication.topologyGeneration(),sample)?sample.temperatureC():Double.NaN;
+        return queries.tryReadAir(p.getX() + .5, p.getY() + .5, p.getZ() + .5, sample) ? sample.temperatureC() : Double.NaN;
     }
     private static void expectMissing(GameTestHelper h, InfraredSnapshot s, BlockPos p, boolean explicit) {
         Short value = temperature(s,p);

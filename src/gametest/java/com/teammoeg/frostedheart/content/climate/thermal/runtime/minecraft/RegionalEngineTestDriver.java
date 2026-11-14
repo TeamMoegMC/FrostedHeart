@@ -19,14 +19,24 @@ public final class RegionalEngineTestDriver {
     private RegionalEngineTestDriver() { }
 
     public static ThermalCompletion submit(GameTestHelper helper, ThermalDimensionEngine engine, ThermalInputBatch input) {
-        engine.offerInput(new ThermalInputEnvelope(input, new SpatialSourceTimeline.Window[0]));
+        return submit(helper, engine, new ThermalInputEnvelope(input, new SpatialSourceTimeline.Window[0]));
+    }
+
+    public static ThermalCompletion submit(GameTestHelper helper, ThermalDimensionEngine engine, ThermalInputEnvelope input) {
+        engine.offerInput(input);
         var phases = new ArrayList<PhaseTransitionRuntime.Request>();
         var resyncs = new ArrayList<ThermalPageHandle.GeometryResyncToken>();
         var residency = new ArrayList<ThermalCompletion.BrickResidency>();
         boolean limited = false;
         long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(30);
         do {
-            if (engine.hasReadyWork()) engine.processWorkRound();
+            if (engine.hasReadyWork()) {
+                try { engine.processWorkRound(); }
+                catch (RuntimeException failure) {
+                    com.teammoeg.frostedheart.FHMain.LOGGER.error("Thermal fixture failed: {}", engine.regionalProgressDescription(), failure);
+                    throw failure;
+                }
+            }
             ThermalCompletion completion;
             while ((completion = engine.pollWorkCompletion()) != null) {
                 helper.assertTrue(completion.failure() == null, "regional effects failed: " + completion.failure());

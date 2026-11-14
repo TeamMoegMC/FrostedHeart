@@ -63,7 +63,7 @@ public final class DormantChunkThermalState {
     }
 
     private static final String ROOT_TAG = "FrostedHeartThermal";
-    private static final int FORMAT_VERSION = 6;
+    private static final int FORMAT_VERSION = 7;
     private static final int BRICKS = ThermalPageHandle.BASE_BRICK_COUNT;
     // Air stores signed temperature excess in sixteenths of a degree, relative to savedNaturalC.
     // All short values are valid here, including MIN_VALUE (unlike infrared's missing marker).

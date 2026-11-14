@@ -27,6 +27,7 @@ import com.teammoeg.frostedheart.content.climate.thermal.source.EmissionPort;
 import com.teammoeg.frostedheart.content.climate.thermal.source.minecraft.MinecraftPhysicalSourceProfile.Port;
 import com.teammoeg.frostedheart.content.climate.thermal.source.minecraft.MinecraftPhysicalSourceProfile.PortKind;
 import com.teammoeg.frostedheart.content.climate.thermal.source.ThermalSourceMode;
+import com.teammoeg.frostedheart.content.climate.thermal.source.SpatialSourceTimeline;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
@@ -98,6 +99,7 @@ public final class PhysicalSourceSpatialIndex
     private byte[] targetCount;
     private long[] targetSections;
     private byte[] targetBricks;
+    private SpatialSourceTimeline.Registration[] registrations;
     private int highWaterMark;
     private int freeHead = NO_SLOT;
     private int nextLifecycleGeneration;
@@ -248,6 +250,7 @@ public final class PhysicalSourceSpatialIndex
     }
 
     public void replaceAccumulator(DimensionInputAccumulator next) {
+        for (int slot = 0; slot < highWaterMark; slot++) releaseRegistration(slot);
         accumulator = next;
     }
 
@@ -268,7 +271,7 @@ public final class PhysicalSourceSpatialIndex
         for (int index = 0; index < dirtyOrder.size(); index++) {
             int slot = dirtyOrder.getInt(index);
             if (isLive(slot) && flag(slot, PRESENT) && !flag(slot, REGISTERED)
-                    && flag(slot, TARGETS_CHANGED)) {
+                    && flag(slot, TARGETS_CHANGED) && prepareRegistration(slot)) {
                 refreshTargets(slot);
                 sourceFlags[slot] &= ~TARGETS_CHANGED;
             }
@@ -315,6 +318,11 @@ public final class PhysicalSourceSpatialIndex
                 setFlag(slot, REGISTRATION_STALE, false);
                 lifecycleGenerations[slot] = nextGeneration();
             }
+            if (!flag(slot, REGISTERED) && !prepareRegistration(slot)) {
+                setFlag(slot, DIRTY_QUEUED, true);
+                dirtyOrder.set(deferred++, slot);
+                continue;
+            }
             if (flag(slot, TARGETS_CHANGED)) {
                 refreshTargets(slot);
                 sourceFlags[slot] &= ~TARGETS_CHANGED;
@@ -335,7 +343,8 @@ public final class PhysicalSourceSpatialIndex
                         anchorY[slot],
                         anchorZ[slot],
                         profile.profileId(),
-                        ports);
+                        ports, registrations[slot]);
+                registrations[slot] = null;
                 if (!admitted) {
                     if (!flag(slot, DIRTY_QUEUED)) {
                         setFlag(slot, DIRTY_QUEUED, true);
@@ -482,10 +491,15 @@ public final class PhysicalSourceSpatialIndex
         int slot = slotsById.get(sourceId);
         boolean radiationChanged = false;
         if (slot == NO_SLOT) {
+            if (freeHead == NO_SLOT && highWaterMark >= maximumSources) return false;
+            var registration = accumulator.prepareSourceRegistration(profile.portCount());
+            if (registration == null) return false;
             slot = allocateSlot();
             if (slot == NO_SLOT) {
+                registration.close();
                 return false;
             }
+            registrations[slot] = registration;
             sourceIds[slot] = sourceId;
             lifecycleGenerations[slot] = nextGeneration();
             anchorX[slot] = targetX;
@@ -501,6 +515,7 @@ public final class PhysicalSourceSpatialIndex
                 || anchorX[slot] != targetX
                 || anchorY[slot] != targetY
                 || anchorZ[slot] != targetZ) {
+            releaseRegistration(slot);
             releaseTargets(slot);
             profileIds[slot] = (byte) profile.profileId();
             anchorX[slot] = targetX;
@@ -636,12 +651,16 @@ public final class PhysicalSourceSpatialIndex
     }
 
     private void indexOrigin(int slot) {
+        long section = originSection(slot);
         sourcesByOriginSection.computeIfAbsent(
-                originSection(slot),
+                section,
                 ignored -> new IntOpenHashSet()).add(slot);
         sourcesByOriginChunk.computeIfAbsent(
                 originChunk(slot),
                 ignored -> new IntOpenHashSet()).add(slot);
+        // Raw container replacement must invalidate a newly registered source
+        // even before its first target geometry has been captured.
+        pages.loadedSectionOrAttach(section);
     }
 
     private void unlinkOrigin(int slot) {
@@ -697,6 +716,7 @@ public final class PhysicalSourceSpatialIndex
     }
 
     private void recycle(int slot) {
+        releaseRegistration(slot);
         sourceFlags[slot] = 0;
         sourceIds[slot] = 0L;
         lifecycleGenerations[slot] = 0;
@@ -709,6 +729,18 @@ public final class PhysicalSourceSpatialIndex
     private boolean isLive(int slot) {
         return slot >= 0 && slot < highWaterMark
                 && lifecycleGenerations[slot] != 0;
+    }
+
+    private boolean prepareRegistration(int slot) {
+        if (registrations[slot] == null)
+            registrations[slot] = accumulator.prepareSourceRegistration(profile(slot).portCount());
+        return registrations[slot] != null;
+    }
+
+    private void releaseRegistration(int slot) {
+        if (registrations[slot] != null) {
+            registrations[slot].close(); registrations[slot] = null;
+        }
     }
 
     private int nextGeneration() {
@@ -731,6 +763,7 @@ public final class PhysicalSourceSpatialIndex
         targetCount = new byte[capacity];
         targetSections = new long[capacity * MAX_PORTS];
         targetBricks = new byte[capacity * MAX_PORTS];
+        registrations = new SpatialSourceTimeline.Registration[capacity];
         Arrays.fill(nextFree, NO_SLOT);
     }
 
@@ -761,6 +794,7 @@ public final class PhysicalSourceSpatialIndex
                 targetSections, capacity * MAX_PORTS);
         targetBricks = Arrays.copyOf(
                 targetBricks, capacity * MAX_PORTS);
+        registrations = Arrays.copyOf(registrations, capacity);
     }
 
     private static boolean isCampfire(BlockState state) {
@@ -777,6 +811,7 @@ public final class PhysicalSourceSpatialIndex
         if (closed) return;
         closed = true;
         for (int slot = 0; slot < highWaterMark; slot++) {
+            releaseRegistration(slot);
             if (isLive(slot)) {
                 releaseTargets(slot);
             }

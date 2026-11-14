@@ -2,8 +2,10 @@
 package com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft;
 
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialSample;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalPageHandle;
+import com.teammoeg.frostedheart.content.climate.thermal.persistence.ThermalRetentionPolicy;
 import com.teammoeg.frostedheart.content.climate.thermal.persistence.minecraft.DormantChunkThermalState;
 import com.teammoeg.frostedheart.content.climate.thermal.profile.minecraft.MinecraftThermalProfiles;
 import com.teammoeg.frostedheart.content.climate.thermal.query.QueryPublication;
@@ -34,6 +36,9 @@ public final class ContinuousAirPhysicalInvalidationGameTests {
         final BlockPos material;
         final int stateId;
         volatile boolean observed;
+        boolean thermalPresent;
+        DormantChunkThermalState.MaterialRead materialRead;
+        double enthalpyJ;
         SaveCheck(GameTestHelper helper, BlockPos material, int stateId) {
             this.helper = helper; this.material = material; this.stateId = stateId;
         }
@@ -45,16 +50,16 @@ public final class ContinuousAirPhysicalInvalidationGameTests {
         var check = saving;
         if (check == null || event.getLevel() != check.helper.getLevel()
                 || !event.getChunk().getPos().equals(new net.minecraft.world.level.ChunkPos(check.material))) return;
+        saving = null;
         var chunk = event.getChunk();
         var state = DormantChunkThermalState.decode(event.getData(), chunk.getSectionYFromSectionIndex(0), chunk.getSections().length);
-        check.helper.assertTrue(state != null, "Real native save contains thermal data");
+        check.thermalPresent = state != null;
         var sample = new MaterialSample();
         int block = (check.material.getX() & 15) | (check.material.getZ() & 15) << 4 | (check.material.getY() & 15) << 8;
-        check.helper.assertTrue(state.readMaterial(check.material.getY() >> 4, block, check.stateId, sample)
-                        == DormantChunkThermalState.MaterialRead.MATCH && Double.isFinite(sample.enthalpyJ()),
-                "The outgoing v6 save must retain the new state ID and its material energy");
+        check.materialRead = state == null ? DormantChunkThermalState.MaterialRead.MISSING
+                : state.readMaterial(check.material.getY() >> 4, block, check.stateId, sample);
+        check.enthalpyJ = sample.enthalpyJ();
         check.observed = true;
-        saving = null;
     }
 
     @GameTest(template = "phase0a_empty", timeoutTicks = 1800)
@@ -117,6 +122,23 @@ public final class ContinuousAirPhysicalInvalidationGameTests {
             level.getChunkAt(material).setUnsaved(true);
             level.getServer().saveEverything(true, true, true);
         }).thenWaitUntil(() -> helper.assertTrue(written[0].observed, "Observe the actual native save payload"))
+                .thenExecute(() -> {
+                    helper.assertTrue(written[0].thermalPresent, "Real native save contains thermal data");
+                    helper.assertTrue(MinecraftThermalInput.sampleMaterial(level, material, matter), "Read the actual submitted body after the save handoff");
+                    var center = new BlockPos((material.getX() & ~15) + 8, (material.getY() & ~15) + 8, (material.getZ() & ~15) + 8);
+                    double natural = WorldTemperature.naturalAir(level, center);
+                    FHMain.LOGGER.info("THERMAL_MATERIAL_SAVE_DIAGNOSTIC,read={},liveC={},naturalC={},residualC={},branch={},liveJ={}",
+                            written[0].materialRead, matter.temperatureC(), natural, matter.temperatureC() - natural, matter.branch(), matter.enthalpyJ());
+                    if (written[0].materialRead == DormantChunkThermalState.MaterialRead.MISSING) {
+                        helper.assertTrue(!ThermalRetentionPolicy.retains(matter.law(), matter.enthalpyJ(), matter.branch(), natural),
+                                "Only sub-threshold sensible heat may be omitted; residualC=" + (matter.temperatureC() - natural));
+                    } else {
+                        helper.assertTrue(written[0].materialRead == DormantChunkThermalState.MaterialRead.MATCH
+                                        && Double.isFinite(written[0].enthalpyJ),
+                                "A retained material must use the new state ID and finite energy; read="
+                                        + written[0].materialRead + ",enthalpyJ=" + written[0].enthalpyJ);
+                    }
+                })
                 .thenExecute(() -> {
             var publication = MinecraftThermalInput.queryPublicationForObservation(level);
             var page = page(helper, material);

@@ -23,6 +23,7 @@ package com.teammoeg.frostedheart.content.climate.thermal.persistence.minecraft;
 import static com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ResolvedGeometryBatch.MaterialChanges.*;
 
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialSample;
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialBoundaryRegistry;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.AirBackingMeter;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialThermalLaw;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.PagePublication;
@@ -518,6 +519,21 @@ public final class MaterialSectionState {
         adaptLaw(out, currentLaw);
     }
 
+    /** A different saved state is usable only after its recorded transition really completed. */
+    public boolean readMatchingState(int index, int currentStateId, MaterialThermalLaw currentLaw,
+            long tick, double naturalC, double coolingRate, MaterialSample out) {
+        if (stateId(index) == currentStateId) {
+            read(index, currentLaw, tick, naturalC, coolingRate, out);
+            return true;
+        }
+        var edge = law(index).transition(branch(index));
+        if (edge == null || !edge.complete(enthalpyJ(index)) || edge.targetStateId() != currentStateId) return false;
+        double energy = enthalpyJ(index);
+        out.setStored(energy, currentLaw, currentLaw.initialBranch(currentLaw.temperatureC(energy, (byte) 0)), savedTick(index));
+        DormantThermalCooling.project(out, tick, naturalC, coolingRate);
+        return true;
+    }
+
     public static void adaptLaw(MaterialSample out, MaterialThermalLaw currentLaw) {
         MaterialThermalLaw previous = out.law();
         double energy = out.enthalpyJ();
@@ -559,6 +575,28 @@ public final class MaterialSectionState {
 
     public record Capture(boolean valid, long sampledBricks, MaterialSectionState state) {}
 
+    /** Exact fixed-cell values using the same BlockState/law palette as v6 regional saves. */
+    public static MaterialSectionState captureCells(int[] signatures, double[] enthalpiesJ, byte[] branches,
+            long tick, ThermalSignatureTable table, MaterialBoundaryRegistry materials, CaptureScratch scratch) {
+        resetCapture(scratch);
+        int count = 0;
+        for (int position = 0; position < 4096; position++) {
+            int signature = signatures[position];
+            if (!table.valid(signature) || table.isAir(signature)) continue;
+            var profile = materials.profileOrNull(table.materialProfileId(signature));
+            if (profile == null) continue;
+            int state = table.materialStateId(signature), palette = scratch.paletteByState.get(state);
+            if (palette < 0) {
+                palette = scratch.states.size(); scratch.paletteByState.put(state, palette);
+                scratch.states.add(state); scratch.laws.add(profile.thermalLaw());
+            }
+            scratch.presence[position >>> 6] |= 1L << (position & 63);
+            scratch.enthalpies[position] = enthalpiesJ[position]; scratch.branches[position] = branches[position];
+            scratch.palettes[position] = palette; count++;
+        }
+        return finishCapture(scratch, count, -1L, tick, null).state();
+    }
+
     public static Capture capture(
             PagePublication page,
             QueryPublication query,
@@ -590,11 +628,9 @@ public final class MaterialSectionState {
                 int node = payload.blockLayout().nodeAt(block);
                 int stateId = signatures.materialStateId(payload.signatureAtBlock(block));
                 if (node < 0 || stateId < 0) continue;
-                boolean read = cursor == null ? query.tryReadMaterial(
-                        payload.firstSlot() + node,
-                        payload.arenaGeneration(),
-                        stateId, scratch.sample) : cursor.tryReadMaterial(payload.firstSlot() + node,
-                                payload.arenaGeneration(), stateId, scratch.sample);
+                int local = com.teammoeg.frostedheart.content.climate.thermal.mesh.BlockBrickLayout.pageBlock(brick, block);
+                boolean read = cursor == null ? query.tryReadMaterial(page, local, stateId, scratch.sample)
+                        : cursor.tryReadMaterial(page, local, stateId, scratch.sample);
                 if (!read) {
                     return new Capture(false, 0, null);
                 }
@@ -626,6 +662,7 @@ public final class MaterialSectionState {
                 count++;
             }
         }
+        if (cursor != null && !cursor.valid()) return new Capture(false, 0, null);
         return finishCapture(scratch, count, sampledBricks, tick, mixedTicks ? scratch.recordTicks : null);
     }
 
@@ -635,38 +672,10 @@ public final class MaterialSectionState {
     }
 
     public static Capture capture(RegionalCheckpoint.Section section, CaptureScratch scratch, double naturalC) {
-        resetCapture(scratch);
-        long tick = -1;
-        long[] ticks = null;
-        int count = 0;
-        for (var part : section.parts()) {
-            var field = part.field();
-            for (int ordinal = 0; ordinal < part.materialCount(); ordinal++) {
-                int body = part.materialBody(ordinal);
-                if (!field.materialWaiting(body) && !ThermalRetentionPolicy.retains(field.materialLaw(body),
-                        field.materialEnthalpyJ(body), field.materialBranch(body), naturalC)) continue;
-                long position = field.materialPosition(body);
-                int local = (net.minecraft.core.BlockPos.getX(position) & 15)
-                        | (net.minecraft.core.BlockPos.getZ(position) & 15) << 4
-                        | (net.minecraft.core.BlockPos.getY(position) & 15) << 8;
-                if (tick < 0) tick = field.sampleTick();
-                if (ticks == null && tick != field.sampleTick()) {
-                    ticks = new long[4096]; Arrays.fill(ticks, tick);
-                }
-                int state = field.materialStateId(body), palette = scratch.paletteByState.get(state);
-                if (palette < 0) {
-                    palette = scratch.states.size(); scratch.paletteByState.put(state, palette);
-                    scratch.states.add(state); scratch.laws.add(field.materialLaw(body));
-                }
-                scratch.presence[local >>> 6] |= 1L << (local & 63);
-                scratch.enthalpies[local] = field.materialEnthalpyJ(body);
-                scratch.branches[local] = field.materialBranch(body); scratch.palettes[local] = palette;
-                if (ticks != null) ticks[local] = field.sampleTick();
-                count++;
-            }
-        }
-        return finishCapture(scratch, count, section.sampledBricks(), tick, ticks);
-    }
+        var state = section.acceptedMaterials();
+        if (state != null) state = state.retain(section.sampledBricks(), section.sampleTick(), naturalC, 0);
+        return new Capture(true, section.sampledBricks(), state);
+}
 
     private static void resetCapture(CaptureScratch scratch) {
         Arrays.fill(scratch.presence, 0);

@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.content.climate.thermal.solver;
 
 import java.util.Objects;
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialThermalLaw;
 
 /** Stable finite-capacity pair and fixed-temperature boundary operators. */
 public final class ThermalExchangeKernel {
@@ -68,6 +69,60 @@ public final class ThermalExchangeKernel {
             enthalpyJ = nextEnthalpy;
         }
 
+    }
+
+    /** Caller-owned result for a pair that can cross sensible/latent branches. */
+    public static final class MutableMaterialPairResult {
+        private double firstJ, secondJ;
+        private byte firstBranch, secondBranch;
+        private boolean firstWaiting, secondWaiting;
+        private int updates;
+        public double firstJ() { return firstJ; }
+        public double secondJ() { return secondJ; }
+        public byte firstBranch() { return firstBranch; }
+        public byte secondBranch() { return secondBranch; }
+        public boolean firstWaiting() { return firstWaiting; }
+        public boolean secondWaiting() { return secondWaiting; }
+        public int updates() { return updates; }
+    }
+
+    /** Shared enthalpy integration for regional and fixed-tile material contacts. */
+    public static void exchangeMaterialsInto(MaterialThermalLaw first, double firstJ, byte firstBranch,
+            boolean firstWaiting, MaterialThermalLaw second, double secondJ, byte secondBranch,
+            boolean secondWaiting, double conductance, double duration, MutableMaterialPairResult out) {
+        int updates = 0;
+        if (conductance != 0 && !firstWaiting && !secondWaiting) {
+            double remaining = duration;
+            for (int segment = 0; segment < 6 && remaining > 0; segment++) {
+                double delta = first.temperatureC(firstJ, firstBranch) - second.temperatureC(secondJ, secondBranch);
+                if (delta == 0) break;
+                double direction = Math.signum(delta);
+                firstBranch = first.selectBranch(firstJ, firstBranch, -direction);
+                secondBranch = second.selectBranch(secondJ, secondBranch, direction);
+                double limit = Math.min(first.energyLimitJ(firstJ, firstBranch, -direction),
+                        second.energyLimitJ(secondJ, secondBranch, direction));
+                if (limit == 0) break;
+                delta = first.temperatureC(firstJ, firstBranch) - second.temperatureC(secondJ, secondBranch);
+                if (delta == 0 || Math.signum(delta) != direction) break;
+                double slope = first.slopeKPerJ(firstJ, firstBranch) + second.slopeKPerJ(secondJ, secondBranch);
+                double requested = slope == 0 ? Math.abs(delta) * conductance * remaining
+                        : Math.abs(delta) / slope * -Math.expm1(-conductance * slope * remaining);
+                double transferred = Math.min(requested, limit);
+                if (transferred == 0) break;
+                firstJ -= direction * transferred; secondJ += direction * transferred; updates++;
+                var a = first.transition(firstBranch);
+                var b = second.transition(secondBranch);
+                firstWaiting |= a != null && a.complete(firstJ);
+                secondWaiting |= b != null && b.complete(secondJ);
+                if (transferred == requested || firstWaiting || secondWaiting) break;
+                double elapsed = slope == 0 ? transferred / (conductance * Math.abs(delta))
+                        : -Math.log1p(-transferred * slope / Math.abs(delta)) / (conductance * slope);
+                remaining = Math.max(0, remaining - elapsed);
+            }
+        }
+        out.firstJ = firstJ; out.secondJ = secondJ;
+        out.firstBranch = firstBranch; out.secondBranch = secondBranch;
+        out.firstWaiting = firstWaiting; out.secondWaiting = secondWaiting; out.updates = updates;
     }
 
     /** Generic pair path using arena-owned inverse capacities. */

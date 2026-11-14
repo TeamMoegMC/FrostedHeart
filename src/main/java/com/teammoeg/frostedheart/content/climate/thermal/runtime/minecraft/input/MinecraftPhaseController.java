@@ -411,12 +411,9 @@ public final class MinecraftPhaseController {
                         publication.geometryRevision())) return false;
         var brick = publication.brickAt(x & 15, y & 15, z & 15);
         if (brick.firstSlot() < 0 || brick.blockLayout() == null) return false;
-        int nodeIndex = brick.blockLayout().nodeAt((x & 3) | (z & 3) << 2 | (y & 3) << 4);
-        if (nodeIndex < 0) return false;
         var sample = MATERIAL_SAMPLE;
         if (!queries.tryReadMaterial(
-                brick.firstSlot() + nodeIndex,
-                brick.arenaGeneration(),
+                publication, (x & 15) | (z & 15) << 4 | (y & 15) << 8,
                 profiles.signatures().materialStateId(brick.signatureAtBlock((x & 3) | (z & 3) << 2 | (y & 3) << 4)),
                 sample)) return false;
         if (sample.requestSequence() != request.requestSequence()

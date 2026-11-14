@@ -120,17 +120,19 @@ public class BodyPartData {
 		double equipmentWeight = 0.0D;
 		int layer = 0;
 		if (!equipment.isEmpty()) {
+			// Forge builds this view through an event; share it within this clothing sample.
+			var attributes = equipment.getAttributeModifiers(part.slot);
 			double insulationFactor = ClothData.sumAttributes(
-					equipment.getAttributeModifiers(part.slot)
+					attributes
 							.get(FHAttributes.INSULATION.get()));
 			double wind = ClothData.sumAttributesPercentage(
-					equipment.getAttributeModifiers(part.slot)
+					attributes
 							.get(FHAttributes.WIND_PROOF.get()));
 			double radiant = ClothData.sumAttributesPercentage(
-					equipment.getAttributeModifiers(part.slot)
+					attributes
 							.get(FHAttributes.HEAT_PROOF.get()));
 			double weight = ClothData.sumAttributes(
-				equipment.getAttributeModifiers(part.slot)
+					attributes
 						.get(FHAttributes.EQUIPMENT_WEIGHT.get()));
 			double innerWeight = innerWeight(part, layerCount, layer);
 			double outerWeight = outerWeight(part, layer);

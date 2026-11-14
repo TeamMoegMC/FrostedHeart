@@ -214,7 +214,7 @@ public final class ThermalInputBatch {
         public PageResidencyUpdate {
             Objects.requireNonNull(page, "page");
             Objects.requireNonNull(signatures, "signatures");
-            if (geometryRevision < 0L || residentBrickMask == 0L
+            if (geometryRevision < 0L
                     || (sourceSeedMask & ~residentBrickMask) != 0L) {
                 throw new IllegalArgumentException(
                         "Page residency payload is invalid");
@@ -261,6 +261,22 @@ public final class ThermalInputBatch {
             int brick = (((int) Math.floor(x) & 15) >>> 2)
                     | (((int) Math.floor(z) & 15) >>> 2) << 2 | (((int) Math.floor(y) & 15) >>> 2) << 4;
             return hasBrick(brick) ? meanTemperatureC(brick) : Double.NaN;
+        }
+
+        /** Read one saved canonical cell at its original sampling time. */
+        public double cellTemperatureC(int brick, int block) {
+            var spatial = entry.spatialAir();
+            if (spatial == null) return hasBrick(brick) ? meanTemperatureC(brick) : Double.NaN;
+            double saved = spatial.blockCenterC(brick, block);
+            if (!Double.isFinite(saved)) return Double.NaN;
+            double factor = decayFactor;
+            if (targetTick >= 0) {
+                long sampled = spatial.sampleTickAt(spatial.minX() + (brick & 3) * 4 + (block & 3) + .5,
+                        spatial.minY() + (brick >>> 4) * 4 + (block >>> 4) + .5,
+                        spatial.minZ() + (brick >>> 2 & 3) * 4 + (block >>> 2 & 3) + .5, entry.savedGameTick());
+                factor = com.teammoeg.frostedheart.content.climate.thermal.persistence.DormantThermalCooling.factor(sampled, targetTick, coolingRate);
+            }
+            return naturalTemperatureC + (saved - naturalTemperatureC) * factor;
         }
 
         public void fillBlockTemperatures(int brick,double[] target) {

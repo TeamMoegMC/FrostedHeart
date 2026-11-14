@@ -13,12 +13,12 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.gametest.GameTestHolder;
 import net.minecraftforge.gametest.PrefixGameTestTemplate;
 
-/** Actual early ticket removal and return; no fabricated heat or worker timing. */
+/** Actual early ticket removal and return; publication is observed at capture rather than assumed from ticket timing. */
 @GameTestHolder("frostedheart_native_checkpoint")
 @PrefixGameTestTemplate(false)
 @Mod.EventBusSubscriber(modid = FHMain.MODID)
 public final class ContinuousAirNativeCheckpointProductionGameTests {
-    private static Scenario observation;
+    private static volatile Scenario observation;
     private static int scenarioIndex;
 
     @SubscribeEvent
@@ -29,7 +29,7 @@ public final class ContinuousAirNativeCheckpointProductionGameTests {
     }
 
     @GameTest(template = "phase0a_empty", batch = "native_early_unload", timeoutTicks = 900)
-    public static void uncapturedInitialChunkUnloadsWithoutInventingThermalResult(GameTestHelper helper) throws java.io.IOException {
+    public static void immediateTicketRemovalSavesOnlyExistingOrCommittedThermalState(GameTestHelper helper) throws java.io.IOException {
         start(helper, false, false);
     }
 
@@ -59,6 +59,15 @@ public final class ContinuousAirNativeCheckpointProductionGameTests {
         }
     }
 
+    public static void checkpointSealed(long chunk) {
+        Scenario current = observation;
+        if (current == null || current.original.getPos().toLong() != chunk) return;
+        current.field.forEachSectionInChunk(chunk, section -> {
+            if (current.field.hasPublishedSection(section))
+                current.latestAcceptedTick = Math.max(current.latestAcceptedTick, current.field.sectionSampleTick(section));
+        });
+    }
+
     public static void nativeUnloadLoop(net.minecraft.server.level.ServerLevel level, java.util.function.BooleanSupplier haveTime,
             it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap<net.minecraft.server.level.ChunkHolder> pending, int queueSize) {
         Scenario current = observation;
@@ -72,7 +81,9 @@ public final class ContinuousAirNativeCheckpointProductionGameTests {
     private static void start(GameTestHelper helper, boolean returnWhilePending, boolean waitForGeometry) throws java.io.IOException {
         MinecraftThermalInput.closeActiveLevel(helper.getLevel());
         ContinuousAirPrecisionProductionGameTests.restoreReferenceClimate(helper, true);
-        BlockPos origin = helper.absolutePos(new BlockPos(517 + 512 * scenarioIndex++, 0, 7));
+        // The shared restart world can retain other fixtures' forced chunks near
+        // the GameTest origin. Keep this actual ticket-removal case independent.
+        BlockPos origin = helper.absolutePos(new BlockPos(196608 + 512 * scenarioIndex++, 192, 196608));
         ContinuousAirTwoBaseProductionGameTests.forceBase(helper.getLevel(), origin, true);
         if (returnWhilePending) {
             // Finish actual vanilla terrain prerequisites before lighting fires.
@@ -118,7 +129,11 @@ public final class ContinuousAirNativeCheckpointProductionGameTests {
         final boolean waitForGeometry;
         final ChunkAccess original;
         final net.minecraft.server.level.ChunkHolder originalHolder;
+        final com.teammoeg.frostedheart.content.climate.thermal.solver.TiledThermalField field;
+        final long previousAirSavedTick;
+        volatile long latestAcceptedTick = -1;
         final long initialWait;
+        final long initialUnloadWait;
         ChunkAccess unloaded;
         boolean returned, finished, dropRequested;
         long unloadLoops, spareTimeLoops, pendingHolderLoops;
@@ -128,12 +143,18 @@ public final class ContinuousAirNativeCheckpointProductionGameTests {
             this.helper = helper; this.origin = origin; this.fires = fires; this.returnWhilePending = returnWhilePending;
             this.waitForGeometry = waitForGeometry;
             original = helper.getLevel().getChunkAt(fires[127]);
+            var publication = MinecraftThermalInput.queryPublicationForObservation(helper.getLevel());
+            helper.assertTrue(publication != null && publication.fixedState() != null, "Observe the actual configured fixed field");
+            field = publication.fixedState();
+            var existing = MinecraftThermalInput.dormantState((net.minecraft.world.level.chunk.LevelChunk) original);
+            previousAirSavedTick = existing == null ? -1 : existing.oldestAirSavedTick();
             net.minecraft.server.level.ChunkHolder holder = null;
             for (var candidate : helper.getLevel().getChunkSource().chunkMap.getChunks())
                 if (candidate.getPos().equals(original.getPos())) holder = candidate;
             originalHolder = holder;
             var waits = MinecraftThermalInput.observedCheckpointStatistics(helper.getLevel());
             initialWait = waits.saveWaitNanos() + waits.unloadWaitNanos();
+            initialUnloadWait = waits.unloadWaitNanos();
         }
 
         void tick(int elapsed) {
@@ -174,13 +195,20 @@ public final class ContinuousAirNativeCheckpointProductionGameTests {
             if (!completed) return;
             var waits = MinecraftThermalInput.observedCheckpointStatistics(level);
             long waited = waits.saveWaitNanos() + waits.unloadWaitNanos() - initialWait;
-            helper.assertTrue(waited <= 5_000_000L, "Actual early lifecycle must not block the main thread: " + waited);
+            long unloadWaited = waits.unloadWaitNanos() - initialUnloadWait;
+            FHMain.LOGGER.info("THERMAL_NATIVE_WAIT_SCOPE,targetChunk={},elapsedTicks={},totalSynchronousNanos={},synchronousUnloadNanos={},allWorldControls={}",
+                    original.getPos(), elapsed, waited, unloadWaited, MinecraftThermalInput.observedMainWaits(level));
+            // Ordinary saves in other chunks are not native unload fallback.
+            // Keep the existing limit on the operation this scenario exercises.
+            helper.assertTrue(unloadWaited <= 5_000_000L, "Actual early unload must not block the main thread: " + unloadWaited
+                    + ",target=" + original.getPos() + "," + MinecraftThermalInput.observedMainWaits(level));
             helper.assertTrue(nativeState.fallbacks() == 0, "No early lifecycle may fall back to blocking");
             if (returnWhilePending) helper.assertTrue(unloaded == null, "A returned chunk must not receive a stale unload");
             else helper.assertTrue(nativeState.prepared() > 0, "The deferred request must eventually prepare a real snapshot");
             if (!returnWhilePending) {
                 var state = MinecraftThermalInput.dormantState((net.minecraft.world.level.chunk.LevelChunk) original);
-                if (!waitForGeometry) helper.assertTrue(state == null || state.oldestAirSavedTick() < 0,
+                long allowedTick = Math.max(previousAirSavedTick, latestAcceptedTick);
+                if (!waitForGeometry && allowedTick < 0) helper.assertTrue(state == null || state.oldestAirSavedTick() < 0,
                         "An unpublished field must not invent Air samples; real unconsumed J may be saved in v6");
                 net.minecraft.nbt.CompoundTag tag = new net.minecraft.nbt.CompoundTag();
                 if (state != null) state.encode(tag);
@@ -198,16 +226,20 @@ public final class ContinuousAirNativeCheckpointProductionGameTests {
                                     (section.getInt("y") << 4) + y + ((corner & 2) == 0 ? .25 : .75),
                                     original.getPos().getMinBlockZ() + z + ((corner & 4) == 0 ? .25 : .75));
                             if (Double.isFinite(value)) {
+                                long sampled = air.sampleTickAt(original.getPos().getMinBlockX() + x + ((corner & 1) == 0 ? .25 : .75),
+                                        (section.getInt("y") << 4) + y + ((corner & 2) == 0 ? .25 : .75),
+                                        original.getPos().getMinBlockZ() + z + ((corner & 4) == 0 ? .25 : .75), previousAirSavedTick);
+                                helper.assertTrue(sampled >= 0 && sampled <= allowedTick, "Saved Air must have an actual stored or committed sample clock");
                                 points++; maximum = Math.max(maximum, Math.abs(value - section.getDouble("natural")));
                             }
                         }
                 }
-                FHMain.LOGGER.info("THERMAL_NATIVE_INITIAL_AIR,points={},maximumDifferenceFromSavedNaturalC={},savedAirTick={}",
-                        points, maximum, state == null ? -1 : state.oldestAirSavedTick());
+                FHMain.LOGGER.info("THERMAL_NATIVE_INITIAL_AIR,points={},maximumDifferenceFromSavedNaturalC={},savedAirTick={},previousAirSavedTick={},acceptedTickAtCapture={}",
+                        points, maximum, state == null ? -1 : state.oldestAirSavedTick(), previousAirSavedTick, latestAcceptedTick);
             }
-            FHMain.LOGGER.info("THERMAL_NATIVE_EARLY_RESULT,returnWhilePending={},elapsedTicks={},requests={},deferred={},prepared={},cancelled={},pending={},thermalWaitUs={}",
+            FHMain.LOGGER.info("THERMAL_NATIVE_EARLY_RESULT,returnWhilePending={},elapsedTicks={},requests={},deferred={},prepared={},cancelled={},pending={},thermalWaitUs={},allWorldSynchronousUs={}",
                     returnWhilePending, elapsed, nativeState.requests(), nativeState.deferred(), nativeState.prepared(),
-                    nativeState.cancelled(), nativeState.pending(), waited / 1000);
+                    nativeState.cancelled(), nativeState.pending(), unloadWaited / 1000, waited / 1000);
             finished = true; observation = null;
             for (BlockPos fire : fires) {
                 if (level.getChunkSource().getChunkNow(fire.getX() >> 4, fire.getZ() >> 4) != null)

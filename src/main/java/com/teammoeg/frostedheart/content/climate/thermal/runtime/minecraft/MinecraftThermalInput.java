@@ -58,6 +58,7 @@ import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.messa
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ThermalInputBatch;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ThermalInputEnvelope;
 import com.teammoeg.frostedheart.content.climate.thermal.solver.BuoyancyConductance;
+import com.teammoeg.frostedheart.content.climate.thermal.solver.TiledThermalField;
 import com.teammoeg.frostedheart.content.climate.thermal.source.minecraft.MinecraftPhysicalSourceProfile;
 import com.teammoeg.frostedheart.content.climate.thermal.source.minecraft.PhysicalSourceSpatialIndex;
 import com.teammoeg.frostedheart.content.climate.thermal.topology.FarFieldSettings;
@@ -320,9 +321,12 @@ public final class MinecraftThermalInput implements AutoCloseable {
     private void createWorker(long initialTick, double referenceTemperatureC) {
         var tuning = profiles.tuning();
         var limits = ThermalDimensionLimits.sharedGrid(3200, MAXIMUM_PHYSICAL_SOURCES);
-        var publication = QueryPublication.createRegional(MEMORY.createCategory(), limits.maximumPages());
+        var field = new TiledThermalField(MEMORY.createCategory(), profiles.signatures(), profiles.materials(),
+                tuning.airHeatCapacityJPerBlockK(), tuning.airMixingWPerBlockK(), 0, limits.maximumPages(), initialTick);
+        QueryPublication publication = null;
         ThermalDimensionEngine engine = null;
         try {
+            publication = QueryPublication.createFixed(MEMORY.createCategory(), limits.maximumPages(), field);
             var topology = new ThermalTopologyParameters(tuning.airHeatCapacityJPerBlockK(), referenceTemperatureC,
                     tuning.airMixingWPerBlockK(), new BuoyancyConductance.Parameters(0.25D, 4.0D, 10.0D),
                     1024, Math.toIntExact(8 * ThermalInputBatch.CUT_INTERVAL_TICKS));
@@ -330,17 +334,21 @@ public final class MinecraftThermalInput implements AutoCloseable {
             var farField = new FarFieldSettings(tuning.farFieldConductanceWPerK(), 32.0D);
             engine = new ThermalDimensionEngine(dimensionGeneration, initialTick, arena, profiles.signatures(),
                     profiles.materials(), topology, farField, tuning.campfire(), limits, publication,
-                    MEMORY.createCategory(), tuning.continuousAirCorrectionToleranceC());
+                    MEMORY.createCategory());
             mailbox = new ThermalDimensionMailbox(ThermalWorkerPool.shared(), engine);
             workerEngine = engine;
             queryPublication = publication;
-            FHMain.LOGGER.info("Thermal runtime: regional shared-grid, dimension={}", level.dimension().location());
+            FHMain.LOGGER.info("Thermal runtime: {}, dimension={}",
+                    "fixed cell enthalpy", level.dimension().location());
             FHMain.LOGGER.info("Thermal checkpoint selected: mode={},dimension={}",
                     nativeCheckpoint ? "native_ready" : "on_demand", level.dimension().location());
         } catch (RuntimeException | Error failure) {
             if (engine != null) {
                 try { engine.close(); } catch (Throwable cleanupFailure) { failure.addSuppressed(cleanupFailure); }
-            } else publication.close();
+            } else {
+                if (publication != null) publication.close();
+                field.close();
+            }
             throw failure;
         }
     }
@@ -505,6 +513,9 @@ public final class MinecraftThermalInput implements AutoCloseable {
             LevelChunk chunk = level.getChunkSource().getChunkNow(position.x, position.z);
             if (chunk != null) attachLoadedChunk(chunk);
         }
+        // The startup source/receiver is already an actual observation, even
+        // while its first bounded geometry capture is still queued.
+        pages.loadedSectionOrAttach(SectionPos.asLong(center));
         int centerX = SectionPos.blockToSectionCoord(center.getX());
         int centerZ = SectionPos.blockToSectionCoord(center.getZ());
         for (int dx = -1; dx <= 1; dx++) {
@@ -596,40 +607,43 @@ public final class MinecraftThermalInput implements AutoCloseable {
         }
     }
 
-    private void sampleAir(
+    private enum AirSampleSource { CURRENT, CAPTURED, DORMANT, NONE }
+
+    private AirSampleSource sampleAir(
             double x, double y, double z, long sampleTick, int maximumAgeTicks, ThermalEnvironmentSample out) {
-        // Regional geometry and its Accepted field are the continuous query
-        // authority. Page slot coverage belongs to scalar/route resolution; a
-        // coarse publication need not retain the fine Page's Air slot.
-        synchronized (queryPublication) {
-            int blockX = floor(x), blockY = floor(y), blockZ = floor(z);
-            long sectionKey = SectionPos.asLong(blockX >> 4, blockY >> 4, blockZ >> 4);
-            var owner = pages.loadedSectionOrAttach(sectionKey);
-            var page = owner == null ? null : owner.page();
-            var loadedChunk = owner == null ? null : owner.chunk();
-            boolean read = queryPublication.tryReadAir(x, y, z, querySample);
-            if (!read && page != null && page.pendingFullGeometryResync() == null
-                    && level.getBlockState(new BlockPos(blockX, blockY, blockZ)).isAir())
-                read = queryPublication.tryReadCapturedAir(x, y, z, sampleTick, maximumAgeTicks, querySample);
-            if (read) {
-                if (querySample.minimumQuality() || sampleTick - querySample.sampleTick() <= maximumAgeTicks)
-                    out.setAir(querySample.temperatureC(), querySample.sampleTick(), querySample.airBasisTerms(), querySample.minimumQuality());
-                else sampleDormant(loadedChunk, x, y, z, sampleTick, out);
-                return;
-            }
-            var publication = airPublication(page);
-            if (publication == null) { sampleDormant(loadedChunk, x, y, z, sampleTick, out); return; }
-            int localX = SectionPos.sectionRelative(blockX), localY = SectionPos.sectionRelative(blockY), localZ = SectionPos.sectionRelative(blockZ);
-            var coverage = publication.brickAt(localX, localY, localZ);
-            int slot = publication.resolveAirPoint(localX, localY, localZ);
-            if (slot == PagePublication.NO_AIR_POINT) {
-                if (sampleRoutedAir(page, publication, coverage, (localX & 3) | (localZ & 3) << 2 | (localY & 3) << 4,
-                        sampleTick, maximumAgeTicks, out)) return;
-                if (coverage.signaturePayload() == null) sampleDormant(loadedChunk, x, y, z, sampleTick, out);
-                return;
-            }
-            sampleDormant(loadedChunk, x, y, z, sampleTick, out);
+        // Publication reads own their coherent frame. Main-owned Page lookup
+        // and dormant sampling do not need the dimension publication monitor.
+        int blockX = floor(x), blockY = floor(y), blockZ = floor(z);
+        long sectionKey = SectionPos.asLong(blockX >> 4, blockY >> 4, blockZ >> 4);
+        var owner = pages.loadedSectionOrAttach(sectionKey);
+        var page = owner == null ? null : owner.page();
+        var loadedChunk = owner == null ? null : owner.chunk();
+        AirSampleSource source = AirSampleSource.CURRENT;
+        boolean read = queryPublication.tryReadAir(x, y, z, querySample);
+        if (!read && page != null && page.pendingFullGeometryResync() == null
+                && level.getBlockState(new BlockPos(blockX, blockY, blockZ)).isAir()) {
+            read = queryPublication.tryReadCapturedAir(x, y, z, sampleTick, maximumAgeTicks, querySample);
+            source = AirSampleSource.CAPTURED;
         }
+        if (read) {
+            if (querySample.minimumQuality() || sampleTick - querySample.sampleTick() <= maximumAgeTicks) {
+                out.setAir(querySample.temperatureC(), querySample.sampleTick(), querySample.airBasisTerms(), querySample.minimumQuality());
+                return source;
+            }
+            return sampleDormant(loadedChunk, x, y, z, sampleTick, out);
+        }
+        var publication = airPublication(page);
+        if (publication == null) return sampleDormant(loadedChunk, x, y, z, sampleTick, out);
+        int localX = SectionPos.sectionRelative(blockX), localY = SectionPos.sectionRelative(blockY), localZ = SectionPos.sectionRelative(blockZ);
+        var coverage = publication.brickAt(localX, localY, localZ);
+        int slot = publication.resolveAirPoint(localX, localY, localZ);
+        if (slot == PagePublication.NO_AIR_POINT) {
+            if (sampleRoutedAir(page, publication, coverage, (localX & 3) | (localZ & 3) << 2 | (localY & 3) << 4,
+                    sampleTick, maximumAgeTicks, out)) return AirSampleSource.CURRENT;
+            if (coverage.signaturePayload() == null) return sampleDormant(loadedChunk, x, y, z, sampleTick, out);
+            return AirSampleSource.NONE;
+        }
+        return sampleDormant(loadedChunk, x, y, z, sampleTick, out);
     }
 
     private PagePublication airPublication(ThermalPageHandle page) {
@@ -674,10 +688,6 @@ public final class MinecraftThermalInput implements AutoCloseable {
         return input == null ? 0 : input.workLimitedCompletions;
     }
 
-    static long independentRegionCommits(ServerLevel level) {
-        var input = active(level);
-        return input == null || input.workerEngine == null ? 0 : input.workerEngine.independentRegionCommits();
-    }
     /** Production lifecycle observation without exposing mutable thermal state. */
     record InputProgress(long completedTick, int queuedSourceChunks, boolean sourceQueued,
             long capturedMask, ThermalPageHandle page) { }
@@ -692,12 +702,6 @@ public final class MinecraftThermalInput implements AutoCloseable {
     static QueryPublication queryPublicationForObservation(ServerLevel level) {
         var input = active(level);
         return input == null ? null : input.queryPublication;
-    }
-    static boolean pointRegionCommittedIndependently(ServerLevel level, BlockPos position) {
-        var input = active(level);
-        if (input == null || input.workerEngine == null) return false;
-        return input.workerEngine.regionCommittedIndependently(input.queryPublication.regionAt(position.getX() + .5,
-                position.getY() + .5, position.getZ() + .5));
     }
 
     /** Test-clock barrier: finish already submitted work without sealing any new input. */
@@ -759,8 +763,9 @@ public final class MinecraftThermalInput implements AutoCloseable {
         return true;
     }
 
-    /** Save committed state and pending input; main can take a queued control turn without running numerical work. */
+    /** Native/retained regional control can take a queued turn without running numerical work. */
     private <T> T awaitCheckpointCommand(CompletableFuture<T> future) {
+        if (future.isDone()) return future.join();
         mailbox.controlChanged();
         while (!future.isDone()) {
             if (mailbox.runCheckpointCommand()) continue;
@@ -771,7 +776,7 @@ public final class MinecraftThermalInput implements AutoCloseable {
         return future.join();
     }
 
-    private void sampleDormant(
+    private AirSampleSource sampleDormant(
             LevelChunk loadedChunk,
             double x,
             double y,
@@ -784,7 +789,9 @@ public final class MinecraftThermalInput implements AutoCloseable {
                 : state.sampleAt(x, y, z, gameTick, dormantHalfLifeSeconds(), level, dormantPosition);
         if (Double.isFinite(temperature)) {
             out.setAir(temperature);
+            return AirSampleSource.DORMANT;
         }
+        return AirSampleSource.NONE;
     }
 
     private void sampleRadiation(ServerPlayer player, ThermalEnvironmentSample out) {
@@ -804,88 +811,98 @@ public final class MinecraftThermalInput implements AutoCloseable {
 
     public static double gameplayPlayerEnvironment(
             ServerPlayer player, double naturalTemperatureC, ThermalEnvironmentSample out) {
-        Objects.requireNonNull(player, "player");
-        Objects.requireNonNull(out, "out").clear();
-        if (!Double.isFinite(naturalTemperatureC)) {
-            return naturalTemperatureC;
-        }
-        MinecraftThermalInput input = active(player.serverLevel());
-        if (input == null) {
-            input = start(player.serverLevel(), player.blockPosition());
-        }
-        if (input == null) {
-            ThermalAnalyticFieldIndex fields =
-                    MinecraftGameplayFields.existing(player.serverLevel());
+        var stageObserver = com.teammoeg.frostedheart.content.climate.thermal.solver.ThermalDiagnostics.observer;
+        if (stageObserver != null) stageObserver.stage("thermal_player_query", true);
+        try {
+            Objects.requireNonNull(player, "player");
+            Objects.requireNonNull(out, "out").clear();
+            if (!Double.isFinite(naturalTemperatureC)) {
+                return naturalTemperatureC;
+            }
+            MinecraftThermalInput input = active(player.serverLevel());
+            if (input == null) {
+                input = start(player.serverLevel(), player.blockPosition());
+            }
+            if (input == null) {
+                ThermalAnalyticFieldIndex fields =
+                        MinecraftGameplayFields.existing(player.serverLevel());
+                double composed =
+                        fields == null
+                                ? naturalTemperatureC
+                                : fields.compose(
+                                        player.getX(),
+                                        player.getEyeY(),
+                                        player.getZ(),
+                                        naturalTemperatureC,
+                                        naturalTemperatureC);
+                if (Double.compare(composed, naturalTemperatureC) != 0) out.setComposedAir(composed);
+                return composed;
+            }
+            var source = input.sampleAir(
+                    player.getX(),
+                    player.getEyeY(),
+                    player.getZ(),
+                    player.serverLevel().getGameTime(),
+                    MAX_PUBLICATION_AGE_TICKS,
+                    out);
+            var diagnostics = com.teammoeg.frostedheart.content.climate.thermal.solver.ThermalDiagnostics.observer;
+            if (diagnostics != null) diagnostics.playerAirSampled(player, out, source.name());
+            input.sampleRadiation(player, out);
+            double base = out.airAvailable() ? out.airTemperatureC() : naturalTemperatureC;
             double composed =
-                    fields == null
-                            ? naturalTemperatureC
-                            : fields.compose(
-                                    player.getX(),
-                                    player.getEyeY(),
-                                    player.getZ(),
-                                    naturalTemperatureC,
-                                    naturalTemperatureC);
-            if (Double.compare(composed, naturalTemperatureC) != 0) out.setComposedAir(composed);
+                    input.analyticFields.compose(
+                            player.getX(), player.getEyeY(), player.getZ(), naturalTemperatureC, base);
+            if (Double.compare(composed, base) != 0) {
+                out.setComposedAir(composed);
+            }
             return composed;
-        }
-        input.sampleAir(
-                player.getX(),
-                player.getEyeY(),
-                player.getZ(),
-                player.serverLevel().getGameTime(),
-                MAX_PUBLICATION_AGE_TICKS,
-                out);
-        input.sampleRadiation(player, out);
-        double base = out.airAvailable() ? out.airTemperatureC() : naturalTemperatureC;
-        double composed =
-                input.analyticFields.compose(
-                        player.getX(), player.getEyeY(), player.getZ(), naturalTemperatureC, base);
-        if (Double.compare(composed, base) != 0) {
-            out.setComposedAir(composed);
-        }
-        return composed;
+        } finally { if (stageObserver != null) stageObserver.stage("thermal_player_query", false); }
     }
 
     public static double gameplayPassiveEnvironment(
             LevelReader level, BlockPos position, double naturalTemperatureC) {
-        if (!(level instanceof ServerLevel server)
-                || !Double.isFinite(naturalTemperatureC)
-                || !server.getServer().isSameThread()) {
-            return naturalTemperatureC;
-        }
-        MinecraftThermalInput input = active(server);
-        double base;
-        if (input == null) {
-            double dormant =
-                    dormantTemperature(
-                            server,
-                            position.getX(),
-                            position.getY(),
-                            position.getZ(),
-                            server.getGameTime(),
-                            DORMANT_QUERY_POSITION.get());
-            base = Double.isFinite(dormant) ? dormant : naturalTemperatureC;
-        } else {
-            ThermalEnvironmentSample out = input.passiveScratch;
-            out.clear();
-            input.sampleAir(
-                    position.getX() + 0.5D,
-                    position.getY() + 0.5D,
-                    position.getZ() + 0.5D,
-                    server.getGameTime(),
-                    MAX_PUBLICATION_AGE_TICKS,
-                    out);
-            base = out.airAvailable() ? out.airTemperatureC() : naturalTemperatureC;
-        }
-        ThermalAnalyticFieldIndex fields =
-                input == null ? MinecraftGameplayFields.existing(server) : input.analyticFields;
-        if (fields == null || fields.isEmpty()) {
-            return base;
-        }
-        double x = position.getX() + 0.5D;
-        double y = position.getY() + 0.5D;
-        double z = position.getZ() + 0.5D;
-        return fields.compose(x, y, z, naturalTemperatureC, base);
+        var stageObserver = com.teammoeg.frostedheart.content.climate.thermal.solver.ThermalDiagnostics.observer;
+        if (stageObserver != null) stageObserver.stage("thermal_passive_query", true);
+        try {
+            if (!(level instanceof ServerLevel server)
+                    || !Double.isFinite(naturalTemperatureC)
+                    || !server.getServer().isSameThread()) {
+                return naturalTemperatureC;
+            }
+            MinecraftThermalInput input = active(server);
+            double base;
+            if (input == null) {
+                double dormant =
+                        dormantTemperature(
+                                server,
+                                position.getX(),
+                                position.getY(),
+                                position.getZ(),
+                                server.getGameTime(),
+                                DORMANT_QUERY_POSITION.get());
+                base = Double.isFinite(dormant) ? dormant : naturalTemperatureC;
+            } else {
+                ThermalEnvironmentSample out = input.passiveScratch;
+                out.clear();
+                input.sampleAir(
+                        position.getX() + 0.5D,
+                        position.getY() + 0.5D,
+                        position.getZ() + 0.5D,
+                        server.getGameTime(),
+                        MAX_PUBLICATION_AGE_TICKS,
+                        out);
+                base = out.airAvailable() ? out.airTemperatureC() : naturalTemperatureC;
+            }
+            ThermalAnalyticFieldIndex fields =
+                    input == null ? MinecraftGameplayFields.existing(server) : input.analyticFields;
+            if (fields == null || fields.isEmpty()) {
+                return base;
+            }
+            double x = position.getX() + 0.5D;
+            double y = position.getY() + 0.5D;
+            double z = position.getZ() + 0.5D;
+            return fields.compose(x, y, z, naturalTemperatureC, base);
+        } finally { if (stageObserver != null) stageObserver.stage("thermal_passive_query", false); }
     }
 
     /**
@@ -937,48 +954,52 @@ public final class MinecraftThermalInput implements AutoCloseable {
             double z,
             double naturalTemperatureC,
             ThermalEnvironmentSample out) {
-        Objects.requireNonNull(out, "out").clear();
-        if (!server.getServer().isSameThread() || !Double.isFinite(naturalTemperatureC)) return;
-        MinecraftThermalInput input = active(server);
-        long tick = server.getGameTime();
-        if (input == null) {
-            double dormant =
-                    dormantTemperatureAt(
-                            server,
-                            x,
-                            y,
-                            z,
-                            tick,
-                            DORMANT_QUERY_POSITION.get());
-            if (Double.isFinite(dormant)) out.setAir(dormant);
-        } else {
-            int quarterX = floorQuarter(x);
-            int quarterY = floorQuarter(y);
-            int quarterZ = floorQuarter(z);
-            int cached = input.itemEnvironmentCache.find(tick, quarterX, quarterY, quarterZ);
-            if (cached >= 0) {
-                input.itemEnvironmentCache.copyTo(cached, out);
-                {
-                    double radiation = out.radiantFluxWPerM2();
-                    out.clear();
-                    input.sampleAir(x, y, z, tick, MAX_PUBLICATION_AGE_TICKS, out);
-                    out.setRadiation(radiation);
-                }
+        var stageObserver = com.teammoeg.frostedheart.content.climate.thermal.solver.ThermalDiagnostics.observer;
+        if (stageObserver != null) stageObserver.stage("thermal_item_query", true);
+        try {
+            Objects.requireNonNull(out, "out").clear();
+            if (!server.getServer().isSameThread() || !Double.isFinite(naturalTemperatureC)) return;
+            MinecraftThermalInput input = active(server);
+            long tick = server.getGameTime();
+            if (input == null) {
+                double dormant =
+                        dormantTemperatureAt(
+                                server,
+                                x,
+                                y,
+                                z,
+                                tick,
+                                DORMANT_QUERY_POSITION.get());
+                if (Double.isFinite(dormant)) out.setAir(dormant);
             } else {
-                input.sampleAir(x, y, z, tick, MAX_PUBLICATION_AGE_TICKS, out);
-                if (input.itemEnvironmentCache.canAdmit() && input.radiation != null) {
-                    input.radiation.sampleItem(
-                            receiverIdentity, receiverGeneration, x, y, z, input.radiationSample);
-                    out.setRadiation(input.radiationSample.radiantFluxWPerM2());
+                int quarterX = floorQuarter(x);
+                int quarterY = floorQuarter(y);
+                int quarterZ = floorQuarter(z);
+                int cached = input.itemEnvironmentCache.find(tick, quarterX, quarterY, quarterZ);
+                if (cached >= 0) {
+                    input.itemEnvironmentCache.copyTo(cached, out);
+                    {
+                        double radiation = out.radiantFluxWPerM2();
+                        out.clear();
+                        input.sampleAir(x, y, z, tick, MAX_PUBLICATION_AGE_TICKS, out);
+                        out.setRadiation(radiation);
+                    }
+                } else {
+                    input.sampleAir(x, y, z, tick, MAX_PUBLICATION_AGE_TICKS, out);
+                    if (input.itemEnvironmentCache.canAdmit() && input.radiation != null) {
+                        input.radiation.sampleItem(
+                                receiverIdentity, receiverGeneration, x, y, z, input.radiationSample);
+                        out.setRadiation(input.radiationSample.radiantFluxWPerM2());
+                    }
+                    input.itemEnvironmentCache.store(quarterX, quarterY, quarterZ, out);
                 }
-                input.itemEnvironmentCache.store(quarterX, quarterY, quarterZ, out);
             }
-        }
-        double base = out.airAvailable() ? out.airTemperatureC() : naturalTemperatureC;
-        ThermalAnalyticFieldIndex fields =
-                input == null ? MinecraftGameplayFields.existing(server) : input.analyticFields;
-        out.setComposedAir(
-                fields == null ? base : fields.compose(x, y, z, naturalTemperatureC, base));
+            double base = out.airAvailable() ? out.airTemperatureC() : naturalTemperatureC;
+            ThermalAnalyticFieldIndex fields =
+                    input == null ? MinecraftGameplayFields.existing(server) : input.analyticFields;
+            out.setComposedAir(
+                    fields == null ? base : fields.compose(x, y, z, naturalTemperatureC, base));
+        } finally { if (stageObserver != null) stageObserver.stage("thermal_item_query", false); }
     }
 
     public static double gameplayCropEnvironment(
@@ -988,72 +1009,76 @@ public final class MinecraftThermalInput implements AutoCloseable {
 
     public static double gameplayTownEnvironment(
             LevelAccessor level, TownThermalProjection projection, double naturalTemperatureC) {
-        if (!(level instanceof ServerLevel server)
-                || projection.voxelCount() == 0
-                || !Double.isFinite(naturalTemperatureC)
-                || !server.getServer().isSameThread()) {
-            return naturalTemperatureC;
-        }
-        MinecraftThermalInput input = active(server);
-        ThermalAnalyticFieldIndex fields =
-                input == null ? MinecraftGameplayFields.existing(server) : input.analyticFields;
-        ThermalAnalyticFieldIndex.Sample fieldSample =
-                fields == null || fields.isEmpty() ? null : TOWN_FIELD_SAMPLE.get();
-        int totalWeight = 0;
-        double total = 0.0D;
-        for (long key : projection.groupKeys()) {
-            int weight = projection.weight(key);
-            if (weight <= 0) continue;
-            int x = projection.representativeX(key);
-            int y = projection.representativeY(key);
-            int z = projection.representativeZ(key);
-            if (fieldSample != null) fields.sample(x + 0.5D, y + 0.5D, z + 0.5D, fieldSample);
-            double natural = Double.NaN;
-            double base;
-            if (input != null) {
-                ThermalEnvironmentSample out = input.townScratch;
-                out.clear();
-                input.sampleAir(
-                        x + 0.5D,
-                        y + 0.5D,
-                        z + 0.5D,
-                        server.getGameTime(),
-                        MAX_PUBLICATION_AGE_TICKS,
-                        out);
-                if (out.airAvailable()) {
-                    base = out.airTemperatureC();
+        var stageObserver = com.teammoeg.frostedheart.content.climate.thermal.solver.ThermalDiagnostics.observer;
+        if (stageObserver != null) stageObserver.stage("thermal_town_query", true);
+        try {
+            if (!(level instanceof ServerLevel server)
+                    || projection.voxelCount() == 0
+                    || !Double.isFinite(naturalTemperatureC)
+                    || !server.getServer().isSameThread()) {
+                return naturalTemperatureC;
+            }
+            MinecraftThermalInput input = active(server);
+            ThermalAnalyticFieldIndex fields =
+                    input == null ? MinecraftGameplayFields.existing(server) : input.analyticFields;
+            ThermalAnalyticFieldIndex.Sample fieldSample =
+                    fields == null || fields.isEmpty() ? null : TOWN_FIELD_SAMPLE.get();
+            int totalWeight = 0;
+            double total = 0.0D;
+            for (long key : projection.groupKeys()) {
+                int weight = projection.weight(key);
+                if (weight <= 0) continue;
+                int x = projection.representativeX(key);
+                int y = projection.representativeY(key);
+                int z = projection.representativeZ(key);
+                if (fieldSample != null) fields.sample(x + 0.5D, y + 0.5D, z + 0.5D, fieldSample);
+                double natural = Double.NaN;
+                double base;
+                if (input != null) {
+                    ThermalEnvironmentSample out = input.townScratch;
+                    out.clear();
+                    input.sampleAir(
+                            x + 0.5D,
+                            y + 0.5D,
+                            z + 0.5D,
+                            server.getGameTime(),
+                            MAX_PUBLICATION_AGE_TICKS,
+                            out);
+                    if (out.airAvailable()) {
+                        base = out.airTemperatureC();
+                    } else {
+                        input.townPosition.set(x, y, z);
+                        base = natural = WorldTemperature.naturalBlock(server, input.townPosition);
+                    }
                 } else {
-                    input.townPosition.set(x, y, z);
-                    base = natural = WorldTemperature.naturalBlock(server, input.townPosition);
+                    double dormant =
+                            dormantTemperature(
+                                    server,
+                                    x,
+                                    y,
+                                    z,
+                                    server.getGameTime(),
+                                    DORMANT_QUERY_POSITION.get());
+                    base =
+                            Double.isFinite(dormant)
+                                    ? dormant
+                                    : (natural =
+                                            WorldTemperature.naturalBlock(
+                                                    server, DORMANT_QUERY_POSITION.get().set(x, y, z)));
                 }
-            } else {
-                double dormant =
-                        dormantTemperature(
-                                server,
-                                x,
-                                y,
-                                z,
-                                server.getGameTime(),
-                                DORMANT_QUERY_POSITION.get());
-                base =
-                        Double.isFinite(dormant)
-                                ? dormant
-                                : (natural =
-                                        WorldTemperature.naturalBlock(
-                                                server, DORMANT_QUERY_POSITION.get().set(x, y, z)));
-            }
-            if (fieldSample != null) {
-                if (fieldSample.requiresNatural() && !Double.isFinite(natural)) {
-                    natural =
-                            WorldTemperature.naturalBlock(
-                                    server, DORMANT_QUERY_POSITION.get().set(x, y, z));
+                if (fieldSample != null) {
+                    if (fieldSample.requiresNatural() && !Double.isFinite(natural)) {
+                        natural =
+                                WorldTemperature.naturalBlock(
+                                        server, DORMANT_QUERY_POSITION.get().set(x, y, z));
+                    }
+                    base = fieldSample.compose(natural, base);
                 }
-                base = fieldSample.compose(natural, base);
+                total += base * weight;
+                totalWeight += weight;
             }
-            total += base * weight;
-            totalWeight += weight;
-        }
-        return totalWeight == 0 ? naturalTemperatureC : total / totalWeight;
+            return totalWeight == 0 ? naturalTemperatureC : total / totalWeight;
+        } finally { if (stageObserver != null) stageObserver.stage("thermal_town_query", false); }
     }
 
     public static List<ThermalAnalyticField> gameplayAnalyticFieldsAt(
@@ -1138,39 +1163,43 @@ public final class MinecraftThermalInput implements AutoCloseable {
 
     /** Reads a body without creating physical residency or substituting environmental temperature. */
     public static boolean sampleMaterial(ServerLevel level, BlockPos position, MaterialSample out) {
-        out.clear();
-        MinecraftThermalInput input = active(level);
-        int x = position.getX(), y = position.getY(), z = position.getZ();
-        long section =
-                SectionPos.asLong(
-                        SectionPos.blockToSectionCoord(x),
-                        SectionPos.blockToSectionCoord(y),
-                        SectionPos.blockToSectionCoord(z));
-        if (input != null) {
-            ThermalPageHandle handle = input.pages.handle(section);
-            if (handle != null) {
-                PagePublication publication = handle.lastPublication();
-                if (readPublishedMaterial(input, handle, publication, section, position, out, false))
-                    return true;
-                if (readPublishedMaterial(input, handle, handle.previousPublication(), section,
-                        position, out, true)) return true;
+        var stageObserver = com.teammoeg.frostedheart.content.climate.thermal.solver.ThermalDiagnostics.observer;
+        if (stageObserver != null) stageObserver.stage("thermal_material_query", true);
+        try {
+            out.clear();
+            MinecraftThermalInput input = active(level);
+            int x = position.getX(), y = position.getY(), z = position.getZ();
+            long section =
+                    SectionPos.asLong(
+                            SectionPos.blockToSectionCoord(x),
+                            SectionPos.blockToSectionCoord(y),
+                            SectionPos.blockToSectionCoord(z));
+            if (input != null) {
+                ThermalPageHandle handle = input.pages.handle(section);
+                if (handle != null) {
+                    PagePublication publication = handle.lastPublication();
+                    if (readPublishedMaterial(input, handle, publication, section, position, out, false))
+                        return true;
+                    if (readPublishedMaterial(input, handle, handle.previousPublication(), section,
+                            position, out, true)) return true;
+                }
             }
-        }
-        LevelChunk chunk =
-                level.getChunkSource().getChunkNow(SectionPos.x(section), SectionPos.z(section));
-        DormantChunkThermalState stored = chunk == null ? null : dormantState(chunk);
-        if (stored == null || !stored.hasMaterials(SectionPos.y(section))) return false;
-        BlockState state = chunk.getBlockState(position);
-        var law = MinecraftThermalProfiles.materialLaw(state);
-        if (law == null) return false;
-        if (stored.readMaterial(
-                        SectionPos.y(section),
-                        (x & 15) | (z & 15) << 4 | (y & 15) << 8,
-                        Block.BLOCK_STATE_REGISTRY.getId(state),
-                        out)
-                != DormantChunkThermalState.MaterialRead.MATCH) return false;
-        stored.projectMaterial(level, position, law, out, DORMANT_QUERY_POSITION.get());
-        return true;
+            LevelChunk chunk =
+                    level.getChunkSource().getChunkNow(SectionPos.x(section), SectionPos.z(section));
+            DormantChunkThermalState stored = chunk == null ? null : dormantState(chunk);
+            if (stored == null || !stored.hasMaterials(SectionPos.y(section))) return false;
+            BlockState state = chunk.getBlockState(position);
+            var law = MinecraftThermalProfiles.materialLaw(state);
+            if (law == null) return false;
+            if (stored.readMaterial(
+                            SectionPos.y(section),
+                            (x & 15) | (z & 15) << 4 | (y & 15) << 8,
+                            Block.BLOCK_STATE_REGISTRY.getId(state),
+                            out)
+                    != DormantChunkThermalState.MaterialRead.MATCH) return false;
+            stored.projectMaterial(level, position, law, out, DORMANT_QUERY_POSITION.get());
+            return true;
+        } finally { if (stageObserver != null) stageObserver.stage("thermal_material_query", false); }
     }
 
     private static boolean readPublishedMaterial(MinecraftThermalInput input,
@@ -1186,8 +1215,6 @@ public final class MinecraftThermalInput implements AutoCloseable {
         if (!brick.resolved() || brick.firstSlot() < 0 || brick.blockLayout() == null)
             return false;
         int localBlock = (x & 3) | (z & 3) << 2 | (y & 3) << 4;
-        int node = brick.blockLayout().nodeAt(localBlock);
-        if (node < 0) return false;
         int stateId = input.profiles.signatures().materialStateId(brick.signatureAtBlock(localBlock));
         if (previous) {
             PagePublication current = handle.lastPublication();
@@ -1198,16 +1225,11 @@ public final class MinecraftThermalInput implements AutoCloseable {
             if (chunk == null || !input.profiles.signatures().valid(signature)
                     || input.profiles.signatures().materialStateId(signature)
                     != Block.BLOCK_STATE_REGISTRY.getId(chunk.getBlockState(position))) return false;
-            return input.queryPublication.tryReadMaterial(
-                            brick.firstSlot() + node, brick.arenaGeneration(),
-                            stateId, out)
+            return input.queryPublication.tryReadMaterial(publication, block, stateId, out)
                     && handle.previousPublication() == publication
                     && handle.lastPublication() == current;
         }
-        return input.queryPublication.tryReadMaterial(
-                        brick.firstSlot() + node,
-                        brick.arenaGeneration(),
-                        stateId, out)
+        return input.queryPublication.tryReadMaterial(publication, block, stateId, out)
                 && handle.lastPublication() == publication;
     }
 
@@ -1319,56 +1341,60 @@ public final class MinecraftThermalInput implements AutoCloseable {
             int localZ,
             BlockState oldState,
             BlockState newState) {
-        if (oldState == newState || owner == null || !owner.isValid()) return;
-        MinecraftThermalInput input = owner.input();
-        if (input == null || input.closed) return;
-        var states = input.profiles.states();
-        int oldCode = states.code(oldState), newCode = states.code(newState);
-        int flags = states.mutationFlagsFromCodes(oldCode, newCode);
-        int oldSignature = states.signatureIdFromCode(oldCode);
-        int newSignature = states.signatureIdFromCode(newCode);
-        boolean physicalRelevant = !input.profiles.signatures().samePhysicalProperties(oldSignature, newSignature);
-        if (input.profiles.signatures().materialProfileId(oldSignature) != 0
-                || input.profiles.signatures().materialProfileId(newSignature) != 0) {
-            int worldX =
-                    SectionPos.sectionToBlockCoord(SectionPos.x(owner.sectionKey()))
-                            + localX;
-            int worldY =
-                    SectionPos.sectionToBlockCoord(SectionPos.y(owner.sectionKey()))
-                            + localY;
-            int worldZ =
-                    SectionPos.sectionToBlockCoord(SectionPos.z(owner.sectionKey()))
-                            + localZ;
-            byte cause =
-                    MinecraftPhaseController.materialChangeCause(
-                            oldState, newState, worldX, worldY, worldZ);
-            if (cause != 0) {
-                owner.recordMaterialChange(
-                        localX | localZ << 4 | localY << 8,
-                        oldSignature,
-                        newSignature,
-                        cause);
-                flags |= MinecraftThermalProfiles.TOPOLOGY_MUTATION;
-                physicalRelevant = true;
+        var stageObserver = com.teammoeg.frostedheart.content.climate.thermal.solver.ThermalDiagnostics.observer;
+        if (stageObserver != null) stageObserver.stage("thermal_world_mutation", true);
+        try {
+            if (oldState == newState || owner == null || !owner.isValid()) return;
+            MinecraftThermalInput input = owner.input();
+            if (input == null || input.closed) return;
+            var states = input.profiles.states();
+            int oldCode = states.code(oldState), newCode = states.code(newState);
+            int flags = states.mutationFlagsFromCodes(oldCode, newCode);
+            int oldSignature = states.signatureIdFromCode(oldCode);
+            int newSignature = states.signatureIdFromCode(newCode);
+            boolean physicalRelevant = !input.profiles.signatures().samePhysicalProperties(oldSignature, newSignature);
+            if (input.profiles.signatures().materialProfileId(oldSignature) != 0
+                    || input.profiles.signatures().materialProfileId(newSignature) != 0) {
+                int worldX =
+                        SectionPos.sectionToBlockCoord(SectionPos.x(owner.sectionKey()))
+                                + localX;
+                int worldY =
+                        SectionPos.sectionToBlockCoord(SectionPos.y(owner.sectionKey()))
+                                + localY;
+                int worldZ =
+                        SectionPos.sectionToBlockCoord(SectionPos.z(owner.sectionKey()))
+                                + localZ;
+                byte cause =
+                        MinecraftPhaseController.materialChangeCause(
+                                oldState, newState, worldX, worldY, worldZ);
+                if (cause != 0) {
+                    owner.recordMaterialChange(
+                            localX | localZ << 4 | localY << 8,
+                            oldSignature,
+                            newSignature,
+                            cause);
+                    flags |= MinecraftThermalProfiles.TOPOLOGY_MUTATION;
+                    physicalRelevant = true;
+                }
             }
-        }
-        if ((flags & MinecraftThermalProfiles.TOPOLOGY_MUTATION) != 0) {
-            input.pages.onBlockMutation(
-                    owner,
-                    localX,
-                    localY,
-                    localZ,
-                    physicalRelevant);
-        }
-        if (input.blockRadiation != null)
-            input.blockRadiation.onStateChanged(owner, localX, localY, localZ);
-        if ((flags & MinecraftThermalProfiles.OCCLUSION_MUTATION) != 0) {
-            long sectionKey = owner.sectionKey();
-            input.radiationOcclusion.onSectionMutation(
-                    SectionPos.x(sectionKey),
-                    SectionPos.y(sectionKey),
-                    SectionPos.z(sectionKey));
-        }
+            if ((flags & MinecraftThermalProfiles.TOPOLOGY_MUTATION) != 0) {
+                input.pages.onBlockMutation(
+                        owner,
+                        localX,
+                        localY,
+                        localZ,
+                        physicalRelevant);
+            }
+            if (input.blockRadiation != null)
+                input.blockRadiation.onStateChanged(owner, localX, localY, localZ);
+            if ((flags & MinecraftThermalProfiles.OCCLUSION_MUTATION) != 0) {
+                long sectionKey = owner.sectionKey();
+                input.radiationOcclusion.onSectionMutation(
+                        SectionPos.x(sectionKey),
+                        SectionPos.y(sectionKey),
+                        SectionPos.z(sectionKey));
+            }
+        } finally { if (stageObserver != null) stageObserver.stage("thermal_world_mutation", false); }
     }
 
     public static void onChunkLoad(ServerLevel level, LevelChunk chunk) {
@@ -1702,25 +1728,29 @@ public final class MinecraftThermalInput implements AutoCloseable {
 
     /** Only campfire lifecycle callbacks produce these notifications. */
     public static void onCampfireStateChanged(ServerLevel level, BlockPos position) {
-        if (!level.getServer().isSameThread()) {
-            BlockPos capturedPosition = position.immutable();
-            level.getServer().execute(() -> onCampfireStateChanged(level, capturedPosition));
-            return;
-        }
-        LevelChunk chunk = level.getChunkSource().getChunkNow(position.getX() >> 4, position.getZ() >> 4);
-        MinecraftThermalInput input = active(level);
-        if (chunk == null) return;
-        if (level.captureBlockSnapshots) {
-            if (input != null) input.physicalSources.deferCampfireState(position.getX(), position.getY(), position.getZ());
-            return;
-        }
-        BlockState state = chunk.getBlockState(position);
-        if (input == null && CampfireBlock.isLitCampfire(state)
-                && MinecraftThermalProfiles.prepare().tuning().campfire().ratedPowerW() > 0)
-            input = start(level, position);
-        if (input != null && !input.physicalSources.resyncBlock(
-                position.getX(), position.getY(), position.getZ(), state))
-            input.enqueueSourceDiscovery(chunk);
+        var stageObserver = com.teammoeg.frostedheart.content.climate.thermal.solver.ThermalDiagnostics.observer;
+        if (stageObserver != null) stageObserver.stage("thermal_campfire_input", true);
+        try {
+            if (!level.getServer().isSameThread()) {
+                BlockPos capturedPosition = position.immutable();
+                level.getServer().execute(() -> onCampfireStateChanged(level, capturedPosition));
+                return;
+            }
+            LevelChunk chunk = level.getChunkSource().getChunkNow(position.getX() >> 4, position.getZ() >> 4);
+            MinecraftThermalInput input = active(level);
+            if (chunk == null) return;
+            if (level.captureBlockSnapshots) {
+                if (input != null) input.physicalSources.deferCampfireState(position.getX(), position.getY(), position.getZ());
+                return;
+            }
+            BlockState state = chunk.getBlockState(position);
+            if (input == null && CampfireBlock.isLitCampfire(state)
+                    && MinecraftThermalProfiles.prepare().tuning().campfire().ratedPowerW() > 0)
+                input = start(level, position);
+            if (input != null && !input.physicalSources.resyncBlock(
+                    position.getX(), position.getY(), position.getZ(), state))
+                input.enqueueSourceDiscovery(chunk);
+        } finally { if (stageObserver != null) stageObserver.stage("thermal_campfire_input", false); }
     }
 
     /** Also runs without an active dimension worker; saved matter must follow world replacement. */
@@ -1892,8 +1922,8 @@ public final class MinecraftThermalInput implements AutoCloseable {
     private static boolean matchesCheckpointPage(ThermalPageHandle page, PagePublication captured,
             QueryPublication.ReadCursor cursor) {
         PagePublication latest = page.lastPublication();
-        return latest == captured || latest != null && page.previousPublication() == captured
-                && cursor.pageBeforeTopology(captured, latest.topologyGeneration());
+        return cursor.valid() && (latest == captured || latest != null && page.previousPublication() == captured
+                && cursor.pageBeforeTopology(captured, latest.topologyGeneration()));
     }
 
     /** The ready checkpoint owns all values and writer space. No live query or arena identity is borrowed here. */
@@ -1938,6 +1968,7 @@ public final class MinecraftThermalInput implements AutoCloseable {
         final long tick, sourceRevision;
         final ThermalPageHandle[] identities;
         final long[] geometry;
+        final boolean direct;
         final com.teammoeg.frostedheart.content.climate.thermal.source.SpatialSourceTimeline.Capture producer;
         CompletableFuture<com.teammoeg.frostedheart.content.climate.thermal.persistence.minecraft.RegionalCheckpoint> ready;
         CompletableFuture<Void> finished;
@@ -1951,8 +1982,8 @@ public final class MinecraftThermalInput implements AutoCloseable {
             sourceCaptureTick = Math.max(sourceCaptureTick, tick);
             physicalSources.flush(tick);
             pages.flushCapturedGeometry();
-            producer = accumulator.captureSources(tick);
-            if (producer == null) throw new IllegalStateException("Thermal producer capture already owned");
+            direct = purpose == com.teammoeg.frostedheart.content.climate.thermal.persistence.minecraft.RegionalCheckpoint.Purpose.SAVE
+                    && queryPublication.fixedState() != null;
             int count = nativeHold ? chunk.getSections().length : 0;
             identities = new ThermalPageHandle[count]; geometry = new long[count];
             for (int i = 0; i < count; i++) {
@@ -1960,11 +1991,19 @@ public final class MinecraftThermalInput implements AutoCloseable {
                 identities[i] = page; geometry[i] = page == null ? -1 : page.liveGeometryRevision();
             }
             sourceRevision = pages.sourceRevisionNearChunk(chunk.getPos().toLong());
+            var stored = dormantState(chunk);
+            var cold = stored == null ? com.teammoeg.frostedheart.content.climate.thermal.persistence.minecraft.PendingHeatCheckpoint.EMPTY
+                    : stored.coldPending();
+            if (direct) {
+                var checkpoint = workerEngine.captureCommittedCheckpoint(chunk.getPos().toLong(), tick,
+                        accumulator.sourceTimeline(), cold, dormantHalfLifeSeconds());
+                producer = checkpoint.producerCapture();
+                ready = CompletableFuture.completedFuture(checkpoint);
+                return;
+            }
+            producer = accumulator.captureSources(tick);
             try {
-                var stored = dormantState(chunk);
-                ready = workerEngine.requestCheckpoint(chunk.getPos().toLong(), producer,
-                        stored == null ? com.teammoeg.frostedheart.content.climate.thermal.persistence.minecraft.PendingHeatCheckpoint.EMPTY
-                                : stored.coldPending(), dormantHalfLifeSeconds(), purpose);
+                ready = workerEngine.requestCheckpoint(chunk.getPos().toLong(), producer, cold, dormantHalfLifeSeconds(), purpose);
                 mailbox.controlChanged();
             } catch (RuntimeException | Error failure) { producer.close(); throw failure; }
         }
@@ -1999,11 +2038,7 @@ public final class MinecraftThermalInput implements AutoCloseable {
                 }
                 sourceCaptureTick = Math.max(sourceCaptureTick, now);
                 var pending = com.teammoeg.frostedheart.content.climate.thermal.persistence.minecraft.PendingHeatCheckpoint.capture(heat,
-                        incarnation -> {
-                            for (var field : checkpoint.fields()) for (int body = 0; body < field.materialCount(); body++)
-                                if (field.materialIncarnation(body) == incarnation) return field.materialStateId(body);
-                            return -1;
-                        }, now);
+                        ignored -> -1, now);
                 var stored = dormantState(chunk);
                 captured.state.setPending(pending, unloading ? pending : checkpoint.coldPending(),
                         unloading ? 0 : stored == null ? pages.restorationPageFloor(chunk.getPos().toLong()) : stored.restorationPageFloor());
@@ -2026,12 +2061,14 @@ public final class MinecraftThermalInput implements AutoCloseable {
         }
         CompletableFuture<Void> finish(boolean unloading) {
             if (finished == null) {
-                if (!unloading) finished = workerEngine.cancelCheckpoint(ready);
+                if (direct) {
+                    var checkpoint = ready.join(); checkpoint.close(); finished = checkpoint.finish(false);
+                } else if (!unloading) finished = workerEngine.cancelCheckpoint(ready);
                 else {
                     var checkpoint = ready.join(); checkpoint.releaseFrames(); finished = checkpoint.finish(true);
                 }
                 ready = null; // A queued native callback must not retain retired field arrays.
-                mailbox.controlChanged();
+                if (!direct) mailbox.controlChanged();
             }
             return finished;
         }
@@ -2045,13 +2082,14 @@ public final class MinecraftThermalInput implements AutoCloseable {
     public boolean captureRegionalCheckpoint(LevelChunk chunk, boolean unloading) {
         requireMainThread();
         if ((checkpointInProgress)) return false;
+        // Worker recovery checkpoints these same pages before the ordinary capture owns its gate.
+        drainCompletion();
         checkpointInProgress = true;
         ChunkCapture capture = null;
         boolean saved = false;
         long started = System.nanoTime();
         try {
-            settleNativePreparationForSave();
-            drainCompletion();
+            if (unloading) settleNativePreparationForSave();
             capture = new ChunkCapture(chunk, false, unloading
                     ? com.teammoeg.frostedheart.content.climate.thermal.persistence.minecraft.RegionalCheckpoint.Purpose.UNLOAD
                     : com.teammoeg.frostedheart.content.climate.thermal.persistence.minecraft.RegionalCheckpoint.Purpose.SAVE);
@@ -2166,8 +2204,8 @@ public final class MinecraftThermalInput implements AutoCloseable {
     }
 
     /**
-     * Prepare before actual maintenance serialization. A busy checkpoint defers
-     * the write; an admitted checkpoint may wait for ownership handoff here.
+     * Prepare before actual maintenance serialization. Fixed ordinary saves copy
+     * Accepted and original pending J without taking the coordinator's turn.
      * The subsequent Forge save callback uses the captured state.
      */
     public static boolean runMaintenanceSave(ServerLevel level, LevelChunk chunk, java.util.function.BooleanSupplier save) {

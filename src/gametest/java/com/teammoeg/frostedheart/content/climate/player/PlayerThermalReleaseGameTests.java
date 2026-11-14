@@ -51,6 +51,58 @@ public final class PlayerThermalReleaseGameTests {
     private static final String TEMPLATE = "phase0a_empty";
 
     @GameTest(template = TEMPLATE, batch = "player_release", timeoutTicks = 40)
+    public static void equipmentThermalPropertiesUseOneFreshAttributeSnapshot(GameTestHelper helper) {
+        try (Fixture fixture = player(helper)) {
+            var equipment = new ItemStack(Items.IRON_CHESTPLATE);
+            fixture.player.setItemSlot(EquipmentSlot.CHEST, equipment);
+            var events = new java.util.concurrent.atomic.AtomicInteger();
+            java.util.function.Consumer<net.minecraftforge.event.ItemAttributeModifierEvent> listener = event -> {
+                if (event.getItemStack() != equipment || event.getSlotType() != EquipmentSlot.CHEST) return;
+                events.incrementAndGet();
+                event.addModifier(FHAttributes.INSULATION.get(), new AttributeModifier(
+                        UUID.fromString("79b65db4-a4de-44bb-adb5-dc4d4e31a214"), "sampling addition",
+                        equipment.getTag().getDouble("thermal_sampling_test"), AttributeModifier.Operation.ADDITION));
+                event.addModifier(FHAttributes.INSULATION.get(), new AttributeModifier(
+                        UUID.fromString("7bb3f589-6abf-42d5-8654-5f0483190410"), "sampling base multiplier", .5,
+                        AttributeModifier.Operation.MULTIPLY_BASE));
+                event.addModifier(FHAttributes.INSULATION.get(), new AttributeModifier(
+                        UUID.fromString("a4fe66c8-7838-466d-a5ae-ebc006c61813"), "sampling total multiplier", .2,
+                        AttributeModifier.Operation.MULTIPLY_TOTAL));
+            };
+            net.minecraftforge.common.MinecraftForge.EVENT_BUS.addListener(
+                    net.minecraftforge.eventbus.api.EventPriority.LOWEST, false,
+                    net.minecraftforge.event.ItemAttributeModifierEvent.class, listener);
+            try {
+                var clothes = new BodyPartData(3); var result = new PartClothData();
+                double first = Double.NaN;
+                for (double amount : new double[] {20, 60}) {
+                    equipment.getOrCreateTag().putDouble("thermal_sampling_test", amount);
+                    var reference = equipment.getAttributeModifiers(EquipmentSlot.CHEST);
+                    double insulation = ClothData.sumAttributes(reference.get(FHAttributes.INSULATION.get()));
+                    double radiant = ClothData.sumAttributesPercentage(reference.get(FHAttributes.HEAT_PROOF.get()));
+                    double wind = ClothData.sumAttributesPercentage(reference.get(FHAttributes.WIND_PROOF.get()));
+                    double weight = ClothData.sumAttributes(reference.get(FHAttributes.EQUIPMENT_WEIGHT.get()));
+                    events.set(0);
+                    clothes.fillClothData(fixture.player, BodyPart.TORSO, result);
+                    near(helper, 100 / (100 + insulation * .4F), result.environmentExchangeFactor, 1e-12,
+                            "One Forge snapshot preserves all insulation operations and the existing equipment layer weight");
+                    near(helper, Math.min(1, Math.max(0, radiant * .4F)), result.radiantHeatProof, 1e-12, "Radiant protection is unchanged");
+                    near(helper, Math.min(1, Math.max(0, wind * .4F)), result.windProof, 1e-12, "Wind protection is unchanged");
+                    near(helper, result.windProof, result.waterResistance, 0, "Water protection uses the same outer-layer value");
+                    near(helper, weight, result.weight, 1e-12, "Equipment weight is unchanged");
+                    helper.assertTrue(events.get() == 1,
+                            "Read the complete equipment attributes once per clothing sample; actual Forge events=" + events.get());
+                    if (Double.isNaN(first)) first = result.environmentExchangeFactor;
+                    else helper.assertTrue(result.environmentExchangeFactor < first,
+                            "The next sample sees changed NBT through the real Forge event; no persistent attribute cache");
+                }
+                com.teammoeg.frostedheart.FHMain.LOGGER.info("THERMAL_CLOTHING_ATTRIBUTE_SNAPSHOT,eventsPerSample=1,liveNbtRefresh=true,operationsAndLayerWeightsPreserved=true");
+            } finally { net.minecraftforge.common.MinecraftForge.EVENT_BUS.unregister(listener); }
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = TEMPLATE, batch = "player_release", timeoutTicks = 40)
     public static void clothingAttributeModifiersFollowVanillaOperationMeaning(GameTestHelper helper) {
         try (Fixture fixture = player(helper)) {
             var attribute = fixture.player.getAttribute(FHAttributes.INSULATION.get());

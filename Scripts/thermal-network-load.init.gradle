@@ -1,0 +1,46 @@
+// Dedicated validation uses current compiler outputs and only its fixture class.
+gradle.beforeProject { project ->
+    project.afterEvaluate {
+        def root = project.file(project.providers.gradleProperty('thermalLoadRoot').getOrElse('build/thermal-network-load'))
+        def fixture = project.sourceSets.create('thermalLoad')
+        fixture.java.setSrcDirs([project.file('src/gametest/java')])
+        fixture.java.include('**/ThermalNetworkLoadServer.java',
+                '**/ThermalNetworkWorkerTiming.java', '**/ThermalNetworkWorkerTimingMixin.java', '**/ThermalNetworkMailboxTimingMixin.java')
+        fixture.resources.setSrcDirs([project.file('src/gametest/resources')])
+        fixture.resources.include('frostedheart.thermal-load-worker-timing.mixins.json')
+        fixture.compileClasspath += project.sourceSets.main.output + project.sourceSets.main.compileClasspath
+        fixture.runtimeClasspath += fixture.output + project.sourceSets.main.runtimeClasspath
+        def run = project.minecraft.runs.server
+        run.workingDirectory(root)
+        run.mods { frostedheart { source fixture } }
+        run.property('forge.logging.console.level', 'info')
+        run.property('frostedheart.thermalLoad', 'true')
+        run.property('frostedheart.thermalLoadRoot', root.absolutePath)
+        run.property('frostedheart.thermalLoad.lifecycleTrace', project.providers.gradleProperty('thermalLoadLifecycleTrace').getOrElse('false'))
+        run.property('frostedheart.thermalLoad.recoveryReturnHome', project.providers.gradleProperty('thermalLoadRecoveryReturnHome').getOrElse('false'))
+        def workerTiming = project.providers.gradleProperty('thermalLoadWorkerTiming').getOrElse('false').toBoolean()
+        run.property('frostedheart.thermalLoad.workerTiming', workerTiming.toString())
+        if (workerTiming) run.arg('-mixin.config=frostedheart.thermal-load-worker-timing.mixins.json')
+        ['players': '100', 'bases': '25', 'sourceSide': '8', 'seconds': '1200', 'recoverySeconds': '0'].each { key, fallback ->
+            run.property('frostedheart.thermalLoad.' + key,
+                    project.providers.gradleProperty('thermalLoad' + key.capitalize()).getOrElse(fallback))
+        }
+        run.environment('FH_CONTINUOUS_AIR_REGION_DIAGNOSTICS', 'false')
+        run.arg('--nogui')
+        run.jvmArg('-Xms1g')
+        run.jvmArg('-Xmx' + project.providers.gradleProperty('thermalTestHeap').getOrElse('4g'))
+        run.jvmArg('-XX:ActiveProcessorCount=' + project.providers.gradleProperty('thermalTestProcessors').getOrElse('5'))
+        run.jvmArg('-Xlog:gc*,safepoint:file=gc-%p.log:time,uptime,level,tags:filecount=5,filesize=16M')
+        run.jvmArg('-XX:+HeapDumpOnOutOfMemoryError')
+        run.jvmArg('-XX:HeapDumpPath=.')
+        run.jvmArg('-XX:StartFlightRecording=settings=profile,dumponexit=true,maxsize=256m,filename=server-profile.jfr')
+        project.tasks.matching { it.name == 'runServer' }.configureEach {
+            dependsOn project.tasks.named('compileThermalLoadJava')
+            dependsOn project.tasks.named('processThermalLoadResources')
+            doFirst {
+                root.mkdirs(); fixture.output.resourcesDir.mkdirs()
+                project.copy { from project.file('src/gametest/catalog'); into new File(root, 'config/fhresearches') }
+            }
+        }
+    }
+}

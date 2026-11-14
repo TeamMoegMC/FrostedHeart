@@ -216,7 +216,7 @@ final class InfraredCapture implements AutoCloseable {
                     if (changedMaterialBricks != 0L) {
                         presence[word] &= ~(1L << (local & 63));
                         for (int b = 0; b < 64; b++)
-                            if (readableSurfaceMask(page.brick(b), b, page.topologyGeneration()) != 0) {
+                            if (readableSurfaceMask(page, b) != 0) {
                                 presence[word] |= 1L << (local & 63);
                                 break;
                             }
@@ -291,9 +291,9 @@ final class InfraredCapture implements AutoCloseable {
                         }
                     }
                 }
-                // Regional values are pinned and each used Page was checked above.
-                // The packet acknowledges the captured epoch, so a newer dirty mask
-                // can only cause an extra resend, never hide the next temperature.
+                // Regional frames remain pinned; fixed-space readers validate the accepted cut.
+                // Never acknowledge a packet assembled across two fixed publications.
+                if (publication != null && !cursor.valid()) continue captureAttempt;
                 boolean changedPresence = !Arrays.equals(presence, knownPresence);
                 if (!full
                         && !moved
@@ -343,7 +343,7 @@ final class InfraredCapture implements AutoCloseable {
                     || page == null
                     || page.topologyGeneration() > cursor.topologyGeneration()) continue;
             for (int b = 0; b < 64; b++) {
-                if (freshSurfaceMask(page.brick(b), page.topologyGeneration()) == 0) continue;
+                if (freshSurfaceMask(page, b) == 0) continue;
                 presence[local >>> 6] |= 1L << (local & 63);
                 break;
             }
@@ -522,19 +522,22 @@ final class InfraredCapture implements AutoCloseable {
                 : 0L;
     }
 
-    private long freshSurfaceMask(PagePublication.Brick brick, long topology) {
+    private long freshSurfaceMask(PagePublication page, int index) {
+        var brick = page.brick(index);
         long mask = surfaceMask(brick), remaining = mask;
         while (remaining != 0) {
             int node = Long.numberOfTrailingZeros(remaining);
             remaining &= remaining - 1;
-            if (!cursor.freshSlot(brick.firstSlot() + node, brick.arenaGeneration(), topology,
+            int block = Long.numberOfTrailingZeros(brick.blockLayout().nodeBlockMask(node));
+            if (!cursor.freshCell(page, BlockBrickLayout.pageBlock(index, block), page.topologyGeneration(),
                     captureTick, MAX_PUBLICATION_AGE_TICKS)) mask &= ~(1L << node);
         }
         return mask;
     }
 
-    private long readableSurfaceMask(PagePublication.Brick brick, int index, long topology) {
-        long mask = freshSurfaceMask(brick, topology);
+    private long readableSurfaceMask(PagePublication page, int index) {
+        var brick = page.brick(index);
+        long mask = freshSurfaceMask(page, index);
         if ((changedMaterialBricks & 1L << index) == 0L) return mask;
         long nodes = mask;
         while (nodes != 0L) {
@@ -564,7 +567,7 @@ final class InfraredCapture implements AutoCloseable {
             int y,
             int z) {
         var brick = page == null ? null : page.brick(index);
-        long mask = brick == null ? 0 : readableSurfaceMask(brick, index, page.topologyGeneration());
+        long mask = brick == null ? 0 : readableSurfaceMask(page, index);
         int address = localPage * 64 + index;
         boolean compose = !brickFields.isEmpty();
         if (mask == 0 && !stored && !compose) {
@@ -575,9 +578,10 @@ final class InfraredCapture implements AutoCloseable {
         while (remaining != 0) {
             int node = Long.numberOfTrailingZeros(remaining);
             remaining &= remaining - 1;
+            int block = Long.numberOfTrailingZeros(brick.blockLayout().nodeBlockMask(node));
             if (!cursor.tryRead(
-                    brick.firstSlot() + node,
-                    brick.arenaGeneration(),
+                    page,
+                    BlockBrickLayout.pageBlock(index, block),
                     page.topologyGeneration(),
                     sample)) return false;
             if (compose) rawNodes[node] = sample.temperatureC();

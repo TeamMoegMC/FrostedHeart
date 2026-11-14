@@ -196,7 +196,10 @@ public final class ThermalSolver {
         int pairs = pairCount;
         int boundaries = farBoundaryCount;
         // A committed token may still be waiting for fragment cleanup.
-        for (var entry : stagedFragments.int2ObjectEntrySet()) if (entry.getValue().token.committed()) {
+        var staged = stagedFragments.int2ObjectEntrySet().fastIterator();
+        while (staged.hasNext()) {
+            var entry = staged.next();
+            if (!entry.getValue().token.committed()) continue;
             var old = fragments[entry.getIntKey()];
             var next = entry.getValue().next;
             pairs += pairCount(next) - pairCount(old);
@@ -211,7 +214,9 @@ public final class ThermalSolver {
             boundaries += next.farBoundaries().size()
                     - old.farBoundaries().size();
         }
-        for (var entry : replacementReferenceDelta.int2IntEntrySet()) {
+        var references = replacementReferenceDelta.int2IntEntrySet().fastIterator();
+        while (references.hasNext()) {
+            var entry = references.next();
             if (stateReferenceCount(entry.getIntKey())
                     + entry.getIntValue() < 0) {
                 throw new IllegalStateException(

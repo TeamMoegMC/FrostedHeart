@@ -4,8 +4,11 @@
 
 | Document | Scope | Status |
 |---|---|---|
-| [thermal-runtime-control.md](thermal-runtime-control.md) | 当前SHARED_GRID输入、任务、准入、粗细切换、查询、Minecraft接入归属和v6保存合同 | Current; validation scope and deferred work recorded in the linked document |
+| [thermal-iteration-summary.md](thermal-iteration-summary.md) | 当前结论，以及合并历史、验证数据和后续计划的入口 | Current fixed-only production runtime and v7 contract linked; retirement validated by 157 distinct checks (full 156/157 plus source-focused 8/8); optimization paused, original qualification incomplete |
+| [thermal-gameplay-representation-exploration.md](thermal-gameplay-representation-exploration.md) | 默认单格焓引擎、完整推进/查询/数组成本、Q1对照与玩法误差 | Current for default fixed entry; hundred-player qualification incomplete |
+| [thermal-runtime-control.md](thermal-runtime-control.md) | 固定温场、输入所有权、物理时间、查询、v7保存与恢复合同 | Current; validation scope and deferred work recorded in the linked document |
 | [thermal-server-memory-evidence.md](thermal-server-memory-evidence.md) | 回调引用泄漏的因果对照、源码修复、分配/调度/计账缺陷及验证边界 | Current for reproduced retention and fix; extreme-load timing unqualified |
+| [thermal-spatial-boundary-optimization.md](thermal-spatial-boundary-optimization.md) | 旧区域阶段的空间遍历、共享表盘点和关闭交接试验 | Historical; current fixed-only contract linked above |
 | [thermal-residual-lifecycle.md](thermal-residual-lifecycle.md) | 材料扩张门槛、0.5°C 余温退出、Page/Chunk 交接、休眠维护和红外删除 | Current for stated validation; river comparison and limits linked within |
 | [thermal-storage-optimization.md](thermal-storage-optimization.md) | 局部容量摘要、Debug盘点、热活动维护、无损存储及同配置CPU/分配/服务代价 | Current; control refactor, focused lifecycle checks and per-build performance/resource limits recorded |
 | [thermal-regional-server-validation.md](thermal-regional-server-validation.md) | 当前区域架构的100温度消费者分散负载、资源代价、粗档全程构建与部署配置 | Current for stated multicore and single-worker measurements; full networked server scope stated separately |

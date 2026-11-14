@@ -138,6 +138,12 @@ public final class ThermalCellArena implements MaterialStateAccess {
 
     /** Uses allocated capacity, including recycled addresses and pinned geometry. */
     public void recordBacking(AirBackingMeter meter) {
+        recordStorageBacking(meter);
+        for (var geometry : mixedBrickGeometries) if (geometry != null) geometry.recordBacking(meter);
+    }
+
+    /** Mutable arena capacity; immutable Brick geometry has its own installed owner. */
+    public void recordStorageBacking(AirBackingMeter meter) {
         meter.array(enthalpyJ); meter.array(capacityJPerK); meter.array(inverseCapacityKPerJ);
         meter.array(materialLaws); meter.array(materialProfileIds); meter.array(materialIncarnations); meter.array(materialBranches);
         meter.array(pendingMaterialLayouts); meter.array(pageSlots); meter.array(lifecycleGenerations);
@@ -145,7 +151,6 @@ public final class ThermalCellArena implements MaterialStateAccess {
         meter.array(cellKinds); meter.array(mixedBrickGeometries); meter.array(allocationState);
         meter.array(activations); meter.array(retirements);
         meter.array(liveSlots); meter.array(liveWordSummary); phases.recordBacking(meter); freeSpans.recordBacking(meter);
-        for (var geometry : mixedBrickGeometries) if (geometry != null) geometry.recordBacking(meter);
         if (geometryPins != null) {
             meter.container(geometryPins, geometryPins.size(), 16);
             for (var pin : geometryPins.values()) {
@@ -313,6 +318,7 @@ public final class ThermalCellArena implements MaterialStateAccess {
 
     /** A Brick has at most its admitted local cells; visibility changes with the shared token. */
     public void stageVisibility(ArenaSpan span, com.teammoeg.frostedheart.content.climate.thermal.runtime.InstallToken token, boolean activation) {
+        if (span.count() == 0) return;
         for (int slot = span.firstSlot(); slot < span.endSlotExclusive(); slot++) {
             if (activation) { activations[slot] = token; liveSlots[slot >>> 6] |= 1L << slot; }
             else retirements[slot] = token;

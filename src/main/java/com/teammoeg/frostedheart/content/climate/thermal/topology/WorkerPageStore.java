@@ -23,7 +23,6 @@ package com.teammoeg.frostedheart.content.climate.thermal.topology;
 import static com.teammoeg.frostedheart.content.climate.thermal.solver.ThermalDiagnostics.TRACE;
 
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.BlockBrickLayout;
-import com.teammoeg.frostedheart.content.climate.thermal.mesh.AirFieldLayout;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.BlockFace;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.PagePublication;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.PageSignatures;
@@ -32,6 +31,7 @@ import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalPageHandle;
 import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureTable;
 import com.teammoeg.frostedheart.content.climate.thermal.persistence.ThermalRetentionPolicy;
 import com.teammoeg.frostedheart.content.climate.thermal.query.QueryPublication;
+import com.teammoeg.frostedheart.content.climate.thermal.solver.TiledThermalField;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.GeometryHalo;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ThermalCompletion;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ThermalInputBatch;
@@ -61,20 +61,24 @@ import java.util.Objects;
  * 该身份不进入网络或客户端模型。</p>
  */
 public final class WorkerPageStore implements AutoCloseable, AirGeometryView {
-    private java.util.function.IntFunction<AirFieldLayout.Component> regionalComponent;
-    private java.util.function.IntFunction<double[]> regionalCoefficients;
-    private Long2LongMap airSupportRequests;
-    private final Long2ObjectOpenHashMap<Long2LongOpenHashMap> supportOwners = new Long2ObjectOpenHashMap<>();
-    private final Long2ObjectOpenHashMap<int[]> supportCounts = new Long2ObjectOpenHashMap<>();
-    private final Long2IntOpenHashMap supportPreparations = new Long2IntOpenHashMap();
-    private final Long2LongOpenHashMap regionalSupport = new Long2LongOpenHashMap();
+    private TiledThermalField fixedField;
+    private final TiledThermalField.Sample fixedSample = new TiledThermalField.Sample();
 
-    private java.util.function.IntFunction<com.teammoeg.frostedheart.content.climate.thermal.query.RegionalQuerySnapshot> regionalSnapshots;
-    private QueryPublication regionalQueries;
+    /** Reuse the original residency owner with the fixed field's sole Accepted values. */
+    public void setFixedField(TiledThermalField field) {
+        fixedField = field;
+    }
+
+    public boolean hasFixedField() { return fixedField != null; }
+
+    public void markAcceptedMaintenance() {
+        for (long section : activeBySection.keySet()) markMaintenanceDirty(section);
+    }
+    private Long2LongMap airSupportRequests;
+
     private final it.unimi.dsi.fastutil.longs.LongLinkedOpenHashSet maintenanceReady = new it.unimi.dsi.fastutil.longs.LongLinkedOpenHashSet();
     private final it.unimi.dsi.fastutil.longs.LongLinkedOpenHashSet maintenanceTargets = new it.unimi.dsi.fastutil.longs.LongLinkedOpenHashSet();
     private final Long2ObjectOpenHashMap<MaintenanceState> maintenance = new Long2ObjectOpenHashMap<>();
-    private final java.util.IdentityHashMap<Object, QueryPublication.FrameLease> maintenanceFrames = new java.util.IdentityHashMap<>();
     private final Long2LongOpenHashMap routeSupport = new Long2LongOpenHashMap();
     private MaintenanceState maintenanceCursor;
     private PageState maintenancePage;
@@ -94,78 +98,8 @@ public final class WorkerPageStore implements AutoCloseable, AirGeometryView {
         boolean residualMaterial, residualMinimum;
     }
 
-    public void setRegionalSnapshots(java.util.function.IntFunction<com.teammoeg.frostedheart.content.climate.thermal.query.RegionalQuerySnapshot> snapshots,
-            QueryPublication queries) {
-        regionalSnapshots = snapshots; regionalQueries = queries;
-        airSupportRequests = regionalSupport;
-    }
 
-    public final class SupportChange implements AutoCloseable {
-        private final long owner;
-        private final Long2LongOpenHashMap next;
-        private final long[] addedSections, removedSections;
-        private final long[] addedMasks, removedMasks;
-        private int phase, cursor;
-        private long remaining;
-        private boolean completed, released;
-        private SupportChange(long owner, Long2LongOpenHashMap next) {
-            this.owner = owner; this.next = next;
-            var old = supportOwners.get(owner);
-            addedSections = next.keySet().toLongArray(); addedMasks = new long[addedSections.length];
-            removedSections = old == null ? new long[0] : old.keySet().toLongArray(); removedMasks = new long[removedSections.length];
-            for (int index = 0; index < addedSections.length; index++) {
-                long section = addedSections[index]; addedMasks[index] = next.get(section);
-                supportCounts.computeIfAbsent(section, ignored -> new int[64]);
-                supportPreparations.addTo(section, 1);
-            }
-            for (int index = 0; index < removedSections.length; index++) {
-                removedMasks[index] = old.get(removedSections[index]); supportPreparations.addTo(removedSections[index], 1);
-            }
-        }
-        /** Add successors first, retaining the old completed support until the replacement is ready. */
-        public boolean run(long deadline) {
-            if (completed) return true;
-            do {
-                long[] sections = phase == 0 ? addedSections : removedSections;
-                long[] masks = phase == 0 ? addedMasks : removedMasks;
-                if (cursor == sections.length) {
-                    if (phase++ == 1) {
-                        if (next.isEmpty()) supportOwners.remove(owner); else supportOwners.put(owner, next);
-                        completed = true;
-                        return true;
-                    }
-                    cursor = 0; remaining = 0; continue;
-                }
-                long section = sections[cursor];
-                if (remaining == 0) remaining = masks[cursor];
-                int limit = 64;
-                while (limit-- > 0 && remaining != 0) {
-                    int brick = Long.numberOfTrailingZeros(remaining); remaining &= remaining - 1;
-                    var counts = supportCounts.get(section);
-                    int count = counts[brick] += phase == 0 ? 1 : -1;
-                    if (count < 0) throw new IllegalStateException("Air support owner count underflow");
-                    long previous = regionalSupport.get(section), mask = count == 0 ? previous & ~(1L << brick) : previous | 1L << brick;
-                    if (mask != previous) {
-                        if (mask == 0) regionalSupport.remove(section); else regionalSupport.put(section, mask);
-                        maintenanceTargets.add(section);
-                    }
-                }
-                if (remaining == 0) cursor++;
-            } while (System.nanoTime() < deadline);
-            return false;
-        }
-        @Override public void close() {
-            if (released) return; released = true;
-            releaseSections(addedSections); releaseSections(removedSections);
-        }
-        private void releaseSections(long[] sections) {
-            for (long section : sections) if (supportPreparations.addTo(section, -1) == 1) {
-                supportPreparations.remove(section);
-                if (regionalSupport.get(section) == 0) supportCounts.remove(section);
-            }
-        }
-    }
-    public SupportChange prepareAirSupport(long owner, Long2LongOpenHashMap requests) { return new SupportChange(owner, requests); }
+
 
     public void markMaintenanceDirty(long section) {
         var state = maintenance.computeIfAbsent(section, ignored -> new MaintenanceState());
@@ -190,27 +124,10 @@ public final class WorkerPageStore implements AutoCloseable, AirGeometryView {
 
     public long maintenanceCapacityWait() { return maintenanceCapacityWait; }
 
-    private com.teammoeg.frostedheart.content.climate.thermal.query.RegionalQuerySnapshot maintenanceSnapshot(int slot) {
-        var snapshot = regionalSnapshots.apply(slot);
-        if (snapshot == null) { maintenanceBlocked = true; return null; }
-        var lease = maintenanceFrames.get(snapshot.geometryIdentity());
-        if (lease == null) {
-            lease = regionalQueries.borrowFrame(snapshot);
-            if (lease == null) { maintenanceBlocked = true; return null; }
-            maintenanceFrames.put(snapshot.geometryIdentity(), lease);
-        }
-        return lease.field;
-    }
-
-    private void releaseMaintenanceFrames() {
-        for (var lease : maintenanceFrames.values()) lease.close();
-        maintenanceFrames.clear();
-    }
-
     /** One Brick/face at a time, preserving the Page's prior completed outputs until all are ready. */
     public void advanceMaintenance(ThermalCellArena arena, double referenceC, long deadline, long capacityRevision,
             java.util.function.Consumer<ThermalCompletion.BrickResidency> output) {
-        if (regionalSnapshots == null) return;
+        if (fixedField == null) return;
         if (maintenanceCursor == null && !maintenanceReady.isEmpty()) {
             long section = maintenanceReady.removeFirstLong();
             var state = maintenance.get(section);
@@ -222,7 +139,7 @@ public final class WorkerPageStore implements AutoCloseable, AirGeometryView {
                     for (var face : BlockFace.values()) maintenanceTargets.add(neighborSection(section, face));
                 }
                 maintenanceTargets.add(section);
-            } else {
+            } else if (fixedField == null || !fixedField.frozen(section)) {
                 maintenanceCursor = state; maintenancePage = page; state.publication = page.publication;
                 state.runningRevision = state.revision; state.nextHot = 0; state.brick = state.face = state.phase = 0;
                 state.maximumResidualC = 0;
@@ -232,8 +149,9 @@ public final class WorkerPageStore implements AutoCloseable, AirGeometryView {
         if (maintenanceCursor != null && (maintenanceCapacityWait < 0 || maintenanceCapacityWait != capacityRevision)) {
             var state = maintenanceCursor; var page = maintenancePage;
             maintenanceCapacityWait = -1;
-            if (pageAt(page.handle.sectionKey()) != page || page.publication != state.publication) {
-                releaseMaintenanceFrames(); markMaintenanceDirty(page.handle.sectionKey());
+            if (pageAt(page.handle.sectionKey()) != page || page.publication != state.publication
+                    || fixedField != null && fixedField.frozen(page.handle.sectionKey())) {
+                markMaintenanceDirty(page.handle.sectionKey());
                 maintenanceCursor = null; maintenancePage = null;
                 return;
             }
@@ -245,23 +163,9 @@ public final class WorkerPageStore implements AutoCloseable, AirGeometryView {
                     if ((page.residentBrickMask & bit) != 0) {
                         var topology = page.brick(brick);
                         double threshold = (state.hot & bit) == 0 ? ThermalRetentionPolicy.ENTER_C : ThermalRetentionPolicy.EXIT_C;
-                        boolean hot = false;
+                        boolean hot = fixedField != null && fixedField.activeBrick(page.handle.sectionKey(), brick, page.naturalTemperatureC, threshold);
                         for (int slot = topology.span.firstSlot(); slot < topology.span.endSlotExclusive(); slot++) {
-                            var field = maintenanceSnapshot(slot);
-                            if (field == null) break;
                             if (arena.hasMaterialTransition(slot)) phaseDirty.accept(slot);
-                            hot = hot || field.activeAtSlot(slot, page.naturalTemperatureC, threshold);
-                            if (TRACE) {
-                                double low = field.minimumAtSlotC(slot), high = field.maximumAtSlotC(slot);
-                                double temperature = Math.abs(low - page.naturalTemperatureC) > Math.abs(high - page.naturalTemperatureC) ? low : high;
-                                double residual = Math.abs(temperature - page.naturalTemperatureC);
-                                if (residual > state.maximumResidualC) {
-                                    state.maximumResidualC = residual; state.residualTemperatureC = temperature;
-                                    state.residualX = arena.minimum(slot, 0); state.residualY = arena.minimum(slot, 1); state.residualZ = arena.minimum(slot, 2);
-                                    state.residualTick = field.sampleTick(); state.residualMaterial = arena.isMaterialCell(slot);
-                                    state.residualMinimum = field.minimumQuality();
-                                }
-                            }
                         }
                         if (hot) state.nextHot |= bit;
                     }
@@ -296,7 +200,7 @@ public final class WorkerPageStore implements AutoCloseable, AirGeometryView {
                     }
                 } else {
                     long section = page.handle.sectionKey();
-                    if (TRACE && (state.nextHot & ~state.hot) != 0) {
+                    if (TRACE && fixedField == null && (state.nextHot & ~state.hot) != 0) {
                         com.teammoeg.frostedheart.FHMain.LOGGER.info("THERMAL_RESIDENCY_HOT,sectionX={},sectionY={},sectionZ={},residentBricks={},newHotBricks={},hotBricks={},sourceBricks={},naturalC={},maximumResidualC={},temperatureC={},x={},y={},z={},sampleTick={},material={},minimum={}",
                                 SectionPos.x(section), SectionPos.y(section), SectionPos.z(section), Long.bitCount(page.residentBrickMask),
                                 Long.bitCount(state.nextHot & ~state.hot), Long.bitCount(state.nextHot), Long.bitCount(page.sourceSeedMask),
@@ -311,7 +215,7 @@ public final class WorkerPageStore implements AutoCloseable, AirGeometryView {
                         maintenanceTargets.add(neighbor);
                     }
                     state.hot = state.nextHot; state.processed = state.runningRevision;
-                    releaseMaintenanceFrames(); maintenanceCursor = null; maintenancePage = null;
+                    maintenanceCursor = null; maintenancePage = null;
                     if (state.revision != state.processed) maintenanceReady.add(section);
                     break;
                 }
@@ -344,7 +248,6 @@ public final class WorkerPageStore implements AutoCloseable, AirGeometryView {
         }
     }
 
-
     public long capturedBrickMask(long sectionKey) {
         PageState page = find(sectionKey);
         if (page == null) return 0;
@@ -362,10 +265,6 @@ public final class WorkerPageStore implements AutoCloseable, AirGeometryView {
 
     /** Borrowed worker state for residency bounds; it is not a second temperature authority. */
     /** Frontier reads the accepted owner directly; no dimension-sized temperature copy. */
-    public void setRegionalAirField(java.util.function.IntFunction<AirFieldLayout.Component> component,
-            java.util.function.IntFunction<double[]> coefficients) {
-        regionalComponent = component; regionalCoefficients = coefficients;
-    }
 
     /** Excludes old spans that are still live only until source rebinding releases them. */
     public boolean ownsCommittedCell(ThermalCellArena arena, int slot) {
@@ -390,6 +289,14 @@ public final class WorkerPageStore implements AutoCloseable, AirGeometryView {
 
     @Override
     public long geometryRevision(PageState page) { return page.geometryRevision; }
+
+    /** Growth at the installed world revision leaves every represented Brick and source seed intact. */
+    public boolean onlyAddsResidentBricks(ThermalInputBatch.PageResidencyUpdate update) {
+        var page = find(update.page().sectionKey());
+        return page != null && page.handle == update.page() && page.geometryRevision >= update.geometryRevision()
+                && (page.residentBrickMask & ~update.residentBrickMask()) == 0
+                && page.sourceSeedMask == (update.sourceSeedMask() & page.residentBrickMask);
+    }
 
     @Override
     public int signatureAtWorld(int x, int y, int z) { return capturedSignatureAt(x, y, z); }
@@ -423,12 +330,24 @@ public final class WorkerPageStore implements AutoCloseable, AirGeometryView {
     }
 
     void replaceHalo(ThermalPageHandle owner, GeometryHalo halo) {
+        var previous = halos.get(owner);
+        if (previous != null && java.util.Arrays.equals(previous.positions(), halo.positions())) {
+            halos.put(owner, halo);
+            for (int index = 0; index < halo.size(); index++) {
+                long position = halo.positions()[index]; int signature = halo.signatures()[index];
+                if (haloSignatures.get(position) != signature) {
+                    haloSignatures.put(position, signature); haloChanged(position, 0);
+                }
+            }
+            return;
+        }
         removeHalo(owner);
         halos.put(owner, halo);
         for (int index = 0; index < halo.size(); index++) {
-            long position = halo.positions()[index];
-            haloSignatures.put(position, halo.signatures()[index]);
-            haloChanged(position, haloReferences.addTo(position, 1) == 0 ? 1 : 0);
+            long position = halo.positions()[index]; int signature = halo.signatures()[index];
+            int references = haloReferences.addTo(position, 1);
+            if (references == 0 || haloSignatures.get(position) != signature) haloSignatures.put(position, signature);
+            haloChanged(position, references == 0 ? 1 : 0);
         }
     }
 
@@ -440,7 +359,7 @@ public final class WorkerPageStore implements AutoCloseable, AirGeometryView {
                 haloReferences.remove(position);
                 haloSignatures.remove(position);
                 haloChanged(position, -1);
-            }
+            } else haloChanged(position, 0);
         }
     }
 
@@ -455,7 +374,7 @@ public final class WorkerPageStore implements AutoCloseable, AirGeometryView {
 
     void airRoutes(AirRouteCompiler compiler) {
         airRoutes = compiler;
-        if (regionalSnapshots != null) {
+        if (fixedField != null) {
             for (long section : routeSupport.keySet()) maintenanceTargets.add(section);
             routeSupport.clear();
             if (compiler != null) compiler.collectRequiredBricks(this, routeSupport);
@@ -481,6 +400,7 @@ public final class WorkerPageStore implements AutoCloseable, AirGeometryView {
 
     static final int PORT_BLOCKED = -1;
     public static final int PORT_TOPOLOGY_UNAVAILABLE = -2;
+    private final Object captureGate;
     private final Long2ObjectOpenHashMap<PageState> activeBySection;
     private final Int2ObjectOpenHashMap<PageState> activeBySlot;
     private final IntArrayList freePageSlots;
@@ -498,6 +418,11 @@ public final class WorkerPageStore implements AutoCloseable, AirGeometryView {
     private static final long Y_MAX = 0xffff_0000_0000_0000L;
 
     public WorkerPageStore(int maximumPages) {
+        this(maximumPages, new Object());
+    }
+
+    public WorkerPageStore(int maximumPages, Object captureGate) {
+        this.captureGate = captureGate;
         if (maximumPages <= 0) {
             throw new IllegalArgumentException("maximumPages must be positive");
         }
@@ -514,45 +439,49 @@ public final class WorkerPageStore implements AutoCloseable, AirGeometryView {
     /** Prepare one immutable Page successor while all accessors still resolve its predecessor. */
     PageState stagePage(PreparedTopologyChange.PageWrite write,
             com.teammoeg.frostedheart.content.climate.thermal.runtime.InstallToken token) {
-        var old = pageAt(write.page.handle.sectionKey());
-        var source = write.page;
-        var next = new PageState(source.handle, source.pageSlot, source.lifecycleGeneration,
-                write.publication.geometryRevision(), write.residentBrickMask, write.sourceSeedMask, write.signatures,
-                write.naturalTemperatureChanged ? write.naturalTemperatureC : source.naturalTemperatureC,
-                source.firstExposedLocalY.clone(), source.dormantAir, source.dormantMaterials);
-        System.arraycopy(source.bricks, 0, next.bricks, 0, next.bricks.length);
-        for (int index = 0; index < write.brickIndexes.length; index++) next.bricks[write.brickIndexes[index]] = write.bricks[index];
-        for (int index = 0; index < write.skyColumns.length; index++)
-            next.firstExposedLocalY[Short.toUnsignedInt(write.skyColumns[index])] = write.firstExposedLocalY[index];
-        next.geometryRevision = write.publication.geometryRevision(); next.topologyGeneration = write.publication.topologyGeneration();
-        next.resolvedBrickMask = write.resolvedBrickMask; next.publication = write.publication;
-        next.previousState = old; next.installToken = token; next.retiring = write.retirement;
-        activeBySection.put(source.handle.sectionKey(), next); activeBySlot.put(source.pageSlot, next);
-        source.handle.stagePublication(token, write.retirement ? PagePublication.EMPTY : write.publication);
-        if (write.replacedPage != null) write.replacedPage.handle.stagePublication(token, PagePublication.EMPTY);
-        return next;
+        synchronized (captureGate) {
+            var old = pageAt(write.page.handle.sectionKey());
+            var source = write.page;
+            var next = new PageState(source.handle, source.pageSlot, source.lifecycleGeneration,
+                    write.publication.geometryRevision(), write.residentBrickMask, write.sourceSeedMask, write.signatures,
+                    write.naturalTemperatureChanged ? write.naturalTemperatureC : source.naturalTemperatureC,
+                    source.firstExposedLocalY.clone(), source.dormantAir, source.dormantMaterials);
+            System.arraycopy(source.bricks, 0, next.bricks, 0, next.bricks.length);
+            for (int index = 0; index < write.brickIndexes.length; index++) next.bricks[write.brickIndexes[index]] = write.bricks[index];
+            for (int index = 0; index < write.skyColumns.length; index++)
+                next.firstExposedLocalY[Short.toUnsignedInt(write.skyColumns[index])] = write.firstExposedLocalY[index];
+            next.geometryRevision = write.publication.geometryRevision(); next.topologyGeneration = write.publication.topologyGeneration();
+            next.resolvedBrickMask = write.resolvedBrickMask; next.publication = write.publication;
+            next.previousState = old; next.installToken = token; next.retiring = write.retirement;
+            activeBySection.put(source.handle.sectionKey(), next); activeBySlot.put(source.pageSlot, next);
+            source.handle.stagePublication(token, write.retirement ? PagePublication.EMPTY : write.publication);
+            if (write.replacedPage != null) write.replacedPage.handle.stagePublication(token, PagePublication.EMPTY);
+            return next;
+        }
     }
 
     void finishPage(PageState staged, PreparedTopologyChange.PageWrite write,
             com.teammoeg.frostedheart.content.climate.thermal.runtime.InstallToken token) {
-        var previous = staged.previousState;
-        if (!token.committed()) {
-            if (previous == null) { activeBySection.remove(staged.handle.sectionKey()); activeBySlot.remove(staged.pageSlot); }
-            else { activeBySection.put(previous.handle.sectionKey(), previous); activeBySlot.put(previous.pageSlot, previous); }
-        } else if (write.retirement) {
-            activeBySection.remove(staged.handle.sectionKey()); activeBySlot.remove(staged.pageSlot);
-            releasePageSlot(staged.pageSlot);
-        } else {
-            if (previous != null && previous.handle != staged.handle) removeHalo(previous.handle);
-            if (write.admission) {
-                residencyIdentityChanges.add(staged.handle.sectionKey());
+        synchronized (captureGate) {
+            var previous = staged.previousState;
+            if (!token.committed()) {
+                if (previous == null) { activeBySection.remove(staged.handle.sectionKey()); activeBySlot.remove(staged.pageSlot); }
+                else { activeBySection.put(previous.handle.sectionKey(), previous); activeBySlot.put(previous.pageSlot, previous); }
+            } else if (write.retirement) {
+                activeBySection.remove(staged.handle.sectionKey()); activeBySlot.remove(staged.pageSlot);
+                releasePageSlot(staged.pageSlot);
+            } else {
+                if (previous != null && previous.handle != staged.handle) removeHalo(previous.handle);
+                if (write.admission) {
+                    residencyIdentityChanges.add(staged.handle.sectionKey());
+                }
+                staged.dormantAir = null; staged.dormantMaterials = null;
             }
-            staged.dormantAir = null; staged.dormantMaterials = null;
+            if (token.committed() && (fixedField != null)) markGeometryMaintenance(staged.handle.sectionKey());
+            staged.handle.finishPublication(token);
+            if (write.replacedPage != null) write.replacedPage.handle.finishPublication(token);
+            staged.previousState = null; staged.installToken = null;
         }
-        if (token.committed() && regionalSnapshots != null) markGeometryMaintenance(staged.handle.sectionKey());
-        staged.handle.finishPublication(token);
-        if (write.replacedPage != null) write.replacedPage.handle.finishPublication(token);
-        staged.previousState = null; staged.installToken = null;
     }
 
     PageState find(long sectionKey) {
@@ -622,7 +551,7 @@ public final class WorkerPageStore implements AutoCloseable, AirGeometryView {
         }
     }
 
-    int activePageCount() {
+    public int activePageCount() {
         return activeBySection.size();
     }
 
@@ -664,6 +593,13 @@ public final class WorkerPageStore implements AutoCloseable, AirGeometryView {
     }
 
     public void recordBacking(com.teammoeg.frostedheart.content.climate.thermal.mesh.AirBackingMeter meter) {
+        recordDirectoryBacking(meter);
+        for (var page : activeBySection.values()) page.recordBacking(meter);
+        if (airRoutes != null) airRoutes.recordComponentBacking(meter);
+    }
+
+    /** Mutable directories and local maintenance; retained Page/route payloads are recorded separately. */
+    public void recordDirectoryBacking(com.teammoeg.frostedheart.content.climate.thermal.mesh.AirBackingMeter meter) {
         meter.container(activeBySection, pageSlotHighWater, 16); meter.container(activeBySlot, pageSlotHighWater, 12);
         meter.array(freePageSlots.elements()); meter.array(residencyIdentityChanges.elements());
         meter.container(desiredBySection, desiredBySection.size(), 16); meter.container(desiredScratch, desiredScratch.size(), 16);
@@ -672,27 +608,12 @@ public final class WorkerPageStore implements AutoCloseable, AirGeometryView {
         meter.container(haloSectionPositions, haloSectionPositions.size(), 12);
         meter.container(haloSectionVersions, haloSectionVersions.size(), 16);
         for (var halo : halos.values()) { meter.array(halo.positions()); meter.array(halo.signatures()); }
-        for (var page : activeBySection.values()) {
-            if (!meter.objectOnce(page, 384)) continue;
-            meter.array(page.bricks); meter.array(page.firstExposedLocalY); page.signatures.recordBacking(meter);
-            page.publication.recordBacking(meter);
-            for (var brick : page.bricks) brick.recordBacking(meter);
-            if (page.dormantAir != null) page.dormantAir.entry().recordBacking(meter);
-            if (page.dormantMaterials != null && page.dormantMaterials.state() != null)
-                page.dormantMaterials.state().recordBacking(meter);
-        }
         meter.container(maintenance, maintenance.size(), 16);
         meter.container(maintenanceReady, maintenanceReady.size(), 16);
         meter.container(maintenanceTargets, maintenanceTargets.size(), 16);
-        meter.container(maintenanceFrames, maintenanceFrames.size(), 16);
         meter.container(routeSupport, routeSupport.size(), 16);
-        meter.container(supportOwners, supportOwners.size(), 16); meter.container(supportCounts, supportCounts.size(), 16);
-        meter.container(supportPreparations, supportPreparations.size(), 12);
-        meter.container(regionalSupport, regionalSupport.size(), 16);
-        for (var counts : supportCounts.values()) meter.array(counts);
-        for (var requests : supportOwners.values()) meter.container(requests, requests.size(), 16);
         for (var state : maintenance.values()) { meter.bytes(128); meter.array(state.outputs); }
-        if (airRoutes != null) airRoutes.recordBacking(meter);
+        if (airRoutes != null) airRoutes.recordDirectoryBacking(meter);
     }
 
     private void collectMaterialFrontier(PageState page, long activeBricks) {
@@ -708,11 +629,15 @@ public final class WorkerPageStore implements AutoCloseable, AirGeometryView {
                 int block = Long.numberOfTrailingZeros(surfaces);
                 surfaces &= surfaces - 1;
                 int slot = page.brick(brick).slotAt(block);
-                var field = maintenanceSnapshot(slot);
-                if (field == null) return;
-                double perturbationC = Math.abs(field.materialPerturbationAtSlotC(slot, page.naturalTemperatureC));
-                if (perturbationC < ThermalRetentionPolicy.EXIT_C) continue;
                 long position = AirRouteCompiler.blockPosition(origin, block);
+                double perturbationC;
+                if (fixedField != null) {
+                    if (!fixedField.read(position, true, fixedSample)) continue;
+                    var law = fixedSample.law();
+                    double backgroundC = law.temperatureC(law.enthalpyAtTemperature(page.naturalTemperatureC), law.initialBranch(page.naturalTemperatureC));
+                    perturbationC = Math.abs(fixedSample.temperatureC() - backgroundC);
+                } else return;
+                if (perturbationC < ThermalRetentionPolicy.EXIT_C) continue;
                 int x = BlockPos.getX(position),
                         y = BlockPos.getY(position),
                         z = BlockPos.getZ(position);
@@ -777,7 +702,18 @@ public final class WorkerPageStore implements AutoCloseable, AirGeometryView {
         if (!topology.resolved || topology.coverageSlot < 0) {
             return 0.0D;
         }
-        if (regionalComponent != null) return continuousFaceResidual(page, topology, brick, face, referenceTemperatureC);
+        if (fixedField != null) {
+            double residual = 0;
+            long origin = AirRouteCompiler.brickPosition(page, brick);
+            int axis = face.ordinal() / 2, side = (face.ordinal() & 1) == 0 ? 0 : 3;
+            for (int patch = 0; patch < 16; patch++) {
+                if (face == BlockFace.POSITIVE_Y && topPortDirectSky(page, brick, patch)) continue;
+                long position = AirRouteCompiler.blockPosition(origin, BlockBrickLayout.faceBlock(axis, side, patch));
+                if (fixedField.read(position, false, fixedSample))
+                    residual = Math.max(residual, Math.abs(fixedSample.temperatureC() - page.naturalTemperatureC));
+            }
+            return residual;
+        }
         if (topology.blockLayout == null) {
             if (face == BlockFace.POSITIVE_Y && allTopColumnsDirectSky(page, brick)) {
                 return 0.0D;
@@ -803,58 +739,6 @@ public final class WorkerPageStore implements AutoCloseable, AirGeometryView {
                                             - page.naturalTemperatureC));
         }
         return residual;
-    }
-
-    private double continuousFaceResidual(PageState page, WorkerBrickTopology topology, int brick,
-            BlockFace face, double referenceC) {
-        int axis = face.ordinal() / 2;
-        int side = (face.ordinal() & 1) == 0 ? 0 : 3;
-        double residualC = 0;
-        int componentSlot = -1, sampledVertices = 0;
-        AirFieldLayout.Component component = null;
-        com.teammoeg.frostedheart.content.climate.thermal.query.RegionalQuerySnapshot sampledField = null;
-        double[] coefficients = null;
-        for (int patch = 0; patch < 16; patch++) {
-            if (face == BlockFace.POSITIVE_Y && topPortDirectSky(page, brick, patch)) continue;
-            int block = BlockBrickLayout.faceBlock(axis, side, patch);
-            int slot = topology.airSlotAt(block);
-            if (slot < 0) continue;
-            if (slot != componentSlot) {
-                if (maintenanceCursor != null) {
-                    var field = maintenanceSnapshot(slot);
-                    if (field == null) return 0;
-                    sampledField = field;
-                    component = field.componentForSlot(slot); coefficients = field.borrowedAirCoefficients();
-                } else {
-                    component = regionalComponent.apply(slot);
-                    coefficients = regionalCoefficients.apply(slot);
-                    sampledField = regionalSnapshots == null ? null : regionalSnapshots.apply(slot);
-                }
-                componentSlot = slot;
-                sampledVertices = 0;
-            }
-            if (component == null) continue;
-            // Face tangent order differs on X faces: use actual local coordinates.
-            int vertexBase = (axis == 0 ? block >>> 4 : block & 3)
-                    + 5 * (axis == 2 ? block >>> 4 : block >>> 2 & 3);
-            for (int corner = 0; corner < 4; corner++) {
-                // Fine vertices at the same coordinate may belong to different Air branches.
-                // Their direct lookups are cheap; coarse fields can share the coordinate sample.
-                if (!component.isUnitGrid() || sampledField != null && sampledField.minimumQuality()) {
-                    int vertexBit = 1 << (vertexBase + (corner & 1) + 5 * (corner >>> 1));
-                    if ((sampledVertices & vertexBit) != 0) continue;
-                    sampledVertices |= vertexBit;
-                }
-                int x = axis == 0 ? face.ordinal() & 1 : corner & 1;
-                int y = axis == 1 ? face.ordinal() & 1 : axis == 0 ? corner & 1 : corner >>> 1;
-                int z = axis == 2 ? face.ordinal() & 1 : corner >>> 1;
-                int vertex = x | z << 1 | y << 2;
-                double residual = sampledField == null ? referenceC + component.temperatureOffsetAtVertex(block, vertex, coefficients) - page.naturalTemperatureC
-                        : sampledField.vertexPerturbationC(component, block, vertex, page.naturalTemperatureC);
-                residualC = Math.max(residualC, Math.abs(residual));
-            }
-        }
-        return residualC;
     }
 
     private static boolean allTopColumnsDirectSky(PageState page, int brick) {
@@ -1197,27 +1081,29 @@ public final class WorkerPageStore implements AutoCloseable, AirGeometryView {
 
     @Override
     public void close() {
-        releaseMaintenanceFrames(); maintenance.clear(); maintenanceReady.clear(); maintenanceTargets.clear();
-        routeSupport.clear(); maintenanceCursor = null; maintenancePage = null;
-        supportOwners.clear(); supportCounts.clear(); supportPreparations.clear(); regionalSupport.clear();
-        if (closed) {
-            return;
+        synchronized (captureGate) {
+            fixedField = null;
+            maintenance.clear(); maintenanceReady.clear(); maintenanceTargets.clear();
+            routeSupport.clear(); maintenanceCursor = null; maintenancePage = null;
+            if (closed) {
+                return;
+            }
+            closed = true;
+            for (PageState stored : activeBySection.values()) {
+                PageState page = visiblePage(stored); if (page == null) continue;
+                page.handle.publish(PagePublication.EMPTY);
+            }
+            activeBySection.clear();
+            halos.clear();
+            haloSignatures.clear();
+            haloReferences.clear();
+            haloSectionPositions.clear(); haloSectionVersions.clear();
+            activeBySlot.clear();
+            freePageSlots.clear();
+            desiredBySection.clear();
+            desiredScratch.clear();
+            residencyIdentityChanges.clear();
         }
-        closed = true;
-        for (PageState stored : activeBySection.values()) {
-            PageState page = visiblePage(stored); if (page == null) continue;
-            page.handle.publish(PagePublication.EMPTY);
-        }
-        activeBySection.clear();
-        halos.clear();
-        haloSignatures.clear();
-        haloReferences.clear();
-        haloSectionPositions.clear(); haloSectionVersions.clear();
-        activeBySlot.clear();
-        freePageSlots.clear();
-        desiredBySection.clear();
-        desiredScratch.clear();
-        residencyIdentityChanges.clear();
     }
 
     public static final class PageState {
@@ -1241,6 +1127,15 @@ public final class WorkerPageStore implements AutoCloseable, AirGeometryView {
         double naturalTemperatureC;
         ThermalInputBatch.DormantAirCut dormantAir;
         ThermalInputBatch.DormantMaterialCut dormantMaterials;
+
+        void recordBacking(com.teammoeg.frostedheart.content.climate.thermal.mesh.AirBackingMeter meter) {
+            if (!meter.objectOnce(this, 384)) return;
+            meter.array(bricks); meter.array(firstExposedLocalY); signatures.recordBacking(meter);
+            publication.recordBacking(meter);
+            for (var brick : bricks) brick.recordBacking(meter);
+            if (dormantAir != null) dormantAir.entry().recordBacking(meter);
+            if (dormantMaterials != null && dormantMaterials.state() != null) dormantMaterials.state().recordBacking(meter);
+        }
 
         private PageState(
                 ThermalPageHandle handle,

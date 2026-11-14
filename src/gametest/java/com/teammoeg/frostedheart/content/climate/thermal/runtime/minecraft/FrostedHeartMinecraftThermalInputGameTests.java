@@ -40,9 +40,7 @@ import com.teammoeg.frostedheart.content.climate.thermal.source.EmissionPort;
 import com.teammoeg.frostedheart.content.climate.thermal.source.SourceBinding;
 import com.teammoeg.frostedheart.content.climate.thermal.source.SpatialSourceTimeline;
 import com.teammoeg.frostedheart.content.climate.thermal.source.SpatialHeatInput;
-import com.teammoeg.frostedheart.content.climate.thermal.source.CutLoadBuffer;
 import com.teammoeg.frostedheart.content.climate.thermal.source.ThermalSourceMode;
-import com.teammoeg.frostedheart.content.climate.thermal.solver.RegionalAirRuntime;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialThermalLaw;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ResolvedGeometryBatch;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ThermalInputBatch;
@@ -110,7 +108,7 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
     }
 
     @GameTest(template = TEMPLATE, batch = BATCH + "_source_balance", timeoutTicks = 120)
-    public static void spatialSourceAccountsForSaturatedRegionalMaterial(GameTestHelper helper) {
+    public static void spatialSourceAccountsForSaturatedFixedMaterial(GameTestHelper helper) {
         BlockPos target = sourceTarget(helper);
         var edge = com.teammoeg.frostedheart.content.climate.thermal.profile.minecraft.MinecraftThermalProfiles
                 .materialLaw(Blocks.ICE.defaultBlockState()).heating();
@@ -126,22 +124,25 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
                     target.getX(), target.getY(), target.getZ(), 1, ports), 100, true, 0), "source producer accepts ownership");
             submitSpatialHeat(helper, simulation, timeline, slot, 20);
             ThermalSourceLedger ledger = ThermalLoadedWorldGameTests.read(simulation.engine, "sources");
+            com.teammoeg.frostedheart.content.climate.thermal.source.SpatialHeatBuffer heat = ThermalLoadedWorldGameTests.read(simulation.engine, "fixedHeat");
             var balance = ledger.energyBalance();
+            double pendingJ = simulation.engine.inputStore().pendingEnergyJ() + heat.committedPendingJoules();
             helper.assertTrue(Math.abs(balance.outputJ() - 100) < 1e-8 && Math.abs(balance.deliveredJ() - 10) < 1e-8
-                            && Math.abs(balance.unacceptedJ() - 40) < 1e-8 && Math.abs(balance.declaredLossJ() - 30) < 1e-8
+                            && Math.abs(balance.unacceptedJ()) < 1e-8 && Math.abs(pendingJ - 40) < 1e-8 && Math.abs(balance.declaredLossJ() - 30) < 1e-8
                             && Math.abs(balance.degradedLossJ() - 20) < 1e-8
                             && Math.abs(simulation.totalEnergy() - before - 10) < 1e-8,
-                    "regional saturation gives every source joule one destination: " + balance);
+                    "Fixed saturation gives every source joule one destination: " + balance + ",pendingJ=" + pendingJ);
             double completed = simulation.enthalpyJ(slot);
             submitSpatialHeat(helper, simulation, timeline, slot, 40);
-            helper.assertTrue(simulation.enthalpyJ(slot) == completed && Math.abs(ledger.energyBalance().unacceptedJ() - 90) < 1e-8,
-                    "waiting for the phase ACK cannot absorb or replay rejected source energy");
+            pendingJ = simulation.engine.inputStore().pendingEnergyJ() + heat.committedPendingJoules();
+            helper.assertTrue(simulation.enthalpyJ(slot) == completed && Math.abs(ledger.energyBalance().unacceptedJ()) < 1e-8 && Math.abs(pendingJ - 90) < 1e-8,
+                    "Waiting for the phase ACK retains accepted source energy without absorbing or replaying it");
             balance = ledger.energyBalance();
             helper.assertTrue(Math.abs(balance.outputJ() - balance.deliveredJ() - balance.unacceptedJ()
-                            - balance.declaredLossJ() - balance.degradedLossJ()) < 1e-8,
+                            - balance.declaredLossJ() - balance.degradedLossJ() - balance.exportedJ() - pendingJ) < 1e-8,
                     "the next committed prefix preserves total source accounting");
-            FHMain.LOGGER.info("THERMAL_SPATIAL_SOURCE_BALANCE,plateauC={},outputJ={},deliveredJ={},unacceptedJ={},declaredLossJ={},degradedLossJ={}",
-                    edge.transitionTemperatureC(), balance.outputJ(), balance.deliveredJ(), balance.unacceptedJ(), balance.declaredLossJ(), balance.degradedLossJ());
+            FHMain.LOGGER.info("THERMAL_SPATIAL_SOURCE_BALANCE,plateauC={},outputJ={},deliveredJ={},unacceptedJ={},declaredLossJ={},degradedLossJ={},pendingJ={}",
+                    edge.transitionTemperatureC(), balance.outputJ(), balance.deliveredJ(), balance.unacceptedJ(), balance.declaredLossJ(), balance.degradedLossJ(), pendingJ);
         }
         helper.succeed();
     }
@@ -165,7 +166,7 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
     /** Use production producer ownership, Store binding and regional commits with explicit bound test ports. */
     private static void submitSpatialHeat(GameTestHelper helper, ThermalMaterialBehaviorGameTests.Simulation simulation,
             SpatialSourceTimeline timeline, int slot, long tick) {
-        var runtime = (RegionalAirRuntime) simulation.material;
+        var runtime = simulation.engine;
         ThermalSourceLedger ledger = ThermalLoadedWorldGameTests.read(simulation.engine, "sources");
         var windows = timeline.seal(tick);
         helper.assertTrue(windows.length != 0, "the producer must seal a real input window");
@@ -182,10 +183,9 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
             runtime.prepareSourceWindow(producer, origins);
             var store = runtime.inputStore();
             var owned = store.acceptSourceWindow(producer, simulation.sequence + 1, ordinal, origins, ledger);
-            var loads = new CutLoadBuffer();
-            store.bindSourcePrefix(owned, tick, ledger, FIXED_BINDINGS, loads);
-            runtime.prepareSpatialInput(loads.size());
-            runtime.receiveSpatialHeat(SpatialHeatInput.takeWorldIdentity(loads.freeze(null, simulation.arena)));
+            runtime.prepareSpatialInput(Math.multiplyExact(owned.size + 1, owned.portCount()));
+            store.bindSourcePrefix(owned, tick, ledger, FIXED_BINDINGS,
+                    (window, binding, generation, from, to, joules) -> runtime.receiveSpatialHeat(target, from, to, joules));
         }
         simulation.tick = tick;
         simulation.publish(ResolvedGeometryBatch.EMPTY, ThermalInputBatch.NO_PHASE_ACKS);
@@ -331,12 +331,15 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
                     "pre-existing campfires did not heat source Air: source="
                             + source + ", natural=" + pageNatural
                             + ", campfireLit=" + level.getBlockState(sourceAir.offset(1, -1, 1))
-                                    .getValue(CampfireBlock.LIT));
+                                    .getValue(CampfireBlock.LIT)
+                            + ", progress=" + MinecraftThermalInput.describeWorkerProgress(level));
             helper.assertTrue(
                     neighbor > pageNatural + 0.25D,
                     "half-Air neighbor did not warm: neighbor="
                             + neighbor + ", natural=" + pageNatural
-                            + ", source=" + source);
+                            + ", source=" + source + ", progress=" + MinecraftThermalInput.describeWorkerProgress(level));
+            FHMain.LOGGER.info("THERMAL_RESIDENCY_HANDOFF,sourceC={},neighborC={},naturalC={},progress={}",
+                    source, neighbor, pageNatural, MinecraftThermalInput.describeWorkerProgress(level));
             MinecraftThermalInput.closeActiveLevel(level);
         }));
     }

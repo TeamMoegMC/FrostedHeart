@@ -31,7 +31,7 @@ public final class DirectAirProjectionGameTests {
             rhs[row] = mass[row] * (row % 17 - 8);
         }
         var projection = new CoupledThermalOperator.ProjectionPreparation(mass, rhs, solution, count,
-                ContinuousAirSolver.DEFAULT_CORRECTION_TOLERANCE_C);
+                1e-5);
         helper.assertTrue(!projection.run(0) && solution[count - 1] == 99,
                 "An expired slice must yield before processing a large Air field");
         boolean done = false;

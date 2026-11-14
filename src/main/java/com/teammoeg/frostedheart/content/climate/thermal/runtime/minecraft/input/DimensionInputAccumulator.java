@@ -78,6 +78,7 @@ public final class DimensionInputAccumulator implements AutoCloseable {
     public SpatialSourceTimeline.Capture captureSources(long tick) {
         return spatialSources.capture(tick);
     }
+    public SpatialSourceTimeline sourceTimeline() { return spatialSources; }
     public ThermalMemoryBudget.Reservation reservePageInputCredit() {
         return sourceBudget.reserveCompletion(512);
     }
@@ -219,17 +220,23 @@ public final class DimensionInputAccumulator implements AutoCloseable {
                         sourceId, lifecycleGeneration, mode, anchorX, anchorY, anchorZ, profileId, ports), powerW, enabled, effectiveTick);
     }
 
+    public SpatialSourceTimeline.Registration prepareSourceRegistration(int ports) {
+        return spatialSources.prepareRegistration(ports);
+    }
+
+    public boolean registerSource(long sourceId, int generation, ThermalSourceMode mode,
+            double powerW, boolean enabled, long tick, int x, int y, int z, int profile,
+            EmissionPort[] ports, SpatialSourceTimeline.Registration registration) {
+        return spatialSources.register(new SpatialSourceTimeline.Descriptor(
+                sourceId, generation, mode, x, y, z, profile, ports), powerW, enabled, tick, registration);
+    }
+
     public void changeSourcePower(long sourceId, double powerW, long effectiveTick) {
         spatialSources.power(sourceId, powerW, effectiveTick);
     }
 
     public void changeSourceEnabled(long sourceId, boolean enabled, long effectiveTick) {
         spatialSources.enabled(sourceId, enabled, effectiveTick);
-    }
-
-    public void emitSourceImpulse(
-            long sourceId, int portId, double signedEnergyJ, long effectiveTick) {
-        spatialSources.impulse(sourceId, portId, signedEnergyJ, effectiveTick);
     }
 
     public void unloadSource(long sourceId, int lifecycleGeneration, long effectiveTick) {

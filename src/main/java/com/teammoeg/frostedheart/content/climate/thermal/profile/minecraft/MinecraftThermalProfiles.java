@@ -72,8 +72,7 @@ public final class MinecraftThermalProfiles {
                         config.farFieldConductanceWPerK.get(),
                         config.dormantTemperatureHalfLifeSeconds.get(),
                         MinecraftPhysicalSourceProfile.campfire(
-                                config.campfirePowerW.get(), config.campfireRadiationShare.get()),
-                        config.continuousAirCorrectionToleranceC.get());
+                                config.campfirePowerW.get(), config.campfireRadiationShare.get()));
         List<Block> blocks = new ArrayList<>(ForgeRegistries.BLOCKS.getValues());
         blocks.sort(
                 Comparator.comparing(
@@ -189,13 +188,6 @@ public final class MinecraftThermalProfiles {
 
     public static int profileEpoch() {
         return profileEpoch;
-    }
-
-    public static boolean lavaBlockRadiationEnabled() {
-        Snapshot current = snapshot;
-        return current != null
-                && current.states.hasRadiationMode(
-                        MinecraftStateThermalTable.RADIATION_LAVA_SURFACE);
     }
 
     private static boolean isCampfire(BlockState state) {
@@ -325,8 +317,7 @@ public final class MinecraftThermalProfiles {
             double airMixingWPerBlockK,
             double farFieldConductanceWPerK,
             double dormantTemperatureHalfLifeSeconds,
-            MinecraftPhysicalSourceProfile campfire,
-            double continuousAirCorrectionToleranceC) {}
+            MinecraftPhysicalSourceProfile campfire) {}
 
     private record BodyKey(
             double conductance,

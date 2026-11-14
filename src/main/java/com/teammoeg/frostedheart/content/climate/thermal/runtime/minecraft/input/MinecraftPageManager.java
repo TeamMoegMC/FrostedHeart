@@ -467,12 +467,12 @@ public final class MinecraftPageManager implements AutoCloseable {
     public void onChunkLoad(LevelChunk chunk) {
         requireMainThread();
         for (int index = 0; index < chunk.getSections().length; index++) {
-            ensureSectionOwner(chunk, index, chunk.getSections()[index]);
-            invalidateHaloConsumers(
-                    SectionPos.asLong(
-                            chunk.getPos().x,
-                            chunk.getSectionYFromSectionIndex(index),
-                            chunk.getPos().z), HaloCause.CHUNK_LOAD);
+            long section = SectionPos.asLong(
+                    chunk.getPos().x, chunk.getSectionYFromSectionIndex(index), chunk.getPos().z);
+            if (pages.containsKey(section) || haloConsumers.containsKey(section)) {
+                ensureSectionOwner(chunk, index, chunk.getSections()[index]);
+            }
+            invalidateHaloConsumers(section, HaloCause.CHUNK_LOAD);
         }
         LongOpenHashSet indexed = pagesByChunk.get(chunk.getPos().toLong());
         if (indexed != null) {
@@ -521,15 +521,15 @@ public final class MinecraftPageManager implements AutoCloseable {
             LevelChunkSection replacement) {
         requireMainThread();
         SectionOwner old = attachment(previous).frostedheart$getThermalInputOwner();
-        if (old != null && old.manager == this && old.chunk == chunk) {
-            detachSection(old);
-        }
-        attachSection(chunk, sectionIndex, replacement);
         long key =
                 SectionPos.asLong(
                         chunk.getPos().x,
                         chunk.getSectionYFromSectionIndex(sectionIndex),
                         chunk.getPos().z);
+        boolean watched = old != null && old.manager == this && old.chunk == chunk;
+        if (watched) detachSection(old);
+        if (!watched && !pages.containsKey(key) && !haloConsumers.containsKey(key)) return;
+        attachSection(chunk, sectionIndex, replacement);
         SectionOwner next = ownersBySection.get(key);
         if (next != null) {
             next.recordFullResync(ThermalPageHandle.GeometryResyncReason.SECTION_REPLACED);
@@ -848,7 +848,9 @@ public final class MinecraftPageManager implements AutoCloseable {
                     if (deferredGeometry) {
                         owner.invalidatePage(mutationScratch.physicalRelevant);
                     }
-                    environment.markSkyColumn(worldX, worldZ);
+                    if (pagesByChunk.containsKey(chunkKey(owner.sectionKey))) {
+                        environment.markSkyColumn(worldX, worldZ);
+                    }
                     if (!fullResync) collectCenter(owner, index, gameTick);
                     geometryChanged = true;
                     remaining &= remaining - 1L;
@@ -908,10 +910,14 @@ public final class MinecraftPageManager implements AutoCloseable {
                 }
             }
         }
-        for (long section : page.haloSections)
+        for (long section : page.haloSections) {
             haloConsumers
                     .computeIfAbsent(section, ignored -> new LongOpenHashSet())
                     .add(page.sectionKey);
+            // Only actual captured dependencies need a mutation owner. Missing
+            // Chunks attach it from the same halo index when they later load.
+            loadedSectionOrAttach(section);
+        }
         if (haloScratch.isEmpty()) return page.capturedHalo = GeometryHalo.EMPTY;
         long[] positions = haloScratch.keySet().toLongArray();
         Arrays.sort(positions);
@@ -1016,6 +1022,7 @@ public final class MinecraftPageManager implements AutoCloseable {
             removeEntry(page);
             return;
         }
+        loadedSectionOrAttach(page.sectionKey);
         long missing = page.requestedMask() & ~page.capturedBrickMask;
         if (missing != 0L || page.handle == null) {
             enqueue(page);
