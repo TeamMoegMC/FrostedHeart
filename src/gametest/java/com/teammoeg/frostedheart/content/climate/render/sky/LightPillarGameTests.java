@@ -138,6 +138,43 @@ public final class LightPillarGameTests {
      * The floor height of the horizon scenes, above the terrain that covers the templates of the GameTest world.
      */
     private static final int HIGH_FLOOR_Y = 300;
+    /**
+     * Cell angles in degrees whose atlas layout the cell tests check.
+     */
+    private static final double[] CELL_ANGLES_DEGREES = {0.1, 0.25, 0.5, 2.0};
+    /**
+     * The cell angle in degrees that the cell grid tests use.
+     */
+    private static final double CELL_ANGLE_DEGREES = 0.25;
+    /**
+     * The most texels the cell atlas may have along one side, which keeps it within the largest texture of the game.
+     */
+    private static final int MOST_ATLAS_HEIGHT = 3072;
+    /**
+     * Covers the reflectance and the across Gaussian that sceneShare leaves out of the share of the pillar of plates,
+     * and its near weight falling linearly in the tilt. It reaches 0.063 within the near fade of a light 10 blocks away.
+     */
+    private static final double PLATE_SCENE_SHARE_TOLERANCE = 0.1;
+    /**
+     * Covers the same for the pillar of wobbling plates, whose tilts span 40 degrees. It reaches 0.235 within the near
+     * fade of a light 10 blocks away.
+     */
+    private static final double WOBBLING_SCENE_SHARE_TOLERANCE = 0.25;
+    /**
+     * Covers the fit of the logistic curve to the normal distribution that normalShare uses.
+     */
+    private static final double NORMAL_SHARE_TOLERANCE = 2.0e-4;
+    /**
+     * The scene distances of the bounds test, spaced evenly from NEAREST_SCENE_SHARE to FARTHEST_SCENE_SHARE times the
+     * distance to the light.
+     */
+    private static final int SCENE_DISTANCE_STEPS = 200;
+    private static final double NEAREST_SCENE_SHARE = 0.01;
+    private static final double FARTHEST_SCENE_SHARE = 10.0;
+    /**
+     * A scene distance just in front of the eye, where the share of the pillar in front of the scene is nearly 0.
+     */
+    private static final double NEAREST_SCENE_DISTANCE = 1.0e-6;
 
     @GameTest(template = "phase0a_empty", timeoutTicks = 100)
     public static void iceMirrorReflectsLikeASlab(GameTestHelper helper) {
@@ -2029,6 +2066,285 @@ public final class LightPillarGameTests {
         helper.succeed();
     }
 
+    @GameTest(template = "phase0a_empty", timeoutTicks = 200)
+    public static void lightPillarCellAtlasKeepsEveryRibbonApart(GameTestHelper helper) {
+        double widest = 0.0;
+        for (IceCrystalData.Crystal crystal : plates()) {
+            widest = Math.max(widest, Math.toRadians(crystal.tiltDegrees()));
+        }
+        double tightest = Double.POSITIVE_INFINITY;
+        String tightestWhere = "nowhere";
+        for (double cellDegrees : CELL_ANGLES_DEGREES) {
+            double cellAngle = Math.toRadians(cellDegrees);
+            int rows = LightPillarCells.atlasRows(cellAngle, widest);
+            helper.assertTrue(rows <= LightPillarCells.MOST_ROWS, "A cell of " + cellDegrees + " degrees gives "
+                    + rows + " rows of each ribbon instead of at most " + LightPillarCells.MOST_ROWS);
+            int height = LightPillarCells.atlasHeight(rows);
+            helper.assertTrue(height <= MOST_ATLAS_HEIGHT, "A cell of " + cellDegrees + " degrees gives an atlas "
+                    + height + " rows tall instead of at most " + MOST_ATLAS_HEIGHT);
+            boolean[] marked = new boolean[LightPillarCells.ATLAS_COLUMNS * height];
+            for (int ribbon = 0; ribbon < 2 * LightPillarSelection.SLOT_COUNT; ribbon++) {
+                int kind = ribbon - 2 * (ribbon / 2);
+                int half = LightPillarCells.halfColumns(kind);
+                int axis = LightPillarCells.axisColumn(ribbon);
+                int bottom = LightPillarCells.bottomRow(ribbon, rows);
+                helper.assertTrue(axis >= half && axis + half < LightPillarCells.ATLAS_COLUMNS, "The ribbon "
+                        + ribbon + " of a cell of " + cellDegrees + " degrees reaches the columns " + (axis - half)
+                        + " to " + (axis + half) + " instead of within 0 to "
+                        + (LightPillarCells.ATLAS_COLUMNS - 1));
+                helper.assertTrue(bottom >= 0 && bottom + rows <= height, "The ribbon " + ribbon + " of a cell of "
+                        + cellDegrees + " degrees reaches the rows " + bottom + " to " + (bottom + rows - 1)
+                        + " instead of within 0 to " + (height - 1));
+                for (int column = axis - half; column <= axis + half; column++) {
+                    for (int row = bottom; row < bottom + rows; row++) {
+                        int texel = row * LightPillarCells.ATLAS_COLUMNS + column;
+                        if (marked[texel]) {
+                            helper.fail("The texel at column " + column + " and row " + row + " belongs to the ribbon "
+                                    + ribbon + " and to another one, at a cell of " + cellDegrees + " degrees");
+                        }
+                        marked[texel] = true;
+                    }
+                }
+            }
+            double covered = rows * cellAngle;
+            double needed = LightPillarOptics.HIGHEST_RIBBON_ELEVATION
+                    + LightPillarCells.SHADER_TILT_RANGE_SIGMAS * widest + cellAngle;
+            if (rows < LightPillarCells.MOST_ROWS) {
+                helper.assertTrue(covered >= needed, "A cell of " + cellDegrees + " degrees covers " + covered
+                        + " radians in " + rows + " rows instead of the " + needed
+                        + " from the lowest cell origin past the top of every ribbon");
+                if (covered - needed < tightest) {
+                    tightest = covered - needed;
+                    tightestWhere = String.format(Locale.ROOT, "%s degrees, %d rows, %.6f radians covered against "
+                            + "%.6f", cellDegrees, rows, covered, needed);
+                }
+            }
+            LOGGER.info("A cell of " + cellDegrees + " degrees gives " + rows + " rows of each ribbon in an atlas "
+                    + height + " rows tall");
+        }
+        LOGGER.info("The rows of a ribbon reach the least above the top of the highest ribbon by " + tightest
+                + " radians, at " + tightestWhere);
+        helper.succeed();
+    }
+
+    @GameTest(template = "phase0a_empty", timeoutTicks = 100)
+    public static void lightPillarCellsStandOnTheLight(GameTestHelper helper) {
+        double cellAngle = Math.toRadians(CELL_ANGLE_DEGREES);
+        for (IceCrystalData.Crystal crystal : plates()) {
+            double tiltSigma = Math.toRadians(crystal.tiltDegrees());
+            double lowestLevel = -LightPillarCells.SHADER_TILT_RANGE_SIGMAS * tiltSigma;
+            for (double elevationDegrees = -60.0; elevationDegrees <= 60.0; elevationDegrees += 0.5) {
+                double lightElevation = Math.toRadians(elevationDegrees);
+                double expected = lightElevation >= lowestLevel ? lightElevation
+                        : -lightElevation - 2.0 * LightPillarCells.SHADER_TILT_RANGE_SIGMAS * tiltSigma;
+                double origin = LightPillarCells.cellOrigin(lightElevation, tiltSigma);
+                helper.assertTrue(Math.abs(origin - expected) <= 1.0e-12, "The cell origin of the " + crystal.name()
+                        + " for a light at " + elevationDegrees + " degrees is " + origin + " instead of " + expected);
+            }
+            double atTheLowestLevel = LightPillarCells.cellOrigin(lowestLevel, tiltSigma);
+            helper.assertTrue(Math.abs(atTheLowestLevel - lowestLevel) <= 1.0e-12, "The cell origin of the "
+                    + crystal.name() + " at the lowest level elevation is " + atTheLowestLevel + " instead of "
+                    + lowestLevel);
+        }
+        for (int index = -5; index <= 5; index++) {
+            for (double fraction : new double[]{-0.49, 0.0, 0.49}) {
+                double lateralAngle = (index + fraction) * cellAngle;
+                int column = LightPillarCells.column(lateralAngle, cellAngle);
+                helper.assertTrue(column == index, "The lateral angle " + index + " plus " + fraction
+                        + " cells is in the column " + column + " instead of " + index);
+            }
+        }
+        for (double origin : new double[]{-0.2, 0.0, 0.3}) {
+            for (int row = 0; row <= 20; row++) {
+                for (double fraction : new double[]{0.01, 0.5, 0.99}) {
+                    double elevation = origin + (row + fraction) * cellAngle;
+                    int actual = LightPillarCells.row(elevation, origin, cellAngle);
+                    helper.assertTrue(actual == row, "The elevation " + row + " plus " + fraction
+                            + " cells above the origin " + origin + " is in the row " + actual + " instead of " + row);
+                }
+            }
+            int below = LightPillarCells.row(origin - 0.01 * cellAngle, origin, cellAngle);
+            helper.assertTrue(below == -1, "The elevation a hundredth of a cell below the origin " + origin
+                    + " is in the row " + below + " instead of -1");
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "phase0a_empty", timeoutTicks = 600)
+    public static void lightPillarSceneShareFollowsTheCutIntegral(GameTestHelper helper) {
+        double refractiveIndex = IceHaloFormulas.refractiveIndex(1);
+        double[][] cases = sceneShareCases();
+        List<IceCrystalData.Crystal> plateKinds = plates();
+        double[] worstByKind = new double[plateKinds.size()];
+        String[] worstWhereByKind = new String[plateKinds.size()];
+        for (int kind = 0; kind < plateKinds.size(); kind++) {
+            IceCrystalData.Crystal crystal = plateKinds.get(kind);
+            double tiltSigma = Math.toRadians(crystal.tiltDegrees());
+            double worst = -1.0;
+            String worstWhere = "nowhere";
+            for (double[] light : PILLAR_LIGHTS) {
+                double horizontalDistance = light[0];
+                for (int height = 1; height < light.length; height++) {
+                    double lightHeight = light[height];
+                    for (double elevationDegrees : PILLAR_ELEVATIONS_DEGREES) {
+                        double elevation = Math.toRadians(elevationDegrees);
+                        double crystalHeight = LightPillarOptics.mirrorHeight(elevation, horizontalDistance,
+                                lightHeight);
+                        if (crystalHeight <= Math.max(0.0, lightHeight) + 0.05) {
+                            continue;
+                        }
+                        double mirrorDistance = crystalHeight / Math.sin(elevation);
+                        double spread = LightPillarOptics.lateralSpread(elevation, horizontalDistance, lightHeight,
+                                tiltSigma);
+                        for (double spreads : SCENE_LATERAL_SPREADS) {
+                            double lateralAngle = spreads * spread;
+                            for (int caseNumber = 0; caseNumber < cases.length; caseNumber++) {
+                                double nearFade = cases[caseNumber][0];
+                                double horizon = cases[caseNumber][1];
+                                double ceiling = cases[caseNumber][2];
+                                double top = cases[caseNumber][3];
+                                double whole = LightPillarOptics.dustRadiance(elevation, lateralAngle,
+                                        horizontalDistance, lightHeight, tiltSigma, refractiveIndex, 0.0, 1.0e9, 0.0,
+                                        NO_SCENE, nearFade, horizon, ceiling, top);
+                                if (!(whole > 0.0)) {
+                                    continue;
+                                }
+                                for (double share : SCENE_DISTANCE_SHARES) {
+                                    double sceneDistance = share * mirrorDistance;
+                                    double cut = LightPillarOptics.dustRadiance(elevation, lateralAngle,
+                                            horizontalDistance, lightHeight, tiltSigma, refractiveIndex, 0.0, 1.0e9,
+                                            0.0, sceneDistance, nearFade, horizon, ceiling, top);
+                                    double expected = cut / whole;
+                                    double actual = LightPillarOptics.sceneShare(elevation, horizontalDistance,
+                                            lightHeight, tiltSigma, sceneDistance, nearFade, horizon, ceiling, top);
+                                    double difference = Math.abs(actual - expected);
+                                    if (!(difference <= worst)) {
+                                        worst = difference;
+                                        worstWhere = String.format(Locale.ROOT, "case %d, light %.0f away and %.0f "
+                                                        + "high, elevation %.0f degrees, %.0f spreads off the center, "
+                                                        + "near fade %.0f, horizon %.4f, ceiling %.4f, top %.4f, "
+                                                        + "scene at %.2f of the crystals, %.4g against %.4g of %.4g",
+                                                caseNumber, horizontalDistance, lightHeight, elevationDegrees,
+                                                spreads, nearFade, horizon, ceiling, top, share, actual, expected,
+                                                whole);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            worstByKind[kind] = worst;
+            worstWhereByKind[kind] = worstWhere;
+            LOGGER.info("The scene share of " + crystal.name() + " differs from the cut integral by at most " + worst
+                    + ", at " + worstWhere);
+        }
+        for (int kind = 0; kind < plateKinds.size(); kind++) {
+            // The share only weighs the tilts by their Gaussian and the near weight, so the reflectance and the across
+            // Gaussian are left out:
+            double tolerance = plateKinds.get(kind).tiltDegrees() > 1.0 ? WOBBLING_SCENE_SHARE_TOLERANCE
+                    : PLATE_SCENE_SHARE_TOLERANCE;
+            helper.assertTrue(worstByKind[kind] <= tolerance, "The scene share of " + plateKinds.get(kind).name()
+                    + " differs from the cut integral by " + worstByKind[kind] + ", at " + worstWhereByKind[kind]
+                    + ", more than " + tolerance);
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "phase0a_empty", timeoutTicks = 600)
+    public static void lightPillarSceneShareStaysWithinItsBounds(GameTestHelper helper) {
+        double[][] cases = sceneShareCases();
+        double worstFall = 0.0;
+        String worstFallWhere = "nowhere";
+        double worstNear = 0.0;
+        String worstNearWhere = "nowhere";
+        for (IceCrystalData.Crystal crystal : plates()) {
+            double tiltSigma = Math.toRadians(crystal.tiltDegrees());
+            for (double[] light : PILLAR_LIGHTS) {
+                double horizontalDistance = light[0];
+                for (int height = 1; height < light.length; height++) {
+                    double lightHeight = light[height];
+                    double lightDistance = Math.hypot(horizontalDistance, lightHeight);
+                    for (double elevationDegrees : PILLAR_ELEVATIONS_DEGREES) {
+                        double elevation = Math.toRadians(elevationDegrees);
+                        for (int caseNumber = 0; caseNumber < cases.length; caseNumber++) {
+                            double nearFade = cases[caseNumber][0];
+                            double horizon = cases[caseNumber][1];
+                            double ceiling = cases[caseNumber][2];
+                            double top = cases[caseNumber][3];
+                            String where = String.format(Locale.ROOT, "%s, light %.0f away and %.0f high, elevation "
+                                            + "%.0f degrees, near fade %.0f, horizon %.4f, ceiling %.4f, top %.4f",
+                                    crystal.name(), horizontalDistance, lightHeight, elevationDegrees, nearFade,
+                                    horizon, ceiling, top);
+                            double whole = LightPillarOptics.sceneShare(elevation, horizontalDistance, lightHeight,
+                                    tiltSigma, NO_SCENE, nearFade, horizon, ceiling, top);
+                            helper.assertTrue(whole == 1.0, "Without a scene the share is " + whole
+                                    + " instead of 1 for " + where);
+                            double previous = -1.0;
+                            for (int step = 0; step < SCENE_DISTANCE_STEPS; step++) {
+                                double sceneDistance = lightDistance * (NEAREST_SCENE_SHARE
+                                        + (FARTHEST_SCENE_SHARE - NEAREST_SCENE_SHARE) * step
+                                        / (SCENE_DISTANCE_STEPS - 1.0));
+                                double share = LightPillarOptics.sceneShare(elevation, horizontalDistance,
+                                        lightHeight, tiltSigma, sceneDistance, nearFade, horizon, ceiling, top);
+                                helper.assertTrue(share >= 0.0 && share <= 1.0, "The share is " + share
+                                        + " at a scene " + sceneDistance + " blocks away for " + where);
+                                if (share < previous - 1.0e-12) {
+                                    double fall = previous - share;
+                                    if (!(fall <= worstFall)) {
+                                        worstFall = fall;
+                                        worstFallWhere = String.format(Locale.ROOT, "from %.6f to %.6f at a scene "
+                                                + "%.4f blocks away for %s", previous, share, sceneDistance, where);
+                                    }
+                                }
+                                previous = share;
+                            }
+                            double near = LightPillarOptics.sceneShare(elevation, horizontalDistance, lightHeight,
+                                    tiltSigma, NEAREST_SCENE_DISTANCE, nearFade, horizon, ceiling, top);
+                            if (!(near <= worstNear)) {
+                                worstNear = near;
+                                worstNearWhere = where;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        LOGGER.info("The scene share falls by at most " + worstFall + ", " + worstFallWhere
+                + ", and is at most " + worstNear + " with the scene " + NEAREST_SCENE_DISTANCE
+                + " blocks away, at " + worstNearWhere);
+        helper.assertTrue(worstFall <= 0.0, "The scene share falls as the scene moves away, by " + worstFall + ", "
+                + worstFallWhere);
+        helper.assertTrue(worstNear <= 1.0e-3, "The scene share is " + worstNear + " with the scene "
+                + NEAREST_SCENE_DISTANCE + " blocks away, at " + worstNearWhere);
+        helper.succeed();
+    }
+
+    @GameTest(template = "phase0a_empty", timeoutTicks = 100)
+    public static void lightPillarNormalShareFollowsTheNormalDistribution(GameTestHelper helper) {
+        double worst = 0.0;
+        String worstWhere = "nowhere";
+        for (int step = -600; step <= 600; step++) {
+            double deviation = step * 0.01;
+            double expected = 0.5 * complementaryErrorFunction(-deviation / Math.sqrt(2.0));
+            double actual = LightPillarOptics.normalShare(deviation);
+            double difference = Math.abs(actual - expected);
+            helper.assertTrue(difference <= NORMAL_SHARE_TOLERANCE, "The normal share at a deviation of " + deviation
+                    + " is " + actual + " instead of " + expected + ", off by " + difference);
+            if (!(difference <= worst)) {
+                worst = difference;
+                worstWhere = "a deviation of " + deviation;
+            }
+            double mirrored = actual + LightPillarOptics.normalShare(-deviation);
+            helper.assertTrue(Math.abs(mirrored - 1.0) <= 1.0e-12, "The normal shares at a deviation of " + deviation
+                    + " and its mirror add up to " + mirrored + " instead of 1");
+        }
+        LOGGER.info("The normal share differs from the normal distribution by at most " + worst + ", at " + worstWhere);
+        helper.assertTrue(Math.abs(LightPillarOptics.normalShare(0.0) - 0.5) <= 1.0e-15,
+                "The normal share at a deviation of 0 is " + LightPillarOptics.normalShare(0.0) + " instead of 0.5");
+        helper.succeed();
+    }
+
     private static void assertSkyCheck(GameTestHelper helper, String where, DataLayer sectionSkyLight,
             DataLayer aboveSkyLight, boolean expected) {
         boolean actual = LightPillarClusters.sectionCanShowPillars(sectionSkyLight, aboveSkyLight);
@@ -2655,6 +2971,17 @@ public final class LightPillarGameTests {
 
     private static String describeBins(long bins) {
         return "0x" + Long.toHexString(bins);
+    }
+
+    /**
+     * The near fade and the horizon, ceiling, and top of the cases of the scene share tests, the open case without a
+     * near fade first.
+     */
+    private static double[][] sceneShareCases() {
+        double[][] cases = new double[RIBBON_CASES.length + 1][];
+        cases[0] = new double[]{0.0, LightPillarHorizons.OPEN, LightPillarHorizons.OPEN, LightPillarHorizons.OPEN};
+        System.arraycopy(RIBBON_CASES, 0, cases, 1, RIBBON_CASES.length);
+        return cases;
     }
 
     /**

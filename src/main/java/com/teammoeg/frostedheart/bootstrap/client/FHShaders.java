@@ -59,6 +59,13 @@ public class FHShaders extends Shaders {
     private static Shader CALCULATED_SKY;
     private static Shader LIGHT_PILLARS_VERTEX;
     private static Shader LIGHT_PILLARS_FRAGMENT;
+    private static Shader LIGHT_PILLAR_CELLS_VERTEX;
+    private static Shader LIGHT_PILLAR_CELLS_FRAGMENT;
+    /**
+     * The defines that light_pillars.glsl is compiled with for each stage, in the order of loadLightPillars.
+     */
+    private static final String[] LIGHT_PILLAR_DEFINES = {"#define VERTEX_SHADER\n", "#define FRAGMENT_SHADER\n",
+            "#define VERTEX_SHADER\n#define CELL_ATLAS\n", "#define FRAGMENT_SHADER\n#define CELL_ATLAS\n"};
     private static boolean lightPillarsUnloadOnReload;
     public static Shader getCalculatedSky() {
         if (CALCULATED_SKY == null) {
@@ -79,6 +86,19 @@ public class FHShaders extends Shaders {
         return LIGHT_PILLARS_FRAGMENT;
     }
 
+    /**
+     * The vertex stage of the pass that fills the light pillar cell atlas, light_pillars.glsl with CELL_ATLAS defined.
+     */
+    public static Shader getLightPillarCellsVertex() {
+        loadLightPillars();
+        return LIGHT_PILLAR_CELLS_VERTEX;
+    }
+
+    public static Shader getLightPillarCellsFragment() {
+        loadLightPillars();
+        return LIGHT_PILLAR_CELLS_FRAGMENT;
+    }
+
     private static void loadLightPillars() {
         if (!lightPillarsUnloadOnReload) {
             addReloadListener(FHShaders::unloadLightPillars);
@@ -86,17 +106,24 @@ public class FHShaders extends Shaders {
         }
         if (LIGHT_PILLARS_VERTEX == null) {
             String source = readShaderSource(FHMain.rl("shaders/light_pillars.glsl"));
-            Shader vertex = Shader.loadShader(Shader.ShaderType.VERTEX, "#version 150\n#define VERTEX_SHADER\n" + source);
-            Shader fragment;
+            Shader[] stages = new Shader[LIGHT_PILLAR_DEFINES.length];
             try {
-                fragment = Shader.loadShader(Shader.ShaderType.FRAGMENT,
-                        "#version 150\n#define FRAGMENT_SHADER\n" + source);
+                for (int stage = 0; stage < stages.length; stage++) {
+                    Shader.ShaderType type = stage % 2 == 0 ? Shader.ShaderType.VERTEX : Shader.ShaderType.FRAGMENT;
+                    stages[stage] = Shader.loadShader(type, "#version 150\n" + LIGHT_PILLAR_DEFINES[stage] + source);
+                }
             } catch (RuntimeException exception) {
-                vertex.deleteShader();
+                for (Shader loaded : stages) {
+                    if (loaded != null) {
+                        loaded.deleteShader();
+                    }
+                }
                 throw exception;
             }
-            LIGHT_PILLARS_VERTEX = vertex;
-            LIGHT_PILLARS_FRAGMENT = fragment;
+            LIGHT_PILLARS_VERTEX = stages[0];
+            LIGHT_PILLARS_FRAGMENT = stages[1];
+            LIGHT_PILLAR_CELLS_VERTEX = stages[2];
+            LIGHT_PILLAR_CELLS_FRAGMENT = stages[3];
         }
     }
 
@@ -107,8 +134,12 @@ public class FHShaders extends Shaders {
         if (LIGHT_PILLARS_VERTEX != null) {
             LIGHT_PILLARS_VERTEX.deleteShader();
             LIGHT_PILLARS_FRAGMENT.deleteShader();
+            LIGHT_PILLAR_CELLS_VERTEX.deleteShader();
+            LIGHT_PILLAR_CELLS_FRAGMENT.deleteShader();
             LIGHT_PILLARS_VERTEX = null;
             LIGHT_PILLARS_FRAGMENT = null;
+            LIGHT_PILLAR_CELLS_VERTEX = null;
+            LIGHT_PILLAR_CELLS_FRAGMENT = null;
         }
     }
 

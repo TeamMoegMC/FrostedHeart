@@ -266,6 +266,89 @@ final class LightPillarOptics {
                 lateralBlur, dustBottomHeight, 0.0, sceneDistance, nearFade, horizon, ceiling, top);
     }
 
+    /**
+     * The share of the light that dustRadiance gives without a scene that comes from the crystals nearer to the eye
+     * than the scene distance, with each tilt weighed by its Gaussian and by the near weight alone instead of the whole
+     * integrand, and the near weight taken to fall linearly in the tilt. It is 1 where the scene distance is infinite.
+     * light_pillars.glsl keeps this share of the value of a cell at each of its pixels, over the tilts within its own
+     * range.
+     */
+    static double sceneShare(double elevation, double horizontalDistance, double lightHeight, double tiltSigma,
+            double sceneDistance, double nearFade, double horizon, double ceiling, double top) {
+        if (!(sceneDistance < Double.POSITIVE_INFINITY)) {
+            return 1.0;
+        }
+        double lightElevation = Math.atan2(lightHeight, horizontalDistance);
+        double sineOfOffset = Math.sin(elevation - lightElevation);
+        if (!(sineOfOffset > 0.0)) {
+            return 0.0;
+        }
+        double lightDistance = Math.hypot(horizontalDistance, lightHeight);
+        double lightToRay = lightDistance * sineOfOffset;
+        double lowestTilt = lowestTilt(elevation, tiltSigma);
+        double cutTilt = tiltAtDistance(elevation, lightElevation, lightDistance, lightToRay, sceneDistance);
+        if (!(cutTilt > lowestTilt)) {
+            return 1.0;
+        }
+        double highestTilt = highestTilt(elevation, lightElevation, tiltSigma, lightDistance, lightToRay, nearFade);
+        double fullTilt = highestTilt;
+        double startTilt = highestTilt;
+        if (nearFade > 0.0) {
+            fullTilt = tiltAtDistance(elevation, lightElevation, lightDistance, lightToRay, nearFade);
+            startTilt = tiltAtDistance(elevation, lightElevation, lightDistance, lightToRay,
+                    NEAR_FADE_START_SHARE * nearFade);
+        }
+        double aboveTop = Math.min(highestTilt, 0.5 * (elevation - top));
+        double belowCeiling = Math.max(lowestTilt, 0.5 * (elevation - ceiling));
+        double aboveHorizon = Math.min(highestTilt, 0.5 * (elevation - horizon));
+        double whole = nearTiltMass(lowestTilt, aboveTop, fullTilt, startTilt, tiltSigma)
+                + nearTiltMass(belowCeiling, aboveHorizon, fullTilt, startTilt, tiltSigma);
+        if (!(whole > 0.0)) {
+            return 0.0;
+        }
+        double nearer = nearTiltMass(cutTilt, aboveTop, fullTilt, startTilt, tiltSigma)
+                + nearTiltMass(Math.max(belowCeiling, cutTilt), aboveHorizon, fullTilt, startTilt, tiltSigma);
+        return Math.max(0.0, Math.min(1.0, nearer / whole));
+    }
+
+    /**
+     * The mass of the tilt Gaussian from the lowest to the highest tilt, weighed by the near weight, which falls from 1
+     * at the full tilt to 0 at the start tilt, here linearly in the tilt. The full and start tilts are those of the
+     * crystals at the near fade and at its start.
+     */
+    private static double nearTiltMass(double lowestTilt, double highestTilt, double fullTilt, double startTilt,
+            double tiltSigma) {
+        double mass = tiltMass(lowestTilt, Math.min(highestTilt, fullTilt), tiltSigma);
+        double rampLowest = Math.max(lowestTilt, fullTilt);
+        double rampHighest = Math.min(highestTilt, startTilt);
+        if (rampHighest > rampLowest) {
+            // The integral of the start tilt less the tilt, times the Gaussian:
+            double rampMass = tiltMass(rampLowest, rampHighest, tiltSigma);
+            double weighed = startTilt * rampMass + tiltSigma * (normalDensity(rampHighest / tiltSigma)
+                    - normalDensity(rampLowest / tiltSigma));
+            mass += Math.max(0.0, Math.min(rampMass, weighed / (startTilt - fullTilt)));
+        }
+        return mass;
+    }
+
+    private static double normalDensity(double deviation) {
+        return Math.exp(-0.5 * deviation * deviation) / Math.sqrt(2.0 * Math.PI);
+    }
+
+    /**
+     * The standard normal distribution function from a logistic curve, within about 2e-4.
+     */
+    static double normalShare(double deviation) {
+        return 1.0 / (1.0 + Math.exp(-1.5976 * deviation * (1.0 + 0.04417 * deviation * deviation)));
+    }
+
+    private static double tiltMass(double lowestTilt, double highestTilt, double tiltSigma) {
+        if (!(highestTilt > lowestTilt)) {
+            return 0.0;
+        }
+        return normalShare(highestTilt / tiltSigma) - normalShare(lowestTilt / tiltSigma);
+    }
+
     private static double dustIntegral(boolean countsCrystals, double elevation, double lateralAngle,
             double horizontalDistance, double lightHeight, double tiltSigma, double refractiveIndex,
             double lateralBlur, double dustBottomHeight, double extinction, double sceneDistance, double nearFade,
@@ -369,8 +452,9 @@ final class LightPillarOptics {
 
     /**
      * The share of its mean value that a pillar shows in a sky cell, as light_pillars.glsl draws it, for the mean count
-     * of crystals in the cell, the cell's place in pixels along the lateral angle and the elevation, the ribbon, and
-     * the twinkle clock in twinkle periods. Each cell draws a count of crystals per period and blends to the next.
+     * of crystals in the cell, the cell's place along the lateral angle and the elevation in pixels or on the grid of
+     * LightPillarCells, the ribbon, and the twinkle clock in twinkle periods. Each cell draws a count of crystals per
+     * period and blends to the next.
      */
     static double sparkle(double meanCount, int lateralCell, int elevationCell, int ribbon, double twinkleClock) {
         if (!(meanCount > 0.0)) {

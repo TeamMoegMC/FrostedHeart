@@ -61,6 +61,9 @@ public enum SkySetting {
             65.0, 0.0, 1000.0),
     PILLAR_TWINKLE_SECONDS("pillarTwinkleSeconds", "Seconds over which the glittering crystals of light pillars change "
             + "while the eye stands still. Moving the eye changes them faster.", Rebuilds.NOTHING, 0.25, 0.02, 5.0),
+    PILLAR_TEXEL_DEGREES("pillarTexelDegrees", "Size in degrees of the square cells that light pillars are drawn in. "
+            + "Each pillar has its own grid standing on its light, so the cells stay on the pillar as the eye moves. "
+            + "0 draws pillars per pixel.", Rebuilds.NOTHING, 0.25, 0.0, 2.0),
     TEXEL_DEGREES("texelDegrees", "Size of the sky's square texels in degrees. They are fixed to the sky like the "
             + "sun's texture. 0 draws a smooth sky.", Rebuilds.HALOS, 0.5, 0.0, 5.0);
 
