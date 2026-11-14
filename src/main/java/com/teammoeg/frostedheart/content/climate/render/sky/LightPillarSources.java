@@ -31,6 +31,7 @@ import net.minecraft.core.SectionPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.LightLayer;
+import net.minecraft.world.level.block.LiquidBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.LevelChunkSection;
@@ -59,9 +60,9 @@ import java.util.function.Predicate;
  * LightPillarWorldChanges queues the chunk sections whose lights may have changed, and each tick takes a fixed number
  * of them. A section is skipped when its block palette holds no light that shows pillars, or when neither its sky light
  * nor the lowest layer of the section above it reaches above LightPillarClusters.SKY_LIGHT_THRESHOLD. Otherwise its
- * blocks are walked. A light counts by its sky light, which leaves out lights indoors and in caves, and lights are
- * merged into LightPillarClusters. LightPillarSelection chooses from them every tick while there is diamond dust, and
- * LightPillarHorizons builds the shadow horizons of the chosen lights from the blocks around them.
+ * blocks are walked. A light counts by its sky light, which leaves out lights indoors and in caves, and lights that
+ * touch are merged in LightPillarClusters. LightPillarSelection chooses from them every tick while there is diamond
+ * dust, and LightPillarShelter reads the cap and the rim of the chosen lights from the blocks right at them.
  * The index is kept while the calculated sky is allowed, so nothing is read from the world while nothing changes.
  * Client thread only.
  */
@@ -74,11 +75,6 @@ public final class LightPillarSources {
     private static final int SECTION_BLOCKS = 16 * 16 * 16;
     private static final int TICKS_PER_SECOND = 20;
     private static final int LISTED_PILLARS = 10;
-    /**
-     * The columns that horizon building may read per tick, which builds about one slot per tick at the default chunk
-     * radius.
-     */
-    private static final int HORIZON_COLUMNS_PER_TICK = 16384;
     /**
      * The share of the way to the ground under the camera that the dust's bottom moves per tick, which follows the
      * ground over about 30 seconds.
@@ -95,9 +91,9 @@ public final class LightPillarSources {
 
     private static final LightPillarClusters clusters = new LightPillarClusters();
     private static final LightPillarSelection selection = new LightPillarSelection();
-    private static final LightPillarHorizons horizons = new LightPillarHorizons();
-    private static final LightPillarHorizons.LevelColumns horizonColumns =
-            new LightPillarHorizons.LevelColumns(horizons.occluders());
+    private static final LightPillarShelter shelter = new LightPillarShelter();
+    private static final LightPillarHorizons.LevelColumns shelterColumns =
+            new LightPillarHorizons.LevelColumns(shelter.occluders());
     private static final Reference2ObjectOpenHashMap<BlockState, float[]> emitterColors =
             new Reference2ObjectOpenHashMap<>();
     private static final BlockPos.MutableBlockPos lightPosition = new BlockPos.MutableBlockPos();
@@ -115,7 +111,7 @@ public final class LightPillarSources {
     private static final SecondStatistics currentSecond = new SecondStatistics();
     private static final SecondStatistics lastSecond = new SecondStatistics();
     private static int ticksThisSecond;
-    private static int horizonBlocksReadLastSecond;
+    private static int shelterBlocksReadLastSecond;
 
     private LightPillarSources() {
     }
@@ -189,10 +185,9 @@ public final class LightPillarSources {
         } else {
             selection.chooseNone();
         }
-        horizonColumns.setLevel(level);
-        horizons.update(selection, horizonColumns, LightPillarHorizons.reachForChunkRadius(chunkRadius),
-                HORIZON_COLUMNS_PER_TICK);
-        horizonColumns.setLevel(null);
+        shelterColumns.setLevel(level);
+        shelter.update(selection, shelterColumns);
+        shelterColumns.setLevel(null);
     }
 
     private static int chunkRadius(Minecraft minecraft) {
@@ -314,8 +309,10 @@ public final class LightPillarSources {
                     float[] color = emitterColor(minecraft, state);
                     lightPosition.setY(originY + blockY);
                     double lightTop = originY + blockY + LightPillarOccluders.lightTop(state, level, lightPosition);
-                    clusters.addLight(originX + blockX, originY + blockY, originZ + blockZ, lightTop,
-                            color[0] * strength, color[1] * strength, color[2] * strength);
+                    boolean fullBlock = LightPillarOccluders.isFullBlock(state, level, lightPosition);
+                    boolean spansBlock = fullBlock || state.getBlock() instanceof LiquidBlock;
+                    clusters.addLight(originX + blockX, originY + blockY, originZ + blockZ, lightTop, fullBlock,
+                            spansBlock, color[0] * strength, color[1] * strength, color[2] * strength);
                     currentSecond.lights++;
                 }
             }
@@ -365,7 +362,7 @@ public final class LightPillarSources {
     private static void stopIndexing() {
         LightPillarWorldChanges.stopTracking();
         clusters.clear();
-        horizons.clear();
+        shelter.clear();
         indexing = false;
     }
 
@@ -385,8 +382,8 @@ public final class LightPillarSources {
         if (ticksThisSecond >= TICKS_PER_SECOND) {
             lastSecond.copy(currentSecond);
             currentSecond.clear();
-            horizons.rollSecond();
-            horizonBlocksReadLastSecond = horizonColumns.takeBlocksRead();
+            shelter.rollSecond();
+            shelterBlocksReadLastSecond = shelterColumns.takeBlocksRead();
             ticksThisSecond = 0;
         }
     }
@@ -397,8 +394,8 @@ public final class LightPillarSources {
     @SubscribeEvent
     public static void onTagsUpdated(TagsUpdatedEvent event) {
         if (event.getUpdateCause() == TagsUpdatedEvent.UpdateCause.CLIENT_PACKET_RECEIVED) {
-            horizons.occluders().clear();
-            horizons.markEveryBin();
+            shelter.occluders().clear();
+            shelter.markEverySlot();
         }
     }
 
@@ -410,17 +407,17 @@ public final class LightPillarSources {
     }
 
     /**
-     * The shadow horizons of the chosen pillars.
+     * The caps and rims of the chosen pillars.
      */
-    static LightPillarHorizons horizons() {
-        return horizons;
+    static LightPillarShelter shelter() {
+        return shelter;
     }
 
     /**
-     * A line about the shadow horizons and their work in the last full second, for the client command.
+     * A line about the shelters and their work in the last full second, for the client command.
      */
-    public static String describeHorizons() {
-        return horizons.describe(horizonBlocksReadLastSecond);
+    public static String describeShelters() {
+        return shelter.describe(shelterBlocksReadLastSecond);
     }
 
     /**
@@ -485,17 +482,15 @@ public final class LightPillarSources {
             int slot = used.get(rank);
             float brightest = Math.max(selection.red(slot), Math.max(selection.green(slot), selection.blue(slot)));
             double distance = Math.hypot(selection.x(slot) - eye.x, selection.z(slot) - eye.z);
-            float horizon = horizons.horizon(slot, eye.x, eye.z);
-            String horizonText = !horizons.isBuilt(slot) ? "horizon not built"
-                    : horizon == LightPillarHorizons.OPEN ? "horizon open"
-                    : String.format(Locale.ROOT, "horizon %.1f degrees", Math.toDegrees(horizon));
             lines.add(String.format(Locale.ROOT,
-                    "%d. at %.1f %.1f %.1f, top %.2f, %.1f blocks away, color %.2f %.2f %.2f, strength %.2f, "
-                            + "score %.3g, fade %.1f, %s",
+                    "%d. at %.1f %.1f %.1f, top %.2f, %.1f blocks away, %d %s across %.1f by %.1f blocks, "
+                            + "color %.2f %.2f %.2f, strength %.2f, score %.3g, fade %.1f, %s",
                     rank + 1, selection.x(slot), selection.y(slot), selection.z(slot), selection.top(slot), distance,
+                    selection.lightCount(slot), selection.lightCount(slot) == 1 ? "light" : "lights",
+                    2.0 * selection.halfExtentX(slot), 2.0 * selection.halfExtentZ(slot),
                     selection.red(slot) / brightest, selection.green(slot) / brightest,
                     selection.blue(slot) / brightest, brightest, selection.slotScore(slot), selection.fade(slot, 1.0F),
-                    horizonText));
+                    shelter.describeSlot(slot, eye.x, eye.z)));
         }
         return lines;
     }

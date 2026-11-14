@@ -39,9 +39,10 @@ final class LightPillarCells {
      */
     static final int MOST_ROWS = 1024;
     /**
-     * The tilts in standard deviations that the shader sums, as TILT_RANGE_SIGMAS in light_pillars.glsl.
+     * The tilt in standard deviations of the faces whose mirror image of a light below the eye the cells stand on, as
+     * CELL_ORIGIN_SIGMAS in light_pillars.glsl.
      */
-    static final double SHADER_TILT_RANGE_SIGMAS = 3.0;
+    static final double CELL_ORIGIN_SIGMAS = 6.0;
 
     private LightPillarCells() {
     }
@@ -69,10 +70,11 @@ final class LightPillarCells {
 
     /**
      * The rows of each ribbon for the side of a cell in radians, from the lowest cell origin of the widest tilt spread
-     * up past the highest elevation that ribbons reach, at most MOST_ROWS.
+     * up past the highest elevation that ribbons reach, at most MOST_ROWS. The lowest cell origin lies half
+     * CELL_ORIGIN_SIGMAS below the horizon.
      */
     static int atlasRows(double cellAngle, double widestTiltSigma) {
-        double height = LightPillarOptics.HIGHEST_RIBBON_ELEVATION + SHADER_TILT_RANGE_SIGMAS * widestTiltSigma;
+        double height = LightPillarOptics.HIGHEST_RIBBON_ELEVATION + 0.5 * CELL_ORIGIN_SIGMAS * widestTiltSigma;
         return (int) Math.min(MOST_ROWS, Math.ceil(height / cellAngle) + 2.0);
     }
 
@@ -81,12 +83,11 @@ final class LightPillarCells {
     }
 
     /**
-     * The elevation in radians that the bottom row of cells stands on, the lowest where the pillar can show without
-     * blocks around the light, which is the light itself or for a light below the eye its mirror image in the most
-     * tilted faces that the shader sums.
+     * The elevation in radians that the bottom row of cells stands on, the light itself or for a light below the eye
+     * the lowest elevation that faces tilted by CELL_ORIGIN_SIGMAS mirror it to.
      */
     static double cellOrigin(double lightElevation, double tiltSigma) {
-        return Math.max(lightElevation, -lightElevation - 2.0 * SHADER_TILT_RANGE_SIGMAS * tiltSigma);
+        return Math.max(lightElevation, -lightElevation - CELL_ORIGIN_SIGMAS * tiltSigma);
     }
 
     /**

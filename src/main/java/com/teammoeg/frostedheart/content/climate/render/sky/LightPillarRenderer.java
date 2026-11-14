@@ -60,18 +60,20 @@ import java.util.Locale;
 /**
  * Draws the light pillars of the lights that LightPillarSources chose, after the weather, in frames where the
  * calculated sky was drawn and there is diamond dust. Each pillar has one ribbon per plate kind on a static vertex
- * buffer, and light_pillars.glsl spreads the ribbons over the pillar on the screen and computes the light on them.
- * The fragment stage reads the depth of the main target and counts only the crystals in front of the scene. Each light
- * carries its horizon, ceiling, and top toward the eye from LightPillarHorizons, and crystals whose light those blocks
- * stop are left out. Crystals near the eye fade out by SkySetting.PILLAR_NEAR_FADE. Each pixel-sized cell of the sky
- * draws the count of crystals that glitter in it from the mean count, which the plates' size sets, and the counts
- * change over the twinkle clock. Pillars add to the frame with a screen blend. They
- * fade out with the brightness of the fog color, so by day, and with the rain level, so in snow. Render thread only.
+ * buffer, and light_pillars.glsl spreads the ribbons over the pillar on the screen and computes the light on them from
+ * the closed form of the pillar of level plates. Each light carries the rim of LightPillarShelter toward the eye and
+ * its cap, and the pillar shows above the rim's angle and below the cap on a vertical sheet through the light. A
+ * cluster of lights also carries its half width across the view, which widens its pillar, and its count of lights.
+ * The fragment stage reads the depth of the main target and hides the pillar where the scene stands in front of the
+ * sheet, except for clouds. Each pixel-sized cell of the sky draws the count of crystals that glitter in it from the
+ * mean count, which the plates' size sets, and the counts change over the twinkle clock. Pillars add to the frame with
+ * a screen blend. They fade out with the brightness of the fog color, so by day, and with the rain level, so in snow.
+ * Render thread only.
  * <p>
  * While SkySetting.PILLAR_TEXEL_DEGREES is above 0, pillars are drawn in the square cells of LightPillarCells instead
  * of per pixel, and the cells are the sky cells that glitter. A first pass draws the ribbons into the cell atlas,
  * which computes each cell once at its center without the scene, and the ribbons on the screen then read their
- * cells and keep the share of their light from the crystals in front of the scene.
+ * cells and hide them where the scene stands in front of the sheet.
  */
 @OnlyIn(Dist.CLIENT)
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
@@ -102,14 +104,23 @@ public final class LightPillarRenderer {
     /**
      * What the fragment stage leaves out in each debug mode, as debugMode in light_pillars.glsl.
      */
-    private static final String[] DEBUG_MODES = {"off", "the integral, replaced by a constant, and with it the glitter",
+    private static final String[] DEBUG_MODES = {"off", "the pillar's value, replaced by a constant, and with it the glitter",
             "the glitter, with the ribbon widths kept", "the scene depth, so pillars show through the scene",
             "everything but the flat ribbons"};
     public static final int LAST_DEBUG_MODE = DEBUG_MODES.length - 1;
     private static final int DEBUG_NO_SCENE_DEPTH = 3;
     private static final int DEBUG_RIBBONS_ONLY = 4;
     private static final FloatBuffer lightBuffer = BufferUtils.createFloatBuffer(4 * SLOTS);
-    private static final FloatBuffer overhangBuffer = BufferUtils.createFloatBuffer(2 * SLOTS);
+    /**
+     * Stands in for a cap that is open, relative to the eye, in the shelter uniform.
+     */
+    private static final float OPEN_CAP_HEIGHT = 1.0e6F;
+    /**
+     * Stands in for the cloud height of a dimension without clouds, relative to the eye.
+     */
+    private static final float NO_CLOUD_HEIGHT = 1.0e30F;
+    private static final FloatBuffer shelterBuffer = BufferUtils.createFloatBuffer(2 * SLOTS);
+    private static final FloatBuffer spanBuffer = BufferUtils.createFloatBuffer(2 * SLOTS);
     private static final FloatBuffer colorBuffer = BufferUtils.createFloatBuffer(4 * SLOTS);
     private static final FloatBuffer matrixBuffer = BufferUtils.createFloatBuffer(16);
     private static final FloatBuffer clearedCell = BufferUtils.createFloatBuffer(4);
@@ -198,9 +209,11 @@ public final class LightPillarRenderer {
             return;
         }
         advanceTwinkle(eyeX, eyeY, eyeZ);
+        float cloudHeight = level.effects().getCloudHeight();
+        float cloudHeightAboveEye = Float.isFinite(cloudHeight) ? (float) (cloudHeight - eyeY) : NO_CLOUD_HEIGHT;
         timer.begin();
         try {
-            draw(projection, extinctionPerBlock, dustBottomY - eyeY);
+            draw(projection, extinctionPerBlock, dustBottomY - eyeY, cloudHeightAboveEye);
         } finally {
             timer.end();
         }
@@ -257,9 +270,9 @@ public final class LightPillarRenderer {
     }
 
     /**
-     * Writes the light positions relative to the eye with their horizons, ceilings, and tops toward the eye, and the
-     * colors of every slot into the uniform buffers, with the colors of slots that are faded out at 0, and returns how
-     * many slots show.
+     * Writes the light positions relative to the eye, their rims toward the eye as angles and caps relative to the eye,
+     * the half widths of their clusters across the view with their counts of lights, and the colors of every slot into
+     * the uniform buffers, with the colors of slots that are faded out at 0, and returns how many slots show.
      */
     private static int fillPillars(double eyeX, double eyeY, double eyeZ, float partialTick, float opacity) {
         float brightness = (float) (LightPillarOptics.BRIGHTNESS * SkySetting.PILLAR_BRIGHTNESS.get());
@@ -267,30 +280,45 @@ public final class LightPillarRenderer {
             return 0;
         }
         LightPillarSelection selection = LightPillarSources.selection();
-        LightPillarHorizons horizons = LightPillarSources.horizons();
+        LightPillarShelter shelter = LightPillarSources.shelter();
         lightBuffer.clear();
-        overhangBuffer.clear();
+        shelterBuffer.clear();
+        spanBuffer.clear();
         colorBuffer.clear();
         int pillars = 0;
         for (int slot = 0; slot < SLOTS; slot++) {
             float fade = selection.fade(slot, partialTick);
             if (fade > 0.0F) {
-                lightBuffer.put((float) (selection.x(slot) - eyeX)).put((float) (selection.y(slot) - eyeY))
-                        .put((float) (selection.z(slot) - eyeZ)).put(horizons.horizon(slot, eyeX, eyeZ));
-                overhangBuffer.put(horizons.ceiling(slot, eyeX, eyeZ)).put(horizons.top(slot, eyeX, eyeZ));
+                double offsetX = selection.x(slot) - eyeX;
+                double offsetZ = selection.z(slot) - eyeZ;
+                lightBuffer.put((float) offsetX).put((float) (selection.y(slot) - eyeY)).put((float) offsetZ)
+                        .put(0.0F);
+                shelterBuffer.put((float) shelter.rimToward(slot, eyeX, eyeZ))
+                        .put(capHeight(shelter.cap(slot), eyeY));
+                spanBuffer.put((float) LightPillarOptics.halfWidthAcross(selection.halfExtentX(slot),
+                        selection.halfExtentZ(slot), offsetX, offsetZ)).put(selection.lightCount(slot));
                 colorBuffer.put(selection.red(slot) * brightness).put(selection.green(slot) * brightness)
                         .put(selection.blue(slot) * brightness).put(fade * opacity);
                 pillars++;
             } else {
                 lightBuffer.put(0.0F).put(0.0F).put(0.0F).put(0.0F);
-                overhangBuffer.put(0.0F).put(0.0F);
+                shelterBuffer.put(0.0F).put(OPEN_CAP_HEIGHT);
+                spanBuffer.put(0.0F).put(1.0F);
                 colorBuffer.put(0.0F).put(0.0F).put(0.0F).put(0.0F);
             }
         }
         lightBuffer.flip();
-        overhangBuffer.flip();
+        shelterBuffer.flip();
+        spanBuffer.flip();
         colorBuffer.flip();
         return pillars;
+    }
+
+    /**
+     * The cap at the world height relative to the eye, with OPEN_CAP_HEIGHT in place of an open one.
+     */
+    private static float capHeight(double height, double eyeY) {
+        return (float) Math.min(OPEN_CAP_HEIGHT, height - eyeY);
     }
 
     /**
@@ -299,8 +327,10 @@ public final class LightPillarRenderer {
      * and either way the framebuffer bound before is bound again after. No depth test runs, since the fragment stage
      * hides the pillars behind the scene itself. With cells, the ribbons first fill the cell atlas, which goes to the
      * cell atlas unit, and margins, blur, and glitter follow the side of a cell instead of a pixel where it is larger.
+     * Scene points at or above the cloud height relative to the eye do not hide pillars.
      */
-    private static void draw(Matrix4f projection, double extinctionPerBlock, double dustBottomHeight) {
+    private static void draw(Matrix4f projection, double extinctionPerBlock, double dustBottomHeight,
+            float cloudHeight) {
         Minecraft minecraft = Minecraft.getInstance();
         VertexBuffer ribbonBuffer = ribbons();
         RenderTarget mainTarget = minecraft.getMainRenderTarget();
@@ -349,7 +379,7 @@ public final class LightPillarRenderer {
                     RenderSystem.disableBlend();
                     atlasPass.use(FHShaders.getLightPillarCellsVertex(), FHShaders.getLightPillarCellsFragment());
                     atlasPass.setFrameUniforms(extinctionPerBlock, dustBottomHeight, sampleAngle, crystalCountScale,
-                            (float) cellAngle, mainTarget);
+                            (float) cellAngle, cloudHeight, mainTarget);
                     ribbonBuffer.draw();
                     if (scissor) {
                         GlStateManager._enableScissorTest();
@@ -365,7 +395,7 @@ public final class LightPillarRenderer {
             RenderSystem.bindTexture(readsSceneDepth ? mainTarget.getDepthTextureId() : 0);
             screenPass.use(FHShaders.getLightPillarsVertex(), FHShaders.getLightPillarsFragment());
             screenPass.setFrameUniforms(extinctionPerBlock, dustBottomHeight, sampleAngle, crystalCountScale,
-                    cells ? (float) cellAngle : 0.0F, mainTarget);
+                    cells ? (float) cellAngle : 0.0F, cloudHeight, mainTarget);
             RenderSystem.enableBlend();
             RenderSystem.blendEquation(GL14.GL_FUNC_ADD);
             RenderSystem.blendFuncSeparate(GL11.GL_ONE_MINUS_DST_COLOR, GL11.GL_ONE, GL11.GL_ZERO, GL11.GL_ONE);
@@ -516,9 +546,14 @@ public final class LightPillarRenderer {
         private boolean fixedUniformsSet;
         private int viewProjectionUniform;
         private int lightsUniform;
-        private int overhangsUniform;
+        private int sheltersUniform;
+        private int spansUniform;
         private int colorsUniform;
+        private int fadeInSigmasUniform;
+        private int baseShareUniform;
         private int nearFadeUniform;
+        private int depthBandUniform;
+        private int cloudHeightUniform;
         private int extinctionUniform;
         private int dustBottomHeightUniform;
         private int lateralBlurUniform;
@@ -594,9 +629,14 @@ public final class LightPillarRenderer {
             GL20.glUniform1i(GL20.glGetUniformLocation(programId, "cellAtlas"), CELL_ATLAS_UNIT);
             viewProjectionUniform = GL20.glGetUniformLocation(programId, "viewProjection");
             lightsUniform = GL20.glGetUniformLocation(programId, "lights");
-            overhangsUniform = GL20.glGetUniformLocation(programId, "overhangs");
+            sheltersUniform = GL20.glGetUniformLocation(programId, "shelters");
+            spansUniform = GL20.glGetUniformLocation(programId, "spans");
             colorsUniform = GL20.glGetUniformLocation(programId, "colors");
+            fadeInSigmasUniform = GL20.glGetUniformLocation(programId, "fadeInSigmas");
+            baseShareUniform = GL20.glGetUniformLocation(programId, "baseShare");
             nearFadeUniform = GL20.glGetUniformLocation(programId, "nearFade");
+            depthBandUniform = GL20.glGetUniformLocation(programId, "depthBand");
+            cloudHeightUniform = GL20.glGetUniformLocation(programId, "cloudHeight");
             extinctionUniform = GL20.glGetUniformLocation(programId, "extinction");
             dustBottomHeightUniform = GL20.glGetUniformLocation(programId, "dustBottomHeight");
             lateralBlurUniform = GL20.glGetUniformLocation(programId, "lateralBlur");
@@ -616,13 +656,18 @@ public final class LightPillarRenderer {
          * crystal count scale is per pixel or per cell, and the cell angle is 0 while pillars draw per pixel.
          */
         private void setFrameUniforms(double extinctionPerBlock, double dustBottomHeight, float sampleAngle,
-                float crystalCountScale, float cellAngle, RenderTarget mainTarget) {
+                float crystalCountScale, float cellAngle, float cloudHeight, RenderTarget mainTarget) {
             viewProjection.get(matrixBuffer);
             GL20.glUniformMatrix4fv(viewProjectionUniform, false, matrixBuffer);
             GL20.glUniform4fv(lightsUniform, lightBuffer);
-            GL20.glUniform2fv(overhangsUniform, overhangBuffer);
+            GL20.glUniform2fv(sheltersUniform, shelterBuffer);
+            GL20.glUniform2fv(spansUniform, spanBuffer);
             GL20.glUniform4fv(colorsUniform, colorBuffer);
+            GL20.glUniform1f(fadeInSigmasUniform, (float) SkySetting.PILLAR_FADE_IN_SIGMAS.get());
+            GL20.glUniform1f(baseShareUniform, (float) SkySetting.PILLAR_BASE_SHARE.get());
             GL20.glUniform1f(nearFadeUniform, (float) SkySetting.PILLAR_NEAR_FADE.get());
+            GL20.glUniform1f(depthBandUniform, (float) SkySetting.PILLAR_DEPTH_BAND.get());
+            GL20.glUniform1f(cloudHeightUniform, cloudHeight);
             GL20.glUniform1f(extinctionUniform, (float) extinctionPerBlock);
             GL20.glUniform1f(dustBottomHeightUniform, (float) dustBottomHeight);
             GL20.glUniform1f(lateralBlurUniform, (float) LightPillarOptics.lateralBlur(sampleAngle));
@@ -687,10 +732,10 @@ public final class LightPillarRenderer {
     /**
      * Sets the debug mode, from 0 to LAST_DEBUG_MODE, and returns what the fragment stage leaves out in it, for
      * measuring the cost of each part. 1 shades every pixel whose scene lies beyond the light alike instead of computing
-     * the integral and the glitter, 2 leaves out the glitter but keeps the ribbons as wide, 3 neither binds nor reads
-     * the scene depth, and 4 shades every pixel the ribbons cover alike. With cells, 1 writes 0.1 as every cell's value
-     * instead of computing it, which the pixels then show in the light's color times their scene share, 2 leaves the
-     * glitter out of the cell values, and 4 also leaves out the atlas pass.
+     * the pillar's value and the glitter, 2 leaves out the glitter but keeps the ribbons as wide, 3 neither binds nor
+     * reads the scene depth, and 4 shades every pixel the ribbons cover alike. With cells, 1 writes 0.1 as every cell's
+     * value instead of computing it, which the pixels then show in the light's color times the share in front of the
+     * scene, 2 leaves the glitter out of the cell values, and 4 also leaves out the atlas pass.
      */
     public static String setDebugMode(int mode) {
         debugMode = Math.max(0, Math.min(LAST_DEBUG_MODE, mode));

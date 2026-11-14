@@ -103,6 +103,18 @@ public final class LightPillarOccluders {
     }
 
     /**
+     * Whether a light fills its block, so that its light leaves from its whole top and its sides. A shape that cannot
+     * be found counts as not filling it.
+     */
+    public static boolean isFullBlock(BlockState state, BlockGetter level, BlockPos pos) {
+        try {
+            return state.isCollisionShapeFullBlock(level, pos);
+        } catch (RuntimeException exception) {
+            return false;
+        }
+    }
+
+    /**
      * The height above the bottom of the block at the position up to which the state stops light, or PASSES. A block
      * whose shape cannot be found stops light up to its top.
      */

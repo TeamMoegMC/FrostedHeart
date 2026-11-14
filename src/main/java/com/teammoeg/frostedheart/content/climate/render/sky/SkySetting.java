@@ -64,6 +64,14 @@ public enum SkySetting {
     PILLAR_TEXEL_DEGREES("pillarTexelDegrees", "Size in degrees of the square cells that light pillars are drawn in. "
             + "Each pillar has its own grid standing on its light, so the cells stay on the pillar as the eye moves. "
             + "0 draws pillars per pixel.", Rebuilds.NOTHING, 0.25, 0.0, 2.0),
+    PILLAR_FADE_IN_SIGMAS("pillarFadeInSigmas", "Height of the fade in at the bottom of light pillars, in standard "
+            + "deviations of the tilt of their plate crystals, so pillars of wobbling plates fade in over a longer "
+            + "way. 0 starts them on a line.", Rebuilds.NOTHING, 2.0, 0.0, 8.0),
+    PILLAR_BASE_SHARE("pillarBaseShare", "Share of their light that light pillars show at the bottom of their fade "
+            + "in, rising to all of it at its top, on top of the fade in itself.", Rebuilds.NOTHING, 0.5, 0.0, 1.0),
+    PILLAR_DEPTH_BAND("pillarDepthBand", "Distance in blocks on each side of a light over which the scene in front "
+            + "of it hides its light pillar. Nearer scene hides the pillar, farther scene shows it.", Rebuilds.NOTHING,
+            0.5, 0.0, 4.0),
     TEXEL_DEGREES("texelDegrees", "Size of the sky's square texels in degrees. They are fixed to the sky like the "
             + "sun's texture. 0 draws a smooth sky.", Rebuilds.HALOS, 0.5, 0.0, 5.0);
 

@@ -45,6 +45,7 @@ import net.minecraftforge.gametest.PrefixGameTestTemplate;
 import org.slf4j.Logger;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
@@ -138,6 +139,11 @@ public final class LightPillarGameTests {
      * The floor height of the horizon scenes, above the terrain that covers the templates of the GameTest world.
      */
     private static final int HIGH_FLOOR_Y = 300;
+    /**
+     * Covers the margin of 1e-4 blocks by which the shelter widens each wall's square, which moves a wall's angle by up
+     * to about 1e-4 radians.
+     */
+    private static final double WALL_ANGLE_TOLERANCE = 2.0e-4;
     /**
      * Cell angles in degrees whose atlas layout the cell tests check.
      */
@@ -674,73 +680,479 @@ public final class LightPillarGameTests {
         helper.succeed();
     }
 
+    @GameTest(template = "phase0a_empty", timeoutTicks = 200)
+    public static void lightPillarClosedFormFollowsTheDustIntegral(GameTestHelper helper) {
+        double refractiveIndex = IceHaloFormulas.refractiveIndex(1);
+        double lateralBlur = LightPillarOptics.lateralBlur(REFERENCE_PIXEL_ANGLE);
+        double[] distances = {8.0, 16.0, 32.0, 64.0, 128.0};
+        double[] heights = {-5.0, -1.12, 0.0, 1.0, 5.0};
+        double[] elevationsDegrees = {10.0, 15.0, 20.0, 30.0, 45.0, 60.0};
+        double fadeInSigmas = SkySetting.PILLAR_FADE_IN_SIGMAS.defaultValue();
+        for (IceCrystalData.Crystal crystal : plates()) {
+            double tiltSigma = Math.toRadians(crystal.tiltDegrees());
+            boolean isPlate = crystal.tiltDegrees() < 1.0;
+            double worstRadianceRatio = 1.0;
+            double worstCountRatio = 1.0;
+            String worstRadianceCase = "";
+            String worstCountCase = "";
+            int compared = 0;
+            int skipped = 0;
+            for (double distance : distances) {
+                for (double height : heights) {
+                    double lowest = Math.abs(Math.atan2(height, distance));
+                    for (double elevationDegrees : elevationsDegrees) {
+                        double elevation = Math.toRadians(elevationDegrees);
+                        if (elevation < lowest + fadeInSigmas * tiltSigma) {
+                            skipped++;
+                            continue;
+                        }
+                        for (double spreads : new double[]{0.0, 1.0}) {
+                            double lateralAngle = spreads * Math.hypot(LightPillarOptics.lateralSpread(elevation,
+                                    distance, height, tiltSigma), lateralBlur);
+                            double integral = LightPillarOptics.dustRadiance(elevation, lateralAngle, distance, height,
+                                    tiltSigma, refractiveIndex, lateralBlur, -1.62, RIBBON_EXTINCTION, NO_SCENE,
+                                    LightPillarHorizons.OPEN);
+                            double closed = LightPillarOptics.closedFormRadiance(elevation, lateralAngle, distance,
+                                    height, 0.0, tiltSigma, refractiveIndex, lateralBlur, -1.62, RIBBON_EXTINCTION, 0.0,
+                                    1.0, 0.0, LightPillarShelter.OPEN_RIM, LightPillarShelter.OPEN_CAP);
+                            double integralCount = LightPillarOptics.dustCrystalCount(elevation, lateralAngle, distance,
+                                    height, tiltSigma, lateralBlur, -1.62, NO_SCENE, 0.0, LightPillarHorizons.OPEN,
+                                    LightPillarHorizons.OPEN, LightPillarHorizons.OPEN);
+                            double closedCount = LightPillarOptics.closedFormCrystalCount(elevation, lateralAngle,
+                                    distance, height, 0.0, tiltSigma, lateralBlur, -1.62, 0.0, 1.0, 0.0,
+                                    LightPillarShelter.OPEN_RIM, LightPillarShelter.OPEN_CAP);
+                            String where = String.format(Locale.ROOT, "%.0f blocks away, %.2f high, at %.0f degrees, "
+                                    + "%.0f spreads across", distance, height, elevationDegrees, spreads);
+                            double radianceRatio = closed / integral;
+                            double countRatio = closedCount / integralCount;
+                            if (Math.abs(Math.log(radianceRatio)) > Math.abs(Math.log(worstRadianceRatio))
+                                    || !Double.isFinite(radianceRatio)) {
+                                worstRadianceRatio = radianceRatio;
+                                worstRadianceCase = where;
+                            }
+                            if (Math.abs(Math.log(countRatio)) > Math.abs(Math.log(worstCountRatio))
+                                    || !Double.isFinite(countRatio)) {
+                                worstCountRatio = countRatio;
+                                worstCountCase = where;
+                            }
+                            compared++;
+                            if (isPlate) {
+                                helper.assertTrue(Math.abs(radianceRatio - 1.0) <= 0.3, "The closed form of plates "
+                                        + where + " is " + radianceRatio + " times the integral");
+                                helper.assertTrue(countRatio <= 1.5 && countRatio >= 1.0 / 1.5, "The closed form's "
+                                        + "crystal count of plates " + where + " is " + countRatio
+                                        + " times the integral's");
+                            } else {
+                                helper.assertTrue(radianceRatio <= 2.5 && radianceRatio >= 1.0 / 2.5, "The closed "
+                                        + "form of wobbling plates " + where + " is " + radianceRatio
+                                        + " times the integral");
+                                helper.assertTrue(countRatio <= 2.5 && countRatio >= 1.0 / 2.5, "The closed form's "
+                                        + "crystal count of wobbling plates " + where + " is " + countRatio
+                                        + " times the integral's");
+                            }
+                        }
+                    }
+                }
+            }
+            LOGGER.info("Closed form of plates tilted {} degrees: {} cases compared, {} in or below the fade in "
+                            + "skipped, radiance worst {} times the integral {}, crystal count worst {} times {}",
+                    crystal.tiltDegrees(), compared, skipped, worstRadianceRatio, worstRadianceCase, worstCountRatio,
+                    worstCountCase);
+        }
+
+        double value = 0.0;
+        for (IceCrystalData.Crystal crystal : plates()) {
+            value += LightPillarOptics.BRIGHTNESS * LightPillarEmitters.strength(14)
+                    * IceCrystalData.get().shareOf(crystal) * 0.001 * LightPillarOptics.closedFormRadiance(
+                    Math.toRadians(10.0), 0.0, 32.0, -1.12, 0.0, Math.toRadians(crystal.tiltDegrees()),
+                    refractiveIndex, lateralBlur, -1.62, 0.001, fadeInSigmas,
+                    SkySetting.PILLAR_BASE_SHARE.defaultValue(), SkySetting.PILLAR_NEAR_FADE.defaultValue(),
+                    LightPillarShelter.OPEN_RIM, LightPillarShelter.OPEN_CAP);
+        }
+        double shown = 1.0 - Math.exp(-value);
+        LOGGER.info("The calibration torch shows {} of the display at 10 degrees in the closed form with the default "
+                + "fades", shown);
+        helper.assertTrue(Math.abs(shown - 0.1) <= 0.02, "The calibration torch shows " + shown + " of the display "
+                + "at 10 degrees in the closed form instead of about 0.1");
+        helper.succeed();
+    }
+
     @GameTest(template = "phase0a_empty", timeoutTicks = 100)
-    public static void lightClustersMergeLightsPerCell(GameTestHelper helper) {
+    public static void lightPillarClosedFormStaysAboveTheRimAndBelowTheCap(GameTestHelper helper) {
+        double tiltSigma = Math.toRadians(0.7);
+        double distance = 16.0;
+        double cap = 9.0;
+        double openRim = LightPillarShelter.OPEN_RIM;
+        double openCap = LightPillarShelter.OPEN_CAP;
+        double[][] capCases = {{6.0, 1.0}, {8.5, 1.0}, {8.75, 0.5}, {9.0, 0.0}, {12.0, 0.0}};
+        for (double[] capCase : capCases) {
+            double elevation = Math.atan2(capCase[0], distance);
+            double share = closedFormAt(elevation, distance, 0.0, tiltSigma, 0.0, 1.0, openRim, cap)
+                    / closedFormAt(elevation, distance, 0.0, tiltSigma, 0.0, 1.0, openRim, openCap);
+            helper.assertTrue(Math.abs(share - capCase[1]) <= 1.0e-9, "The pillar on the sheet " + capCase[0]
+                    + " blocks above the eye shows " + share + " of its light below a cap at " + cap + " instead of "
+                    + capCase[1]);
+        }
+        double belowTheEye = Math.toRadians(1.0);
+        double lowLight = closedFormAt(belowTheEye, distance, -1.0, tiltSigma, 0.0, 1.0, openRim, openCap);
+        helper.assertTrue(lowLight == 0.0, "A light 1 block below the eye and " + distance + " blocks away shows "
+                + lowLight + " at 1 degree, below its mirror image");
+
+        double fadeInSigmas = 2.0;
+        double baseShare = 0.5;
+        double halfwayShare = 0.5 * (baseShare + 0.5 * (1.0 - baseShare));
+        double lowest = Math.atan2(1.0, distance);
+        double middle = lowest + 0.5 * fadeInSigmas * tiltSigma;
+        double faded = closedFormAt(middle, distance, -1.0, tiltSigma, fadeInSigmas, baseShare, openRim, openCap)
+                / closedFormAt(middle, distance, -1.0, tiltSigma, 0.0, 1.0, openRim, openCap);
+        helper.assertTrue(Math.abs(faded - halfwayShare) <= 1.0e-9, "Halfway up the fade in the pillar shows "
+                + faded + " of its light instead of " + halfwayShare);
+
+        double rim = Math.toRadians(30.0);
+        double belowTheRim = closedFormAt(Math.toRadians(29.9), distance, 0.0, tiltSigma, 0.0, 1.0, rim, openCap);
+        helper.assertTrue(belowTheRim == 0.0, "A pillar shows " + belowTheRim + " below a rim at 30 degrees");
+        double aboveTheRim = rim + 0.5 * fadeInSigmas * tiltSigma;
+        double liftedFade = closedFormAt(aboveTheRim, distance, 0.0, tiltSigma, fadeInSigmas, baseShare, rim, openCap)
+                / closedFormAt(aboveTheRim, distance, 0.0, tiltSigma, 0.0, 1.0, openRim, openCap);
+        helper.assertTrue(Math.abs(liftedFade - halfwayShare) <= 1.0e-9, "Halfway up the fade in above a rim at 30 "
+                + "degrees the pillar shows " + liftedFade + " of its light instead of " + halfwayShare);
+        double lowRim = Math.atan2(-0.125, 0.5);
+        double nearTheBottom = 0.5 * fadeInSigmas * tiltSigma;
+        double underALowRim = closedFormAt(nearTheBottom, distance, 0.0, tiltSigma, fadeInSigmas, baseShare, lowRim,
+                openCap);
+        double withoutARim = closedFormAt(nearTheBottom, distance, 0.0, tiltSigma, fadeInSigmas, baseShare, openRim,
+                openCap);
+        helper.assertTrue(underALowRim == withoutARim, "A rim below the horizon changes the bottom of a pillar at eye "
+                + "level from " + withoutARim + " to " + underALowRim);
+
+        double aboveTheCap = Math.atan2(12.0, distance);
+        double inTheCapBand = Math.atan2(8.75, distance);
+        for (double elevation : new double[]{middle, inTheCapBand, aboveTheCap}) {
+            double plainCount = LightPillarOptics.closedFormCrystalCount(elevation, 0.0, distance, -1.0, 0.0,
+                    tiltSigma, 0.0, -1.62, 0.0, 1.0, 0.0, openRim, openCap);
+            double shelteredCount = LightPillarOptics.closedFormCrystalCount(elevation, 0.0, distance, -1.0, 0.0,
+                    tiltSigma, 0.0, -1.62, fadeInSigmas, baseShare, 0.0, openRim, cap);
+            double plainRadiance = closedFormAt(elevation, distance, -1.0, tiltSigma, 0.0, 1.0, openRim, openCap);
+            double shelteredRadiance = closedFormAt(elevation, distance, -1.0, tiltSigma, fadeInSigmas, baseShare,
+                    openRim, cap);
+            helper.assertTrue(plainCount > 0.0 && shelteredCount == plainCount, "The crystal count at "
+                    + Math.toDegrees(elevation) + " degrees is " + shelteredCount + " with the fade in and the cap "
+                    + "instead of " + plainCount + " without them");
+            helper.assertTrue(shelteredRadiance < plainRadiance, "The radiance at " + Math.toDegrees(elevation)
+                    + " degrees is " + shelteredRadiance + " with the fade in and the cap, not less than "
+                    + plainRadiance + " without them");
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "phase0a_empty", timeoutTicks = 100)
+    public static void lightPillarClosedFormFadesNearTheEye(GameTestHelper helper) {
+        double tiltSigma = Math.toRadians(0.7);
+        double nearFade = 8.0;
+        double openRim = LightPillarShelter.OPEN_RIM;
+        double openCap = LightPillarShelter.OPEN_CAP;
+        // For a light at eye level the crystals stand at d tan(e) / 2, so they lie d / (2 cos e) from the eye:
+        double[][] nearCases = {{8.0, 0.3}, {8.0, 1.0}, {12.0, 0.5}, {64.0, 0.3}};
+        for (double[] nearCase : nearCases) {
+            double distance = nearCase[0];
+            double elevation = nearCase[1];
+            double eyeLeg = distance / (2.0 * Math.cos(elevation));
+            double ramp = Math.max(0.0, Math.min(1.0, (eyeLeg - 0.25 * nearFade) / (0.75 * nearFade)));
+            double expected = ramp * ramp * (3.0 - 2.0 * ramp);
+            double faded = LightPillarOptics.closedFormRadiance(elevation, 0.0, distance, 0.0, 0.0, tiltSigma,
+                    IceHaloFormulas.refractiveIndex(1), 0.0, -1.62, RIBBON_EXTINCTION, 0.0, 1.0, nearFade, openRim,
+                    openCap);
+            double plain = closedFormAt(elevation, distance, 0.0, tiltSigma, 0.0, 1.0, openRim, openCap);
+            helper.assertTrue(plain > 0.0 && Math.abs(faded / plain - expected) <= 1.0e-9, "A light at eye level "
+                    + distance + " blocks away shows " + faded / plain + " of its light at " + elevation
+                    + " radians with a near fade of " + nearFade + " blocks instead of " + expected + ", its crystals "
+                    + "being " + eyeLeg + " blocks away");
+            double fadedCount = LightPillarOptics.closedFormCrystalCount(elevation, 0.0, distance, 0.0, 0.0,
+                    tiltSigma, 0.0, -1.62, 0.0, 1.0, nearFade, openRim, openCap);
+            double plainCount = LightPillarOptics.closedFormCrystalCount(elevation, 0.0, distance, 0.0, 0.0,
+                    tiltSigma, 0.0, -1.62, 0.0, 1.0, 0.0, openRim, openCap);
+            helper.assertTrue(plainCount > 0.0 && fadedCount == plainCount, "The near fade changes the crystal count "
+                    + distance + " blocks away at " + elevation + " radians from " + plainCount + " to " + fadedCount);
+        }
+        // 8 blocks away at 0.3 radians the crystals lie 4.187 blocks away, which the near fade of 8 shows at 0.302:
+        double nearShare = LightPillarOptics.closedFormRadiance(0.3, 0.0, 8.0, 0.0, 0.0, tiltSigma,
+                IceHaloFormulas.refractiveIndex(1), 0.0, -1.62, RIBBON_EXTINCTION, 0.0, 1.0, nearFade, openRim,
+                openCap) / closedFormAt(0.3, 8.0, 0.0, tiltSigma, 0.0, 1.0, openRim, openCap);
+        helper.assertTrue(Math.abs(nearShare - 0.302) <= 0.001, "A light 8 blocks away shows " + nearShare
+                + " at 0.3 radians with the near fade instead of 0.302");
+        helper.succeed();
+    }
+
+    @GameTest(template = "phase0a_empty", timeoutTicks = 100)
+    public static void lightPillarClosedFormWidensOverAClusterOfLights(GameTestHelper helper) {
+        double spread = 0.004;
+        for (double offset : new double[]{0.0, 1.0, 3.0}) {
+            double lateralAngle = offset * spread;
+            double gaussian = Math.exp(-0.5 * offset * offset) / (Math.sqrt(2.0 * Math.PI) * spread);
+            double pointProfile = LightPillarOptics.lateralProfile(lateralAngle, spread, 0.0);
+            helper.assertTrue(Math.abs(pointProfile / gaussian - 1.0) <= 1.0e-12, "The profile of a light without "
+                    + "width " + offset + " spreads across is " + pointProfile + " instead of the Gaussian " + gaussian);
+            double narrowProfile = LightPillarOptics.lateralProfile(lateralAngle, spread, 0.05 * spread);
+            helper.assertTrue(Math.abs(narrowProfile / gaussian - 1.0) <= 0.02, "The profile of a light 0.1 spreads "
+                    + "wide " + offset + " spreads across is " + narrowProfile / gaussian + " times the Gaussian");
+        }
+
+        double[][] tails = {{0.0, 0.5}, {1.0, 0.158655254}, {2.0, 0.022750132}, {3.0, 0.001349898},
+                {-1.0, 0.841344746}};
+        for (double[] tail : tails) {
+            double actual = LightPillarOptics.upperNormalTail(tail[0]);
+            helper.assertTrue(Math.abs(actual - tail[1]) <= 2.0e-7, "The normal tail above " + tail[0] + " is "
+                    + actual + " instead of " + tail[1]);
+        }
+
+        for (double halfAngleSpreads : new double[]{0.0, 0.3, 0.5, 0.51, 1.0, 3.0, 10.0}) {
+            double halfAngle = halfAngleSpreads * spread;
+            double end = halfAngle + 10.0 * spread;
+            int steps = 20000;
+            double step = 2.0 * end / steps;
+            double total = 0.0;
+            for (int index = 0; index < steps; index++) {
+                total += LightPillarOptics.lateralProfile(-end + (index + 0.5) * step, spread, halfAngle) * step;
+            }
+            helper.assertTrue(Math.abs(total - 1.0) <= 1.0e-4, "The profile of a light " + 2.0 * halfAngleSpreads
+                    + " spreads wide sums to " + total + " across the pillar instead of 1");
+        }
+
+        // The ribbons of light_pillars.glsl reach the half angle plus the spreads at which a Gaussian falls from the
+        // center to the visible value, and beyond them the widened profile stays below it:
+        for (double halfAngleSpreads : new double[]{0.0, 0.3, 0.5, 0.51, 1.0, 3.0, 10.0}) {
+            double halfAngle = halfAngleSpreads * spread;
+            double center = LightPillarOptics.lateralProfile(0.0, spread, halfAngle);
+            for (double centerOverVisible : new double[]{1.01, 1.5, 10.0, 1.0e3, 1.0e6}) {
+                double ribbonEdge = halfAngle + Math.sqrt(2.0 * Math.log(centerOverVisible)) * spread;
+                double edgeShare = LightPillarOptics.lateralProfile(ribbonEdge, spread, halfAngle) / center;
+                helper.assertTrue(edgeShare <= (1.0 + 1.0e-9) / centerOverVisible, "At the ribbon's edge the profile of a "
+                        + "light " + 2.0 * halfAngleSpreads + " spreads wide shows " + edgeShare + " of its center, "
+                        + "above the visible share " + 1.0 / centerOverVisible);
+            }
+        }
+
+        double switchAngle = LightPillarOptics.SMEAR_SHARE * spread;
+        for (double offset : new double[]{0.0, 1.0, 2.0}) {
+            double below = LightPillarOptics.lateralProfile(offset * spread, spread, switchAngle);
+            double above = LightPillarOptics.lateralProfile(offset * spread, spread, switchAngle * (1.0 + 1.0e-6));
+            helper.assertTrue(Math.abs(above / below - 1.0) <= 0.005, "The profile " + offset + " spreads across "
+                    + "jumps from " + below + " to " + above + " where the smear takes over");
+        }
+
+        // A 3 by 3 floor of glowstone seen along an axis spans 1.5 blocks on each side, 4.3 degrees at 20 blocks:
+        double floorHalfWidth = LightPillarOptics.halfWidthAcross(1.5, 1.5, 20.0, 0.0);
+        helper.assertTrue(Math.abs(floorHalfWidth - 1.5) <= 1.0e-12, "A 3 by 3 floor seen along x is "
+                + floorHalfWidth + " blocks wide on each side instead of 1.5");
+        double diagonalHalfWidth = LightPillarOptics.halfWidthAcross(1.5, 1.5, 20.0, 20.0);
+        helper.assertTrue(Math.abs(diagonalHalfWidth - 3.0 / Math.sqrt(2.0)) <= 1.0e-12, "A 3 by 3 floor seen "
+                + "along the diagonal is " + diagonalHalfWidth + " blocks wide on each side instead of 2.121");
+        double rowHalfWidth = LightPillarOptics.halfWidthAcross(2.0, 0.0, 20.0, 0.0);
+        helper.assertTrue(rowHalfWidth == 0.0, "A row of lights along x seen along x is " + rowHalfWidth
+                + " blocks wide on each side instead of 0");
+        double halfAngle = floorHalfWidth / 20.0;
+        helper.assertTrue(Math.abs(Math.toDegrees(2.0 * halfAngle) - 8.594) <= 0.001, "The floor's pillar is "
+                + Math.toDegrees(2.0 * halfAngle) + " degrees wide instead of 8.594");
+        double tiltSigma = Math.toRadians(0.7);
+        double elevation = Math.toRadians(20.0);
+        double floorCenter = floorRadiance(elevation, 0.0, tiltSigma, floorHalfWidth);
+        double floorEdge = floorRadiance(elevation, halfAngle, tiltSigma, floorHalfWidth);
+        double floorInside = floorRadiance(elevation, 0.8 * halfAngle, tiltSigma, floorHalfWidth);
+        helper.assertTrue(Math.abs(floorEdge / floorCenter - 0.5) <= 0.01 && floorInside / floorCenter > 0.99,
+                "The floor's pillar shows " + floorEdge / floorCenter + " of its middle at the floor's edge and "
+                        + floorInside / floorCenter + " at 0.8 of the way there, instead of 0.5 and about 1");
+        double floorTotal = 0.0;
+        double singleTotal = 0.0;
+        int steps = 4000;
+        double step = 4.0 * halfAngle / steps;
+        for (int index = 0; index < steps; index++) {
+            double lateralAngle = -2.0 * halfAngle + (index + 0.5) * step;
+            floorTotal += floorRadiance(elevation, lateralAngle, tiltSigma, floorHalfWidth) * step;
+            singleTotal += floorRadiance(elevation, lateralAngle, tiltSigma, 0.0) * step;
+        }
+        helper.assertTrue(Math.abs(floorTotal / singleTotal - 1.0) <= 1.0e-3, "The floor's pillar carries "
+                + floorTotal / singleTotal + " times the light of a pillar of one point with the same strength");
+        helper.succeed();
+    }
+
+    /**
+     * The closed form radiance 20 blocks from a light 1.12 below the eye, without blur or fades, for the half width of
+     * its light across the view.
+     */
+    private static double floorRadiance(double elevation, double lateralAngle, double tiltSigma,
+            double halfWidthAcross) {
+        return LightPillarOptics.closedFormRadiance(elevation, lateralAngle, 20.0, -1.12, halfWidthAcross, tiltSigma,
+                IceHaloFormulas.refractiveIndex(1), 0.0, -1.62, RIBBON_EXTINCTION, 0.0, 1.0, 0.0,
+                LightPillarShelter.OPEN_RIM, LightPillarShelter.OPEN_CAP);
+    }
+
+    /**
+     * The closed form radiance on the pillar's axis, without blur, width or near fade, for the dust bottom 1.62 below
+     * the eye.
+     */
+    private static double closedFormAt(double elevation, double horizontalDistance, double lightHeight,
+            double tiltSigma, double fadeInSigmas, double baseShare, double rim, double cap) {
+        return LightPillarOptics.closedFormRadiance(elevation, 0.0, horizontalDistance, lightHeight, 0.0, tiltSigma,
+                IceHaloFormulas.refractiveIndex(1), 0.0, -1.62, RIBBON_EXTINCTION, fadeInSigmas, baseShare, 0.0, rim,
+                cap);
+    }
+
+    @GameTest(template = "phase0a_empty", timeoutTicks = 100)
+    public static void lightClustersMergeLightsThatTouch(GameTestHelper helper) {
         LightPillarClusters clusters = new LightPillarClusters();
         clusters.beginSection(2, 4, -1);
-        clusters.addLight(33, 65, -15, 65.625, 1.0F, 0.5F, 0.25F);
-        clusters.addLight(35, 66, -13, 67.0, 0.5F, 0.25F, 0.125F);
-        clusters.addLight(40, 65, -15, 65.5, 0.0F, 0.0F, 1.0F);
+        clusters.addLight(34, 65, -15, 65.625, false, false, 0.5F, 0.25F, 0.125F);
+        clusters.addLight(33, 65, -15, 65.625, false, false, 1.0F, 0.5F, 0.25F);
+        clusters.addLight(36, 65, -15, 65.625, false, false, 1.0F, 1.0F, 1.0F);
+        clusters.addLight(40, 65, -15, 65.5, false, false, 0.0F, 0.0F, 1.0F);
+        clusters.addLight(41, 66, -14, 66.5, false, false, 0.0F, 0.0F, 1.0F);
         clusters.endSection();
-        helper.assertTrue(clusters.count() == 2, "The finished section has " + clusters.count() + " clusters, not 2");
-        int merged = clusterWithKey(clusters, BlockPos.asLong(8, 16, -4));
-        int single = clusterWithKey(clusters, BlockPos.asLong(10, 16, -4));
-        helper.assertTrue(merged >= 0 && single >= 0, "The clusters do not have the keys of their cells");
-        double firstWeight = 1.75;
-        double secondWeight = 0.875;
-        double expectedX = (firstWeight * 33.5 + secondWeight * 35.5) / (firstWeight + secondWeight);
-        double expectedY = (firstWeight * 65.5 + secondWeight * 66.5) / (firstWeight + secondWeight);
-        double expectedZ = (firstWeight * -14.5 + secondWeight * -12.5) / (firstWeight + secondWeight);
-        helper.assertTrue(Math.abs(clusters.x(merged) - expectedX) < 1.0e-9
-                        && Math.abs(clusters.y(merged) - expectedY) < 1.0e-9
-                        && Math.abs(clusters.z(merged) - expectedZ) < 1.0e-9,
-                "The merged cluster is centered at " + clusters.x(merged) + " " + clusters.y(merged) + " "
-                        + clusters.z(merged) + " instead of " + expectedX + " " + expectedY + " " + expectedZ);
-        helper.assertTrue(clusters.red(merged) == 1.5F && clusters.green(merged) == 0.75F
-                        && clusters.blue(merged) == 0.375F,
-                "The merged cluster has the strengths " + clusters.red(merged) + " " + clusters.green(merged) + " "
-                        + clusters.blue(merged) + " instead of 1.5 0.75 0.375");
-        helper.assertTrue(clusters.x(single) == 40.5 && clusters.y(single) == 65.5 && clusters.z(single) == -14.5,
-                "A single light's cluster is not centered on its block");
-        helper.assertTrue(clusters.top(merged) == 67.0,
-                "The merged cluster's top is " + clusters.top(merged) + " instead of 67.0");
-        helper.assertTrue(clusters.top(single) == 65.5,
-                "The single cluster's top is " + clusters.top(single) + " instead of 65.5");
+        helper.assertTrue(clusters.count() == 3, "Two touching torches, one 2 blocks away, and two touching "
+                + "diagonally give " + clusters.count() + " clusters instead of 3");
+        long pairKey = BlockPos.asLong(33, 65, -15);
+        int pair = clusterWithKey(clusters, pairKey);
+        int apart = clusterWithKey(clusters, BlockPos.asLong(36, 65, -15));
+        int diagonal = clusterWithKey(clusters, BlockPos.asLong(40, 65, -15));
+        helper.assertTrue(pair >= 0 && apart >= 0 && diagonal >= 0, "The clusters do not have the keys of their "
+                + "first lights in the order of y, z and x");
+        // Points at 33.5 and 34.5 span 1 block along x, weighted 1.75 and 0.875 in y:
+        helper.assertTrue(clusters.x(pair) == 34.0 && clusters.y(pair) == 65.5 && clusters.z(pair) == -14.5,
+                "The pair stands at " + clusters.x(pair) + " " + clusters.y(pair) + " " + clusters.z(pair)
+                        + " instead of 34 65.5 -14.5");
+        helper.assertTrue(clusters.halfExtentX(pair) == 0.5 && clusters.halfExtentZ(pair) == 0.0
+                        && clusters.lightCount(pair) == 2,
+                "The pair spans " + clusters.halfExtentX(pair) + " and " + clusters.halfExtentZ(pair)
+                        + " on each side with " + clusters.lightCount(pair) + " lights instead of 0.5 and 0 with 2");
+        helper.assertTrue(clusters.red(pair) == 1.5F && clusters.green(pair) == 0.75F && clusters.blue(pair) == 0.375F,
+                "The pair has the strengths " + clusters.red(pair) + " " + clusters.green(pair) + " "
+                        + clusters.blue(pair) + " instead of 1.5 0.75 0.375");
+        helper.assertTrue(clusters.shelterX(pair) == 33 && clusters.shelterZ(pair) == -15 && !clusters.isFullBlock(pair),
+                "The pair's shelter is read at " + clusters.shelterX(pair) + " " + clusters.shelterZ(pair)
+                        + " instead of at its first light, 33 -15, which lies as near its middle as the other");
+        helper.assertTrue(clusters.x(apart) == 36.5 && clusters.halfExtentX(apart) == 0.0
+                        && clusters.lightCount(apart) == 1,
+                "A torch 2 blocks from the pair stands at " + clusters.x(apart) + " with a half extent of "
+                        + clusters.halfExtentX(apart) + " instead of alone at 36.5 with none");
+        helper.assertTrue(clusters.x(diagonal) == 41.0 && clusters.z(diagonal) == -14.0
+                        && clusters.halfExtentX(diagonal) == 0.5 && clusters.halfExtentZ(diagonal) == 0.5
+                        && clusters.top(diagonal) == 66.5 && clusters.shelterX(diagonal) == 41
+                        && clusters.shelterZ(diagonal) == -14,
+                "Two lights touching diagonally give a cluster at " + clusters.x(diagonal) + " "
+                        + clusters.z(diagonal) + " spanning " + clusters.halfExtentX(diagonal) + " and "
+                        + clusters.halfExtentZ(diagonal) + " with the top " + clusters.top(diagonal) + " read at "
+                        + clusters.shelterX(diagonal) + " " + clusters.shelterZ(diagonal)
+                        + " instead of 41 -14 spanning 0.5 and 0.5 with the top 66.5 read at its higher light");
+
+        LightPillarClusters floors = new LightPillarClusters();
+        floors.beginSection(0, 0, 0);
+        for (int x = 2; x <= 4; x++) {
+            for (int z = 6; z <= 8; z++) {
+                floors.addLight(x, 3, z, 4.0, true, true, 1.0F, 1.0F, 1.0F);
+            }
+        }
+        floors.addLight(5, 3, 7, 3.625, false, false, 1.0F, 1.0F, 1.0F);
+        floors.endSection();
+        int floor = clusterWithKey(floors, BlockPos.asLong(2, 3, 6));
+        // Glowstone fills x and z from 2 to 5 and the torch beside it adds the point 5.5 along x:
+        helper.assertTrue(floors.count() == 1 && floor >= 0 && floors.x(floor) == 3.75 && floors.z(floor) == 7.5
+                        && floors.halfExtentX(floor) == 1.75 && floors.halfExtentZ(floor) == 1.5
+                        && floors.lightCount(floor) == 10,
+                "A 3 by 3 glowstone floor with a torch beside it gives " + floors.count() + " clusters, at "
+                        + (floor >= 0 ? floors.x(floor) + " " + floors.z(floor) + " spanning "
+                        + floors.halfExtentX(floor) + " and " + floors.halfExtentZ(floor) + " with "
+                        + floors.lightCount(floor) + " lights" : "no key")
+                        + " instead of one at 3.75 7.5 spanning 1.75 and 1.5 with 10 lights");
+        helper.assertTrue(floor >= 0 && floors.shelterX(floor) == 3 && floors.shelterZ(floor) == 7
+                        && floors.isFullBlock(floor) && floors.top(floor) == 4.0,
+                "The floor's shelter is not read at its middle glowstone 3 7 as a full block");
+
+        LightPillarClusters row = new LightPillarClusters();
+        row.beginSection(0, 0, 0);
+        for (int x = 6; x <= 15; x++) {
+            row.addLight(x, 3, 1, 3.625, false, false, 1.0F, 1.0F, 1.0F);
+        }
+        row.endSection();
+        row.beginSection(1, 0, 0);
+        for (int x = 16; x <= 19; x++) {
+            row.addLight(x, 3, 1, 3.625, false, false, 1.0F, 1.0F, 1.0F);
+        }
+        row.endSection();
+        int westPart = clusterWithKey(row, BlockPos.asLong(6, 3, 1));
+        int eastPart = clusterWithKey(row, BlockPos.asLong(16, 3, 1));
+        helper.assertTrue(row.count() == 2 && westPart >= 0 && eastPart >= 0
+                        && row.lightCount(westPart) == 10 && row.lightCount(eastPart) == 4
+                        && row.x(westPart) == 11.0 && row.halfExtentX(westPart) == 4.5
+                        && row.x(eastPart) == 18.0 && row.halfExtentX(eastPart) == 1.5,
+                "A row of 14 torches across a section border gives " + row.count() + " clusters instead of one of 10 "
+                        + "torches spanning 4.5 around 11 and one of 4 spanning 1.5 around 18");
+
+        LightPillarClusters rescanned = new LightPillarClusters();
+        rescanned.beginSection(2, 4, -1);
+        rescanned.addLight(41, 66, -14, 66.5, false, false, 0.0F, 0.0F, 1.0F);
+        rescanned.addLight(40, 65, -15, 65.5, false, false, 0.0F, 0.0F, 1.0F);
+        rescanned.addLight(36, 65, -15, 65.625, false, false, 1.0F, 1.0F, 1.0F);
+        rescanned.addLight(33, 65, -15, 65.625, false, false, 1.0F, 0.5F, 0.25F);
+        rescanned.addLight(34, 65, -15, 65.625, false, false, 0.5F, 0.25F, 0.125F);
+        rescanned.endSection();
+        for (int cluster = 0; cluster < clusters.count(); cluster++) {
+            int same = clusterWithKey(rescanned, clusters.key(cluster));
+            helper.assertTrue(same >= 0 && rescanned.x(same) == clusters.x(cluster)
+                            && rescanned.y(same) == clusters.y(cluster) && rescanned.z(same) == clusters.z(cluster)
+                            && rescanned.halfExtentX(same) == clusters.halfExtentX(cluster)
+                            && rescanned.shelterX(same) == clusters.shelterX(cluster),
+                    "The cluster " + BlockPos.of(clusters.key(cluster)).toShortString() + " changes when the same "
+                            + "lights are added in another order");
+        }
+        rescanned.beginSection(2, 4, -1);
+        rescanned.addLight(33, 65, -15, 65.625, false, false, 1.0F, 0.5F, 0.25F);
+        rescanned.addLight(34, 65, -15, 65.625, false, false, 0.5F, 0.25F, 0.125F);
+        rescanned.addLight(36, 65, -15, 65.625, false, false, 1.0F, 1.0F, 1.0F);
+        rescanned.addLight(40, 65, -15, 65.5, false, false, 0.0F, 0.0F, 1.0F);
+        rescanned.addLight(41, 66, -14, 66.5, false, false, 0.0F, 0.0F, 1.0F);
+        rescanned.endSection();
+        helper.assertTrue(rescanned.count() == 3 && rescanned.sectionCount() == 1
+                        && clusterWithKey(rescanned, pairKey) >= 0,
+                "Walking the section again gives " + rescanned.count() + " clusters in " + rescanned.sectionCount()
+                        + " sections, and the pair's key " + (clusterWithKey(rescanned, pairKey) >= 0 ? "stays"
+                        : "is gone") + ", instead of the same 3 in 1");
+        assertDistinctKeys(helper, rescanned, " after walking the section again");
 
         clusters.beginSection(3, 4, -1);
-        clusters.addLight(56, 70, -10, 71.0, 1.0F, 1.0F, 1.0F);
+        clusters.addLight(56, 70, -10, 71.0, false, false, 1.0F, 1.0F, 1.0F);
         clusters.endSection();
-        long otherKey = BlockPos.asLong(14, 17, -3);
-        helper.assertTrue(clusters.count() == 3 && clusters.sectionCount() == 2,
+        long otherKey = BlockPos.asLong(56, 70, -10);
+        helper.assertTrue(clusters.count() == 4 && clusters.sectionCount() == 2,
                 "A second section gives " + clusters.count() + " clusters in " + clusters.sectionCount()
-                        + " sections instead of 3 in 2");
+                        + " sections instead of 4 in 2");
         helper.assertTrue(clusterWithKey(clusters, otherKey) >= 0,
                 "The second section has no cluster with the key " + BlockPos.of(otherKey).toShortString());
         clusters.beginSection(2, 4, -1);
-        clusters.addLight(33, 65, -15, 66.0, 1.0F, 1.0F, 1.0F);
+        clusters.addLight(34, 65, -15, 66.0, false, false, 1.0F, 1.0F, 1.0F);
         clusters.endSection();
-        helper.assertTrue(clusterWithKey(clusters, BlockPos.asLong(10, 16, -4)) < 0,
-                "The old cluster of the cell " + BlockPos.of(BlockPos.asLong(10, 16, -4)).toShortString()
-                        + " is still there after its section was begun again");
-        int replaced = clusterWithKey(clusters, BlockPos.asLong(8, 16, -4));
-        helper.assertTrue(replaced >= 0, "The cell " + BlockPos.of(BlockPos.asLong(8, 16, -4)).toShortString()
-                + " has no cluster after its section was begun again");
-        helper.assertTrue(clusters.x(replaced) == 33.5 && clusters.y(replaced) == 65.5 && clusters.z(replaced) == -14.5,
-                "The replaced cluster is centered at " + clusters.x(replaced) + " " + clusters.y(replaced) + " "
-                        + clusters.z(replaced) + " instead of 33.5 65.5 -14.5");
+        helper.assertTrue(clusterWithKey(clusters, pairKey) < 0,
+                "The pair " + BlockPos.of(pairKey).toShortString() + " is still there after its section was walked "
+                        + "again without its first light");
+        long replacedKey = BlockPos.asLong(34, 65, -15);
+        int replaced = clusterWithKey(clusters, replacedKey);
+        helper.assertTrue(replaced >= 0, "The light " + BlockPos.of(replacedKey).toShortString()
+                + " has no cluster after its section was walked again");
+        helper.assertTrue(clusters.x(replaced) == 34.5 && clusters.y(replaced) == 65.5 && clusters.z(replaced) == -14.5,
+                "The replaced cluster stands at " + clusters.x(replaced) + " " + clusters.y(replaced) + " "
+                        + clusters.z(replaced) + " instead of 34.5 65.5 -14.5");
         helper.assertTrue(clusters.red(replaced) == 1.0F && clusters.green(replaced) == 1.0F
-                        && clusters.blue(replaced) == 1.0F,
+                        && clusters.blue(replaced) == 1.0F && clusters.lightCount(replaced) == 1,
                 "The replaced cluster has the strengths " + clusters.red(replaced) + " " + clusters.green(replaced) + " "
-                        + clusters.blue(replaced) + " instead of 1 1 1");
+                        + clusters.blue(replaced) + " instead of 1 1 1 from one light");
         helper.assertTrue(clusterWithKey(clusters, otherKey) >= 0,
-                "The cluster of the other section went away with the section begun again");
+                "The cluster of the other section went away with the section walked again");
         helper.assertTrue(clusters.count() == 2 && clusters.sectionCount() == 2,
-                "After the section was begun again there are " + clusters.count() + " clusters in "
+                "After the section was walked again there are " + clusters.count() + " clusters in "
                         + clusters.sectionCount() + " sections instead of 2 in 2");
+        assertDistinctKeys(helper, clusters, " after the section was walked again");
 
         clusters.beginSection(2, 4, -1);
         clusters.endSection();
-        helper.assertTrue(clusterWithKey(clusters, BlockPos.asLong(8, 16, -4)) < 0,
+        helper.assertTrue(clusterWithKey(clusters, replacedKey) < 0,
                 "A section begun again without lights keeps its cluster");
         helper.assertTrue(clusterWithKey(clusters, otherKey) >= 0,
                 "A section begun again without lights removed the cluster of another section");
@@ -751,22 +1163,23 @@ public final class LightPillarGameTests {
         LightPillarClusters column = new LightPillarClusters();
         for (int sectionY = -4; sectionY <= 3; sectionY++) {
             column.beginSection(5, sectionY, 7);
-            column.addLight(5 * 16 + 8, sectionY * 16 + 8, 7 * 16 + 8, sectionY * 16 + 9.0, 1.0F, 1.0F, 1.0F);
+            column.addLight(5 * 16 + 8, sectionY * 16 + 8, 7 * 16 + 8, sectionY * 16 + 9.0, false, false, 1.0F, 1.0F,
+                    1.0F);
             column.endSection();
         }
         column.beginSection(6, 0, 7);
-        column.addLight(6 * 16 + 8, 8, 7 * 16 + 8, 9.0, 1.0F, 1.0F, 1.0F);
+        column.addLight(6 * 16 + 8, 8, 7 * 16 + 8, 9.0, false, false, 1.0F, 1.0F, 1.0F);
         column.endSection();
         helper.assertTrue(column.count() == 9 && column.sectionCount() == 9,
                 "The column and its neighbor give " + column.count() + " clusters in " + column.sectionCount()
                         + " sections instead of 9 in 9");
-        long neighborKey = BlockPos.asLong(26, 2, 30);
+        long neighborKey = BlockPos.asLong(104, 8, 120);
         for (int sectionY = -4; sectionY <= 3; sectionY++) {
             column.removeSection(5, sectionY, 7);
             assertDistinctKeys(helper, column, " after removing the section at y " + sectionY + " of the column");
             int remaining = 4 - sectionY;
             for (int keptY = sectionY + 1; keptY <= 3; keptY++) {
-                long keptKey = BlockPos.asLong(22, 4 * keptY + 2, 30);
+                long keptKey = BlockPos.asLong(88, 16 * keptY + 8, 120);
                 helper.assertTrue(clusterWithKey(column, keptKey) >= 0,
                         "The cluster " + BlockPos.of(keptKey).toShortString() + " went away with the section at y "
                                 + sectionY + " of the column");
@@ -780,7 +1193,8 @@ public final class LightPillarGameTests {
         }
         for (int sectionY = -4; sectionY <= 3; sectionY++) {
             column.beginSection(5, sectionY, 7);
-            column.addLight(5 * 16 + 8, sectionY * 16 + 8, 7 * 16 + 8, sectionY * 16 + 9.0, 1.0F, 1.0F, 1.0F);
+            column.addLight(5 * 16 + 8, sectionY * 16 + 8, 7 * 16 + 8, sectionY * 16 + 9.0, false, false, 1.0F, 1.0F,
+                    1.0F);
             column.endSection();
         }
         helper.assertTrue(column.count() == 9, "The filled column has " + column.count() + " clusters, not 9");
@@ -792,7 +1206,7 @@ public final class LightPillarGameTests {
         helper.assertTrue(clusterWithKey(column, neighborKey) >= 0,
                 "Removing the column removed the cluster of the neighboring column");
         for (int sectionY = -4; sectionY <= 3; sectionY++) {
-            long removedKey = BlockPos.asLong(22, 4 * sectionY + 2, 30);
+            long removedKey = BlockPos.asLong(88, 16 * sectionY + 8, 120);
             helper.assertTrue(clusterWithKey(column, removedKey) < 0, "Removing the column kept the cluster "
                     + BlockPos.of(removedKey).toShortString() + " of its section at y " + sectionY);
         }
@@ -1072,23 +1486,23 @@ public final class LightPillarGameTests {
 
     @GameTest(template = "phase0a_empty", timeoutTicks = 100)
     public static void lightPillarSelectionSkipsClustersOutsideTheChunkRadius(GameTestHelper helper) {
-        assertWithinRadius(helper, "chunk 2 0", BlockPos.asLong(8, 0, 0), 2, true);
-        assertWithinRadius(helper, "chunk 2 1", BlockPos.asLong(8, 0, 4), 2, true);
-        assertWithinRadius(helper, "chunk 2 2", BlockPos.asLong(8, 0, 8), 2, false);
-        assertWithinRadius(helper, "chunk -1 -2", BlockPos.asLong(-1, 0, -5), 2, true);
-        assertWithinRadius(helper, "chunk -3 0", BlockPos.asLong(-12, 0, 0), 2, false);
+        assertWithinRadius(helper, "chunk 2 0", BlockPos.asLong(40, 0, 0), 2, true);
+        assertWithinRadius(helper, "chunk 2 1", BlockPos.asLong(40, 0, 20), 2, true);
+        assertWithinRadius(helper, "chunk 2 2", BlockPos.asLong(40, 0, 40), 2, false);
+        assertWithinRadius(helper, "chunk -1 -2", BlockPos.asLong(-1, 0, -20), 2, true);
+        assertWithinRadius(helper, "chunk -3 0", BlockPos.asLong(-40, 0, 0), 2, false);
 
-        long nearKey = BlockPos.asLong(0, 0, 0);
-        long farKey = BlockPos.asLong(12, 0, 0);
+        long nearKey = BlockPos.asLong(1, 1, 1);
+        long farKey = BlockPos.asLong(49, 1, 1);
         LightPillarClusters clusters = new LightPillarClusters();
         clusters.beginSection(0, 0, 0);
-        clusters.addLight(1, 1, 1, 2.0, 1.0F, 1.0F, 1.0F);
+        clusters.addLight(1, 1, 1, 2.0, false, false, 1.0F, 1.0F, 1.0F);
         clusters.endSection();
         clusters.beginSection(3, 0, 0);
-        clusters.addLight(3 * 16 + 1, 1, 1, 2.0, 1.0F, 1.0F, 1.0F);
+        clusters.addLight(3 * 16 + 1, 1, 1, 2.0, false, false, 1.0F, 1.0F, 1.0F);
         clusters.endSection();
         helper.assertTrue(clusterWithKey(clusters, nearKey) >= 0 && clusterWithKey(clusters, farKey) >= 0,
-                "The clusters do not have the keys of their cells");
+                "The clusters do not have the keys of their lights");
 
         LightPillarSelection selection = new LightPillarSelection();
         selection.choose(clusters, 0.5, 0.5, 0.5, 1000.0, 2);
@@ -1784,7 +2198,7 @@ public final class LightPillarGameTests {
 
         LightPillarClusters clusters = new LightPillarClusters();
         clusters.beginSection(0, 3, 0);
-        clusters.addLight(0, 63, 0, 64.0, 1.0F, 1.0F, 1.0F);
+        clusters.addLight(0, 63, 0, 64.0, false, false, 1.0F, 1.0F, 1.0F);
         clusters.endSection();
         LightPillarSelection selection = new LightPillarSelection();
         selection.choose(clusters, 3.5, 64.6, 0.5, 1000.0, WIDE_CHUNK_RADIUS);
@@ -1861,8 +2275,8 @@ public final class LightPillarGameTests {
         horizons.update(selection, columns, 40.0, 1_000_000);
 
         clusters.beginSection(0, 3, 0);
-        clusters.addLight(0, 63, 0, 64.0, 1.0F, 1.0F, 1.0F);
-        clusters.addLight(1, 63, 0, 64.0, 1.0F, 1.0F, 1.0F);
+        clusters.addLight(0, 63, 0, 64.0, false, false, 1.0F, 1.0F, 1.0F);
+        clusters.addLight(1, 63, 0, 64.0, false, false, 1.0F, 1.0F, 1.0F);
         clusters.endSection();
         selection.choose(clusters, 3.5, 64.6, 0.5, 1000.0, WIDE_CHUNK_RADIUS);
         horizons.update(selection, columns, 40.0, 0);
@@ -1895,7 +2309,7 @@ public final class LightPillarGameTests {
         });
         LightPillarClusters clusters = new LightPillarClusters();
         clusters.beginSection(0, 3, 0);
-        clusters.addLight(0, 63, 0, 64.0, 1.0F, 1.0F, 1.0F);
+        clusters.addLight(0, 63, 0, 64.0, false, false, 1.0F, 1.0F, 1.0F);
         clusters.endSection();
         LightPillarSelection selection = new LightPillarSelection();
         selection.choose(clusters, 3.5, 64.6, 0.5, 1000.0, WIDE_CHUNK_RADIUS);
@@ -1933,6 +2347,361 @@ public final class LightPillarGameTests {
         helper.assertTrue(afterFreeing == belowTheFirstBin, "The horizon of a freed slot is " + afterFreeing
                 + " instead of its last " + belowTheFirstBin + ", which the slot still shows while it fades out");
         helper.succeed();
+    }
+
+    @GameTest(template = "phase0a_empty", timeoutTicks = 100)
+    public static void lightPillarShelterCapsUnderARoof(GameTestHelper helper) {
+        fillGrassFloor(helper);
+        BlockPos lightBlock = highAbove(helper, 10, 1, 10);
+        BlockState stone = Blocks.STONE.defaultBlockState();
+        BlockState air = Blocks.AIR.defaultBlockState();
+        ShelterSetup open = buildShelter(helper, lightBlock, 0.625, false);
+        assertCap(helper, open, "under open sky", LightPillarShelter.OPEN_CAP);
+        assertRimToward(helper, open, "under open sky", 0.0, 0.0);
+        helper.getLevel().setBlockAndUpdate(highAbove(helper, 10, 4, 10), stone);
+        ShelterSetup singleBlock = buildShelter(helper, lightBlock, 0.625, false);
+        assertCap(helper, singleBlock, "under one block 3 up, open in its 4 side columns", HIGH_FLOOR_Y + 4.0);
+        placeSquareAroundTheLight(helper, stone, 4, 1);
+        ShelterSetup roof = buildShelter(helper, lightBlock, 0.625, false);
+        assertCap(helper, roof, "under a 3 by 3 roof 3 blocks up", HIGH_FLOOR_Y + 4.0);
+        placeSquareAroundTheLight(helper, Blocks.GLASS.defaultBlockState(), 4, 1);
+        ShelterSetup glass = buildShelter(helper, lightBlock, 0.625, false);
+        assertCap(helper, glass, "under glass", LightPillarShelter.OPEN_CAP);
+        BlockState leaves = Blocks.OAK_LEAVES.defaultBlockState().setValue(LeavesBlock.PERSISTENT, true);
+        placeSquareAroundTheLight(helper, leaves, 4, 1);
+        ShelterSetup canopy = buildShelter(helper, lightBlock, 0.625, false);
+        assertCap(helper, canopy, "under leaves", HIGH_FLOOR_Y + 4.0);
+        placeSquareAroundTheLight(helper, air, 4, 1);
+        int[][] staggeredBlocks = {{10, 5, 10}, {10, 7, 10}, {11, 4, 10}, {9, 4, 10}};
+        for (int[] block : staggeredBlocks) {
+            helper.getLevel().setBlockAndUpdate(highAbove(helper, block[0], block[1], block[2]), stone);
+        }
+        ShelterSetup staggered = buildShelter(helper, lightBlock, 0.625, false);
+        assertCap(helper, staggered, "under blocks 4 and 6 up in its own column, beside lower ones in its side "
+                + "columns", HIGH_FLOOR_Y + 5.0);
+        for (int[] block : staggeredBlocks) {
+            helper.getLevel().setBlockAndUpdate(highAbove(helper, block[0], block[1], block[2]), air);
+        }
+        placeSquareAroundTheLight(helper, Blocks.OAK_PLANKS.defaultBlockState(), 4, 2);
+        ShelterSetup porch = buildShelter(helper, lightBlock, 0.625, false);
+        assertCap(helper, porch, "under a porch roof", HIGH_FLOOR_Y + 4.0);
+        assertRimToward(helper, porch, "under a porch roof", 0.0, 0.0);
+        placeSquareAroundTheLight(helper, air, 4, 2);
+
+        // An upside down U of planks: posts east and west of the torch 3 high, under a beam 3 up across them:
+        BlockState planks = Blocks.OAK_PLANKS.defaultBlockState();
+        for (int y = 1; y <= 3; y++) {
+            helper.getLevel().setBlockAndUpdate(highAbove(helper, 9, y, 10), planks);
+            helper.getLevel().setBlockAndUpdate(highAbove(helper, 11, y, 10), planks);
+        }
+        for (int x = 9; x <= 11; x++) {
+            helper.getLevel().setBlockAndUpdate(highAbove(helper, x, 4, 10), planks);
+        }
+        ShelterSetup arch = buildShelter(helper, lightBlock, 0.625, false);
+        assertCap(helper, arch, "under an upside down U", HIGH_FLOOR_Y + 4.0);
+        assertRimToward(helper, arch, "under an upside down U, through its open side", 90.0, 0.0);
+        // The post and the beam over it reach 5 above the floor's bottom, 0.5 / cos(5.625 degrees) = 0.5024 east:
+        assertRimToward(helper, arch, "under an upside down U, through its post", 0.0,
+                Math.atan2(5.0 - 1.625, 0.5 / Math.cos(Math.toRadians(5.625))));
+        helper.succeed();
+    }
+
+    @GameTest(template = "phase0a_empty", timeoutTicks = 100)
+    public static void lightPillarShelterCapsAFullBlockThroughItsSides(GameTestHelper helper) {
+        fillGrassFloor(helper);
+        BlockPos lightBlock = highAbove(helper, 10, 1, 10);
+        BlockState stone = Blocks.STONE.defaultBlockState();
+        BlockState air = Blocks.AIR.defaultBlockState();
+        for (int x = 10; x <= 12; x++) {
+            for (int z = 7; z <= 13; z++) {
+                for (int y = 1; y <= 5; y++) {
+                    helper.getLevel().setBlockAndUpdate(highAbove(helper, x, y, z), stone);
+                }
+            }
+        }
+        helper.getLevel().setBlockAndUpdate(lightBlock, Blocks.GLOWSTONE.defaultBlockState());
+        ShelterSetup facade = buildShelter(helper, lightBlock, 1.0, true);
+        assertCap(helper, facade, "set into a wall facing -x", LightPillarShelter.OPEN_CAP);
+        for (int y = 2; y <= 3; y++) {
+            helper.getLevel().setBlockAndUpdate(highAbove(helper, 9, y, 10), stone);
+        }
+        ShelterSetup buried = buildShelter(helper, lightBlock, 1.0, true);
+        assertCap(helper, buried, "set into a wall with a block over the column in front", HIGH_FLOOR_Y + 2.0);
+        for (int y = 2; y <= 3; y++) {
+            helper.getLevel().setBlockAndUpdate(highAbove(helper, 9, y, 10), air);
+        }
+        BlockPos sideAbove = highAbove(helper, 9, 1 + LightPillarShelter.WALL_HEIGHT + 4, 10);
+        buried.shelter().onBlockChanged(sideAbove.getX(), sideAbove.getY(), sideAbove.getZ(), air, stone);
+        buried.shelter().update(buried.selection(), buried.columns());
+        assertCap(helper, buried, "set into a wall, after a change high in the column in front, which rebuilds it "
+                + "with that column open", LightPillarShelter.OPEN_CAP);
+
+        for (int x = 10; x <= 12; x++) {
+            for (int z = 7; z <= 13; z++) {
+                for (int y = 1; y <= 5; y++) {
+                    helper.getLevel().setBlockAndUpdate(highAbove(helper, x, y, z), air);
+                }
+            }
+        }
+        helper.getLevel().setBlockAndUpdate(lightBlock, Blocks.GLOWSTONE.defaultBlockState());
+        placeSquareAroundTheLight(helper, stone, 4, 1);
+        ShelterSetup roof = buildShelter(helper, lightBlock, 1.0, true);
+        assertCap(helper, roof, "under a 3 by 3 roof 3 blocks up", HIGH_FLOOR_Y + 4.0);
+        placeSquareAroundTheLight(helper, air, 4, 1);
+        for (int x = 9; x <= 11; x++) {
+            helper.getLevel().setBlockAndUpdate(highAbove(helper, x, 4, 10), stone);
+        }
+        ShelterSetup beam = buildShelter(helper, lightBlock, 1.0, true);
+        assertCap(helper, beam, "under a beam 3 blocks up with its top open", HIGH_FLOOR_Y + 4.0);
+        helper.succeed();
+    }
+
+    @GameTest(template = "phase0a_empty", timeoutTicks = 100)
+    public static void lightPillarShelterRisesOverWallsTowardTheEye(GameTestHelper helper) {
+        // Heights above the floor's bottom, with the torch's top at 1.625 and its center in the middle of its column:
+        double twoHigh = 3.0 - 1.625;
+        double threeHigh = 4.0 - 1.625;
+        BlockState stone = Blocks.STONE.defaultBlockState();
+        BlockState air = Blocks.AIR.defaultBlockState();
+        fillGrassFloor(helper);
+        BlockPos lightBlock = highAbove(helper, 10, 1, 10);
+
+        // Every ray from the center meets the near face of a side block 0.5 away, farthest at 45 degrees:
+        placeRingAroundTheLight(helper, stone, air, 1, 2);
+        double[] plusAngles = wallAngles(twoHigh, 0.5, 0.5);
+        ShelterSetup plus = buildShelter(helper, lightBlock, 0.625, false);
+        assertBins(helper, plus, "in a plus of walls 2 high", plusAngles);
+        // At 39.375 degrees the ray enters 0.5 / cos(39.375 degrees) = 0.6468 away, which is 64.81 degrees:
+        double lowestPlusDirection = Math.toDegrees(plus.shelter().binAngle(plus.slot(), 3));
+        helper.assertTrue(Math.abs(lowestPlusDirection - 64.81) <= 0.02, "The plus rises " + lowestPlusDirection
+                + " degrees at 39.375 degrees instead of 64.81");
+        // Along +x the eye lies halfway between the rays at -5.625 and 5.625 degrees, both 0.5024 to the wall:
+        assertRimToward(helper, plus, "in a plus of walls 2 high", 0.0,
+                Math.atan2(twoHigh, 0.5 / Math.cos(Math.toRadians(5.625))));
+        assertRimToward(helper, plus, "in a plus of walls 2 high", 45.0, plusAngles[3]);
+        placeRingAroundTheLight(helper, stone, stone, 1, 2);
+        ShelterSetup ring = buildShelter(helper, lightBlock, 0.625, false);
+        assertBins(helper, ring, "in a ring of walls 2 high, whose side blocks the rays meet first", plusAngles);
+
+        // Without the side block east and the corners, the 8 rays within 45 degrees of +x meet no wall:
+        placeRingAroundTheLight(helper, stone, air, 1, 2);
+        for (int y = 1; y <= 2; y++) {
+            helper.getLevel().setBlockAndUpdate(highAbove(helper, 11, y, 10), air);
+        }
+        double[] gapAngles = plusAngles.clone();
+        for (int bin : new int[]{28, 29, 30, 31, 0, 1, 2, 3}) {
+            gapAngles[bin] = LightPillarShelter.OPEN_RIM;
+        }
+        ShelterSetup gap = buildShelter(helper, lightBlock, 0.625, false);
+        assertBins(helper, gap, "in a plus of walls without its east side", gapAngles);
+        assertRimToward(helper, gap, "in a plus without its east side", 0.0, 0.0);
+        assertRimToward(helper, gap, "in a plus without its east side", 180.0,
+                Math.atan2(twoHigh, 0.5 / Math.cos(Math.toRadians(5.625))));
+        // At 45 degrees the eye lies halfway between the open ray at 39.375 and the wall at 50.625 degrees:
+        assertRimToward(helper, gap, "in a plus without its east side", 45.0, 0.5 * plusAngles[4]);
+        placeRingAroundTheLight(helper, air, air, 1, 2);
+
+        // Walls 1 wide 2 blocks out on the axes stop the rays within atan(0.5 / 1.5) = 18.4 degrees of an axis:
+        for (int[] wall : new int[][]{{12, 10}, {10, 12}, {8, 10}, {10, 8}}) {
+            for (int y = 1; y <= 2; y++) {
+                helper.getLevel().setBlockAndUpdate(highAbove(helper, wall[0], y, wall[1]), stone);
+            }
+        }
+        double[] axisAngles = wallAngles(twoHigh, 1.5, 0.5);
+        ShelterSetup axes = buildShelter(helper, lightBlock, 0.625, false);
+        assertBins(helper, axes, "between 4 walls 2 out on the axes", axisAngles);
+        helper.assertTrue(axisAngles[2] == LightPillarShelter.OPEN_RIM && axisAngles[1] > 0.0,
+                "The ray at 28.125 degrees meets a wall on the axes or the ray at 16.875 degrees misses it");
+        assertRimToward(helper, axes, "between 4 walls 2 out on the axes", 45.0, 0.0);
+        // Along +x the rays enter the wall 1.5 / cos(5.625 degrees) = 1.5073 away, which is 42.37 degrees:
+        assertRimToward(helper, axes, "between 4 walls 2 out on the axes", 0.0,
+                Math.atan2(twoHigh, 1.5 / Math.cos(Math.toRadians(5.625))));
+        for (int[] wall : new int[][]{{12, 10}, {10, 12}, {8, 10}, {10, 8}}) {
+            for (int y = 1; y <= 2; y++) {
+                helper.getLevel().setBlockAndUpdate(highAbove(helper, wall[0], y, wall[1]), air);
+            }
+        }
+
+        // A ring 2 out has its inner faces 1.5 away, and they reach 2.5 along the other axis:
+        placeOuterRingAroundTheLight(helper, stone, 1, 3);
+        double[] outerAngles = wallAngles(threeHigh, 1.5, 2.5);
+        ShelterSetup outer = buildShelter(helper, lightBlock, 0.625, false);
+        assertBins(helper, outer, "in a ring of stone 2 out and 3 high", outerAngles);
+        // At 39.375 degrees the ray enters 1.5 / cos(39.375 degrees) = 1.9405 away, which is 50.75 degrees:
+        double lowestOuterDirection = Math.toDegrees(outer.shelter().binAngle(outer.slot(), 3));
+        helper.assertTrue(Math.abs(lowestOuterDirection - 50.75) <= 0.02, "The ring 2 out rises "
+                + lowestOuterDirection + " degrees at 39.375 degrees instead of 50.75");
+        BlockState leaves = Blocks.OAK_LEAVES.defaultBlockState().setValue(LeavesBlock.PERSISTENT, true);
+        placeOuterRingAroundTheLight(helper, leaves, 1, 3);
+        ShelterSetup hedge = buildShelter(helper, lightBlock, 0.625, false);
+        assertBins(helper, hedge, "in a ring of leaves 2 out and 3 high", outerAngles);
+        placeOuterRingAroundTheLight(helper, Blocks.GLASS.defaultBlockState(), 1, 3);
+        double[] openAngles = new double[LightPillarShelter.BINS];
+        Arrays.fill(openAngles, LightPillarShelter.OPEN_RIM);
+        ShelterSetup glass = buildShelter(helper, lightBlock, 0.625, false);
+        assertBins(helper, glass, "in a ring of glass", openAngles);
+        placeOuterRingAroundTheLight(helper, stone, 1, 3);
+        helper.getLevel().setBlockAndUpdate(highAbove(helper, 12, 4, 9), stone);
+        helper.getLevel().setBlockAndUpdate(highAbove(helper, 12, 5, 9), stone);
+        // The tower at (2, -1) reaches 6 above the floor's bottom. The rays at -39.375 and -28.125 degrees enter the
+        // ring through it, and the ray at -16.875 degrees passes (2, 0) into its side 0.5 / sin(16.875 degrees) away:
+        double[] towerAngles = outerAngles.clone();
+        for (int bin : new int[]{28, 29}) {
+            towerAngles[bin] = Math.atan2(6.0 - 1.625, 1.5 / Math.cos(Math.toRadians((bin + 0.5) * 11.25)));
+        }
+        towerAngles[30] = Math.atan2(6.0 - 1.625, 0.5 / Math.sin(Math.toRadians(16.875)));
+        ShelterSetup tower = buildShelter(helper, lightBlock, 0.625, false);
+        assertBins(helper, tower, "in a ring with a tower", towerAngles);
+        helper.getLevel().setBlockAndUpdate(highAbove(helper, 12, 4, 9), air);
+        helper.getLevel().setBlockAndUpdate(highAbove(helper, 12, 5, 9), air);
+        for (int y = 1; y <= 3; y++) {
+            helper.getLevel().setBlockAndUpdate(highAbove(helper, 12, y, 10), air);
+        }
+        // Through the gap at (2, 0) the rays at -5.625 and 5.625 degrees meet no wall, and those at -16.875 and 16.875
+        // degrees leave the gap through its side at 0.5 / sin(16.875 degrees) = 1.7232 into (2, -1) and (2, 1):
+        double[] gapRingAngles = outerAngles.clone();
+        gapRingAngles[0] = LightPillarShelter.OPEN_RIM;
+        gapRingAngles[31] = LightPillarShelter.OPEN_RIM;
+        gapRingAngles[1] = Math.atan2(threeHigh, 0.5 / Math.sin(Math.toRadians(16.875)));
+        gapRingAngles[30] = gapRingAngles[1];
+        ShelterSetup gapRing = buildShelter(helper, lightBlock, 0.625, false);
+        assertBins(helper, gapRing, "in a ring 2 out with a gap at (2, 0)", gapRingAngles);
+        assertRimToward(helper, gapRing, "in a ring 2 out, through its gap", 0.0, 0.0);
+        assertRimToward(helper, gapRing, "in a ring 2 out, away from its gap", 180.0, outerAngles[15]);
+        placeOuterRingAroundTheLight(helper, air, 1, 5);
+
+        // Slabs below the light's top rise below the horizon and lift nothing. There the farthest slab a ray enters is
+        // the steepest, and rays more than atan(1 / 3) off an axis pass the side slab into a corner slab:
+        placeRingAroundTheLight(helper, Blocks.STONE_SLAB.defaultBlockState(), Blocks.STONE_SLAB.defaultBlockState(),
+                1, 1);
+        double slabHeight = 1.5 - 1.625;
+        double[] slabAngles = wallAngles(slabHeight, 0.5, 1.5);
+        for (int bin = 0; bin < LightPillarShelter.BINS; bin++) {
+            double direction = Math.toRadians((bin + 0.5) * 11.25);
+            double alongX = Math.abs(Math.cos(direction));
+            double alongZ = Math.abs(Math.sin(direction));
+            double across = Math.min(alongX, alongZ);
+            if (3.0 * across > Math.max(alongX, alongZ)) {
+                slabAngles[bin] = Math.atan2(slabHeight, 0.5 / across);
+            }
+        }
+        ShelterSetup slabs = buildShelter(helper, lightBlock, 0.625, false);
+        assertBins(helper, slabs, "in a ring of bottom slabs", slabAngles);
+        assertRimToward(helper, slabs, "in a ring of bottom slabs", 30.0, 0.0);
+        helper.succeed();
+    }
+
+    @GameTest(template = "phase0a_empty", timeoutTicks = 100)
+    public static void lightPillarShelterLiftsOnlyTowardTheWalls(GameTestHelper helper) {
+        fillGrassFloor(helper);
+        BlockPos lightBlock = highAbove(helper, 10, 1, 10);
+        BlockState stone = Blocks.STONE.defaultBlockState();
+        // A wall 3 high reaches 4 above the floor's bottom, and the rays along an axis enter it 0.5024 away:
+        double nearestEntry = 0.5 / Math.cos(Math.toRadians(5.625));
+        double towardThreeHigh = Math.atan2(4.0 - 1.625, nearestEntry);
+        for (int y = 1; y <= 3; y++) {
+            for (int z = 8; z <= 12; z++) {
+                helper.getLevel().setBlockAndUpdate(highAbove(helper, 11, y, z), stone);
+            }
+        }
+        ShelterSetup wall = buildShelter(helper, lightBlock, 0.625, false);
+        assertCap(helper, wall, "beside one wall", LightPillarShelter.OPEN_CAP);
+        assertRimToward(helper, wall, "beside one wall, from the open side", 180.0, 0.0);
+        assertRimToward(helper, wall, "beside one wall, from behind it", 0.0, towardThreeHigh);
+        for (int y = 1; y <= 3; y++) {
+            for (int x = 8; x <= 11; x++) {
+                helper.getLevel().setBlockAndUpdate(highAbove(helper, x, y, 11), stone);
+            }
+        }
+        ShelterSetup corner = buildShelter(helper, lightBlock, 0.625, false);
+        assertRimToward(helper, corner, "in a corner, from the open side", 225.0, 0.0);
+        assertRimToward(helper, corner, "in a corner, from behind its east wall", 0.0, towardThreeHigh);
+        assertRimToward(helper, corner, "in a corner, from behind its south wall", 90.0, towardThreeHigh);
+        for (int y = 1; y <= 3; y++) {
+            for (int x = 8; x <= 12; x++) {
+                for (int z = 8; z <= 12; z++) {
+                    helper.getLevel().setBlockAndUpdate(highAbove(helper, x, y, z), Blocks.AIR.defaultBlockState());
+                }
+            }
+        }
+        for (int y = 1; y <= 4; y++) {
+            helper.getLevel().setBlockAndUpdate(highAbove(helper, 11, y, 10), stone);
+        }
+        ShelterSetup hanging = buildShelter(helper, lightBlock, 0.625, false);
+        assertRimToward(helper, hanging, "on the wall it hangs on, from the front", 180.0, 0.0);
+        assertRimToward(helper, hanging, "on the wall it hangs on, from behind it", 0.0,
+                Math.atan2(5.0 - 1.625, nearestEntry));
+        helper.succeed();
+    }
+
+    @GameTest(template = "phase0a_empty", timeoutTicks = 100)
+    public static void lightPillarShelterFollowsBlockChanges(GameTestHelper helper) {
+        fillGrassFloor(helper);
+        BlockPos lightBlock = highAbove(helper, 10, 1, 10);
+        BlockState stone = Blocks.STONE.defaultBlockState();
+        BlockState air = Blocks.AIR.defaultBlockState();
+        placeOuterRingAroundTheLight(helper, stone, 1, 3);
+        BlockPos gap = highAbove(helper, 12, 1, 10);
+        helper.getLevel().setBlockAndUpdate(gap, air);
+        ShelterSetup setup = buildShelter(helper, lightBlock, 0.625, false);
+        assertCap(helper, setup, "in a ring with a gap", LightPillarShelter.OPEN_CAP);
+        assertRimToward(helper, setup, "in a ring with a gap, through the gap", 0.0, 0.0);
+
+        // Along +x the ring's wall tops 4 and the light's top 1.625 above the floor's bottom are 1.5073 apart:
+        double throughTheGap = Math.atan2(4.0 - 1.625, 1.5 / Math.cos(Math.toRadians(5.625)));
+        helper.getLevel().setBlockAndUpdate(gap, stone);
+        setup.shelter().onBlockChanged(gap.getX(), gap.getY(), gap.getZ(), air, stone);
+        setup.shelter().update(setup.selection(), setup.columns());
+        assertRimToward(helper, setup, "once the gap is closed", 0.0, throughTheGap);
+
+        placeRoofWithHooks(helper, setup, stone, 6);
+        setup.shelter().update(setup.selection(), setup.columns());
+        assertCap(helper, setup, "once a roof is placed", HIGH_FLOOR_Y + 6.0);
+        assertRimToward(helper, setup, "once a roof is placed", 0.0, throughTheGap);
+
+        BlockPos farAbove = highAbove(helper, 12, 1 + LightPillarShelter.WALL_HEIGHT + 2, 10);
+        setup.shelter().onBlockChanged(farAbove.getX(), farAbove.getY(), farAbove.getZ(), air, stone);
+        setup.shelter().update(setup.selection(), setup.columns());
+        helper.getLevel().setBlockAndUpdate(gap, air);
+        setup.shelter().update(setup.selection(), setup.columns());
+        assertRimToward(helper, setup, "after a change above the walls read, without a hook for the gap", 0.0,
+                throughTheGap);
+
+        BlockPos sideAbove = highAbove(helper, 11, 1 + LightPillarShelter.WALL_HEIGHT + 2, 10);
+        setup.shelter().onBlockChanged(sideAbove.getX(), sideAbove.getY(), sideAbove.getZ(), air, stone);
+        setup.shelter().update(setup.selection(), setup.columns());
+        assertRimToward(helper, setup, "after a change high in a side column of a torch, which reads no side column "
+                + "that high", 0.0, throughTheGap);
+
+        BlockPos ownAbove = highAbove(helper, 10, 1 + LightPillarShelter.WALL_HEIGHT + 2, 10);
+        setup.shelter().onBlockChanged(ownAbove.getX(), ownAbove.getY(), ownAbove.getZ(), air, stone);
+        setup.shelter().update(setup.selection(), setup.columns());
+        assertRimToward(helper, setup, "after a change high in its own column, which rebuilds with the gap open", 0.0,
+                0.0);
+        assertCap(helper, setup, "after a change high in its own column", HIGH_FLOOR_Y + 6.0);
+
+        helper.getLevel().setBlockAndUpdate(gap, stone);
+        setup.shelter().onBlockChanged(gap.getX(), gap.getY(), gap.getZ(), air, stone);
+        placeRoofWithHooks(helper, setup, air, 6);
+        setup.shelter().update(setup.selection(), setup.columns());
+        assertCap(helper, setup, "once the gap is closed again and the roof broken", LightPillarShelter.OPEN_CAP);
+        assertRimToward(helper, setup, "once the gap is closed again and the roof broken", 0.0, throughTheGap);
+        helper.succeed();
+    }
+
+    /**
+     * Sets the state into the 3 by 3 blocks over the light's column at relative (10, 10), at the height above
+     * HIGH_FLOOR_Y, and reports each change to the shelter.
+     */
+    private static void placeRoofWithHooks(GameTestHelper helper, ShelterSetup setup, BlockState state, int y) {
+        for (int x = 9; x <= 11; x++) {
+            for (int z = 9; z <= 11; z++) {
+                BlockPos position = highAbove(helper, x, y, z);
+                BlockState oldState = helper.getLevel().getBlockState(position);
+                helper.getLevel().setBlockAndUpdate(position, state);
+                setup.shelter().onBlockChanged(position.getX(), position.getY(), position.getZ(), oldState, state);
+            }
+        }
     }
 
     @GameTest(template = "phase0a_empty", timeoutTicks = 200)
@@ -2108,7 +2877,7 @@ public final class LightPillarGameTests {
             }
             double covered = rows * cellAngle;
             double needed = LightPillarOptics.HIGHEST_RIBBON_ELEVATION
-                    + LightPillarCells.SHADER_TILT_RANGE_SIGMAS * widest + cellAngle;
+                    + 0.5 * LightPillarCells.CELL_ORIGIN_SIGMAS * widest + cellAngle;
             if (rows < LightPillarCells.MOST_ROWS) {
                 helper.assertTrue(covered >= needed, "A cell of " + cellDegrees + " degrees covers " + covered
                         + " radians in " + rows + " rows instead of the " + needed
@@ -2132,11 +2901,11 @@ public final class LightPillarGameTests {
         double cellAngle = Math.toRadians(CELL_ANGLE_DEGREES);
         for (IceCrystalData.Crystal crystal : plates()) {
             double tiltSigma = Math.toRadians(crystal.tiltDegrees());
-            double lowestLevel = -LightPillarCells.SHADER_TILT_RANGE_SIGMAS * tiltSigma;
+            double lowestLevel = -0.5 * LightPillarCells.CELL_ORIGIN_SIGMAS * tiltSigma;
             for (double elevationDegrees = -60.0; elevationDegrees <= 60.0; elevationDegrees += 0.5) {
                 double lightElevation = Math.toRadians(elevationDegrees);
                 double expected = lightElevation >= lowestLevel ? lightElevation
-                        : -lightElevation - 2.0 * LightPillarCells.SHADER_TILT_RANGE_SIGMAS * tiltSigma;
+                        : -lightElevation - LightPillarCells.CELL_ORIGIN_SIGMAS * tiltSigma;
                 double origin = LightPillarCells.cellOrigin(lightElevation, tiltSigma);
                 helper.assertTrue(Math.abs(origin - expected) <= 1.0e-12, "The cell origin of the " + crystal.name()
                         + " for a light at " + elevationDegrees + " degrees is " + origin + " instead of " + expected);
@@ -2425,13 +3194,13 @@ public final class LightPillarGameTests {
                 continue;
             }
             clusters.beginSection(light, 0, 0);
-            clusters.addLight(16 * light + 8, 0, 0, 1.0, 1.0F, 1.0F, 1.0F);
+            clusters.addLight(16 * light + 8, 0, 0, 1.0, false, false, 1.0F, 1.0F, 1.0F);
             clusters.endSection();
         }
     }
 
     private static long rowKey(int light) {
-        return BlockPos.asLong(4 * light + 2, 0, 0);
+        return BlockPos.asLong(16 * light + 8, 0, 0);
     }
 
     private static void stepSelection(LightPillarSelection selection, LightPillarClusters clusters, int steps) {
@@ -2809,7 +3578,7 @@ public final class LightPillarGameTests {
                 SectionPos.blockToSectionCoord(lightBlock.getY()),
                 SectionPos.blockToSectionCoord(lightBlock.getZ()));
         clusters.addLight(lightBlock.getX(), lightBlock.getY(), lightBlock.getZ(), lightBlock.getY() + topOffset,
-                1.0F, 1.0F, 1.0F);
+                false, false, 1.0F, 1.0F, 1.0F);
         clusters.endSection();
         LightPillarSelection selection = new LightPillarSelection();
         selection.choose(clusters, lightBlock.getX() + 3.5, lightBlock.getY() + 1.6, lightBlock.getZ() + 0.5, 1000.0,
@@ -2829,6 +3598,129 @@ public final class LightPillarGameTests {
      */
     private record HorizonSetup(LightPillarSelection selection, LightPillarHorizons horizons,
             LightPillarHorizons.LevelColumns columns, int slot, BlockPos lightBlock) {
+    }
+
+    /**
+     * Sets the state into the 16 columns 2 blocks around the light's column at relative (10, 10), at each height
+     * above HIGH_FLOOR_Y from the lowest to the highest.
+     */
+    private static void placeOuterRingAroundTheLight(GameTestHelper helper, BlockState state, int lowestY,
+            int highestY) {
+        for (int x = 8; x <= 12; x++) {
+            for (int z = 8; z <= 12; z++) {
+                if (Math.abs(x - 10) < 2 && Math.abs(z - 10) < 2) {
+                    continue;
+                }
+                for (int y = lowestY; y <= highestY; y++) {
+                    helper.getLevel().setBlockAndUpdate(highAbove(helper, x, y, z), state);
+                }
+            }
+        }
+    }
+
+    /**
+     * Sets the state into the square of columns up to the reach around the light's column at relative (10, 10), its
+     * own column included, at the height above HIGH_FLOOR_Y.
+     */
+    private static void placeSquareAroundTheLight(GameTestHelper helper, BlockState state, int y, int reach) {
+        for (int x = 10 - reach; x <= 10 + reach; x++) {
+            for (int z = 10 - reach; z <= 10 + reach; z++) {
+                helper.getLevel().setBlockAndUpdate(highAbove(helper, x, y, z), state);
+            }
+        }
+    }
+
+    /**
+     * Chooses the light at the block as the only cluster of a new selection and builds the shelter of its slot from
+     * the level. The top of the light lies the given offset above the block.
+     */
+    private static ShelterSetup buildShelter(GameTestHelper helper, BlockPos lightBlock, double topOffset,
+            boolean fullBlock) {
+        LightPillarClusters clusters = new LightPillarClusters();
+        clusters.beginSection(SectionPos.blockToSectionCoord(lightBlock.getX()),
+                SectionPos.blockToSectionCoord(lightBlock.getY()),
+                SectionPos.blockToSectionCoord(lightBlock.getZ()));
+        clusters.addLight(lightBlock.getX(), lightBlock.getY(), lightBlock.getZ(), lightBlock.getY() + topOffset,
+                fullBlock, fullBlock, 1.0F, 1.0F, 1.0F);
+        clusters.endSection();
+        LightPillarSelection selection = new LightPillarSelection();
+        selection.choose(clusters, lightBlock.getX() + 3.5, lightBlock.getY() + 1.6, lightBlock.getZ() + 0.5, 1000.0,
+                WIDE_CHUNK_RADIUS);
+        int slot = usedSlot(helper, selection);
+        LightPillarShelter shelter = new LightPillarShelter();
+        LightPillarHorizons.LevelColumns columns = new LightPillarHorizons.LevelColumns(shelter.occluders());
+        columns.setLevel(helper.getLevel());
+        helper.assertTrue(!selection.isReady(slot), "The slot of the light at " + lightBlock.toShortString()
+                + " is ready before its shelter is built");
+        shelter.update(selection, columns);
+        helper.assertTrue(shelter.isBuilt(slot) && selection.isReady(slot), "The shelter of the light at "
+                + lightBlock.toShortString() + " is not built and ready");
+        return new ShelterSetup(selection, shelter, columns, slot, lightBlock);
+    }
+
+    /**
+     * The slot, shelter, and columns of one light standing in the template, with its shelter built.
+     */
+    private record ShelterSetup(LightPillarSelection selection, LightPillarShelter shelter,
+            LightPillarHorizons.LevelColumns columns, int slot, BlockPos lightBlock) {
+    }
+
+    private static void assertCap(GameTestHelper helper, ShelterSetup setup, String where, double expectedCap) {
+        double cap = setup.shelter().cap(setup.slot());
+        helper.assertTrue(cap == expectedCap || Math.abs(cap - expectedCap) <= 1.0e-9, "The cap of a light " + where
+                + " is " + cap + " instead of " + expectedCap);
+    }
+
+    /**
+     * The rim of the slot toward an eye 30 blocks from the light's block center in the direction at the angle in
+     * degrees, counted from +x toward +z.
+     */
+    private static double rimToward(ShelterSetup setup, double eyeDegrees) {
+        double eyeX = setup.lightBlock().getX() + 0.5 + 30.0 * Math.cos(Math.toRadians(eyeDegrees));
+        double eyeZ = setup.lightBlock().getZ() + 0.5 + 30.0 * Math.sin(Math.toRadians(eyeDegrees));
+        return setup.shelter().rimToward(setup.slot(), eyeX, eyeZ);
+    }
+
+    private static void assertRimToward(GameTestHelper helper, ShelterSetup setup, String where, double eyeDegrees,
+            double expectedRim) {
+        double rim = rimToward(setup, eyeDegrees);
+        helper.assertTrue(Math.abs(rim - expectedRim) <= WALL_ANGLE_TOLERANCE, "The rim of a light " + where
+                + " toward an eye at "
+                + eyeDegrees + " degrees is " + Math.toDegrees(rim) + " degrees instead of "
+                + Math.toDegrees(expectedRim));
+    }
+
+    /**
+     * Checks every direction's angle against the expected one, with OPEN_RIM for a direction that meets no wall.
+     */
+    private static void assertBins(GameTestHelper helper, ShelterSetup setup, String where, double[] expected) {
+        for (int bin = 0; bin < LightPillarShelter.BINS; bin++) {
+            double angle = setup.shelter().binAngle(setup.slot(), bin);
+            helper.assertTrue(angle == expected[bin] || Math.abs(angle - expected[bin]) <= WALL_ANGLE_TOLERANCE,
+                    "The direction "
+                    + bin + " at " + (bin + 0.5) * 11.25 + " degrees of a light " + where + " rises "
+                    + Math.toDegrees(angle) + " degrees instead of " + Math.toDegrees(expected[bin]));
+        }
+    }
+
+    /**
+     * The angle of the walls the height above the light's top, for a light at the center of its block, in each
+     * direction where a ray from the center enters them at the given distances of the faces nearest to the light along
+     * x and z, where the ray meets the face within the half widths of the walls along the other axis. Directions that
+     * meet no wall are OPEN_RIM.
+     */
+    private static double[] wallAngles(double height, double faceDistance, double faceHalfWidth) {
+        double[] angles = new double[LightPillarShelter.BINS];
+        for (int bin = 0; bin < LightPillarShelter.BINS; bin++) {
+            double direction = Math.toRadians((bin + 0.5) * 11.25);
+            double alongX = Math.abs(Math.cos(direction));
+            double alongZ = Math.abs(Math.sin(direction));
+            // The ray reaches the face across the axis it runs more along, at the distance over that axis' share:
+            double entry = faceDistance / Math.max(alongX, alongZ);
+            double sideways = entry * Math.min(alongX, alongZ);
+            angles[bin] = sideways <= faceHalfWidth ? Math.atan2(height, entry) : LightPillarShelter.OPEN_RIM;
+        }
+        return angles;
     }
 
     /**

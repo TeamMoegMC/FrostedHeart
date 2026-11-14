@@ -114,6 +114,23 @@ final class LightPillarOptics {
      * The standard normal quantile of RIBBON_GLINT_CHANCE.
      */
     private static final double RIBBON_GLINT_SIGMAS = 2.326;
+    /**
+     * The closed form fades out over this many blocks of the sheet's height below the cap, as
+     * SHELTER_BAND in light_pillars.glsl.
+     */
+    static final double SHELTER_BAND = 0.5;
+    /**
+     * Below this ratio of the half angle of a light's width to the spread across its pillar, the closed form takes a
+     * Gaussian as wide as the smeared profile instead, which is within 0.2 percent of it at the peak, as SMEAR_SHARE in
+     * light_pillars.glsl.
+     */
+    static final double SMEAR_SHARE = 0.5;
+    /**
+     * The coefficients of the complementary error function of Abramowitz and Stegun 7.1.26.
+     */
+    private static final double ERROR_FUNCTION_STEP = 0.3275911;
+    private static final double[] ERROR_FUNCTION_COEFFICIENTS = {0.254829592, -0.284496736, 1.421413741,
+            -1.453152027, 1.061405429};
 
     private LightPillarOptics() {
     }
@@ -422,6 +439,154 @@ final class LightPillarOptics {
             }
         }
         return sum * halfRange;
+    }
+
+    /**
+     * The radiance of the pillar of level faces in the diamond dust toward a direction, the closed form that
+     * light_pillars.glsl draws, per unit face area of the plates per volume at the bottom of the dust as dustRadiance
+     * gives it. Its crystals stand on the vertical sheet through the light at the elevation. It shows from the
+     * elevation where crystals stand above both the eye and the light, fading in there over the fade in sigmas of the
+     * tilt from the base share up, and crystals nearer to the eye than the near fade in blocks show less, as
+     * nearWeight gives it. The rim of LightPillarShelter, an angle, lifts that elevation, and the pillar shows below
+     * the cap, a height relative to the eye. A light as wide as twice the half width across the view in blocks spreads
+     * its pillar over that width, as lateralProfile gives it.
+     */
+    static double closedFormRadiance(double elevation, double lateralAngle, double horizontalDistance,
+            double lightHeight, double halfWidthAcross, double tiltSigma, double refractiveIndex, double lateralBlur,
+            double dustBottomHeight, double extinction, double fadeInSigmas, double baseShare, double nearFade,
+            double rim, double cap) {
+        return closedForm(false, elevation, lateralAngle, horizontalDistance, lightHeight, halfWidthAcross, tiltSigma,
+                refractiveIndex, lateralBlur, dustBottomHeight, extinction, fadeInSigmas, baseShare, nearFade, rim,
+                cap);
+    }
+
+    /**
+     * The mean count of crystals that mirror one light toward a direction in the closed form of closedFormRadiance,
+     * per unit face area of the plates per volume at the bottom of the dust and per unit crystalCountScale, as
+     * dustCrystalCount gives it. The fade in, the near fade, and the cap dim the light of the crystals but leave their
+     * count, so glints there dim instead of thinning out. Each light of a cluster has crystals of its own, so the
+     * cluster's count is this times its count of lights.
+     */
+    static double closedFormCrystalCount(double elevation, double lateralAngle, double horizontalDistance,
+            double lightHeight, double halfWidthAcross, double tiltSigma, double lateralBlur, double dustBottomHeight,
+            double fadeInSigmas, double baseShare, double nearFade, double rim, double cap) {
+        return closedForm(true, elevation, lateralAngle, horizontalDistance, lightHeight, halfWidthAcross, tiltSigma,
+                1.0, lateralBlur, dustBottomHeight, 0.0, fadeInSigmas, baseShare, nearFade, rim, cap);
+    }
+
+    /**
+     * The share of the pillar's light per radian across it at the lateral angle, for the spread across the pillar of
+     * one point of the light and the half angle that the light's width takes up across the view. It is the Gaussian
+     * of the spread smeared evenly over the half angle on both sides, and integrates to 1 across the pillar. Where the
+     * half angle is below SMEAR_SHARE of the spread, it is the Gaussian with the same variance instead, which is the
+     * plain Gaussian for a half angle of 0.
+     */
+    static double lateralProfile(double lateralAngle, double spread, double halfAngle) {
+        if (halfAngle <= SMEAR_SHARE * spread) {
+            return gaussian(lateralAngle, spread * spread + halfAngle * halfAngle / 3.0);
+        }
+        double offset = Math.abs(lateralAngle);
+        return (upperNormalTail((offset - halfAngle) / spread) - upperNormalTail((offset + halfAngle) / spread))
+                / (2.0 * halfAngle);
+    }
+
+    /**
+     * Half the width across the view of a cluster with the half extents along x and z, seen in the level direction of
+     * the offset from the eye, or its widest half extent where the offset is 0.
+     */
+    static double halfWidthAcross(double halfExtentX, double halfExtentZ, double offsetX, double offsetZ) {
+        double distance = Math.sqrt(offsetX * offsetX + offsetZ * offsetZ);
+        if (!(distance > 0.0)) {
+            return Math.max(halfExtentX, halfExtentZ);
+        }
+        return (Math.abs(halfExtentX * offsetZ) + Math.abs(halfExtentZ * offsetX)) / distance;
+    }
+
+    /**
+     * The chance that a standard normal deviate lies above the deviation, from the complementary error function of
+     * Abramowitz and Stegun 7.1.26, within 1e-7.
+     */
+    static double upperNormalTail(double deviation) {
+        double scaled = Math.abs(deviation) / Math.sqrt(2.0);
+        double step = 1.0 / (1.0 + ERROR_FUNCTION_STEP * scaled);
+        double polynomial = 0.0;
+        for (int power = ERROR_FUNCTION_COEFFICIENTS.length - 1; power >= 0; power--) {
+            polynomial = (polynomial + ERROR_FUNCTION_COEFFICIENTS[power]) * step;
+        }
+        double tail = 0.5 * polynomial * Math.exp(-scaled * scaled);
+        return deviation >= 0.0 ? tail : 1.0 - tail;
+    }
+
+    /**
+     * The lowest elevation of the closed form, where crystals stand above both the eye and the light, and not below
+     * the rim's angle.
+     */
+    static double lowestClosedFormElevation(double horizontalDistance, double lightHeight, double rim) {
+        return Math.max(Math.abs(Math.atan2(lightHeight, horizontalDistance)), rim);
+    }
+
+    /**
+     * The share of its light that the closed form shows at the elevation above its lowest elevation, rising from 0
+     * over the fade in sigmas of the tilt, and from the base share to all of it on top of that.
+     */
+    static double fadeIn(double elevation, double lowestElevation, double tiltSigma, double fadeInSigmas,
+            double baseShare) {
+        double ramp = smoothstep(lowestElevation, lowestElevation + fadeInSigmas * tiltSigma, elevation);
+        return ramp * (baseShare + (1.0 - baseShare) * ramp);
+    }
+
+    /**
+     * The share of its light that the closed form shows at the height of the sheet through the light above the eye,
+     * falling over SHELTER_BAND below the cap, or all of it for an infinite cap.
+     */
+    static double capShare(double sheetHeight, double cap) {
+        if (cap == Double.POSITIVE_INFINITY) {
+            return 1.0;
+        }
+        return 1.0 - smoothstep(cap - SHELTER_BAND, cap, sheetHeight);
+    }
+
+    /**
+     * The smoothstep of GLSL, which steps at the edge where both edges are the same.
+     */
+    private static double smoothstep(double edge, double otherEdge, double value) {
+        if (!(otherEdge > edge)) {
+            return value >= edge ? 1.0 : 0.0;
+        }
+        double share = Math.max(0.0, Math.min(1.0, (value - edge) / (otherEdge - edge)));
+        return share * share * (3.0 - 2.0 * share);
+    }
+
+    private static double closedForm(boolean countsCrystals, double elevation, double lateralAngle,
+            double horizontalDistance, double lightHeight, double halfWidthAcross, double tiltSigma,
+            double refractiveIndex, double lateralBlur, double dustBottomHeight, double extinction,
+            double fadeInSigmas, double baseShare, double nearFade, double rim, double cap) {
+        double lowestElevation = lowestClosedFormElevation(horizontalDistance, lightHeight, rim);
+        if (!(elevation > lowestElevation)) {
+            return 0.0;
+        }
+        double sineOfElevation = Math.sin(elevation);
+        double sheetHeight = horizontalDistance * Math.tan(elevation);
+        double crystalHeight = mirrorHeight(elevation, horizontalDistance, lightHeight);
+        double eyeLeg = crystalHeight / sineOfElevation;
+        double lightLeg = (crystalHeight - lightHeight) / sineOfElevation;
+        double tiltSpread = 2.0 * tiltSigma * sineOfElevation * lightLeg / (lightLeg + eyeLeg);
+        double spread = Math.sqrt(tiltSpread * tiltSpread + lateralBlur * lateralBlur);
+        double across = lateralProfile(lateralAngle, spread, halfWidthAcross / horizontalDistance);
+        double crystalsOverDistance = dustDensity(crystalHeight, dustBottomHeight) * across / horizontalDistance;
+        if (countsCrystals) {
+            double legsOverSpread = eyeLeg * lightLeg / Math.max(sineOfElevation, SMALLEST_SINE_OF_GRAZING);
+            return 2.0 * crystalsOverDistance * legsOverSpread * legsOverSpread;
+        }
+        double weight = fadeIn(elevation, lowestElevation, tiltSigma, fadeInSigmas, baseShare)
+                * capShare(sheetHeight, cap) * nearWeight(eyeLeg, nearFade);
+        if (!(weight > 0.0)) {
+            return 0.0;
+        }
+        double opticalDepth = extinction * (2.0 * dustColumn(crystalHeight, dustBottomHeight)
+                - dustColumn(lightHeight, dustBottomHeight) - dustColumn(0.0, dustBottomHeight)) / sineOfElevation;
+        return 0.5 * weight * crystalsOverDistance * Math.exp(-opticalDepth)
+                * IceMirror.slabReflectance(sineOfElevation, refractiveIndex);
     }
 
     /**

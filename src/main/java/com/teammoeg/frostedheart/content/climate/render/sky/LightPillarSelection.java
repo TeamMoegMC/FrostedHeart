@@ -29,8 +29,8 @@ import java.util.Arrays;
  * Chooses the clusters whose pillars look brightest and holds them in a fixed number of slots for drawing.
  * A slot fades in when its cluster is chosen and out when it no longer is, so the choice can change without pillars
  * popping. A slot stays bound to its cluster's key until it has faded out, and a newly chosen cluster waits for a free
- * slot. A slot that takes a new key holds its fade at 0 until setReady marks it ready, which LightPillarHorizons does
- * once its horizons are built. Fades step once per client tick. Heights and distances are in blocks.
+ * slot. A slot that takes a new key holds its fade at 0 until setReady marks it ready, which LightPillarShelter does
+ * once its shelter is built. Fades step once per client tick. Heights and distances are in blocks.
  */
 public final class LightPillarSelection {
     public static final int SLOT_COUNT = 48;
@@ -49,10 +49,6 @@ public final class LightPillarSelection {
     private static final double SCORE_ELEVATION_TANGENT = Math.tan(Math.toRadians(10.0));
     private static final double HIGHEST_SCORE_TANGENT = Math.tan(Math.toRadians(85.0));
     private static final long NO_KEY = Long.MIN_VALUE;
-    /**
-     * Shifts a cluster's cell coordinate to its chunk coordinate, since a chunk is 4 cells wide.
-     */
-    private static final int CELLS_PER_CHUNK_SHIFT = 2;
 
     private final double[] heapScores = new double[SLOT_COUNT];
     private final int[] heapClusters = new int[SLOT_COUNT];
@@ -67,6 +63,12 @@ public final class LightPillarSelection {
     private final float[] slotRed = new float[SLOT_COUNT];
     private final float[] slotGreen = new float[SLOT_COUNT];
     private final float[] slotBlue = new float[SLOT_COUNT];
+    private final double[] slotHalfExtentX = new double[SLOT_COUNT];
+    private final double[] slotHalfExtentZ = new double[SLOT_COUNT];
+    private final int[] slotLightCounts = new int[SLOT_COUNT];
+    private final int[] slotShelterX = new int[SLOT_COUNT];
+    private final int[] slotShelterZ = new int[SLOT_COUNT];
+    private final boolean[] slotFullBlocks = new boolean[SLOT_COUNT];
     private final double[] slotScores = new double[SLOT_COUNT];
     private final int[] slotFadeTicks = new int[SLOT_COUNT];
     private final int[] slotPreviousFadeTicks = new int[SLOT_COUNT];
@@ -97,12 +99,13 @@ public final class LightPillarSelection {
     }
 
     /**
-     * Whether a cluster with the key lies in a chunk within the radius in chunks around the eye's chunk. The chunks are
-     * those whose offsets x and z from the eye's chunk satisfy x * x + z * z <= radius * radius + radius.
+     * Whether a cluster with the key, the packed position of one of its lights, lies in a chunk within the radius in
+     * chunks around the eye's chunk. The chunks are those whose offsets x and z from the eye's chunk satisfy
+     * x * x + z * z <= radius * radius + radius.
      */
     public static boolean isWithinChunkRadius(long clusterKey, int eyeChunkX, int eyeChunkZ, int chunkRadius) {
-        long offsetX = (BlockPos.getX(clusterKey) >> CELLS_PER_CHUNK_SHIFT) - eyeChunkX;
-        long offsetZ = (BlockPos.getZ(clusterKey) >> CELLS_PER_CHUNK_SHIFT) - eyeChunkZ;
+        long offsetX = SectionPos.blockToSectionCoord(BlockPos.getX(clusterKey)) - eyeChunkX;
+        long offsetZ = SectionPos.blockToSectionCoord(BlockPos.getZ(clusterKey)) - eyeChunkZ;
         return offsetX * offsetX + offsetZ * offsetZ <= (long) chunkRadius * chunkRadius + chunkRadius;
     }
 
@@ -245,6 +248,12 @@ public final class LightPillarSelection {
         slotRed[slot] = clusters.red(cluster);
         slotGreen[slot] = clusters.green(cluster);
         slotBlue[slot] = clusters.blue(cluster);
+        slotHalfExtentX[slot] = clusters.halfExtentX(cluster);
+        slotHalfExtentZ[slot] = clusters.halfExtentZ(cluster);
+        slotLightCounts[slot] = clusters.lightCount(cluster);
+        slotShelterX[slot] = clusters.shelterX(cluster);
+        slotShelterZ[slot] = clusters.shelterZ(cluster);
+        slotFullBlocks[slot] = clusters.isFullBlock(cluster);
         slotScores[slot] = heapScores[chosen];
         slotChosen[slot] = true;
     }
@@ -325,6 +334,45 @@ public final class LightPillarSelection {
 
     public float blue(int slot) {
         return slotBlue[slot];
+    }
+
+    /**
+     * Half the extent of the slot's cluster along x in blocks.
+     */
+    public double halfExtentX(int slot) {
+        return slotHalfExtentX[slot];
+    }
+
+    /**
+     * Half the extent of the slot's cluster along z in blocks.
+     */
+    public double halfExtentZ(int slot) {
+        return slotHalfExtentZ[slot];
+    }
+
+    public int lightCount(int slot) {
+        return slotLightCounts[slot];
+    }
+
+    /**
+     * The block x of the light whose surroundings give the shelter of the slot's cluster.
+     */
+    public int shelterX(int slot) {
+        return slotShelterX[slot];
+    }
+
+    /**
+     * The block z of the light whose surroundings give the shelter of the slot's cluster.
+     */
+    public int shelterZ(int slot) {
+        return slotShelterZ[slot];
+    }
+
+    /**
+     * Whether the light that gives the shelter of the slot's cluster is a full block.
+     */
+    public boolean isFullBlock(int slot) {
+        return slotFullBlocks[slot];
     }
 
     /**
