@@ -23,6 +23,7 @@ import com.mojang.serialization.Codec;
 import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.frostedheart.content.town.ITownWithBuildings;
 import com.teammoeg.frostedheart.content.town.buildings.house.HouseBuilding;
+import com.teammoeg.frostedheart.content.town.buildings.institute.ResearchInstituteBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.hunting.HuntingBaseBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBaseBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBuilding;
@@ -35,13 +36,15 @@ import net.minecraft.server.level.ServerLevel;
  * handle the work logic of town building.
  */
 public interface ITownBuilding {
-    public static final Codec<ITownBuilding> CODEC = CodecUtil.dispatch(ITownBuilding.class)
+    public static final Codec<ITownBuilding> BASE_CODEC = CodecUtil.dispatch(ITownBuilding.class)
             .typeLazy("house", HouseBuilding.class, () -> HouseBuilding.CODEC)
             .typeLazy("huntingBase", HuntingBaseBuilding.class, () -> HuntingBaseBuilding.CODEC)
             .typeLazy("mine", MineBuilding.class, () -> MineBuilding.CODEC)
             .typeLazy("mineBase", MineBaseBuilding.class, () -> MineBaseBuilding.CODEC)
             .typeLazy("warehouse", WarehouseBuilding.class, () -> WarehouseBuilding.CODEC)
             .typeLazy("transportStation", TransportStationBuilding.class, () -> TransportStationBuilding.CODEC)
+            .typeLazy("laborDispatch", com.teammoeg.frostedheart.content.town.buildings.dispatch.LaborDispatchBuilding.class, () -> com.teammoeg.frostedheart.content.town.buildings.dispatch.LaborDispatchBuilding.CODEC)
+            .typeLazy("researchInstitute", ResearchInstituteBuilding.class, () -> ResearchInstituteBuilding.CODEC)
             // 按字符串key分发（写盘存 "house"/"mine" 等名称），解码时兼容旧存档的整数索引。
             // 新增建筑类型时可任意位置插入，不再受注册顺序约束。
             .buildByNameWithLegacyInt();
@@ -50,6 +53,20 @@ public interface ITownBuilding {
      * check if this building is workable.
      * @return true if workable
      */
+    Codec<ITownBuilding> CODEC = com.mojang.serialization.codecs.RecordCodecBuilder.create(instance -> instance.group(
+            BASE_CODEC.fieldOf("building").forGetter((ITownBuilding value) -> value),
+            Codec.BOOL.fieldOf("connectedToTower").forGetter(value ->
+                    value instanceof AbstractTownBuilding building && building.isConnectedToTower()),
+            Codec.BOOL.fieldOf("connectivityWorkable").forGetter(value ->
+                    value instanceof AbstractTownBuilding building && building.isConnectivityWorkable())
+    ).apply(instance, (value, connected, working) -> {
+        if (value instanceof AbstractTownBuilding building) {
+            building.setConnectedToTower(connected);
+            building.setConnectivityWorkable(working);
+        }
+        return value;
+    }));
+
     boolean isBuildingWorkable();
 
     /**

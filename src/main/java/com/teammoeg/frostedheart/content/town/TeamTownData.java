@@ -630,6 +630,8 @@ public class TeamTownData implements com.teammoeg.chorda.dataholders.PersistentC
     }
 
     public TownBuildingStore getBuildingStore() { return buildingStore; }
+    public java.util.UUID roadOwnerId() { return buildingOwner == null ? null : buildingOwner.getId(); }
+
     TeamDataHolder buildingOwner() { return buildingOwner; }
     void removeBuildingPlans(BlockPos pos) {
         staffingPlan = staffingPlan.withoutBuilding(pos);
@@ -644,13 +646,31 @@ public class TeamTownData implements com.teammoeg.chorda.dataholders.PersistentC
         }
         buildingStore.reportInitialChanges();
     }
+    /**
+     * 城镇运行的世界：建筑所在的维度，还没有建筑时用能量塔的维度。能量塔在不在、在哪个维度，都不影响城镇的更新与结算。
+     * <p>
+     * The world the town runs in: its buildings' dimension, or the tower's while it has none. Whether a tower exists,
+     * and where, never stops the town from updating or settling; a player may dismantle the tower at any time.
+     */
     public static ServerLevel executionLevel(TeamDataHolder owner) {
         CTeamDataManager teams = CTeamDataManager.INSTANCE;
         if (owner == null || teams == null || teams.findByHolderId(owner.getId()) != owner) return null;
-        var generator = owner.getOptional(FHSpecialDataTypes.GENERATOR_DATA).orElse(null);
         ResourceKey<Level> dimension = resolveTownDimension(owner);
-        if (generator == null || dimension == null || !dimension.equals(generator.dimension)) return null;
-        return teams.server().getLevel(dimension);
+        return dimension == null ? null : teams.server().getLevel(dimension);
+    }
+
+    /**
+     * 为这个城镇服务的能量塔数据：只认城镇所在维度里的塔，塔在别的维度时对这个城镇等于没有塔。塔拆掉以后数据还在，
+     * 但 {@code actualPos} 为空，调用方照旧检查。
+     * <p>
+     * The tower data that serves this town: only a tower in the town's own dimension counts, so one elsewhere is no
+     * tower at all here. A dismantled tower keeps its data with a null {@code actualPos}, which callers still check.
+     */
+    public static Optional<GeneratorData> townGenerator(TeamDataHolder owner) {
+        if (owner == null) return Optional.empty();
+        ResourceKey<Level> dimension = resolveTownDimension(owner);
+        return owner.getOptional(FHSpecialDataTypes.GENERATOR_DATA)
+                .filter(generator -> dimension != null && dimension.equals(generator.dimension));
     }
 
     boolean isCurrentExecutionContext(ServerLevel level, TeamDataHolder owner) {
@@ -936,6 +956,8 @@ public class TeamTownData implements com.teammoeg.chorda.dataholders.PersistentC
     }
 
     void prepareView(ServerLevel level, TeamDataHolder teamData) {
+        // Directions follow only a tower in the town's own dimension.
+        followTower(townGenerator(teamData).map(generator -> generator.actualPos).orElse(null));
         prepareBuildingGeometry();
         TeamTown town = new TeamTown(this);
         town.prepareWarehouseTopology(executionDimension(teamData));
@@ -951,7 +973,21 @@ public class TeamTownData implements com.teammoeg.chorda.dataholders.PersistentC
         }
     }
 
-    public void tick(ServerLevel level, TeamDataHolder teamData) { TownSync.tick(this, level, teamData); }
+    private final transient com.teammoeg.frostedheart.content.town.block.blockscanner.TownConnectivity connectivity =
+            new com.teammoeg.frostedheart.content.town.block.blockscanner.TownConnectivity();
+
+    public com.teammoeg.frostedheart.content.town.block.blockscanner.TownConnectivity connectivityView() { return connectivity; }
+
+    public void tick(ServerLevel level, TeamDataHolder teamData) {
+        connectivity.tick(level, townGenerator(teamData).map(g -> g.actualPos).orElse(null), buildings);
+        int dispatchWorkers = buildings.values().stream()
+                .filter(com.teammoeg.frostedheart.content.town.buildings.dispatch.LaborDispatchBuilding.class::isInstance)
+                .map(com.teammoeg.frostedheart.content.town.buildings.dispatch.LaborDispatchBuilding.class::cast)
+                .mapToInt(building -> building.availableWorkers(createTeamTown())).sum();
+        teamData.getData(FHSpecialDataTypes.LABOUR_DATA).setExtraProviderValue(
+                com.teammoeg.frostedheart.content.robotics.LaborTypes.WORKER, dispatchWorkers);
+        TownSync.tick(this, level, teamData);
+    }
 
     private void flushChanges(ServerLevel level, TeamDataHolder teamData) { TownSync.flushChanges(this, level, teamData); }
 
@@ -963,7 +999,8 @@ public class TeamTownData implements com.teammoeg.chorda.dataholders.PersistentC
      */
     public void tickSecond(ServerLevel world, TeamDataHolder teamData) {
         //if (!FHConfig.SERVER.TOWN.enableTownTick.get()) return;
-        Optional<GeneratorData> genDataOpt = teamData.getOptional(FHSpecialDataTypes.GENERATOR_DATA);
+        // A tower in another dimension is not this town's tower, so it is neither driven nor watched from here.
+        Optional<GeneratorData> genDataOpt = townGenerator(teamData);
         if (genDataOpt.isPresent()) {
             GeneratorData genData = genDataOpt.get();
             if (genData.actualPos != null) {
@@ -995,6 +1032,8 @@ public class TeamTownData implements com.teammoeg.chorda.dataholders.PersistentC
     private void flushTownTipNotifications(TeamDataHolder teamData) { TownSync.flushTownTipNotifications(this, teamData); }
 
     public TownSettlement.Result tickMorning(ServerLevel world, TeamDataHolder teamData) {
+        // Buildings from saves made before numbers were kept get theirs at the first morning.
+        com.teammoeg.frostedheart.content.town.building.TownBuildingNumbers.assignMissing(buildings);
         return TownSettlement.advanceOneDay(this, world, teamData, java.util.OptionalLong.empty());
     }
 
@@ -1025,7 +1064,7 @@ public class TeamTownData implements com.teammoeg.chorda.dataholders.PersistentC
     PreparedDayCommit prepareDayCommit(ServerLevel world, TeamDataHolder teamData) {
 
         long day = TownHistoryModel.nextSettlementDay(history, WorldClimate.getWorldDay(world));
-        Optional<GeneratorData> generator = teamData.getOptional(FHSpecialDataTypes.GENERATOR_DATA);
+        Optional<GeneratorData> generator = townGenerator(teamData);
         BlockPos fallback = generator.filter(value -> value.actualPos != null)
                 .map(value -> value.actualPos)
                 .orElseGet(() -> buildings.keySet().stream().findFirst().orElse(BlockPos.ZERO));
@@ -1628,6 +1667,40 @@ public class TeamTownData implements com.teammoeg.chorda.dataholders.PersistentC
     public void applyNameUpdate(String updatedName) {
         this.name = updatedName;
         com.teammoeg.frostedheart.content.town.client.TownClientUpdates.nameUpdated();
+    }
+
+    /**
+     * 能量塔的位置，只用来给建筑标方位。服务端每刻从队伍的能量塔数据抄一份，变了就同步给成员；不存盘。
+     * <p>
+     * Where the energy tower stands, used only to tell which part of town a building is in. The server copies it from
+     * the team's tower data every tick and sends changes to members; it is not saved.
+     */
+    @javax.annotation.Nullable
+    private BlockPos towerPos;
+    private boolean towerChanged;
+
+    @javax.annotation.Nullable
+    public BlockPos getTowerPos() {
+        return towerPos;
+    }
+
+    /** Server side: follows the team's tower; a change goes out with the next flush. */
+    void followTower(@javax.annotation.Nullable BlockPos pos) {
+        BlockPos next = pos == null ? null : pos.immutable();
+        if (Objects.equals(next, towerPos)) return;
+        towerPos = next;
+        towerChanged = true;
+    }
+
+    boolean drainTowerChange() {
+        boolean changed = towerChanged;
+        towerChanged = false;
+        return changed;
+    }
+
+    /** Client-side tower position from the server. */
+    public void applyTowerUpdate(@javax.annotation.Nullable BlockPos pos) {
+        this.towerPos = pos;
     }
 
     /** Client-side idempotent history merge; retransmitted entries replace by town day. */

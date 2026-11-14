@@ -43,9 +43,9 @@ V1 `townSim` 显式为空表示没有模拟，不能从旧全局文件补回来�
 
 自动机会使用主世界气候时钟：`logicalTick = getSec()*20 + elapsedDayTimeTicks(getClockDayTime(), overworld.getDayTime())`，单位是游戏 tick。相位为 `1000 + floorMod(holderId.hashCode(),20)`，窗口为 `floorDiv(logicalTick-phase,24000)`。所有镇在一个 Server END 使用同一次时钟采样。
 
-持久 `autoSettlement` 包含 `processedThrough`、可选 `lastCompleted` 和可选 `pendingOrigin`。冷加载不补算过去窗口；离线、开关关闭和执行维度缺失只推进运行观察值。真正新建使用 NEW 来源，旧档缺字段使用 LEGACY，旧档跳过迁移所在逻辑日。时钟不可用时来源仍可保存。手动 `/town tick` 通过 `executionLevel` 选择建筑归属与 tower 匹配的世界，每次独立调用推进一天，不消耗自动机会。
+持久 `autoSettlement` 包含 `processedThrough`、可选 `lastCompleted` 和可选 `pendingOrigin`。冷加载不补算过去窗口；离线、开关关闭和执行维度缺失只推进运行观察值。真正新建使用 NEW 来源，旧档缺字段使用 LEGACY，旧档跳过迁移所在逻辑日。时钟不可用时来源仍可保存。手动 `/town tick` 通过 `executionLevel` 选择建筑归属的世界（没有建筑时用 tower 的维度），不要求有塔，每次独立调用推进一天，不消耗自动机会。
 
-`buildingDimension` 保存建筑归属，`TeamTownData.executionLevel` 统一导出当前可执行世界；维度错配暂停服务并保留事实。`TownRuntimeManager` 登记当前对象、绑定世界和模拟，并消费有限的生命周期请求。核心放置/移除在经营与绑定期间进入同一操作边界，按位置合并并核对当前组件。组件替换关闭旧菜单，解绑旧监听，再接管新对象；模拟接管和设备重新订阅有实际修复入口。经营与模拟仍在服务器主线程执行。气候 Level START 保留时钟与离线供热，居民 Level END 保留模拟，城镇 Server END 完成自动经营、同步及统一可见性刷新。
+`buildingDimension` 保存建筑归属，`TeamTownData.executionLevel` 统一导出当前可执行世界；tower 缺失或在别的维度不暂停服务，只是塔不为这个城镇服务。`TownRuntimeManager` 登记当前对象、绑定世界和模拟，并消费有限的生命周期请求。核心放置/移除在经营与绑定期间进入同一操作边界，按位置合并并核对当前组件。组件替换关闭旧菜单，解绑旧监听，再接管新对象；模拟接管和设备重新订阅有实际修复入口。经营与模拟仍在服务器主线程执行。气候 Level START 保留时钟与离线供热，居民 Level END 保留模拟，城镇 Server END 完成自动经营、同步及统一可见性刷新。
 
 ## 管理视图
 

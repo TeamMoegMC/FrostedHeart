@@ -1,37 +1,57 @@
-# Forge GameTest 验证
+# Forge GameTest sources
 
-这里保存Frosted Heart的独立测试代码、数值参照、真实服务端用例和测试资源。普通生产JAR不包含GameTest源集。当前源码与[热运行合同](../../docs/climate/thermal-runtime-control.md)是行为依据；逐轮结果及边界由[生产退役回执](../../docs/climate/validation/thermal-cell-enthalpy-validation-2026-11-14.json#/records/thermal-production-runtime-retirement-2026-11-14)记录。
+This directory contains reusable Forge GameTest cases, test-only observers, catalogue fixtures and resources. They use the `gameTest` source set and are excluded from the ordinary production JAR.
 
-## 从哪里开始
+Production source and data under `src/main/` and `src/generated/` define implemented behaviour. These tests describe the checks they perform; successful cases do not prove untested loads.
 
-- `thermal-runtime-namespaces.txt`：当前固定温场、源输入、几何、查询、保存、故障恢复、材料和独立图构建对照的统一命名空间列表。
-- `TiledThermalFieldGameTests`：单元值/能量、当前位置查询和v7存储；包含明确忽略旧v6数据的检查。
-- `ContinuousAirWorkerRecoveryGameTests`：六个实际worker故障点的原生存盘读回，以及替代场仍供暖时的旧场回收。
-- `ThermalIndependentProgressGameTests`：无关基地、未来控制、首次捕获与原生重入的真实边界。
-- `ContinuousAirConcurrentSaveGameTests`、`ThermalCommittedSaveGameTests`：Working不可见、Claim/pending归属及磁盘读回。
-- `ThermalMaterialBehaviorGameTests`：当前固定引擎中的材料焓、相变、状态身份与保存。
-- `PairwiseGraphSortGameTests`：仅供独立数值参照的图构建与TreeMap对照。相关Q1算子、材料边界和快照类型位于GameTest，不构成生产后端。
+Start with the relevant system in [docs/README.md](../../docs/README.md). The `gameTest` source set and `runGameTestServer` task are configured in [build.gradle](../../build.gradle); temperature behaviour and configuration are described in [the thermal runtime contract](../../docs/climate/thermal-runtime-control.md).
 
-旧区域调度器专属的控制与性能对照入口已退役；历史测量继续保留在docs/climate/validation及diary中。它们不能作为当前生产资格。
+Thermal tests retain input/source ownership, query and save lifecycle, quality recovery, gameplay integration, and current two-base/scattered/overload fixtures. One-off recording clients, retired capacity variants and duplicate entry wrappers were removed; their history is recorded in [the thermal consolidation](../../diary/2026-10-29_23-38-00_thermal-development-history.md#retired-validation-tools). Other systems' test code and fixture data are separate from that cleanup.
 
-## 最小运行方式
+Use Java 17 and compile the test source set with `./gradlew compileGameTestJava` (`.\gradlew.bat compileGameTestJava` on Windows). For example, select the compact-storage checks with `./gradlew runGameTestServer -PgameTestNamespaces=frostedheart_compact_storage`. Runtime worlds, logs and profiling recordings are generated outputs and stay outside Git; test source and deliberate fixtures stay versioned.
 
-在仓库根目录使用Java17：
+For town staffing and housing queues, use `-I Scripts/town-scheduling-validation.init.gradle` and namespace `frostedheart_town_scheduling`. The same init file provides `runTownSchedulingClient`, which creates a disposable world and checks the rendered Mayor's Seal with actual management packets and mouse events; its JSON result must pass for the task to succeed. The [town synchronization reference](../../docs/town/persistence-and-runtime.md#验证入口) owns the scenarios, evidence and controlled temperature.
 
-```powershell
-$env:JAVA_HOME = 'C:/Program Files/Java/jdk-17'
-& .\gradlew.bat --no-daemon -PgameTestNamespaces=frostedheart_tiled_thermal runGameTestServer
-```
+That client entry also calls `TownEditorClientChecks` for controlled component reply sequences. The returned `editorReplyChecks` list records completed checks; earlier result files without that field do not cover them. These added checks are prepared but unrun as of 2026-11-09, following the user's instruction not to build this change.
 
-统一命名空间可从本目录的列表读取，并作为单个参数传入：
+Player heating equipment checks use namespace `frostedheart_equipment_heating`:
+real item capabilities, sustained body curves, stacked devices, fuel cadence and
+reload, vest demand, reservoir energy conservation and the actual player tick.
+Their gameplay contract and validation scope belong to
+[player temperature](../../docs/climate/player-temperature.md).
 
-```powershell
-$thermalNamespaces = (Get-Content src/gametest/thermal-runtime-namespaces.txt -Raw).Trim()
-& .\gradlew.bat --no-daemon "-PgameTestNamespaces=$thermalNamespaces" runGameTestServer
-```
+For the shared thermal comparison baseline, run [`scripts/run-thermal-baseline.ps1`](../../scripts/run-thermal-baseline.ps1). The [baseline reference](../../docs/climate/thermal-validation-baseline.md) owns its scene list, recorded configuration, clocks and result interpretation.
 
-任务默认使用独立的`run-gametest`目录并重建测试世界。`catalog/`是研究数据原料，`resources/`是结构、Mixin和其他测试资源；运行目录、日志与剖析文件保留在生成目录中。
+For infrared transport and actual GL display, run [`Scripts/run-infrared-network-e2e.py`](../../Scripts/run-infrared-network-e2e.py) with Java 17. It starts an isolated dedicated server, two rendering clients and an ordered TCP delay/rate proxy; the [infrared reference](../../docs/climate/infrared-view.md) owns its scenarios, invocation and verification limits.
 
-`ProductionObservationBridge`只在测试启动时注册当前固定worker与原生保存的观察器。`PrivateSaveObservationMixin`只用于功能GameTest，观察真实私有推进到原提交之前的间隔；正式JAR和网络负载测试不加载它。
+The memory-lifecycle regressions use namespaces `frostedheart_preparation_retention`,
+`frostedheart_geometry_input_order`, `frostedheart_checkpoint_boundary`, and
+`frostedheart_persistence_overload`; `frostedheart_concurrent_save` covers accepted
+and unaccepted input during a running solve. Their separate GameTest batches permit a
+combined run without closing another test's live thermal runtime. They check
+collection of completed builders before closing a heated world, actual adjacent
+Page publication order when fair selection first visits the later input, incoming
+geometry holds during unload-job cleanup, connecting Pages that are announced but
+not yet installed, and a real flushed chunk save with every
+thermal worker paused. The last test also reads disk NBT to check pending heat and
+the changed block's material identity.
 
-`Scripts/thermal-network-load.init.gradle`及`ThermalNetworkLoadServer`提供100个实际FML3连接的独立负载入口。旧Q1工厂替换Mixin和后端选择参数已删除。当前性能优化暂停，短功能通过不等于百人长期性能通过。
+These focused checks complement the ordinary dedicated-server source/chunk
+workload in [`Scripts/run-thermal-oom-repro.py`](../../Scripts/run-thermal-oom-repro.py).
+The [memory evidence reference](../../docs/climate/thermal-server-memory-evidence.md)
+records the confirmed reference defect, heap analysis, configuration differences,
+and limits on attributing the original remote OOM.
+
+
+Town connectivity and citizen road navigation checks use namespaces `frostedheart_town_connectivity,frostedheart_citizen_roads`:
+`./gradlew --offline runGameTestServer -PgameTestNamespaces=frostedheart_town_connectivity,frostedheart_citizen_roads -PgameTestDirectory=build/citizen-road-gametest`.
+The 28 cases cover component policy, entrance radii, building-port transfers, server-side vertical movement and dynamic obstacles,
+local support/headroom checks, ladders, stairs and packet metadata. With the opt-in agent client bridge, create a disposable empty
+singleplayer town and use `roads setup`, `roads populate`, `roads status` for a rendered fixture and observations.
+The [citizen rendering contract](../../docs/town/citizen-rendering-at-scale.md#客户端道路站位与攀爬2026-11-13) owns the behavior and validation limits.
+
+
+Section snapshot TTL checks use `frostedheart_section_cache`. Run it with the existing road suites:
+`./gradlew --offline runGameTestServer -PgameTestNamespaces=frostedheart_town_connectivity,frostedheart_citizen_roads,frostedheart_section_cache -PgameTestDirectory=build/town-section-cache-gametest`.
+The deterministic clock cases cover fresh/grace/hard-expiry boundaries, dirty deadlines, FIFO deduplication, coalesced cold readers,
+capacity eviction, invalidation, failure and rollback. Two real-level cases exercise the state-write mixin and section-edge dirty propagation.

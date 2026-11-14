@@ -47,7 +47,7 @@ public class ThermosItem extends DurableDrinkContainerItem implements ICreativeM
     final boolean doAddItems;
 
     public ThermosItem(int capacity, boolean add) {
-        super(new Properties().stacksTo(1).setNoRepair().durability(capacity), capacity);
+        super(new Properties(), capacity);
         doAddItems = add;
     }
 

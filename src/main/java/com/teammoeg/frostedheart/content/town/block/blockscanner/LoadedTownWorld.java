@@ -31,13 +31,13 @@ import java.util.List;
 import java.util.Map;
 
 /** A single main-thread scan. Missing chunks invalidate the candidate instead of loading terrain. */
-final class LoadedTownWorld implements LevelReader, AbstractWorld {
+public final class LoadedTownWorld implements LevelReader, AbstractWorld {
     private final ServerLevel level;
     private final BiomeManager biomeManager;
     private final Map<Long, LevelChunk> chunks = new HashMap<>();
     private boolean complete = true;
 
-    LoadedTownWorld(ServerLevel level) {
+    public LoadedTownWorld(ServerLevel level) {
         this.level = level;
         biomeManager = level.getBiomeManager().withDifferentSource(this);
     }
@@ -65,6 +65,14 @@ final class LoadedTownWorld implements LevelReader, AbstractWorld {
         }
         LevelChunk chunk = loadedChunk(position.getX() >> 4, position.getZ() >> 4);
         return chunk == null ? Blocks.BARRIER.defaultBlockState() : chunk.getBlockState(position);
+    }
+
+    public BlockType getPathBlockType(BlockPos position) {
+        return isPathDoor(getBlockState(position)) ? BlockType.AIR : getBlockType(position);
+    }
+
+    static boolean isPathDoor(BlockState state) {
+        return state.getBlock() instanceof net.minecraft.world.level.block.DoorBlock;
     }
 
     @Override

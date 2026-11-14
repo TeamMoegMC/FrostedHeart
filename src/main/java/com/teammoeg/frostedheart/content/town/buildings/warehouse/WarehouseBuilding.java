@@ -35,7 +35,7 @@ import lombok.Getter;
 import net.minecraft.core.BlockPos;
 
 public class WarehouseBuilding extends AbstractTownBuilding {
-	public static final MapCodec<WarehouseBuilding> MAP_CODEC = RecordCodecBuilder.mapCodec(t -> t.group(
+	public static final MapCodec<WarehouseBuilding> MAP_CODEC = AbstractTownBuilding.named(RecordCodecBuilder.mapCodec(t -> t.group(
                     strict(BlockPos.CODEC).optionalFieldOf("pos",BlockPos.ZERO).forGetter(o -> o.pos),
                     strict(Codec.BOOL).optionalFieldOf("isStructureValid",false).forGetter(o -> o.isStructureValid()),
                     strict(OccupiedZoneInfo.CODEC).optionalFieldOf("occupiedVolume",OccupiedZoneInfo.EMPTY).forGetter(o -> o.getOccupiedVolume()),
@@ -45,7 +45,7 @@ public class WarehouseBuilding extends AbstractTownBuilding {
 					strict(Codec.INT).optionalFieldOf("volume",0).forGetter(o -> o.getVolume()),
                     strict(Codec.INT).optionalFieldOf("decorationAmount",0).forGetter(o -> o.getDecorationAmount())
 			)
-			.apply(t, WarehouseBuilding::new));
+			.apply(t, WarehouseBuilding::new)));
         public static final Codec<WarehouseBuilding> CODEC = MAP_CODEC.codec();
 
 

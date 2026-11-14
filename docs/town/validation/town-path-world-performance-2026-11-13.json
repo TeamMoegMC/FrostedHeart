@@ -1,0 +1,1413 @@
+{
+  "world": "town-path-natural-20261113",
+  "seed": 12345,
+  "preset": "normal",
+  "cases": [
+    {
+      "label": "8-first",
+      "done": true,
+      "failed": false,
+      "buildings": 8,
+      "baseline": false,
+      "elapsedSeconds": 20.4127944,
+      "mainTickCount": 162,
+      "sectionsServed": 205,
+      "maxSectionsPerTick": 2,
+      "sectionRequests": 205,
+      "uniqueSections": 131,
+      "repeatedSectionRequests": 74,
+      "requestsInMissingChunks": 0,
+      "expandedNodes": 14924,
+      "workerReturned": true,
+      "workerWallMs": 20245.069,
+      "workerCpuMs": 122.2576,
+      "snapshotWaitWallMs": 18470.7409,
+      "mainTickWall": {
+        "p95Ms": 30.5308,
+        "meanMs": 43.54485555555555,
+        "maxMs": 1395.678,
+        "samples": 162
+      },
+      "mainTickCpu": {
+        "p95Ms": 6.4742,
+        "meanMs": 2.6463395061728394,
+        "maxMs": 9.3706,
+        "samples": 162
+      },
+      "copyTickWall": {
+        "p95Ms": 30.5308,
+        "meanMs": 44.02147,
+        "maxMs": 1395.678,
+        "samples": 160
+      },
+      "copyTickCpu": {
+        "p95Ms": 6.4742,
+        "meanMs": 2.666275,
+        "maxMs": 9.3706,
+        "samples": 160
+      },
+      "serverTickWall": {
+        "p95Ms": 106.9497,
+        "meanMs": 117.052700621118,
+        "maxMs": 1488.3476,
+        "samples": 161
+      },
+      "mainCpuTotalMs": 428.707,
+      "mainWallTotalMs": 7054.2666,
+      "routes": 1,
+      "working": 2,
+      "cpuClockSupported": true
+    },
+    {
+      "label": "8-recompute",
+      "done": true,
+      "failed": false,
+      "buildings": 8,
+      "baseline": false,
+      "elapsedSeconds": 13.2929316,
+      "mainTickCount": 171,
+      "sectionsServed": 205,
+      "maxSectionsPerTick": 2,
+      "sectionRequests": 205,
+      "uniqueSections": 131,
+      "repeatedSectionRequests": 74,
+      "requestsInMissingChunks": 0,
+      "expandedNodes": 14924,
+      "workerReturned": true,
+      "workerWallMs": 13212.5998,
+      "workerCpuMs": 77.871,
+      "snapshotWaitWallMs": 12966.8771,
+      "mainTickWall": {
+        "p95Ms": 19.2014,
+        "meanMs": 6.901736257309942,
+        "maxMs": 31.1759,
+        "samples": 171
+      },
+      "mainTickCpu": {
+        "p95Ms": 4.5323,
+        "meanMs": 1.9130818713450293,
+        "maxMs": 7.6347,
+        "samples": 171
+      },
+      "copyTickWall": {
+        "p95Ms": 19.2014,
+        "meanMs": 6.959389349112426,
+        "maxMs": 31.1759,
+        "samples": 169
+      },
+      "copyTickCpu": {
+        "p95Ms": 4.5323,
+        "meanMs": 1.9295816568047337,
+        "maxMs": 7.6347,
+        "samples": 169
+      },
+      "serverTickWall": {
+        "p95Ms": 70.0274,
+        "meanMs": 77.78934235294118,
+        "maxMs": 1438.4158,
+        "samples": 170
+      },
+      "mainCpuTotalMs": 327.137,
+      "mainWallTotalMs": 1180.1969,
+      "routes": 1,
+      "working": 2,
+      "cpuClockSupported": true
+    },
+    {
+      "label": "16-first",
+      "done": true,
+      "failed": false,
+      "buildings": 16,
+      "baseline": false,
+      "elapsedSeconds": 23.9727854,
+      "mainTickCount": 336,
+      "sectionsServed": 450,
+      "maxSectionsPerTick": 2,
+      "sectionRequests": 450,
+      "uniqueSections": 171,
+      "repeatedSectionRequests": 279,
+      "requestsInMissingChunks": 0,
+      "expandedNodes": 28177,
+      "workerReturned": true,
+      "workerWallMs": 23924.498,
+      "workerCpuMs": 132.6345,
+      "snapshotWaitWallMs": 23532.9256,
+      "mainTickWall": {
+        "p95Ms": 22.4866,
+        "meanMs": 27.76613035714286,
+        "maxMs": 1539.4457,
+        "samples": 336
+      },
+      "mainTickCpu": {
+        "p95Ms": 5.91,
+        "meanMs": 2.0757324404761905,
+        "maxMs": 8.082,
+        "samples": 336
+      },
+      "copyTickWall": {
+        "p95Ms": 22.4866,
+        "meanMs": 27.93170748502994,
+        "maxMs": 1539.4457,
+        "samples": 334
+      },
+      "copyTickCpu": {
+        "p95Ms": 5.91,
+        "meanMs": 2.0875844311377247,
+        "maxMs": 8.082,
+        "samples": 334
+      },
+      "serverTickWall": {
+        "p95Ms": 58.1828,
+        "meanMs": 71.20980776119403,
+        "maxMs": 1574.4847,
+        "samples": 335
+      },
+      "mainCpuTotalMs": 697.4461,
+      "mainWallTotalMs": 9329.4198,
+      "routes": 5,
+      "working": 4,
+      "cpuClockSupported": true
+    },
+    {
+      "label": "16-recompute",
+      "done": true,
+      "failed": false,
+      "buildings": 16,
+      "baseline": false,
+      "elapsedSeconds": 22.5467879,
+      "mainTickCount": 336,
+      "sectionsServed": 450,
+      "maxSectionsPerTick": 2,
+      "sectionRequests": 450,
+      "uniqueSections": 171,
+      "repeatedSectionRequests": 279,
+      "requestsInMissingChunks": 0,
+      "expandedNodes": 28177,
+      "workerReturned": true,
+      "workerWallMs": 22471.106,
+      "workerCpuMs": 129.5229,
+      "snapshotWaitWallMs": 16733.2004,
+      "mainTickWall": {
+        "p95Ms": 19.77,
+        "meanMs": 18.92847113095238,
+        "maxMs": 1582.3888,
+        "samples": 336
+      },
+      "mainTickCpu": {
+        "p95Ms": 5.8189,
+        "meanMs": 1.905560119047619,
+        "maxMs": 7.8126,
+        "samples": 336
+      },
+      "copyTickWall": {
+        "p95Ms": 19.77,
+        "meanMs": 19.040488023952097,
+        "maxMs": 1582.3888,
+        "samples": 334
+      },
+      "copyTickCpu": {
+        "p95Ms": 5.8189,
+        "meanMs": 1.9163607784431136,
+        "maxMs": 7.8126,
+        "samples": 334
+      },
+      "serverTickWall": {
+        "p95Ms": 54.1121,
+        "meanMs": 66.96291701492538,
+        "maxMs": 1607.7452,
+        "samples": 335
+      },
+      "mainCpuTotalMs": 640.2682,
+      "mainWallTotalMs": 6359.9663,
+      "routes": 5,
+      "working": 4,
+      "cpuClockSupported": true
+    },
+    {
+      "label": "32-first",
+      "done": true,
+      "failed": false,
+      "buildings": 32,
+      "baseline": false,
+      "elapsedSeconds": 55.7732926,
+      "mainTickCount": 933,
+      "sectionsServed": 1278,
+      "maxSectionsPerTick": 2,
+      "sectionRequests": 1278,
+      "uniqueSections": 253,
+      "repeatedSectionRequests": 1025,
+      "requestsInMissingChunks": 0,
+      "expandedNodes": 76935,
+      "workerReturned": true,
+      "workerWallMs": 55726.0866,
+      "workerCpuMs": 343.5983,
+      "snapshotWaitWallMs": 53366.9303,
+      "mainTickWall": {
+        "p95Ms": 18.8976,
+        "meanMs": 20.105039121114682,
+        "maxMs": 1395.0514,
+        "samples": 933
+      },
+      "mainTickCpu": {
+        "p95Ms": 6.2136,
+        "meanMs": 2.0480657020364417,
+        "maxMs": 8.4068,
+        "samples": 933
+      },
+      "copyTickWall": {
+        "p95Ms": 18.8976,
+        "meanMs": 20.190370398277718,
+        "maxMs": 1395.0514,
+        "samples": 929
+      },
+      "copyTickCpu": {
+        "p95Ms": 6.2136,
+        "meanMs": 2.056378686759957,
+        "maxMs": 8.4068,
+        "samples": 929
+      },
+      "serverTickWall": {
+        "p95Ms": 52.8832,
+        "meanMs": 59.65332467811159,
+        "maxMs": 1423.002,
+        "samples": 932
+      },
+      "mainCpuTotalMs": 1910.8453,
+      "mainWallTotalMs": 18758.0015,
+      "routes": 14,
+      "working": 8,
+      "cpuClockSupported": true
+    },
+    {
+      "label": "32-recompute",
+      "done": true,
+      "failed": false,
+      "buildings": 32,
+      "baseline": false,
+      "elapsedSeconds": 49.4628868,
+      "mainTickCount": 908,
+      "sectionsServed": 1278,
+      "maxSectionsPerTick": 2,
+      "sectionRequests": 1278,
+      "uniqueSections": 253,
+      "repeatedSectionRequests": 1025,
+      "requestsInMissingChunks": 0,
+      "expandedNodes": 76935,
+      "workerReturned": true,
+      "workerWallMs": 49445.0893,
+      "workerCpuMs": 336.1248,
+      "snapshotWaitWallMs": 44715.4114,
+      "mainTickWall": {
+        "p95Ms": 16.0226,
+        "meanMs": 13.546900440528635,
+        "maxMs": 1290.3255,
+        "samples": 908
+      },
+      "mainTickCpu": {
+        "p95Ms": 6.3498,
+        "meanMs": 2.065763325991189,
+        "maxMs": 8.2617,
+        "samples": 908
+      },
+      "copyTickWall": {
+        "p95Ms": 16.0226,
+        "meanMs": 13.63614201773836,
+        "maxMs": 1290.3255,
+        "samples": 902
+      },
+      "copyTickCpu": {
+        "p95Ms": 6.3498,
+        "meanMs": 2.0792021064301554,
+        "maxMs": 8.2617,
+        "samples": 902
+      },
+      "serverTickWall": {
+        "p95Ms": 47.2288,
+        "meanMs": 54.417484233737596,
+        "maxMs": 1515.8907,
+        "samples": 907
+      },
+      "mainCpuTotalMs": 1875.7131,
+      "mainWallTotalMs": 12300.5856,
+      "routes": 14,
+      "working": 8,
+      "cpuClockSupported": true
+    },
+    {
+      "label": "32-blocked",
+      "done": true,
+      "failed": false,
+      "buildings": 32,
+      "baseline": false,
+      "elapsedSeconds": 52.8349614,
+      "mainTickCount": 924,
+      "sectionsServed": 1284,
+      "maxSectionsPerTick": 2,
+      "sectionRequests": 1284,
+      "uniqueSections": 252,
+      "repeatedSectionRequests": 1032,
+      "requestsInMissingChunks": 0,
+      "expandedNodes": 76743,
+      "workerReturned": true,
+      "workerWallMs": 51478.034,
+      "workerCpuMs": 341.4258,
+      "snapshotWaitWallMs": 47848.7565,
+      "mainTickWall": {
+        "p95Ms": 15.833,
+        "meanMs": 19.03012987012987,
+        "maxMs": 1335.5775,
+        "samples": 924
+      },
+      "mainTickCpu": {
+        "p95Ms": 6.4712,
+        "meanMs": 2.082151948051948,
+        "maxMs": 8.6994,
+        "samples": 924
+      },
+      "copyTickWall": {
+        "p95Ms": 15.9706,
+        "meanMs": 19.150955882352942,
+        "maxMs": 1335.5775,
+        "samples": 918
+      },
+      "copyTickCpu": {
+        "p95Ms": 6.4721,
+        "meanMs": 2.0953954248366014,
+        "maxMs": 8.6994,
+        "samples": 918
+      },
+      "serverTickWall": {
+        "p95Ms": 38.2137,
+        "meanMs": 51.8551054171181,
+        "maxMs": 1454.844,
+        "samples": 923
+      },
+      "mainCpuTotalMs": 1923.9084,
+      "mainWallTotalMs": 17583.84,
+      "routes": 14,
+      "working": 8,
+      "cpuClockSupported": true
+    },
+    {
+      "label": "32-reloaded-control",
+      "done": true,
+      "failed": false,
+      "buildings": 32,
+      "baseline": false,
+      "elapsedSeconds": 43.3346781,
+      "mainTickCount": 867,
+      "sectionsServed": 1284,
+      "maxSectionsPerTick": 2,
+      "sectionRequests": 1284,
+      "uniqueSections": 252,
+      "repeatedSectionRequests": 1032,
+      "requestsInMissingChunks": 0,
+      "expandedNodes": 76743,
+      "workerReturned": true,
+      "workerWallMs": 43245.5984,
+      "workerCpuMs": 110.3449,
+      "snapshotWaitWallMs": 43013.9177,
+      "mainTickWall": {
+        "maxMs": 7.673,
+        "meanMs": 1.9836295271049595,
+        "p95Ms": 3.8856,
+        "samples": 867
+      },
+      "mainTickCpu": {
+        "maxMs": 1.9426,
+        "meanMs": 0.7856336793540946,
+        "p95Ms": 1.5064,
+        "samples": 867
+      },
+      "copyTickWall": {
+        "maxMs": 7.673,
+        "meanMs": 1.9858145664739884,
+        "p95Ms": 3.8856,
+        "samples": 865
+      },
+      "copyTickCpu": {
+        "maxMs": 1.9426,
+        "meanMs": 0.7863543352601156,
+        "p95Ms": 1.5064,
+        "samples": 865
+      },
+      "serverTickWall": {
+        "maxMs": 94.4919,
+        "meanMs": 8.220375750577366,
+        "p95Ms": 14.4182,
+        "samples": 866
+      },
+      "mainCpuTotalMs": 681.1444,
+      "mainWallTotalMs": 1719.8068,
+      "routes": 14,
+      "working": 8,
+      "cpuClockSupported": true
+    },
+    {
+      "label": "32-sealed-reachable-entrance",
+      "done": true,
+      "failed": false,
+      "buildings": 32,
+      "baseline": false,
+      "elapsedSeconds": 42.1748693,
+      "mainTickCount": 844,
+      "sectionsServed": 1240,
+      "maxSectionsPerTick": 2,
+      "sectionRequests": 1240,
+      "uniqueSections": 242,
+      "repeatedSectionRequests": 998,
+      "requestsInMissingChunks": 0,
+      "expandedNodes": 72104,
+      "workerReturned": true,
+      "workerWallMs": 42091.7659,
+      "workerCpuMs": 104.566,
+      "snapshotWaitWallMs": 41867.7408,
+      "mainTickWall": {
+        "maxMs": 37.8722,
+        "meanMs": 1.873760308056872,
+        "p95Ms": 3.5437,
+        "samples": 844
+      },
+      "mainTickCpu": {
+        "maxMs": 1.749,
+        "meanMs": 0.7709313981042655,
+        "p95Ms": 1.4768,
+        "samples": 844
+      },
+      "copyTickWall": {
+        "maxMs": 37.8722,
+        "meanMs": 1.8763220902612827,
+        "p95Ms": 3.5437,
+        "samples": 842
+      },
+      "copyTickCpu": {
+        "maxMs": 1.749,
+        "meanMs": 0.7722794536817101,
+        "p95Ms": 1.4768,
+        "samples": 842
+      },
+      "serverTickWall": {
+        "maxMs": 41.8804,
+        "meanMs": 6.532269395017793,
+        "p95Ms": 9.7842,
+        "samples": 843
+      },
+      "mainCpuTotalMs": 650.6661,
+      "mainWallTotalMs": 1581.4537,
+      "routes": 13,
+      "working": 8,
+      "cpuClockSupported": true
+    }
+  ],
+  "hardware": {
+    "processors": 1,
+    "maxHeapBytes": 1415053312,
+    "java": "17.0.21.0.3",
+    "os": "Linux",
+    "gpu": "llvmpipe (LLVM 21.1.8, 256 bits)",
+    "gl": "4.5 (Core Profile) Mesa 26.0.8-1ubuntu0.3",
+    "window": [
+      1280,
+      720
+    ],
+    "vsync": false,
+    "fpsLimit": 260,
+    "renderDistance": 6
+  },
+  "prepare": {
+    "origin": [
+      48,
+      -64
+    ],
+    "forcedChunks": 221,
+    "probe": {
+      "armed": false
+    },
+    "residents": 0,
+    "busy": false,
+    "entranceCounts": []
+  },
+  "preloadSeconds": 0.8110143000085372,
+  "builds": [
+    {
+      "buildings": 8,
+      "groundHeights": [
+        62,
+        119,
+        124,
+        128,
+        139,
+        143,
+        153,
+        155
+      ],
+      "biomes": [
+        "minecraft:ocean",
+        "minecraft:dark_forest",
+        "minecraft:frozen_peaks"
+      ],
+      "originalTerrainBetweenBuildings": true,
+      "probe": {
+        "label": "8-first",
+        "done": false,
+        "failed": false,
+        "buildings": 8,
+        "baseline": false,
+        "elapsedSeconds": 0.0005792,
+        "mainTickCount": 0,
+        "sectionsServed": 0,
+        "maxSectionsPerTick": 0,
+        "sectionRequests": 0,
+        "uniqueSections": 0,
+        "repeatedSectionRequests": 0,
+        "requestsInMissingChunks": 0,
+        "expandedNodes": 0,
+        "workerReturned": false,
+        "workerWallMs": 0.0,
+        "workerCpuMs": 0.0,
+        "snapshotWaitWallMs": 0.0,
+        "mainTickWall": {
+          "p95Ms": 0.0,
+          "meanMs": 0.0,
+          "maxMs": 0.0,
+          "samples": 0
+        },
+        "mainTickCpu": {
+          "p95Ms": 0.0,
+          "meanMs": 0.0,
+          "maxMs": 0.0,
+          "samples": 0
+        },
+        "copyTickWall": {
+          "p95Ms": 0.0,
+          "meanMs": 0.0,
+          "maxMs": 0.0,
+          "samples": 0
+        },
+        "copyTickCpu": {
+          "p95Ms": 0.0,
+          "meanMs": 0.0,
+          "maxMs": 0.0,
+          "samples": 0
+        },
+        "serverTickWall": {
+          "p95Ms": 0.0,
+          "meanMs": 0.0,
+          "maxMs": 0.0,
+          "samples": 0
+        },
+        "mainCpuTotalMs": 0.0,
+        "mainWallTotalMs": 0.0,
+        "routes": 0,
+        "working": 0,
+        "cpuClockSupported": true
+      },
+      "residents": 0,
+      "busy": false,
+      "entranceCounts": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "buildings": 16,
+      "groundHeights": [
+        62,
+        119,
+        124,
+        128,
+        139,
+        143,
+        153,
+        155,
+        62,
+        62,
+        127,
+        134,
+        136,
+        149,
+        154,
+        160
+      ],
+      "biomes": [
+        "minecraft:ocean",
+        "minecraft:dark_forest",
+        "minecraft:frozen_peaks"
+      ],
+      "originalTerrainBetweenBuildings": true,
+      "probe": {
+        "label": "16-first",
+        "done": false,
+        "failed": false,
+        "buildings": 16,
+        "baseline": false,
+        "elapsedSeconds": 8.26e-05,
+        "mainTickCount": 0,
+        "sectionsServed": 0,
+        "maxSectionsPerTick": 0,
+        "sectionRequests": 0,
+        "uniqueSections": 0,
+        "repeatedSectionRequests": 0,
+        "requestsInMissingChunks": 0,
+        "expandedNodes": 0,
+        "workerReturned": false,
+        "workerWallMs": 0.0,
+        "workerCpuMs": 0.0,
+        "snapshotWaitWallMs": 0.0,
+        "mainTickWall": {
+          "p95Ms": 0.0,
+          "meanMs": 0.0,
+          "maxMs": 0.0,
+          "samples": 0
+        },
+        "mainTickCpu": {
+          "p95Ms": 0.0,
+          "meanMs": 0.0,
+          "maxMs": 0.0,
+          "samples": 0
+        },
+        "copyTickWall": {
+          "p95Ms": 0.0,
+          "meanMs": 0.0,
+          "maxMs": 0.0,
+          "samples": 0
+        },
+        "copyTickCpu": {
+          "p95Ms": 0.0,
+          "meanMs": 0.0,
+          "maxMs": 0.0,
+          "samples": 0
+        },
+        "serverTickWall": {
+          "p95Ms": 0.0,
+          "meanMs": 0.0,
+          "maxMs": 0.0,
+          "samples": 0
+        },
+        "mainCpuTotalMs": 0.0,
+        "mainWallTotalMs": 0.0,
+        "routes": 1,
+        "working": 2,
+        "cpuClockSupported": true
+      },
+      "residents": 0,
+      "busy": false,
+      "entranceCounts": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "buildings": 32,
+      "groundHeights": [
+        62,
+        119,
+        124,
+        128,
+        139,
+        143,
+        153,
+        155,
+        62,
+        62,
+        127,
+        134,
+        136,
+        149,
+        154,
+        160,
+        62,
+        62,
+        122,
+        133,
+        137,
+        141,
+        149,
+        160,
+        62,
+        62,
+        62,
+        130,
+        134,
+        142,
+        156,
+        155
+      ],
+      "biomes": [
+        "minecraft:ocean",
+        "minecraft:dark_forest",
+        "minecraft:frozen_peaks"
+      ],
+      "originalTerrainBetweenBuildings": true,
+      "probe": {
+        "label": "32-first",
+        "done": false,
+        "failed": false,
+        "buildings": 32,
+        "baseline": false,
+        "elapsedSeconds": 0.0001212,
+        "mainTickCount": 0,
+        "sectionsServed": 0,
+        "maxSectionsPerTick": 0,
+        "sectionRequests": 0,
+        "uniqueSections": 0,
+        "repeatedSectionRequests": 0,
+        "requestsInMissingChunks": 0,
+        "expandedNodes": 0,
+        "workerReturned": false,
+        "workerWallMs": 0.0,
+        "workerCpuMs": 0.0,
+        "snapshotWaitWallMs": 0.0,
+        "mainTickWall": {
+          "p95Ms": 0.0,
+          "meanMs": 0.0,
+          "maxMs": 0.0,
+          "samples": 0
+        },
+        "mainTickCpu": {
+          "p95Ms": 0.0,
+          "meanMs": 0.0,
+          "maxMs": 0.0,
+          "samples": 0
+        },
+        "copyTickWall": {
+          "p95Ms": 0.0,
+          "meanMs": 0.0,
+          "maxMs": 0.0,
+          "samples": 0
+        },
+        "copyTickCpu": {
+          "p95Ms": 0.0,
+          "meanMs": 0.0,
+          "maxMs": 0.0,
+          "samples": 0
+        },
+        "serverTickWall": {
+          "p95Ms": 0.0,
+          "meanMs": 0.0,
+          "maxMs": 0.0,
+          "samples": 0
+        },
+        "mainCpuTotalMs": 0.0,
+        "mainWallTotalMs": 0.0,
+        "routes": 5,
+        "working": 4,
+        "cpuClockSupported": true
+      },
+      "residents": 0,
+      "busy": false,
+      "entranceCounts": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ]
+    }
+  ],
+  "idleControl": {
+    "label": "32-idle-control",
+    "done": true,
+    "failed": false,
+    "buildings": 32,
+    "baseline": true,
+    "elapsedSeconds": 19.4937856,
+    "mainTickCount": 396,
+    "sectionsServed": 0,
+    "maxSectionsPerTick": 0,
+    "sectionRequests": 0,
+    "uniqueSections": 0,
+    "repeatedSectionRequests": 0,
+    "requestsInMissingChunks": 0,
+    "expandedNodes": 0,
+    "workerReturned": false,
+    "workerWallMs": 0.0,
+    "workerCpuMs": 0.0,
+    "snapshotWaitWallMs": 0.0,
+    "mainTickWall": {
+      "p95Ms": 0.1557,
+      "meanMs": 0.056238131313131316,
+      "maxMs": 1.6213,
+      "samples": 396
+    },
+    "mainTickCpu": {
+      "p95Ms": 0.0328,
+      "meanMs": 0.017871464646464646,
+      "maxMs": 0.0418,
+      "samples": 396
+    },
+    "copyTickWall": {
+      "p95Ms": 0.0,
+      "meanMs": 0.0,
+      "maxMs": 0.0,
+      "samples": 0
+    },
+    "copyTickCpu": {
+      "p95Ms": 0.0,
+      "meanMs": 0.0,
+      "maxMs": 0.0,
+      "samples": 0
+    },
+    "serverTickWall": {
+      "p95Ms": 55.9715,
+      "meanMs": 42.48678409090909,
+      "maxMs": 1386.8733,
+      "samples": 396
+    },
+    "mainCpuTotalMs": 7.0771,
+    "mainWallTotalMs": 22.2703,
+    "routes": 14,
+    "working": 8,
+    "cpuClockSupported": true
+  },
+  "barrier": {
+    "wallBlocks": 525,
+    "probe": {
+      "label": "32-idle-control",
+      "done": true,
+      "failed": false,
+      "buildings": 32,
+      "baseline": true,
+      "elapsedSeconds": 19.4937856,
+      "mainTickCount": 396,
+      "sectionsServed": 0,
+      "maxSectionsPerTick": 0,
+      "sectionRequests": 0,
+      "uniqueSections": 0,
+      "repeatedSectionRequests": 0,
+      "requestsInMissingChunks": 0,
+      "expandedNodes": 0,
+      "workerReturned": false,
+      "workerWallMs": 0.0,
+      "workerCpuMs": 0.0,
+      "snapshotWaitWallMs": 0.0,
+      "mainTickWall": {
+        "p95Ms": 0.1557,
+        "meanMs": 0.056238131313131316,
+        "maxMs": 1.6213,
+        "samples": 396
+      },
+      "mainTickCpu": {
+        "p95Ms": 0.0328,
+        "meanMs": 0.017871464646464646,
+        "maxMs": 0.0418,
+        "samples": 396
+      },
+      "copyTickWall": {
+        "p95Ms": 0.0,
+        "meanMs": 0.0,
+        "maxMs": 0.0,
+        "samples": 0
+      },
+      "copyTickCpu": {
+        "p95Ms": 0.0,
+        "meanMs": 0.0,
+        "maxMs": 0.0,
+        "samples": 0
+      },
+      "serverTickWall": {
+        "p95Ms": 55.9715,
+        "meanMs": 42.48678409090909,
+        "maxMs": 1386.8733,
+        "samples": 396
+      },
+      "mainCpuTotalMs": 7.0771,
+      "mainWallTotalMs": 22.2703,
+      "routes": 14,
+      "working": 8,
+      "cpuClockSupported": true
+    },
+    "residents": 0,
+    "busy": false,
+    "entranceCounts": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ]
+  },
+  "screenshot": "/home/aiagent/project/khjxiaogu/FrostedHeart/run/agent/screenshots/01794562234110375900-town-path-natural-performance.png",
+  "cleanup": {
+    "releasedForcedChunks": 221,
+    "probe": {
+      "label": "32-blocked",
+      "done": true,
+      "failed": false,
+      "buildings": 32,
+      "baseline": false,
+      "elapsedSeconds": 52.8349614,
+      "mainTickCount": 924,
+      "sectionsServed": 1284,
+      "maxSectionsPerTick": 2,
+      "sectionRequests": 1284,
+      "uniqueSections": 252,
+      "repeatedSectionRequests": 1032,
+      "requestsInMissingChunks": 0,
+      "expandedNodes": 76743,
+      "workerReturned": true,
+      "workerWallMs": 51478.034,
+      "workerCpuMs": 341.4258,
+      "snapshotWaitWallMs": 47848.7565,
+      "mainTickWall": {
+        "p95Ms": 15.833,
+        "meanMs": 19.03012987012987,
+        "maxMs": 1335.5775,
+        "samples": 924
+      },
+      "mainTickCpu": {
+        "p95Ms": 6.4712,
+        "meanMs": 2.082151948051948,
+        "maxMs": 8.6994,
+        "samples": 924
+      },
+      "copyTickWall": {
+        "p95Ms": 15.9706,
+        "meanMs": 19.150955882352942,
+        "maxMs": 1335.5775,
+        "samples": 918
+      },
+      "copyTickCpu": {
+        "p95Ms": 6.4721,
+        "meanMs": 2.0953954248366014,
+        "maxMs": 8.6994,
+        "samples": 918
+      },
+      "serverTickWall": {
+        "p95Ms": 38.2137,
+        "meanMs": 51.8551054171181,
+        "maxMs": 1454.844,
+        "samples": 923
+      },
+      "mainCpuTotalMs": 1923.9084,
+      "mainWallTotalMs": 17583.84,
+      "routes": 14,
+      "working": 8,
+      "cpuClockSupported": true
+    },
+    "residents": 0,
+    "busy": false,
+    "entranceCounts": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ]
+  },
+  "discardedAttempts": [
+    {
+      "stage": "supplement-reload",
+      "reason": "OutOfMemoryError: Java heap space before a valid supplemental sample",
+      "action": "stopped only this test client and automation; retry with fixed 4G heap"
+    }
+  ],
+  "supplementHardware": {
+    "processors": 1,
+    "maxHeapBytes": 4151836672,
+    "java": "17.0.21.0.3",
+    "os": "Linux",
+    "gpu": "llvmpipe (LLVM 21.1.8, 256 bits)",
+    "gl": "4.5 (Core Profile) Mesa 26.0.8-1ubuntu0.3",
+    "window": [
+      1280,
+      720
+    ],
+    "vsync": false,
+    "fpsLimit": 260,
+    "renderDistance": 6
+  },
+  "resume": {
+    "origin": [
+      48,
+      -64
+    ],
+    "forcedChunks": 221,
+    "probe": {
+      "armed": false
+    },
+    "residents": 0,
+    "busy": true,
+    "entranceCounts": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ]
+  },
+  "sealedEntrance": {
+    "previousWorking": 8,
+    "previousRoutes": 14,
+    "sealedController": [
+      51,
+      63,
+      -61
+    ],
+    "probe": {
+      "label": "32-sealed-reachable-entrance",
+      "done": false,
+      "failed": false,
+      "buildings": 32,
+      "baseline": false,
+      "elapsedSeconds": 2.04e-05,
+      "mainTickCount": 0,
+      "sectionsServed": 0,
+      "maxSectionsPerTick": 0,
+      "sectionRequests": 0,
+      "uniqueSections": 0,
+      "repeatedSectionRequests": 0,
+      "requestsInMissingChunks": 0,
+      "expandedNodes": 0,
+      "workerReturned": false,
+      "workerWallMs": 0.0,
+      "workerCpuMs": 0.0,
+      "snapshotWaitWallMs": 0.0,
+      "mainTickWall": {
+        "maxMs": 0.0,
+        "meanMs": 0.0,
+        "p95Ms": 0.0,
+        "samples": 0
+      },
+      "mainTickCpu": {
+        "maxMs": 0.0,
+        "meanMs": 0.0,
+        "p95Ms": 0.0,
+        "samples": 0
+      },
+      "copyTickWall": {
+        "maxMs": 0.0,
+        "meanMs": 0.0,
+        "p95Ms": 0.0,
+        "samples": 0
+      },
+      "copyTickCpu": {
+        "maxMs": 0.0,
+        "meanMs": 0.0,
+        "p95Ms": 0.0,
+        "samples": 0
+      },
+      "serverTickWall": {
+        "maxMs": 0.0,
+        "meanMs": 0.0,
+        "p95Ms": 0.0,
+        "samples": 0
+      },
+      "mainCpuTotalMs": 0.0,
+      "mainWallTotalMs": 0.0,
+      "routes": 14,
+      "working": 8,
+      "cpuClockSupported": true
+    },
+    "residents": 0,
+    "busy": false,
+    "entranceCounts": [
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ]
+  },
+  "supplementError": "{'label': '32-sealed-reachable-entrance', 'done': True, 'failed': False, 'buildings': 32, 'baseline': False, 'elapsedSeconds': 42.1748693, 'mainTickCount': 844, 'sectionsServed': 1240, 'maxSectionsPerTick': 2, 'sectionRequests': 1240, 'uniqueSections': 242, 'repeatedSectionRequests': 998, 'requestsInMissingChunks': 0, 'expandedNodes': 72104, 'workerReturned': True, 'workerWallMs': 42091.7659, 'workerCpuMs': 104.566, 'snapshotWaitWallMs': 41867.7408, 'mainTickWall': {'maxMs': 37.8722, 'meanMs': 1.873760308056872, 'p95Ms': 3.5437, 'samples': 844}, 'mainTickCpu': {'maxMs': 1.749, 'meanMs': 0.7709313981042655, 'p95Ms': 1.4768, 'samples': 844}, 'copyTickWall': {'maxMs': 37.8722, 'meanMs': 1.8763220902612827, 'p95Ms': 3.5437, 'samples': 842}, 'copyTickCpu': {'maxMs': 1.749, 'meanMs': 0.7722794536817101, 'p95Ms': 1.4768, 'samples': 842}, 'serverTickWall': {'maxMs': 41.8804, 'meanMs': 6.532269395017793, 'p95Ms': 9.7842, 'samples': 843}, 'mainCpuTotalMs': 650.6661, 'mainWallTotalMs': 1581.4537, 'routes': 13, 'working': 8, 'cpuClockSupported': True}",
+  "supplementCleanup": {
+    "releasedForcedChunks": 221,
+    "probe": {
+      "label": "32-sealed-reachable-entrance",
+      "done": true,
+      "failed": false,
+      "buildings": 32,
+      "baseline": false,
+      "elapsedSeconds": 42.1748693,
+      "mainTickCount": 844,
+      "sectionsServed": 1240,
+      "maxSectionsPerTick": 2,
+      "sectionRequests": 1240,
+      "uniqueSections": 242,
+      "repeatedSectionRequests": 998,
+      "requestsInMissingChunks": 0,
+      "expandedNodes": 72104,
+      "workerReturned": true,
+      "workerWallMs": 42091.7659,
+      "workerCpuMs": 104.566,
+      "snapshotWaitWallMs": 41867.7408,
+      "mainTickWall": {
+        "maxMs": 37.8722,
+        "meanMs": 1.873760308056872,
+        "p95Ms": 3.5437,
+        "samples": 844
+      },
+      "mainTickCpu": {
+        "maxMs": 1.749,
+        "meanMs": 0.7709313981042655,
+        "p95Ms": 1.4768,
+        "samples": 844
+      },
+      "copyTickWall": {
+        "maxMs": 37.8722,
+        "meanMs": 1.8763220902612827,
+        "p95Ms": 3.5437,
+        "samples": 842
+      },
+      "copyTickCpu": {
+        "maxMs": 1.749,
+        "meanMs": 0.7722794536817101,
+        "p95Ms": 1.4768,
+        "samples": 842
+      },
+      "serverTickWall": {
+        "maxMs": 41.8804,
+        "meanMs": 6.532269395017793,
+        "p95Ms": 9.7842,
+        "samples": 843
+      },
+      "mainCpuTotalMs": 650.6661,
+      "mainWallTotalMs": 1581.4537,
+      "routes": 13,
+      "working": 8,
+      "cpuClockSupported": true
+    },
+    "residents": 0,
+    "busy": false,
+    "entranceCounts": [
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ]
+  },
+  "testedProductionCommit": "86eedc23a",
+  "sealedValidation": {
+    "accepted": true,
+    "criterion": "same 32 building nodes, all selected building ports closed with solid blocks, spanning-forest edge count decreases",
+    "componentsBefore": 18,
+    "componentsAfter": 19,
+    "routesBefore": 14,
+    "routesAfter": 13,
+    "largestWorkingBefore": 8,
+    "largestWorkingAfter": 8,
+    "originalAutomationAssertionWasTooStrong": true,
+    "explanation": "The largest component size need not decrease when an equal-size component can take over. Measurement worker succeeded; original assertion error is preserved in raw results."
+  },
+  "shutdown": {
+    "commands.jsonl": {
+      "cleanup": true,
+      "releasedForcedChunks": 221,
+      "restore": true,
+      "quit": true
+    },
+    "supplement-commands.jsonl": {
+      "cleanup": true,
+      "releasedForcedChunks": 221,
+      "restore": true,
+      "quit": true
+    }
+  },
+  "probeScope": {
+    "main": "entire TownConnectivity.tick method; CPU timer excludes time descheduled by the OS",
+    "worker": "entire calculate task including BFS/snapshot lookup and probe overhead; CPU separate from wall time",
+    "wait": "sum of CompletableFuture.get waits for section bytes; overlaps main classification and must not be added to main wall time",
+    "expandedNodes": "RoomPathfinder.getNeighbors invocation count; excludes unexpanded maximum-distance frontier",
+    "worldData": "real loaded ServerLevel chunk/block states, not an AbstractWorld synthetic fixture",
+    "tower": "no tower placed or registered for this test team",
+    "residents": 0
+  },
+  "sessionGroups": {
+    "defaultHeap": [
+      "8-first",
+      "8-recompute",
+      "16-first",
+      "16-recompute",
+      "32-first",
+      "32-recompute",
+      "32-blocked"
+    ],
+    "fixed4GHeap": [
+      "32-reloaded-control",
+      "32-sealed-reachable-entrance"
+    ]
+  }
+}

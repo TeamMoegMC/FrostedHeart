@@ -125,8 +125,8 @@ public class SnowSackItem extends FHBaseItem {
 
     @Override
     public boolean overrideOtherStackedOnMe(ItemStack stack, ItemStack other, Slot slot, ClickAction action, Player player, SlotAccess access) {
-        if (!(ClientUtils.getMc().screen instanceof SnowSackScreen) && action == ClickAction.SECONDARY) {
-            if (other.isEmpty()) {
+        if (action == ClickAction.SECONDARY) {
+            if (player.level().isClientSide && !(ClientUtils.getMc().screen instanceof SnowSackScreen) && other.isEmpty()) {
                 openScreenFromClient(player, stack);
                 return true;
             } else if (isSnow(other)) {

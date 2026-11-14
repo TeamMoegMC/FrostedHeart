@@ -45,7 +45,7 @@ public final class LinkMatcher {
     public static List<Match> match(List<KnowledgeElement> selected, Map<ResourceLocation, LinkRule> rules, TagLookup tags) {
         if (selected.size() < 2 || selected.size() > 5 || selected.stream().map(KnowledgeElement::key).distinct().count() != selected.size())
             return List.of();
-        return search(selected, rules, tags, true, Integer.MAX_VALUE);
+        return search(selected, rules, tags, true, Integer.MAX_VALUE, Integer.MAX_VALUE);
     }
 
     /**
@@ -56,10 +56,19 @@ public final class LinkMatcher {
     }
 
     public static List<Match> candidates(List<KnowledgeElement> archive, Map<ResourceLocation, LinkRule> rules, int limit, TagLookup tags) {
+        return candidates(archive, rules, limit, tags, Integer.MAX_VALUE);
+    }
+
+    /**
+     * 同上，但每条规则的回溯至多尝试 {@code steps} 个候选；超出预算的规则视为没有组合。
+     * As above, but each rule's backtracking tries at most {@code steps} candidates; a rule that exhausts its budget
+     * yields no combination.
+     */
+    public static List<Match> candidates(List<KnowledgeElement> archive, Map<ResourceLocation, LinkRule> rules, int limit, TagLookup tags, int steps) {
         if (limit <= 0) return List.of();
         Map<KnowledgeKey, KnowledgeElement> unique = new LinkedHashMap<>();
         archive.forEach(element -> unique.putIfAbsent(element.key(), element));
-        return search(List.copyOf(unique.values()), rules, tags, false, limit);
+        return search(List.copyOf(unique.values()), rules, tags, false, limit, steps);
     }
 
     /**
@@ -81,13 +90,13 @@ public final class LinkMatcher {
         return bind(List.copyOf(unique.values()), pattern, tags, steps);
     }
 
-    private static List<Match> search(List<KnowledgeElement> selected, Map<ResourceLocation, LinkRule> rules, TagLookup tags, boolean exact, int limit) {
+    private static List<Match> search(List<KnowledgeElement> selected, Map<ResourceLocation, LinkRule> rules, TagLookup tags, boolean exact, int limit, int steps) {
         List<Match> matches = new ArrayList<>();
         for (var e : rules.entrySet().stream().sorted(Map.Entry.comparingByKey(Comparator.comparing(ResourceLocation::toString))).toList()) {
             if (matches.size() >= limit) break;
             LinkRule rule = e.getValue();
             if (exact && rule.inputs().size() != selected.size() || rule.inputs().size() > selected.size()) continue;
-            bind(selected, rule.pattern(), tags, Integer.MAX_VALUE).ifPresent(bindings -> {
+            bind(selected, rule.pattern(), tags, steps).ifPresent(bindings -> {
                 Map<String, KnowledgeKey> keys = new LinkedHashMap<>();
                 rule.inputs().forEach(s -> keys.put(s.name(), bindings.get(s.name()).key()));
                 matches.add(new Match(e.getKey(), rule, keys));

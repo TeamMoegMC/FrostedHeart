@@ -106,6 +106,7 @@ public final class ThermalLoadedWorldGameTests {
     @GameTest(template = TEMPLATE, batch = "thermal_natural_formula_equivalence", timeoutTicks = 100)
     public static void naturalWorldQueriesRetainTheirTemperatureResults(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
+        helper.assertTrue(!WorldTemperature.hasNoUnderground(level), "the test overworld is normal terrain");
         BlockPos origin = helper.absolutePos(new BlockPos(2, 2, 2));
         var config = FHConfig.SERVER.CLIMATE;
         float minimum = config.absoluteZeroCelsius.get().floatValue();
@@ -127,6 +128,44 @@ public final class ThermalLoadedWorldGameTests {
                         "underground air must retain dimension, biome, altitude and lower clamp at y=" + y);
             }
         }
+        helper.succeed();
+    }
+
+    @GameTest(template = TEMPLATE, batch = "thermal_natural_formula_equivalence", timeoutTicks = 100)
+    public static void superflatHasNoUndergroundHeatOrInsulation(GameTestHelper helper) {
+        // The test server has no superflat dimension, so detection is checked on a real superflat generator and the
+        // rule through the same functions the level queries use.
+        ServerLevel level = helper.getLevel();
+        var registries = level.registryAccess();
+        var superflat = new net.minecraft.world.level.levelgen.FlatLevelSource(
+                net.minecraft.world.level.levelgen.flat.FlatLevelGeneratorSettings.getDefault(
+                        registries.lookupOrThrow(net.minecraft.core.registries.Registries.BIOME),
+                        registries.lookupOrThrow(net.minecraft.core.registries.Registries.STRUCTURE_SET),
+                        registries.lookupOrThrow(net.minecraft.core.registries.Registries.PLACED_FEATURE)));
+        helper.assertTrue(WorldTemperature.hasNoUnderground(superflat)
+                        && !WorldTemperature.hasNoUnderground(level.getChunkSource().getGenerator()),
+                "a superflat generator has no underground; the normal test overworld does");
+        float blockMaximum = FHConfig.SERVER.CLIMATE.blockMaximumClimateAffection.get().floatValue();
+        // Bedrock, the superflat ground and everything up to sea level read as sea level.
+        for (int y : new int[]{-64, -60, -58, -55, -1, 0, 1, 63}) {
+            helper.assertTrue(WorldTemperature.altitude(y, true) == 0,
+                    "superflat ground has no geothermal heat at y=" + y);
+            helper.assertTrue(WorldTemperature.airClimateAffection(y, true) == 1,
+                    "superflat air takes the whole climate at y=" + y);
+            helper.assertTrue(WorldTemperature.blockClimateAffection(y, true) == blockMaximum,
+                    "no rock keeps the climate from superflat blocks at y=" + y);
+        }
+        // Above sea level a superflat dimension follows the normal rule.
+        for (int y : new int[]{64, 160, 240, 241, 319}) {
+            helper.assertTrue(WorldTemperature.altitude(y, true) == WorldTemperature.altitude(y, false)
+                            && WorldTemperature.airClimateAffection(y, true) == WorldTemperature.airClimateAffection(y, false),
+                    "superflat matches normal terrain above sea level at y=" + y);
+        }
+        // Normal terrain keeps its deep band, through the level query as well.
+        BlockPos deep = helper.absolutePos(new BlockPos(2, 2, 2)).atY(-60);
+        helper.assertTrue(WorldTemperature.altitude(-60, false) == 100 && WorldTemperature.altitude(level, deep) == 100
+                        && WorldTemperature.airClimateAffection(-60, false) == 0,
+                "normal terrain keeps its geothermal band at y=-60");
         helper.succeed();
     }
 

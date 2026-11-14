@@ -26,14 +26,108 @@ import net.minecraft.world.entity.NeutralMob;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.animal.PolarBear;
-import net.minecraft.world.entity.animal.Wolf;
+import java.util.EnumSet;
+import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.entity.ai.util.DefaultRandomPos;
+import net.minecraft.world.phys.Vec3;
+import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(PolarBear.class)
-public abstract class PolarBearMixin implements NeutralMob {
+public abstract class PolarBearMixin extends net.minecraft.world.entity.animal.Animal implements NeutralMob {
+    protected PolarBearMixin(EntityType<? extends net.minecraft.world.entity.animal.Animal> type, net.minecraft.world.level.Level level) {
+        super(type, level);
+    }
+
+    @Unique private LivingEntity frostedheart$trackedTarget;
+    @Unique private int frostedheart$unreachableTicks;
+    @Unique private int frostedheart$fleeTicks;
+    @Unique private LivingEntity frostedheart$threat;
+    @Unique private int frostedheart$counterattackTicks;
+    @Unique private int frostedheart$lastHurtTimestamp;
+    @Unique private LivingEntity frostedheart$counterattackTarget;
+
+    @Inject(method = "registerGoals", at = @At("TAIL"))
+    private void frostedheart$registerRetreat(CallbackInfo ci) {
+        PolarBear self = (PolarBear)(Object)this;
+        this.goalSelector.addGoal(0, new Goal() {
+            { setFlags(EnumSet.of(Flag.MOVE, Flag.LOOK, Flag.JUMP)); }
+            @Override public boolean canUse() { return !self.isBaby() && frostedheart$fleeTicks > 0 && frostedheart$counterattackTicks == 0; }
+            @Override public boolean canContinueToUse() { return canUse(); }
+            @Override public void start() { self.setTarget(null); self.getNavigation().stop(); }
+            @Override public void tick() {
+                self.setTarget(null);
+                if (frostedheart$threat != null && self.getNavigation().isDone()) {
+                    Vec3 away = DefaultRandomPos.getPosAway(self, 16, 7, frostedheart$threat.position());
+                    if (away != null) self.getNavigation().moveTo(away.x, away.y, away.z, 1.5D);
+                }
+            }
+            @Override public boolean requiresUpdateEveryTick() { return true; }
+            @Override public void stop() { self.getNavigation().stop(); }
+        });
+    }
+
+    @Inject(method = "tick", at = @At("HEAD"))
+    private void frostedheart$updateCombat(CallbackInfo ci) {
+        PolarBear self = (PolarBear)(Object)this;
+        if (self.level().isClientSide || self.isBaby()) return;
+        LivingEntity attacker = self.getLastHurtByMob();
+        int hurtTimestamp = self.getLastHurtByMobTimestamp();
+        boolean newlyHurt = hurtTimestamp != frostedheart$lastHurtTimestamp;
+        frostedheart$lastHurtTimestamp = hurtTimestamp;
+        if (frostedheart$fleeTicks > 0) {
+            // Do not extend an active counterattack: sustained damage must not prevent retreat.
+            if (newlyHurt && frostedheart$counterattackTicks == 0
+                    && attacker != null && attacker.isAlive() && self.canAttack(attacker)) {
+                frostedheart$counterattackTarget = attacker;
+                frostedheart$threat = attacker;
+                frostedheart$counterattackTicks = 40;
+                self.getNavigation().stop();
+            }
+            if (frostedheart$counterattackTicks > 0) {
+                --frostedheart$counterattackTicks;
+                if (frostedheart$counterattackTicks > 0 && frostedheart$counterattackTarget.isAlive()
+                        && self.canAttack(frostedheart$counterattackTarget)) {
+                    self.setTarget(frostedheart$counterattackTarget);
+                    return;
+                }
+                frostedheart$counterattackTicks = 0;
+                frostedheart$counterattackTarget = null;
+                self.getNavigation().stop();
+            }
+            --frostedheart$fleeTicks;
+            self.setTarget(null);
+            return;
+        }
+        if (attacker != null && attacker.isAlive() && self.canAttack(attacker)
+                && self.tickCount - self.getLastHurtByMobTimestamp() <= 600) {
+            self.setTarget(attacker);
+        }
+        LivingEntity target = self.getTarget();
+        if (target == null || !target.isAlive()) {
+            frostedheart$trackedTarget = null;
+            frostedheart$unreachableTicks = 0;
+            return;
+        }
+        if (target != frostedheart$trackedTarget) {
+            frostedheart$trackedTarget = target;
+            frostedheart$unreachableTicks = 0;
+        }
+        if (self.distanceToSqr(target) <= 6.0D + target.getBbWidth()
+                && self.getSensing().hasLineOfSight(target)) frostedheart$unreachableTicks = 0;
+        else ++frostedheart$unreachableTicks;
+        if (self.getHealth() < self.getMaxHealth() * 0.25F || frostedheart$unreachableTicks >= 300) {
+            frostedheart$threat = target;
+            frostedheart$fleeTicks = 200;
+            frostedheart$unreachableTicks = 0;
+            self.setTarget(null);
+            self.stopBeingAngry();
+        }
+    }
 
     /**
      * @author yuesha-yc
@@ -42,6 +136,11 @@ public abstract class PolarBearMixin implements NeutralMob {
     @Override
     public boolean isAngryAt(LivingEntity pTarget) {
         PolarBear self = (PolarBear)(Object)this;
+
+        if (!self.isBaby() && frostedheart$fleeTicks > 0) {
+            return frostedheart$counterattackTicks > 0
+                    && pTarget == frostedheart$counterattackTarget && self.canAttack(pTarget);
+        }
 
         // Check if it's dark enough
         float lightLevel = self.getLightLevelDependentMagicValue();

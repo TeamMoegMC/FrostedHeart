@@ -117,6 +117,55 @@ public class TownInfoPanel extends UIElement {
         setSize(width, height);
     }
 
+    private boolean paper;
+
+    /**
+     * 改成布告纸样式：纸面底、墨色文字、纸槽滚动条；原来为深色底挑的颜色换成能在纸上读的墨色。
+     * Switches to the notice-board look: a paper sheet, ink text and a paper scroll track, with colours chosen for the
+     * dark panel mapped to inks that read on paper.
+     */
+    public TownInfoPanel paper() {
+        paper = true;
+        return this;
+    }
+
+    private boolean grid;
+
+    /**
+     * 纸面样式，但画在方格纸上，像一本记录簿；调试页用它，和给玩家看的纸张区分开。
+     * The paper look on graph paper, like a logbook; debug pages use it to set them apart from the players' sheets.
+     */
+    public TownInfoPanel ledger() {
+        paper = true;
+        grid = true;
+        return this;
+    }
+
+    /**
+     * 把为深色面板挑的行内颜色逐段换成纸上的墨色，例如进度条里实心和空心的方块仍然分得开。
+     * Maps the inline colours picked for the dark panel to paper inks segment by segment, so that, say, the filled and
+     * empty blocks of a text bar still differ.
+     */
+    public static net.minecraft.util.FormattedCharSequence inked(net.minecraft.util.FormattedCharSequence text, int baseInk) {
+        return sink -> text.accept((position, style, codePoint) -> {
+            net.minecraft.network.chat.TextColor color = style.getColor();
+            int ink = color == null ? baseInk : paperInk(0xFF000000 | color.getValue());
+            return sink.accept(position, style.withColor(net.minecraft.network.chat.TextColor.fromRgb(ink & 0xFFFFFF)), codePoint);
+        });
+    }
+
+    /** The ink that stands for a colour picked for the dark panel. */
+    public static int paperInk(int color) {
+        return switch (color) {
+            case 0xFF55FF55, 0xFF55AA55 -> com.teammoeg.frostedheart.content.town.client.board.NoticeBoardTheme.GREEN;
+            case 0xFFFFAA00, 0xFFFFCC55, 0xFFFFFF55 -> com.teammoeg.frostedheart.content.town.client.board.NoticeBoardTheme.AMBER;
+            case 0xFFFF5555, 0xFFAA0000 -> com.teammoeg.frostedheart.content.town.client.board.NoticeBoardTheme.RED;
+            case 0xFF55FFFF, 0xFF5599CC -> com.teammoeg.frostedheart.content.town.client.board.NoticeBoardTheme.BLUE;
+            case 0xFFAAAAAA, 0xFF888888, 0xFF777777, 0xFF555555 -> com.teammoeg.frostedheart.content.town.client.board.NoticeBoardTheme.MUTED;
+            default -> com.teammoeg.frostedheart.content.town.client.board.NoticeBoardTheme.INK;
+        };
+    }
+
     /** Returns the panel to its first row after its owning view changes context. */
     public void resetScroll() {
         scrollStart = 0;
@@ -130,7 +179,9 @@ public class TownInfoPanel extends UIElement {
     ) {
         Font font = Minecraft.getInstance().font;
         List<VisualRow> rows = visualRows(font, width);
-        if (drawFrame) drawPanel(graphics, x, y, width, height);
+        if (drawFrame && paper) (grid ? com.teammoeg.frostedheart.content.town.client.board.NoticeBoardIcons.GRID
+                : com.teammoeg.frostedheart.content.town.client.board.NoticeBoardIcons.PAPER).draw(graphics, x, y, width, height);
+        else if (drawFrame) drawPanel(graphics, x, y, width, height);
 
         int visible = visibleRows();
         int maxScroll = Math.max(0, rows.size() - visible);
@@ -147,7 +198,8 @@ public class TownInfoPanel extends UIElement {
                 CIcons.getIcon(row.icon()).draw(
                         graphics, x + PADDING_X, rowY - 2, 12, 12);
             }
-            graphics.drawString(font, row.text(), textX, rowY, row.color(), true);
+            if (paper) graphics.drawString(font, inked(row.text(), paperInk(row.color())), textX, rowY, paperInk(row.color()), false);
+            else graphics.drawString(font, row.text(), textX, rowY, row.color(), true);
         }
         graphics.disableScissor();
         renderScrollbar(graphics, x, y, width, height, rows.size(), visible, maxScroll);
@@ -222,6 +274,13 @@ public class TownInfoPanel extends UIElement {
         int thumbHeight = thumbHeight(totalRows, visibleRows, trackHeight);
         int travel = trackHeight - thumbHeight;
         int thumbY = trackY + travel * scrollStart / maxScroll;
+        if (paper) {
+            com.teammoeg.frostedheart.content.town.client.board.NoticeBoardTheme.INSTANCE.drawSliderBackground(graphics, trackX, trackY,
+                    SCROLLBAR_WIDTH, trackHeight, false);
+            com.teammoeg.frostedheart.content.town.client.board.NoticeBoardTheme.INSTANCE.drawSliderBar(graphics, trackX, thumbY,
+                    SCROLLBAR_WIDTH, thumbHeight, draggingScrollbar);
+            return;
+        }
         graphics.fill(trackX, trackY, trackX + SCROLLBAR_WIDTH, trackY + trackHeight, 0xFF202020);
         graphics.fill(
                 trackX + 1, thumbY, trackX + SCROLLBAR_WIDTH - 1, thumbY + thumbHeight,

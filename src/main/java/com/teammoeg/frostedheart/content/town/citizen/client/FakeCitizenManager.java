@@ -108,7 +108,7 @@ public final class FakeCitizenManager {
 		for (ClientCitizen citizen : ClientCitizenCache.values()) {
 			if (citizen.state == CitizenState.SLEEP)
 				continue;
-			double[] pos = citizen.renderPos(now);
+			double[] pos = citizen.presentationPos(now);
 			double dx = pos[0] - px;
 			double dz = pos[2] - pz;
 			double distance2 = dx * dx + dz * dz;
@@ -151,7 +151,7 @@ public final class FakeCitizenManager {
 			ClientCitizen c = ClientCitizenCache.get(citizenId);
 			if (c == null || c.state == CitizenState.SLEEP)
 				continue;
-			double[] pos = c.renderPos(now);
+			double[] pos = c.presentationPos(now);
 			FakeCitizenEntity ent = ACTIVE.get(citizenId);
 			if (ent != null) {
 				drive(ent, c, pos, now);
@@ -160,6 +160,7 @@ public final class FakeCitizenManager {
 			ent = new FakeCitizenEntity(FHEntityTypes.FAKE_CITIZEN.get(), level);
 			ent.setCitizenId(c.id);
 			ent.setModelScale(c.modelScale());
+        ent.roadClimbing = c.isRoadClimbing();
 			ent.setId(-c.id - 1);
 			ent.setPos(pos[0], pos[1], pos[2]);
 			ent.xo = pos[0];
@@ -215,6 +216,7 @@ public final class FakeCitizenManager {
 	 */
 	private static void drive(FakeCitizenEntity ent, ClientCitizen c, double[] pos, double now) {
 		ent.setModelScale(c.modelScale());
+        ent.roadClimbing = c.isRoadClimbing();
 		double oldX = ent.getX();
 		double oldZ = ent.getZ();
 		ent.xo = oldX;

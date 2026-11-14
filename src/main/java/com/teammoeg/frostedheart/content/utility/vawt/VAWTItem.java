@@ -25,21 +25,41 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 
 public class VAWTItem extends BlockItem {
-	@Override
-	public boolean isDamageable(ItemStack stack) {
-		return true;
-	}
+    private final VAWTType type;
 
-	VAWTType type;
-	public VAWTItem(Block block, Properties props,VAWTType type) {
-		super(block, props);
-		this.type=type;
-		// TODO Auto-generated constructor stub
-	}
+    public VAWTItem(Block block, Properties props, VAWTType type) {
+        super(block, props);
+        this.type = type;
+    }
 
-	@Override
-	public int getMaxDamage(ItemStack stack) {
-		return type.getDurability();
-	}
+    public static long getWear(ItemStack stack) {
+        var tag = stack.getTag();
+        if (tag == null) return 0;
+        return Math.max(0L, tag.contains("VAWTWear") ? tag.getLong("VAWTWear") : tag.getLong("Damage"));
+    }
 
+    public static void setWear(ItemStack stack, long wear) {
+        stack.getOrCreateTag().putLong("VAWTWear", Math.max(0L, wear));
+        stack.getOrCreateTag().remove("Damage");
+    }
+
+    @Override
+    public boolean isBarVisible(ItemStack stack) {
+        return getWear(stack) > 0;
+    }
+
+    private float remainingFraction(ItemStack stack) {
+        long maximum = type.getDurability();
+        return maximum <= 0 ? 0 : (float) Math.max(0D, 1D - (double) getWear(stack) / maximum);
+    }
+
+    @Override
+    public int getBarWidth(ItemStack stack) {
+        return Math.round(13 * remainingFraction(stack));
+    }
+
+    @Override
+    public int getBarColor(ItemStack stack) {
+        return net.minecraft.util.Mth.hsvToRgb(remainingFraction(stack) / 3F, 1F, 1F);
+    }
 }

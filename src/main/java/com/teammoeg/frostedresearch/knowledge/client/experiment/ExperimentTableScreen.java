@@ -94,7 +94,8 @@ public final class ExperimentTableScreen extends MenuPrimaryLayer<ExperimentTabl
         for (var run : data.runs)
             if (run.open())
                 for (var requirement : run.requirements())
-                    if (requirement.experiment() && !requirement.satisfied())
+                    // Required institute labor may still be open after the table's own runs are done.
+                    if (requirement.experiment() && !requirement.satisfied() && requirement.playerRemaining() > 0)
                         list.add(new Option(run.id(), requirement.id(), t("option", run.title(), requirement.title())));
         options = List.copyOf(list);
         var table = table();

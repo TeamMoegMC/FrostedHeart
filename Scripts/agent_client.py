@@ -7,6 +7,9 @@ Commands run one at a time, in order; the script prints each JSON result and sto
 Commands may be queued before the client has finished starting. GUI coordinates are the scaled GUI
 coordinates reported by 'screen' (multiply by guiScale for screenshot pixels).
 
+Apart from the bridge class, the client has the same mods and data as a plain ./gradlew runClient
+(no GameTest resources), so a plain client can open the worlds it creates or opens.
+
     state                          player, screen, position, looked-at block
     connect <host[:port]>          join a server from the title screen
     world <save folder>            open an existing singleplayer save
@@ -20,11 +23,14 @@ coordinates reported by 'screen' (multiply by guiScale for screenshot pixels).
     key <name>                     press a key: e, escape, key.mouse.right (use the looked-at block), ...
     type <text>                    type text into the open screen
     click <x> <y> [left|right|middle]       click inside the open screen
+    drag <x1> <y1> <x2> <y2>       press at x1,y1, drag to x2,y2 with the left button, release (sliders, reordering)
     scroll <x> <y> <delta>         scroll inside the open screen
     move <x> <y>                   move the in-game cursor (hover/tooltips) without moving the OS cursor
     screen                         describe the open screen: vanilla widgets, container slots, CUI element tree
     screenshot [name]              save a PNG of the next frame and return its path
     wait <ticks>                   wait for game ticks
+    roads setup|populate|status    disposable town-road fixture / real residents / rendering observations
+    roads path ...                natural-world path timing (requires town-path-profile.init.gradle)
     quit                           close the client
 """
 import argparse

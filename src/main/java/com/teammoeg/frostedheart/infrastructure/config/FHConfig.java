@@ -236,6 +236,7 @@ public class FHConfig {
 	 * 
 	 */
 	public static class Common {
+		public final ForgeConfigSpec.IntValue sledGroundTransitionTicks;
 		public static class ThermalRuntime {
 			public final ForgeConfigSpec.DoubleValue airHeatCapacityJPerBlockK;
 			public final ForgeConfigSpec.BooleanValue continuousAirNativeCheckpoint;
@@ -315,6 +316,11 @@ public class FHConfig {
 		public final ForgeConfigSpec.ConfigValue<Boolean> enableUpdateReminder;
 
 		Common(ForgeConfigSpec.Builder builder) {
+			builder.push("Sled");
+			sledGroundTransitionTicks = builder
+				.comment("Ticks to smoothly transition sled ground friction and forward acceleration. 20 ticks = 1 second; 0 switches immediately.")
+				.defineInRange("sledGroundTransitionTicks", 10, 0, Integer.MAX_VALUE);
+			builder.pop();
 			THERMAL_RUNTIME = new ThermalRuntime(builder);
 
 			builder.push("Miscellaneous");
@@ -1853,6 +1859,159 @@ public class FHConfig {
 				}
 			}
 
+			public static class ResearchInstitute {
+				public final ForgeConfigSpec.IntValue minimumFloorAreaBlocks;
+				public final ForgeConfigSpec.IntValue minimumInteriorVolumeBlocks;
+				public final ForgeConfigSpec.DoubleValue floorBlocksPerResearcher;
+				public final ForgeConfigSpec.DoubleValue minimumWorkingTemperatureCelsius;
+				public final ForgeConfigSpec.DoubleValue minimumAverageBlockLight;
+				public final ForgeConfigSpec.DoubleValue physicalActivity;
+				public final ForgeConfigSpec.DoubleValue learningActivity;
+				public final ForgeConfigSpec.DoubleValue productivityAtAttributeZero;
+				public final ForgeConfigSpec.DoubleValue productivityAtAttributeHundred;
+				public final ForgeConfigSpec.DoubleValue maximumProficiency;
+				public final ForgeConfigSpec.DoubleValue bonusAtMaximumProficiency;
+				public final ForgeConfigSpec.DoubleValue minimumResidentProductivity;
+				public final ForgeConfigSpec.DoubleValue maximumResidentProductivity;
+				public final ForgeConfigSpec.DoubleValue healthWeight;
+				public final ForgeConfigSpec.DoubleValue mentalWeight;
+				public final ForgeConfigSpec.DoubleValue strengthWeight;
+				public final ForgeConfigSpec.DoubleValue intelligenceWeight;
+				public final ForgeConfigSpec.DoubleValue decorationBonusAtFullRating;
+				public final ForgeConfigSpec.IntValue archiveObservationsPerBookshelf;
+				public final ForgeConfigSpec.IntValue inboxObservationsPerBookshelf;
+				public final ForgeConfigSpec.IntValue associationMinimumEducation;
+				public final ForgeConfigSpec.DoubleValue associationRatePerStandardResearcherDay;
+				public final ForgeConfigSpec.IntValue heatEndpointPriority;
+				public final ForgeConfigSpec.DoubleValue heatConsumptionPerTick;
+				public final ForgeConfigSpec.DoubleValue heatTemperatureLevelScaleCelsius;
+				public final ForgeConfigSpec.DoubleValue minimumHeatingModifierCelsius;
+
+				ResearchInstitute(ForgeConfigSpec.Builder builder) {
+					builder.push("Research Institute");
+					minimumFloorAreaBlocks = builder
+							.comment("Minimum floor area of a working research institute, in square blocks.")
+							.defineInRange("minimumFloorAreaBlocks",
+									TownModelParameters.Defaults.RESEARCH_INSTITUTE_MINIMUM_FLOOR_AREA_BLOCKS, 0, 1000000);
+					minimumInteriorVolumeBlocks = builder
+							.comment("Minimum interior volume of a working research institute, in cubic blocks.")
+							.defineInRange("minimumInteriorVolumeBlocks",
+									TownModelParameters.Defaults.RESEARCH_INSTITUTE_MINIMUM_INTERIOR_VOLUME_BLOCKS, 0, 1000000000);
+					floorBlocksPerResearcher = builder
+							.comment("Effective floor area each researcher needs, in blocks per researcher.")
+							.comment("Researcher slots are the smaller of the drawing desks and the space-rated floor area divided by this value.")
+							.defineInRange("floorBlocksPerResearcher",
+									TownModelParameters.Defaults.RESEARCH_INSTITUTE_FLOOR_BLOCKS_PER_RESEARCHER, 0.01d, 1000000d);
+					minimumWorkingTemperatureCelsius = builder
+							.comment("Minimum effective indoor temperature at which the institute works, in degrees Celsius.")
+							.defineInRange("minimumWorkingTemperatureCelsius",
+									TownModelParameters.Defaults.RESEARCH_INSTITUTE_MINIMUM_WORKING_TEMPERATURE_CELSIUS, -1000d, 1000d);
+					minimumAverageBlockLight = builder
+							.comment("Minimum average block light (lamps, torches; not daylight) over the room's standing positions, 0 to 15.")
+							.defineInRange("minimumAverageBlockLight",
+									TownModelParameters.Defaults.RESEARCH_INSTITUTE_MINIMUM_AVERAGE_BLOCK_LIGHT, 0d, 15d);
+					physicalActivity = builder
+							.comment("Physical growth activity recorded after an institute workday.")
+							.defineInRange("physicalActivity",
+									TownModelParameters.Defaults.RESEARCH_INSTITUTE_PHYSICAL_ACTIVITY, 0d, 1d);
+					learningActivity = builder
+							.comment("Learning growth activity recorded after an institute workday; it raises intelligence.")
+							.defineInRange("learningActivity",
+									TownModelParameters.Defaults.RESEARCH_INSTITUTE_LEARNING_ACTIVITY, 0d, 1d);
+					decorationBonusAtFullRating = builder
+							.comment("Relative research labor added at a full institute decoration rating; 0.3 means +30%.")
+							.defineInRange("decorationBonusAtFullRating",
+									TownModelParameters.Defaults.RESEARCH_INSTITUTE_DECORATION_BONUS_AT_FULL_RATING, 0d, 100d);
+
+					builder.push("Knowledge Capacity");
+					archiveObservationsPerBookshelf = builder
+							.comment("Archived observation records each bookshelf of a working institute adds to its team's knowledge capacity.")
+							.defineInRange("archiveObservationsPerBookshelf",
+									TownModelParameters.Defaults.RESEARCH_INSTITUTE_ARCHIVE_OBSERVATIONS_PER_BOOKSHELF, 0, 1000000);
+					inboxObservationsPerBookshelf = builder
+							.comment("Inbox observation records each bookshelf of a working institute adds to its team's knowledge capacity.")
+							.defineInRange("inboxObservationsPerBookshelf",
+									TownModelParameters.Defaults.RESEARCH_INSTITUTE_INBOX_OBSERVATIONS_PER_BOOKSHELF, 0, 1000000);
+					builder.pop();
+
+					builder.push("Association");
+					associationMinimumEducation = builder
+							.comment("Lowest resident education level whose idle research labor can associate ideas, 0 to 5.")
+							.defineInRange("minimumEducation",
+									TownModelParameters.Defaults.RESEARCH_INSTITUTE_ASSOCIATION_MINIMUM_EDUCATION, 0, 5);
+					associationRatePerStandardResearcherDay = builder
+							.comment("Daily association rate per idle standard researcher; the day's chance is 1 - exp(-rate * labor).")
+							.defineInRange("ratePerStandardResearcherDay",
+									TownModelParameters.Defaults.RESEARCH_INSTITUTE_ASSOCIATION_RATE_PER_STANDARD_RESEARCHER_DAY, 0d, 100d);
+					builder.pop();
+
+					builder.push("Resident Productivity");
+					productivityAtAttributeZero = builder
+							.comment("Relative research labor at weighted attribute 0 and proficiency 0.")
+							.defineInRange("productivityAtAttributeZero",
+									TownModelParameters.Defaults.RESEARCH_INSTITUTE_PRODUCTIVITY_AT_ATTRIBUTE_ZERO, 0d, 100d);
+					productivityAtAttributeHundred = builder
+							.comment("Relative research labor at weighted attribute 100 and proficiency 0.")
+							.comment("Linear interpolation makes weighted attribute 50 equal 1.0 with the defaults.")
+							.defineInRange("productivityAtAttributeHundred",
+									TownModelParameters.Defaults.RESEARCH_INSTITUTE_PRODUCTIVITY_AT_ATTRIBUTE_HUNDRED, 0d, 100d);
+					maximumProficiency = builder
+							.comment("Research proficiency that grants the full configured productivity bonus.")
+							.defineInRange("maximumProficiency",
+									TownModelParameters.Defaults.RESEARCH_INSTITUTE_MAXIMUM_PROFICIENCY, 1d, 100d);
+					bonusAtMaximumProficiency = builder
+							.comment("Additive relative research labor granted at maximum research proficiency.")
+							.defineInRange("bonusAtMaximumProficiency",
+									TownModelParameters.Defaults.RESEARCH_INSTITUTE_BONUS_AT_MAXIMUM_PROFICIENCY, 0d, 100d);
+					minimumResidentProductivity = builder
+							.comment("Minimum research labor of one researcher before decoration, in standard researchers.")
+							.defineInRange("minimumResidentProductivity",
+									TownModelParameters.Defaults.RESEARCH_INSTITUTE_MINIMUM_PRODUCTIVITY, 0d, 100d);
+					maximumResidentProductivity = builder
+							.comment("Maximum research labor of one researcher before decoration, in standard researchers.")
+							.defineInRange("maximumResidentProductivity",
+									TownModelParameters.Defaults.RESEARCH_INSTITUTE_MAXIMUM_PRODUCTIVITY, 0d, 100d);
+					builder.pop();
+
+					builder.push("Attribute Weights");
+					healthWeight = defineResearchAttributeWeight(builder, "healthWeight", "health",
+							TownModelParameters.Defaults.RESEARCH_INSTITUTE_HEALTH_WEIGHT);
+					mentalWeight = defineResearchAttributeWeight(builder, "mentalWeight", "mental",
+							TownModelParameters.Defaults.RESEARCH_INSTITUTE_MENTAL_WEIGHT);
+					strengthWeight = defineResearchAttributeWeight(builder, "strengthWeight", "strength",
+							TownModelParameters.Defaults.RESEARCH_INSTITUTE_STRENGTH_WEIGHT);
+					intelligenceWeight = defineResearchAttributeWeight(builder, "intelligenceWeight", "intelligence",
+							TownModelParameters.Defaults.RESEARCH_INSTITUTE_INTELLIGENCE_WEIGHT);
+					builder.pop();
+
+					builder.push("Heating");
+					heatEndpointPriority = builder
+							.comment("Heat-network consumer priority. Lower-priority endpoints detach first when heat is insufficient.")
+							.comment("Changing this for an existing block entity requires its chunk to be reloaded.")
+							.defineInRange("endpointPriority", 99, -1000000, 1000000);
+					heatConsumptionPerTick = builder
+							.comment("Heat consumed by an active institute per game tick, in heat units per tick.")
+							.comment("Set to 0 to disable institute network heating. Changing it may require a chunk reload.")
+							.defineInRange("consumptionPerTick", 1d, 0d, 1000000d);
+					heatTemperatureLevelScaleCelsius = builder
+							.comment("Degrees Celsius of temperature modifier per heat-network temperature level.")
+							.defineInRange("temperatureLevelScaleCelsius", 10d, -1000d, 1000d);
+					minimumHeatingModifierCelsius = builder
+							.comment("Minimum temperature modifier while heat is successfully consumed, in degrees Celsius.")
+							.defineInRange("minimumModifierCelsius", 24d, -1000d, 1000d);
+					builder.pop();
+					builder.pop();
+				}
+
+				private static ForgeConfigSpec.DoubleValue defineResearchAttributeWeight(
+						ForgeConfigSpec.Builder builder, String key, String attributeName, double defaultValue) {
+					return builder
+							.comment("Relative dimensionless weight of " + attributeName + " in research labor.")
+							.comment("Weights are normalized by their sum; setting every weight to zero uses an equal-weight average.")
+							.defineInRange(key, defaultValue, 0d, 1000d);
+				}
+			}
+
 			public static class TransportConsumers {
 				public final ForgeConfigSpec.IntValue defaultRateItemsPerSecond;
 				public final ForgeConfigSpec.IntValue minimumRateItemsPerSecond;
@@ -1969,6 +2128,7 @@ public class FHConfig {
 			public final GeneratorT1 GENERATOR_T1;
 			public final Mining MINING;
 			public final TransportStation TRANSPORT_STATION;
+			public final ResearchInstitute RESEARCH_INSTITUTE;
 			public final TransportConsumers TRANSPORT_CONSUMERS;
 			public final ResidentRules RESIDENT_RULES;
 			public final ResidentProgression RESIDENT_PROGRESSION;
@@ -2011,6 +2171,7 @@ public class FHConfig {
 				HUNTING = new Hunting(builder);
 				MINING = new Mining(builder);
 				TRANSPORT_STATION = new TransportStation(builder);
+				RESEARCH_INSTITUTE = new ResearchInstitute(builder);
 				TRANSPORT_CONSUMERS = new TransportConsumers(builder);
 				RESOURCE=new Resource(builder);
 				builder.pop();

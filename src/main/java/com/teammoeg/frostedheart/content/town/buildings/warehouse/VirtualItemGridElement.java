@@ -45,17 +45,43 @@ public class VirtualItemGridElement extends UIElement{
     private float scrollOffset = 0.0f;
     private boolean isScrolling = false;
 
-    private final int cols = 9;
-    private final int rows = 5;
+    private final int cols;
+    private final int rows;
     private final int slotSize = 18;
 
     private final int scrollBarWidth = 12;
 
     public VirtualItemGridElement(UIElement parent, int x, int y, Supplier<List<VirtualItemStack>> itemSource) {
+        this(parent, x, y, 9, 5, itemSource);
+    }
+
+    /** A grid of {@code cols} × {@code rows} cells; slots and the scroll bar are drawn by the screen's theme. */
+    public VirtualItemGridElement(UIElement parent, int x, int y, int cols, int rows, Supplier<List<VirtualItemStack>> itemSource) {
         super(parent);
         this.itemSource = itemSource;
+        this.cols = Math.max(1, cols);
+        this.rows = Math.max(1, rows);
         this.setPos(x, y);
-        this.setSize(cols * slotSize + 2 + scrollBarWidth, rows * slotSize);
+        this.setSize(this.cols * slotSize + 2 + scrollBarWidth, this.rows * slotSize);
+    }
+
+    /** Width of a grid with {@code cols} columns, scroll bar included. */
+    public static int widthFor(int cols) {
+        return cols * 18 + 2 + 12;
+    }
+
+    private static final int MIN_RULED_ROWS = 3;
+    private boolean compactRows;
+
+    /** Draws cells only for the rows in use plus a spare one, instead of the whole grid. */
+    public VirtualItemGridElement compactRows() {
+        compactRows = true;
+        return this;
+    }
+
+    /** Scrolls back to the top, e.g. when the search changes. */
+    public void resetScroll() {
+        scrollOffset = 0;
     }
 
 
@@ -63,17 +89,16 @@ public class VirtualItemGridElement extends UIElement{
     public void render(GuiGraphics guiGraphics, int x, int y, int w, int h, RenderingHint hint) {
         //参数x, y 是屏幕绝对坐标
         //槽位背景绘制
-        for (int r = 0; r < rows; r++) {
+        List<VirtualItemStack> itemList = itemSource.get();
+        // Rule only the rows in use and one spare, like entries in a ledger; the rest of the page stays blank.
+        int usedRows = itemList == null ? 0 : (int) Math.ceil((double) itemList.size() / cols);
+        int ruled = compactRows ? Math.min(rows, Math.max(MIN_RULED_ROWS, usedRows + 1)) : rows;
+        for (int r = 0; r < ruled; r++) {
             for (int c = 0; c < cols; c++) {
-                int sx = x + c * slotSize;
-                int sy = y + r * slotSize;
-                guiGraphics.fill(sx, sy, sx + slotSize - 1, sy + slotSize - 1, 0xFF8B8B8B);
-                guiGraphics.fill(sx, sy, sx + slotSize - 1, sy + 1, 0xFF373737); // Top
-                guiGraphics.fill(sx, sy, sx + 1, sy + slotSize - 1, 0xFF373737); // Left
+                hint.theme(this).drawSlot(guiGraphics, x + c * slotSize + 1, y + r * slotSize + 1, 16, 16);
             }
         }
 
-        List<VirtualItemStack> itemList = itemSource.get();
         if (itemList == null) return;
 
         //计算滚动索引（列表缩短时钳制，避免保留的滚动位置越界导致空白网格）
@@ -111,8 +136,12 @@ public class VirtualItemGridElement extends UIElement{
             guiGraphics.pose().translate(0, 0, 200);
             String amountStr = formatAmount(vStack.getAmount());
             int strWidth = mc.font.width(amountStr);
-            // 右下角对齐
-            guiGraphics.drawString(mc.font, amountStr, sx + 17 - strWidth, sy + 9, 0xFFFFFF, true);
+            // 右下角对齐；白字描一圈深色边，压在浅色物品图标和纸色底上也看得清。
+            // Bottom-right, white with a dark outline all round, so it reads over pale icons on the paper as well.
+            mc.font.drawInBatch8xOutline(Component.literal(amountStr).getVisualOrderText(), sx + 17 - strWidth, sy + 9,
+                    0xFFFFFFFF, 0xFF2C2C2A, guiGraphics.pose().last().pose(), guiGraphics.bufferSource(),
+                    net.minecraft.client.renderer.LightTexture.FULL_BRIGHT);
+            guiGraphics.flush();
             guiGraphics.pose().popPose();
 
             // 悬停高亮 (判断相对坐标)
@@ -128,28 +157,23 @@ public class VirtualItemGridElement extends UIElement{
         guiGraphics.pose().popPose();
 
         //渲染滑块
-        renderScrollBar(guiGraphics, x, y, h);
+        renderScrollBar(guiGraphics, x, y, h, hint);
     }
 
-    private void renderScrollBar(GuiGraphics guiGraphics, int x, int y, int h) {
+    private void renderScrollBar(GuiGraphics guiGraphics, int x, int y, int h, RenderingHint hint) {
         int barX = x + getScrollBarXRelative(); // 屏幕绝对X
         int trackH = h;
         int thumbHeight = getThumbHeight();
 
-        guiGraphics.fill(barX, y, barX + scrollBarWidth, y + trackH, 0xFF000000);
+        hint.theme(this).drawSliderBackground(guiGraphics, barX, y, scrollBarWidth, trackH, false);
         List<VirtualItemStack> list = itemSource.get();
         int totalItems = list != null ? list.size() : 0;
         int totalRows = (int) Math.ceil((double) totalItems / cols);
 
-        if (totalRows <= rows) {
-            guiGraphics.fill(barX + 1, y, barX + scrollBarWidth - 1, y + trackH, 0xFF555555);
-            return;
-        }
+        if (totalRows <= rows) return;
 
         int thumbY = y + (int) (scrollOffset * (trackH - thumbHeight));
-        int color = isScrolling ? 0xFFAAAAAA : 0xFF808080;
-
-        guiGraphics.fill(barX + 1, thumbY, barX + scrollBarWidth - 1, thumbY + thumbHeight, color);
+        hint.theme(this).drawSliderBar(guiGraphics, barX + 1, thumbY, scrollBarWidth - 2, thumbHeight, isScrolling);
     }
 
     @Override
@@ -169,6 +193,9 @@ public class VirtualItemGridElement extends UIElement{
                 for (Component c : itemTooltip) {
                     tooltip.accept(c);
                 }
+                if (vStack.getAmount() >= 1000)
+                    tooltip.accept(Component.translatable("gui.frostedheart.warehouse.exact_amount", vStack.getAmount())
+                            .withStyle(net.minecraft.ChatFormatting.GRAY));
             }
         }
     }
@@ -293,11 +320,9 @@ public class VirtualItemGridElement extends UIElement{
         return Math.max(thumbHeight, 10);
     }
 
-    //数量字符(k,M)
+    //数量字符(k,M)，不出现小数；准确数量在悬停提示里
     private String formatAmount(long amount) {
-        if (amount < 1000) return String.valueOf(amount);
-        if (amount < 1000000) return String.format("%.1fk", amount / 1000.0);
-        return String.format("%.1fM", amount / 1000000.0);
+        return com.teammoeg.frostedheart.content.town.ui.TownFormat.compact(amount);
     }
 
     private void playClickSound() {

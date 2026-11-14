@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart.bootstrap.common;
 
+import com.teammoeg.frostedheart.content.town.buildings.dispatch.*;
 import com.google.common.collect.ImmutableMap;
 import com.simibubi.create.AllTags;
 import com.teammoeg.caupona.CPTags;
@@ -67,6 +68,7 @@ import com.teammoeg.frostedheart.content.town.block.AbstractTownBuildingBlock;
 import com.teammoeg.frostedheart.content.town.buildings.house.HouseBlock;
 import com.teammoeg.frostedheart.content.town.buildings.hunting.HuntingBaseBlock;
 import com.teammoeg.frostedheart.content.town.buildings.logistics.TransportStationBlock;
+import com.teammoeg.frostedheart.content.town.buildings.institute.ResearchInstituteBlock;
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBaseBlock;
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBlock;
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseBlock;
@@ -2472,6 +2474,16 @@ public class FHBlocks {
             .lang("Hunting Base")
             .register();
 
+    public static final BlockEntry<LaborDispatchBlock> LABOR_DISPATCH = REGISTRATE
+            .block("labor_dispatch", LaborDispatchBlock::new)
+            .properties(t -> AbstractTownBuildingBlock.TOWN_BUILDING_CORE_BLOCK_BASE_PROPERTY)
+            .tag(FHTags.Blocks.TOWN_BLOCKS.tag)
+            .transform(axeOnly())
+            .blockstate(FHBlockStateGen.simpleCubeAll("transport_station"))
+            .simpleItem()
+            .lang("Labor Dispatch Agency")
+            .register();
+
     public static final BlockEntry<TransportStationBlock> TRANSPORT_STATION = REGISTRATE
             .block("transport_station", TransportStationBlock::new)
             .properties(t -> AbstractTownBuildingBlock.TOWN_BUILDING_CORE_BLOCK_BASE_PROPERTY)
@@ -2479,6 +2491,15 @@ public class FHBlocks {
             .transform(axeOnly())
             .simpleItem()
             .lang("Transport Station")
+            .register();
+
+    public static final BlockEntry<ResearchInstituteBlock> RESEARCH_INSTITUTE = REGISTRATE
+            .block("research_institute", ResearchInstituteBlock::new)
+            .properties(t -> AbstractTownBuildingBlock.TOWN_BUILDING_CORE_BLOCK_BASE_PROPERTY)
+            .tag(FHTags.Blocks.TOWN_BLOCKS.tag)
+            .transform(axeOnly())
+            .simpleItem()
+            .lang("Research Institute")
             .register();
     // Logistic blocks
     public static final BlockEntry<LogisticChestBlock<RequesterTileEntity>> REQUESTER_CHEST = REGISTRATE.block("requester_chest", o->new LogisticChestBlock<>(o,FHBlockEntityTypes.REQUESTER_CHEST))

@@ -126,7 +126,7 @@ public class RoomZoneRenderer {
 
 	}
 
-	private static void renderDoubleFloorFace(Shape3DTesslator tesselator, Matrix4f matrix, float x, float y, float z, int color) {
+	static void renderDoubleFloorFace(Shape3DTesslator tesselator, Matrix4f matrix, float x, float y, float z, int color) {
 
 		tesselator.vertex(matrix, x, y, z, color);
 		tesselator.vertex(matrix, x + 1, y, z, color);

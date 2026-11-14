@@ -55,6 +55,7 @@ void vertex(inout Vertex v, Citizen citizen) {
     vec3 right = vec3(forward.z, 0.0, -forward.x);
 
     float part = floor(v.color.r * 255.0 + 0.5);
+    bool climbing = citizen.flags.x > 1.5;
     bool sleeping = citizen.flags.y > 0.5;
     bool moving = citizen.flags.x > 0.5 || snapshotSpeed > 0.001;
     float ageScale = citizen.flags.w < 0.5 ? 0.4
@@ -86,11 +87,15 @@ void vertex(inout Vertex v, Citizen citizen) {
 
     vec3 localPos = v.pos;
     vec3 localNormal = v.normal;
-    if (moving && !sleeping && part > 1.5) {
+    if ((moving || climbing) && !sleeping && part > 1.5) {
         float limbAmplitude = part > 3.5 ? walkSpeed * CITIZEN_LEG_SWING_SCALE : walkSpeed;
         float swing = sin(walkPhase) * limbAmplitude;
         if (part > 2.5 && part < 4.5)
             swing = -swing;
+        if (climbing) {
+            float phase = sin(uTime * 0.2) * (part < 3.5 ? 0.15 : 0.30);
+            swing = (part < 3.5 ? -2.2 : 0.0) + phase * (part == 2.0 || part == 4.0 ? 1.0 : -1.0);
+        }
         vec3 pivot;
         if (part < 3.5)
             pivot = vec3(part < 2.5 ? -0.375 : 0.375, -1.5, 0.0);

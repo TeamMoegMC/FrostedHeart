@@ -6,7 +6,7 @@
 
 将本目录复制到测试世界的 `datapacks/knowledge-example` 后执行 `/reload`。从纸和木棍的物品观察，或橡木原木与纸的观察开始。完整包包含
 9 个想法、9 个项目、17 项成果和 12 条联络规则，可展示分支、汇合与回环。其中 `material_record`、`basic_switch`、`pressure_control` 与
-`lattice` 带有证据、演算和实验需求，可在研究页与实验台完成。
+`lattice` 带有证据、演算和实验需求，可在研究页与实验台完成；`basic_switch`、`pressure_control` 允许城镇研究所代劳，`kiln` 只能由研究所的研究员完成。
 
 体验步骤与临时完成指令见 [游戏内检查路线](../playthrough.md)。`/knowledge research complete <项目ID> [想法ID]`
 供开发者跳过项目需求，保留真实研究来源与成果学习流程。加载本示例会管理其中声明的配方、拉杆/熔炉操作和高炉成型；它用于测试世界，不是正式整合包进度。

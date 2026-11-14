@@ -37,7 +37,7 @@ The settlement order is behavior:
 1. Validate buildings and occupied-area overlap.
 2. Activate pending policy, apply daily nutrition loss, allocate housing, and assign work.
 3. Update refugees, mine links, and terrain resources.
-4. Run production buildings, centralized ration allocation, and priority-ordered house menus through `TownHousingMealService`.
+4. Run production buildings, hand research-institute labor to the knowledge system (`TownResearchSettlement`), then centralized ration allocation and priority-ordered house menus through `TownHousingMealService`.
 5. Apply aging, recovery, resident exit, resource recovery, history, and signal events.
 
 Changing this order changes gameplay contracts and requires updates to tests, [town-model.md](town-model.md), and the development diary.
@@ -48,6 +48,8 @@ Inside `TeamTownData#buildingsWork`, service reconstruction has a stricter neste
 2. `TeamTownData#reloadMaxCapacity` rebuilds warehouse capacity.
 3. Every non-house building whose `shouldRunDailySettlement()` is true executes once in descending work-priority order, with x/y/z coordinate order breaking ties. A workable `TransportStationBuilding` adds its deterministic output through `TownResourceActions.VirtualResourceAttributeAction`; it never writes the holder directly.
 4. `TeamTownData#finishDailyTransportSettlement` snapshots town total transport capacity and the reservation map's current nominal reserved capacity into `TownTransportState.DailyReport`.
+
+`RESEARCH_LABOR` is the leveled daily service of research institutes (level = researcher education 0–5); `resetAllServices` clears every level. Right after `buildingsWork`, `TownResearchSettlement.settle` reads the levels into a `ResearchLaborPool`, lets `KnowledgeService.workLabor` assign it to labor requirements (drawing daily items through `TownResearchSupplies`), rolls the day's association for the idle labor, and records the team's `LaborReport` in knowledge state. A morning with no labor at all only replaces a report that still shows labor with an empty one (`retireReport`), once. It writes no town state of its own and logs, rather than propagates, knowledge-side failures. Institutes also register the `KnowledgeCapacity` provider in common setup; see [town-model.md §24](town-model.md).
 
 `TRANSPORT_CAPACITY` is a daily service, not a consumable stock. It does not use warehouse capacity, does not carry into the next settlement, and consumers reserve capacity instead of applying a resource `COST` action.
 
@@ -98,7 +100,7 @@ Building registration changes also synchronize the final authoritative staffing 
 
 Building menus and the Mayor's Seal call `TownSync.ensureCurrent` to reuse a ready baseline. `requestFull` coalesces pending work until the server boundary; ordinary record changes no longer invalidate every player's baseline. `TownClientUpdates.currentTown` retains the current display during a same-holder refresh while `canApply`/`apply` suspend deltas until the new complete view installs. Ownership changes, confirmed absence and logout clear that display. Full-request reasons and the exceptional metadata path are documented in [the current synchronization contract](persistence-and-runtime.md#管理视图).
 
-`ObjectWriter.readWithType` preserves Java `null` in sparse compressed-map lists. Replacing those absent slots with a sentinel object makes strict optional building fields fail during real wire decoding, even when direct Codec or server-only checks succeed. The wire regression exercises all six building types through the actual writer and reader; the rendered-client run additionally exercises packet handlers and GUI continuity.
+`ObjectWriter.readWithType` preserves Java `null` in sparse compressed-map lists. Replacing those absent slots with a sentinel object makes strict optional building fields fail during real wire decoding, even when direct Codec or server-only checks succeed. The wire regression exercises all seven building types through the actual writer and reader; the rendered-client run additionally exercises packet handlers and GUI continuity.
 
 The station report is persisted and incrementally synchronized as part of its building object. The town state is persisted in `TeamTownData.transportState`. Both `TownResourceUpdatePacket` and `TeamTownDataS2CPacket` carry an immutable `TownTransportSnapshot` containing the daily report, stable reservation list, current total capacity, server-derived reservation capacities, effective warehouse count, and server `warehouseDistanceCostPerBlock`. Incremental application updates the resource holder and snapshot before firing one resource callback. Full sync decodes the persistent town data, applies the accompanying snapshot, replaces the client instance, and then fires one existing full-sync callback batch. This is required because `TransportReservation.CODEC` intentionally omits derived capacity while `TransportReservation.SNAPSHOT_CODEC` includes it. Snapshot decoding limits the reservation count and rejects invalid numeric fields.
 

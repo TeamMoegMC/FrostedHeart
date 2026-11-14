@@ -31,7 +31,12 @@ import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.house.HouseBuilding;
 import com.teammoeg.frostedheart.content.town.network.TownHousingEditRequestPacket;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
+import com.teammoeg.frostedheart.content.town.client.board.BoardDraw;
+import com.teammoeg.frostedheart.content.town.client.board.BoardQueue;
+import com.teammoeg.frostedheart.content.town.client.board.NoticeBoardTheme;
 import com.teammoeg.frostedheart.content.town.tabs.TownTextLayout;
+import com.teammoeg.frostedheart.content.town.ui.TownBuildingLabels;
+import com.teammoeg.frostedheart.content.town.ui.TownFormat;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -47,17 +52,18 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
 
-/** Drag housing priority and edit guaranteed-ration residents per house. */
+/**
+ * 住房：一列可以拖动排序的住宅纸条（越靠前越先住人），每张带一道纸槽，黄铜图钉是保障口粮人数的滑块。尺寸随布告板。
+ * <p>
+ * Housing: house strips dragged into priority order (earlier houses fill first), each with a paper track whose brass
+ * pin sets the residents guaranteed a ration. Takes the board's size.
+ */
 public final class TownHousingPanel extends UIElement {
-    private static final int WIDTH = TownManagerScreen.CONTENT_WIDTH;
-    private static final int HEIGHT = TownManagerScreen.CONTENT_HEIGHT;
-    private static final int LIST_TOP = 32;
-    private static final int ROW_HEIGHT = 28;
-    private static final int VISIBLE_ROWS = 6;
-    private static final int HANDLE_RIGHT = 14;
-    private static final int BAR_X = 138;
-    private static final int BAR_WIDTH = WIDTH - BAR_X - 8;
+    private static final int LIST_TOP = 30;
+    private static final int ROW_HEIGHT = 30;
+    private static final int HANDLE_RIGHT = 16;
     private static final int BAR_Y = 18;
+    private static final int SCROLLBAR_WIDTH = 8;
     private final Supplier<TeamTown> townSource;
     private TownHousingPlan observed = TownHousingPlan.EMPTY;
     private final List<BlockPos> draftOrder = new ArrayList<>();
@@ -69,10 +75,26 @@ public final class TownHousingPanel extends UIElement {
     private int targetBeforeDrag;
 
     public TownHousingPanel(UIElement parent, int x, int y, Supplier<TeamTown> townSource) {
+        this(parent, x, y, TownManagerScreen.CONTENT_WIDTH, TownManagerScreen.CONTENT_HEIGHT, townSource);
+    }
+
+    public TownHousingPanel(UIElement parent, int x, int y, int width, int height, Supplier<TeamTown> townSource) {
         super(parent);
         this.townSource = townSource;
         setPos(x, y);
-        setSize(WIDTH, HEIGHT);
+        setSize(width, height);
+    }
+
+    private int visibleRows() {
+        return Math.max(1, (getHeight() - LIST_TOP) / ROW_HEIGHT);
+    }
+
+    private int barX() {
+        return Math.max(140, getWidth() * 50 / 100);
+    }
+
+    private int barWidth() {
+        return getWidth() - barX() - SCROLLBAR_WIDTH - 14;
     }
 
     @Override
@@ -80,11 +102,10 @@ public final class TownHousingPanel extends UIElement {
                        RenderingHint hint) {
         TeamTown town = townSource.get();
         sync(town);
-        drawPanel(graphics, x, y, width, height);
         Font font = Minecraft.getInstance().font;
-        graphics.drawString(font,
-                Component.translatable("gui.frostedheart.town_manager.housing_care"),
-                x + 4, y + 4, 0xFFFFAA00, true);
+        com.teammoeg.frostedheart.content.town.client.board.BoardDraw.textOnWood(graphics,
+                Component.translatable("gui.frostedheart.town_manager.housing_care").copy().withStyle(net.minecraft.ChatFormatting.BOLD),
+                x + 4, y + 2, NoticeBoardTheme.ON_WOOD);
         if (town == null) return;
         int housed = (int) town.getAllResidents().stream()
                 .filter(resident -> resident.getHousePos() != null).count();
@@ -92,11 +113,20 @@ public final class TownHousingPanel extends UIElement {
         Component summary = Component.translatable(
                 "gui.frostedheart.town_manager.housing_summary",
                 housed, town.getAllResidents().size(), guarantees);
-        graphics.drawString(font,
+        com.teammoeg.frostedheart.content.town.client.board.BoardDraw.textOnWood(graphics,
                 TownTextLayout.ellipsize(font, summary.getString(), width - 8),
-                x + 4, y + 17, 0xFFAAAAAA, false);
+                x + 4, y + 14, NoticeBoardTheme.ON_WOOD);
         renderRows(graphics, font, x, y, town);
+        renderScrollbar(graphics, x, y);
         renderDropMarker(graphics, x, y);
+        // Below the last strip, where the board would stand empty, a note says how the page works.
+        int listBottom = y + LIST_TOP + Math.min(draftOrder.size(), visibleRows()) * ROW_HEIGHT + 8;
+        com.teammoeg.frostedheart.content.town.client.board.BoardDraw.helpNote(graphics,
+                net.minecraft.network.chat.Component.translatable("gui.frostedheart.board.town.housing.help.title"),
+                java.util.List.of(net.minecraft.network.chat.Component.translatable("gui.frostedheart.board.town.housing.help.order"),
+                        net.minecraft.network.chat.Component.translatable("gui.frostedheart.board.town.housing.help.pin"),
+                        net.minecraft.network.chat.Component.translatable("gui.frostedheart.board.town.housing.help.colors")),
+                x + 8, listBottom, Math.min(getWidth() - 24, 300), y + getHeight() - listBottom - 4);
     }
 
     private void sync(@Nullable TeamTown town) {
@@ -115,11 +145,13 @@ public final class TownHousingPanel extends UIElement {
     }
 
     private void renderRows(GuiGraphics graphics, Font font, int x, int y, TeamTown town) {
-        for (int row = 0; row < VISIBLE_ROWS; row++) {
+        Map<BlockPos, AbstractTownBuilding> buildings = town.getTownBuildings();
+        int barX = barX(), barWidth = barWidth(), stripRight = getWidth() - SCROLLBAR_WIDTH - 6;
+        for (int row = 0; row < visibleRows(); row++) {
             int index = scroll + row;
             if (index >= draftOrder.size()) break;
             BlockPos pos = draftOrder.get(index);
-            AbstractTownBuilding value = town.getTownBuildings().get(pos);
+            AbstractTownBuilding value = buildings.get(pos);
             if (!(value instanceof HouseBuilding house)) continue;
             int rowY = y + LIST_TOP + row * ROW_HEIGHT;
             boolean workable = house.isBuildingWorkable();
@@ -127,42 +159,45 @@ public final class TownHousingPanel extends UIElement {
             int guarantee = Math.max(0, draftGuarantees.getOrDefault(pos, 0));
             int occupancy = (int) town.getAllResidents().stream()
                     .filter(resident -> pos.equals(resident.getHousePos())).count();
-            int background = pos.equals(dragged) ? 0xA0446688
-                    : workable ? 0x90202020 : 0x90404040;
-            graphics.fill(x + 2, rowY, x + WIDTH - 5, rowY + ROW_HEIGHT - 2, background);
-            graphics.drawString(font, "≡", x + 4, rowY + 9,
-                    workable ? 0xFFCCCCCC : 0xFF777777, false);
-            graphics.drawString(font,
-                    TownTextLayout.ellipsize(font,
-                            Component.translatable("gui.frostedheart.town_manager.house").getString(),
-                            44), x + 15, rowY + 3,
-                    workable ? 0xFFFFFFFF : 0xFF999999, false);
-            graphics.drawString(font, pos.getX() + ", " + pos.getY() + ", " + pos.getZ(),
-                    x + 15, rowY + 15, 0xFF888888, false);
-            Component detail = Component.translatable(
-                    "gui.frostedheart.town_manager.housing_counts",
-                    occupancy, guarantee, capacity, Math.round(house.getComfortRating() * 100));
-            graphics.drawString(font,
-                    TownTextLayout.ellipsize(font, detail.getString(), BAR_WIDTH),
-                    x + BAR_X, rowY + 3, workable ? 0xFFFFFFFF : 0xFF888888, false);
-            renderBar(graphics, x + BAR_X, rowY + BAR_Y,
-                    occupancy, guarantee, capacity, workable);
+            BoardQueue.strip(graphics, x + 2, rowY, stripRight - 2, ROW_HEIGHT - 4, pos.equals(dragged), !workable);
+            BoardQueue.handle(graphics, x + 7, rowY + 9, !workable);
+            Component name = TownBuildingLabels.name(buildings, pos, house);
+            int nameW = font.width(name);
+            graphics.drawString(font, TownTextLayout.ellipsize(font, name.getString(), barX - 70), x + 19, rowY + 4,
+                    NoticeBoardTheme.INK, false);
+            // Comfort as stars beside the name, the same rating the house's own board shows.
+            if (19 + nameW + 46 < barX) BoardDraw.stars(graphics, x + 19 + nameW + 5, rowY + 4, TownFormat.stars(house.getComfortRating()));
+            Component where = workable ? TownBuildingLabels.subtitle(house, town.getTowerPos(), pos)
+                    : Component.translatable("gui.frostedheart.board.town.housing.unfit");
+            graphics.drawString(font, TownTextLayout.ellipsize(font, where.getString(), barX - 26), x + 19, rowY + 15,
+                    workable ? NoticeBoardTheme.MUTED : NoticeBoardTheme.RED, false);
+            Component detail = Component.translatable("gui.frostedheart.board.town.housing.counts", occupancy, guarantee, capacity);
+            graphics.drawString(font, TownTextLayout.ellipsize(font, detail.getString(), barWidth), x + barX, rowY + 4,
+                    workable ? NoticeBoardTheme.INK : NoticeBoardTheme.MUTED, false);
+            renderBar(graphics, x + barX, rowY + BAR_Y, barWidth, occupancy, guarantee, capacity, workable);
         }
     }
 
-    private static void renderBar(GuiGraphics graphics, int x, int y,
+    private static void renderBar(GuiGraphics graphics, int x, int y, int barWidth,
                                   int occupancy, int guarantee, int capacity,
                                   boolean workable) {
-        graphics.fill(x, y, x + BAR_WIDTH, y + 6, 0xFF181818);
-        if (!workable || capacity <= 0) {
-            graphics.fill(x + 1, y + 1, x + BAR_WIDTH - 1, y + 5, 0xFF555555);
-            return;
-        }
-        int occupiedWidth = BAR_WIDTH * Math.min(occupancy, capacity) / capacity;
-        int guaranteeWidth = BAR_WIDTH * Math.min(guarantee, capacity) / capacity;
-        graphics.fill(x, y, x + occupiedWidth, y + 6, 0xFF5599CC);
-        int marker = Mth.clamp(guaranteeWidth, 0, BAR_WIDTH - 1);
-        graphics.fill(x + marker, y - 1, x + marker + 1, y + 7, 0xFFFFCC55);
+        BoardQueue.track(graphics, x, y, barWidth, 6);
+        if (capacity <= 0) return;
+        int occupiedWidth = barWidth * Math.min(occupancy, capacity) / capacity;
+        int guaranteeWidth = barWidth * Math.min(guarantee, capacity) / capacity;
+        // An unfit house keeps its people and its setting, so both stay on the strip, greyed.
+        BoardQueue.fill(graphics, x, y, 0, occupiedWidth, 6, workable ? BoardQueue.EXTRA : BoardQueue.OFF);
+        BoardQueue.knob(graphics, x, y, Mth.clamp(guaranteeWidth, 0, barWidth - 1), 6, false);
+    }
+
+    private void renderScrollbar(GuiGraphics graphics, int x, int y) {
+        int maximum = maxScroll();
+        if (maximum <= 0) return;
+        int trackX = x + getWidth() - SCROLLBAR_WIDTH, trackY = y + LIST_TOP, trackHeight = visibleRows() * ROW_HEIGHT - 4;
+        int thumbHeight = Math.max(12, trackHeight * visibleRows() / draftOrder.size());
+        int thumbY = trackY + (trackHeight - thumbHeight) * scroll / maximum;
+        NoticeBoardTheme.INSTANCE.drawSliderBackground(graphics, trackX, trackY, SCROLLBAR_WIDTH, trackHeight, false);
+        NoticeBoardTheme.INSTANCE.drawSliderBar(graphics, trackX + 1, thumbY, SCROLLBAR_WIDTH - 2, thumbHeight, false);
     }
 
     @Override
@@ -176,7 +211,7 @@ public final class TownHousingPanel extends UIElement {
             dropIndex = index;
             return true;
         }
-        if (getMouseX() >= BAR_X && getMouseX() <= BAR_X + BAR_WIDTH) {
+        if (getMouseX() >= barX() && getMouseX() <= barX() + barWidth()) {
             AbstractTownBuilding value = building(pos);
             if (!(value instanceof HouseBuilding house) || house.getMaxResidents() <= 0) return false;
             editingTarget = pos;
@@ -240,23 +275,28 @@ public final class TownHousingPanel extends UIElement {
     @Override
     public void getTooltip(TooltipBuilder tooltip) {
         if (!isMouseOver()) return;
-        tooltip.accept(Component.translatable(
-                "gui.frostedheart.town_manager.housing_priority_help"));
-        tooltip.accept(Component.translatable(
-                "gui.frostedheart.town_manager.housing_guarantee_help"));
+        int index = rowAtMouse();
+        if (index < 0 || index >= draftOrder.size()) return;
+        // Help where the hand is: the handle explains the order, the track the guarantee.
+        if (getMouseX() < HANDLE_RIGHT)
+            tooltip.accept(Component.translatable("gui.frostedheart.town_manager.housing_priority_help"));
+        else if (getMouseX() >= barX() && getMouseX() <= barX() + barWidth())
+            tooltip.accept(Component.translatable("gui.frostedheart.town_manager.housing_guarantee_help"));
+        else return;
+        tooltip.accept(Component.translatable("gui.frostedheart.town_manager.staffing_tooltip_next_day"));
     }
 
     private void updateTarget(int capacity) {
-        double fraction = Mth.clamp((getMouseX() - BAR_X) / (double) BAR_WIDTH, 0.0, 1.0);
+        double fraction = Mth.clamp((getMouseX() - barX()) / (double) barWidth(), 0.0, 1.0);
         draftGuarantees.put(editingTarget, (int) Math.round(fraction * capacity));
     }
 
     private int rowAtMouse() {
-        if (getMouseY() < LIST_TOP || getMouseY() >= LIST_TOP + VISIBLE_ROWS * ROW_HEIGHT) return -1;
+        if (getMouseY() < LIST_TOP || getMouseY() >= LIST_TOP + visibleRows() * ROW_HEIGHT) return -1;
         return scroll + (int) ((getMouseY() - LIST_TOP) / ROW_HEIGHT);
     }
 
-    private int maxScroll() { return Math.max(0, draftOrder.size() - VISIBLE_ROWS); }
+    private int maxScroll() { return Math.max(0, draftOrder.size() - visibleRows()); }
 
     @Nullable
     private AbstractTownBuilding building(BlockPos pos) {
@@ -267,16 +307,7 @@ public final class TownHousingPanel extends UIElement {
     private void renderDropMarker(GuiGraphics graphics, int x, int y) {
         if (dragged == null) return;
         int visible = dropIndex - scroll;
-        if (visible < 0 || visible > VISIBLE_ROWS) return;
-        int markerY = y + LIST_TOP + visible * ROW_HEIGHT;
-        graphics.fill(x + 2, markerY - 1, x + WIDTH - 5, markerY + 1, 0xFFFFFFFF);
-    }
-
-    private static void drawPanel(GuiGraphics graphics, int x, int y, int width, int height) {
-        graphics.fill(x, y, x + width, y + height, 0xE0101010);
-        graphics.fill(x, y, x + width, y + 1, 0xFF373737);
-        graphics.fill(x, y, x + 1, y + height, 0xFF373737);
-        graphics.fill(x, y + height - 1, x + width, y + height, 0xFF8B8B8B);
-        graphics.fill(x + width - 1, y, x + width, y + height, 0xFF8B8B8B);
+        if (visible < 0 || visible > visibleRows()) return;
+        BoardQueue.dropLine(graphics, x + 4, y + LIST_TOP + visible * ROW_HEIGHT - 2, getWidth() - SCROLLBAR_WIDTH - 14);
     }
 }

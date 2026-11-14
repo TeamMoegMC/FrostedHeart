@@ -122,7 +122,7 @@ public final class ClientCitizenRenderer {
 			if (CitizenRenderCoordinator.hasDetailedOwnership(c))
 				continue;
 
-			double[] pos = c.renderPos(timeSeconds);
+			double[] pos = c.presentationPos(timeSeconds);
 			double dx = pos[0] - cp.x;
 			double dy = pos[1] - cp.y;
 			double dz = pos[2] - cp.z;
@@ -208,7 +208,9 @@ public final class ClientCitizenRenderer {
 		for (int index = 0; index < CitizenBatchRenderLayout.bodyPartCount(); index++) {
 			CitizenBatchRenderLayout.BodyPart part = CitizenBatchRenderLayout.bodyPartAt(index);
 			standingPart(buf, mat, pos, axes, part,
-					CitizenBatchRenderLayout.limbAngle(part, BODY_MOTION), modelScale);
+					c.isRoadClimbing() && index >= 2
+                            ? (index < 4 ? -2.2f : 0) + (float) Math.sin(timeSeconds * 4) * (index < 4 ? .15f : .3f) * (index % 2 == 0 ? 1 : -1)
+                            : CitizenBatchRenderLayout.limbAngle(part, BODY_MOTION), modelScale);
 		}
 	}
 

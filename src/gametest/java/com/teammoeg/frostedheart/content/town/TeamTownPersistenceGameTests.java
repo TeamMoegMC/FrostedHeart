@@ -298,19 +298,28 @@ public final class TeamTownPersistenceGameTests {
     }
 
     @GameTest(template = "empty", timeoutTicks = 200)
-    public static void generatorRemovalPausesSimulationAndReinstallRestoresIt(GameTestHelper helper) throws Exception {
+    public static void generatorRemovalLeavesTheTownRunning(GameTestHelper helper) throws Exception {
         Fixture fixture = populatedTown(helper, "generator-rebind");
         var generator = fixture.holder().removeData(FHSpecialDataTypes.GENERATOR_DATA).orElseThrow();
         helper.assertTrue(fixture.holder().getOptional(FHSpecialDataTypes.TOWN_DATA).orElseThrow() == fixture.town(),
                 "removing the generator must retain economic facts");
-        helper.assertTrue(AITownManager.peekPlayerSim(fixture.holder().getId()) == fixture.sim() && !fixture.sim().isAdopted(),
-                "generator removal must pause runtime simulation and retain its stored arrays");
+        helper.assertTrue(TeamTownData.executionLevel(fixture.holder()) == helper.getLevel(),
+                "without any tower the town still runs in its buildings' world");
+        helper.assertTrue(AITownManager.peekPlayerSim(fixture.holder().getId()) == fixture.sim() && fixture.sim().isAdopted(),
+                "generator removal must not pause the simulation");
         helper.getLevel().getServer().saveAllChunks(true, true, true);
         helper.assertTrue(NbtIo.readCompressed(teamFile(fixture.holder()).toFile()).getCompound("townSim")
-                .getCompound("sim").getInt("size") == 1, "a paused simulation must still be saved");
+                .getCompound("sim").getInt("size") == 1, "the simulation is saved without a tower");
         fixture.holder().setData(FHSpecialDataTypes.GENERATOR_DATA, generator);
         helper.assertTrue(fixture.sim().isAdopted() && fixture.sim().sim().size() == 1,
-                "reinstall must reconnect the retained simulation without duplicating residents");
+                "reinstalling the tower keeps the simulation without duplicating residents");
+        // Dismantle it again and settle: the fixture's house has no core block, so the morning may drop it, and only
+        // the day itself is checked.
+        fixture.holder().removeData(FHSpecialDataTypes.GENERATOR_DATA);
+        long townDay = fixture.town().getTownDay();
+        helper.assertTrue(fixture.town().tickMorning(helper.getLevel(), fixture.holder()) == TownSettlement.Result.COMMITTED,
+                "a town without a tower keeps settling");
+        helper.assertTrue(fixture.town().getTownDay() == townDay + 1, "the settlement without a tower advances the day");
         helper.succeed();
     }
 

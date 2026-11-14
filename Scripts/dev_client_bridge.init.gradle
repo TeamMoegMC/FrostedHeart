@@ -2,16 +2,29 @@
 // (src/gametest/java/com/teammoeg/frostedheart/devtools/AgentClientBridge.java). Does not alter build.gradle.
 //   ./gradlew runClient -I Scripts/dev_client_bridge.init.gradle
 // Then drive it with: python3 Scripts/agent_client.py "<command>" ...
+//
+// The bridge is compiled on its own, into an agentBridge source set made only of the devtools package of
+// src/gametest/java, with no resources. Do not add the whole gameTest source set to this run: it also brings
+// in src/gametest/resources (the frostedheart_deposits:* test dimensions, test worldgen, a flat world preset
+// override). Every world the client created or opened would then keep those dimensions in level.dat, and a
+// plain runClient could no longer load it ("Failed to load level data or datapacks").
 allprojects {
     afterEvaluate {
+        def agentBridge = sourceSets.create('agentBridge')
+        agentBridge.java.srcDirs = ["$rootDir/src/gametest/java"]
+        agentBridge.java.include 'com/teammoeg/frostedheart/devtools/**'
+        agentBridge.resources.srcDirs = []
+        agentBridge.compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
+        agentBridge.runtimeClasspath += sourceSets.main.runtimeClasspath
+        tasks.named(agentBridge.compileJavaTaskName) {
+            options.encoding = 'UTF-8'
+        }
+        // ForgeGradle makes runClient depend on agentBridgeClasses because the source set is one of the run's mod sources.
         minecraft.runs.client {
-            mods { frostedheart { source sourceSets.gameTest } }
+            mods { frostedheart { source agentBridge } }
             property 'frostedheart.agentBridge', 'true'
             // A fixed window keeps screenshot sizes and GUI coordinates comparable between runs.
             args '--width', '1280', '--height', '720'
-        }
-        tasks.matching { it.name == 'runClient' }.configureEach {
-            dependsOn tasks.named('compileGameTestJava')
         }
     }
 }

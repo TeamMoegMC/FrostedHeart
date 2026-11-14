@@ -1,0 +1,1080 @@
+{
+  "world": "town-path-natural-20261113",
+  "buildingCount": 32,
+  "cases": [
+    {
+      "probeSchema": 2,
+      "futureLookups": 0,
+      "cacheStatistics": {
+        "entries": 0,
+        "pending": 0,
+        "freshHits": 1182,
+        "staleHits": 32,
+        "misses": 242,
+        "loads": 271,
+        "expired": 242,
+        "evicted": 0
+      },
+      "label": "idle-before",
+      "done": true,
+      "failed": false,
+      "buildings": 32,
+      "baseline": true,
+      "elapsedSeconds": 10.4234985,
+      "mainTickCount": 209,
+      "sectionsServed": 0,
+      "maxSectionsPerTick": 0,
+      "sectionRequests": 0,
+      "uniqueSections": 0,
+      "repeatedSectionRequests": 0,
+      "requestsInMissingChunks": 0,
+      "expandedNodes": 0,
+      "workerReturned": false,
+      "workerWallMs": 0.0,
+      "workerCpuMs": 0.0,
+      "snapshotWaitWallMs": 0.0,
+      "mainTickWall": {
+        "maxMs": 2.653,
+        "meanMs": 0.22786411483253588,
+        "p95Ms": 0.6763,
+        "samples": 209
+      },
+      "mainTickCpu": {
+        "maxMs": 0.111,
+        "meanMs": 0.05272200956937799,
+        "p95Ms": 0.0765,
+        "samples": 209
+      },
+      "copyTickWall": {
+        "maxMs": 0.0,
+        "meanMs": 0.0,
+        "p95Ms": 0.0,
+        "samples": 0
+      },
+      "copyTickCpu": {
+        "maxMs": 0.0,
+        "meanMs": 0.0,
+        "p95Ms": 0.0,
+        "samples": 0
+      },
+      "serverTickWall": {
+        "maxMs": 85.2532,
+        "meanMs": 16.308782775119617,
+        "p95Ms": 50.1434,
+        "samples": 209
+      },
+      "serverTickCpu": {
+        "maxMs": 24.6971,
+        "meanMs": 4.582543062200957,
+        "p95Ms": 11.1433,
+        "samples": 209
+      },
+      "singleSectionCpu": {
+        "maxMs": 0.0,
+        "meanMs": 0.0,
+        "p95Ms": 0.0,
+        "samples": 0
+      },
+      "singleSectionWall": {
+        "maxMs": 0.0,
+        "meanMs": 0.0,
+        "p95Ms": 0.0,
+        "samples": 0
+      },
+      "mainCpuTotalMs": 11.0189,
+      "mainWallTotalMs": 47.6236,
+      "routes": 13,
+      "working": 8,
+      "cpuClockSupported": true,
+      "p95CpuBudgetPercent": 0.153,
+      "maxCpuBudgetPercent": 0.22200000000000003,
+      "p95WallBudgetPercent": 1.3526
+    },
+    {
+      "probeSchema": 2,
+      "futureLookups": 1251,
+      "cacheStatistics": {
+        "entries": 174,
+        "pending": 0,
+        "freshHits": 2181,
+        "staleHits": 41,
+        "misses": 485,
+        "loads": 523,
+        "expired": 311,
+        "evicted": 0
+      },
+      "label": "cold-1",
+      "done": true,
+      "failed": false,
+      "buildings": 32,
+      "baseline": false,
+      "elapsedSeconds": 9.7898896,
+      "mainTickCount": 196,
+      "sectionsServed": 252,
+      "maxSectionsPerTick": 2,
+      "sectionRequests": 447,
+      "uniqueSections": 242,
+      "repeatedSectionRequests": 205,
+      "requestsInMissingChunks": 0,
+      "expandedNodes": 72104,
+      "workerReturned": true,
+      "workerWallMs": 9704.7681,
+      "workerCpuMs": 72.0894,
+      "snapshotWaitWallMs": 9533.9676,
+      "mainTickWall": {
+        "maxMs": 10.6931,
+        "meanMs": 2.4623408163265306,
+        "p95Ms": 5.3464,
+        "samples": 196
+      },
+      "mainTickCpu": {
+        "maxMs": 1.8424,
+        "meanMs": 0.7271785714285715,
+        "p95Ms": 1.5243,
+        "samples": 196
+      },
+      "copyTickWall": {
+        "maxMs": 10.6931,
+        "meanMs": 2.474617435897436,
+        "p95Ms": 5.3464,
+        "samples": 195
+      },
+      "copyTickCpu": {
+        "maxMs": 1.8424,
+        "meanMs": 0.7305697435897436,
+        "p95Ms": 1.5243,
+        "samples": 195
+      },
+      "serverTickWall": {
+        "maxMs": 37.8074,
+        "meanMs": 10.385905128205128,
+        "p95Ms": 15.354,
+        "samples": 195
+      },
+      "serverTickCpu": {
+        "maxMs": 15.792,
+        "meanMs": 3.6029220512820515,
+        "p95Ms": 4.3757,
+        "samples": 195
+      },
+      "singleSectionCpu": {
+        "maxMs": 0.9183,
+        "meanMs": 0.48267777777777776,
+        "p95Ms": 0.835,
+        "samples": 252
+      },
+      "singleSectionWall": {
+        "maxMs": 4.9549,
+        "meanMs": 1.454375,
+        "p95Ms": 2.9929,
+        "samples": 252
+      },
+      "mainCpuTotalMs": 142.527,
+      "mainWallTotalMs": 482.6188,
+      "routes": 13,
+      "working": 8,
+      "cpuClockSupported": true,
+      "cacheBefore": {
+        "entries": 0,
+        "pending": 0,
+        "freshHits": 1182,
+        "staleHits": 32,
+        "misses": 242,
+        "loads": 271,
+        "expired": 242,
+        "evicted": 0
+      },
+      "p95CpuBudgetPercent": 3.0486,
+      "maxCpuBudgetPercent": 3.6848,
+      "p95WallBudgetPercent": 10.6928
+    },
+    {
+      "probeSchema": 2,
+      "futureLookups": 1262,
+      "cacheStatistics": {
+        "entries": 162,
+        "pending": 0,
+        "freshHits": 3187,
+        "staleHits": 65,
+        "misses": 717,
+        "loads": 779,
+        "expired": 555,
+        "evicted": 0
+      },
+      "label": "immediate-recompute-1",
+      "done": true,
+      "failed": false,
+      "buildings": 32,
+      "baseline": false,
+      "elapsedSeconds": 9.7655885,
+      "mainTickCount": 196,
+      "sectionsServed": 256,
+      "maxSectionsPerTick": 2,
+      "sectionRequests": 449,
+      "uniqueSections": 242,
+      "repeatedSectionRequests": 207,
+      "requestsInMissingChunks": 0,
+      "expandedNodes": 72104,
+      "workerReturned": true,
+      "workerWallMs": 9701.4759,
+      "workerCpuMs": 67.6069,
+      "snapshotWaitWallMs": 9562.0544,
+      "mainTickWall": {
+        "maxMs": 31.2097,
+        "meanMs": 1.9801714285714287,
+        "p95Ms": 3.7202,
+        "samples": 196
+      },
+      "mainTickCpu": {
+        "maxMs": 1.669,
+        "meanMs": 0.7086275510204082,
+        "p95Ms": 1.3367,
+        "samples": 196
+      },
+      "copyTickWall": {
+        "maxMs": 31.2097,
+        "meanMs": 1.9883158974358974,
+        "p95Ms": 3.7202,
+        "samples": 195
+      },
+      "copyTickCpu": {
+        "maxMs": 1.669,
+        "meanMs": 0.7114964102564103,
+        "p95Ms": 1.3367,
+        "samples": 195
+      },
+      "serverTickWall": {
+        "maxMs": 35.9348,
+        "meanMs": 7.2695015384615385,
+        "p95Ms": 10.29,
+        "samples": 195
+      },
+      "serverTickCpu": {
+        "maxMs": 6.1169,
+        "meanMs": 3.0880702564102567,
+        "p95Ms": 3.8002,
+        "samples": 195
+      },
+      "singleSectionCpu": {
+        "maxMs": 0.8914,
+        "meanMs": 0.47803046875,
+        "p95Ms": 0.8389,
+        "samples": 256
+      },
+      "singleSectionWall": {
+        "maxMs": 31.0567,
+        "meanMs": 1.222555078125,
+        "p95Ms": 2.5045,
+        "samples": 256
+      },
+      "mainCpuTotalMs": 138.891,
+      "mainWallTotalMs": 388.1136,
+      "routes": 13,
+      "working": 8,
+      "cpuClockSupported": true,
+      "cacheBefore": {
+        "entries": 164,
+        "pending": 0,
+        "freshHits": 2181,
+        "staleHits": 41,
+        "misses": 485,
+        "loads": 523,
+        "expired": 321,
+        "evicted": 0
+      },
+      "p95CpuBudgetPercent": 2.6734,
+      "maxCpuBudgetPercent": 3.338,
+      "p95WallBudgetPercent": 7.4403999999999995
+    },
+    {
+      "probeSchema": 2,
+      "futureLookups": 0,
+      "cacheStatistics": {
+        "entries": 65,
+        "pending": 0,
+        "freshHits": 3187,
+        "staleHits": 65,
+        "misses": 717,
+        "loads": 779,
+        "expired": 652,
+        "evicted": 0
+      },
+      "label": "refresh-tail-1",
+      "done": true,
+      "failed": false,
+      "buildings": 32,
+      "baseline": true,
+      "elapsedSeconds": 4.1743654,
+      "mainTickCount": 83,
+      "sectionsServed": 0,
+      "maxSectionsPerTick": 0,
+      "sectionRequests": 0,
+      "uniqueSections": 0,
+      "repeatedSectionRequests": 0,
+      "requestsInMissingChunks": 0,
+      "expandedNodes": 0,
+      "workerReturned": false,
+      "workerWallMs": 0.0,
+      "workerCpuMs": 0.0,
+      "snapshotWaitWallMs": 0.0,
+      "mainTickWall": {
+        "maxMs": 0.5123,
+        "meanMs": 0.1618168674698795,
+        "p95Ms": 0.3369,
+        "samples": 83
+      },
+      "mainTickCpu": {
+        "maxMs": 0.0998,
+        "meanMs": 0.06471566265060241,
+        "p95Ms": 0.0784,
+        "samples": 83
+      },
+      "copyTickWall": {
+        "maxMs": 0.0,
+        "meanMs": 0.0,
+        "p95Ms": 0.0,
+        "samples": 0
+      },
+      "copyTickCpu": {
+        "maxMs": 0.0,
+        "meanMs": 0.0,
+        "p95Ms": 0.0,
+        "samples": 0
+      },
+      "serverTickWall": {
+        "maxMs": 19.3105,
+        "meanMs": 5.811042168674699,
+        "p95Ms": 8.6293,
+        "samples": 83
+      },
+      "serverTickCpu": {
+        "maxMs": 3.3671,
+        "meanMs": 2.4456421686746985,
+        "p95Ms": 2.8837,
+        "samples": 83
+      },
+      "singleSectionCpu": {
+        "maxMs": 0.0,
+        "meanMs": 0.0,
+        "p95Ms": 0.0,
+        "samples": 0
+      },
+      "singleSectionWall": {
+        "maxMs": 0.0,
+        "meanMs": 0.0,
+        "p95Ms": 0.0,
+        "samples": 0
+      },
+      "mainCpuTotalMs": 5.3714,
+      "mainWallTotalMs": 13.4308,
+      "routes": 13,
+      "working": 8,
+      "cpuClockSupported": true,
+      "p95CpuBudgetPercent": 0.1568,
+      "maxCpuBudgetPercent": 0.1996,
+      "p95WallBudgetPercent": 0.6738
+    },
+    {
+      "probeSchema": 2,
+      "futureLookups": 1267,
+      "cacheStatistics": {
+        "entries": 158,
+        "pending": 0,
+        "freshHits": 4192,
+        "staleHits": 84,
+        "misses": 960,
+        "loads": 1041,
+        "expired": 740,
+        "evicted": 0
+      },
+      "label": "cold-2",
+      "done": true,
+      "failed": false,
+      "buildings": 32,
+      "baseline": false,
+      "elapsedSeconds": 10.0728112,
+      "mainTickCount": 202,
+      "sectionsServed": 262,
+      "maxSectionsPerTick": 2,
+      "sectionRequests": 457,
+      "uniqueSections": 242,
+      "repeatedSectionRequests": 215,
+      "requestsInMissingChunks": 0,
+      "expandedNodes": 72104,
+      "workerReturned": true,
+      "workerWallMs": 10005.308,
+      "workerCpuMs": 69.3986,
+      "snapshotWaitWallMs": 9847.5885,
+      "mainTickWall": {
+        "maxMs": 6.5435,
+        "meanMs": 1.8414653465346535,
+        "p95Ms": 3.8064,
+        "samples": 202
+      },
+      "mainTickCpu": {
+        "maxMs": 1.7241,
+        "meanMs": 0.7011920792079208,
+        "p95Ms": 1.497,
+        "samples": 202
+      },
+      "copyTickWall": {
+        "maxMs": 6.5435,
+        "meanMs": 1.855387,
+        "p95Ms": 3.8064,
+        "samples": 200
+      },
+      "copyTickCpu": {
+        "maxMs": 1.7241,
+        "meanMs": 0.706903,
+        "p95Ms": 1.497,
+        "samples": 200
+      },
+      "serverTickWall": {
+        "maxMs": 84.1318,
+        "meanMs": 7.2780139303482585,
+        "p95Ms": 10.9724,
+        "samples": 201
+      },
+      "serverTickCpu": {
+        "maxMs": 25.7508,
+        "meanMs": 3.1124358208955223,
+        "p95Ms": 3.9028,
+        "samples": 201
+      },
+      "singleSectionCpu": {
+        "maxMs": 0.8995,
+        "meanMs": 0.4786717557251909,
+        "p95Ms": 0.8259,
+        "samples": 262
+      },
+      "singleSectionWall": {
+        "maxMs": 3.1011,
+        "meanMs": 1.0830851145038167,
+        "p95Ms": 2.3424,
+        "samples": 262
+      },
+      "mainCpuTotalMs": 141.6408,
+      "mainWallTotalMs": 371.976,
+      "routes": 13,
+      "working": 8,
+      "cpuClockSupported": true,
+      "cacheBefore": {
+        "entries": 0,
+        "pending": 0,
+        "freshHits": 3187,
+        "staleHits": 65,
+        "misses": 717,
+        "loads": 779,
+        "expired": 655,
+        "evicted": 0
+      },
+      "p95CpuBudgetPercent": 2.994,
+      "maxCpuBudgetPercent": 3.4482,
+      "p95WallBudgetPercent": 7.6128
+    },
+    {
+      "probeSchema": 2,
+      "futureLookups": 1250,
+      "cacheStatistics": {
+        "entries": 173,
+        "pending": 0,
+        "freshHits": 5191,
+        "staleHits": 113,
+        "misses": 1182,
+        "loads": 1290,
+        "expired": 947,
+        "evicted": 0
+      },
+      "label": "immediate-recompute-2",
+      "done": true,
+      "failed": false,
+      "buildings": 32,
+      "baseline": false,
+      "elapsedSeconds": 9.3655402,
+      "mainTickCount": 188,
+      "sectionsServed": 249,
+      "maxSectionsPerTick": 2,
+      "sectionRequests": 445,
+      "uniqueSections": 242,
+      "repeatedSectionRequests": 203,
+      "requestsInMissingChunks": 0,
+      "expandedNodes": 72104,
+      "workerReturned": true,
+      "workerWallMs": 9306.3453,
+      "workerCpuMs": 66.8808,
+      "snapshotWaitWallMs": 9166.572,
+      "mainTickWall": {
+        "maxMs": 32.3189,
+        "meanMs": 1.9164680851063831,
+        "p95Ms": 3.4294,
+        "samples": 188
+      },
+      "mainTickCpu": {
+        "maxMs": 1.787,
+        "meanMs": 0.7091659574468084,
+        "p95Ms": 1.3055,
+        "samples": 188
+      },
+      "copyTickWall": {
+        "maxMs": 32.3189,
+        "meanMs": 1.9354806451612905,
+        "p95Ms": 3.4294,
+        "samples": 186
+      },
+      "copyTickCpu": {
+        "maxMs": 1.787,
+        "meanMs": 0.7153634408602151,
+        "p95Ms": 1.3055,
+        "samples": 186
+      },
+      "serverTickWall": {
+        "maxMs": 36.5025,
+        "meanMs": 6.791260962566845,
+        "p95Ms": 10.0092,
+        "samples": 187
+      },
+      "serverTickCpu": {
+        "maxMs": 10.7559,
+        "meanMs": 2.988294652406417,
+        "p95Ms": 3.7084,
+        "samples": 187
+      },
+      "singleSectionCpu": {
+        "maxMs": 0.9071,
+        "meanMs": 0.4731453815261044,
+        "p95Ms": 0.831,
+        "samples": 249
+      },
+      "singleSectionWall": {
+        "maxMs": 32.1749,
+        "meanMs": 1.1847787148594378,
+        "p95Ms": 2.2993,
+        "samples": 249
+      },
+      "mainCpuTotalMs": 133.3232,
+      "mainWallTotalMs": 360.296,
+      "routes": 13,
+      "working": 8,
+      "cpuClockSupported": true,
+      "cacheBefore": {
+        "entries": 156,
+        "pending": 0,
+        "freshHits": 4192,
+        "staleHits": 84,
+        "misses": 960,
+        "loads": 1041,
+        "expired": 742,
+        "evicted": 0
+      },
+      "p95CpuBudgetPercent": 2.611,
+      "maxCpuBudgetPercent": 3.5740000000000003,
+      "p95WallBudgetPercent": 6.8588
+    },
+    {
+      "probeSchema": 2,
+      "futureLookups": 1248,
+      "cacheStatistics": {
+        "entries": 171,
+        "pending": 0,
+        "freshHits": 6188,
+        "staleHits": 124,
+        "misses": 1422,
+        "loads": 1541,
+        "expired": 1189,
+        "evicted": 0
+      },
+      "label": "dirty-grace-recompute",
+      "done": true,
+      "failed": false,
+      "buildings": 32,
+      "baseline": false,
+      "elapsedSeconds": 9.6403737,
+      "mainTickCount": 193,
+      "sectionsServed": 251,
+      "maxSectionsPerTick": 2,
+      "sectionRequests": 446,
+      "uniqueSections": 242,
+      "repeatedSectionRequests": 204,
+      "requestsInMissingChunks": 0,
+      "expandedNodes": 72104,
+      "workerReturned": true,
+      "workerWallMs": 9550.2623,
+      "workerCpuMs": 67.959,
+      "snapshotWaitWallMs": 9420.3778,
+      "mainTickWall": {
+        "maxMs": 6.5317,
+        "meanMs": 1.7867435233160622,
+        "p95Ms": 3.5412,
+        "samples": 193
+      },
+      "mainTickCpu": {
+        "maxMs": 1.67,
+        "meanMs": 0.7071761658031088,
+        "p95Ms": 1.397,
+        "samples": 193
+      },
+      "copyTickWall": {
+        "maxMs": 6.5317,
+        "meanMs": 1.7933125,
+        "p95Ms": 3.5412,
+        "samples": 192
+      },
+      "copyTickCpu": {
+        "maxMs": 1.67,
+        "meanMs": 0.7103109375,
+        "p95Ms": 1.397,
+        "samples": 192
+      },
+      "serverTickWall": {
+        "maxMs": 13.5648,
+        "meanMs": 6.480702604166667,
+        "p95Ms": 9.2054,
+        "samples": 192
+      },
+      "serverTickCpu": {
+        "maxMs": 4.3445,
+        "meanMs": 2.977359375,
+        "p95Ms": 3.9182,
+        "samples": 192
+      },
+      "singleSectionCpu": {
+        "maxMs": 1.0724,
+        "meanMs": 0.47744900398406376,
+        "p95Ms": 0.8274,
+        "samples": 251
+      },
+      "singleSectionWall": {
+        "maxMs": 3.6721,
+        "meanMs": 1.05779203187251,
+        "p95Ms": 2.0853,
+        "samples": 251
+      },
+      "mainCpuTotalMs": 136.485,
+      "mainWallTotalMs": 344.8415,
+      "routes": 13,
+      "working": 8,
+      "cpuClockSupported": true,
+      "cacheBefore": {
+        "entries": 134,
+        "pending": 0,
+        "freshHits": 5191,
+        "staleHits": 113,
+        "misses": 1182,
+        "loads": 1290,
+        "expired": 986,
+        "evicted": 0
+      },
+      "p95CpuBudgetPercent": 2.794,
+      "maxCpuBudgetPercent": 3.34,
+      "p95WallBudgetPercent": 7.0824
+    },
+    {
+      "probeSchema": 2,
+      "futureLookups": 0,
+      "cacheStatistics": {
+        "entries": 58,
+        "pending": 0,
+        "freshHits": 6188,
+        "staleHits": 124,
+        "misses": 1422,
+        "loads": 1541,
+        "expired": 1302,
+        "evicted": 0
+      },
+      "label": "refresh-tail-2",
+      "done": true,
+      "failed": false,
+      "buildings": 32,
+      "baseline": true,
+      "elapsedSeconds": 4.1727699,
+      "mainTickCount": 84,
+      "sectionsServed": 0,
+      "maxSectionsPerTick": 0,
+      "sectionRequests": 0,
+      "uniqueSections": 0,
+      "repeatedSectionRequests": 0,
+      "requestsInMissingChunks": 0,
+      "expandedNodes": 0,
+      "workerReturned": false,
+      "workerWallMs": 0.0,
+      "workerCpuMs": 0.0,
+      "snapshotWaitWallMs": 0.0,
+      "mainTickWall": {
+        "maxMs": 2.306,
+        "meanMs": 0.15560238095238094,
+        "p95Ms": 0.2359,
+        "samples": 84
+      },
+      "mainTickCpu": {
+        "maxMs": 0.0932,
+        "meanMs": 0.06416785714285715,
+        "p95Ms": 0.0787,
+        "samples": 84
+      },
+      "copyTickWall": {
+        "maxMs": 0.0,
+        "meanMs": 0.0,
+        "p95Ms": 0.0,
+        "samples": 0
+      },
+      "copyTickCpu": {
+        "maxMs": 0.0,
+        "meanMs": 0.0,
+        "p95Ms": 0.0,
+        "samples": 0
+      },
+      "serverTickWall": {
+        "maxMs": 7.1738,
+        "meanMs": 4.616346428571428,
+        "p95Ms": 6.1703,
+        "samples": 84
+      },
+      "serverTickCpu": {
+        "maxMs": 2.6752,
+        "meanMs": 2.234903571428571,
+        "p95Ms": 2.5864,
+        "samples": 84
+      },
+      "singleSectionCpu": {
+        "maxMs": 0.0,
+        "meanMs": 0.0,
+        "p95Ms": 0.0,
+        "samples": 0
+      },
+      "singleSectionWall": {
+        "maxMs": 0.0,
+        "meanMs": 0.0,
+        "p95Ms": 0.0,
+        "samples": 0
+      },
+      "mainCpuTotalMs": 5.3901,
+      "mainWallTotalMs": 13.0706,
+      "routes": 13,
+      "working": 8,
+      "cpuClockSupported": true,
+      "p95CpuBudgetPercent": 0.1574,
+      "maxCpuBudgetPercent": 0.1864,
+      "p95WallBudgetPercent": 0.4718
+    },
+    {
+      "probeSchema": 2,
+      "futureLookups": 0,
+      "cacheStatistics": {
+        "entries": 0,
+        "pending": 0,
+        "freshHits": 6188,
+        "staleHits": 124,
+        "misses": 1422,
+        "loads": 1541,
+        "expired": 1360,
+        "evicted": 0
+      },
+      "label": "idle-after",
+      "done": true,
+      "failed": false,
+      "buildings": 32,
+      "baseline": true,
+      "elapsedSeconds": 10.2590008,
+      "mainTickCount": 205,
+      "sectionsServed": 0,
+      "maxSectionsPerTick": 0,
+      "sectionRequests": 0,
+      "uniqueSections": 0,
+      "repeatedSectionRequests": 0,
+      "requestsInMissingChunks": 0,
+      "expandedNodes": 0,
+      "workerReturned": false,
+      "workerWallMs": 0.0,
+      "workerCpuMs": 0.0,
+      "snapshotWaitWallMs": 0.0,
+      "mainTickWall": {
+        "maxMs": 1.4928,
+        "meanMs": 0.0931819512195122,
+        "p95Ms": 0.1776,
+        "samples": 205
+      },
+      "mainTickCpu": {
+        "maxMs": 0.0663,
+        "meanMs": 0.03279463414634146,
+        "p95Ms": 0.0423,
+        "samples": 205
+      },
+      "copyTickWall": {
+        "maxMs": 0.0,
+        "meanMs": 0.0,
+        "p95Ms": 0.0,
+        "samples": 0
+      },
+      "copyTickCpu": {
+        "maxMs": 0.0,
+        "meanMs": 0.0,
+        "p95Ms": 0.0,
+        "samples": 0
+      },
+      "serverTickWall": {
+        "maxMs": 10.8915,
+        "meanMs": 4.441009756097561,
+        "p95Ms": 6.9866,
+        "samples": 205
+      },
+      "serverTickCpu": {
+        "maxMs": 3.1091,
+        "meanMs": 2.18278487804878,
+        "p95Ms": 2.6298,
+        "samples": 205
+      },
+      "singleSectionCpu": {
+        "maxMs": 0.0,
+        "meanMs": 0.0,
+        "p95Ms": 0.0,
+        "samples": 0
+      },
+      "singleSectionWall": {
+        "maxMs": 0.0,
+        "meanMs": 0.0,
+        "p95Ms": 0.0,
+        "samples": 0
+      },
+      "mainCpuTotalMs": 6.7229,
+      "mainWallTotalMs": 19.1023,
+      "routes": 13,
+      "working": 8,
+      "cpuClockSupported": true,
+      "p95CpuBudgetPercent": 0.0846,
+      "maxCpuBudgetPercent": 0.1326,
+      "p95WallBudgetPercent": 0.3552
+    }
+  ],
+  "tickBudgetMs": 50,
+  "hardware": {
+    "processors": 1,
+    "maxHeapBytes": 4151836672,
+    "java": "17.0.21.0.3",
+    "os": "Linux",
+    "gpu": "llvmpipe (LLVM 21.1.8, 256 bits)",
+    "gl": "4.5 (Core Profile) Mesa 26.0.8-1ubuntu0.3",
+    "window": [
+      1280,
+      720
+    ],
+    "vsync": false,
+    "fpsLimit": 260,
+    "renderDistance": 6
+  },
+  "resume": {
+    "origin": [
+      48,
+      -64
+    ],
+    "forcedChunks": 221,
+    "probe": {
+      "armed": false
+    },
+    "residents": 0,
+    "busy": true,
+    "entranceCounts": [
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ]
+  },
+  "cleanup": {
+    "releasedForcedChunks": 221,
+    "probe": {
+      "probeSchema": 2,
+      "futureLookups": 0,
+      "cacheStatistics": {
+        "entries": 0,
+        "pending": 0,
+        "freshHits": 6188,
+        "staleHits": 124,
+        "misses": 1422,
+        "loads": 1541,
+        "expired": 1360,
+        "evicted": 0
+      },
+      "label": "idle-after",
+      "done": true,
+      "failed": false,
+      "buildings": 32,
+      "baseline": true,
+      "elapsedSeconds": 10.2590008,
+      "mainTickCount": 205,
+      "sectionsServed": 0,
+      "maxSectionsPerTick": 0,
+      "sectionRequests": 0,
+      "uniqueSections": 0,
+      "repeatedSectionRequests": 0,
+      "requestsInMissingChunks": 0,
+      "expandedNodes": 0,
+      "workerReturned": false,
+      "workerWallMs": 0.0,
+      "workerCpuMs": 0.0,
+      "snapshotWaitWallMs": 0.0,
+      "mainTickWall": {
+        "maxMs": 1.4928,
+        "meanMs": 0.0931819512195122,
+        "p95Ms": 0.1776,
+        "samples": 205
+      },
+      "mainTickCpu": {
+        "maxMs": 0.0663,
+        "meanMs": 0.03279463414634146,
+        "p95Ms": 0.0423,
+        "samples": 205
+      },
+      "copyTickWall": {
+        "maxMs": 0.0,
+        "meanMs": 0.0,
+        "p95Ms": 0.0,
+        "samples": 0
+      },
+      "copyTickCpu": {
+        "maxMs": 0.0,
+        "meanMs": 0.0,
+        "p95Ms": 0.0,
+        "samples": 0
+      },
+      "serverTickWall": {
+        "maxMs": 10.8915,
+        "meanMs": 4.441009756097561,
+        "p95Ms": 6.9866,
+        "samples": 205
+      },
+      "serverTickCpu": {
+        "maxMs": 3.1091,
+        "meanMs": 2.18278487804878,
+        "p95Ms": 2.6298,
+        "samples": 205
+      },
+      "singleSectionCpu": {
+        "maxMs": 0.0,
+        "meanMs": 0.0,
+        "p95Ms": 0.0,
+        "samples": 0
+      },
+      "singleSectionWall": {
+        "maxMs": 0.0,
+        "meanMs": 0.0,
+        "p95Ms": 0.0,
+        "samples": 0
+      },
+      "mainCpuTotalMs": 6.7229,
+      "mainWallTotalMs": 19.1023,
+      "routes": 13,
+      "working": 8,
+      "cpuClockSupported": true
+    },
+    "residents": 0,
+    "busy": false,
+    "entranceCounts": [
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ]
+  },
+  "summary": {
+    "activeWeightedMeanCpuMs": 0.7106328205128205,
+    "activeP95CpuMsRange": [
+      1.3055,
+      1.5243
+    ],
+    "activeMaxCpuMs": 1.8424,
+    "activeP95WallMsRange": [
+      3.4294,
+      5.3464
+    ],
+    "activeMaxWallMs": 32.3189,
+    "singleSectionWeightedMeanCpuMs": 0.4780122047244095,
+    "singleSectionP95CpuMsRange": [
+      0.8259,
+      0.8389
+    ]
+  },
+  "configuration": {
+    "ttlTicks": 100,
+    "dirtyTtlTicks": 20,
+    "graceTicks": 40,
+    "maxSectionsPerLevelTick": 2,
+    "maxCachedSectionsPerLevel": 1024
+  },
+  "scope": {
+    "mainFeature": "shared cache service for selected ServerLevel plus selected TownConnectivity.tick; non-contiguous intervals summed per tick",
+    "wholeServer": "Forge ServerTick START to END, not a pristine vanilla-only server",
+    "cpu": "ThreadMXBean current thread CPU; excludes time descheduled and GC work on other threads",
+    "wall": "elapsed in the measured intervals, including descheduling/pauses",
+    "notIndividuallyAttributed": "dirty-write mixin callbacks outside measured feature intervals; included in whole-server measurements",
+    "tail": "separate windows after worker completion; no extra copied sections observed in these two windows"
+  },
+  "shutdown": {
+    "releasedForcedChunks": 221,
+    "restoredOptions": true,
+    "quitSucceeded": true,
+    "worldSaveConfirmed": true
+  },
+  "limits": [
+    "one 32-building town and one active dimension",
+    "single-core llvmpipe integrated client/server process",
+    "initial/final full-server controls drift due warmup/background load; do not subtract p95 to infer feature cost",
+    "immediate recompute is not fully warm because a round lasts longer than 5-second TTL",
+    "small instrumented sample and only two cold/immediate repeats; not a hard latency upper bound"
+  ]
+}

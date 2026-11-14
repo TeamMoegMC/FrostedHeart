@@ -1,7 +1,6 @@
 package com.teammoeg.frostedheart.item.townmanager;
 
 import com.teammoeg.chorda.client.cui.base.UILayer;
-import com.teammoeg.chorda.client.cui.widgets.TextBox;
 import com.teammoeg.frostedheart.content.town.TeamTown;
 import com.teammoeg.frostedheart.content.town.TeamTownData;
 import com.teammoeg.frostedheart.content.town.TownHousingPlan;
@@ -9,14 +8,13 @@ import com.teammoeg.frostedheart.content.town.TownStaffingPlan;
 import com.teammoeg.frostedheart.content.town.buildings.house.HouseBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.hunting.HuntingBaseBuilding;
 import com.teammoeg.frostedheart.content.town.client.TownClientUpdates;
+import com.teammoeg.frostedheart.content.town.client.board.RenameBox;
 import com.teammoeg.frostedheart.content.town.network.TownHousingPlanUpdatePacket;
 import com.teammoeg.frostedheart.content.town.network.TownStaffingPlanUpdatePacket;
-import com.teammoeg.frostedheart.content.town.resident.Resident;
 import io.netty.buffer.Unpooled;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 
@@ -85,44 +83,30 @@ public final class TownEditorClientChecks {
         require(name.getText().equals("B") && field(name, "pendingName") == null,
                 "an equal-name authoritative reply must also end the wait");
 
-        UUID id = UUID.randomUUID();
-        Resident original = new Resident("Original", "Resident", id);
-        data.applyResidentUpdate(Map.of(id, original), Set.of());
-        TownResidentsPanel residents = new TownResidentsPanel(parent, 0, 0, () -> town);
-        call(residents, "syncNameEditors", Resident.class, original);
-        TextBox first = (TextBox) field(residents, "firstNameBox");
-        first.setText("A", false);
-        field(residents, "displayedNameKey", id + "\u0000A\u0000Resident");
-        field(residents, "pendingNameResident", original);
-        Resident latest = new Resident("B", "Resident", id);
-        data.applyResidentUpdate(Map.of(id, latest), Set.of());
-        call(residents, "commitResidentName", boolean.class, false);
-        require(field(residents, "pendingNameResident") == original,
-                "resident blur after Enter must not submit A over B");
-        call(residents, "syncNameEditors", Resident.class, latest);
-        require(first.getText().equals("B") && field(residents, "pendingNameResident") == null,
-                "a coalesced resident update must clear the pending intermediate name");
-
-        first.setText("A", false);
-        field(residents, "displayedNameKey", id + "\u0000A\u0000Resident");
-        field(residents, "pendingNameResident", latest);
-        Resident other = new Resident("Other", "Resident", UUID.randomUUID());
-        data.applyResidentUpdate(Map.of(other.getUUID(), other), Set.of());
-        call(residents, "syncNameEditors", Resident.class, latest);
-        require(first.getText().equals("A"), "another resident's update must not acknowledge this pending edit");
-        Resident equalReply = new Resident("B", "Resident", id);
-        data.applyResidentUpdate(Map.of(id, equalReply), Set.of());
-        call(residents, "syncNameEditors", Resident.class, equalReply);
-        require(first.getText().equals("B") && field(residents, "pendingNameResident") == null,
-                "an equal-name replacement snapshot must clear the resident draft");
-        first.setText("Unsubmitted", false);
-        field(first, "focusedLastFrame", true);
-        call(residents, "syncNameEditors", Resident.class, equalReply);
-        require(first.getText().equals("Unsubmitted"), "background sync must preserve text until child focus-loss commit");
-        field(first, "focusedLastFrame", false);
+        // Residents are renamed on the seal's residents page in a one-shot box: Enter hands the name over once, losing
+        // focus afterwards must not hand it over again, and losing focus before Enter cancels. While it is open the page
+        // does not rebuild, so incoming resident updates cannot overwrite the draft.
+        int[] done = {0}, cancelled = {0};
+        String[] handed = {null};
+        RenameBox enter = new RenameBox(parent, "Original Resident", 48, submitted -> { done[0]++; handed[0] = submitted; }, () -> cancelled[0]++);
+        enter.setFocused(true);
+        enter.setText("A Resident", false);
+        enter.onEnterPressed();
+        enter.setFocused(false);
+        enter.tick();
+        enter.onEnterPressed();
+        require(done[0] == 1 && cancelled[0] == 0 && "A Resident".equals(handed[0]),
+                "resident rename hands its name over once; blur after Enter must not resubmit");
+        RenameBox blur = new RenameBox(parent, "Original Resident", 48, submitted -> done[0]++, () -> cancelled[0]++);
+        blur.setFocused(true);
+        blur.setText("Unsubmitted", false);
+        blur.setFocused(false);
+        blur.tick();
+        blur.tick();
+        require(done[0] == 1 && cancelled[0] == 1, "resident rename without Enter cancels once and submits nothing");
         return List.of("equal staffing reply after drag", "equal housing reply after drag",
-                "town rename coalescing and blur", "equal town-name reply", "resident rename coalescing and blur",
-                "resident reply identity and unrelated updates", "resident focus-loss ordering");
+                "town rename coalescing and blur", "equal town-name reply", "resident rename submits once",
+                "resident rename blur cancels");
     }
 
     private static void submitLocally(TownNameEditor editor, String name) throws Exception {

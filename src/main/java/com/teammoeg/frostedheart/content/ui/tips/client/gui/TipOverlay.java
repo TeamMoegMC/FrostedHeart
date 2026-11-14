@@ -105,6 +105,8 @@ public class TipOverlay extends PrimaryLayer {
             QUEUE.removeIf(TipOverlay::isTownEventTip);
             if (currentIsTownEvent) tipLayer.clearImmediately();
         }
+        // Tips wait, unseen and paused, while a full-window board is open, and resume when it closes.
+        if (coveredByBoard()) return;
         super.tick();
         if (ClientUtils.getMc().screen instanceof CUIScreenWrapper cui) {
             if (cui.getPrimaryLayer().getDialog() instanceof EditorFieldsDialog<?> efd) {
@@ -146,7 +148,12 @@ public class TipOverlay extends PrimaryLayer {
 
     @Override
     public boolean isEnabled() {
-        return tipLayer.isEnabled();
+        return tipLayer.isEnabled() && !coveredByBoard();
+    }
+
+    /** A board that fills the window is open, such as a town building's board or the Mayor's Seal. */
+    private static boolean coveredByBoard() {
+        return com.teammoeg.chorda.client.cui.base.HidesSidebarButtons.isOpen();
     }
 
     @Override

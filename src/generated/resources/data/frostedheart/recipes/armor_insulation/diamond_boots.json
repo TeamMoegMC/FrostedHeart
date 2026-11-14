@@ -1,0 +1,9 @@
+{
+  "type": "frostedheart:armor_temp",
+  "factor": 100.0,
+  "heat_proof": 0.7,
+  "item": "minecraft:diamond_boots",
+  "slot": "feet",
+  "weight": 0.47368422,
+  "wind_proof": 1.0
+}

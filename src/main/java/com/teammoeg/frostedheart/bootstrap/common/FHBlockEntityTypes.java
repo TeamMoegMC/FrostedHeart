@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart.bootstrap.common;
 
+import com.teammoeg.frostedheart.content.town.buildings.dispatch.*;
 import com.google.common.collect.ImmutableSet;
 import com.simibubi.create.content.kinetics.base.HalfShaftInstance;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntityRenderer;
@@ -44,6 +45,7 @@ import com.teammoeg.frostedheart.content.steamenergy.steamcore.SteamCoreTileEnti
 import com.teammoeg.frostedheart.content.town.buildings.house.HouseBlockEntity;
 import com.teammoeg.frostedheart.content.town.buildings.hunting.HuntingBaseBlockEntity;
 import com.teammoeg.frostedheart.content.town.buildings.logistics.TransportStationBlockEntity;
+import com.teammoeg.frostedheart.content.town.buildings.institute.ResearchInstituteBlockEntity;
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBaseBlockEntity;
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBlockEntity;
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseBlockEntity;
@@ -167,8 +169,15 @@ public class FHBlockEntityTypes {
     public static final RegistryObject<BlockEntityType<HuntingBaseBlockEntity>> HUNTING_BASE = REGISTER.register(
             "hunting_base", makeType(HuntingBaseBlockEntity::new, FHBlocks.HUNTING_BASE::get)
     );
+    public static final RegistryObject<BlockEntityType<LaborDispatchBlockEntity>> LABOR_DISPATCH = REGISTER.register(
+            "labor_dispatch", makeType(LaborDispatchBlockEntity::new, FHBlocks.LABOR_DISPATCH::get)
+    );
+
     public static final RegistryObject<BlockEntityType<TransportStationBlockEntity>> TRANSPORT_STATION = REGISTER.register(
             "transport_station", makeType(TransportStationBlockEntity::new, FHBlocks.TRANSPORT_STATION::get)
+    );
+    public static final RegistryObject<BlockEntityType<ResearchInstituteBlockEntity>> RESEARCH_INSTITUTE = REGISTER.register(
+            "research_institute", makeType(ResearchInstituteBlockEntity::new, FHBlocks.RESEARCH_INSTITUTE::get)
     );
 
     public static final RegistryObject<BlockEntityType<WardrobeBlockEntity>> WARDROBE = REGISTER.register(

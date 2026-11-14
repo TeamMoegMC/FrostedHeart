@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.gson.JsonElement;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
@@ -461,6 +462,23 @@ public class CIcons {
 		
 		public abstract void tesselate(TextureTesselator tex, GuiGraphics ms, int x,int y,int w,int h);
 		public abstract ResourceLocation getTexture();
+
+		/**
+		 * 乘上 ARGB 颜色后绘制，白色贴图可以染成任意颜色（印戳、进度条填充等）。九宫格同样适用。
+		 * <p>
+		 * Draws the texture multiplied by an ARGB color, so a white texture can take any color, for example ink stamps
+		 * or progress fills. Works for nine-slice icons as well.
+		 */
+		public void drawTinted(GuiGraphics ms, int x, int y, int w, int h, int argb) {
+			CGuiHelper.resetGuiDrawing();
+			RenderSystem.setShaderColor(((argb >> 16) & 0xFF) / 255f, ((argb >> 8) & 0xFF) / 255f, (argb & 0xFF) / 255f,
+				((argb >>> 24) & 0xFF) / 255f);
+			try (TextureTesselator tex = TesselateHelper.getTextureTesselator(getTexture())) {
+				tesselate(tex, ms, x, y, w, h);
+			} finally {
+				RenderSystem.setShaderColor(1F, 1F, 1F, 1F);
+			}
+		}
 		@Override
 		void drawBatched(CIconBatch batch, GuiGraphics graphics, int x, int y, int w, int h) {
 			batch.submitTexture(this, x, y, w, h);

@@ -94,7 +94,8 @@ public final class KnowledgePresentation {
     }
     public static Component source(AcquisitionSource source) { return source(source.mechanism()); }
     public static Component source(String source) {
-        String kind=source.startsWith("link:") ? "link" : source.startsWith("research:") ? "research" : switch(source) {
+        String kind=source.startsWith("link:") ? "link" : source.startsWith("research:") ? "research"
+                : source.startsWith("institute:") ? "institute" : switch(source) {
             case "research_note" -> "note";
             case "player_observation", "item_retrieval" -> "self";
             case "initial" -> "initial";

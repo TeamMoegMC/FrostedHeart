@@ -47,6 +47,8 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.SaplingBlock;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.chunk.ChunkGenerator;
+import net.minecraft.world.level.levelgen.FlatLevelSource;
 import net.minecraft.world.level.levelgen.Heightmap;
 
 /**
@@ -311,16 +313,72 @@ public class WorldTemperature {
 
 
     /**
+     * 超平坦维度没有地下：海平面以下一律按海平面算，没有地热，气候也不被岩层隔开。按维度的生成器判断，所以超平坦
+     * 存档里的下界和末地照常；拿不到所属服务端世界的读取器按普通地形算。
+     * <p>
+     * A superflat dimension has no underground: everything below sea level reads as sea level, with no geothermal heat
+     * and no rock keeping the climate out. Decided per dimension by its chunk generator, so a superflat save's Nether
+     * and End stay normal; a reader without a server level counts as normal terrain.
+     */
+    public static boolean hasNoUnderground(LevelReader w) {
+        return w instanceof WorldGenLevel level && hasNoUnderground(level.getLevel().getChunkSource().getGenerator());
+    }
+
+    /** {@link #hasNoUnderground(LevelReader)} for a chunk generator: superflat generators have no underground. */
+    public static boolean hasNoUnderground(ChunkGenerator generator) {
+        return generator instanceof FlatLevelSource;
+    }
+
+    /**
      * Altitude-induced temperature change, this value is consistent.
-     * Range: [(BUILD_UPPER_LIMIT - SEA_LEVEL) * TEMPERATURE_CHANGE_PER_BLOCK_ABOVE_SEA_LEVEL,
-     * (STONE_INTERFACE_LEVEL - BUILD_LOWER_LIMIT) * TEMPERATURE_CHANGE_PER_BLOCK_BELOW_STONE_INTERFACE]
-     * Now, it is [-25.7, 6.4]
+     * Normal terrain follows the piecewise curve in {@link #computeAltitude}, from -160 at y = 320 to 180 at bedrock;
+     * in a superflat dimension every height up to sea level reads 0.
      */
     public static float altitude(LevelReader w, BlockPos pos) {
         // TODO: This is for only overworld
         int y = pos.getY();
+        return altitude(y, y <= SEA_LEVEL && hasNoUnderground(w));
+    }
+
+    /** The altitude term at height {@code y}; {@code noUnderground} is true in a superflat dimension. */
+    public static float altitude(int y, boolean noUnderground) {
         if (y < BUILD_LOWER_LIMIT || y > BUILD_UPPER_LIMIT) return 0;
+        if (noUnderground && y <= SEA_LEVEL) return 0;
         return ALTITUDE_CACHE[y - BUILD_LOWER_LIMIT];
+    }
+
+    /**
+     * 空气受气候影响的比例：普通地形在海平面以上为 1，往下到石层界面渐变为 0；超平坦维度处处为 1。
+     * <p>
+     * How much of the climate reaches the air: 1 above sea level on normal terrain, fading to 0 at the stone interface;
+     * 1 at every height in a superflat dimension.
+     */
+    public static float airClimateAffection(int y, boolean noUnderground) {
+        // above sea level, climate significantly influences air; a superflat dimension has no rock to insulate it
+        if (y > SEA_LEVEL || noUnderground) return 1.0F;
+        // a thin layer of stone beneath sea level serves as a climate insulation layer
+        if (y > STONE_INTERFACE_LEVEL) return 1.0F * (y - STONE_INTERFACE_LEVEL) / (SEA_LEVEL - STONE_INTERFACE_LEVEL);
+        // below that, climate no longer affects the air
+        return 0.0F;
+    }
+
+    /**
+     * 方块受气候影响的比例：普通地形在海平面与石层界面之间渐变，超平坦维度处处取最大值。
+     * <p>
+     * How much of the climate reaches a block: normal terrain fades it out between sea level and the stone interface,
+     * a superflat dimension lets all of it through at every height.
+     */
+    public static float blockClimateAffection(LevelReader w, int y) {
+        return blockClimateAffection(y, y <= FHConfig.SERVER.CLIMATE.climateSeaLevel.get() && hasNoUnderground(w));
+    }
+
+    /** {@link #blockClimateAffection(LevelReader, int)} with {@code noUnderground} true in a superflat dimension. */
+    public static float blockClimateAffection(int y, boolean noUnderground) {
+        var climate = FHConfig.SERVER.CLIMATE;
+        float maximum = climate.blockMaximumClimateAffection.get().floatValue();
+        if (noUnderground) return maximum;
+        return BlockTemperatureModel.climateBlockAffection(y, climate.climateStoneInterfaceLevel.get(),
+                climate.climateSeaLevel.get(), maximum);
     }
     private static float[] buildAltitudeCache() {
         int min = BUILD_LOWER_LIMIT, max = BUILD_UPPER_LIMIT;
@@ -405,10 +463,7 @@ public class WorldTemperature {
             BlockPos pos,
             float climateBase
     ) {
-        float affection = BlockTemperatureModel.climateBlockAffection(
-                pos.getY(), FHConfig.SERVER.CLIMATE.climateStoneInterfaceLevel.get(),
-                FHConfig.SERVER.CLIMATE.climateSeaLevel.get(),
-                FHConfig.SERVER.CLIMATE.blockMaximumClimateAffection.get().floatValue());
+        float affection = blockClimateAffection(world, pos.getY());
         float natural = BlockTemperatureModel.naturalTemperature(
                 dimension(world), biome(world, pos), altitude(world, pos), climateBase, affection);
         return Math.max(FHConfig.SERVER.CLIMATE.absoluteZeroCelsius.get().floatValue(), natural);
@@ -448,21 +503,7 @@ public class WorldTemperature {
 
     private static float naturalAirUnclamped(LevelReader world, BlockPos pos) {
         int y = pos.getY();
-
-        float climateAirAffection;
-        // above sea level, climate significantly influences air
-        if (y > SEA_LEVEL) {
-            climateAirAffection = 1.0F;
-        }
-        // a thin layer of stone beneath sea level serves as a climate insulation layer
-        else if (y > STONE_INTERFACE_LEVEL) {
-            climateAirAffection = 1.0F * (y - STONE_INTERFACE_LEVEL) / (SEA_LEVEL - STONE_INTERFACE_LEVEL);
-        }
-        // below that, climate no longer affects block temperature
-        else {
-            climateAirAffection = 0.0F;
-        }
-
+        float climateAirAffection = airClimateAffection(y, y <= SEA_LEVEL && hasNoUnderground(world));
         return dimension(world) + biome(world, pos) + altitude(world, pos) +
                 (climateAirAffection == 0.0F ? 0.0F : climate(world,pos) * climateAirAffection);
     }

@@ -186,6 +186,7 @@ public class TeamTown implements ITown, ITownWithResidents, ITownWithBuildings {
             if (core.createBuilding() instanceof AbstractTownBuilding building) {
                 removeTownBlockInternal(level, pos);
                 data.getBuildingStore().install(building);
+                com.teammoeg.frostedheart.content.town.building.TownBuildingNumbers.assignMissing(data.buildings);
                 data.prepareAssignments();
                 if (core instanceof AbstractTownBuildingBlockEntity<?> block) {
                     block.rememberPlacement(building);
@@ -218,6 +219,7 @@ public class TeamTown implements ITown, ITownWithResidents, ITownWithBuildings {
             }
             if (core.createBuilding() instanceof AbstractTownBuilding building
                     && data.getBuildingStore().installMissing(building)) {
+                com.teammoeg.frostedheart.content.town.building.TownBuildingNumbers.assignMissing(data.buildings);
                 data.prepareAssignments();
             }
         };
@@ -525,6 +527,12 @@ public class TeamTown implements ITown, ITownWithResidents, ITownWithBuildings {
      */
     public String getName() {
         return data.name;
+    }
+
+    /** Where the town's energy tower stands, or null without one; buildings are placed in town relative to it. */
+    @javax.annotation.Nullable
+    public BlockPos getTowerPos() {
+        return data.getTowerPos();
     }
 
     /**

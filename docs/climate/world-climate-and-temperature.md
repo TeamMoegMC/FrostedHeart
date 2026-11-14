@@ -118,6 +118,14 @@ outside [-64,320] : A = 0
 
 这些分段在 `y=240/241` 和 `y=-54/-55` 附近并不连续；文档按源码保留这一事实，不将其平滑化。
 
+**超平坦维度没有地下。** 维度的区块生成器是 `FlatLevelSource` 时（`WorldTemperature.hasNoUnderground`），
+`y <= 63` 一律按海平面算：`A = 0`，没有地热；空气的气候系数取 `1`，方块的气候系数取
+`blockMaximumClimateAffection`，没有岩层把气候隔开。`y > 63` 与普通地形相同。按维度判断，所以超平坦存档里的
+下界和末地照常。以前超平坦的地面（y = −61）落在 `y <= -55` 那一段，屋里的空气有 60–100°C，世界的寒冷也进不来。
+GameTest 世界是普通地形（测试放在 y ≈ −60，仍在深层地热段里），服务端没有超平坦维度；超平坦规则通过纯函数
+`altitude(int, boolean)`、`airClimateAffection`、`blockClimateAffection(int, boolean)` 和真实的 `FlatLevelSource`
+来测。`src/gametest/resources` 里的 `flat.json` 只影响用超平坦预设新建的世界，例如 bridge 的 `newworld`。
+
 `WorldTemperature.base` 是未加局部热区的简单和：
 
 ```text
@@ -178,10 +186,11 @@ Page 重采样：方块 mutation 在 heightmap 更新完成后于 tick-end 合�
 空气公式有三个必须保留的当前差异：
 
 - `alpha_air` 使用 `WorldTemperature.SEA_LEVEL=63` 和 `STONE_INTERFACE_LEVEL=0` 硬编码常量，不读取对应服务端配置；
+  超平坦维度里恒为 `1`；
 - 气候最大影响为 `1.0`，而方块默认最大影响为 `0.5`；
 - `WorldTemperature.air` 的 fallback 有 `0.3degC` 高斯扰动，`naturalAir` 和 FarField 没有。
 
-自然空气在`y <= STONE_INTERFACE_LEVEL`时的气候系数为零，直接跳过气候查询；
+普通地形的自然空气在`y <= STONE_INTERFACE_LEVEL`时的气候系数为零，直接跳过气候查询；
 维度、群系、海拔贡献及绝对零度下限保持原公式。
 
 每次服务端空气温度查询还会从世界随机源加入标准差 `0.3` 的高斯扰动，所以相同位置连续查询不保证相同结果。
