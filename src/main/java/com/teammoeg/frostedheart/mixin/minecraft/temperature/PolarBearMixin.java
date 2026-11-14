@@ -47,13 +47,16 @@ public abstract class PolarBearMixin extends net.minecraft.world.entity.animal.A
     @Unique private int frostedheart$unreachableTicks;
     @Unique private int frostedheart$fleeTicks;
     @Unique private LivingEntity frostedheart$threat;
+    @Unique private int frostedheart$counterattackTicks;
+    @Unique private int frostedheart$lastHurtTimestamp;
+    @Unique private LivingEntity frostedheart$counterattackTarget;
 
     @Inject(method = "registerGoals", at = @At("TAIL"))
     private void frostedheart$registerRetreat(CallbackInfo ci) {
         PolarBear self = (PolarBear)(Object)this;
         this.goalSelector.addGoal(0, new Goal() {
             { setFlags(EnumSet.of(Flag.MOVE, Flag.LOOK, Flag.JUMP)); }
-            @Override public boolean canUse() { return !self.isBaby() && frostedheart$fleeTicks > 0; }
+            @Override public boolean canUse() { return !self.isBaby() && frostedheart$fleeTicks > 0 && frostedheart$counterattackTicks == 0; }
             @Override public boolean canContinueToUse() { return canUse(); }
             @Override public void start() { self.setTarget(null); self.getNavigation().stop(); }
             @Override public void tick() {
@@ -72,12 +75,34 @@ public abstract class PolarBearMixin extends net.minecraft.world.entity.animal.A
     private void frostedheart$updateCombat(CallbackInfo ci) {
         PolarBear self = (PolarBear)(Object)this;
         if (self.level().isClientSide || self.isBaby()) return;
+        LivingEntity attacker = self.getLastHurtByMob();
+        int hurtTimestamp = self.getLastHurtByMobTimestamp();
+        boolean newlyHurt = hurtTimestamp != frostedheart$lastHurtTimestamp;
+        frostedheart$lastHurtTimestamp = hurtTimestamp;
         if (frostedheart$fleeTicks > 0) {
+            // Do not extend an active counterattack: sustained damage must not prevent retreat.
+            if (newlyHurt && frostedheart$counterattackTicks == 0
+                    && attacker != null && attacker.isAlive() && self.canAttack(attacker)) {
+                frostedheart$counterattackTarget = attacker;
+                frostedheart$threat = attacker;
+                frostedheart$counterattackTicks = 40;
+                self.getNavigation().stop();
+            }
+            if (frostedheart$counterattackTicks > 0) {
+                --frostedheart$counterattackTicks;
+                if (frostedheart$counterattackTicks > 0 && frostedheart$counterattackTarget.isAlive()
+                        && self.canAttack(frostedheart$counterattackTarget)) {
+                    self.setTarget(frostedheart$counterattackTarget);
+                    return;
+                }
+                frostedheart$counterattackTicks = 0;
+                frostedheart$counterattackTarget = null;
+                self.getNavigation().stop();
+            }
             --frostedheart$fleeTicks;
             self.setTarget(null);
             return;
         }
-        LivingEntity attacker = self.getLastHurtByMob();
         if (attacker != null && attacker.isAlive() && self.canAttack(attacker)
                 && self.tickCount - self.getLastHurtByMobTimestamp() <= 600) {
             self.setTarget(attacker);
@@ -112,7 +137,10 @@ public abstract class PolarBearMixin extends net.minecraft.world.entity.animal.A
     public boolean isAngryAt(LivingEntity pTarget) {
         PolarBear self = (PolarBear)(Object)this;
 
-        if (!self.isBaby() && frostedheart$fleeTicks > 0) return false;
+        if (!self.isBaby() && frostedheart$fleeTicks > 0) {
+            return frostedheart$counterattackTicks > 0
+                    && pTarget == frostedheart$counterattackTarget && self.canAttack(pTarget);
+        }
 
         // Check if it's dark enough
         float lightLevel = self.getLightLevelDependentMagicValue();
