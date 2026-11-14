@@ -12,6 +12,7 @@ This directory explains implemented, player-facing game systems. Source, configu
 | Climate and temperature       | [climate/README.md](climate/README.md)                   | Transitional      |
 | Space station                 | [space/README.md](space/README.md)                       | Current      |
 | Natural deposit generation    | [world-generation.md](world-generation.md)              | Current      |
+| Scenario 剧情系统           | [scenario/README.md](scenario/README.md)                 | Partial      |
 | Scenario font rendering       | [scenario-font-rendering.md](scenario-font-rendering.md) | Current      |
 | Ice cave world generation     | [worldgen/README.md](worldgen/README.md)                   | Partial      |
 
