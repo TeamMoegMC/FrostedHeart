@@ -547,6 +547,30 @@ final class LightPillarOptics {
     }
 
     /**
+     * The distance that vanilla's fog takes for a point at the offset from the eye, as fog_distance in vanilla's
+     * fog.glsl. A cylinder takes the larger of the horizontal and the vertical distance, and a sphere the distance.
+     */
+    static double fogDistance(double offsetX, double offsetY, double offsetZ, boolean cylinder) {
+        double horizontalSquared = offsetX * offsetX + offsetZ * offsetZ;
+        if (cylinder) {
+            return Math.max(Math.sqrt(horizontalSquared), Math.abs(offsetY));
+        }
+        return Math.sqrt(horizontalSquared + offsetY * offsetY);
+    }
+
+    /**
+     * The share of a light that shows through vanilla's fog at the fog distance, as linear_fog in vanilla's fog.glsl
+     * with the fog color's opacity. All of it shows up to the fog start, and the fog takes it over to the fog end.
+     */
+    static double fogVisibility(double fogDistance, double fogStart, double fogEnd, double fogOpacity) {
+        if (fogDistance <= fogStart) {
+            return 1.0;
+        }
+        double fogValue = fogDistance < fogEnd ? smoothstep(fogStart, fogEnd, fogDistance) : 1.0;
+        return 1.0 - fogValue * Math.max(0.0, Math.min(1.0, fogOpacity));
+    }
+
+    /**
      * The smoothstep of GLSL, which steps at the edge where both edges are the same.
      */
     private static double smoothstep(double edge, double otherEdge, double value) {

@@ -194,10 +194,12 @@ public final class LightPillarSources {
         shelterColumns.setLevel(null);
     }
 
+    /**
+     * The render distance in chunks, or the server's view distance where that is smaller. LightPillarRenderer fades
+     * the pillars out in the fog before it.
+     */
     private static int chunkRadius(Minecraft minecraft) {
-        int configured = (int) Math.round(SkySetting.PILLAR_CHUNK_RADIUS.get());
-        int largest = (int) SkySetting.PILLAR_CHUNK_RADIUS.maximum();
-        return Math.max(1, Math.min(Math.min(configured, largest), minecraft.options.getEffectiveRenderDistance()));
+        return Math.max(1, minecraft.options.getEffectiveRenderDistance());
     }
 
     /**

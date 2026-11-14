@@ -889,6 +889,39 @@ public final class LightPillarGameTests {
     }
 
     @GameTest(template = "phase0a_empty", timeoutTicks = 100)
+    public static void lightPillarFadesWithItsLightInTheFog(GameTestHelper helper) {
+        // Vanilla's terrain fog at a render distance of 12 chunks runs from 192 - 19.2 to 192 blocks:
+        double fogStart = 172.8;
+        double fogEnd = 192.0;
+        // The smoothstep of 0.75 is 0.84375:
+        double[][] fogCases = {{0.0, 1.0}, {172.8, 1.0}, {182.4, 0.5}, {187.2, 0.15625}, {192.0, 0.0},
+                {250.0, 0.0}};
+        for (double[] fogCase : fogCases) {
+            double shown = LightPillarOptics.fogVisibility(fogCase[0], fogStart, fogEnd, 1.0);
+            helper.assertTrue(Math.abs(shown - fogCase[1]) <= 1.0e-9, "A light " + fogCase[0] + " blocks into fog "
+                    + "from " + fogStart + " to " + fogEnd + " shows " + shown + " of its pillar instead of "
+                    + fogCase[1]);
+        }
+        double thinFog = LightPillarOptics.fogVisibility(250.0, fogStart, fogEnd, 0.5);
+        helper.assertTrue(Math.abs(thinFog - 0.5) <= 1.0e-9, "A light beyond the end of fog with half opacity shows "
+                + thinFog + " of its pillar instead of 0.5");
+        double noFog = LightPillarOptics.fogVisibility(1000.0, Float.MAX_VALUE, fogEnd, 1.0);
+        helper.assertTrue(noFog == 1.0, "A light 1000 blocks away shows " + noFog + " of its pillar without fog");
+
+        double[][] distanceCases = {{180.0, -30.0, 0.0, 1.0, 180.0}, {100.0, -150.0, 0.0, 1.0, 150.0},
+                {120.0, 5.0, 160.0, 1.0, 200.0}, {120.0, 5.0, 160.0, 0.0, Math.sqrt(40025.0)}};
+        for (double[] distanceCase : distanceCases) {
+            boolean cylinder = distanceCase[3] != 0.0;
+            double distance = LightPillarOptics.fogDistance(distanceCase[0], distanceCase[1], distanceCase[2],
+                    cylinder);
+            helper.assertTrue(Math.abs(distance - distanceCase[4]) <= 1.0e-9, "The fog distance of a light at "
+                    + distanceCase[0] + " " + distanceCase[1] + " " + distanceCase[2] + " from the eye is " + distance
+                    + " in a " + (cylinder ? "cylinder" : "sphere") + " instead of " + distanceCase[4]);
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "phase0a_empty", timeoutTicks = 100)
     public static void lightPillarClosedFormWidensOverAClusterOfLights(GameTestHelper helper) {
         double spread = 0.004;
         for (double offset : new double[]{0.0, 1.0, 3.0}) {

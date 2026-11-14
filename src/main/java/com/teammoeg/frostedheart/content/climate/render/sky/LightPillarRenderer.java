@@ -23,6 +23,7 @@ import com.lowdragmc.lowdraglib.client.shader.management.Shader;
 import com.lowdragmc.lowdraglib.client.shader.management.ShaderProgram;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.shaders.FogShape;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
@@ -67,8 +68,8 @@ import java.util.Locale;
  * The fragment stage reads the depth of the main target and hides the pillar where the scene stands in front of the
  * sheet, except for clouds. Each pixel-sized cell of the sky draws the count of crystals that glitter in it from the
  * mean count, which the plates' size sets, and the counts change over the twinkle clock. Pillars add to the frame with
- * a screen blend. They fade out with the brightness of the fog color, so by day, and with the rain level, so in snow.
- * Render thread only.
+ * a screen blend. They fade out with the brightness of the fog color, so by day, with the rain level, so in snow, and
+ * as their lights go into the fog, so before the render distance. Render thread only.
  * <p>
  * While SkySetting.PILLAR_TEXEL_DEGREES is above 0, pillars are drawn in the square cells of LightPillarCells instead
  * of per pixel, and the cells are the sky cells that glitter. A first pass draws the ribbons into the cell atlas,
@@ -272,7 +273,9 @@ public final class LightPillarRenderer {
     /**
      * Writes the light positions relative to the eye, their rims toward the eye as angles and caps relative to the eye,
      * the half widths of their clusters across the view with their counts of lights, and the colors of every slot into
-     * the uniform buffers, with the colors of slots that are faded out at 0, and returns how many slots show.
+     * the uniform buffers, and returns how many slots show. Each slot's opacity is its fade times how much of its light
+     * shows through the fog set up for the terrain, which LevelRenderer keeps from before the terrain until after this
+     * stage. The colors of slots that are faded out or hidden in the fog are 0.
      */
     private static int fillPillars(double eyeX, double eyeY, double eyeZ, float partialTick, float opacity) {
         float brightness = (float) (LightPillarOptics.BRIGHTNESS * SkySetting.PILLAR_BRIGHTNESS.get());
@@ -281,18 +284,27 @@ public final class LightPillarRenderer {
         }
         LightPillarSelection selection = LightPillarSources.selection();
         LightPillarShelter shelter = LightPillarSources.shelter();
+        float fogStart = RenderSystem.getShaderFogStart();
+        float fogEnd = RenderSystem.getShaderFogEnd();
+        float fogOpacity = RenderSystem.getShaderFogColor()[3];
+        boolean cylinderFog = RenderSystem.getShaderFogShape() == FogShape.CYLINDER;
         lightBuffer.clear();
         shelterBuffer.clear();
         spanBuffer.clear();
         colorBuffer.clear();
         int pillars = 0;
         for (int slot = 0; slot < SLOTS; slot++) {
+            double offsetX = selection.x(slot) - eyeX;
+            double offsetY = selection.y(slot) - eyeY;
+            double offsetZ = selection.z(slot) - eyeZ;
             float fade = selection.fade(slot, partialTick);
             if (fade > 0.0F) {
-                double offsetX = selection.x(slot) - eyeX;
-                double offsetZ = selection.z(slot) - eyeZ;
-                lightBuffer.put((float) offsetX).put((float) (selection.y(slot) - eyeY)).put((float) offsetZ)
-                        .put(0.0F);
+                fade *= (float) LightPillarOptics.fogVisibility(
+                        LightPillarOptics.fogDistance(offsetX, offsetY, offsetZ, cylinderFog), fogStart, fogEnd,
+                        fogOpacity);
+            }
+            if (fade > 0.0F) {
+                lightBuffer.put((float) offsetX).put((float) offsetY).put((float) offsetZ).put(0.0F);
                 shelterBuffer.put((float) shelter.rimToward(slot, eyeX, eyeZ))
                         .put(capHeight(shelter.cap(slot), eyeY));
                 spanBuffer.put((float) LightPillarOptics.halfWidthAcross(selection.halfExtentX(slot),

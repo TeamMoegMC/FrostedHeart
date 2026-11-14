@@ -48,8 +48,6 @@ public enum SkySetting {
             + "in the clear air after snow. Used while dustFollowsWeather is off.", Rebuilds.NOTHING, 0.0, 0.0, 3.0),
     DUST_FOLLOWS_WEATHER("dustFollowsWeather", "Lets the diamond dust follow the weather, forming after each snow and "
             + "gone a climate day later.", true, DUST_EXTINCTION),
-    PILLAR_CHUNK_RADIUS("pillarChunkRadius", "Radius in chunks around the player in which lights can show light "
-            + "pillars in diamond dust. The render distance limits it.", Rebuilds.NOTHING, 8.0, 2.0, 16.0),
     PILLAR_BRIGHTNESS("pillarBrightness", "Brightness of light pillars, as a factor on their calibrated brightness.",
             Rebuilds.NOTHING, 1.0, 0.0, 10.0),
     PILLAR_NEAR_FADE("pillarNearFade", "Distance in blocks from the eye beyond which ice crystals fully show light "
