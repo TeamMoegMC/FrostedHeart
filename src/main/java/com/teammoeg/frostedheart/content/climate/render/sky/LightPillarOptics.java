@@ -120,6 +120,10 @@ final class LightPillarOptics {
      */
     static final double SHELTER_BAND = 0.5;
     /**
+     * Stands in for a cap that is open, relative to the eye, in what LightPillarRenderer passes to light_pillars.glsl.
+     */
+    static final double OPEN_CAP_HEIGHT = 1.0e6;
+    /**
      * Below this ratio of the half angle of a light's width to the spread across its pillar, the closed form takes a
      * Gaussian as wide as the smeared profile instead, which is within 0.2 percent of it at the peak, as SMEAR_SHARE in
      * light_pillars.glsl.
@@ -544,6 +548,21 @@ final class LightPillarOptics {
             return 1.0;
         }
         return 1.0 - smoothstep(cap - SHELTER_BAND, cap, sheetHeight);
+    }
+
+    /**
+     * The cap that the closed form takes relative to the eye, on the sheet through a light at the horizontal distance
+     * from the eye, from its cap as a world height and its ceiling toward the eye, at most OPEN_CAP_HEIGHT. Light that
+     * left the light at an elevation shows at the same elevation from the eye, so a ceiling cuts the sheet at the
+     * distance times its tangent, and the lower of that and the cap counts. LightPillarShelter.OPEN_CEILING cuts
+     * nothing.
+     */
+    static double shelteredCap(double cap, double eyeY, double horizontalDistance, double ceiling) {
+        double capAboveEye = cap - eyeY;
+        if (ceiling < LightPillarShelter.OPEN_CEILING) {
+            capAboveEye = Math.min(capAboveEye, horizontalDistance * Math.tan(ceiling));
+        }
+        return Math.min(OPEN_CAP_HEIGHT, capAboveEye);
     }
 
     /**

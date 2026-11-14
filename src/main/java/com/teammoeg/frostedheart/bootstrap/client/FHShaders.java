@@ -61,6 +61,7 @@ public class FHShaders extends Shaders {
     private static Shader LIGHT_PILLARS_FRAGMENT;
     private static Shader LIGHT_PILLAR_CELLS_VERTEX;
     private static Shader LIGHT_PILLAR_CELLS_FRAGMENT;
+    private static Shader LIGHT_PILLARS_COMPOSITE;
     /**
      * The defines that light_pillars.glsl is compiled with for each stage, in the order of loadLightPillars.
      */
@@ -97,6 +98,17 @@ public class FHShaders extends Shaders {
     public static Shader getLightPillarCellsFragment() {
         loadLightPillars();
         return LIGHT_PILLAR_CELLS_FRAGMENT;
+    }
+
+    /**
+     * The full screen stage that tone maps the light pillars summed in linear light, for IMAGE_V.
+     */
+    public static Shader getLightPillarsComposite() {
+        if (LIGHT_PILLARS_COMPOSITE == null) {
+            runAndAddReloadListener(() -> LIGHT_PILLARS_COMPOSITE = load(Shader.ShaderType.FRAGMENT,
+                    FHMain.rl("light_pillars_composite")));
+        }
+        return LIGHT_PILLARS_COMPOSITE;
     }
 
     private static void loadLightPillars() {

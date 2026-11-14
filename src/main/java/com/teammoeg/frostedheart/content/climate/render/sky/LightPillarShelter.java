@@ -19,70 +19,73 @@
 
 package com.teammoeg.frostedheart.content.climate.render.sky;
 
-import it.unimi.dsi.fastutil.longs.LongArrayList;
-import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.SectionPos;
 import net.minecraft.util.Mth;
-import net.minecraft.world.level.ChunkPos;
-import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.Arrays;
 import java.util.Locale;
 
 /**
- * The shelter of the lights in the slots of a LightPillarSelection, read from the blocks right at each light. Its cap
- * is a height below which light_pillars.glsl shows the pillar, and its rim toward the eye an angle above which it
- * shows. A slot is read at the light that LightPillarClusters chose for its cluster, from the center of its block.
+ * The shelter of one light, read from the blocks right at it, which LightPillarSources reads for every light it finds
+ * and LightPillarClusters keeps. Its cap is a height below which light_pillars.glsl shows the pillar, its rim in each
+ * of BINS directions an angle above which it shows, and its ceiling in each direction an angle below which it shows.
+ * A light is read from the center of its block.
  * A column's cap is the bottom of the lowest block in it that stops light from above the light up. The cap is the
  * light's own column's, except for a full block whose top is covered, whose light leaves through its sides: its cap is
  * the highest of its 4 side columns' caps, or OPEN_CAP where one of them has none, so a lamp set into a wall shows its
  * pillar through the column in front of it.
  * The rim follows the walls around the light. The columns within RIM_REACH blocks of the light's column each have a
  * wall where the block at the flame's level stops light, up to the top of the blocks that stop light from there up.
- * Light leaves the light toward the eye for the whole pillar, so in each of BINS directions a ray from the light meets
- * the walls' squares, and the direction's angle is the steepest of the wall tops seen from the top of the light where
- * the ray enters them, or OPEN_RIM where it meets none. The rim toward the eye blends the two directions nearest to
- * the eye.
- * A slot is built again when a block changes in one of its columns within the heights read, when a chunk of its
- * columns loads or unloads, or when it takes a new key, moves, or its full block flag changes, and it is ready to fade
- * in once built. Heights are world heights in blocks and angles are in radians, counted from +x toward +z.
- * Not thread safe.
+ * Light leaves the light toward the eye for the whole pillar, so in each direction a ray from the light meets the
+ * walls' squares, and the direction's rim is the steepest of the wall tops seen from the top of the light where the ray
+ * enters them, or OPEN_RIM where it meets none.
+ * The ceilings follow the overhangs around the light. Each of those columns has an overhang at the bottom of the
+ * lowest block that stops light above the air over its wall, or over the flame's level where it has no wall, read up
+ * to WALL_HEIGHT above the top of the light. Light rising in a direction meets an overhang once it reaches the
+ * overhang's bottom where the ray leaves its square, so the direction's ceiling is the lowest of those bottoms seen
+ * from the top of the light there, or OPEN_CEILING where it crosses none. Light never passes above an overhang.
+ * Heights are world heights in blocks and angles are in radians, the directions counted from +x toward +z, with
+ * direction i centered at (i + 0.5) times BIN_ANGLE. Not thread safe.
  */
 public final class LightPillarShelter {
     /**
-     * The angle of a direction without a wall.
+     * The rim of a direction without a wall.
      */
     public static final double OPEN_RIM = -0.5 * Math.PI;
+    /**
+     * The ceiling of a direction without an overhang.
+     */
+    public static final double OPEN_CEILING = 0.5 * Math.PI;
     public static final double OPEN_CAP = Double.POSITIVE_INFINITY;
     /**
-     * Columns up to this many blocks from the light's column along each axis can hold a wall of the rim.
+     * Columns up to this many blocks from the light's column along each axis can hold a wall or an overhang.
      */
     public static final int RIM_REACH = 2;
     /**
-     * A wall of the rim is read up to this many blocks above the top of the light.
+     * Walls and overhangs are read up to this many blocks above the top of the light.
      */
     public static final int WALL_HEIGHT = 16;
     /**
-     * The directions around the light whose walls are read, with direction i centered at (i + 0.5) times BIN_ANGLE,
-     * so no direction from the center of a block aims at a corner of the blocks around it.
+     * The directions around the light whose walls and overhangs are read. No direction from the center of a block aims
+     * at a corner of the blocks around it.
      */
     public static final int BINS = 32;
     public static final double BIN_ANGLE = 2.0 * Math.PI / BINS;
-    private static final int SLOTS = LightPillarSelection.SLOT_COUNT;
-    private static final int CHUNK_SIZE = 16;
-    private static final int INITIAL_CHANGES = 256;
     /**
-     * Walls nearer to the light than this count as this far, which keeps the angle finite where a ray enters a wall at
-     * the light.
+     * Lights compare their rims and ceilings rounded to this step, so lights whose walls cut them alike merge.
+     */
+    public static final double COMPARED_ANGLE_STEP = Math.toRadians(2.0);
+    /**
+     * Walls and overhangs nearer to the light than this count as this far, which keeps the angle finite where a ray
+     * enters a wall at the light.
      */
     private static final double NEAREST_WALL = 0.05;
     /**
-     * A wall column's square is widened by this on each side, so a ray through the corner where two columns meet
-     * enters both.
+     * A column's square is widened by this on each side, so a ray through the corner where two columns meet enters
+     * both.
      */
     private static final double SQUARE_MARGIN = 1.0e-4;
     private static final double NO_WALL = Double.NEGATIVE_INFINITY;
+    private static final double NO_OVERHANG = Double.POSITIVE_INFINITY;
     private static final double NO_HIT = -1.0;
     private static final int[] SIDE_OFFSETS_X = {1, -1, 0, 0};
     private static final int[] SIDE_OFFSETS_Z = {0, 0, 1, -1};
@@ -91,6 +94,10 @@ public final class LightPillarShelter {
     private static final int[] RIM_OFFSETS_Z = new int[RIM_COLUMNS];
     private static final double[] BIN_COSINES = new double[BINS];
     private static final double[] BIN_SINES = new double[BINS];
+    /**
+     * The columns of a chunk section and RIM_REACH around it along each axis, which the lights of the section read.
+     */
+    private static final int CACHE_SIDE = 16 + 2 * RIM_REACH;
 
     static {
         int column = 0;
@@ -110,199 +117,174 @@ public final class LightPillarShelter {
     }
 
     private final LightPillarOccluders occluders = new LightPillarOccluders();
-    private final double[] binAngles = new double[SLOTS * BINS];
-    private final double[] caps = new double[SLOTS];
-    private final boolean[] tracked = new boolean[SLOTS];
-    private final boolean[] built = new boolean[SLOTS];
-    private final boolean[] dirty = new boolean[SLOTS];
-    private final boolean[] fullBlocks = new boolean[SLOTS];
-    private final long[] slotKeys = new long[SLOTS];
-    private final double[] originX = new double[SLOTS];
-    private final double[] originY = new double[SLOTS];
-    private final double[] originZ = new double[SLOTS];
     private final double[] wallTops = new double[RIM_COLUMNS];
-    private int trackedCount;
-
-    private final LongOpenHashSet changedBlockSet = new LongOpenHashSet(INITIAL_CHANGES);
-    private final LongArrayList changedBlocks = new LongArrayList(INITIAL_CHANGES);
-    private final LongOpenHashSet changedChunkSet = new LongOpenHashSet(INITIAL_CHANGES);
-    private final LongArrayList changedChunks = new LongArrayList(INITIAL_CHANGES);
-
-    private int blockChangesThisSecond;
-    private int slotsBuiltThisSecond;
-    private int blockChangesLastSecond;
-    private int slotsBuiltLastSecond;
+    private final double[] overhangBottoms = new double[RIM_COLUMNS];
+    private final double[] rims = new double[BINS];
+    private final double[] ceilings = new double[BINS];
+    /**
+     * Where the ray that enterSquare followed last leaves the square.
+     */
+    private double squareExit;
+    /**
+     * The wall tops and overhang bottoms read in the current section, by column from the cache's lowest corner, with
+     * the flame's level and the highest block they were read for and the section they were read in.
+     */
+    private final double[] cachedWallTops = new double[CACHE_SIDE * CACHE_SIDE];
+    private final double[] cachedOverhangBottoms = new double[CACHE_SIDE * CACHE_SIDE];
+    private final int[] cachedFlameLevels = new int[CACHE_SIDE * CACHE_SIDE];
+    private final int[] cachedHighestBlocks = new int[CACHE_SIDE * CACHE_SIDE];
+    private final int[] cachedSections = new int[CACHE_SIDE * CACHE_SIDE];
+    private boolean caching;
+    private int cacheSection;
+    private int cacheLowestX;
+    private int cacheLowestZ;
 
     public LightPillarOccluders occluders() {
         return occluders;
     }
 
     /**
-     * Notes a block change at the block coordinates, unless no slot is tracked or both states stop light up to the
-     * same height wherever they stand.
+     * Keeps the columns read from now until endSection, for the lights of the chunk section whose lowest corner is at
+     * the block coordinates, while nothing in the world changes. Lights at the same flame's level and height then read
+     * each column once.
      */
-    public void onBlockChanged(int blockX, int blockY, int blockZ, BlockState oldState, BlockState newState) {
-        if (trackedCount == 0 || occluders.stopsTheSame(oldState, newState)) {
-            return;
-        }
-        blockChangesThisSecond++;
-        long block = BlockPos.asLong(blockX, blockY, blockZ);
-        if (changedBlockSet.add(block)) {
-            changedBlocks.add(block);
+    public void beginSection(int lowestX, int lowestZ) {
+        caching = true;
+        cacheLowestX = lowestX - RIM_REACH;
+        cacheLowestZ = lowestZ - RIM_REACH;
+        cacheSection++;
+        if (cacheSection == 0) {
+            Arrays.fill(cachedSections, 0);
+            cacheSection = 1;
         }
     }
 
     /**
-     * Notes that the chunk column at the chunk coordinates loaded or unloaded, unless no slot is tracked.
+     * Reads every column again from now on.
      */
-    public void onChunkChanged(int chunkX, int chunkZ) {
-        if (trackedCount == 0) {
-            return;
-        }
-        long chunk = ChunkPos.asLong(chunkX, chunkZ);
-        if (changedChunkSet.add(chunk)) {
-            changedChunks.add(chunk);
-        }
+    public void endSection() {
+        caching = false;
     }
 
     /**
-     * Follows the slots of the selection, marks the slots that the noted changes reach, builds every marked slot, and
-     * tells the selection which slots are ready to fade in. A slot takes the center of its shelter light's block and
-     * the top of its cluster.
+     * Reads the rims and the ceilings of a light with its top at the height in the column at the block coordinates,
+     * which rim and ceiling then give.
      */
-    public void update(LightPillarSelection selection, LightPillarHorizons.Columns columns) {
-        trackedCount = 0;
-        for (int slot = 0; slot < SLOTS; slot++) {
-            followSlot(selection, slot);
-        }
-        for (int change = 0; change < changedBlocks.size(); change++) {
-            long block = changedBlocks.getLong(change);
-            markBlock(BlockPos.getX(block), BlockPos.getY(block), BlockPos.getZ(block));
-        }
-        for (int change = 0; change < changedChunks.size(); change++) {
-            long chunk = changedChunks.getLong(change);
-            markChunk(SectionPos.sectionToBlockCoord(ChunkPos.getX(chunk)),
-                    SectionPos.sectionToBlockCoord(ChunkPos.getZ(chunk)));
-        }
-        clearChanges();
-        for (int slot = 0; slot < SLOTS; slot++) {
-            if (tracked[slot] && dirty[slot]) {
-                build(slot, columns);
-                dirty[slot] = false;
-                slotsBuiltThisSecond++;
-                if (!built[slot]) {
-                    built[slot] = true;
-                    selection.setReady(slot, true);
-                }
-            }
-        }
-    }
-
-    private void followSlot(LightPillarSelection selection, int slot) {
-        if (!selection.isUsed(slot)) {
-            tracked[slot] = false;
-            dirty[slot] = false;
-            return;
-        }
-        trackedCount++;
-        long key = selection.key(slot);
-        double x = selection.shelterX(slot) + 0.5;
-        double y = selection.top(slot);
-        double z = selection.shelterZ(slot) + 0.5;
-        boolean fullBlock = selection.isFullBlock(slot);
-        if (!tracked[slot] || slotKeys[slot] != key) {
-            tracked[slot] = true;
-            built[slot] = false;
-            dirty[slot] = true;
-            slotKeys[slot] = key;
-            setOrigin(slot, x, y, z);
-            fullBlocks[slot] = fullBlock;
-            selection.setReady(slot, false);
-        } else if (x != originX[slot] || y != originY[slot] || z != originZ[slot] || fullBlock != fullBlocks[slot]) {
-            setOrigin(slot, x, y, z);
-            fullBlocks[slot] = fullBlock;
-            dirty[slot] = true;
-        }
-    }
-
-    private void setOrigin(int slot, double x, double y, double z) {
-        originX[slot] = x;
-        originY[slot] = y;
-        originZ[slot] = z;
-    }
-
-    /**
-     * Marks the tracked slots that read the block: the light's own column from the flame's level up, for a full block
-     * also its side columns, and the other columns around it from the flame's level up to WALL_HEIGHT above it.
-     */
-    private void markBlock(int blockX, int blockY, int blockZ) {
-        for (int slot = 0; slot < SLOTS; slot++) {
-            if (!tracked[slot] || dirty[slot]) {
-                continue;
-            }
-            int offsetX = Math.abs(blockX - Mth.floor(originX[slot]));
-            int offsetZ = Math.abs(blockZ - Mth.floor(originZ[slot]));
-            int flameY = Mth.floor(originY[slot]);
-            if (offsetX > RIM_REACH || offsetZ > RIM_REACH || blockY < flameY) {
-                continue;
-            }
-            boolean capColumn = offsetX + offsetZ == 0 || (fullBlocks[slot] && offsetX + offsetZ == 1);
-            if (capColumn || blockY <= flameY + WALL_HEIGHT) {
-                dirty[slot] = true;
-            }
-        }
-    }
-
-    /**
-     * Marks the tracked slots with a column in the chunk whose lowest corner is at the block coordinates.
-     */
-    private void markChunk(int minX, int minZ) {
-        for (int slot = 0; slot < SLOTS; slot++) {
-            if (!tracked[slot]) {
-                continue;
-            }
-            int lightX = Mth.floor(originX[slot]);
-            int lightZ = Mth.floor(originZ[slot]);
-            if (lightX + RIM_REACH >= minX && lightX - RIM_REACH < minX + CHUNK_SIZE
-                    && lightZ + RIM_REACH >= minZ && lightZ - RIM_REACH < minZ + CHUNK_SIZE) {
-                dirty[slot] = true;
-            }
-        }
-    }
-
-    private void build(int slot, LightPillarHorizons.Columns columns) {
-        double x = originX[slot];
-        double top = originY[slot];
-        double z = originZ[slot];
-        int lightX = Mth.floor(x);
-        int lightZ = Mth.floor(z);
-        caps[slot] = readLightCap(columns, lightX, lightZ, top, fullBlocks[slot]);
+    public void read(LightPillarHorizons.Columns columns, int lightX, int lightZ, double top) {
         int flameY = Mth.floor(top);
+        int highestY = Mth.ceil(top + WALL_HEIGHT) - 1;
+        boolean blocked = false;
         for (int column = 0; column < RIM_COLUMNS; column++) {
-            wallTops[column] = readWallTop(columns, lightX + RIM_OFFSETS_X[column], lightZ + RIM_OFFSETS_Z[column],
-                    flameY, top);
+            readCachedColumn(columns, lightX + RIM_OFFSETS_X[column], lightZ + RIM_OFFSETS_Z[column], flameY,
+                    highestY, column);
+            blocked |= wallTops[column] != NO_WALL || overhangBottoms[column] != NO_OVERHANG;
         }
+        double x = lightX + 0.5;
+        double z = lightZ + 0.5;
         for (int bin = 0; bin < BINS; bin++) {
             double steepest = OPEN_RIM;
-            for (int column = 0; column < RIM_COLUMNS; column++) {
-                if (wallTops[column] == NO_WALL) {
+            double lowest = OPEN_CEILING;
+            for (int column = 0; blocked && column < RIM_COLUMNS; column++) {
+                double wallTop = wallTops[column];
+                double overhangBottom = overhangBottoms[column];
+                if (wallTop == NO_WALL && overhangBottom == NO_OVERHANG) {
                     continue;
                 }
-                double entry = rayEntry(x, z, BIN_COSINES[bin], BIN_SINES[bin], lightX + RIM_OFFSETS_X[column],
+                double entry = enterSquare(x, z, BIN_COSINES[bin], BIN_SINES[bin], lightX + RIM_OFFSETS_X[column],
                         lightZ + RIM_OFFSETS_Z[column]);
-                if (entry != NO_HIT) {
-                    steepest = Math.max(steepest, Math.atan2(wallTops[column] - top, Math.max(entry, NEAREST_WALL)));
+                if (entry == NO_HIT) {
+                    continue;
+                }
+                if (wallTop != NO_WALL) {
+                    steepest = Math.max(steepest, Math.atan2(wallTop - top, Math.max(entry, NEAREST_WALL)));
+                }
+                if (overhangBottom != NO_OVERHANG) {
+                    lowest = Math.min(lowest, Math.atan2(overhangBottom - top, Math.max(squareExit, NEAREST_WALL)));
                 }
             }
-            binAngles[slot * BINS + bin] = steepest;
+            rims[bin] = steepest;
+            ceilings[bin] = lowest;
+        }
+    }
+
+    /**
+     * The rim of the direction that read gave last, or OPEN_RIM.
+     */
+    public double rim(int bin) {
+        return rims[bin];
+    }
+
+    /**
+     * The ceiling of the direction that read gave last, or OPEN_CEILING.
+     */
+    public double ceiling(int bin) {
+        return ceilings[bin];
+    }
+
+    /**
+     * Sets the wall top and the overhang bottom of the column as readColumn does, from the cache where the column was
+     * read for the same flame's level and highest block since beginSection.
+     */
+    private void readCachedColumn(LightPillarHorizons.Columns columns, int columnX, int columnZ, int flameY,
+            int highestY, int column) {
+        int cacheX = columnX - cacheLowestX;
+        int cacheZ = columnZ - cacheLowestZ;
+        if (!caching || cacheX < 0 || cacheX >= CACHE_SIDE || cacheZ < 0 || cacheZ >= CACHE_SIDE) {
+            readColumn(columns, columnX, columnZ, flameY, highestY, column);
+            return;
+        }
+        int cached = cacheZ * CACHE_SIDE + cacheX;
+        if (cachedSections[cached] == cacheSection && cachedFlameLevels[cached] == flameY
+                && cachedHighestBlocks[cached] == highestY) {
+            wallTops[column] = cachedWallTops[cached];
+            overhangBottoms[column] = cachedOverhangBottoms[cached];
+            return;
+        }
+        readColumn(columns, columnX, columnZ, flameY, highestY, column);
+        cachedSections[cached] = cacheSection;
+        cachedFlameLevels[cached] = flameY;
+        cachedHighestBlocks[cached] = highestY;
+        cachedWallTops[cached] = wallTops[column];
+        cachedOverhangBottoms[cached] = overhangBottoms[column];
+    }
+
+    /**
+     * Sets the wall top and the overhang bottom of the column. The wall is the blocks that stop light from the flame's
+     * level up, NO_WALL where the block at the flame's level lets light through, and the overhang the bottom of the
+     * lowest block that stops light above it, NO_OVERHANG where none does, both read up to the highest block, which is
+     * WALL_HEIGHT above the top of the light.
+     */
+    private void readColumn(LightPillarHorizons.Columns columns, int columnX, int columnZ, int flameY, int highestRead,
+            int column) {
+        wallTops[column] = NO_WALL;
+        overhangBottoms[column] = NO_OVERHANG;
+        int surface = columns.beginColumn(columnX, columnZ);
+        if (surface == LightPillarHorizons.NO_BLOCKS || flameY > surface) {
+            return;
+        }
+        int highestY = Math.min(surface, highestRead);
+        int blockY = flameY;
+        for (; blockY <= highestY; blockY++) {
+            double height = columns.stoppedHeight(blockY);
+            if (height == LightPillarOccluders.PASSES) {
+                break;
+            }
+            wallTops[column] = blockY + height;
+        }
+        for (blockY++; blockY <= highestY; blockY++) {
+            if (columns.stoppedHeight(blockY) != LightPillarOccluders.PASSES) {
+                overhangBottoms[column] = blockY;
+                return;
+            }
         }
     }
 
     /**
      * The distance along a level ray from the origin in the direction to where it enters the square of the column,
-     * widened by SQUARE_MARGIN, 0 where it starts inside, or NO_HIT where it misses.
+     * widened by SQUARE_MARGIN, 0 where it starts inside, or NO_HIT where it misses. Where it hits, squareExit is
+     * where it leaves the square.
      */
-    static double rayEntry(double originX, double originZ, double directionX, double directionZ, int columnX,
+    private double enterSquare(double originX, double originZ, double directionX, double directionZ, int columnX,
             int columnZ) {
         double nearest = 0.0;
         double farthest = Double.POSITIVE_INFINITY;
@@ -330,7 +312,11 @@ public final class LightPillarShelter {
             nearest = Math.max(nearest, Math.min(first, second));
             farthest = Math.min(farthest, Math.max(first, second));
         }
-        return nearest <= farthest ? nearest : NO_HIT;
+        if (nearest > farthest) {
+            return NO_HIT;
+        }
+        squareExit = farthest;
+        return nearest;
     }
 
     /**
@@ -364,139 +350,62 @@ public final class LightPillarShelter {
     }
 
     /**
-     * The top of the wall of the column, the blocks that stop light from the flame's level up, read up to WALL_HEIGHT
-     * above the top of the light, or NO_WALL where the block at the flame's level lets light through.
+     * The rim toward the eye of the angles stored per direction from the offset, for a light at the origin, an angle
+     * over the horizontal seen from the top of the light, blended linearly between the two directions whose centers
+     * lie nearest to the eye's direction from the light. Directions whose walls stay below the horizon count as 0, so
+     * the rim is never below 0, where it lifts no pillar.
      */
-    private static double readWallTop(LightPillarHorizons.Columns columns, int columnX, int columnZ, int flameY,
-            double top) {
-        int surface = columns.beginColumn(columnX, columnZ);
-        if (surface == LightPillarHorizons.NO_BLOCKS || flameY > surface) {
-            return NO_WALL;
-        }
-        double wallTop = NO_WALL;
-        int highestY = Math.min(surface, Mth.ceil(top + WALL_HEIGHT) - 1);
-        for (int blockY = flameY; blockY <= highestY; blockY++) {
-            double height = columns.stoppedHeight(blockY);
-            if (height == LightPillarOccluders.PASSES) {
-                break;
-            }
-            wallTop = blockY + height;
-        }
-        return wallTop;
-    }
-
-    /**
-     * The rim of the slot toward the eye, an angle over the horizontal seen from the top of the light, blended
-     * linearly between the two directions whose centers lie nearest to the eye's direction from the light. Directions
-     * whose walls stay below the horizon count as 0, so the rim is never below 0, where it lifts no pillar, and it is 0
-     * where the slot was not built since it took its key.
-     */
-    public double rimToward(int slot, double eyeX, double eyeZ) {
-        if (!built[slot]) {
-            return 0.0;
-        }
-        double position = Math.atan2(eyeZ - originZ[slot], eyeX - originX[slot]) / BIN_ANGLE - 0.5;
+    public static double rimToward(float[] rims, int offset, double originX, double originZ, double eyeX,
+            double eyeZ) {
+        double position = binPosition(originX, originZ, eyeX, eyeZ);
         double lowerPosition = Math.floor(position);
         double share = position - lowerPosition;
         int lowerBin = Math.floorMod((int) lowerPosition, BINS);
         int upperBin = (lowerBin + 1) % BINS;
-        return (1.0 - share) * Math.max(0.0, binAngles[slot * BINS + lowerBin])
-                + share * Math.max(0.0, binAngles[slot * BINS + upperBin]);
+        return (1.0 - share) * Math.max(0.0, rims[offset + lowerBin])
+                + share * Math.max(0.0, rims[offset + upperBin]);
     }
 
     /**
-     * The angle of the direction around the slot's light, or OPEN_RIM where it meets no wall or the slot was not built
-     * since it took its key.
+     * The ceiling toward the eye of the angles stored per direction from the offset, for a light at the origin,
+     * blended linearly between the two directions whose centers lie nearest to the eye's direction from the light, so
+     * OPEN_CEILING where both are open.
      */
-    public double binAngle(int slot, int bin) {
-        return built[slot] ? binAngles[slot * BINS + bin] : OPEN_RIM;
+    public static double ceilingToward(float[] ceilings, int offset, double originX, double originZ, double eyeX,
+            double eyeZ) {
+        double position = binPosition(originX, originZ, eyeX, eyeZ);
+        double lowerPosition = Math.floor(position);
+        double share = position - lowerPosition;
+        int lowerBin = Math.floorMod((int) lowerPosition, BINS);
+        int upperBin = (lowerBin + 1) % BINS;
+        return (1.0 - share) * Math.min(OPEN_CEILING, ceilings[offset + lowerBin])
+                + share * Math.min(OPEN_CEILING, ceilings[offset + upperBin]);
     }
 
     /**
-     * The cap of the slot as a world height, or OPEN_CAP where it has none or was not built since it took its key.
+     * The eye's direction from the light in bins, with direction i at i.
      */
-    public double cap(int slot) {
-        return built[slot] ? caps[slot] : OPEN_CAP;
+    private static double binPosition(double originX, double originZ, double eyeX, double eyeZ) {
+        return Math.atan2(eyeZ - originZ, eyeX - originX) / BIN_ANGLE - 0.5;
     }
 
     /**
-     * Whether the slot was built since it took its key.
+     * The step of COMPARED_ANGLE_STEP that a rim or a ceiling rounds to when lights are compared, between 0 and the
+     * vertical, so every rim below the horizon compares as 0 and every ceiling near the vertical as open.
      */
-    public boolean isBuilt(int slot) {
-        return tracked[slot] && built[slot];
+    public static int comparedStep(double angle) {
+        return (int) Math.round(Math.max(0.0, Math.min(OPEN_CEILING, angle)) / COMPARED_ANGLE_STEP);
     }
 
     /**
-     * Marks every tracked slot, after what stops light changed.
+     * A line about the cap, the rim and the ceiling toward the eye, and how many directions have neither a wall nor an
+     * overhang, for the client command.
      */
-    public void markEverySlot() {
-        for (int slot = 0; slot < SLOTS; slot++) {
-            if (tracked[slot]) {
-                dirty[slot] = true;
-            }
-        }
-    }
-
-    /**
-     * Forgets every slot and every noted change.
-     */
-    public void clear() {
-        Arrays.fill(tracked, false);
-        Arrays.fill(built, false);
-        Arrays.fill(dirty, false);
-        trackedCount = 0;
-        clearChanges();
-    }
-
-    private void clearChanges() {
-        changedBlockSet.clear();
-        changedBlocks.clear();
-        changedChunkSet.clear();
-        changedChunks.clear();
-    }
-
-    /**
-     * Rolls the counts of the current second into the last second.
-     */
-    public void rollSecond() {
-        blockChangesLastSecond = blockChangesThisSecond;
-        slotsBuiltLastSecond = slotsBuiltThisSecond;
-        blockChangesThisSecond = 0;
-        slotsBuiltThisSecond = 0;
-    }
-
-    /**
-     * A line about the shelters and their work in the last full second, for the client command.
-     */
-    public String describe(int blocksRead) {
-        int builtSlots = 0;
-        for (int slot = 0; slot < SLOTS; slot++) {
-            if (isBuilt(slot)) {
-                builtSlots++;
-            }
-        }
-        return String.format(Locale.ROOT,
-                "Shelters of %d slots, %d built; last second %d block changes that stop light differently, "
-                        + "%d slots built reading %d blocks",
-                trackedCount, builtSlots, blockChangesLastSecond, slotsBuiltLastSecond, blocksRead);
-    }
-
-    /**
-     * The cap of the slot, its rim toward the eye, and how many of its directions lift no pillar, for the client
-     * command, also the last ones of a slot that fades out.
-     */
-    public String describeSlot(int slot, double eyeX, double eyeZ) {
-        if (!built[slot]) {
-            return "shelter not built";
-        }
-        int openBins = 0;
-        for (int bin = 0; bin < BINS; bin++) {
-            if (!(binAngles[slot * BINS + bin] > 0.0)) {
-                openBins++;
-            }
-        }
-        String cap = caps[slot] == OPEN_CAP ? "cap open" : String.format(Locale.ROOT, "cap y %.2f", caps[slot]);
-        return String.format(Locale.ROOT, "%s, rim %.1f degrees toward the eye, %d of %d directions open", cap,
-                Math.toDegrees(rimToward(slot, eyeX, eyeZ)), openBins, BINS);
+    static String describe(double cap, double rimToward, double ceilingToward, int openBins) {
+        String capText = cap == OPEN_CAP ? "cap open" : String.format(Locale.ROOT, "cap y %.2f", cap);
+        String ceilingText = ceilingToward < OPEN_CEILING
+                ? String.format(Locale.ROOT, "ceiling %.1f degrees", Math.toDegrees(ceilingToward)) : "ceiling open";
+        return String.format(Locale.ROOT, "%s, rim %.1f degrees and %s toward the eye, %d of %d directions open",
+                capText, Math.toDegrees(rimToward), ceilingText, openBins, BINS);
     }
 }

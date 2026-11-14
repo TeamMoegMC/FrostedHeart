@@ -61,9 +61,9 @@ import java.util.function.Predicate;
  * of them. A section is skipped when its block palette holds no light that shows pillars, or when neither its sky light
  * nor the lowest layer of the section above it reaches above LightPillarClusters.SKY_LIGHT_THRESHOLD. Otherwise its
  * blocks are walked. A light counts by its sky light, which leaves out lights indoors and in caves. Each light's cap is
- * read with LightPillarShelter.readLightCap, and lights that touch and share a cap are merged in LightPillarClusters.
- * LightPillarSelection chooses from them every tick while there is diamond dust, and LightPillarShelter reads the cap
- * and the rim of the chosen lights from the blocks right at them.
+ * read with LightPillarShelter.readLightCap and its rims and ceilings with LightPillarShelter.read, and lights that
+ * touch and share a shelter are merged in LightPillarClusters. LightPillarSelection chooses from them every tick while
+ * there is diamond dust, and takes the shelters with them.
  * The index is kept while the calculated sky is allowed, so nothing is read from the world while nothing changes.
  * Client thread only.
  */
@@ -95,8 +95,6 @@ public final class LightPillarSources {
     private static final LightPillarShelter shelter = new LightPillarShelter();
     private static final LightPillarHorizons.LevelColumns shelterColumns =
             new LightPillarHorizons.LevelColumns(shelter.occluders());
-    private static final LightPillarHorizons.LevelColumns capColumns =
-            new LightPillarHorizons.LevelColumns(shelter.occluders());
     private static final Reference2ObjectOpenHashMap<BlockState, float[]> emitterColors =
             new Reference2ObjectOpenHashMap<>();
     private static final BlockPos.MutableBlockPos lightPosition = new BlockPos.MutableBlockPos();
@@ -115,7 +113,6 @@ public final class LightPillarSources {
     private static final SecondStatistics lastSecond = new SecondStatistics();
     private static int ticksThisSecond;
     private static int shelterBlocksReadLastSecond;
-    private static int capBlocksReadLastSecond;
 
     private LightPillarSources() {
     }
@@ -189,9 +186,6 @@ public final class LightPillarSources {
         } else {
             selection.chooseNone();
         }
-        shelterColumns.setLevel(level);
-        shelter.update(selection, shelterColumns);
-        shelterColumns.setLevel(null);
     }
 
     /**
@@ -239,14 +233,14 @@ public final class LightPillarSources {
         LayerLightSectionStorage<?> skyLight = skyLightStorage(level);
         int tests = 0;
         int walks = 0;
-        capColumns.setLevel(level);
+        shelterColumns.setLevel(level);
         while (tests < SECTION_TESTS_PER_TICK && walks < SECTIONS_WALKED_PER_TICK && queue.nextSection()) {
             tests++;
             if (updateSection(minecraft, level, skyLight, queue.takenSection())) {
                 walks++;
             }
         }
-        capColumns.setLevel(null);
+        shelterColumns.setLevel(null);
         currentSecond.sectionsTested += tests;
         currentSecond.sectionsWalked += walks;
     }
@@ -287,7 +281,7 @@ public final class LightPillarSources {
 
     /**
      * Replaces the section's clusters with every light of the section with sky light above
-     * LightPillarClusters.SKY_LIGHT_THRESHOLD at itself or the block above, each with its cap.
+     * LightPillarClusters.SKY_LIGHT_THRESHOLD at itself or the block above, each with its shelter.
      */
     @SuppressWarnings("deprecation")
     private static void walk(Minecraft minecraft, ClientLevel level, LevelChunkSection section, int chunkX,
@@ -297,6 +291,7 @@ public final class LightPillarSources {
         int originZ = SectionPos.sectionToBlockCoord(chunkZ);
         int threshold = LightPillarClusters.SKY_LIGHT_THRESHOLD;
         clusters.beginSection(chunkX, sectionY, chunkZ);
+        shelter.beginSection(originX, originZ);
         for (int blockY = 0; blockY < 16; blockY++) {
             for (int blockZ = 0; blockZ < 16; blockZ++) {
                 for (int blockX = 0; blockX < 16; blockX++) {
@@ -319,14 +314,17 @@ public final class LightPillarSources {
                     double lightTop = originY + blockY + LightPillarOccluders.lightTop(state, level, lightPosition);
                     boolean fullBlock = LightPillarOccluders.isFullBlock(state, level, lightPosition);
                     boolean spansBlock = fullBlock || state.getBlock() instanceof LiquidBlock;
-                    double cap = LightPillarShelter.readLightCap(capColumns, originX + blockX, originZ + blockZ,
+                    double cap = LightPillarShelter.readLightCap(shelterColumns, originX + blockX, originZ + blockZ,
                             lightTop, fullBlock);
+                    shelter.read(shelterColumns, originX + blockX, originZ + blockZ, lightTop);
                     clusters.addLight(originX + blockX, originY + blockY, originZ + blockZ, lightTop, fullBlock,
-                            spansBlock, cap, color[0] * strength, color[1] * strength, color[2] * strength);
+                            spansBlock, cap, shelter, color[0] * strength, color[1] * strength,
+                            color[2] * strength);
                     currentSecond.lights++;
                 }
             }
         }
+        shelter.endSection();
         clusters.endSection();
     }
 
@@ -372,9 +370,7 @@ public final class LightPillarSources {
     private static void stopIndexing() {
         LightPillarWorldChanges.stopTracking();
         clusters.clear();
-        shelter.clear();
         shelterColumns.setLevel(null);
-        capColumns.setLevel(null);
         indexing = false;
     }
 
@@ -394,22 +390,18 @@ public final class LightPillarSources {
         if (ticksThisSecond >= TICKS_PER_SECOND) {
             lastSecond.copy(currentSecond);
             currentSecond.clear();
-            shelter.rollSecond();
             shelterBlocksReadLastSecond = shelterColumns.takeBlocksRead();
-            capBlocksReadLastSecond = capColumns.takeBlocksRead();
             ticksThisSecond = 0;
         }
     }
 
     /**
-     * Forgets which block states stop light once the client received new block tags, and reads the caps and the rims
-     * again.
+     * Forgets which block states stop light once the client received new block tags, and reads the shelters again.
      */
     @SubscribeEvent
     public static void onTagsUpdated(TagsUpdatedEvent event) {
         if (event.getUpdateCause() == TagsUpdatedEvent.UpdateCause.CLIENT_PACKET_RECEIVED) {
             shelter.occluders().clear();
-            shelter.markEverySlot();
             clusters.queueEverySection(LightPillarWorldChanges.queue());
         }
     }
@@ -422,7 +414,7 @@ public final class LightPillarSources {
     }
 
     /**
-     * The caps and rims of the chosen pillars.
+     * The shelter reader of the index, whose occluders say which blocks stop light.
      */
     static LightPillarShelter shelter() {
         return shelter;
@@ -430,13 +422,6 @@ public final class LightPillarSources {
 
     static LightPillarClusters clusters() {
         return clusters;
-    }
-
-    /**
-     * A line about the shelters and their work in the last full second, for the client command.
-     */
-    public static String describeShelters() {
-        return shelter.describe(shelterBlocksReadLastSecond);
     }
 
     /**
@@ -476,11 +461,11 @@ public final class LightPillarSources {
                 : "allocations not counted by this JVM";
         return String.format(Locale.ROOT,
                 "Light pillars %s; %d clusters in %d sections, %d sections queued; last second %d sections tested, "
-                        + "%d walked, %d lights found reading %d blocks for their caps, %d chunks dropped, "
+                        + "%d walked, %d lights found reading %d blocks for their shelters, %d chunks dropped, "
                         + "tick %.3f ms mean and %.3f ms most, %s; %d chosen, %d of %d slots used, dust bottom y %.1f",
                 state, clusters.count(), clusters.sectionCount(),
                 LightPillarWorldChanges.queue().queuedSectionCount(), lastSecond.sectionsTested,
-                lastSecond.sectionsWalked, lastSecond.lights, capBlocksReadLastSecond, lastSecond.columnsDropped,
+                lastSecond.sectionsWalked, lastSecond.lights, shelterBlocksReadLastSecond, lastSecond.columnsDropped,
                 meanMilliseconds, lastSecond.mostNanos / 1.0e6, allocated, selection.chosenCount(),
                 selection.usedCount(), LightPillarSelection.SLOT_COUNT, dustBottomY);
     }
@@ -509,7 +494,7 @@ public final class LightPillarSources {
                     2.0 * selection.halfExtentX(slot), 2.0 * selection.halfExtentZ(slot),
                     selection.red(slot) / brightest, selection.green(slot) / brightest,
                     selection.blue(slot) / brightest, brightest, selection.slotScore(slot), selection.fade(slot, 1.0F),
-                    shelter.describeSlot(slot, eye.x, eye.z)));
+                    selection.describeShelter(slot, eye.x, eye.z)));
         }
         return lines;
     }

@@ -3,16 +3,9 @@
 // Each pillar has one ribbon per plate kind that covers it on the screen, and shows above the rim's angle and below the cap of LightPillarShelter on a vertical sheet through the light.
 // The fragment shader hides the pillar where the scene stands in front of that sheet.
 // With cells, the atlas pass computes each cell of each ribbon once without the scene, and the fragment shader reads its cell.
+// The screen pass writes linear light, which LightPillarRenderer sums over the pillars and tone maps once, except in the fill view and with only the flat ribbons.
 // Takes positions relative to the eye, which view bobbing moves away from the camera:
 uniform mat4 viewProjection;
-// Light positions relative to the eye, then 0:
-uniform vec4 lights[48];
-// The rim of LightPillarShelter toward the eye as an angle in radians, and its cap relative to the eye with a large stand in where it is open:
-uniform vec2 shelters[48];
-// The half width of each light's cluster across the view in blocks, and the count of its lights:
-uniform vec2 spans[48];
-// Colors times strength and brightness, then the opacity:
-uniform vec4 colors[48];
 uniform vec2 tiltSigmas;
 uniform vec2 shares;
 uniform float refractiveIndex;
@@ -24,6 +17,8 @@ uniform float marginAngle;
 uniform float visibleValue;
 uniform float glintValue;
 uniform float highestElevation;
+// The opacity that the composite gives the summed light, or 1 where the ribbons draw into the scene themselves:
+uniform float summedOpacity;
 // Pillars fade in over this many tilt sigmas above their lowest elevation, from the base share of their light up:
 uniform float fadeInSigmas;
 uniform float baseShare;
@@ -37,6 +32,8 @@ uniform int debugMode;
 uniform float cellAngle;
 // The rows of each ribbon in the cell atlas:
 uniform int atlasRows;
+// The bands of SLOTS_ACROSS pillars that the cell atlas holds:
+uniform int atlasBands;
 
 const float PI = 3.14159265358979;
 const float INVERSE_SQUARE_ROOT_OF_TWO_PI = 0.3989422804014327;
@@ -57,25 +54,24 @@ const int DEBUG_CONSTANT_INTEGRAL = 1;
 const int DEBUG_NO_GLITTER = 2;
 const int DEBUG_NO_SCENE_DEPTH = 3;
 const int DEBUG_RIBBONS_ONLY = 4;
-// The cell atlas holds both ribbons of SLOTS_ACROSS slots side by side in each band of atlasRows rows, the plates first, as LightPillarCells:
+// The cell atlas holds both ribbons of SLOTS_ACROSS drawn pillars side by side in each band of atlasRows rows, the plates first, as LightPillarCells:
 const int SLOTS_ACROSS = 16;
 const int PLATE_HALF_COLUMNS = 16;
 const int WOBBLING_HALF_COLUMNS = 64;
 const int PAIR_COLUMNS = 2 * PLATE_HALF_COLUMNS + 2 * WOBBLING_HALF_COLUMNS + 2;
 const int ATLAS_COLUMNS = SLOTS_ACROSS * PAIR_COLUMNS;
-const int SLOT_BANDS = 48 / SLOTS_ACROSS;
 
 int atlasHalfColumns(int kind) {
     return kind == 0 ? PLATE_HALF_COLUMNS : WOBBLING_HALF_COLUMNS;
 }
 
-// The atlas texel of the ribbon's cell on the pillar's axis in its bottom row, as LightPillarCells.axisColumn and bottomRow:
+// The atlas texel of the ribbon's cell on the pillar's axis in its bottom row, for the ribbon index drawn pillar * 2 + plate kind, as LightPillarCells.axisColumn and bottomRow:
 ivec2 atlasAxis(int ribbon) {
-    int slot = ribbon / 2;
-    int kind = ribbon - 2 * slot;
-    int column = (slot % SLOTS_ACROSS) * PAIR_COLUMNS + (kind == 0 ? 0 : 2 * PLATE_HALF_COLUMNS + 1)
+    int pillar = ribbon / 2;
+    int kind = ribbon - 2 * pillar;
+    int column = (pillar % SLOTS_ACROSS) * PAIR_COLUMNS + (kind == 0 ? 0 : 2 * PLATE_HALF_COLUMNS + 1)
             + atlasHalfColumns(kind);
-    return ivec2(column, (slot / SLOTS_ACROSS) * atlasRows);
+    return ivec2(column, (pillar / SLOTS_ACROSS) * atlasRows);
 }
 
 // As IceMirror.slabReflectance. Each polarization reflects r / (1 + r) with r = ((a - b) / (a + b))^2, which is (a - b)^2 / (2 a^2 + 2 b^2):
@@ -194,7 +190,13 @@ float sparkleCap(float meanCount) {
 }
 
 #ifdef VERTEX_SHADER
-// The ribbon index is slot * 2 + plate kind, then the row from the bottom and the side, -1 or 1, doubled at the top of each quad:
+// Three vectors per drawn pillar, in the order LightPillarRenderer.fillPillars packs them.
+// The light's position relative to the eye and the count of its lights, then its color times strength and brightness and its opacity.
+// Then the rim toward the eye as an angle in radians, the cap relative to the eye with a large stand in where it is open, the half width of the cluster across the view in blocks, and the slot:
+layout(std140) uniform PillarSlots {
+    vec4 pillarSlots[768];
+};
+// The ribbon index is drawn pillar * 2 + plate kind, then the row from the bottom and the side, -1 or 1, doubled at the top of each quad:
 in vec3 Position;
 out vec3 relativePosition;
 flat out float pillarCellOrigin;
@@ -208,6 +210,8 @@ flat out vec2 pillarShelter;
 flat out float pillarHalfAngle;
 flat out float pillarLightCount;
 flat out float pillarRibbon;
+// The slot * 2 + plate kind, which seeds the glitter, so it stays while other pillars come and go:
+flat out float pillarSeed;
 
 const float SEGMENTS = 16.0;
 // Ribbons only cover the pillar on the screen, so they all stand at this distance from the eye:
@@ -267,12 +271,13 @@ float halfWidthAt(float elevation, float lightHeight, float horizontalDistance, 
 
 void main() {
     int ribbon = int(Position.x + 0.5);
-    int slot = ribbon / 2;
-    int kind = ribbon - 2 * slot;
-    vec3 light = lights[slot].xyz;
-    vec2 shelter = shelters[slot];
-    vec2 span = spans[slot];
-    vec4 color = colors[slot];
+    int pillar = ribbon / 2;
+    int kind = ribbon - 2 * pillar;
+    vec4 placement = pillarSlots[3 * pillar];
+    vec4 color = pillarSlots[3 * pillar + 1];
+    vec4 shelterAndSpan = pillarSlots[3 * pillar + 2];
+    vec3 light = placement.xyz;
+    vec2 shelter = shelterAndSpan.xy;
     float tiltSigma = tiltSigmas[kind];
     float share = shares[kind];
     float horizontalDistance = length(light.xz);
@@ -284,18 +289,19 @@ void main() {
     pillarShare = share;
     pillarShelter = shelter;
     pillarHalfAngle = 0.0;
-    pillarLightCount = span.y;
+    pillarLightCount = placement.w;
     pillarRibbon = float(ribbon);
+    pillarSeed = 2.0 * shelterAndSpan.w + float(kind);
     pillarCellOrigin = 0.0;
     relativePosition = vec3(0.0);
     gl_Position = vec4(0.0, 0.0, 2.0, 1.0);
 
-    float valueScale = max(color.r, max(color.g, color.b)) * color.a * share * extinction;
-    float countScale = share * extinction * crystalCountScale * span.y;
+    float valueScale = max(color.r, max(color.g, color.b)) * color.a * summedOpacity * share * extinction;
+    float countScale = share * extinction * crystalCountScale * placement.w;
     if (!(valueScale > 0.0) || horizontalDistance < NEAREST_HORIZONTAL_DISTANCE) {
         return;
     }
-    float halfAngle = span.x / horizontalDistance;
+    float halfAngle = shelterAndSpan.z / horizontalDistance;
     pillarHalfAngle = halfAngle;
     float lightElevation = atan(light.y, horizontalDistance);
     // The cells stand on the light, or below the eye on the lowest elevation that faces tilted by CELL_ORIGIN_SIGMAS mirror it to, whatever the shelter:
@@ -334,7 +340,7 @@ void main() {
     }
     vec2 texel = vec2(atlasAxis(ribbon))
             + vec2(0.5 + side * atlasHalfWidth / cellAngle, (atlasElevation - cellOrigin) / cellAngle);
-    gl_Position = vec4(2.0 * texel / vec2(float(ATLAS_COLUMNS), float(SLOT_BANDS * atlasRows)) - 1.0, 0.0, 1.0);
+    gl_Position = vec4(2.0 * texel / vec2(float(ATLAS_COLUMNS), float(atlasBands * atlasRows)) - 1.0, 0.0, 1.0);
 #else
     vec2 toward = light.xz / horizontalDistance;
     vec3 along = vec3(toward.x * cos(elevation), sin(elevation), toward.y * cos(elevation));
@@ -374,6 +380,7 @@ flat in vec2 pillarShelter;
 flat in float pillarHalfAngle;
 flat in float pillarLightCount;
 flat in float pillarRibbon;
+flat in float pillarSeed;
 out vec4 fragColor;
 
 const float LARGEST_COUNTED_MEAN = 3.0;
@@ -438,7 +445,7 @@ float sparkle(float meanCount, ivec2 cell) {
     if (!(meanCount > 0.0)) {
         return 1.0;
     }
-    uint cellSeed = hashOf(uint(cell.x) ^ hashOf(uint(cell.y) ^ hashOf(uint(pillarRibbon))));
+    uint cellSeed = hashOf(uint(cell.x) ^ hashOf(uint(cell.y) ^ hashOf(uint(pillarSeed))));
     float time = twinkleClock + uniformOf(cellSeed);
     float frame = floor(time);
     uint frameNumber = uint(frame);
@@ -532,7 +539,8 @@ void main() {
         ivec2 cell = ivec2(int(floor(lateralAngle / cellAngle + 0.5)),
                 int(floor((elevation - pillarCellOrigin) / cellAngle)));
         int ribbon = int(pillarRibbon + 0.5);
-        bool inAtlas = abs(cell.x) <= atlasHalfColumns(ribbon - 2 * (ribbon / 2)) && cell.y < atlasRows;
+        bool inAtlas = ribbon / 2 / SLOTS_ACROSS < atlasBands
+                && abs(cell.x) <= atlasHalfColumns(ribbon - 2 * (ribbon / 2)) && cell.y < atlasRows;
         float value = 0.0;
         if (cell.y >= 0) {
             if (inAtlas) {
@@ -552,7 +560,7 @@ void main() {
         if (!(value > 0.0)) {
             discard;
         }
-        fragColor = vec4(encodeSrgb(1.0 - exp(-linear)) * pillarOpacity, 1.0);
+        fragColor = vec4(linear * pillarOpacity, 1.0);
         return;
     }
     if (debugMode == DEBUG_CONSTANT_INTEGRAL) {
@@ -576,7 +584,7 @@ void main() {
     if (!(radiance > 0.0)) {
         discard;
     }
-    fragColor = vec4(encodeSrgb(1.0 - exp(-pillarColor * radiance)) * pillarOpacity, 1.0);
+    fragColor = vec4(pillarColor * radiance * pillarOpacity, 1.0);
 }
 #endif
 #endif

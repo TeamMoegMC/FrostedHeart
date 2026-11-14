@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart.content.climate.render.sky;
 
+import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 import net.minecraft.util.Mth;
@@ -29,11 +30,12 @@ import java.util.Arrays;
  * Chooses the clusters whose pillars look brightest and holds them in a fixed number of slots for drawing.
  * A slot fades in when its cluster is chosen and out when it no longer is, so the choice can change without pillars
  * popping. A slot stays bound to its cluster's key until it has faded out, and a newly chosen cluster waits for a free
- * slot. A slot that takes a new key holds its fade at 0 until setReady marks it ready, which LightPillarShelter does
- * once its shelter is built. Fades step once per client tick. Heights and distances are in blocks.
+ * slot. Each step copies a chosen cluster's lights and shelter into its slot, so a slot keeps them while it fades out
+ * after its cluster is gone. A slot that takes a new key is ready to fade in, and setReady can hold its fade at 0.
+ * Fades step once per client tick. Heights and distances are in blocks.
  */
 public final class LightPillarSelection {
-    public static final int SLOT_COUNT = 48;
+    public static final int SLOT_COUNT = 256;
     /**
      * The client ticks a slot takes to fade in or out, which is half a second.
      */
@@ -49,6 +51,8 @@ public final class LightPillarSelection {
     private static final double SCORE_ELEVATION_TANGENT = Math.tan(Math.toRadians(10.0));
     private static final double HIGHEST_SCORE_TANGENT = Math.tan(Math.toRadians(85.0));
     private static final long NO_KEY = Long.MIN_VALUE;
+    private static final int NO_SLOT = -1;
+    private static final int BINS = LightPillarShelter.BINS;
 
     private final double[] heapScores = new double[SLOT_COUNT];
     private final int[] heapClusters = new int[SLOT_COUNT];
@@ -56,6 +60,10 @@ public final class LightPillarSelection {
     private int heapSize;
 
     private final long[] slotKeys = new long[SLOT_COUNT];
+    /**
+     * The slot of each key held, which never grows past its first size.
+     */
+    private final Long2IntOpenHashMap slotsByKey = new Long2IntOpenHashMap(2 * SLOT_COUNT);
     private final double[] slotX = new double[SLOT_COUNT];
     private final double[] slotY = new double[SLOT_COUNT];
     private final double[] slotZ = new double[SLOT_COUNT];
@@ -69,6 +77,9 @@ public final class LightPillarSelection {
     private final int[] slotShelterX = new int[SLOT_COUNT];
     private final int[] slotShelterZ = new int[SLOT_COUNT];
     private final boolean[] slotFullBlocks = new boolean[SLOT_COUNT];
+    private final double[] slotCaps = new double[SLOT_COUNT];
+    private final float[] slotRims = new float[SLOT_COUNT * BINS];
+    private final float[] slotCeilings = new float[SLOT_COUNT * BINS];
     private final double[] slotScores = new double[SLOT_COUNT];
     private final int[] slotFadeTicks = new int[SLOT_COUNT];
     private final int[] slotPreviousFadeTicks = new int[SLOT_COUNT];
@@ -76,6 +87,7 @@ public final class LightPillarSelection {
     private final boolean[] slotReady = new boolean[SLOT_COUNT];
 
     public LightPillarSelection() {
+        slotsByKey.defaultReturnValue(NO_SLOT);
         clear();
     }
 
@@ -154,6 +166,7 @@ public final class LightPillarSelection {
     public void clear() {
         heapSize = 0;
         Arrays.fill(slotKeys, NO_KEY);
+        slotsByKey.clear();
         Arrays.fill(slotFadeTicks, 0);
         Arrays.fill(slotPreviousFadeTicks, 0);
         Arrays.fill(slotChosen, false);
@@ -201,28 +214,28 @@ public final class LightPillarSelection {
     private void updateSlots(LightPillarClusters clusters) {
         Arrays.fill(slotChosen, false);
         for (int chosen = 0; chosen < heapSize; chosen++) {
-            long key = clusters.key(heapClusters[chosen]);
-            heapPlaced[chosen] = false;
-            for (int slot = 0; slot < SLOT_COUNT; slot++) {
-                if (slotKeys[slot] == key) {
-                    fillSlot(slot, clusters, chosen);
-                    heapPlaced[chosen] = true;
-                    break;
-                }
+            int slot = slotsByKey.get(clusters.key(heapClusters[chosen]));
+            heapPlaced[chosen] = slot != NO_SLOT;
+            if (slot != NO_SLOT) {
+                fillSlot(slot, clusters, chosen);
             }
         }
+        int freeSlot = 0;
         for (int chosen = 0; chosen < heapSize; chosen++) {
             if (heapPlaced[chosen]) {
                 continue;
             }
-            for (int slot = 0; slot < SLOT_COUNT; slot++) {
-                if (slotKeys[slot] == NO_KEY) {
-                    slotKeys[slot] = clusters.key(heapClusters[chosen]);
-                    slotReady[slot] = false;
-                    fillSlot(slot, clusters, chosen);
-                    break;
-                }
+            while (freeSlot < SLOT_COUNT && slotKeys[freeSlot] != NO_KEY) {
+                freeSlot++;
             }
+            if (freeSlot == SLOT_COUNT) {
+                break;
+            }
+            long key = clusters.key(heapClusters[chosen]);
+            slotKeys[freeSlot] = key;
+            slotsByKey.put(key, freeSlot);
+            slotReady[freeSlot] = true;
+            fillSlot(freeSlot, clusters, chosen);
         }
         for (int slot = 0; slot < SLOT_COUNT; slot++) {
             slotPreviousFadeTicks[slot] = slotFadeTicks[slot];
@@ -233,6 +246,7 @@ public final class LightPillarSelection {
             } else if (slotKeys[slot] != NO_KEY) {
                 slotFadeTicks[slot] = Math.max(0, slotFadeTicks[slot] - 1);
                 if (slotFadeTicks[slot] == 0) {
+                    slotsByKey.remove(slotKeys[slot]);
                     slotKeys[slot] = NO_KEY;
                 }
             }
@@ -254,6 +268,8 @@ public final class LightPillarSelection {
         slotShelterX[slot] = clusters.shelterX(cluster);
         slotShelterZ[slot] = clusters.shelterZ(cluster);
         slotFullBlocks[slot] = clusters.isFullBlock(cluster);
+        slotCaps[slot] = clusters.cap(cluster);
+        clusters.copyAngles(cluster, slotRims, slotCeilings, slot * BINS);
         slotScores[slot] = heapScores[chosen];
         slotChosen[slot] = true;
     }
@@ -287,7 +303,7 @@ public final class LightPillarSelection {
     }
 
     /**
-     * Marks whether the slot may fade in while it is chosen. A slot that takes a new key is not ready.
+     * Marks whether the slot may fade in while it is chosen. A slot that takes a new key is ready.
      */
     public void setReady(int slot, boolean ready) {
         slotReady[slot] = ready;
@@ -373,6 +389,61 @@ public final class LightPillarSelection {
      */
     public boolean isFullBlock(int slot) {
         return slotFullBlocks[slot];
+    }
+
+    /**
+     * The cap of the slot's cluster as a world height, or LightPillarShelter.OPEN_CAP.
+     */
+    public double cap(int slot) {
+        return slotCaps[slot];
+    }
+
+    /**
+     * The rim of the direction around the light that gives the slot's shelter, or LightPillarShelter.OPEN_RIM.
+     */
+    public double rim(int slot, int bin) {
+        return slotRims[slot * BINS + bin];
+    }
+
+    /**
+     * The ceiling of the direction around the light that gives the slot's shelter, or
+     * LightPillarShelter.OPEN_CEILING.
+     */
+    public double ceiling(int slot, int bin) {
+        return slotCeilings[slot * BINS + bin];
+    }
+
+    /**
+     * The slot's rim toward the eye, as LightPillarShelter.rimToward gives it from the center of the light that gives
+     * the slot's shelter.
+     */
+    public double rimToward(int slot, double eyeX, double eyeZ) {
+        return LightPillarShelter.rimToward(slotRims, slot * BINS, slotShelterX[slot] + 0.5, slotShelterZ[slot] + 0.5,
+                eyeX, eyeZ);
+    }
+
+    /**
+     * The slot's ceiling toward the eye, as LightPillarShelter.ceilingToward gives it from the center of the light
+     * that gives the slot's shelter.
+     */
+    public double ceilingToward(int slot, double eyeX, double eyeZ) {
+        return LightPillarShelter.ceilingToward(slotCeilings, slot * BINS, slotShelterX[slot] + 0.5,
+                slotShelterZ[slot] + 0.5, eyeX, eyeZ);
+    }
+
+    /**
+     * A line about the slot's shelter toward the eye, for the client command.
+     */
+    public String describeShelter(int slot, double eyeX, double eyeZ) {
+        int openBins = 0;
+        for (int bin = 0; bin < BINS; bin++) {
+            if (!(slotRims[slot * BINS + bin] > 0.0F)
+                    && !(slotCeilings[slot * BINS + bin] < (float) LightPillarShelter.OPEN_CEILING)) {
+                openBins++;
+            }
+        }
+        return LightPillarShelter.describe(slotCaps[slot], rimToward(slot, eyeX, eyeZ),
+                ceilingToward(slot, eyeX, eyeZ), openBins);
     }
 
     /**

@@ -153,7 +153,6 @@ public final class CalculatedSkyClientCommand {
             return 0;
         }
         send(context, LightPillarSources.describe(level));
-        send(context, LightPillarSources.describeShelters());
         send(context, LightPillarWorldChanges.describe());
         send(context, LightPillarWorldChanges.describeBlocks());
         send(context, LightPillarRenderer.describe());

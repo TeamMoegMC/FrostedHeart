@@ -24,8 +24,10 @@ package com.teammoeg.frostedheart.content.climate.render.sky;
  * that holds their values, as light_pillars.glsl lays them out. Each ribbon has its own grid: columns by the lateral
  * angle from the pillar's axis, with the middle column on the axis, and rows by the elevation up from cellOrigin, so
  * the cells stay on the pillar as the eye moves and on the sky as it turns. The atlas holds both ribbons of
- * SLOTS_ACROSS slots side by side in each band of rows, the plates first and then the wobbling plates of
- * crystals.csv. The shader computes the cells beyond a ribbon's half columns or rows at each of their pixels instead.
+ * SLOTS_ACROSS drawn pillars side by side in each band of rows, the plates first and then the wobbling plates of
+ * crystals.csv, in the order LightPillarRenderer draws the pillars, with as many bands as the most pillars drawn need.
+ * The shader computes the cells beyond a ribbon's half columns or rows, or beyond the atlas's bands, at each of their
+ * pixels instead.
  */
 final class LightPillarCells {
     static final int SLOTS_ACROSS = 16;
@@ -33,9 +35,13 @@ final class LightPillarCells {
     static final int WOBBLING_HALF_COLUMNS = 64;
     static final int PAIR_COLUMNS = 2 * PLATE_HALF_COLUMNS + 2 * WOBBLING_HALF_COLUMNS + 2;
     static final int ATLAS_COLUMNS = SLOTS_ACROSS * PAIR_COLUMNS;
-    static final int SLOT_BANDS = (LightPillarSelection.SLOT_COUNT + SLOTS_ACROSS - 1) / SLOTS_ACROSS;
+    static final int MOST_BANDS = bandsFor(LightPillarSelection.SLOT_COUNT);
     /**
-     * The most rows of each ribbon, which keeps the atlas within 3072 texels at small cells.
+     * The atlas grows by this many bands at a time.
+     */
+    static final int BAND_STEP = 2;
+    /**
+     * The most rows of each ribbon, which keeps a band within 1024 texels at small cells.
      */
     static final int MOST_ROWS = 1024;
     /**
@@ -52,12 +58,12 @@ final class LightPillarCells {
     }
 
     /**
-     * The atlas column of the ribbon's cells on the pillar's axis, for the ribbon index slot * 2 + plate kind.
+     * The atlas column of the ribbon's cells on the pillar's axis, for the ribbon index drawn pillar * 2 + plate kind.
      */
     static int axisColumn(int ribbon) {
-        int slot = ribbon / 2;
-        int kind = ribbon - 2 * slot;
-        return (slot % SLOTS_ACROSS) * PAIR_COLUMNS + (kind == 0 ? 0 : 2 * PLATE_HALF_COLUMNS + 1)
+        int pillar = ribbon / 2;
+        int kind = ribbon - 2 * pillar;
+        return (pillar % SLOTS_ACROSS) * PAIR_COLUMNS + (kind == 0 ? 0 : 2 * PLATE_HALF_COLUMNS + 1)
                 + halfColumns(kind);
     }
 
@@ -78,8 +84,25 @@ final class LightPillarCells {
         return (int) Math.min(MOST_ROWS, Math.ceil(height / cellAngle) + 2.0);
     }
 
-    static int atlasHeight(int rows) {
-        return SLOT_BANDS * rows;
+    static int atlasHeight(int rows, int bands) {
+        return bands * rows;
+    }
+
+    /**
+     * The bands that hold the ribbons of the count of drawn pillars.
+     */
+    static int bandsFor(int pillars) {
+        return (pillars + SLOTS_ACROSS - 1) / SLOTS_ACROSS;
+    }
+
+    /**
+     * The bands an atlas of the rows gets when it has to hold the bands needed, from BAND_STEP up in steps of it, at
+     * most MOST_BANDS and at most as many as the largest texture side holds, and at least 1.
+     */
+    static int grownBands(int bandsNeeded, int rows, int largestTextureSide) {
+        int stepped = (Math.max(1, bandsNeeded) + BAND_STEP - 1) / BAND_STEP * BAND_STEP;
+        int fitting = largestTextureSide / Math.max(1, rows);
+        return Math.max(1, Math.min(Math.min(stepped, MOST_BANDS), fitting));
     }
 
     /**

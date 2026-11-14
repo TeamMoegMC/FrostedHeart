@@ -33,8 +33,8 @@ import net.minecraft.world.level.block.state.BlockState;
  * until the light arrives every block reads full sky light, and then every section of it is queued.
  * After that a section is queued when its sky light changes, together with the section below, whose top layer reads
  * the light of the blocks above it, and when a block that shows pillars appears, goes away, or changes its block or
- * its emission. LightPillarClusters also queues the sections whose clusters read their cap at a changed block or in a
- * column that got its light, and every section with clusters when the block tags change.
+ * its emission. LightPillarClusters also queues the sections whose clusters read their shelter at a changed block or in
+ * a column that got its light, and every section with clusters when the block tags change.
  * Sections are queued only while tracking, each at most once until it is taken, and unloaded columns are
  * kept until taken so their clusters can be dropped. Loaded columns are kept also while not tracking, so tracking can
  * start at any time. Not thread safe.

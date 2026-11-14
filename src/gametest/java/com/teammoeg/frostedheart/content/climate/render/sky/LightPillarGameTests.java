@@ -46,6 +46,7 @@ import org.slf4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.List;
 import java.util.Locale;
 
@@ -158,9 +159,10 @@ public final class LightPillarGameTests {
      */
     private static final double CELL_ANGLE_DEGREES = 0.25;
     /**
-     * The most texels the cell atlas may have along one side, which keeps it within the largest texture of the game.
+     * A largest texture side that the cell atlas fits its bands into, as GL_MAX_TEXTURE_SIZE gives it on most graphics
+     * cards.
      */
-    private static final int MOST_ATLAS_HEIGHT = 3072;
+    private static final int LARGEST_TEXTURE_SIDE = 16384;
     /**
      * Covers the reflectance and the across Gaussian that sceneShare leaves out of the share of the pillar of plates,
      * and its near weight falling linearly in the tilt. It reaches 0.063 within the near fade of a light 10 blocks away.
@@ -1295,7 +1297,7 @@ public final class LightPillarGameTests {
     }
 
     @GameTest(template = "phase0a_empty", timeoutTicks = 100)
-    public static void lightClustersQueueTheSectionsReadingAChangedCap(GameTestHelper helper) {
+    public static void lightClustersQueueTheSectionsReadingAChangedShelter(GameTestHelper helper) {
         LightPillarWorkQueue queue = new LightPillarWorkQueue();
         queue.onColumnLoaded(ChunkPos.asLong(1, 2));
         queue.startTracking(-4, 24);
@@ -1326,41 +1328,54 @@ public final class LightPillarGameTests {
         long walled = SectionPos.asLong(1, 6, 2);
         long floor = SectionPos.asLong(1, 7, 2);
 
+        // The rim box of a torch reaches 2 columns out and from its flame's level to 16 above its top, so the torch at
+        // 20 65 36 reads 18 to 22 by 34 to 38 from 65 to 81, and the glowstone at 31 97 40 reads 29 to 33 by 38 to 42
+        // from 98 to 113:
         assertCapChangeQueues(helper, clusters, queue, 20, 68, 36, roofed, "between a torch and its roof");
         assertCapChangeQueues(helper, clusters, queue, 20, 70, 36, roofed, "at the roof of a torch");
-        assertCapChangeQueues(helper, clusters, queue, 20, 71, 36, NO_SECTION, "above the roof of a torch");
-        assertCapChangeQueues(helper, clusters, queue, 20, 65, 36, NO_SECTION, "at a torch");
-        assertCapChangeQueues(helper, clusters, queue, 21, 68, 36, NO_SECTION, "beside a torch");
+        assertCapChangeQueues(helper, clusters, queue, 20, 71, 36, roofed, "above the roof of a torch, in its rim box");
+        assertCapChangeQueues(helper, clusters, queue, 20, 82, 36, NO_SECTION, "above the rim box of a torch");
+        assertCapChangeQueues(helper, clusters, queue, 20, 64, 36, NO_SECTION, "below a torch");
+        assertCapChangeQueues(helper, clusters, queue, 21, 68, 36, roofed, "beside a torch");
+        assertCapChangeQueues(helper, clusters, queue, 22, 79, 36, roofed, "2 columns beside a torch");
+        assertCapChangeQueues(helper, clusters, queue, 23, 68, 36, NO_SECTION, "3 columns beside a torch");
         assertCapChangeQueues(helper, clusters, queue, 26, 88, 44, roofed,
                 "in the section above a torch, below its roof");
         assertCapChangeQueues(helper, clusters, queue, 24, 120, 36, open, "2 sections above an open torch");
-        assertCapChangeQueues(helper, clusters, queue, 24, 81, 36, NO_SECTION, "at an open torch");
+        assertCapChangeQueues(helper, clusters, queue, 24, 81, 36, open, "at an open torch");
         assertCapChangeQueues(helper, clusters, queue, 32, 98, 40, walled,
                 "across the chunk border in a side column of glowstone");
         assertCapChangeQueues(helper, clusters, queue, 30, 99, 40, walled, "at the cap in a side column of glowstone");
-        assertCapChangeQueues(helper, clusters, queue, 33, 98, 40, NO_SECTION, "2 columns from glowstone");
-        assertCapChangeQueues(helper, clusters, queue, 31, 100, 40, NO_SECTION, "above the cap of glowstone");
+        assertCapChangeQueues(helper, clusters, queue, 33, 98, 40, walled,
+                "across the chunk border 2 columns from glowstone");
+        assertCapChangeQueues(helper, clusters, queue, 34, 98, 40, NO_SECTION, "3 columns from glowstone");
+        assertCapChangeQueues(helper, clusters, queue, 31, 100, 40, walled,
+                "above the cap of glowstone, in its rim box");
+        assertCapChangeQueues(helper, clusters, queue, 31, 114, 40, NO_SECTION, "above the rim box of glowstone");
         assertCapChangeQueues(helper, clusters, queue, 28, 98, 48, walled,
                 "across the chunk border in the south side column of glowstone");
         assertCapChangeQueues(helper, clusters, queue, 22, 115, 36, floor,
                 "in the east side column of the second of two glowstone blocks");
         assertCapChangeQueues(helper, clusters, queue, 19, 116, 36, floor,
                 "at the cap in the west side column of the first of two glowstone blocks");
-        assertCapChangeQueues(helper, clusters, queue, 23, 115, 36, NO_SECTION, "2 columns from two glowstone blocks");
-        assertCapChangeQueues(helper, clusters, queue, 20, 117, 36, NO_SECTION,
-                "above the cap of two glowstone blocks");
+        assertCapChangeQueues(helper, clusters, queue, 23, 115, 36, floor, "2 columns from two glowstone blocks");
+        assertCapChangeQueues(helper, clusters, queue, 20, 115, 39, NO_SECTION, "3 rows from two glowstone blocks");
+        assertCapChangeQueues(helper, clusters, queue, 20, 117, 36, floor,
+                "above the cap of two glowstone blocks, in their rim box");
+        assertCapChangeQueues(helper, clusters, queue, 20, 130, 36, NO_SECTION,
+                "above the rim box of two glowstone blocks");
 
         queue.onColumnLoaded(ChunkPos.asLong(2, 2));
         helper.assertTrue(queue.onColumnLit(ChunkPos.asLong(2, 2)),
                 "The chunk column beside the glowstone does not report that it waited for its light");
-        int besideQueued = clusters.queueSectionsReadingCapsIn(2, 2, queue);
+        int besideQueued = clusters.queueSectionsReadingSheltersIn(2, 2, queue);
         helper.assertTrue(besideQueued == 1, "Lighting the chunk column beside the glowstone queues " + besideQueued
                 + " sections beside it instead of the glowstone's");
         drainSections(helper, queue, 25, "after lighting the chunk column beside the glowstone");
-        int northQueued = clusters.queueSectionsReadingCapsIn(1, 1, queue);
+        int northQueued = clusters.queueSectionsReadingSheltersIn(1, 1, queue);
         helper.assertTrue(northQueued == 0, "Lighting the chunk column north of the lights queues " + northQueued
-                + " sections, though none reads its cap there");
-        int southQueued = clusters.queueSectionsReadingCapsIn(1, 3, queue);
+                + " sections, though none reads its shelter there");
+        int southQueued = clusters.queueSectionsReadingSheltersIn(1, 3, queue);
         helper.assertTrue(southQueued == 1, "Lighting the chunk column south of the lights queues " + southQueued
                 + " sections instead of the glowstone's at the south edge");
         drainSections(helper, queue, 1, "after lighting the chunk column south of the lights");
@@ -1380,9 +1395,9 @@ public final class LightPillarGameTests {
                 "2 sections above an open torch, after another section was removed");
 
         queue.stopTracking();
-        helper.assertTrue(clusters.queueSectionsReadingCapAt(24, 120, 36, queue) == 0
-                        && clusters.queueSectionsReadingCapsIn(2, 2, queue) == 0,
-                "A queue that does not track takes sections for changed caps");
+        helper.assertTrue(clusters.queueSectionsReadingShelterAt(24, 120, 36, queue) == 0
+                        && clusters.queueSectionsReadingSheltersIn(2, 2, queue) == 0,
+                "A queue that does not track takes sections for changed shelters");
         helper.succeed();
     }
 
@@ -1392,7 +1407,7 @@ public final class LightPillarGameTests {
      */
     private static void assertCapChangeQueues(GameTestHelper helper, LightPillarClusters clusters,
             LightPillarWorkQueue queue, int blockX, int blockY, int blockZ, long expectedSection, String where) {
-        int queued = clusters.queueSectionsReadingCapAt(blockX, blockY, blockZ, queue);
+        int queued = clusters.queueSectionsReadingShelterAt(blockX, blockY, blockZ, queue);
         String change = "A change at " + blockX + " " + blockY + " " + blockZ + " " + where;
         if (expectedSection == NO_SECTION) {
             helper.assertTrue(queued == 0, change + " queues " + queued + " sections instead of none");
@@ -1436,17 +1451,10 @@ public final class LightPillarGameTests {
         }
         int nearestSlot = slotWithKey(selection, rowKey(0));
         float fadeStep = 1.0F / LightPillarSelection.FADE_TICKS;
-        helper.assertTrue(!selection.isReady(nearestSlot) && selection.fade(nearestSlot, 1.0F) == 0.0F,
-                "A new slot is ready or fades before its horizons are built");
-        for (int slot = 0; slot < LightPillarSelection.SLOT_COUNT; slot++) {
-            if (selection.isUsed(slot)) {
-                selection.setReady(slot, true);
-            }
-        }
-        stepSelection(selection, clusters, 1);
-        helper.assertTrue(selection.fade(nearestSlot, 1.0F) == fadeStep && selection.fade(nearestSlot, 0.0F) == 0.0F
+        helper.assertTrue(selection.isReady(nearestSlot) && selection.fade(nearestSlot, 1.0F) == fadeStep
+                        && selection.fade(nearestSlot, 0.0F) == 0.0F
                         && Math.abs(selection.fade(nearestSlot, 0.5F) - 0.5F * fadeStep) < 1.0e-6F,
-                "A ready slot does not start its fade from 0");
+                "A new slot is not ready or does not start its fade from 0 in the step that chose it");
         stepSelection(selection, clusters, LightPillarSelection.FADE_TICKS);
         helper.assertTrue(selection.fade(nearestSlot, 1.0F) == 1.0F, "A chosen slot does not fade in fully");
 
@@ -1462,13 +1470,17 @@ public final class LightPillarGameTests {
         helper.assertTrue(!selection.isUsed(nearestSlot) && slotWithKey(selection, nextKey) < 0,
                 "The slot of a light that went away is not free once it faded out");
         stepSelection(selection, withoutNearest, 1);
-        helper.assertTrue(slotWithKey(selection, nextKey) == nearestSlot && !selection.isReady(nearestSlot)
-                        && selection.fade(nearestSlot, 1.0F) == 0.0F,
-                "The waiting light did not take the freed slot unready and at fade 0");
-        selection.setReady(nearestSlot, true);
+        helper.assertTrue(slotWithKey(selection, nextKey) == nearestSlot && selection.isReady(nearestSlot)
+                        && selection.fade(nearestSlot, 1.0F) == fadeStep,
+                "The waiting light did not take the freed slot and start fading in");
+        selection.setReady(nearestSlot, false);
         stepSelection(selection, withoutNearest, 1);
         helper.assertTrue(selection.fade(nearestSlot, 1.0F) == fadeStep,
-                "The freed slot does not fade in once it is ready");
+                "A slot that is not ready goes on fading in");
+        selection.setReady(nearestSlot, true);
+        stepSelection(selection, withoutNearest, 1);
+        helper.assertTrue(selection.fade(nearestSlot, 1.0F) == 2.0F * fadeStep,
+                "The slot does not fade on once it is ready again");
 
         for (int step = 0; step < stepsToFreeASlot; step++) {
             selection.chooseNone();
@@ -2620,11 +2632,9 @@ public final class LightPillarGameTests {
         for (int y = 2; y <= 3; y++) {
             helper.getLevel().setBlockAndUpdate(highAbove(helper, 9, y, 10), air);
         }
-        BlockPos sideAbove = highAbove(helper, 9, 1 + LightPillarShelter.WALL_HEIGHT + 4, 10);
-        buried.shelter().onBlockChanged(sideAbove.getX(), sideAbove.getY(), sideAbove.getZ(), air, stone);
-        buried.shelter().update(buried.selection(), buried.columns());
-        assertCap(helper, buried, "set into a wall, after a change high in the column in front, which rebuilds it "
-                + "with that column open", LightPillarShelter.OPEN_CAP);
+        ShelterSetup reopened = buildShelter(helper, lightBlock, 1.0, true);
+        assertCap(helper, reopened, "set into a wall, once the column in front is open again",
+                LightPillarShelter.OPEN_CAP);
 
         for (int x = 10; x <= 12; x++) {
             for (int z = 7; z <= 13; z++) {
@@ -2662,7 +2672,7 @@ public final class LightPillarGameTests {
         ShelterSetup plus = buildShelter(helper, lightBlock, 0.625, false);
         assertBins(helper, plus, "in a plus of walls 2 high", plusAngles);
         // At 39.375 degrees the ray enters 0.5 / cos(39.375 degrees) = 0.6468 away, which is 64.81 degrees:
-        double lowestPlusDirection = Math.toDegrees(plus.shelter().binAngle(plus.slot(), 3));
+        double lowestPlusDirection = Math.toDegrees(plus.selection().rim(plus.slot(), 3));
         helper.assertTrue(Math.abs(lowestPlusDirection - 64.81) <= 0.02, "The plus rises " + lowestPlusDirection
                 + " degrees at 39.375 degrees instead of 64.81");
         // Along +x the eye lies halfway between the rays at -5.625 and 5.625 degrees, both 0.5024 to the wall:
@@ -2718,7 +2728,7 @@ public final class LightPillarGameTests {
         ShelterSetup outer = buildShelter(helper, lightBlock, 0.625, false);
         assertBins(helper, outer, "in a ring of stone 2 out and 3 high", outerAngles);
         // At 39.375 degrees the ray enters 1.5 / cos(39.375 degrees) = 1.9405 away, which is 50.75 degrees:
-        double lowestOuterDirection = Math.toDegrees(outer.shelter().binAngle(outer.slot(), 3));
+        double lowestOuterDirection = Math.toDegrees(outer.selection().rim(outer.slot(), 3));
         helper.assertTrue(Math.abs(lowestOuterDirection - 50.75) <= 0.02, "The ring 2 out rises "
                 + lowestOuterDirection + " degrees at 39.375 degrees instead of 50.75");
         BlockState leaves = Blocks.OAK_LEAVES.defaultBlockState().setValue(LeavesBlock.PERSISTENT, true);
@@ -2834,64 +2844,305 @@ public final class LightPillarGameTests {
         BlockPos gap = highAbove(helper, 12, 1, 10);
         helper.getLevel().setBlockAndUpdate(gap, air);
         ShelterSetup setup = buildShelter(helper, lightBlock, 0.625, false);
+        LightPillarWorkQueue queue = trackingQueue(helper, lightBlock);
         assertCap(helper, setup, "in a ring with a gap", LightPillarShelter.OPEN_CAP);
         assertRimToward(helper, setup, "in a ring with a gap, through the gap", 0.0, 0.0);
 
         // Along +x the ring's wall tops 4 and the light's top 1.625 above the floor's bottom are 1.5073 apart:
         double throughTheGap = Math.atan2(4.0 - 1.625, 1.5 / Math.cos(Math.toRadians(5.625)));
         helper.getLevel().setBlockAndUpdate(gap, stone);
-        setup.shelter().onBlockChanged(gap.getX(), gap.getY(), gap.getZ(), air, stone);
-        setup.shelter().update(setup.selection(), setup.columns());
+        assertShelterChangeQueues(helper, setup, queue, gap, true, "closing the gap in the ring");
+        setup = buildShelter(helper, lightBlock, 0.625, false);
         assertRimToward(helper, setup, "once the gap is closed", 0.0, throughTheGap);
 
-        placeRoofWithHooks(helper, setup, stone, 6);
-        setup.shelter().update(setup.selection(), setup.columns());
+        for (int x = 9; x <= 11; x++) {
+            for (int z = 9; z <= 11; z++) {
+                BlockPos roof = highAbove(helper, x, 6, z);
+                helper.getLevel().setBlockAndUpdate(roof, stone);
+                assertShelterChangeQueues(helper, setup, queue, roof, true, "placing a roof block at "
+                        + roof.toShortString());
+            }
+        }
+        setup = buildShelter(helper, lightBlock, 0.625, false);
         assertCap(helper, setup, "once a roof is placed", HIGH_FLOOR_Y + 6.0);
         assertRimToward(helper, setup, "once a roof is placed", 0.0, throughTheGap);
 
-        BlockPos farAbove = highAbove(helper, 12, 1 + LightPillarShelter.WALL_HEIGHT + 2, 10);
-        setup.shelter().onBlockChanged(farAbove.getX(), farAbove.getY(), farAbove.getZ(), air, stone);
-        setup.shelter().update(setup.selection(), setup.columns());
+        // The torch's top is 1.625 above the floor's bottom, so its walls and overhangs are read up to 17 above it in
+        // the columns up to 2 out, and its cap in its own column up to the roof:
+        assertShelterChangeQueues(helper, setup, queue, highAbove(helper, 12, 17, 10), true,
+                "2 columns out at the highest block read");
+        assertShelterChangeQueues(helper, setup, queue, highAbove(helper, 8, 17, 12), true,
+                "2 columns out along both axes at the highest block read");
+        assertShelterChangeQueues(helper, setup, queue, highAbove(helper, 12, 18, 10), false,
+                "2 columns out above the highest block read");
+        assertShelterChangeQueues(helper, setup, queue, highAbove(helper, 13, 2, 10), false, "3 columns out");
+        assertShelterChangeQueues(helper, setup, queue, highAbove(helper, 11, 0, 10), false,
+                "below the flame's level");
+        assertShelterChangeQueues(helper, setup, queue,
+                highAbove(helper, 10, 1 + LightPillarShelter.WALL_HEIGHT + 2, 10), false,
+                "high in its own column above the roof");
+
         helper.getLevel().setBlockAndUpdate(gap, air);
-        setup.shelter().update(setup.selection(), setup.columns());
-        assertRimToward(helper, setup, "after a change above the walls read, without a hook for the gap", 0.0,
-                throughTheGap);
+        for (int x = 9; x <= 11; x++) {
+            for (int z = 9; z <= 11; z++) {
+                helper.getLevel().setBlockAndUpdate(highAbove(helper, x, 6, z), air);
+            }
+        }
+        setup = buildShelter(helper, lightBlock, 0.625, false);
+        assertCap(helper, setup, "once the gap is open again and the roof broken", LightPillarShelter.OPEN_CAP);
+        assertRimToward(helper, setup, "once the gap is open again and the roof broken", 0.0, 0.0);
+        helper.succeed();
+    }
 
-        BlockPos sideAbove = highAbove(helper, 11, 1 + LightPillarShelter.WALL_HEIGHT + 2, 10);
-        setup.shelter().onBlockChanged(sideAbove.getX(), sideAbove.getY(), sideAbove.getZ(), air, stone);
-        setup.shelter().update(setup.selection(), setup.columns());
-        assertRimToward(helper, setup, "after a change high in a side column of a torch, which reads no side column "
-                + "that high", 0.0, throughTheGap);
+    @GameTest(template = "phase0a_empty", timeoutTicks = 100)
+    public static void lightPillarShelterCeilsUnderOverhangsBesideTheLight(GameTestHelper helper) {
+        fillGrassFloor(helper);
+        BlockPos lightBlock = highAbove(helper, 10, 1, 10);
+        BlockState stone = Blocks.STONE.defaultBlockState();
+        BlockState air = Blocks.AIR.defaultBlockState();
+        double open = LightPillarShelter.OPEN_CEILING;
+        // A porch roof 3 above the floor's bottom over the 3 columns east of the torch and 2 rows to each side. The
+        // torch's top is 1.625 above the floor's bottom, and the 2 nearer columns lie within the reach:
+        placeBlocks(helper, stone, 11, 13, 3, 3, 8, 12);
+        ShelterSetup porch = buildShelter(helper, lightBlock, 0.625, false);
+        double[] porchCeilings = porchCeilings(3.0 - 1.625);
+        // Along +x the rays leave the column 2 east 2.5 / cos(5.625 degrees) = 2.5121 away, which is 28.69 degrees:
+        double eastCeiling = Math.atan2(3.0 - 1.625, 2.5 / Math.cos(Math.toRadians(5.625)));
+        double[] openRims = new double[LightPillarShelter.BINS];
+        Arrays.fill(openRims, LightPillarShelter.OPEN_RIM);
+        assertCap(helper, porch, "beside a porch roof", OPEN_CAP);
+        assertBins(helper, porch, "beside a porch roof", openRims);
+        assertCeilings(helper, porch, "beside a porch roof", porchCeilings);
+        assertCeilingToward(helper, porch, "beside a porch roof, from under it", 0.0, eastCeiling);
+        assertCeilingToward(helper, porch, "beside a porch roof, from the open side", 180.0, open);
+        assertCeilingToward(helper, porch, "beside a porch roof, from along its edge", 90.0, open);
+        // Halfway between the open ray at 84.375 degrees and the one at 73.125 degrees, which leaves the column 1 east
+        // and 2 south through its south side 2.5 / sin(73.125 degrees) away:
+        assertCeilingToward(helper, porch, "beside a porch roof, at 78.75 degrees", 78.75,
+                0.5 * (open + Math.atan2(3.0 - 1.625, 2.5 / Math.sin(Math.toRadians(73.125)))));
 
-        BlockPos ownAbove = highAbove(helper, 10, 1 + LightPillarShelter.WALL_HEIGHT + 2, 10);
-        setup.shelter().onBlockChanged(ownAbove.getX(), ownAbove.getY(), ownAbove.getZ(), air, stone);
-        setup.shelter().update(setup.selection(), setup.columns());
-        assertRimToward(helper, setup, "after a change high in its own column, which rebuilds with the gap open", 0.0,
-                0.0);
-        assertCap(helper, setup, "after a change high in its own column", HIGH_FLOOR_Y + 6.0);
+        // Under a roof that only reaches past the reach, and over a wall 1 high under the roof, the rays still leave
+        // the roof's columns within the reach where they did:
+        LightPillarWorkQueue queue = trackingQueue(helper, lightBlock);
+        assertShelterChangeQueues(helper, porch, queue, highAbove(helper, 12, 3, 12), true,
+                "in the roof 2 columns out");
+        assertShelterChangeQueues(helper, porch, queue, highAbove(helper, 13, 3, 10), false,
+                "in the roof 3 columns out");
+        placeBlocks(helper, stone, 11, 11, 1, 1, 8, 12);
+        ShelterSetup parapet = buildShelter(helper, lightBlock, 0.625, false);
+        assertCeilings(helper, parapet, "beside a wall 1 high under a porch roof", porchCeilings);
+        // The wall's top 2 above the floor's bottom, 0.5024 east along +x, rises 36.73 degrees, above the ceiling:
+        double parapetRim = Math.atan2(2.0 - 1.625, 0.5 / Math.cos(Math.toRadians(5.625)));
+        assertRimToward(helper, parapet, "beside a wall 1 high under a porch roof", 0.0, parapetRim);
+        double eyeY = lightBlock.getY() + 0.625;
+        double distance = 16.0;
+        double tiltSigma = Math.toRadians(0.7);
+        double belowTheRimCap = LightPillarOptics.shelteredCap(parapet.selection().cap(parapet.slot()), eyeY,
+                distance, ceilingToward(parapet, 0.0));
+        double porchCeiling = ceilingToward(porch, 0.0);
+        double openCap = LightPillarOptics.shelteredCap(porch.selection().cap(porch.slot()), eyeY, distance,
+                porchCeiling);
+        helper.assertTrue(Math.abs(openCap - distance * Math.tan(porchCeiling)) <= 1.0e-6, "The ceiling at "
+                + Math.toDegrees(porchCeiling) + " degrees cuts the sheet " + distance + " blocks away at " + openCap
+                + " instead of " + distance * Math.tan(porchCeiling));
+        boolean showsUnderThePorch = false;
+        for (double degrees = 0.5; degrees < 90.0; degrees += 0.5) {
+            double elevation = Math.toRadians(degrees);
+            double underTheCeiling = closedFormAt(elevation, distance, 0.0, tiltSigma, 0.0, 1.0,
+                    rimToward(porch, 0.0), openCap);
+            showsUnderThePorch |= underTheCeiling > 0.0;
+            double aboveTheCeiling = closedFormAt(elevation, distance, 0.0, tiltSigma, 0.0, 1.0, parapetRim,
+                    belowTheRimCap);
+            helper.assertTrue(aboveTheCeiling == 0.0, "A pillar whose rim at " + Math.toDegrees(parapetRim)
+                    + " degrees lies above its ceiling at " + Math.toDegrees(eastCeiling) + " degrees shows "
+                    + aboveTheCeiling + " at " + degrees + " degrees");
+        }
+        helper.assertTrue(showsUnderThePorch, "A pillar under its ceiling shows nowhere below it");
+        placeBlocks(helper, air, 11, 11, 1, 1, 8, 12);
 
-        helper.getLevel().setBlockAndUpdate(gap, stone);
-        setup.shelter().onBlockChanged(gap.getX(), gap.getY(), gap.getZ(), air, stone);
-        placeRoofWithHooks(helper, setup, air, 6);
-        setup.shelter().update(setup.selection(), setup.columns());
-        assertCap(helper, setup, "once the gap is closed again and the roof broken", LightPillarShelter.OPEN_CAP);
-        assertRimToward(helper, setup, "once the gap is closed again and the roof broken", 0.0, throughTheGap);
+        BlockState leaves = Blocks.OAK_LEAVES.defaultBlockState().setValue(LeavesBlock.PERSISTENT, true);
+        placeBlocks(helper, leaves, 11, 13, 3, 3, 8, 12);
+        ShelterSetup canopy = buildShelter(helper, lightBlock, 0.625, false);
+        assertCeilings(helper, canopy, "beside the edge of a canopy of leaves", porchCeilings);
+        placeBlocks(helper, Blocks.GLASS.defaultBlockState(), 11, 13, 3, 3, 8, 12);
+        double[] openCeilings = new double[LightPillarShelter.BINS];
+        Arrays.fill(openCeilings, open);
+        ShelterSetup glass = buildShelter(helper, lightBlock, 0.625, false);
+        assertCeilings(helper, glass, "beside a glass roof", openCeilings);
+
+        double[][] foldCases = {{Double.POSITIVE_INFINITY, 15.0, open, LightPillarOptics.OPEN_CAP_HEIGHT},
+                {110.0, 15.0, open, 10.0}, {Double.POSITIVE_INFINITY, 15.0, Math.toRadians(30.0),
+                15.0 * Math.tan(Math.toRadians(30.0))}, {105.0, 15.0, Math.toRadians(30.0), 5.0},
+                {120.0, 0.0, Math.toRadians(30.0), 0.0}};
+        for (double[] fold : foldCases) {
+            double folded = LightPillarOptics.shelteredCap(fold[0], 100.0, fold[1], fold[2]);
+            helper.assertTrue(Math.abs(folded - fold[3]) <= 1.0e-9, "A cap at " + fold[0] + " with a ceiling at "
+                    + Math.toDegrees(fold[2]) + " degrees " + fold[1] + " blocks from an eye at 100 folds to "
+                    + folded + " instead of " + fold[3]);
+        }
         helper.succeed();
     }
 
     /**
-     * Sets the state into the 3 by 3 blocks over the light's column at relative (10, 10), at the height above
-     * HIGH_FLOOR_Y, and reports each change to the shelter.
+     * The ceilings of a torch at the center of its block beside a roof the height above its top over the columns 1 to
+     * 2 east of it and 2 rows to each side, as far as the reach. Rays within 45 degrees of +x leave the reach through
+     * its east side 2.5 / cos away, steeper rays east leave it through its north or south side 2.5 / |sin| away while
+     * they still cross a column east of the light there, and the other rays cross no roof.
      */
-    private static void placeRoofWithHooks(GameTestHelper helper, ShelterSetup setup, BlockState state, int y) {
-        for (int x = 9; x <= 11; x++) {
-            for (int z = 9; z <= 11; z++) {
-                BlockPos position = highAbove(helper, x, y, z);
-                BlockState oldState = helper.getLevel().getBlockState(position);
-                helper.getLevel().setBlockAndUpdate(position, state);
-                setup.shelter().onBlockChanged(position.getX(), position.getY(), position.getZ(), oldState, state);
+    private static double[] porchCeilings(double height) {
+        double[] ceilings = new double[LightPillarShelter.BINS];
+        for (int bin = 0; bin < LightPillarShelter.BINS; bin++) {
+            double direction = Math.toRadians((bin + 0.5) * 11.25);
+            double alongX = Math.cos(direction);
+            double alongZ = Math.abs(Math.sin(direction));
+            if (alongX >= alongZ) {
+                ceilings[bin] = Math.atan2(height, 2.5 / alongX);
+            } else if (alongX > 0.0 && 2.5 * alongX / alongZ > 0.5) {
+                ceilings[bin] = Math.atan2(height, 2.5 / alongZ);
+            } else {
+                ceilings[bin] = LightPillarShelter.OPEN_CEILING;
             }
         }
+        return ceilings;
+    }
+
+    @GameTest(template = "phase0a_empty", timeoutTicks = 100)
+    public static void lightClustersMergeOnlyLightsThatWallsCutAlike(GameTestHelper helper) {
+        fillGrassFloor(helper);
+        BlockState glowstone = Blocks.GLOWSTONE.defaultBlockState();
+        BlockState stone = Blocks.STONE.defaultBlockState();
+        BlockState air = Blocks.AIR.defaultBlockState();
+        BlockState grass = Blocks.GRASS_BLOCK.defaultBlockState();
+        int start = rowStartWithinAChunk(helper, 7, 2, 11);
+        // The reproduction in PILLAR_SLOTS.md: 7 glowstone in the floor along +x, and a wall 4 high across the row 2
+        // columns past its last light, which reaches it alone:
+        BlockPos[] row = new BlockPos[7];
+        for (int light = 0; light < row.length; light++) {
+            row[light] = highAbove(helper, start + light, 0, 10);
+            helper.getLevel().setBlockAndUpdate(row[light], glowstone);
+        }
+        placeBlocks(helper, stone, start + 8, start + 8, 1, 4, 9, 11);
+        LightPillarClusters crossed = clustersOfLights(helper, 1.0, true, row);
+        int lifted = clusterWithLightCount(crossed, 1);
+        int open = clusterWithLightCount(crossed, 6);
+        helper.assertTrue(crossed.count() == 2 && lifted >= 0 && open >= 0, "A row of 7 glowstone with a wall 2 "
+                + "columns past its end gives " + crossed.count() + " clusters instead of one of 6 lights and one of 1");
+        // The wall's top 5 above the floor's bottom stands 4 above the glowstone's top, 1.5073 east along +x:
+        double liftedRim = Math.atan2(4.0, 1.5 / Math.cos(Math.toRadians(5.625)));
+        helper.assertTrue(Math.abs(crossed.rim(lifted, 0) - liftedRim) <= WALL_ANGLE_TOLERANCE, "The light next to "
+                + "the wall rises " + Math.toDegrees(crossed.rim(lifted, 0)) + " degrees along +x instead of "
+                + Math.toDegrees(liftedRim));
+        for (int bin = 0; bin < LightPillarShelter.BINS; bin++) {
+            helper.assertTrue(!(crossed.rim(open, bin) > 0.0)
+                            && crossed.ceiling(open, bin) >= (float) LightPillarShelter.OPEN_CEILING,
+                    "The 6 lights beyond the wall's reach rise " + Math.toDegrees(crossed.rim(open, bin))
+                            + " degrees or have a ceiling in the direction " + bin);
+        }
+        placeBlocks(helper, air, start + 8, start + 8, 1, 4, 9, 11);
+
+        // A wall along the row 2 rows south that runs 2 columns past both ends meets every light alike:
+        placeBlocks(helper, stone, start - 2, start + 8, 1, 4, 12, 12);
+        LightPillarClusters along = clustersOfLights(helper, 1.0, true, row);
+        double alongRim = Math.atan2(4.0, 1.5 / Math.sin(Math.toRadians(84.375)));
+        helper.assertTrue(along.count() == 1 && along.lightCount(0) == 7
+                        && Math.abs(along.rim(0, 7) - alongRim) <= WALL_ANGLE_TOLERANCE,
+                "A row of 7 glowstone along a wall gives " + along.count() + " clusters, the first of "
+                        + along.lightCount(0) + " lights rising " + Math.toDegrees(along.rim(0, 7))
+                        + " degrees toward the wall, instead of one of 7 rising " + Math.toDegrees(alongRim));
+        placeBlocks(helper, air, start - 2, start + 8, 1, 4, 12, 12);
+
+        // Torches in a row with snow layers beside them, which stay below their flames, stay one cluster:
+        BlockPos[] torches = new BlockPos[row.length];
+        for (int light = 0; light < row.length; light++) {
+            helper.getLevel().setBlockAndUpdate(row[light], grass);
+            torches[light] = highAbove(helper, start + light, 1, 10);
+            helper.getLevel().setBlockAndUpdate(torches[light], Blocks.TORCH.defaultBlockState());
+        }
+        BlockState snow = Blocks.SNOW.defaultBlockState();
+        int[][] snowColumns = {{1, 9}, {4, 11}, {6, 11}, {7, 10}};
+        for (int[] column : snowColumns) {
+            helper.getLevel().setBlockAndUpdate(highAbove(helper, start + column[0], 1, column[1]), snow);
+        }
+        LightPillarClusters snowy = clustersOfLights(helper, 0.625, false, torches);
+        helper.assertTrue(snowy.count() == 1 && snowy.lightCount(0) == 7, "A row of 7 torches with snow layers "
+                + "beside them gives " + snowy.count() + " clusters instead of one of 7");
+
+        double step = LightPillarShelter.COMPARED_ANGLE_STEP;
+        double[][] stepCases = {{LightPillarShelter.OPEN_RIM, 0}, {-0.1, 0}, {0.45 * step, 0}, {0.55 * step, 1},
+                {10.0 * step, 10}, {LightPillarShelter.OPEN_CEILING, 45}, {LightPillarShelter.OPEN_CEILING - 0.4 * step,
+                45}, {2.0, 45}};
+        for (double[] stepCase : stepCases) {
+            int compared = LightPillarShelter.comparedStep(stepCase[0]);
+            helper.assertTrue(compared == (int) stepCase[1], "An angle of " + Math.toDegrees(stepCase[0])
+                    + " degrees compares as step " + compared + " instead of " + (int) stepCase[1]);
+        }
+        helper.succeed();
+    }
+
+    /**
+     * Sets the state into every block of the box at the relative coordinates, with y above HIGH_FLOOR_Y.
+     */
+    private static void placeBlocks(GameTestHelper helper, BlockState state, int lowestX, int highestX, int lowestY,
+            int highestY, int lowestZ, int highestZ) {
+        for (int x = lowestX; x <= highestX; x++) {
+            for (int y = lowestY; y <= highestY; y++) {
+                for (int z = lowestZ; z <= highestZ; z++) {
+                    helper.getLevel().setBlockAndUpdate(highAbove(helper, x, y, z), state);
+                }
+            }
+        }
+    }
+
+    /**
+     * The lowest relative x from the lowest to the highest at which a row of the length along +x lies in one chunk.
+     */
+    private static int rowStartWithinAChunk(GameTestHelper helper, int length, int lowest, int highest) {
+        for (int start = lowest; start <= highest; start++) {
+            int first = highAbove(helper, start, 0, 0).getX();
+            if (SectionPos.blockToSectionCoord(first) == SectionPos.blockToSectionCoord(first + length - 1)) {
+                return start;
+            }
+        }
+        throw new IllegalStateException("No row of " + length + " from " + lowest + " to " + highest
+                + " lies in one chunk");
+    }
+
+    /**
+     * The clusters of the lights at the positions, which must lie in one chunk section, each read with its cap and
+     * shelter from the level as LightPillarSources reads them, with the top the offset above its block.
+     */
+    private static LightPillarClusters clustersOfLights(GameTestHelper helper, double topOffset, boolean fullBlock,
+            BlockPos... lights) {
+        LightPillarShelter shelter = new LightPillarShelter();
+        LightPillarHorizons.LevelColumns columns = new LightPillarHorizons.LevelColumns(shelter.occluders());
+        columns.setLevel(helper.getLevel());
+        LightPillarClusters clusters = new LightPillarClusters();
+        int chunkX = SectionPos.blockToSectionCoord(lights[0].getX());
+        int chunkZ = SectionPos.blockToSectionCoord(lights[0].getZ());
+        clusters.beginSection(chunkX, SectionPos.blockToSectionCoord(lights[0].getY()), chunkZ);
+        shelter.beginSection(SectionPos.sectionToBlockCoord(chunkX), SectionPos.sectionToBlockCoord(chunkZ));
+        for (BlockPos light : lights) {
+            double top = light.getY() + topOffset;
+            double cap = LightPillarShelter.readLightCap(columns, light.getX(), light.getZ(), top, fullBlock);
+            shelter.read(columns, light.getX(), light.getZ(), top);
+            clusters.addLight(light.getX(), light.getY(), light.getZ(), top, fullBlock, fullBlock, cap, shelter,
+                    1.0F, 1.0F, 1.0F);
+        }
+        shelter.endSection();
+        clusters.endSection();
+        return clusters;
+    }
+
+    /**
+     * The index of the first cluster with the count of lights, or -1.
+     */
+    private static int clusterWithLightCount(LightPillarClusters clusters, int lightCount) {
+        for (int cluster = 0; cluster < clusters.count(); cluster++) {
+            if (clusters.lightCount(cluster) == lightCount) {
+                return cluster;
+            }
+        }
+        return -1;
     }
 
     @GameTest(template = "phase0a_empty", timeoutTicks = 200)
@@ -3031,6 +3282,21 @@ public final class LightPillarGameTests {
         for (IceCrystalData.Crystal crystal : plates()) {
             widest = Math.max(widest, Math.toRadians(crystal.tiltDegrees()));
         }
+        helper.assertTrue(LightPillarCells.MOST_BANDS * LightPillarCells.SLOTS_ACROSS >= LightPillarSelection.SLOT_COUNT
+                        && LightPillarCells.bandsFor(1) == 1 && LightPillarCells.bandsFor(16) == 1
+                        && LightPillarCells.bandsFor(17) == 2,
+                "The atlas's bands do not hold " + LightPillarCells.SLOTS_ACROSS + " pillars each for all "
+                        + LightPillarSelection.SLOT_COUNT + " slots");
+        // Atlases grow by BAND_STEP bands, at most MOST_BANDS, within the largest texture side:
+        int[][] growthCases = {{0, 420, LARGEST_TEXTURE_SIDE, 2}, {1, 420, LARGEST_TEXTURE_SIDE, 2},
+                {3, 420, LARGEST_TEXTURE_SIDE, 4}, {16, 420, LARGEST_TEXTURE_SIDE, 16},
+                {17, 420, LARGEST_TEXTURE_SIDE, 16}, {12, 1024, 8192, 8}, {5, 1024, 4096, 4}, {3, 1024, 1000, 1}};
+        for (int[] growth : growthCases) {
+            int grown = LightPillarCells.grownBands(growth[0], growth[1], growth[2]);
+            helper.assertTrue(grown == growth[3], "An atlas of " + growth[1] + " rows per band that needs "
+                    + growth[0] + " bands within a texture side of " + growth[2] + " grows to " + grown
+                    + " bands instead of " + growth[3]);
+        }
         double tightest = Double.POSITIVE_INFINITY;
         String tightestWhere = "nowhere";
         for (double cellDegrees : CELL_ANGLES_DEGREES) {
@@ -3038,11 +3304,12 @@ public final class LightPillarGameTests {
             int rows = LightPillarCells.atlasRows(cellAngle, widest);
             helper.assertTrue(rows <= LightPillarCells.MOST_ROWS, "A cell of " + cellDegrees + " degrees gives "
                     + rows + " rows of each ribbon instead of at most " + LightPillarCells.MOST_ROWS);
-            int height = LightPillarCells.atlasHeight(rows);
-            helper.assertTrue(height <= MOST_ATLAS_HEIGHT, "A cell of " + cellDegrees + " degrees gives an atlas "
-                    + height + " rows tall instead of at most " + MOST_ATLAS_HEIGHT);
-            boolean[] marked = new boolean[LightPillarCells.ATLAS_COLUMNS * height];
-            for (int ribbon = 0; ribbon < 2 * LightPillarSelection.SLOT_COUNT; ribbon++) {
+            int bands = LightPillarCells.grownBands(LightPillarCells.MOST_BANDS, rows, LARGEST_TEXTURE_SIDE);
+            int height = LightPillarCells.atlasHeight(rows, bands);
+            helper.assertTrue(height <= LARGEST_TEXTURE_SIDE, "A cell of " + cellDegrees + " degrees gives an atlas "
+                    + height + " rows tall instead of at most " + LARGEST_TEXTURE_SIDE);
+            BitSet marked = new BitSet(LightPillarCells.ATLAS_COLUMNS * height);
+            for (int ribbon = 0; ribbon < 2 * LightPillarCells.SLOTS_ACROSS * bands; ribbon++) {
                 int kind = ribbon - 2 * (ribbon / 2);
                 int half = LightPillarCells.halfColumns(kind);
                 int axis = LightPillarCells.axisColumn(ribbon);
@@ -3057,11 +3324,11 @@ public final class LightPillarGameTests {
                 for (int column = axis - half; column <= axis + half; column++) {
                     for (int row = bottom; row < bottom + rows; row++) {
                         int texel = row * LightPillarCells.ATLAS_COLUMNS + column;
-                        if (marked[texel]) {
+                        if (marked.get(texel)) {
                             helper.fail("The texel at column " + column + " and row " + row + " belongs to the ribbon "
                                     + ribbon + " and to another one, at a cell of " + cellDegrees + " degrees");
                         }
-                        marked[texel] = true;
+                        marked.set(texel);
                     }
                 }
             }
@@ -3078,8 +3345,8 @@ public final class LightPillarGameTests {
                             + "%.6f", cellDegrees, rows, covered, needed);
                 }
             }
-            LOGGER.info("A cell of " + cellDegrees + " degrees gives " + rows + " rows of each ribbon in an atlas "
-                    + height + " rows tall");
+            LOGGER.info("A cell of " + cellDegrees + " degrees gives " + rows + " rows of each ribbon in an atlas of "
+                    + bands + " bands " + height + " rows tall");
         }
         LOGGER.info("The rows of a ribbon reach the least above the top of the highest ribbon by " + tightest
                 + " radians, at " + tightestWhere);
@@ -3826,37 +4093,37 @@ public final class LightPillarGameTests {
      */
     private static ShelterSetup buildShelter(GameTestHelper helper, BlockPos lightBlock, double topOffset,
             boolean fullBlock) {
+        LightPillarShelter shelter = new LightPillarShelter();
+        LightPillarHorizons.LevelColumns columns = new LightPillarHorizons.LevelColumns(shelter.occluders());
+        columns.setLevel(helper.getLevel());
+        double top = lightBlock.getY() + topOffset;
+        double cap = LightPillarShelter.readLightCap(columns, lightBlock.getX(), lightBlock.getZ(), top, fullBlock);
+        shelter.read(columns, lightBlock.getX(), lightBlock.getZ(), top);
         LightPillarClusters clusters = new LightPillarClusters();
         clusters.beginSection(SectionPos.blockToSectionCoord(lightBlock.getX()),
                 SectionPos.blockToSectionCoord(lightBlock.getY()),
                 SectionPos.blockToSectionCoord(lightBlock.getZ()));
-        clusters.addLight(lightBlock.getX(), lightBlock.getY(), lightBlock.getZ(), lightBlock.getY() + topOffset,
-                fullBlock, fullBlock, OPEN_CAP, 1.0F, 1.0F, 1.0F);
+        clusters.addLight(lightBlock.getX(), lightBlock.getY(), lightBlock.getZ(), top, fullBlock, fullBlock, cap,
+                shelter, 1.0F, 1.0F, 1.0F);
         clusters.endSection();
         LightPillarSelection selection = new LightPillarSelection();
         selection.choose(clusters, lightBlock.getX() + 3.5, lightBlock.getY() + 1.6, lightBlock.getZ() + 0.5, 1000.0,
                 WIDE_CHUNK_RADIUS);
         int slot = usedSlot(helper, selection);
-        LightPillarShelter shelter = new LightPillarShelter();
-        LightPillarHorizons.LevelColumns columns = new LightPillarHorizons.LevelColumns(shelter.occluders());
-        columns.setLevel(helper.getLevel());
-        helper.assertTrue(!selection.isReady(slot), "The slot of the light at " + lightBlock.toShortString()
-                + " is ready before its shelter is built");
-        shelter.update(selection, columns);
-        helper.assertTrue(shelter.isBuilt(slot) && selection.isReady(slot), "The shelter of the light at "
-                + lightBlock.toShortString() + " is not built and ready");
-        return new ShelterSetup(selection, shelter, columns, slot, lightBlock);
+        helper.assertTrue(selection.isReady(slot), "The slot of the light at " + lightBlock.toShortString()
+                + " is not ready to fade in at once with its shelter");
+        return new ShelterSetup(clusters, selection, slot, lightBlock);
     }
 
     /**
-     * The slot, shelter, and columns of one light standing in the template, with its shelter built.
+     * The cluster and the slot of one light standing in the template, with its shelter read from the blocks there.
      */
-    private record ShelterSetup(LightPillarSelection selection, LightPillarShelter shelter,
-            LightPillarHorizons.LevelColumns columns, int slot, BlockPos lightBlock) {
+    private record ShelterSetup(LightPillarClusters clusters, LightPillarSelection selection, int slot,
+            BlockPos lightBlock) {
     }
 
     private static void assertCap(GameTestHelper helper, ShelterSetup setup, String where, double expectedCap) {
-        double cap = setup.shelter().cap(setup.slot());
+        double cap = setup.selection().cap(setup.slot());
         helper.assertTrue(cap == expectedCap || Math.abs(cap - expectedCap) <= 1.0e-9, "The cap of a light " + where
                 + " is " + cap + " instead of " + expectedCap);
     }
@@ -3868,7 +4135,71 @@ public final class LightPillarGameTests {
     private static double rimToward(ShelterSetup setup, double eyeDegrees) {
         double eyeX = setup.lightBlock().getX() + 0.5 + 30.0 * Math.cos(Math.toRadians(eyeDegrees));
         double eyeZ = setup.lightBlock().getZ() + 0.5 + 30.0 * Math.sin(Math.toRadians(eyeDegrees));
-        return setup.shelter().rimToward(setup.slot(), eyeX, eyeZ);
+        return setup.selection().rimToward(setup.slot(), eyeX, eyeZ);
+    }
+
+    /**
+     * The ceiling of the slot toward an eye 30 blocks from the light's block center in the direction at the angle in
+     * degrees, counted from +x toward +z.
+     */
+    private static double ceilingToward(ShelterSetup setup, double eyeDegrees) {
+        double eyeX = setup.lightBlock().getX() + 0.5 + 30.0 * Math.cos(Math.toRadians(eyeDegrees));
+        double eyeZ = setup.lightBlock().getZ() + 0.5 + 30.0 * Math.sin(Math.toRadians(eyeDegrees));
+        return setup.selection().ceilingToward(setup.slot(), eyeX, eyeZ);
+    }
+
+    private static void assertCeilingToward(GameTestHelper helper, ShelterSetup setup, String where,
+            double eyeDegrees, double expectedCeiling) {
+        double ceiling = ceilingToward(setup, eyeDegrees);
+        helper.assertTrue(Math.abs(ceiling - expectedCeiling) <= WALL_ANGLE_TOLERANCE, "The ceiling of a light "
+                + where + " toward an eye at " + eyeDegrees + " degrees is " + Math.toDegrees(ceiling)
+                + " degrees instead of " + Math.toDegrees(expectedCeiling));
+    }
+
+    /**
+     * Checks every direction's ceiling against the expected one, with OPEN_CEILING for a direction that crosses no
+     * overhang.
+     */
+    private static void assertCeilings(GameTestHelper helper, ShelterSetup setup, String where, double[] expected) {
+        for (int bin = 0; bin < LightPillarShelter.BINS; bin++) {
+            double ceiling = setup.selection().ceiling(setup.slot(), bin);
+            helper.assertTrue(Math.abs(ceiling - expected[bin]) <= WALL_ANGLE_TOLERANCE, "The direction " + bin
+                    + " at " + (bin + 0.5) * 11.25 + " degrees of a light " + where + " has the ceiling "
+                    + Math.toDegrees(ceiling) + " degrees instead of " + Math.toDegrees(expected[bin]));
+        }
+    }
+
+    /**
+     * A queue that tracks the level of the test with the chunk column of the light loaded and lit, and nothing queued.
+     */
+    private static LightPillarWorkQueue trackingQueue(GameTestHelper helper, BlockPos lightBlock) {
+        LightPillarWorkQueue queue = new LightPillarWorkQueue();
+        long column = ChunkPos.asLong(SectionPos.blockToSectionCoord(lightBlock.getX()),
+                SectionPos.blockToSectionCoord(lightBlock.getZ()));
+        queue.onColumnLoaded(column);
+        queue.startTracking(helper.getLevel().getMinSection(), helper.getLevel().getSectionsCount());
+        queue.onColumnLit(column);
+        drainSections(helper, queue, helper.getLevel().getSectionsCount(), "after the light's column was lit");
+        return queue;
+    }
+
+    /**
+     * Asserts that a change of how high the block at the position stops light queues the light's section, or none.
+     */
+    private static void assertShelterChangeQueues(GameTestHelper helper, ShelterSetup setup,
+            LightPillarWorkQueue queue, BlockPos position, boolean queues, String where) {
+        int queued = setup.clusters().queueSectionsReadingShelterAt(position.getX(), position.getY(),
+                position.getZ(), queue);
+        long section = SectionPos.asLong(SectionPos.blockToSectionCoord(setup.lightBlock().getX()),
+                SectionPos.blockToSectionCoord(setup.lightBlock().getY()),
+                SectionPos.blockToSectionCoord(setup.lightBlock().getZ()));
+        if (queues) {
+            helper.assertTrue(queued == 1 && queue.nextSection() && queue.takenSection() == section, "A change "
+                    + where + " queues " + queued + " sections instead of the light's");
+        } else {
+            helper.assertTrue(queued == 0, "A change " + where + " queues " + queued + " sections instead of none");
+        }
+        drainSections(helper, queue, 0, "after a change " + where);
     }
 
     private static void assertRimToward(GameTestHelper helper, ShelterSetup setup, String where, double eyeDegrees,
@@ -3885,7 +4216,7 @@ public final class LightPillarGameTests {
      */
     private static void assertBins(GameTestHelper helper, ShelterSetup setup, String where, double[] expected) {
         for (int bin = 0; bin < LightPillarShelter.BINS; bin++) {
-            double angle = setup.shelter().binAngle(setup.slot(), bin);
+            double angle = setup.selection().rim(setup.slot(), bin);
             helper.assertTrue(angle == expected[bin] || Math.abs(angle - expected[bin]) <= WALL_ANGLE_TOLERANCE,
                     "The direction "
                     + bin + " at " + (bin + 0.5) * 11.25 + " degrees of a light " + where + " rises "
