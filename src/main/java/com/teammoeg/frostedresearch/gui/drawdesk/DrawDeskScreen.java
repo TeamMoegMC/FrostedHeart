@@ -37,6 +37,8 @@ import javax.annotation.Nullable;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
 
 import java.util.IdentityHashMap;
 import java.util.Map;
@@ -55,6 +57,7 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
     private com.teammoeg.frostedresearch.knowledge.client.KnowledgeLayer knowledge;
     private boolean knowledgeOpen;
     private boolean initialSurfaceOpened;
+    private AirflowDeskPanel airflow;
 	private final Map<AbstractWidget, WidgetState> hiddenExternalWidgets = new IdentityHashMap<>();
 
 	public DrawDeskScreen(DrawDeskContainer cx) {
@@ -132,6 +135,10 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
 	}
 
     public void showKnowledge() {
+        if (airflow != null) {
+            closeAirflow();
+            return;
+        }
         if (knowledge == null) {
             knowledge = new com.teammoeg.frostedresearch.knowledge.client.KnowledgeLayer(this, menu, () -> {
                 knowledgeOpen = false;
@@ -146,6 +153,35 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
 
     public com.teammoeg.frostedresearch.knowledge.client.KnowledgeLayer getKnowledgeLayer() {
         return knowledgeOpen ? knowledge : null;
+    }
+
+    public AirflowDeskPanel getAirflowPanel() { return airflow; }
+
+    public void openAirflow(String run, String task, Component projectTitle) {
+        getLayerHolder().focusOn(null);
+        airflow = new AirflowDeskPanel(p, this, run, task, projectTitle);
+        knowledgeOpen = false;
+        workspaceState.setSurface(ResearchWorkspaceState.Surface.DRAWING_DESK);
+        p.closeHelp();
+        p.refresh();
+        applyWorkspaceSurface();
+        airflow.start();
+    }
+
+    public void closeAirflow() {
+        if (airflow == null) return;
+        airflow = null;
+        knowledgeOpen = true;
+        p.refresh();
+        if (knowledge != null) knowledge.refreshSnapshot();
+        applyWorkspaceSurface();
+    }
+
+    public boolean receiveAirflowReply(CompoundTag payload) {
+        if (airflow == null || !java.util.Set.of("START_AIRFLOW", "ROTATE_AIRFLOW", "RESET_AIRFLOW").contains(payload.getString("action"))) return false;
+        airflow.receive(payload);
+        p.refresh();
+        return true;
     }
 
     private void resizeKnowledgeToWindow() {
@@ -187,6 +223,9 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
 		p.setVisible(!showArchive);
 		p.setEnabled(!showArchive);
 		menu.setSlotVisible(!showArchive);
+
+        if (airflow != null) for (int index = 0; index < 3; index++)
+            if (menu.slots.get(index) instanceof com.teammoeg.chorda.client.cui.menu.DeactivatableSlot slot) slot.setActived(false);
 		if (showArchive) {
 			resizeArchiveToWindow();
 			hideExternalWidgets();
@@ -271,6 +310,10 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
 
 	@Override
 	public void back() {
+        if (airflow != null) {
+            closeAirflow();
+            return;
+        }
         if (knowledgeOpen) {
             if (!knowledge.goBack()) {
                 closeGui(false);
@@ -287,7 +330,7 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
 
 	@Override
 	public boolean onKeyPressed(int keyCode, int scanCode, int modifier) {
-        if (knowledgeOpen && CInputHelper.isEsc(keyCode)) {
+        if ((knowledgeOpen || airflow != null) && CInputHelper.isEsc(keyCode)) {
             back();
             return true;
         }
@@ -317,6 +360,7 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
 
 	@Override
 	public void onResearchProgressChanged(String researchId) {
+        if (airflow != null && knowledge != null) knowledge.refreshSnapshot();
 		if (archive != null) {
 			archive.onResearchProgressChanged(researchId);
 		}

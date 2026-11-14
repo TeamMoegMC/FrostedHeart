@@ -72,3 +72,8 @@ exact validation scope and evidence belong in the [M6 handoff](../../diary/2026-
 Client checks use the opt-in `runM3cClient` task or the separate `m3cValidationJar` helper for an isolated full-pack
 instance. Normal `jar` excludes the helper. See the [M3-C handoff](../../diary/2026-11-12_16-58-51_research-m3c-client-prism-handoff.md)
 for setup, evidence paths and the distinction between callback tests, full-pack loading and physical input.
+
+The opt-in M4 client helper also supports `-Dfrostedresearch.m4Validation=true -Dfrostedresearch.m4DeskOnly=true`.
+It creates a fresh full-pack fixture world, opens the formal project, solves airflow through the desk buttons,
+checks Esc/button return and retained board state, then exits. It covers the airflow stage only, not the later
+prototype trial or survival materials. Output is `<frostedresearch.m4Root>/build/m4-client/`.

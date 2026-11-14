@@ -245,6 +245,33 @@ public final class ControlledFurnaceGameTests {
         }finally{manager.replaceRecipes(previous);KnowledgeDefinitions.install(defs);RefractoryObservationIndex.refresh(server);}
     }
     @GameTest(batch="m5_idea_signals",template="trial_kiln_empty",timeoutTicks=80)
+    public static void mineralFormsShareObservationPrerequisitesAndDiscounts(GameTestHelper h){
+        try(var scope=new Scope()){
+            install();var actor=scope.actor(h);
+            var kaolins=List.of("frostedheart:kaolin","frostedheart:crushed_raw_kaolin","frostedheart:kaolin_dust","frostedheart:kaolin_block","frostedheart:kaolin_permafrost");
+            var bauxites=List.of("frostedheart:bauxite","frostedheart:crushed_raw_bauxite","frostedheart:bauxite_dust","frostedheart:bauxite_block","frostedheart:bauxite_permafrost");
+            var link=KnowledgeDefinitions.current().links().get(id("refractory_firing"));
+            for(String kaolin:kaolins)for(String bauxite:bauxites){
+                var s=new KnowledgeService(UUID.randomUUID(),new KnowledgeState(),1,()->{});
+                for(String material:List.of("charcoal_pit:sandy_brick_item","minecraft:clay_ball",kaolin,bauxite))
+                    s.learn(ItemRetrieval.observe(actor.player,new ItemStack(item(material))),SOURCE,KnowledgeService.Grant.NORMAL);
+                h.assertTrue(KnowledgeLinkSessions.duration(s,link)==140,"any form pair provides all three auxiliary groups: "+kaolin+" / "+bauxite);
+                s.learn(KnowledgeElement.idea(IDEA),SOURCE,KnowledgeService.Grant.NORMAL);
+                h.assertTrue(s.startResearch(PROJECT).isPresent(),"same form pair satisfies project access");
+                for(String extra:kaolins)s.learn(ItemRetrieval.observe(actor.player,new ItemStack(item(extra))),SOURCE,KnowledgeService.Grant.NORMAL);
+                for(String extra:bauxites)s.learn(ItemRetrieval.observe(actor.player,new ItemStack(item(extra))),SOURCE,KnowledgeService.Grant.NORMAL);
+                h.assertTrue(KnowledgeLinkSessions.duration(s,link)==140,"additional forms never count as additional auxiliary groups");
+            }
+            for(var family:List.of(kaolins,bauxites))for(String material:family){
+                var s=new KnowledgeService(UUID.randomUUID(),new KnowledgeState(),1,()->{});
+                var subject=ItemRetrieval.observe(actor.player,new ItemStack(item(material)));
+                IdeaAcquisitionService.fire(s,List.of(new IdeaAcquisitionService.Signal(IdeaAcquisitionService.ITEM_OBTAINED,subject)),()->0);
+                h.assertTrue(s.isActive(KnowledgeKey.idea(IDEA)),"obtaining any mineral form can inspire the idea");
+            }
+            h.succeed();
+        }
+    }
+    @GameTest(batch="m5_idea_signals",template="trial_kiln_empty",timeoutTicks=80)
     public static void formalIdeaHasFourIndependentEntrancesAndNoBrickGate(GameTestHelper h){
         try(var scope=new Scope()){
             install();var a=scope.actor(h);var idea=KnowledgeDefinitions.current().ideas().get(IDEA);

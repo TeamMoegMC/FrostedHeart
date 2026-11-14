@@ -134,7 +134,8 @@ public final class M7ClientValidation {
     private static void press(JournalButton button) throws Exception { require(button.isEnabled(),"disabled "+button.getTitle().getString());((Runnable)read(button,"action")).run(); }
     private static void click(String key) throws Exception {
         String title=Component.translatable("gui.frostedresearch.journal."+key).getString();
-        press(layer.getElements().stream().filter(JournalButton.class::isInstance).map(JournalButton.class::cast).filter(b -> b.getTitle().getString().equals(title)).findFirst().orElseThrow());
+        var surface=desk.getAirflowPanel()==null ? layer : desk.getAirflowPanel();
+        press(surface.getElements().stream().filter(JournalButton.class::isInstance).map(JournalButton.class::cast).filter(b -> b.getTitle().getString().equals(title)).findFirst().orElseThrow());
     }
     private static void action(Action action,UUID target,String expectedStage) {
         FRNetwork.INSTANCE.sendToServer(new KnowledgeWorkbenchActionPacket(DESK,action,List.of(),target.toString(),"","",expectedStage));
@@ -148,10 +149,10 @@ public final class M7ClientValidation {
         mc().player.setXRot((float)-Math.toDegrees(Math.atan2(delta.y,Math.sqrt(delta.x*delta.x+delta.z*delta.z))));
     }
     private static boolean solve() throws Exception {
-        var board=(CompoundTag)read(layer,"airflowBoard");int[] masks=board.getIntArray("masks");
+        var board=Objects.requireNonNull(desk.getAirflowPanel()).board();int[] masks=board.getIntArray("masks");
         if(board.getBoolean("won")) return current()!=null && current().stage().ready();
         if(masks.length!=9 || (waitingMasks!=null && Arrays.equals(masks,waitingMasks)))return false;
-        var buttons=layer.getElements().stream().filter(JournalButton.class::isInstance).map(JournalButton.class::cast)
+        var buttons=desk.getAirflowPanel().getElements().stream().filter(JournalButton.class::isInstance).map(JournalButton.class::cast)
             .filter(b -> b.getWidth()==30 && b.getHeight()==30).sorted(Comparator.comparingInt(JournalButton::getY).thenComparingInt(JournalButton::getX)).toList();
         require(buttons.size()==9,"airflow cells");
         for(int i=0;i<9;i++)if(masks[i]!=SOLUTION[i]) {waitingMasks=masks.clone();press(buttons.get(i));rotations++;break;}

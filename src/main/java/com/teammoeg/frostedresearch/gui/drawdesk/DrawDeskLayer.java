@@ -58,6 +58,20 @@ public class DrawDeskLayer extends UILayer {
 	@Override
 	public void addUIElements() {
 
+        var airflow = dd.getAirflowPanel();
+        if (airflow != null) {
+            add(airflow);
+            var title = new com.teammoeg.chorda.client.cui.widgets.TextField(this).setMaxWidth(108).setText(airflow.projectTitle());
+            title.setPosAndSize(16, 21, 108, 19);
+            add(title);
+            var help = new com.teammoeg.chorda.client.cui.widgets.TextField(this)
+                .setMaxWidth(108)
+                .setText(com.teammoeg.frostedresearch.knowledge.client.KnowledgePresentation.t(airflow.won() ? "research.airflow_won" : "research.airflow_explain"));
+            help.setPosAndSize(16, 42, 108, 44);
+            add(help);
+            return;
+        }
+
 		add(mgp);
 		HelpPanel hp = new HelpPanel(this);
 		hp.setPosAndSize(140, 19, 243, 170);

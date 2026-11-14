@@ -56,6 +56,7 @@ import java.util.*;
  */
 public final class M4ClientValidation {
     private static final boolean ENABLED = Boolean.getBoolean("frostedresearch.m4Validation");
+    private static final boolean DESK_ONLY = Boolean.getBoolean("frostedresearch.m4DeskOnly");
     private static final Path OUT = Path.of(System.getProperty("frostedresearch.m4Root", ".")).resolve("build/m4-client");
     private static final ResourceLocation PROJECT = id("the_winter_rescue:iron_bloomery");
     private static final ResourceLocation IDEA = id("the_winter_rescue:iron_smelting");
@@ -80,6 +81,7 @@ public final class M4ClientValidation {
     private static DrawDeskScreen desk;
     private static KnowledgeLayer layer;
     private static int[] pendingMasks;
+    private static int[] reopenedMasks;
     private static java.util.concurrent.CompletableFuture<Void> reload;
 
     private static ResourceLocation id(String text) { return new ResourceLocation(text); }
@@ -120,7 +122,8 @@ public final class M4ClientValidation {
     }
     private static JournalButton button(String key) {
         String title = Component.translatable("gui.frostedresearch.journal." + key).getString();
-        return layer.getElements().stream().filter(JournalButton.class::isInstance).map(JournalButton.class::cast)
+        var surface = desk.getAirflowPanel() == null ? layer : desk.getAirflowPanel();
+        return surface.getElements().stream().filter(JournalButton.class::isInstance).map(JournalButton.class::cast)
             .filter(b -> b.getTitle().getString().equals(title)).findFirst().orElseThrow(() -> new IllegalStateException("missing UI button " + title));
     }
     private static void click(String key) throws Exception { press(button(key)); }
@@ -196,7 +199,7 @@ public final class M4ClientValidation {
         checks.put("initial_all_three_locked", true);
         var s = service(); var source = new AcquisitionSource("client_fixture", Optional.of(p.getUUID()), level.getGameTime());
         s.produce(KnowledgeElement.idea(IDEA), source);
-        for (var item : List.of(Items.COPPER_INGOT, Items.COAL)) s.learn(ItemRetrieval.observe(p, new ItemStack(item)), source, KnowledgeService.Grant.NORMAL);
+        for (var item : List.of(Items.RAW_IRON, Items.COPPER_INGOT, Items.COAL)) s.learn(ItemRetrieval.observe(p, new ItemStack(item)), source, KnowledgeService.Grant.NORMAL);
         p.teleportTo(.5, 64, .5); p.getInventory().clearContent();
         p.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(FRContents.Blocks.DRAWING_DESK.get()));
         require(p.getMainHandItem().useOn(new UseOnContext(p, InteractionHand.MAIN_HAND, new BlockHitResult(Vec3.atCenterOf(DESK.below()), Direction.UP, DESK.below(), false))).consumesAction(), "desk placement");
@@ -253,12 +256,12 @@ public final class M4ClientValidation {
     }
     private static void observe(BlockPos pos) { FRNetwork.INSTANCE.sendToServer(new ObservationActionPacket(ObservationActionPacket.Action.BLOCK, pos, -1)); }
     private static void discard() { FRNetwork.INSTANCE.sendToServer(new ObservationActionPacket(ObservationActionPacket.Action.DISCARD)); }
-    private static CompoundTag board() throws Exception { return (CompoundTag) read(layer, "airflowBoard"); }
+    private static CompoundTag board() { return Objects.requireNonNull(desk.getAirflowPanel(), "desk airflow panel").board(); }
     private static void rotateNext() throws Exception {
         int[] masks = board().getIntArray("masks");
         if (masks.length != 9 || (pendingMasks != null && Arrays.equals(masks, pendingMasks))) return;
         pendingMasks = null;
-        var cells = layer.getElements().stream().filter(JournalButton.class::isInstance).map(JournalButton.class::cast)
+        var cells = desk.getAirflowPanel().getElements().stream().filter(JournalButton.class::isInstance).map(JournalButton.class::cast)
             .filter(b -> b.getWidth() == 30 && b.getHeight() == 30).sorted(Comparator.comparingInt(JournalButton::getY).thenComparingInt(JournalButton::getX)).toList();
         require(cells.size() == 9, "actual airflow UI cells");
         for (int i = 0; i < 9; i++) if (masks[i] != SOLUTION[i]) { pendingMasks = masks.clone(); press(cells.get(i)); rotations++; return; }
@@ -300,19 +303,38 @@ public final class M4ClientValidation {
                 case 3 -> { if (!openDesk()) return; focusProject(); next(); }
                 case 4 -> {
                     if (ticks < 15) return; require(project().staged() && project().startStatus().equals("LEARNABLE"), "formal staged project start");
-                    translated(project().title().getString()); require(project().accessConditions().size() == 3, "three formal start conditions");
+                    translated(project().title().getString()); require(project().accessConditions().size() == 4, "four formal start conditions");
                     project().accessConditions().forEach(c -> translated(c.title().getString()));
-                    if (!readingShots("01-formal-entry")) return; click("research.start"); next();
+                    if (!DESK_ONLY && !readingShots("01-formal-entry")) return; click("research.start"); next();
                 }
                 case 5 -> {
                     if (ticks < 15 || project().openRun().isBlank()) return; run = UUID.fromString(project().openRun());
-                    require(current().stage().id().equals("airflow") && !current().stage().ready(), "initial airflow stage"); checkStageText();
+                    require(current().stage().id().equals("airflow") && !current().stage().ready(), "initial airflow stage"); if (!DESK_ONLY) checkStageText();
                     require(!button("research.advance_stage").isEnabled(), "advance disabled before win");
-                    if (!readingShots("02-airflow-stage")) return; click("research.airflow_start"); next();
+                    if (!DESK_ONLY && !readingShots("02-airflow-stage")) return; click("research.airflow_start"); next();
                 }
-                case 6 -> { if (ticks < 15 || board().getIntArray("masks").length != 9) return; require(!board().getBoolean("won"), "unsolved initial board"); shot("03-airflow-board"); next(); }
+                case 6 -> {
+                    if (ticks < 15 || board().getIntArray("masks").length != 9) return;
+                    require(!board().getBoolean("won"), "unsolved initial board"); shot("03-airflow-board");
+                    if (DESK_ONLY) {
+                        require(desk.getKnowledgeLayer() == null && desk.getWidth() == 387 && desk.getHeight() == 203, "old drawing-desk surface, not journal details");
+                        var saved = board();
+                        reopenedMasks = saved.getIntArray("masks");
+                        desk.onKeyPressed(GLFW.GLFW_KEY_ESCAPE, 1, 0);
+                        require(desk.getAirflowPanel() == null && desk.getKnowledgeLayer() == layer && (Boolean) read(layer,"projectDetails"), "Esc returns to same project details");
+                        require((Integer) read(layer,"projectTab") == 2, "task tab retained");
+                        click("research.airflow_start");
+                        checks.put("reopened_board", saved.toString());
+                    }
+                    next();
+                }
                 case 7 -> {
                     if (ticks < 5) return;
+                    if (reopenedMasks != null) {
+                        if (board().getIntArray("masks").length != 9) return;
+                        require(Arrays.equals(reopenedMasks,board().getIntArray("masks")), "reopening retains the server board");
+                        reopenedMasks = null; checks.put("board_retained_on_reopen",true);
+                    }
                     if (board().getBoolean("won")) {
                         if (!current().stage().ready()) return;
                         checks.put("actual_ui_rotations", rotations); shot("04-airflow-won"); next();
@@ -323,7 +345,14 @@ public final class M4ClientValidation {
                     server(() -> { require(allowed(PROTOTYPE) && !allowed(BLOOMERY) && !allowed(TUYERE), "temporary-only access immediately after win"); checks.put("temporary_before_advance", true); });
                     click("research.airflow_back"); next();
                 }
-                case 9 -> { if (ticks < 15) return; checkStageText(); require(!current().stage().conclusions().isEmpty(), "airflow conclusion visible"); if (!readingShots("05-airflow-conclusion-and-advance")) return; click("research.advance_stage"); next(); }
+                case 9 -> { if (ticks < 15) return;
+                    if (DESK_ONLY) {
+                        require(desk.getAirflowPanel() == null && desk.getKnowledgeLayer() == layer && (Boolean) read(layer,"projectDetails"), "back button returns to same details after winning");
+                        require(current().stage().id().equals("airflow") && current().stage().ready(), "server win recorded without auto advance");
+                        checks.put("desk_only",true); checks.put("esc_and_button_return",true);
+                        shot("05-returned-to-project-tasks"); finish(null); return;
+                    }
+                    checkStageText(); require(!current().stage().conclusions().isEmpty(), "airflow conclusion visible"); if (!readingShots("05-airflow-conclusion-and-advance")) return; click("research.advance_stage"); next(); }
                 case 10 -> {
                     if (ticks < 15 || !current().stage().id().equals("trial")) return; checkStageText(); require(!current().stage().ready() && !button("research.complete").isEnabled(), "trial initially unfinished");
                     if (!readingShots("06-trial-stage")) return; mc.player.closeContainer(); server(M4ClientValidation::materialsAndWorld); next();

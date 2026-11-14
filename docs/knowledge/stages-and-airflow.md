@@ -1,7 +1,7 @@
 # 有序阶段、临时配方与风道试验
 
-- Status: `Current`（源码、38项完整服务端验证、独立进程重启及缺依赖检查；实际客户端待主协调验证）
-- Last verified: `2026-11-13`（原型模型/邻面遮挡按源码核对；本次外观待游戏内验收，阶段测试为11月12日结果）
+- Status: `Current`（源码与定向服务端回归核对；桌面风道已通过客户端检查，阶段持久化/重启基线见11月12日记录）
+- Last verified: `2026-11-14`（风道迁至绘图台桌面；其它验证范围见各节）
 - Scope: 有序研究阶段、变体固定、临时配方、绘图台风道、队伍试吹对象关联；正式整合包路线由 iron-bloomery.md 说明。
 - Code anchors: `StageDefinition`、`StageRunState`、`ResearchStages`、`KnowledgeService.advanceStage`、`AirflowGame`、`TuyereTrials`、`PendingResearchProofs`。
 
@@ -38,7 +38,7 @@ StageRunState 保存 order/current/visits/completed_tasks；visit 保存 variant
 
 风道是3×3固定可解管道拓扑，随机旋转五个可操作格；其余为墙。左侧入口到右侧出口连通即成功。
 绘图台独立保存 airflow_target/airflow_game，不改变旧纸牌记录。客户端仅发选择、旋转和重置，服务端判通路并写任务。
-风道不耗纸笔，无评分、时限或质量；关闭重开延续原盘面。
+风道不耗纸笔，无评分、时限或质量；关闭重开延续原盘面。客户端从知识札记任务按钮切到旧绘图台桌面，由 AirflowDeskPanel 占用连连看原来的区域（165,25,218×164），桌面整体仍为387×203。返回按钮或Esc恢复原项目详情、阶段任务标签和所选记录。小游戏期间不展示旧连连看/旧项目进度控件，桌面三种工具槽停用；玩家背包仍可用。
 
 prototype_tuyere 放置或空手选择任务时绑定 team/run/task/experiment，无个人 owner。多候选须选择。
 真实 Charcoal Pit BlockBellows.blow 前置接点按 FACING 查出风侧原型，当前队伍任务仍有效才转为真实 sandy_tuyere。
@@ -72,9 +72,11 @@ $env:JAVA_HOME='C:/Program Files/Java/jdk-17.0.2'
 
 ## M4 管道绘制
 
-风道九格保留原有 JournalButton 坐标、30×30 尺寸和点击操作；其上只渲染、不接管输入的 UIElement 按 N/E/S/W=1/2/4/8 从中心画四像素宽管道到格边，墙为暗色块，中行左右显示入口/出口箭头；成功后管线改 ACCENT 色。无新贴图或游戏规则变动。
+风道现由 AirflowDeskPanel 在旧桌面右侧绘制，九格使用30×30 JournalButton和2像素间隔；其上只渲染、不接管输入的 UIElement 按 N/E/S/W=1/2/4/8 从中心画四像素宽管道到格边，墙为暗色块，中行左右显示入口/出口箭头；成功后管线改 ACCENT 色。无新贴图或游戏规则变动。
 
-该绘制改动已通过本轮生产编译；实际截图与点击由 M5/M7 客户端接续，不能用服务端 GameTest 替代画面验收。
+KnowledgeClientState 把风道操作回复转交当前桌面面板；隐藏的札记也会在研究快照更新时刷新，返回后显示服务端真实进度。旧连连看数据不参与风道结算，小游戏规则与持久化格式不变。
+
+11月14日正式Playtest定向客户端检查确认桌面管线/按钮显示、真实C2S通关、重开盘面以及Esc/按钮返回原阶段任务页，见[当轮记录](../../diary/2026-11-14_13-57-10_research-material-families-and-desk-airflow.md)。材料与起始知识为夹具，不代表生存流程。
 
 ## M6 合并后的备用记录
 

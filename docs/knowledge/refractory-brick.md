@@ -1,11 +1,13 @@
 # 普通耐火砖与控温炉正式路线
 
 - Status: Verified：FH实现、正式数据、29项服务端测试、独立进程保存/恢复及完整客户端入口/实验通过；材料使用夹具，完整生存采集未实玩。
-- Last verified: 2026-11-14（砂砖必要、三原料辅助的联络配置；新入口客户端待重走）
+- Last verified: 2026-11-14（矿物形态标签与联络/开始条件核对；新入口客户端待重走）
 - Scope: refractory_firing 想法、refractory_brick 项目、controlled_refractory_production 单 Design；只增加自有炉批量工艺。
 - Anchors: [M5 采用决定](../../plans/2026-11-12_16-00-00_research-m5-controlled-furnace-decisions.md)、[正式项目](../../../TheWinterRescue/kubejs/data/the_winter_rescue/frostedresearch/knowledge/projects/refractory_brick.json)、[批量配方](../../../TheWinterRescue/kubejs/data/the_winter_rescue/recipes/research/refractory_brick_batch.json)。
 
 ## 开始与试烧
+
+高岭土、铝土矿各自按材料类别接受替代：原料、碎矿、粉末、矿块和冻土块的物品观察均可。类别内任取一种即可；同时掌握同类多个形态也只算一项前置/一次减时。标签分别为 `the_winter_rescue:research/kaolin_materials`、`bauxite_materials`，聚合 `forge:raw_materials/<矿物>`、`crushed_raw_materials/<矿物>`、`dusts/<矿物>`、`forge:<矿物>` 和对应 `*_permafrost`。物品获得触发也接受这两组形态；既有原料观察仍有效。
 
 获取高岭土、铝土矿或耐火黏土球，观察普通/高耐火砖物品或方块，或观察直接配方含砖的制品，都可触发构想。主动联络则先观察砂砖单砖或砂砖方块物品，学会后只把这份记录放到桌面，默认10秒。高岭土、铝土矿、黏土球观察是联络辅助，各减1秒；只需学会，不放到桌面。三项辅助齐全时7秒。构想正常自动入档，开始项目仍需构想、砂砖及三项原料观察全部掌握。砂砖通过 research/sandy_bricks 物品标签接受 charcoal_pit:sandy_brick_item 或 charcoal_pit:sandy_brick 任一种。现成耐火砖观察既是行为构想入口，也能提供后续参考，但获取构想和开始项目都不要求先有这项观察。
 

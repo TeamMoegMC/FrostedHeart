@@ -170,7 +170,7 @@ public final class KnowledgeLayer extends UILayer {
     public void opened() {
         refreshSnapshot();
         mode = Mode.READ;
-        projectDetails = airflowOpen = false;
+        projectDetails = false;
         chooseOpeningPage = true;
         chooseOpeningResearch();
         rebuild();
@@ -230,7 +230,6 @@ public final class KnowledgeLayer extends UILayer {
                     projectTab, tab -> {
                         projectTab = tab;
                         mode = Mode.READ;
-                        airflowOpen = false;
                         rebuild();
                     }, this::closeProjectDetails);
             frame.setPosAndSize(0, 0, getWidth(), getHeight());
@@ -461,57 +460,12 @@ public final class KnowledgeLayer extends UILayer {
     /**
      * A project's aims and requirements, with the actions its open run allows. The server judges every action.
      */
-    private CompoundTag airflowBoard = new CompoundTag();
-    private String airflowRun="", airflowTask="";
-    private boolean airflowOpen;
-    private void buildAirflowReading(int x,int w,int bottom) {
-        reading.text(List.of(t("research.airflow_explain"),t(airflowBoard.getBoolean("won") ? "research.airflow_won" : "research.airflow_rotate")));
-        reading.setHeight(Math.max(20,reading.getHeight()-140));
-        int[] masks=airflowBoard.getIntArray("masks");
-        int left=x+(w-96)/2,top=bottom-132;
-        for(int cell=0;cell<9;cell++) {
-            final int chosen=cell;int mask=masks.length==9 ? masks[cell] : 0;
-            button(left+(cell%3)*32,top+(cell/3)*32,30,30,Component.empty(),false,
-                () -> send(Action.ROTATE_AIRFLOW,List.of(),airflowRun,Integer.toString(chosen),"",airflowTask))
-                .setEnabled(mask!=0 && !airflowBoard.getBoolean("won"));
-        }
-        // Render only: the original nine 30x30 buttons retain all input and driver coordinates.
-        UIElement pipes=new UIElement(this) {
-            @Override public void render(GuiGraphics g,int px,int py,int width,int height,RenderingHint hint) {
-                int color=airflowBoard.getBoolean("won") ? ACCENT : INK;
-                for(int cell=0;cell<9;cell++) {
-                    int mask=masks.length==9 ? masks[cell] : 0;
-                    int bx=px+12+(cell%3)*32,by=py+(cell/3)*32,cx=bx+15,cy=by+15;
-                    if(mask==0) {g.fill(bx+8,by+8,bx+22,by+22,MUTED);continue;}
-                    g.fill(cx-2,cy-2,cx+2,cy+2,color);
-                    if((mask&1)!=0)g.fill(cx-2,by,cx+2,cy,color);
-                    if((mask&2)!=0)g.fill(cx,cy-2,bx+30,cy+2,color);
-                    if((mask&4)!=0)g.fill(cx-2,cy,cx+2,by+30,color);
-                    if((mask&8)!=0)g.fill(bx,cy-2,cx,cy+2,color);
-                }
-                int mid=py+47;
-                for(int ax:new int[]{px,px+108}) {
-                    g.fill(ax,mid-2,ax+10,mid+2,color);
-                    g.fill(ax+6,mid-5,ax+8,mid+5,color);
-                    g.fill(ax+8,mid-3,ax+10,mid+3,color);
-                    g.fill(ax+10,mid-1,ax+12,mid+1,color);
-                }
-            }
-        };
-        pipes.setPosAndSize(left-12,top,120,94);
-        pipes.setEnabled(false);
-        add(pipes);
-        button(x,bottom-27,w/2-2,20,t("research.airflow_reset"),true,
-            () -> send(Action.RESET_AIRFLOW,List.of(),airflowRun,"","",airflowTask)).setEnabled(!airflowBoard.getBoolean("won"));
-        button(x+w/2+2,bottom-27,w/2-2,20,t("research.airflow_back"),true,() -> {airflowOpen=false;rebuild();});
-    }
     private KnowledgeJournalData.Run selectedRun(String project) {
         var run=data.openRun(project,selectedRuns.get(project));
         if(run!=null)selectedRuns.put(project,run.id());
         return run;
     }
     private void buildResearchReading(int x, int w, int bottom) {
-        if(airflowOpen) { buildAirflowReading(x,w,bottom);return; }
         var project = researchProject(focusedProject);
         if (project == null) {
             reading.text(List.of(t(researchProjects().isEmpty() ? "research.empty" : "research.choose")));
@@ -665,8 +619,10 @@ public final class KnowledgeLayer extends UILayer {
         }
         if (requirement.type().equals("observation") || requirement.type().equals("minigame")) {
             if(requirement.type().equals("minigame")) button(x,y,w,19,t("research.airflow_start"),false,() -> {
-                airflowRun=run.id();airflowTask=requirement.id();airflowBoard=new CompoundTag();airflowOpen=true;
-                send(Action.START_AIRFLOW,List.of(),run.id(),"","",requirement.id());rebuild();
+                if (getParent() instanceof DrawDeskScreen desk) {
+                    var project = researchProject(run.project());
+                    desk.openAirflow(run.id(), requirement.id(), project == null ? t("research.airflow_start") : project.title());
+                }
             });else button(x,y,w,19,t("research.observe_target"),true,() -> {}).setEnabled(false);
             return;
         }
@@ -993,7 +949,6 @@ public final class KnowledgeLayer extends UILayer {
     private void switchPage(Page next) {
         chooseOpeningPage = false;
         projectDetails = false;
-        airflowOpen = false;
         closeGraphSheet();
         notice = Component.empty();
         rowsDirty = true;
@@ -1027,7 +982,7 @@ public final class KnowledgeLayer extends UILayer {
     }
 
     private void closeProjectDetails() {
-        projectDetails = airflowOpen = false;
+        projectDetails = false;
         mode = Mode.READ;
         rebuild();
     }
@@ -1042,11 +997,6 @@ public final class KnowledgeLayer extends UILayer {
             getLayerHolder().focusOn(null);
             mode = Mode.READ;
             surfaceChanged.run();
-            rebuild();
-            return true;
-        }
-        if (airflowOpen) {
-            airflowOpen = false;
             rebuild();
             return true;
         }
@@ -1106,7 +1056,7 @@ public final class KnowledgeLayer extends UILayer {
 
     public void receiveReply(CompoundTag payload) {
         if (projectDetails && payload.getString("message").equals("research.start.success")) projectTab = 2;
-        if(payload.contains("airflow")) { airflowBoard=payload.getCompound("airflow").copy();rebuild();return; }
+        if (payload.contains("airflow")) return; // Late reply after returning from the desk game.
         if (payload.contains("link_state")) {
             linkState = payload.getString("link_state"); linkElapsed = payload.getInt("link_elapsed"); linkDuration = payload.getInt("link_duration");
             if (linkState.equals("completed") || linkState.equals("cancelled")) {
@@ -1163,7 +1113,7 @@ public final class KnowledgeLayer extends UILayer {
             draftRemarks = "";
         }
         if (payload.getBoolean("calculate")) {
-            // The card game is on the drawing desk surface; the journal keeps its page for the return.
+            // The matching game is on the drawing desk surface; the journal keeps its page for the return.
             notices = List.copyOf(feedback);
             notice = feedback.isEmpty() ? Component.empty() : feedback.get(0);
             noticeTicks = 100;
