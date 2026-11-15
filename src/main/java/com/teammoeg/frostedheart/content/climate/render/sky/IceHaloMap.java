@@ -27,7 +27,8 @@ import java.util.List;
  * AZIMUTH_BINS by ELEVATION_BINS bins. Columns are the absolute azimuth from the sun over 0 to pi, since the display
  * is mirror symmetric, and rows are elevation from LOWEST_ELEVATION to the zenith in equal steps.
  * The table is blurred by the sun disc and by part of a sky texel, so one lookup per texel is enough.
- * Light of the oriented crystals that leaves below LOWEST_ELEVATION is dropped.
+ * Light of the oriented crystals that leaves below LOWEST_ELEVATION is dropped. The plates' mirror pillar is the
+ * exception while the sun is in the table, since its part below LOWEST_ELEVATION stays at the sun.
  * An instance keeps its table until it is built again, and a map that anything still reads must not be rebuilt.
  * The lookup is repeated in calculated_sky.fsh and must stay equal.
  */

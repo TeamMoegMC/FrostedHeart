@@ -41,8 +41,9 @@ public final class IceCrystalData {
     public static final int SIDE_MIRRORED_PATH = 1;
     public static final int END_TO_SIDE_PATH = 2;
     public static final int END_TO_END_PATH = 3;
-    public static final int OTHER_PATH = 4;
-    public static final int PATH_COUNT = 5;
+    public static final int END_MIRROR_PATH = 4;
+    public static final int OTHER_PATH = 5;
+    public static final int PATH_COUNT = 6;
     public static final int SCATTERING_ANGLE_BINS = 3600;
     private static final int CHANNELS = SkyAtmosphere.CHANNEL_COUNT;
     private static final String FOLDER = "ice_halos";

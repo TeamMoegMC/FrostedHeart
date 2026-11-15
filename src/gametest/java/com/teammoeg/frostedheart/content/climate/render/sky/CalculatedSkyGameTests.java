@@ -27,6 +27,7 @@ import net.minecraft.world.level.Level;
 import net.minecraftforge.gametest.GameTestHolder;
 import net.minecraftforge.gametest.PrefixGameTestTemplate;
 
+import java.util.Arrays;
 import java.util.function.DoubleUnaryOperator;
 
 /**
@@ -178,6 +179,49 @@ public final class CalculatedSkyGameTests {
     private static final double FULL_MOON_GREEN_FOG_STEPS_MAXIMUM = 55.0;
     private static final double NIGHT_SKY_STEPS_LIMIT = 64.0;
     private static final double NEW_MOON_STEPS_LIMIT = 0.5;
+    /**
+     * The sun elevations whose halo maps are checked for negative values, from below the horizon to well above it.
+     */
+    private static final double[] MIRROR_PILLAR_SUN_DEGREES = {
+            -6.0, -4.0, -3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0, 5.0, 8.0, 15.0, 30.0
+    };
+    private static final double MIRROR_PILLAR_MAP_SUN_DEGREES = -3.0;
+    private static final double MIRROR_PILLAR_ROW_LOWEST_DEGREES = 0.0;
+    private static final double MIRROR_PILLAR_ROW_HIGHEST_DEGREES = 12.0;
+    /**
+     * The pillar of plates spreads over about half a degree across, so its peak stays within the row that holds the
+     * sun's mirror image.
+     */
+    private static final double MIRROR_PILLAR_PEAK_TOLERANCE_DEGREES = 0.75;
+    private static final int MIRROR_PILLAR_SIDE_COLUMN = 8;
+    private static final double MIRROR_PILLAR_SIDE_RATIO = 4.0;
+    private static final String LEVEL_PLATE_NAME = "plates";
+    private static final String WOBBLING_PLATE_NAME = "wobbling plates";
+    private static final double[] MIRROR_PILLAR_CLOSED_FORM_SUN_DEGREES = {5.0, 10.0, 30.0};
+    /**
+     * The mean side area over the basal area of a level plate per unit of half height over radius, as the closed form
+     * of the level plate pillar holds it.
+     */
+    private static final double LEVEL_PLATE_SIDE_AREA = 1.47;
+    private static final double MIRROR_PILLAR_CLOSED_FORM_TOLERANCE = 0.03;
+    private static final double MIRROR_PILLAR_SUNSET_MINIMUM = 0.1;
+    // The traced mirrored share is 0.84 to 0.96 times the slab formula from sun -3 to 30 degrees, so 0.75 leaves room:
+    private static final double MIRROR_PILLAR_TRACED_LEAST_SHARE = 0.75;
+    private static final double[] MIRROR_PILLAR_INSIDE_SUN_DEGREES = {-3.0, 3.0, 5.0};
+    private static final double MIRROR_PILLAR_INSIDE_WEIGHT = 0.1;
+    // The map sums the pillar at row centers, so its part inside the map differs a little from the integral:
+    private static final double MIRROR_PILLAR_INSIDE_TOLERANCE = 0.005;
+    private static final double MIRROR_PILLAR_INSIDE_STEP_DEGREES = 0.001;
+    private static final double[] MIRROR_PILLAR_PRINT_SUN_DEGREES = {
+            -3.0, 0.0, 1.0, 2.0, 3.0, 5.0, 8.0, 10.0, 15.0, 20.0, 30.0
+    };
+    private static final double MIRROR_PILLAR_SPHERE_STEP_DEGREES = 0.01;
+    private static final double MIRROR_PILLAR_PHASE_SUN_DEGREES = 3.0;
+    private static final double MIRROR_PILLAR_PHASE_STEP_DEGREES = 0.02;
+    private static final double MIRROR_PILLAR_PHASE_ELEVATION_LIMIT_DEGREES = 60.0;
+    private static final double MIRROR_PILLAR_PHASE_SIDE_LIMIT_DEGREES = 15.0;
+    private static final double MIRROR_PILLAR_EXTRA_VARIANCE_DEGREES = 0.5;
+    private static final double MIRROR_PILLAR_PHASE_TOLERANCE = 0.03;
 
     @GameTest(template = "phase0a_empty", timeoutTicks = 100)
     public static void mieMatchesPublishedAndRayleighLimits(GameTestHelper helper) {
@@ -1301,6 +1345,215 @@ public final class CalculatedSkyGameTests {
     }
 
     /**
+     * The pillar that plates mirror into the halo map moves light out of the sun's bin, which must never take more
+     * than the data set gives the other paths, at any sun elevation from below the horizon to high above it.
+     */
+    @GameTest(template = "phase0a_empty", timeoutTicks = 400)
+    public static void mirrorPillarKeepsTheHaloMapNonNegative(GameTestHelper helper) {
+        IceCrystalData data = IceCrystalData.get();
+        double blurSigma = IceHaloMap.blurSigma(SkySettings.DEFAULT.actualTexelDegrees());
+        for (double sunElevationDegrees : MIRROR_PILLAR_SUN_DEGREES) {
+            IceHaloMap map = new IceHaloMap(data, Math.toRadians(sunElevationDegrees), blurSigma);
+            double lowest = Double.POSITIVE_INFINITY;
+            double highest = Double.NEGATIVE_INFINITY;
+            int lowestChannel = 0;
+            int lowestColumn = 0;
+            int lowestRow = 0;
+            for (int channel = 0; channel < SkyAtmosphere.CHANNEL_COUNT; channel++) {
+                for (int row = 0; row < IceHaloMap.ELEVATION_BINS; row++) {
+                    for (int column = 0; column < IceHaloMap.AZIMUTH_BINS; column++) {
+                        double value = map.value(channel, column, row);
+                        if (!(value >= lowest)) {
+                            lowest = value;
+                            lowestChannel = channel;
+                            lowestColumn = column;
+                            lowestRow = row;
+                        }
+                        highest = Math.max(highest, value);
+                    }
+                }
+            }
+            helper.assertTrue(Double.isFinite(lowest) && lowest >= 0.0 && Double.isFinite(highest),
+                    "The halo map at sun " + sunElevationDegrees + " degrees holds the lowest value " + lowest
+                            + " in channel " + lowestChannel + ", column " + lowestColumn + " and row " + lowestRow
+                            + " and the highest value " + highest + ", where every value should be finite and at "
+                            + "least 0");
+        }
+        helper.succeed();
+    }
+
+    /**
+     * The plates' mirror pillar stands at the sun's mirror image, three degrees up for a sun three degrees down, and
+     * falls off sideways far faster than it falls off along the vertical.
+     */
+    @GameTest(template = "phase0a_empty", timeoutTicks = 400)
+    public static void mirrorPillarPeaksAtTheSunsMirrorImage(GameTestHelper helper) {
+        IceCrystalData data = IceCrystalData.get();
+        double blurSigma = IceHaloMap.blurSigma(SkySettings.DEFAULT.actualTexelDegrees());
+        IceHaloMap map = new IceHaloMap(data, Math.toRadians(MIRROR_PILLAR_MAP_SUN_DEGREES), blurSigma);
+        int peakRow = -1;
+        for (int row = 0; row < IceHaloMap.ELEVATION_BINS; row++) {
+            double centerDegrees = Math.toDegrees(IceHaloMap.LOWEST_ELEVATION + (row + 0.5) * IceHaloMap.BIN_STEP);
+            if (centerDegrees < MIRROR_PILLAR_ROW_LOWEST_DEGREES
+                    || centerDegrees > MIRROR_PILLAR_ROW_HIGHEST_DEGREES) {
+                continue;
+            }
+            if (peakRow < 0 || map.value(SkyAtmosphere.GREEN_CHANNEL, 0, row)
+                    > map.value(SkyAtmosphere.GREEN_CHANNEL, 0, peakRow)) {
+                peakRow = row;
+            }
+        }
+        helper.assertTrue(peakRow >= 0, "The halo map at sun " + MIRROR_PILLAR_MAP_SUN_DEGREES + " degrees holds no "
+                + "row between " + MIRROR_PILLAR_ROW_LOWEST_DEGREES + " and " + MIRROR_PILLAR_ROW_HIGHEST_DEGREES
+                + " degrees of elevation");
+        double peakDegrees = Math.toDegrees(IceHaloMap.LOWEST_ELEVATION + (peakRow + 0.5) * IceHaloMap.BIN_STEP);
+        double mirrorDegrees = -MIRROR_PILLAR_MAP_SUN_DEGREES;
+        helper.assertTrue(Math.abs(peakDegrees - mirrorDegrees) <= MIRROR_PILLAR_PEAK_TOLERANCE_DEGREES,
+                "The mirror pillar of the sun at " + MIRROR_PILLAR_MAP_SUN_DEGREES + " degrees peaks at elevation "
+                        + peakDegrees + " degrees in row " + peakRow + ", not within "
+                        + MIRROR_PILLAR_PEAK_TOLERANCE_DEGREES + " degrees of the sun's mirror image at "
+                        + mirrorDegrees + " degrees");
+        double peakValue = map.value(SkyAtmosphere.GREEN_CHANNEL, 0, peakRow);
+        double sideValue = map.value(SkyAtmosphere.GREEN_CHANNEL, MIRROR_PILLAR_SIDE_COLUMN, peakRow);
+        helper.assertTrue(peakValue > MIRROR_PILLAR_SIDE_RATIO * sideValue, "The mirror pillar of the sun at "
+                + MIRROR_PILLAR_MAP_SUN_DEGREES + " degrees has the green value " + peakValue + " in column 0 of row "
+                + peakRow + " and " + sideValue + " in column " + MIRROR_PILLAR_SIDE_COLUMN + ", not more than "
+                + MIRROR_PILLAR_SIDE_RATIO + " times as much");
+        helper.succeed();
+    }
+
+    /**
+     * The pillar's shape from IceMirror adds up to the share that level plates reflect as a slab, and the phase that
+     * spreads it over the sky integrates back to that share. Wobbling plates keep a pillar at sunset, where level
+     * plates reflect nothing. The traced share of the data set lies a little below it, since part of the light inside
+     * a plate leaves through a side face.
+     */
+    @GameTest(template = "phase0a_empty", timeoutTicks = 400)
+    public static void mirrorPillarMatchesTheLevelPlateClosedForm(GameTestHelper helper) {
+        IceCrystalData data = IceCrystalData.get();
+        IceCrystalData.Crystal plates = plateCrystal(data, LEVEL_PLATE_NAME);
+        IceCrystalData.Crystal wobblingPlates = plateCrystal(data, WOBBLING_PLATE_NAME);
+        for (double sunElevationDegrees : MIRROR_PILLAR_CLOSED_FORM_SUN_DEGREES) {
+            double sunElevation = Math.toRadians(sunElevationDegrees);
+            for (int channel = 0; channel < SkyAtmosphere.CHANNEL_COUNT; channel++) {
+                double sphere = mirrorPillarSphereTotal(plates, channel, sunElevation);
+                double reflectance = IceMirror.slabReflectance(Math.sin(sunElevation),
+                        IceHaloFormulas.refractiveIndex(channel));
+                double closedForm = Math.sin(sunElevation) * reflectance / (Math.sin(sunElevation)
+                        + LEVEL_PLATE_SIDE_AREA * plates.halfHeightOverRadius() * Math.cos(sunElevation));
+                helper.assertTrue(Math.abs(sphere / closedForm - 1.0) < MIRROR_PILLAR_CLOSED_FORM_TOLERANCE,
+                        "The " + LEVEL_PLATE_NAME + " pillar at sun " + sunElevationDegrees + " degrees holds "
+                                + sphere + " of the light in channel " + channel + ", the level plate closed form "
+                                + closedForm);
+            }
+        }
+        for (int channel = 0; channel < SkyAtmosphere.CHANNEL_COUNT; channel++) {
+            double sphere = mirrorPillarSphereTotal(wobblingPlates, channel, 0.0);
+            helper.assertTrue(sphere > MIRROR_PILLAR_SUNSET_MINIMUM, "The " + WOBBLING_PLATE_NAME + " pillar at sun 0 "
+                    + "degrees holds " + sphere + " of the light in channel " + channel + ", not above "
+                    + MIRROR_PILLAR_SUNSET_MINIMUM);
+        }
+        double[][] pathShares = new double[SkyAtmosphere.CHANNEL_COUNT][IceCrystalData.PATH_COUNT];
+        for (IceCrystalData.Crystal crystal : new IceCrystalData.Crystal[] {plates, wobblingPlates}) {
+            for (double sunElevationDegrees : MIRROR_PILLAR_PRINT_SUN_DEGREES) {
+                double sunElevation = Math.toRadians(sunElevationDegrees);
+                data.pathShares(crystal, sunElevationDegrees, pathShares);
+                for (int channel = 0; channel < SkyAtmosphere.CHANNEL_COUNT; channel++) {
+                    double sphere = mirrorPillarSphereTotal(crystal, channel, sunElevation);
+                    double traced = pathShares[channel][IceCrystalData.END_MIRROR_PATH];
+                    LogUtils.getLogger().info("MirrorPillar share " + crystal.name() + " sun " + sunElevationDegrees
+                            + " channel " + channel + " sphere " + sphere + " traced " + traced + " other "
+                            + pathShares[channel][IceCrystalData.OTHER_PATH]);
+                    helper.assertTrue(traced <= sphere && traced >= MIRROR_PILLAR_TRACED_LEAST_SHARE * sphere,
+                            "The " + crystal.name() + " pillar at sun " + sunElevationDegrees + " degrees holds "
+                                    + sphere + " of the light in channel " + channel + " from IceMirror and "
+                                    + traced + " in the data set, outside " + MIRROR_PILLAR_TRACED_LEAST_SHARE
+                                    + " to 1 times");
+                }
+            }
+        }
+        double sunElevation = Math.toRadians(MIRROR_PILLAR_PHASE_SUN_DEGREES);
+        double extraVariance = Math.pow(Math.toRadians(MIRROR_PILLAR_EXTRA_VARIANCE_DEGREES), 2.0);
+        double[] integrated = new double[2];
+        for (IceCrystalData.Crystal crystal : new IceCrystalData.Crystal[] {wobblingPlates, plates}) {
+            double sphere = mirrorPillarSphereTotal(crystal, SkyAtmosphere.GREEN_CHANNEL, sunElevation);
+            integrateMirrorPillarPhase(crystal, SkyAtmosphere.GREEN_CHANNEL, sunElevation, 0.0, integrated);
+            double withoutExtra = integrated[0];
+            double peakWithoutExtra = integrated[1];
+            integrateMirrorPillarPhase(crystal, SkyAtmosphere.GREEN_CHANNEL, sunElevation, extraVariance, integrated);
+            double withExtra = integrated[0];
+            double peakWithExtra = integrated[1];
+            String where = "The " + crystal.name() + " pillar at sun " + MIRROR_PILLAR_PHASE_SUN_DEGREES + " degrees";
+            helper.assertTrue(Math.abs(withoutExtra / sphere - 1.0) < MIRROR_PILLAR_PHASE_TOLERANCE, where
+                    + " has the phase integral " + withoutExtra + " without extra variance, the sphere total "
+                    + sphere);
+            helper.assertTrue(Math.abs(withExtra / sphere - 1.0) < MIRROR_PILLAR_PHASE_TOLERANCE, where
+                    + " has the phase integral " + withExtra + " with the extra variance of "
+                    + MIRROR_PILLAR_EXTRA_VARIANCE_DEGREES + " degrees, the sphere total " + sphere);
+            helper.assertTrue(peakWithExtra < peakWithoutExtra, where + " has the phase peak " + peakWithExtra
+                    + " with the extra variance of " + MIRROR_PILLAR_EXTRA_VARIANCE_DEGREES
+                    + " degrees, not below the " + peakWithoutExtra + " without it");
+        }
+        helper.succeed();
+    }
+
+    /**
+     * With all of a plate kind's light on the mirrored path, the pillar takes the part of IceMirror's shape that lies
+     * inside the map and the sun's bin keeps the rest, so the map holds all of the light while the sun is in it. With
+     * the sun below the map only the pillar's part inside the map is there.
+     */
+    @GameTest(template = "phase0a_empty", timeoutTicks = 200)
+    public static void mirrorPillarMovesThePartOfItsShapeInsideTheMap(GameTestHelper helper) {
+        IceCrystalData data = IceCrystalData.get();
+        IceHaloFormulas formulas = new IceHaloFormulas(data);
+        double[][] maps = new double[SkyAtmosphere.CHANNEL_COUNT][IceHaloMap.AZIMUTH_BINS * IceHaloMap.ELEVATION_BINS];
+        double[][] pathShares = new double[SkyAtmosphere.CHANNEL_COUNT][IceCrystalData.PATH_COUNT];
+        for (int channel = 0; channel < SkyAtmosphere.CHANNEL_COUNT; channel++) {
+            pathShares[channel][IceCrystalData.END_MIRROR_PATH] = 1.0;
+        }
+        for (String name : new String[] {LEVEL_PLATE_NAME, WOBBLING_PLATE_NAME}) {
+            IceCrystalData.Crystal crystal = plateCrystal(data, name);
+            double tiltSigma = Math.toRadians(crystal.tiltDegrees());
+            for (double sunElevationDegrees : MIRROR_PILLAR_INSIDE_SUN_DEGREES) {
+                double sunElevation = Math.toRadians(sunElevationDegrees);
+                double[] sun = {Math.cos(sunElevation), Math.sin(sunElevation), 0.0};
+                for (double[] map : maps) {
+                    Arrays.fill(map, 0.0);
+                }
+                formulas.addCrystal(maps, crystal, sun, MIRROR_PILLAR_INSIDE_WEIGHT, pathShares);
+                int sunBin = IceHaloMap.binOf(sun[0], sun[1], sun[2]);
+                double crossSection = IceMirror.crossSection(sunElevation, tiltSigma, crystal.halfHeightOverRadius());
+                for (int channel = 0; channel < SkyAtmosphere.CHANNEL_COUNT; channel++) {
+                    double total = 0.0;
+                    double atSun = 0.0;
+                    for (int bin = 0; bin < maps[channel].length; bin++) {
+                        double mass = maps[channel][bin] * IceHaloMap.binSolidAngle(bin);
+                        total += mass;
+                        if (bin == sunBin) {
+                            atSun = mass;
+                        }
+                    }
+                    double index = IceHaloFormulas.refractiveIndex(channel);
+                    double inside = mirrorPillarShapeInsideMap(crystal, sunElevation, crossSection, index)
+                            / IceMirror.pillarShare(sunElevation, tiltSigma, crossSection, index);
+                    double expectedPillar = MIRROR_PILLAR_INSIDE_WEIGHT * inside;
+                    String where = "The " + name + " pillar at sun " + sunElevationDegrees + " degrees in channel "
+                            + channel;
+                    helper.assertTrue(Math.abs(total - atSun - expectedPillar)
+                                    <= MIRROR_PILLAR_INSIDE_TOLERANCE * MIRROR_PILLAR_INSIDE_WEIGHT,
+                            where + " puts " + (total - atSun) + " outside the sun's bin, where its shape puts "
+                                    + expectedPillar + " inside the map");
+                    double expectedTotal = sunBin >= 0 ? MIRROR_PILLAR_INSIDE_WEIGHT : expectedPillar;
+                    helper.assertTrue(Math.abs(total - expectedTotal)
+                                    <= MIRROR_PILLAR_INSIDE_TOLERANCE * MIRROR_PILLAR_INSIDE_WEIGHT,
+                            where + " leaves " + total + " in the map, expected " + expectedTotal);
+                }
+            }
+        }
+        helper.succeed();
+    }
+
+    /**
      * A change of the texel size keeps the tables and builds the halo profile, the halo maps, and the views again.
      * A change of the nanobots then keeps the halo profile and maps, builds the tables again, and fills the views that
      * the first state dropped. A change of any setting that rebuilds nothing, such as the exposure, starts no build.
@@ -1424,5 +1677,88 @@ public final class CalculatedSkyGameTests {
             sum += phase.applyAsDouble(-1.0 + 2.0 * (step + 0.5) / steps);
         }
         return sum * 2.0 / steps * 2.0 * Math.PI;
+    }
+
+    /**
+     * The plate crystal kind with the name, which the closed form of the level plate pillar applies to.
+     */
+    /**
+     * The part of the pillar's shape that lies inside the halo map, from IceMirror.pillarStrength over the vertical.
+     */
+    private static double mirrorPillarShapeInsideMap(IceCrystalData.Crystal crystal, double sunElevation,
+            double crossSection, double refractiveIndex) {
+        double heightSigma = IceMirror.pillarHeightSigma(Math.toRadians(crystal.tiltDegrees()));
+        double lowest = Math.max(IceHaloMap.LOWEST_ELEVATION, -sunElevation - 6.0 * heightSigma);
+        double highest = Math.min(0.5 * Math.PI, -sunElevation + 6.0 * heightSigma);
+        double step = Math.toRadians(MIRROR_PILLAR_INSIDE_STEP_DEGREES);
+        double sum = 0.0;
+        for (double viewElevation = lowest + 0.5 * step; viewElevation < highest; viewElevation += step) {
+            double offset = (viewElevation + sunElevation) / heightSigma;
+            sum += IceMirror.pillarStrength(viewElevation, sunElevation, crossSection, refractiveIndex)
+                    * Math.exp(-0.5 * offset * offset) / (Math.sqrt(2.0 * Math.PI) * heightSigma);
+        }
+        return sum * step;
+    }
+
+    private static IceCrystalData.Crystal plateCrystal(IceCrystalData data, String name) {
+        for (IceCrystalData.Crystal crystal : data.crystals()) {
+            if (crystal.orientation() == IceCrystalData.Orientation.PLATE && crystal.name().equals(name)) {
+                return crystal;
+            }
+        }
+        throw new GameTestAssertException("The ice crystal data holds no plate crystal named " + name);
+    }
+
+    /**
+     * The share of the light hitting plates that the pillar holds over the whole sphere at a sun elevation, from the
+     * midpoint rule over the view elevation of the pillar's strength times its Gaussian along the vertical.
+     */
+    private static double mirrorPillarSphereTotal(IceCrystalData.Crystal crystal, int channel, double sunElevation) {
+        double tiltSigma = Math.toRadians(crystal.tiltDegrees());
+        double heightSigma = IceMirror.pillarHeightSigma(tiltSigma);
+        double crossSection = IceMirror.crossSection(sunElevation, tiltSigma, crystal.halfHeightOverRadius());
+        double refractiveIndex = IceHaloFormulas.refractiveIndex(channel);
+        double step = Math.toRadians(MIRROR_PILLAR_SPHERE_STEP_DEGREES);
+        int steps = (int) Math.round(Math.PI / step);
+        double sum = 0.0;
+        for (int index = 0; index < steps; index++) {
+            double viewElevation = -0.5 * Math.PI + (index + 0.5) * step;
+            double offset = (viewElevation + sunElevation) / heightSigma;
+            double density = Math.exp(-0.5 * offset * offset) / (Math.sqrt(2.0 * Math.PI) * heightSigma);
+            sum += IceMirror.pillarStrength(viewElevation, sunElevation, crossSection, refractiveIndex) * density;
+        }
+        return sum * step;
+    }
+
+    /**
+     * Integrates the pillar's phase over the view elevation and the angle sideways from the vertical through the sun
+     * with dv * dside as the solid angle, and writes the integral first and the peak of the grid second.
+     */
+    private static void integrateMirrorPillarPhase(IceCrystalData.Crystal crystal, int channel, double sunElevation,
+            double extraVariance, double[] result) {
+        double tiltSigma = Math.toRadians(crystal.tiltDegrees());
+        double halfHeightOverRadius = crystal.halfHeightOverRadius();
+        double refractiveIndex = IceHaloFormulas.refractiveIndex(channel);
+        double step = Math.toRadians(MIRROR_PILLAR_PHASE_STEP_DEGREES);
+        int elevationSteps = (int) Math.round(2.0 * MIRROR_PILLAR_PHASE_ELEVATION_LIMIT_DEGREES
+                / MIRROR_PILLAR_PHASE_STEP_DEGREES);
+        int sideSteps = (int) Math.round(2.0 * MIRROR_PILLAR_PHASE_SIDE_LIMIT_DEGREES
+                / MIRROR_PILLAR_PHASE_STEP_DEGREES);
+        double sum = 0.0;
+        double peak = 0.0;
+        for (int elevationIndex = 0; elevationIndex < elevationSteps; elevationIndex++) {
+            double viewElevation = Math.toRadians(-MIRROR_PILLAR_PHASE_ELEVATION_LIMIT_DEGREES
+                    + (elevationIndex + 0.5) * MIRROR_PILLAR_PHASE_STEP_DEGREES);
+            for (int sideIndex = 0; sideIndex < sideSteps; sideIndex++) {
+                double sideAngle = Math.toRadians(-MIRROR_PILLAR_PHASE_SIDE_LIMIT_DEGREES
+                        + (sideIndex + 0.5) * MIRROR_PILLAR_PHASE_STEP_DEGREES);
+                double phase = IceMirror.pillarPhase(viewElevation, sideAngle, sunElevation, tiltSigma,
+                        halfHeightOverRadius, refractiveIndex, extraVariance);
+                sum += phase;
+                peak = Math.max(peak, phase);
+            }
+        }
+        result[0] = sum * step * step;
+        result[1] = peak;
     }
 }

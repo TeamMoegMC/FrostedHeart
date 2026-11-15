@@ -19,12 +19,15 @@
 
 package com.teammoeg.frostedheart.content.climate.render.sky;
 
+import java.util.Arrays;
+
 /**
  * Halo arcs of oriented ice crystals from formulas, splatted into the bins of IceHaloMap.
  * Light leaving through side faces lies on the cone around the crystal axis through the sun, at the in-plane
  * deviation of the side face table for Bravais' effective index. Light entering an end face is traced exactly in 3D,
  * and light passing from end face to end face is followed through its side face reflections in the plane.
- * Each axis is weighted by its projected side area. Single threaded and deterministic. An instance reuses its scratch
+ * Each axis is weighted by its projected side area. Plates mirror the sun into a pillar from IceMirror, and the other
+ * paths go to the sun's bin. Single threaded and deterministic. An instance reuses its scratch
  * buffers, so one instance must not be shared between threads.
  */
 final class IceHaloFormulas {
@@ -39,6 +42,7 @@ final class IceHaloFormulas {
     private static final int COLUMN_MIRROR_ROTATIONS = 2;
     private static final int MAXIMUM_PLATE_AXES = 196;
     private static final double PLATE_TILT_STEP_RADIANS = Math.toRadians(0.5);
+    private static final double PILLAR_SPAN_SIGMAS = 6.0;
     private static final int COLUMN_AXES = (int) Math.round(Math.PI / COLUMN_AZIMUTH_STEP_RADIANS);
     private static final int MAXIMUM_AXES = Math.max(MAXIMUM_PLATE_AXES, COLUMN_AXES);
     private static final int PRISM_OUTPUT_CAPACITY = Math.max(Math.max(
@@ -110,6 +114,10 @@ final class IceHaloFormulas {
     private final double[] faceViewY = new double[FACE_ANGLE_STEPS];
     private final double[] faceViewZ = new double[FACE_ANGLE_STEPS];
     private final double[] faceWeights = new double[FACE_ANGLE_STEPS];
+    private final double[] mirroredShares = new double[CHANNELS];
+    private final double[] pillarShares = new double[CHANNELS];
+    private final double[] pillarScales = new double[CHANNELS];
+    private final double[] rowStrengths = new double[CHANNELS];
     private final double[] coneBase = new double[4];
     private final double[] perpendicular = new double[3];
     private final Axis[] axes = new Axis[MAXIMUM_AXES];
@@ -177,11 +185,86 @@ final class IceHaloFormulas {
                         crystal.halfHeightOverRadius(), parry ? 1 : mirrorRotations, parry);
             }
         }
+        Arrays.fill(mirroredShares, 0.0);
+        if (crystal.orientation() == IceCrystalData.Orientation.PLATE) {
+            addMirrorPillar(maps, crystal, Math.asin(Math.max(-1.0, Math.min(1.0, sun[1]))), weight, pathShares);
+        }
         int sunBin = IceHaloMap.binOf(sun[0], sun[1], sun[2]);
         if (sunBin >= 0) {
             for (int channel = 0; channel < CHANNELS; channel++) {
-                maps[channel][sunBin] += weight * pathShares[channel][IceCrystalData.OTHER_PATH]
+                double atSun = pathShares[channel][IceCrystalData.END_MIRROR_PATH]
+                        + pathShares[channel][IceCrystalData.OTHER_PATH];
+                maps[channel][sunBin] += (weight * atSun - mirroredShares[channel])
                         / IceHaloMap.binSolidAngle(sunBin);
+            }
+        }
+    }
+
+    /**
+     * Moves the light that the end faces of plates mirror from the sun into the pillar, as far as the pillar lies in
+     * the map, and writes what each channel moved into mirroredShares. The data set gives the mirrored share, and
+     * IceMirror the shape it spreads over. The part of the pillar below the map stays at the sun.
+     */
+    private void addMirrorPillar(double[][] maps, IceCrystalData.Crystal crystal, double sunElevation, double weight,
+            double[][] pathShares) {
+        double tiltSigma = Math.toRadians(crystal.tiltDegrees());
+        double crossSection = IceMirror.crossSection(sunElevation, tiltSigma, crystal.halfHeightOverRadius());
+        Arrays.fill(pillarShares, 0.0);
+        splatMirrorPillar(maps, sunElevation, tiltSigma, crossSection, false);
+        for (int channel = 0; channel < CHANNELS; channel++) {
+            double whole = IceMirror.pillarShare(sunElevation, tiltSigma, crossSection, REFRACTIVE_INDEX[channel]);
+            double insideShare = whole > 0.0 ? Math.min(1.0, pillarShares[channel] / whole) : 0.0;
+            mirroredShares[channel] = weight * pathShares[channel][IceCrystalData.END_MIRROR_PATH] * insideShare;
+            pillarScales[channel] = pillarShares[channel] > 0.0 ? mirroredShares[channel] / pillarShares[channel]
+                    : 0.0;
+        }
+        splatMirrorPillar(maps, sunElevation, tiltSigma, crossSection, true);
+    }
+
+    /**
+     * Goes over the bins the pillar covers, with its mass over each bin from Gaussian masses along and across.
+     * Without adding it only sums the masses per unit of light hitting plates into pillarShares. With adding it adds
+     * each mass times pillarScales into the maps.
+     */
+    private void splatMirrorPillar(double[][] maps, double sunElevation, double tiltSigma, double crossSection,
+            boolean add) {
+        double heightSigma = IceMirror.pillarHeightSigma(tiltSigma);
+        double center = -sunElevation;
+        int firstRow = Math.max(0, IceHaloMap.rowOfElevation(center - PILLAR_SPAN_SIGMAS * heightSigma));
+        int lastRow = Math.min(IceHaloMap.ELEVATION_BINS - 1,
+                IceHaloMap.rowOfElevation(center + PILLAR_SPAN_SIGMAS * heightSigma));
+        for (int row = firstRow; row <= lastRow; row++) {
+            double lower = IceHaloMap.LOWEST_ELEVATION + row * IceHaloMap.BIN_STEP;
+            double upper = Math.min(Math.PI / 2.0, lower + IceHaloMap.BIN_STEP);
+            double rowMass = IceMirror.gaussianMass((lower - center) / heightSigma, (upper - center) / heightSigma);
+            if (rowMass <= 0.0) {
+                continue;
+            }
+            double elevation = 0.5 * (lower + upper);
+            for (int channel = 0; channel < CHANNELS; channel++) {
+                rowStrengths[channel] = rowMass
+                        * IceMirror.pillarStrength(elevation, sunElevation, crossSection, REFRACTIVE_INDEX[channel]);
+            }
+            double columnWidth = IceHaloMap.BIN_STEP * Math.cos(elevation)
+                    / IceMirror.pillarWidthSigma(elevation, sunElevation, tiltSigma);
+            for (int column = 0; column < IceHaloMap.AZIMUTH_BINS; column++) {
+                double inner = column * columnWidth;
+                if (inner > PILLAR_SPAN_SIGMAS) {
+                    break;
+                }
+                double columnMass = 2.0 * IceMirror.gaussianMass(inner, inner + columnWidth);
+                if (columnMass <= 0.0) {
+                    continue;
+                }
+                int bin = column + row * IceHaloMap.AZIMUTH_BINS;
+                for (int channel = 0; channel < CHANNELS; channel++) {
+                    double mass = rowStrengths[channel] * columnMass;
+                    if (add) {
+                        maps[channel][bin] += mass * pillarScales[channel] * IceHaloMap.inverseBinSolidAngle(bin);
+                    } else {
+                        pillarShares[channel] += mass;
+                    }
+                }
             }
         }
     }
