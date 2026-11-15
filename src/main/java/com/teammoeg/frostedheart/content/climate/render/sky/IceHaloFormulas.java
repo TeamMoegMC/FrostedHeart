@@ -117,6 +117,7 @@ final class IceHaloFormulas {
     private final double[] mirroredShares = new double[CHANNELS];
     private final double[] pillarShares = new double[CHANNELS];
     private final double[] pillarScales = new double[CHANNELS];
+    private final double[] mirrorLobeScales = new double[CHANNELS];
     private final double[] rowStrengths = new double[CHANNELS];
     private final double[] coneBase = new double[4];
     private final double[] perpendicular = new double[3];
@@ -145,6 +146,14 @@ final class IceHaloFormulas {
 
     static double refractiveIndex(int channel) {
         return REFRACTIVE_INDEX[channel];
+    }
+
+    /**
+     * The factor on IceMirror.pillarPhase that gives the mirror pillar of the crystal kind added last per steradian
+     * over the whole sky, inside the map and below it, or 0 for a kind that is not a plate.
+     */
+    double mirrorLobeScale(int channel) {
+        return mirrorLobeScales[channel];
     }
 
     /**
@@ -186,6 +195,7 @@ final class IceHaloFormulas {
             }
         }
         Arrays.fill(mirroredShares, 0.0);
+        Arrays.fill(mirrorLobeScales, 0.0);
         if (crystal.orientation() == IceCrystalData.Orientation.PLATE) {
             addMirrorPillar(maps, crystal, Math.asin(Math.max(-1.0, Math.min(1.0, sun[1]))), weight, pathShares);
         }
@@ -215,6 +225,8 @@ final class IceHaloFormulas {
             double whole = IceMirror.pillarShare(sunElevation, tiltSigma, crossSection, REFRACTIVE_INDEX[channel]);
             double insideShare = whole > 0.0 ? Math.min(1.0, pillarShares[channel] / whole) : 0.0;
             mirroredShares[channel] = weight * pathShares[channel][IceCrystalData.END_MIRROR_PATH] * insideShare;
+            mirrorLobeScales[channel] = whole > 0.0
+                    ? weight * pathShares[channel][IceCrystalData.END_MIRROR_PATH] / whole : 0.0;
             pillarScales[channel] = pillarShares[channel] > 0.0 ? mirroredShares[channel] / pillarShares[channel]
                     : 0.0;
         }

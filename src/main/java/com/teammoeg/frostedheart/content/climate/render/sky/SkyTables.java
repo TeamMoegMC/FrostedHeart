@@ -441,6 +441,7 @@ public final class SkyTables {
         double[] groundRadiance = view.groundRadiance();
         double[] sunTransmittance = scratchSunTransmittance;
         transmittance.sample(SkyAtmosphere.GROUND_RADIUS, sun[1], sunTransmittance);
+        transmittance.sample(SkyAtmosphere.CAMERA_RADIUS, sun[1], view.lightTransmittance());
         double[] profileIrradiance = scratchProfileIrradiance;
         double[] mapIrradiance = scratchMapIrradiance;
         haloProfile.irradiance(sun, ice, profileIrradiance, scratchRingSums, scratchSamples);

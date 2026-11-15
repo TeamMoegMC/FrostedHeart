@@ -38,6 +38,10 @@ public final class IceHaloMap {
     public static final double LOWEST_ELEVATION = Math.toRadians(-2.0);
     public static final int ELEVATION_BINS = (int) Math.ceil((Math.PI / 2.0 - LOWEST_ELEVATION) / BIN_STEP);
     public static final double SUN_RADIUS_RADIANS = Math.toRadians(0.2665);
+    /**
+     * The plate kinds of the data set, in its order, whose mirror lobe scale the map keeps.
+     */
+    public static final int MIRROR_KINDS = 2;
     private static final int CHANNELS = SkyAtmosphere.CHANNEL_COUNT;
     private static final int BIN_COUNT = AZIMUTH_BINS * ELEVATION_BINS;
     private static final double TEXEL_BLUR_FRACTION = 0.45;
@@ -103,7 +107,9 @@ public final class IceHaloMap {
     }
 
     private double sunElevationRadians;
+    private double blurSigma;
     private final float[] values = new float[BIN_COUNT * CHANNELS];
+    private final double[][] mirrorLobeScales = new double[MIRROR_KINDS][CHANNELS];
 
     /**
      * An empty map for build to fill.
@@ -124,6 +130,10 @@ public final class IceHaloMap {
      */
     void build(Workspace workspace, double sunElevationRadians, double blurSigma) {
         this.sunElevationRadians = sunElevationRadians;
+        this.blurSigma = blurSigma;
+        for (double[] scales : mirrorLobeScales) {
+            Arrays.fill(scales, 0.0);
+        }
         IceCrystalData data = workspace.data;
         double[] sun = workspace.sun;
         sun[0] = Math.cos(sunElevationRadians);
@@ -136,6 +146,7 @@ public final class IceHaloMap {
         }
         double refracted = 1.0 - SkyAtmosphere.ICE_DIFFRACTION_FRACTION;
         List<IceCrystalData.Crystal> crystals = data.crystals();
+        int plateKind = 0;
         for (int index = 0; index < crystals.size(); index++) {
             IceCrystalData.Crystal crystal = crystals.get(index);
             if (crystal.orientation() == IceCrystalData.Orientation.RANDOM) {
@@ -144,6 +155,12 @@ public final class IceHaloMap {
             data.pathShares(crystal, sunElevationDegrees, workspace.pathShares);
             workspace.formulas.addCrystal(accumulated, crystal, sun, refracted * data.shareOf(crystal),
                     workspace.pathShares);
+            if (crystal.orientation() == IceCrystalData.Orientation.PLATE && plateKind < MIRROR_KINDS) {
+                for (int channel = 0; channel < CHANNELS; channel++) {
+                    mirrorLobeScales[plateKind][channel] = workspace.formulas.mirrorLobeScale(channel);
+                }
+                plateKind++;
+            }
         }
         blurElevation(accumulated, workspace.elevationBlurred, workspace.kernel, blurSigma);
         blurAzimuth(workspace.elevationBlurred, values, workspace.extended, workspace.kernel, blurSigma);
@@ -162,6 +179,22 @@ public final class IceHaloMap {
 
     public double sunElevationRadians() {
         return sunElevationRadians;
+    }
+
+    /**
+     * The blur the map was built with, as a standard deviation in radians.
+     */
+    public double blurSigma() {
+        return blurSigma;
+    }
+
+    /**
+     * The factor on IceMirror.pillarPhase that gives the mirror pillar of a plate kind per steradian over the whole
+     * sky, of which the map holds the part above LOWEST_ELEVATION. The kind is its place among the plate kinds of the
+     * data set.
+     */
+    public double mirrorLobeScale(int kind, int channel) {
+        return mirrorLobeScales[kind][channel];
     }
 
     /**

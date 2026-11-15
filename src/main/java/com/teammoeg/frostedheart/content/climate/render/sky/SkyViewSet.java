@@ -156,6 +156,19 @@ public final class SkyViewSet {
         }
     }
 
+    /**
+     * Writes the share of the light's beam that reaches the eye into the result, blended as horizonDisplayColor blends
+     * the radiance, times the light scale.
+     */
+    public void lightTransmittance(double sunWeight, double depthWeight, double[] lightScale, double[] result) {
+        for (int channel = 0; channel < CHANNELS; channel++) {
+            double transmittance = blend(views[slot(0, 0)].lightTransmittance()[channel],
+                    views[slot(0, 1)].lightTransmittance()[channel], views[slot(1, 0)].lightTransmittance()[channel],
+                    views[slot(1, 1)].lightTransmittance()[channel], sunWeight, depthWeight);
+            result[channel] = transmittance * lightScale[channel];
+        }
+    }
+
     private static double blend(double lowDepthLowSun, double lowDepthHighSun, double highDepthLowSun,
             double highDepthHighSun, double sunWeight, double depthWeight) {
         double lowDepth = lowDepthLowSun + (lowDepthHighSun - lowDepthLowSun) * sunWeight;

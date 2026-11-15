@@ -76,6 +76,7 @@ public final class CalculatedSkyClientCommand {
                         .then(literal("debug").then(Commands.argument("mode",
                                 IntegerArgumentType.integer(0, LightPillarRenderer.LAST_DEBUG_MODE))
                                 .executes(CalculatedSkyClientCommand::setDebugMode))))
+                .then(literal("dust").executes(CalculatedSkyClientCommand::dust))
                 .then(set);
         CalculatedSkyScreenshots.addCommands(command);
         registerCommand(event.getDispatcher(), command);
@@ -108,6 +109,7 @@ public final class CalculatedSkyClientCommand {
             CalculatedSkyRenderer.clearFailure();
             LightPillarSources.clearFailure();
             LightPillarRenderer.clearFailure();
+            DustGlitterRenderer.clearFailure();
         }
         return status(context);
     }
@@ -161,6 +163,12 @@ public final class CalculatedSkyClientCommand {
                 Minecraft.getInstance().gameRenderer.getMainCamera().getPosition())) {
             send(context, line);
         }
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private static int dust(CommandContext<CommandSourceStack> context) {
+        send(context, DiamondDustExtinction.describe(Minecraft.getInstance().getFrameTime()));
+        send(context, DustGlitterRenderer.describe());
         return Command.SINGLE_SUCCESS;
     }
 

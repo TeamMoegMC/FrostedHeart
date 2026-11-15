@@ -216,10 +216,32 @@ public final class CalculatedSkyRenderer {
     }
 
     /**
+     * The state the sky draws from, or null before the first build. A build that finishes in render replaces it.
+     */
+    @Nullable
+    static SkyState drawnState() {
+        return builder.state();
+    }
+
+    /**
+     * The texture of the halo profile of the drawn state, with the tumbling crystals in its first row.
+     */
+    static int haloProfileTexture() {
+        return textures.haloProfileTexture();
+    }
+
+    /**
+     * The texture of the low (0) or the high (1) halo map of the drawn state.
+     */
+    static int haloMapTexture(int slot) {
+        return textures.haloTexture(slot);
+    }
+
+    /**
      * The factor on each channel of the state's radiance for the frame's light. The returned array is reused by the
      * next call.
      */
-    private static double[] lightScale(SkyState current, SkyFrame frame) {
+    static double[] lightScale(SkyState current, SkyFrame frame) {
         SkyLight light = frame.light();
         for (int channel = 0; channel < CHANNELS; channel++) {
             reusedLightScale[channel] = light.radianceScale(channel, current.lightKind());
@@ -246,17 +268,17 @@ public final class CalculatedSkyRenderer {
         return (float) Math.max(0.0, Math.min(1.0, (lightElevation - lowElevation) / (highElevation - lowElevation)));
     }
 
-    private static float viewBlend(SkyState current, SkyFrame frame) {
+    static float viewBlend(SkyState current, SkyFrame frame) {
         return blendWeight(frame.light().elevationRadians(), current.views().lowSunElevationRadians(),
                 current.views().highSunElevationRadians());
     }
 
-    private static float haloBlend(SkyState current, SkyFrame frame) {
+    static float haloBlend(SkyState current, SkyFrame frame) {
         return blendWeight(frame.light().elevationRadians(), current.lowHalo().sunElevationRadians(),
                 current.highHalo().sunElevationRadians());
     }
 
-    private static double depthBlend(SkyState current, SkyFrame frame) {
+    static double depthBlend(SkyState current, SkyFrame frame) {
         return IceDepthGrid.blendWeight(frame.iceDepth(), current.depthIndex());
     }
 

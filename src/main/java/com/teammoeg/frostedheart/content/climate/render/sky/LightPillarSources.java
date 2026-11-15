@@ -152,8 +152,12 @@ public final class LightPillarSources {
     /**
      * The bytes the client thread allocated so far, or 0 where the JVM does not count them.
      */
-    private static long allocatedBytes() {
+    static long allocatedBytes() {
         return ALLOCATION_COUNTER != null ? ALLOCATION_COUNTER.getCurrentThreadAllocatedBytes() : 0L;
+    }
+
+    static boolean countsAllocations() {
+        return ALLOCATION_COUNTER != null;
     }
 
     @Nullable

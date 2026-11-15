@@ -80,6 +80,17 @@ public enum SkySetting {
     PILLAR_DEPTH_BAND("pillarDepthBand", "Distance in blocks on each side of a light over which the scene in front "
             + "of it hides its light pillar. Nearer scene hides the pillar, farther scene shows it.", Rebuilds.NOTHING,
             0.5, 0.0, 4.0),
+    DUST_GLITTER_BRIGHTNESS("dustGlitterBrightness", "Brightness of the glints of diamond dust near the eye, as a "
+            + "factor on their calibrated brightness. 0 draws none.", Rebuilds.NOTHING, 1.0, 0.0, 10.0),
+    DUST_GLITTER_FLOOR("dustGlitterFloor", "Brightness of the glints of diamond dust in every lit direction, as a "
+            + "share of their brightness on the 22 degree halo. The halos, sun dogs, and pillars add to it.",
+            Rebuilds.NOTHING, 0.03, 0.0, 1.0),
+    DUST_GLITTER_COUNT("dustGlitterCount", "Points drawn for the glints of diamond dust in a cube of 32 blocks around "
+            + "the eye. Those within 16 blocks show where the dust is dense. 0 draws none.", Rebuilds.NOTHING, 16384.0,
+            0.0, 65536.0),
+    DUST_GLITTER_SIZE("dustGlitterSize", "Width in pixels at half its peak of the core of a glint of diamond dust, in "
+            + "a window 1080 pixels high. Larger windows scale it. Bright glints saturate and show wider.",
+            Rebuilds.NOTHING, 3.0, 0.5, 8.0),
     TEXEL_DEGREES("texelDegrees", "Size of the sky's square texels in degrees. They are fixed to the sky like the "
             + "sun's texture. 0 draws a smooth sky.", Rebuilds.HALOS, 0.5, 0.0, 5.0);
 

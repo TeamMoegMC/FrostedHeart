@@ -68,6 +68,9 @@ public class FHShaders extends Shaders {
     private static final String[] LIGHT_PILLAR_DEFINES = {"#define VERTEX_SHADER\n", "#define FRAGMENT_SHADER\n",
             "#define VERTEX_SHADER\n#define CELL_ATLAS\n", "#define FRAGMENT_SHADER\n#define CELL_ATLAS\n"};
     private static boolean lightPillarsUnloadOnReload;
+    private static Shader DIAMOND_DUST_VERTEX;
+    private static Shader DIAMOND_DUST_FRAGMENT;
+    private static boolean diamondDustUnloadOnReload;
     public static Shader getCalculatedSky() {
         if (CALCULATED_SKY == null) {
             runAndAddReloadListener(() -> CALCULATED_SKY = load(Shader.ShaderType.FRAGMENT, FHMain.rl("calculated_sky")));
@@ -152,6 +155,52 @@ public class FHShaders extends Shaders {
             LIGHT_PILLARS_FRAGMENT = null;
             LIGHT_PILLAR_CELLS_VERTEX = null;
             LIGHT_PILLAR_CELLS_FRAGMENT = null;
+        }
+    }
+
+    /**
+     * The vertex stage of diamond_dust.glsl. Both stages come from that one file, compiled with a define for each.
+     */
+    public static Shader getDiamondDustVertex() {
+        loadDiamondDust();
+        return DIAMOND_DUST_VERTEX;
+    }
+
+    public static Shader getDiamondDustFragment() {
+        loadDiamondDust();
+        return DIAMOND_DUST_FRAGMENT;
+    }
+
+    private static void loadDiamondDust() {
+        if (!diamondDustUnloadOnReload) {
+            addReloadListener(FHShaders::unloadDiamondDust);
+            diamondDustUnloadOnReload = true;
+        }
+        if (DIAMOND_DUST_VERTEX == null) {
+            String source = readShaderSource(FHMain.rl("shaders/diamond_dust.glsl"));
+            Shader vertex = Shader.loadShader(Shader.ShaderType.VERTEX, "#version 150\n#define VERTEX_SHADER\n" + source);
+            Shader fragment;
+            try {
+                fragment = Shader.loadShader(Shader.ShaderType.FRAGMENT,
+                        "#version 150\n#define FRAGMENT_SHADER\n" + source);
+            } catch (RuntimeException exception) {
+                vertex.deleteShader();
+                throw exception;
+            }
+            DIAMOND_DUST_VERTEX = vertex;
+            DIAMOND_DUST_FRAGMENT = fragment;
+        }
+    }
+
+    /**
+     * Deletes the diamond dust stages after a resource reload, so the next use compiles them from the new resources.
+     */
+    private static void unloadDiamondDust() {
+        if (DIAMOND_DUST_VERTEX != null) {
+            DIAMOND_DUST_VERTEX.deleteShader();
+            DIAMOND_DUST_FRAGMENT.deleteShader();
+            DIAMOND_DUST_VERTEX = null;
+            DIAMOND_DUST_FRAGMENT = null;
         }
     }
 

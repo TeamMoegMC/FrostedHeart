@@ -38,6 +38,7 @@ public final class SkyView {
     private final float[] ice = new float[TABLE_LENGTH];
     private final double[] groundRadiance = new double[CHANNELS];
     private final double[] meanHorizonRadiance = new double[CHANNELS];
+    private final double[] lightTransmittance = new double[CHANNELS];
 
     public double sunElevationRadians() {
         return sunElevationRadians;
@@ -61,6 +62,14 @@ public final class SkyView {
 
     public double[] meanHorizonRadiance() {
         return meanHorizonRadiance;
+    }
+
+    /**
+     * The share of the light's beam that reaches the eye, with the light diffracted by ice counted as transmitted.
+     * It is 0 while the light is below the eye's horizon.
+     */
+    public double[] lightTransmittance() {
+        return lightTransmittance;
     }
 
     /**
