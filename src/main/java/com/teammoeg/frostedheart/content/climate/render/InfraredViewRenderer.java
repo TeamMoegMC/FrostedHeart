@@ -186,6 +186,16 @@ public final class InfraredViewRenderer {
         return true;
     }
 
+    /** The natural value uploads merge at a block of the current window: INVALID outside it, for air, or not computed yet. */
+    static short naturalAt(int x, int y, int z) {
+        x -= (textureCenterChunkX - PAGE_RADIUS) * BLOCKS_PER_PAGE_AXIS;
+        y -= (textureCenterSectionY - PAGE_RADIUS) * BLOCKS_PER_PAGE_AXIS;
+        z -= (textureCenterChunkZ - PAGE_RADIUS) * BLOCKS_PER_PAGE_AXIS;
+        if (x < 0 || x >= TEXTURE_SIZE || y < 0 || y >= TEXTURE_SIZE || z < 0 || z >= TEXTURE_SIZE)
+            return InfraredBrickCodec.INVALID_TEMPERATURE;
+        return natural.at(InfraredNaturalFill.texel(x, y, z));
+    }
+
     public static int frameTemperatureTexture() { return frameTexture; }
     public static int frameOriginX() { return frameOriginX; }
     public static int frameOriginY() { return frameOriginY; }

@@ -16,8 +16,12 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CampfireBlock;
 
-/** Matches actual wire values to GPU values, with independent backend and framebuffer evidence. */
+/**
+ * Matches GPU values to the actual wire values, and where the wire has none to the client's natural temperature, with
+ * independent backend and framebuffer evidence.
+ */
 final class InfraredPhysicalE2eClient {
+    private static final BlockPos WALL=new BlockPos(-4,67,0);
     private static Path root;
     private static String role,phase;
     private static int round,frames,heatedQ;
@@ -38,7 +42,7 @@ final class InfraredPhysicalE2eClient {
         if(phase.equals("done"))return true;
         if(phase.equals("baseline")) {
             var fire=mc.level.getBlockState(new BlockPos(-4,66,-1));
-            if(!mc.level.getBlockState(new BlockPos(-4,67,0)).is(Blocks.IRON_BLOCK)
+            if(!mc.level.getBlockState(WALL).is(Blocks.IRON_BLOCK)
                     ||!fire.is(Blocks.CAMPFIRE)||fire.getValue(CampfireBlock.LIT))return false;
             if(++frames<25)return false;
             baselineRgb=pixels("baseline");InfraredViewRenderer.toggleInfraredView();
@@ -60,27 +64,37 @@ final class InfraredPhysicalE2eClient {
         String id=match.group(1);
         JsonObject replies=JsonParser.parseString(Files.readString(wireFile)).getAsJsonObject();
         if(!replies.has(id))return false;
-        JsonObject expected=replies.getAsJsonObject(id);
-        short[] gpu=InfraredE2eClient.gpu(status);
-        if(gpu[0]!=expected.get("warm").getAsShort()||gpu[1]!=expected.get("cold").getAsShort())
-            throw new IllegalStateException("GPU differs from actual server wire for display "+id+": "+gpu[0]+","+gpu[1]+" expected="+expected);
+        JsonObject wire=replies.getAsJsonObject(id);
+        short wireWarm=wire.get("warm").getAsShort(),wireCold=wire.get("cold").getAsShort();
+        short[] gpu=InfraredE2eClient.gpu(status),natural=InfraredE2eClient.natural();
         Map<String,Object> observed=new LinkedHashMap<>();
         observed.put("phase",phase);observed.put("elapsedMs",(System.nanoTime()-opened)/1_000_000.0);
         observed.put("status",status);observed.put("gpuWarmQ",gpu[0]);observed.put("gpuColdQ",gpu[1]);
-        observed.put("wire",expected);observed.put("backend",state);
+        observed.put("naturalWarmQ",natural[0]);observed.put("naturalColdQ",natural[1]);
+        observed.put("wire",wire);observed.put("backend",state);
         write(role+"-round-"+round+"-physics-latest.json",observed);
+        // Where the wire has no value the texture shows the client's natural temperature; INVALID only if that is unknown too.
+        if(gpu[0]!=(wireWarm!=Short.MIN_VALUE?wireWarm:natural[0])||gpu[1]!=(wireCold!=Short.MIN_VALUE?wireCold:natural[1]))
+            throw new IllegalStateException("GPU differs from the actual server wire, or from the natural base where the wire has none, for display "+id+": "+observed);
+        // The client computes the server's naturalAir of the same block, to one 0.25 C step.
+        if(natural[0]!=Short.MIN_VALUE&&Math.abs(natural[0]-state.get("naturalWarmQ").getAsInt())>1
+                ||natural[1]!=Short.MIN_VALUE&&Math.abs(natural[1]-state.get("naturalColdQ").getAsInt())>1)
+            throw new IllegalStateException("Client natural temperature differs from the server's naturalAir: "+observed);
         int baseline=state.get("baselineQ").getAsInt();
-        if(coolingOnly&&state.get("missingTicks").getAsLong()>=240&&gpu[0]!=Short.MIN_VALUE)
+        if(coolingOnly&&state.get("missingTicks").getAsLong()>=240&&wireWarm!=Short.MIN_VALUE)
             throw new IllegalStateException("Naturally missing server material remains in infrared after 12 seconds: "+observed);
         boolean ready=switch(phase) {
-            case "heated" -> state.get("materialHeated").getAsBoolean()&&gpu[0]>=baseline+2;
+            case "heated" -> state.get("materialHeated").getAsBoolean()&&wireWarm!=Short.MIN_VALUE&&gpu[0]>=baseline+2;
             case "cooled" -> state.get("airCooled").getAsBoolean()&&(coolingOnly?
-                    state.get("materialCooled").getAsBoolean()&&(gpu[0]==Short.MIN_VALUE||gpu[0]<=state.get("peakMaterialQ").getAsInt()-1)
+                    state.get("materialCooled").getAsBoolean()&&(wireWarm==Short.MIN_VALUE||gpu[0]<=state.get("peakMaterialQ").getAsInt()-1)
                     :gpu[0]!=heatedQ&&gpu[0]!=Short.MIN_VALUE);
-            case "natural-cleared" -> state.get("naturalCleared").getAsBoolean()&&gpu[0]==Short.MIN_VALUE;
-            case "removed" -> mc.level.getBlockState(new BlockPos(-4,67,0)).isAir()&&gpu[0]==Short.MIN_VALUE;
-            case "restored" -> mc.level.getBlockState(new BlockPos(-4,67,0)).is(Blocks.IRON_BLOCK)
-                    &&(gpu[0]==Short.MIN_VALUE||gpu[0]<=baseline+2);
+            // A retired material falls back to the iron block's natural temperature.
+            case "natural-cleared" -> state.get("naturalCleared").getAsBoolean()&&wireWarm==Short.MIN_VALUE&&natural[0]!=Short.MIN_VALUE;
+            // Air has no natural temperature, so a removed block leaves no value.
+            case "removed" -> mc.level.getBlockState(WALL).isAir()&&gpu[0]==Short.MIN_VALUE;
+            // A new block shows its natural temperature, or a fresh material value without the old heat.
+            case "restored" -> mc.level.getBlockState(WALL).is(Blocks.IRON_BLOCK)
+                    &&(wireWarm==Short.MIN_VALUE?natural[0]!=Short.MIN_VALUE:wireWarm<=baseline+2);
             default -> false;
         };
         if(!ready){geometryReady=0;return false;}

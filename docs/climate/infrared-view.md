@@ -1,7 +1,7 @@
 # 红外视野的数据路径与现场诊断
 
 - Status: `Current; local WAN timeout reproduced and fixed; reported overseas-client cause remains unconfirmed`
-- Last verified: `2026-11-15`（新增“自然温度底色”“色标”“非地形像素”，缺失值不着色；其余内容 `2026-11-08`，“验证边界”中的记录描述当时的蓝色占位）
+- Last verified: `2026-11-15`（新增“自然温度底色”“色标”“非地形像素”，缺失值不着色；真实客户端E2E默认场景按自然温度底色重新通过；其余内容 `2026-11-08`，“验证边界”中2026-11-08的记录描述当时的蓝色占位）
 - Scope: 红外温度来源、自然温度底色、色标、传输内容、接收驱动分片、渐进显示、生命周期及客户端/服务端诊断
 - Code anchors: `FHRequestInfraredViewDataSyncPacket`, `FHContinueInfraredViewPacket`, `InfraredTransfers`, `InfraredCapture`, `InfraredBrickCodec`, `InfraredNaturalClimate`, `InfraredNaturalFill`, `InfraredDisplayCache`, `InfraredViewRenderer`, `InfraredDiagnostics`, `InfraredClientCommand`, `InfraredServerCommand`
 
@@ -126,6 +126,42 @@ camera-relative 位置，再读144³纹理。这类表面正好落在方块边�
 
 ## 验证边界
 
+### 自然温度底色以后的真实客户端E2E
+
+`2026-11-15`起，服务端没有发送值的方块在GPU纹理里显示客户端算出的自然温度（见[自然温度底色](#自然温度底色)），下面
+2026-11-08记录中“材料退出或删除后GPU变为INVALID”的期望不再成立。`InfraredPhysicalE2eClient`和脚本现在这样检查：
+
+- 暖点`-4,67,0`与冷点`4,67,0`的GPU值：最后提交的display在代理独立解析的线上回复里有值时等于线上值；没有值时等于
+  客户端在该方块的自然温度（`InfraredViewRenderer.naturalAt`，即上传时合并的`InfraredNaturalFill`值）；两者都没有
+  （空气、窗口外或尚未算到）才是INVALID。
+- 客户端自然温度与服务端对同一方块的`WorldTemperature.naturalAir`（`physical-state.json`的`naturalWarmQ`/`naturalColdQ`）
+  相差不超过一个0.25°C量化步长。E2E服务端关闭了昼夜循环，气候时钟不走，整轮都可以这样对照。
+- `heated`要求线上有材料值；`removed`时空气没有自然温度，GPU仍为INVALID、像素不着色；`restored`显示自然温度，或
+  不高于基线+0.5°C的新材料值；`--cooling-only`的`natural-cleared`要求线上变为INVALID、GPU回到铁块的自然温度，
+  12秒检查改为“客户端已提交的线上值仍是材料值”。
+- 帧颜色按当前色标（`InfraredPhysicalE2eClient.color`），只有GPU值为INVALID时期望未着色画面。人工解析场景
+  （`InfraredE2eClient`）的冷色像素只计蓝到紫（`b>r+32`且`b>g+64`）：约−11°C的青蓝自然底色不计入，否则底色本身
+  就满足−40°C参考场的像素条件。
+- 脚本的线上解析：FIRST片在epoch之后带可选的`InfraredNaturalClimate`，现在跳过它并把大小记为`naturalBytes`；
+  `infrared_view_s2c`的消息编号按`FHNetwork.registerMessages`的注册顺序从源码算出（`CBaseNetwork`从1依次编号），
+  不再写死。11-10以后新增的城镇消息已把它从61推到66，写死的61会把别的消息当成红外回复解析。
+
+`2026-11-15`默认真实篝火场景（`physical-campfires-3s-rtt-16KiBps`）按这些期望通过，含启动导出约2分43秒，两个客户端
+均通过。暖点铁块的材料基线为−10.01°C（q=−40）；点火后线上与GPU同为−9.50°C，熄火后为−9.25°C。冷点`4,67,0`整轮
+线上没有值，GPU显示自然温度−10.00°C，旧期望正是在这里误报失败。两点的客户端自然温度与服务端`naturalAir`都是
+−10.00°C（q=−40）。删除后线上、客户端自然温度与GPU均为INVALID；重新放置后线上仍没有值，GPU回到自然温度−10.00°C
+（慢客户端判定时服务端已有LIVE −10.00°C的新材料，还没进入已提交的display）。帧颜色与期望色的误差：heated 0.45、
+restored 0.62（上限60），与未着色画面分别相差113、115。慢连接只建立一个TCP会话，红外回复帧15个、最大正文921B、
+最大帧543B、合计4752B；服务端没有Timed out。运行环境为macOS 15.0.1 arm64、Apple M3 Max（OpenGL 4.1 Metal）、
+Java 17.0.20、Forge 47.3.0开发启动、Embeddium 0.3.31-beta.53、Oculus 1.7.0，配置为源码默认值。数字见
+[验证摘要](validation/infrared-physical-e2e-2026-11-15.json)。
+
+本轮观察到：每个非空回复的第一片都带约165B的自然气候表。`knownNaturalRevision`只让本来为空的回复保持为空，
+修订号相同的非空回复照发。慢连接15个回复的正文（压缩前）共8405B，其中自然气候表2475B，约29%。本轮没有改生产代码。
+
+本轮没有重跑`--cooling-only`和`--analytic-stress-only`；后者冷色像素判定的修改尚未在真实客户端上运行过。本节以下
+2026-11-08的记录按当时写成：当时没有自然温度底色，缺失值显示蓝色占位。
+
 ### 持续开启红外时的自然冷却
 
 `--cooling-only`使用露天单个真实煤燃料篝火，解析场为0；目标铁块保持原位，点火/熄灭之外不改动它，客户端保持红外开启，不调用resync或重连。2026-11-08的两轮均通过：开发图形库组合以及整合包的Embeddium0.3.31/Oculus1.8.0组合。此处仍采用Forge47.3.0开发启动，不能等同于完整整合包或远端运行。
@@ -142,7 +178,7 @@ camera-relative 位置，再读144³纹理。这类表面正好落在方块边�
 
 本轮慢客户端最大温度回复正文770B、经实际Minecraft压缩及Forge封装后的最大帧515B，整轮红外服务端下行（含ACK）3352B。它不包含其他游戏数据、C2S、TCP/IP头或重传，也不是所有大型基地的上限。该场景的数据量不能与约2MB的人工全窗口解析负载混称。
 
-本地复现入口为`python Scripts/run-infrared-network-e2e.py --java "C:/Program Files/Java/jdk-17/bin/java.exe"`，默认运行真实篝火/连续Air场景，只写`build/infrared-network-e2e/`。脚本通过独立init脚本导出当前工作区Forge启动参数，逐次准备后运行专用服和两个隐藏窗口客户端。`--root`指定运行目录；`--offline`使用已缓存依赖；`--gradle-init`可追加现有构建环境配置。`--analytic-stress-only`单独运行人工参考和传输压力测试：300ms RTT、3s RTT、3s RTT+16KiB/s全窗口、同限制下192个重叠解析场，以及快客户端关闭红外的单慢观察者场景。这些解析场轮次记录40→60°C、删除恢复、GL_R16I读回及PNG颜色变化，渐进显示另记录preview；不代表连续Air的供热模型或典型流量。代理模拟TCP传播延迟和限速，不注入丢包或模拟重传。
+本地复现入口为`python Scripts/run-infrared-network-e2e.py --java "C:/Program Files/Java/jdk-17/bin/java.exe"`（`--java`默认取`$JAVA_HOME/bin/java`，Windows上为`java.exe`），默认运行真实篝火/连续Air场景，只写`build/infrared-network-e2e/`。脚本通过独立init脚本导出当前工作区Forge启动参数，逐次准备后运行专用服和两个隐藏窗口客户端。`--root`指定运行目录；`--offline`使用已缓存依赖；`--gradle-init`可追加现有构建环境配置。`--analytic-stress-only`单独运行人工参考和传输压力测试：300ms RTT、3s RTT、3s RTT+16KiB/s全窗口、同限制下192个重叠解析场，以及快客户端关闭红外的单慢观察者场景。这些解析场轮次记录40→60°C、删除恢复、GL_R16I读回及PNG颜色变化，渐进显示另记录preview；不代表连续Air的供热模型或典型流量。代理模拟TCP传播延迟和限速，不注入丢包或模拟重传。
 
 此前带宽与状态测试覆盖服务器查询、编解码、窗口镜像和事务逻辑。2026-11-08新增真实专用服、两个真实客户端、保序TCP延迟/限速代理、GL_R16I读回和PNG验证。旧版在300ms RTT、3s RTT和3s RTT+16KiB/s的570328B场景能显示、升温及删除恢复；192个重叠参考场产生1987907B/三个旧分片时，慢客户端尚未收到第一片即被服务器判定Timed out，而快客户端正常。该本地故障支持修复发送排队，但不能单独确认它就是那位国外玩家遇到的全部原因；现场是否同时发生连接超时尚未核实。
 
