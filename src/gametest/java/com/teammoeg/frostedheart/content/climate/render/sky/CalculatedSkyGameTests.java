@@ -19,9 +19,11 @@
 
 package com.teammoeg.frostedheart.content.climate.render.sky;
 
+import com.mojang.logging.LogUtils;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestAssertException;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.gametest.GameTestHolder;
 import net.minecraftforge.gametest.PrefixGameTestTemplate;
 
@@ -67,6 +69,29 @@ public final class CalculatedSkyGameTests {
     private static final double[] DAYLIGHT_SUN_DEGREES = {
             90.0, 45.0, 30.0, 20.0, 12.0, 5.0, 2.0, 0.0, -2.0, -6.0, -12.0, -18.0
     };
+    private static final double[] SKY_LIGHT_ANGLES = {
+            0.0, 0.3, 1.0, Math.PI / 2.0, 2.0, Math.PI, 4.0, 3.0 * Math.PI / 2.0, 5.5, 2.0 * Math.PI - 0.01
+    };
+    /**
+     * Covers the day time rounded to the whole tick, which moves the sun by at most half of the 0.018 degrees it
+     * travels in a tick.
+     */
+    private static final double ROUND_TRIP_TOLERANCE_DEGREES = 0.01;
+    private static final double ROUND_TRIP_LOWEST_SUN_DEGREES = -18.0;
+    private static final double ROUND_TRIP_SUN_STEP_DEGREES = 0.25;
+    private static final int ROUND_TRIP_STEPS = 432;
+    private static final double MIRROR_LOWEST_SUN_DEGREES = -90.0;
+    private static final double MIRROR_SUN_STEP_DEGREES = 0.5;
+    private static final int MIRROR_STEPS = 360;
+    private static final long NOON_DAY_TIME = 6000;
+    private static final long MIDNIGHT_DAY_TIME = 18000;
+    private static final long SUNSET_DAY_TIME = 12785;
+    private static final long SUNRISE_DAY_TIME = 23215;
+    /**
+     * The day time that the setting and the rising time of one elevation add up to, each rounded to a tick.
+     */
+    private static final long MIRROR_DAY_TIME = 12000;
+    private static final long MIRROR_DAY_TIME_TOLERANCE = 1;
 
     @GameTest(template = "phase0a_empty", timeoutTicks = 100)
     public static void mieMatchesPublishedAndRayleighLimits(GameTestHelper helper) {
@@ -441,6 +466,132 @@ public final class CalculatedSkyGameTests {
         helper.assertTrue(redOverBlueAt2 > 10.0 * redOverBlueAt30,
                 "Red over blue of the sun is " + redOverBlueAt2 + " at 2 degrees and " + redOverBlueAt30
                         + " at 30 degrees");
+        helper.succeed();
+    }
+
+    @GameTest(template = "phase0a_empty", timeoutTicks = 100)
+    public static void skyLightPutsTheMoonOppositeTheSun(GameTestHelper helper) {
+        SkyLight sun = new SkyLight();
+        SkyLight moon = new SkyLight();
+        for (double angle : SKY_LIGHT_ANGLES) {
+            sun.set(SkyLight.Kind.SUN, angle, 1.0);
+            moon.set(SkyLight.Kind.MOON, angle, 0.25);
+            String where = "At the time of day angle " + angle;
+            helper.assertTrue(sun.kind() == SkyLight.Kind.SUN, where + " the sun's kind is " + sun.kind()
+                    + " instead of SUN");
+            helper.assertTrue(moon.kind() == SkyLight.Kind.MOON, where + " the moon's kind is " + moon.kind()
+                    + " instead of MOON");
+            helper.assertTrue(sun.scale() == 1.0, where + " the sun's scale is " + sun.scale() + " instead of 1");
+            helper.assertTrue(moon.scale() == 0.25, where + " the moon's scale is " + moon.scale()
+                    + " instead of 0.25");
+            helper.assertTrue(sun.elevationRadians() == Math.asin(Math.cos(angle)), where + " the sun's elevation is "
+                    + sun.elevationRadians() + " radians instead of the " + Math.asin(Math.cos(angle))
+                    + " that the cosine of the angle gives");
+            helper.assertTrue(sun.x() == (float) -Math.sin(angle), where + " the sun's x is " + sun.x()
+                    + " instead of " + (float) -Math.sin(angle));
+            helper.assertTrue(sun.y() == (float) Math.cos(angle), where + " the sun's y is " + sun.y()
+                    + " instead of " + (float) Math.cos(angle));
+            helper.assertTrue(sun.side() == (Math.sin(angle) > 0.0 ? -1.0F : 1.0F), where + " the sun's side is "
+                    + sun.side() + " instead of " + (Math.sin(angle) > 0.0 ? -1.0F : 1.0F));
+            helper.assertTrue(moon.elevationRadians() == -sun.elevationRadians(), where + " the moon's elevation is "
+                    + moon.elevationRadians() + " radians instead of the sun's " + sun.elevationRadians()
+                    + " negated");
+            helper.assertTrue(moon.x() == -sun.x(), where + " the moon's x is " + moon.x() + " instead of the sun's "
+                    + sun.x() + " negated");
+            helper.assertTrue(moon.y() == -sun.y(), where + " the moon's y is " + moon.y() + " instead of the sun's "
+                    + sun.y() + " negated");
+            helper.assertTrue(moon.side() == -sun.side(), where + " the moon's side is " + moon.side()
+                    + " instead of the sun's " + sun.side() + " negated");
+        }
+        sun.set(SkyLight.Kind.SUN, 2.0, 1.0);
+        moon.set(SkyLight.Kind.SUN, 2.0, 1.0);
+        helper.assertTrue(sun.kind() == SkyLight.Kind.SUN, "The sun set again has the kind " + sun.kind()
+                + " instead of SUN");
+        helper.assertTrue(moon.kind() == sun.kind(), "A light reused as the sun has the kind " + moon.kind()
+                + " instead of the sun's " + sun.kind());
+        helper.assertTrue(moon.scale() == sun.scale(), "A light reused as the sun has the scale " + moon.scale()
+                + " instead of the sun's " + sun.scale());
+        helper.assertTrue(moon.elevationRadians() == sun.elevationRadians(), "A light reused as the sun has the "
+                + "elevation " + moon.elevationRadians() + " radians instead of the sun's " + sun.elevationRadians());
+        helper.assertTrue(moon.x() == sun.x(), "A light reused as the sun has the x " + moon.x()
+                + " instead of the sun's " + sun.x());
+        helper.assertTrue(moon.y() == sun.y(), "A light reused as the sun has the y " + moon.y()
+                + " instead of the sun's " + sun.y());
+        helper.assertTrue(moon.side() == sun.side(), "A light reused as the sun has the side " + moon.side()
+                + " instead of the sun's " + sun.side());
+        helper.succeed();
+    }
+
+    @GameTest(template = "phase0a_empty", timeoutTicks = 100)
+    public static void sunElevationTimesRoundTripOnBothBranches(GameTestHelper helper) {
+        double largestError = 0.0;
+        for (int step = 0; step <= ROUND_TRIP_STEPS; step++) {
+            double elevationDegrees = ROUND_TRIP_LOWEST_SUN_DEGREES + ROUND_TRIP_SUN_STEP_DEGREES * step;
+            for (SunElevationTimes.Branch branch : SunElevationTimes.Branch.values()) {
+                long time = SunElevationTimes.dayTime(elevationDegrees, branch);
+                String where = "The sun at " + elevationDegrees + " degrees on the " + branch + " branch";
+                helper.assertTrue(time >= 0 && time < Level.TICKS_PER_DAY, where + " stands at day time " + time
+                        + ", outside the day of " + Level.TICKS_PER_DAY + " ticks");
+                float timeOfDay = helper.getLevel().dimensionType().timeOfDay(time);
+                double back = Math.toDegrees(Math.asin(Math.cos(timeOfDay * Math.PI * 2.0)));
+                double error = Math.abs(back - elevationDegrees);
+                helper.assertTrue(error <= ROUND_TRIP_TOLERANCE_DEGREES, where + " comes back as " + back
+                        + " degrees at day time " + time + ", off by " + error + " degrees");
+                largestError = Math.max(largestError, error);
+                if (elevationDegrees <= 89.0) {
+                    double sine = Math.sin(timeOfDay * Math.PI * 2.0);
+                    boolean setting = branch == SunElevationTimes.Branch.SETTING;
+                    helper.assertTrue(setting ? sine > 0.0 : sine < 0.0, where + " has the sine " + sine
+                            + " of the time of day angle at day time " + time + ", on the wrong side of 0");
+                }
+            }
+        }
+        LogUtils.getLogger().info("SunElevationTimes largest round trip error " + largestError + " degrees");
+        helper.succeed();
+    }
+
+    @GameTest(template = "phase0a_empty", timeoutTicks = 100)
+    public static void sunElevationTimesAreSymmetricAroundMidnight(GameTestHelper helper) {
+        long noon = SunElevationTimes.dayTime(90.0, SunElevationTimes.Branch.SETTING);
+        helper.assertTrue(noon == NOON_DAY_TIME, "The sun at 90 degrees sets at day time " + noon + " instead of the "
+                + "noon " + NOON_DAY_TIME);
+        long risingNoon = SunElevationTimes.dayTime(90.0, SunElevationTimes.Branch.RISING);
+        helper.assertTrue(risingNoon == NOON_DAY_TIME, "The sun at 90 degrees rises at day time " + risingNoon
+                + " instead of the noon " + NOON_DAY_TIME);
+        long midnight = SunElevationTimes.dayTime(-90.0, SunElevationTimes.Branch.SETTING);
+        helper.assertTrue(midnight == MIDNIGHT_DAY_TIME, "The sun at -90 degrees sets at day time " + midnight
+                + " instead of the midnight " + MIDNIGHT_DAY_TIME);
+        long risingMidnight = SunElevationTimes.dayTime(-90.0, SunElevationTimes.Branch.RISING);
+        helper.assertTrue(risingMidnight == MIDNIGHT_DAY_TIME, "The sun at -90 degrees rises at day time "
+                + risingMidnight + " instead of the midnight " + MIDNIGHT_DAY_TIME);
+        long sunset = SunElevationTimes.dayTime(0.0, SunElevationTimes.Branch.SETTING);
+        long sunrise = SunElevationTimes.dayTime(0.0, SunElevationTimes.Branch.RISING);
+        LogUtils.getLogger().info("SunElevationTimes sunset " + sunset + " sunrise " + sunrise);
+        helper.assertTrue(sunset == SUNSET_DAY_TIME, "The sun at 0 degrees sets at day time " + sunset
+                + " instead of " + SUNSET_DAY_TIME);
+        helper.assertTrue(sunrise == SUNRISE_DAY_TIME, "The sun at 0 degrees rises at day time " + sunrise
+                + " instead of " + SUNRISE_DAY_TIME);
+        for (int step = 0; step <= MIRROR_STEPS; step++) {
+            double elevationDegrees = MIRROR_LOWEST_SUN_DEGREES + MIRROR_SUN_STEP_DEGREES * step;
+            long setting = SunElevationTimes.dayTime(elevationDegrees, SunElevationTimes.Branch.SETTING);
+            long rising = SunElevationTimes.dayTime(elevationDegrees, SunElevationTimes.Branch.RISING);
+            long mirror = Math.floorMod(setting + rising, Level.TICKS_PER_DAY);
+            helper.assertTrue(Math.abs(mirror - MIRROR_DAY_TIME) <= MIRROR_DAY_TIME_TOLERANCE, "The sun at "
+                    + elevationDegrees + " degrees sets at " + setting + " and rises at " + rising + ", which add up "
+                    + "to " + mirror + " instead of " + MIRROR_DAY_TIME + " within a tick");
+        }
+        long highSetting = SunElevationTimes.dayTime(120.0, SunElevationTimes.Branch.SETTING);
+        helper.assertTrue(highSetting == noon, "The sun at 120 degrees sets at day time " + highSetting
+                + " instead of at the noon " + noon + " of 90 degrees");
+        long lowRising = SunElevationTimes.dayTime(-120.0, SunElevationTimes.Branch.RISING);
+        helper.assertTrue(lowRising == midnight, "The sun at -120 degrees rises at day time " + lowRising
+                + " instead of at the midnight " + midnight + " of -90 degrees");
+        helper.assertTrue(SunElevationTimes.Branch.byKey("setting") == SunElevationTimes.Branch.SETTING,
+                "The branch key setting gives " + SunElevationTimes.Branch.byKey("setting") + " instead of SETTING");
+        helper.assertTrue(SunElevationTimes.Branch.byKey("rising") == SunElevationTimes.Branch.RISING,
+                "The branch key rising gives " + SunElevationTimes.Branch.byKey("rising") + " instead of RISING");
+        helper.assertTrue(SunElevationTimes.Branch.byKey("noon") == null,
+                "The branch key noon gives " + SunElevationTimes.Branch.byKey("noon") + " instead of none");
         helper.succeed();
     }
 

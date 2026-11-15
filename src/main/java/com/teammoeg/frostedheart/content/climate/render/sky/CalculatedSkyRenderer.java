@@ -69,6 +69,7 @@ public final class CalculatedSkyRenderer {
     private static final SkyBuilder builder = new SkyBuilder();
     private static final SkyTextures textures = new SkyTextures();
     private static final SkyGlPass pass = new SkyGlPass(TEXTURE_UNITS);
+    private static final SkyDrawTimer timer = new SkyDrawTimer();
     private static final Matrix4f inverseViewProjection = new Matrix4f();
     private static final FloatBuffer matrixBuffer = BufferUtils.createFloatBuffer(16);
     private static final float[] reusedFogColor = new float[CHANNELS];
@@ -160,7 +161,12 @@ public final class CalculatedSkyRenderer {
             if (failed || current == null || camera.getFluidInCamera() != FogType.NONE) {
                 return;
             }
-            draw(current, frame, poseStack, projection);
+            timer.begin();
+            try {
+                draw(current, frame, poseStack, projection);
+            } finally {
+                timer.end();
+            }
             sunDrawn = true;
             drawnFrameNumber = SkyFrame.frameNumber();
         } catch (RuntimeException exception) {
@@ -181,7 +187,7 @@ public final class CalculatedSkyRenderer {
         SkyFrame frame = SkyFrame.current(level, partialTick);
         Vector3f look = camera.getLookVector();
         double horizontalFraction = Math.min(1.0, Math.sqrt(look.x() * look.x() + look.z() * look.z()));
-        double azimuth = Math.atan2(look.z(), look.x() * frame.sunSide());
+        double azimuth = Math.atan2(look.z(), look.x() * frame.light().side());
         current.views().horizonDisplayColor(viewBlend(current, frame), depthBlend(current, frame), azimuth,
                 horizontalFraction, frame.exposure(), frame.rainLevel(), frame.thunderLevel(), reusedFogColor);
         return reusedFogColor;
@@ -204,19 +210,19 @@ public final class CalculatedSkyRenderer {
     }
 
     /**
-     * How far the sun is from the low elevation toward the high one, clamped to the range from 0 to 1.
+     * How far the light is from the low elevation toward the high one, clamped to the range from 0 to 1.
      */
-    private static float blendWeight(double sunElevation, double lowElevation, double highElevation) {
-        return (float) Math.max(0.0, Math.min(1.0, (sunElevation - lowElevation) / (highElevation - lowElevation)));
+    private static float blendWeight(double lightElevation, double lowElevation, double highElevation) {
+        return (float) Math.max(0.0, Math.min(1.0, (lightElevation - lowElevation) / (highElevation - lowElevation)));
     }
 
     private static float viewBlend(SkyState current, SkyFrame frame) {
-        return blendWeight(frame.sunElevationRadians(), current.views().lowSunElevationRadians(),
+        return blendWeight(frame.light().elevationRadians(), current.views().lowSunElevationRadians(),
                 current.views().highSunElevationRadians());
     }
 
     private static float haloBlend(SkyState current, SkyFrame frame) {
-        return blendWeight(frame.sunElevationRadians(), current.lowHalo().sunElevationRadians(),
+        return blendWeight(frame.light().elevationRadians(), current.lowHalo().sunElevationRadians(),
                 current.highHalo().sunElevationRadians());
     }
 
@@ -278,8 +284,9 @@ public final class CalculatedSkyRenderer {
             GL20.glUniform1f(depthBlendUniform, (float) depthBlend(current, frame));
             inverseViewProjection.get(matrixBuffer);
             GL20.glUniformMatrix4fv(inverseViewProjectionUniform, false, matrixBuffer);
-            GL20.glUniform3f(sunDirectionUniform, frame.sunX(), frame.sunY(), 0.0F);
-            GL20.glUniform1f(sunSideUniform, frame.sunSide());
+            SkyLight light = frame.light();
+            GL20.glUniform3f(sunDirectionUniform, light.x(), light.y(), 0.0F);
+            GL20.glUniform1f(sunSideUniform, light.side());
             GL20.glUniform1f(exposureUniform, (float) frame.exposure());
             GL20.glUniform1f(texelFaceSizeUniform, current.settings().texelFaceSize());
             GL20.glUniform1f(haloBlendUniform, haloBlend(current, frame));
@@ -383,6 +390,13 @@ public final class CalculatedSkyRenderer {
 
     public static double lastHaloMapMilliseconds() {
         return builder.lastHaloMapMilliseconds();
+    }
+
+    /**
+     * The mean CPU and GPU times of the sky's draw, without the uploads of finished builds.
+     */
+    public static String describeDrawTime() {
+        return timer.describe();
     }
 
     private static final class OculusShaderPack {

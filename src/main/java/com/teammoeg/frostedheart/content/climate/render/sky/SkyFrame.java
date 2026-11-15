@@ -28,10 +28,10 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
 /**
- * What the calculated sky draws from in one frame, which is the sun, the ice optical depth, the grid indices they call
- * for, the diamond dust, the exposure, and the weather. It is filled at its first use in a frame and reused by the draw,
- * the fog color, the daylight, and CalculatedSkyRenderer.isSettled, so the renderer calls IceWeatherDepth.update and
- * DiamondDustExtinction.update once per frame.
+ * What the calculated sky draws from in one frame, which is the light, the ice optical depth, the grid indices they
+ * call for, the diamond dust, the exposure, and the weather. It is filled at its first use in a frame and reused by the
+ * draw, the fog color, the daylight, and CalculatedSkyRenderer.isSettled, so the renderer calls IceWeatherDepth.update
+ * and DiamondDustExtinction.update once per frame.
  * A new frame begins with each render tick, and a call with another partial tick fills it again. Render thread only.
  * Blend weights are not part of the frame, because they depend on the state the renderer draws from, and a build that
  * finishes in CalculatedSkyRenderer.render replaces that state after the fog color and the daylight of the same frame.
@@ -44,10 +44,7 @@ public final class SkyFrame {
 
     private boolean stale = true;
     private float partialTick;
-    private double sunElevationRadians;
-    private float sunX;
-    private float sunY;
-    private float sunSide;
+    private final SkyLight light = new SkyLight();
     private double iceDepth;
     private int haloIndex;
     private int depthIndex;
@@ -88,14 +85,11 @@ public final class SkyFrame {
     private void fill(ClientLevel level, float partialTick) {
         this.partialTick = partialTick;
         double timeOfDayAngle = level.getTimeOfDay(partialTick) * Math.PI * 2.0;
-        sunElevationRadians = Math.asin(Math.cos(timeOfDayAngle));
-        sunX = (float) -Math.sin(timeOfDayAngle);
-        sunY = (float) Math.cos(timeOfDayAngle);
-        sunSide = Math.sin(timeOfDayAngle) > 0.0 ? -1.0F : 1.0F;
+        light.set(SkyLight.Kind.SUN, timeOfDayAngle, 1.0);
         iceDepth = IceWeatherDepth.update(partialTick);
-        haloIndex = SkyBuilder.haloGridIndex(sunElevationRadians);
+        haloIndex = SkyBuilder.haloGridIndex(light.elevationRadians());
         depthIndex = IceDepthGrid.index(iceDepth);
-        viewIndex = SkyBuilder.viewGridIndex(sunElevationRadians);
+        viewIndex = SkyBuilder.viewGridIndex(light.elevationRadians());
         dustExtinction = DiamondDustExtinction.update(partialTick);
         exposure = SkySetting.EXPOSURE.get();
         rainLevel = level.getRainLevel(partialTick);
@@ -103,26 +97,11 @@ public final class SkyFrame {
         stale = false;
     }
 
-    public double sunElevationRadians() {
-        return sunElevationRadians;
-    }
-
     /**
-     * The x component of the direction to the sun, which moves in the plane of x and y.
+     * The light the sky is drawn for in this frame, which is always the sun.
      */
-    public float sunX() {
-        return sunX;
-    }
-
-    public float sunY() {
-        return sunY;
-    }
-
-    /**
-     * The sign of the sun's x direction, which turns world azimuths into azimuths from the sun as the tables use them.
-     */
-    public float sunSide() {
-        return sunSide;
+    public SkyLight light() {
+        return light;
     }
 
     /**

@@ -144,6 +144,7 @@ public final class CalculatedSkyClientCommand {
                 "Last build: tables %.1f ms, halo profile %.1f ms, halo map %.1f ms, sky view %.1f ms",
                 CalculatedSkyRenderer.lastTablesMilliseconds(), CalculatedSkyRenderer.lastHaloProfileMilliseconds(),
                 CalculatedSkyRenderer.lastHaloMapMilliseconds(), CalculatedSkyRenderer.lastViewMilliseconds()));
+        send(context, "Sky draw: " + CalculatedSkyRenderer.describeDrawTime());
         return Command.SINGLE_SUCCESS;
     }
 

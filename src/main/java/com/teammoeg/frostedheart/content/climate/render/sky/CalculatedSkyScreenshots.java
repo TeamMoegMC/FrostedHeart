@@ -106,7 +106,7 @@ public final class CalculatedSkyScreenshots {
     private static final Set<String> SET_KEYS = Set.of("poses", "times", "weather", "variants", "groups", "hud");
     private static final Set<String> GROUP_KEYS = Set.of("poses", "times", "weather", "variants");
     private static final Set<String> POSE_KEYS = Set.of("name", "yaw", "pitch", "position", "offset", "times",
-            "weather");
+            "sunElevations", "sunBranch", "weather");
     private static final Set<String> VARIANT_KEYS = Stream.concat(Stream.of("name", "sky"),
             Arrays.stream(SkySetting.values()).map(SkySetting::key)).collect(Collectors.toUnmodifiableSet());
     private static final String MANIFEST_HEADER = manifestHeader();
@@ -688,9 +688,44 @@ public final class CalculatedSkyScreenshots {
             float yaw = (float) number(entry, "yaw", startPose.yaw(), warnings);
             float pitch = (float) clamped(entry, "pitch", startPose.pitch(), -90.0, 90.0, warnings);
             poses.add(new Pose(name, yaw, pitch, vector(entry, "position", warnings),
-                    vector(entry, "offset", warnings), times(entry, warnings), weathers(entry, warnings)));
+                    vector(entry, "offset", warnings), poseTimes(entry, warnings), weathers(entry, warnings)));
         }
         return poses;
+    }
+
+    /**
+     * The pose's times followed by the day times of its sun elevations in degrees, on the branch that sunBranch names.
+     */
+    private static List<Long> poseTimes(JsonObject pose, List<String> warnings) {
+        List<Long> times = times(pose, warnings);
+        SunElevationTimes.Branch branch = sunBranch(pose, warnings);
+        for (JsonElement element : array(pose, "sunElevations", warnings)) {
+            if (!isNumber(element)) {
+                warnings.add("Skipped a sun elevation that is not a number: " + element);
+                continue;
+            }
+            double elevation = element.getAsDouble();
+            double limited = Math.max(-90.0, Math.min(90.0, elevation));
+            if (limited != elevation) {
+                warnings.add("The sun elevation " + elevation + " is outside -90..90, so " + limited + " was used.");
+            }
+            times.add(SunElevationTimes.dayTime(limited, branch));
+        }
+        return times;
+    }
+
+    private static SunElevationTimes.Branch sunBranch(JsonObject pose, List<String> warnings) {
+        JsonElement element = pose.get("sunBranch");
+        if (element == null) {
+            return SunElevationTimes.Branch.SETTING;
+        }
+        SunElevationTimes.Branch branch = element.isJsonPrimitive() && element.getAsJsonPrimitive().isString()
+                ? SunElevationTimes.Branch.byKey(element.getAsString()) : null;
+        if (branch != null) {
+            return branch;
+        }
+        warnings.add("\"sunBranch\" should be setting or rising, so setting was used: " + element);
+        return SunElevationTimes.Branch.SETTING;
     }
 
     private static List<Long> times(JsonObject object, List<String> warnings) {
