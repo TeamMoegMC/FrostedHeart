@@ -48,7 +48,8 @@ import java.util.concurrent.CompletionException;
 /**
  * Draws the calculated sky and its sun over the vanilla sky dome, before vanilla draws the moon and stars, and gives
  * the fog color and the daylight of the same sky. SkyBuilder builds what it is drawn from and SkyTextures holds it on
- * the GPU. The two of each around the sun and the ice depth of IceWeatherDepth are blended by their exact values.
+ * the GPU. The two of each around the light's elevation and the ice depth of IceWeatherDepth are blended by their exact
+ * values. The light is the sun by day and the moon at night, as MoonLight chooses it.
  */
 @OnlyIn(Dist.CLIENT)
 public final class CalculatedSkyRenderer {
@@ -73,6 +74,7 @@ public final class CalculatedSkyRenderer {
     private static final Matrix4f inverseViewProjection = new Matrix4f();
     private static final FloatBuffer matrixBuffer = BufferUtils.createFloatBuffer(16);
     private static final float[] reusedFogColor = new float[CHANNELS];
+    private static final double[] reusedLightScale = new double[CHANNELS];
     private static final int[] drawnTextures = new int[TEXTURE_UNITS];
 
     @Nullable
@@ -89,6 +91,8 @@ public final class CalculatedSkyRenderer {
     private static int inverseViewProjectionUniform;
     private static int sunDirectionUniform;
     private static int sunSideUniform;
+    private static int lightScaleUniform;
+    private static int sunScaleUniform;
     private static int exposureUniform;
     private static int texelFaceSizeUniform;
     private static int haloBlendUniform;
@@ -116,8 +120,8 @@ public final class CalculatedSkyRenderer {
     }
 
     /**
-     * Whether the sky is drawn from tables, halo maps, and views built for the current config, ice depth, and sun
-     * elevation, with no build pending.
+     * Whether the sky is drawn from tables, halo maps, and views built for the current config, ice depth, light, and
+     * light elevation, with no build pending.
      */
     public static boolean isSettled(ClientLevel level, float partialTick) {
         SkyState current = builder.state();
@@ -125,8 +129,8 @@ public final class CalculatedSkyRenderer {
             return false;
         }
         SkyFrame frame = SkyFrame.current(level, partialTick);
-        return current.settings().matchesConfig()
-                && current.isFor(frame.haloIndex(), frame.depthIndex(), frame.viewIndex());
+        return current.settings().matchesConfig() && current.isFor(frame.light().kind(), frame.haloIndex(),
+                frame.depthIndex(), frame.viewIndex());
     }
 
     private static boolean shaderPackInUse() {
@@ -134,7 +138,8 @@ public final class CalculatedSkyRenderer {
     }
 
     /**
-     * Whether the calculated sky drew its sun in the current call of LevelRenderer.renderSky, so vanilla's is hidden.
+     * Whether the calculated sky was drawn in the current call of LevelRenderer.renderSky, so vanilla's sun is hidden.
+     * By day it draws its own sun, and at night vanilla's sun is below the horizon.
      */
     public static boolean isSunDrawn() {
         return sunDrawn;
@@ -189,7 +194,8 @@ public final class CalculatedSkyRenderer {
         double horizontalFraction = Math.min(1.0, Math.sqrt(look.x() * look.x() + look.z() * look.z()));
         double azimuth = Math.atan2(look.z(), look.x() * frame.light().side());
         current.views().horizonDisplayColor(viewBlend(current, frame), depthBlend(current, frame), azimuth,
-                horizontalFraction, frame.exposure(), frame.rainLevel(), frame.thunderLevel(), reusedFogColor);
+                horizontalFraction, frame.exposure(), lightScale(current, frame), frame.rainLevel(),
+                frame.thunderLevel(), reusedFogColor);
         return reusedFogColor;
     }
 
@@ -205,8 +211,32 @@ public final class CalculatedSkyRenderer {
         }
         SkyFrame frame = SkyFrame.current(level, partialTick);
         current.views().daylightColor(viewBlend(current, frame), depthBlend(current, frame), frame.exposure(),
-                frame.rainLevel(), skyDarken, result);
+                daylightScale(current, frame), frame.rainLevel(), skyDarken, result);
         return true;
+    }
+
+    /**
+     * The factor on each channel of the state's radiance for the frame's light. The returned array is reused by the
+     * next call.
+     */
+    private static double[] lightScale(SkyState current, SkyFrame frame) {
+        SkyLight light = frame.light();
+        for (int channel = 0; channel < CHANNELS; channel++) {
+            reusedLightScale[channel] = light.radianceScale(channel, current.lightKind());
+        }
+        return reusedLightScale;
+    }
+
+    /**
+     * The factor on each channel of the state's ground radiance for the terrain light, as SkyLight.terrainScale gives
+     * it. The returned array is reused by the next call.
+     */
+    private static double[] daylightScale(SkyState current, SkyFrame frame) {
+        SkyLight light = frame.light();
+        for (int channel = 0; channel < CHANNELS; channel++) {
+            reusedLightScale[channel] = light.terrainScale(channel, current.lightKind());
+        }
+        return reusedLightScale;
     }
 
     /**
@@ -252,7 +282,7 @@ public final class CalculatedSkyRenderer {
         SkyState current = builder.state();
         SkySettings settings = current != null && current.settings().matchesConfig() ? current.settings()
                 : SkySettings.fromConfig();
-        builder.request(settings, frame.haloIndex(), frame.depthIndex(), frame.viewIndex());
+        builder.request(settings, frame.light().kind(), frame.haloIndex(), frame.depthIndex(), frame.viewIndex());
     }
 
     private static void draw(SkyState current, SkyFrame frame, PoseStack poseStack, Matrix4f projection) {
@@ -287,6 +317,9 @@ public final class CalculatedSkyRenderer {
             SkyLight light = frame.light();
             GL20.glUniform3f(sunDirectionUniform, light.x(), light.y(), 0.0F);
             GL20.glUniform1f(sunSideUniform, light.side());
+            double[] lightScale = lightScale(current, frame);
+            GL20.glUniform3f(lightScaleUniform, (float) lightScale[0], (float) lightScale[1], (float) lightScale[2]);
+            GL20.glUniform1f(sunScaleUniform, light.kind() == SkyLight.Kind.SUN ? 1.0F : 0.0F);
             GL20.glUniform1f(exposureUniform, (float) frame.exposure());
             GL20.glUniform1f(texelFaceSizeUniform, current.settings().texelFaceSize());
             GL20.glUniform1f(haloBlendUniform, haloBlend(current, frame));
@@ -327,6 +360,8 @@ public final class CalculatedSkyRenderer {
         inverseViewProjectionUniform = GL20.glGetUniformLocation(programId, "inverseViewProjection");
         sunDirectionUniform = GL20.glGetUniformLocation(programId, "sunDirection");
         sunSideUniform = GL20.glGetUniformLocation(programId, "sunSide");
+        lightScaleUniform = GL20.glGetUniformLocation(programId, "lightScale");
+        sunScaleUniform = GL20.glGetUniformLocation(programId, "sunScale");
         exposureUniform = GL20.glGetUniformLocation(programId, "exposure");
         texelFaceSizeUniform = GL20.glGetUniformLocation(programId, "texelFaceSize");
         haloBlendUniform = GL20.glGetUniformLocation(programId, "haloBlend");

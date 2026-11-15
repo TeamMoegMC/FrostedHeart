@@ -85,7 +85,9 @@ public final class SkyFrame {
     private void fill(ClientLevel level, float partialTick) {
         this.partialTick = partialTick;
         double timeOfDayAngle = level.getTimeOfDay(partialTick) * Math.PI * 2.0;
-        light.set(SkyLight.Kind.SUN, timeOfDayAngle, 1.0);
+        MoonLight.chooseLight(light, timeOfDayAngle, level.getMoonPhase(), SkySetting.MOONLIGHT_SWITCH_DEGREES.get(),
+                SkySetting.MOONLIGHT_FADE_DEGREES.get(), SkySetting.MOONLIGHT_BRIGHTNESS.get(),
+                SkySetting.MOONLIGHT_BLUE_SHIFT.get());
         iceDepth = IceWeatherDepth.update(partialTick);
         haloIndex = SkyBuilder.haloGridIndex(light.elevationRadians());
         depthIndex = IceDepthGrid.index(iceDepth);
@@ -98,7 +100,7 @@ public final class SkyFrame {
     }
 
     /**
-     * The light the sky is drawn for in this frame, which is always the sun.
+     * The light the sky is drawn for in this frame, the sun or the moon, as MoonLight.chooseLight sets it.
      */
     public SkyLight light() {
         return light;
@@ -112,7 +114,7 @@ public final class SkyFrame {
     }
 
     /**
-     * The index of the halo map grid at or below the sun.
+     * The index of the halo map grid at or below the light.
      */
     public int haloIndex() {
         return haloIndex;
@@ -126,7 +128,7 @@ public final class SkyFrame {
     }
 
     /**
-     * The index of the sky view grid at or below the sun.
+     * The index of the sky view grid at or below the light.
      */
     public int viewIndex() {
         return viewIndex;

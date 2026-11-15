@@ -25,11 +25,12 @@ import javax.annotation.Nullable;
  * Everything the calculated sky is drawn from. The low halo map is for the sun elevation of the halo index on its
  * grid, and the high one for the next grid step. Tables and views are on their own grids in the same way, with a view
  * for each pair of depth and sun elevation. The settings are those the build was asked for, of which only the ones
- * that rebuild something were used.
+ * that rebuild something were used. The light kind is the one the build was asked for. Halo maps and views depend
+ * only on the light's elevation, so a build for the other kind reuses those on the same grid indices.
  */
-record SkyState(SkySettings settings, IceHaloProfile haloProfile, int haloIndex, IceHaloMap lowHalo,
-        IceHaloMap highHalo, int depthIndex, SkyTables lowDepthTables, SkyTables highDepthTables, int viewIndex,
-        SkyViewSet views) {
+record SkyState(SkySettings settings, SkyLight.Kind lightKind, IceHaloProfile haloProfile, int haloIndex,
+        IceHaloMap lowHalo, IceHaloMap highHalo, int depthIndex, SkyTables lowDepthTables, SkyTables highDepthTables,
+        int viewIndex, SkyViewSet views) {
     static final int HALO_COUNT = 2;
 
     IceHaloMap halo(int slot) {
@@ -73,9 +74,10 @@ record SkyState(SkySettings settings, IceHaloProfile haloProfile, int haloIndex,
     }
 
     /**
-     * Whether the state was built for the halo, depth, and view grid indices.
+     * Whether the state was built for the light kind and the halo, depth, and view grid indices.
      */
-    boolean isFor(int haloGridIndex, int depthGridIndex, int viewGridIndex) {
-        return haloIndex == haloGridIndex && depthIndex == depthGridIndex && viewIndex == viewGridIndex;
+    boolean isFor(SkyLight.Kind kind, int haloGridIndex, int depthGridIndex, int viewGridIndex) {
+        return lightKind == kind && haloIndex == haloGridIndex && depthIndex == depthGridIndex
+                && viewIndex == viewGridIndex;
     }
 }

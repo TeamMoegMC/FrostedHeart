@@ -39,6 +39,10 @@ public final class SkyViewSet {
      * The lowest sky darkness that ClientLevel.getSkyDarken returns, at night.
      */
     private static final float NIGHT_SKY_DARKEN = 0.2F;
+    /**
+     * A light scale of 1 in every channel. Never written.
+     */
+    private static final double[] FULL_LIGHT = {1.0, 1.0, 1.0};
 
     private final SkyView[] views = new SkyView[VIEW_COUNT];
 
@@ -90,21 +94,41 @@ public final class SkyViewSet {
     }
 
     /**
-     * Writes the displayed sky color at the horizon into the result, tone mapped and grayed as calculated_sky.fsh does.
-     * Single scattering by ice is left out, so the color stays smooth near the sun and across halo arcs.
-     * A horizontal fraction of 1 uses the given azimuth, and 0 uses the mean over all azimuths.
+     * Writes the displayed sky color at the horizon into the result for a light at full strength, as the other form
+     * does with a light scale of 1 in every channel.
      */
     public void horizonDisplayColor(double sunWeight, double depthWeight, double azimuth, double horizontalFraction,
             double exposure, float rainLevel, float thunderLevel, float[] result) {
+        horizonDisplayColor(sunWeight, depthWeight, azimuth, horizontalFraction, exposure, FULL_LIGHT, rainLevel,
+                thunderLevel, result);
+    }
+
+    /**
+     * Writes the displayed sky color at the horizon into the result, tone mapped and grayed as calculated_sky.fsh does.
+     * Single scattering by ice is left out, so the color stays smooth near the sun and across halo arcs.
+     * A horizontal fraction of 1 uses the given azimuth, and 0 uses the mean over all azimuths.
+     * The light scale multiplies each channel of the radiance before the tone map, as SkyLight.radianceScale gives it.
+     */
+    public void horizonDisplayColor(double sunWeight, double depthWeight, double azimuth, double horizontalFraction,
+            double exposure, double[] lightScale, float rainLevel, float thunderLevel, float[] result) {
         for (int channel = 0; channel < CHANNELS; channel++) {
             double radiance = blend(views[slot(0, 0)].horizonRadiance(channel, azimuth, horizontalFraction),
                     views[slot(0, 1)].horizonRadiance(channel, azimuth, horizontalFraction),
                     views[slot(1, 0)].horizonRadiance(channel, azimuth, horizontalFraction),
                     views[slot(1, 1)].horizonRadiance(channel, azimuth, horizontalFraction), sunWeight, depthWeight);
-            result[channel] = (float) SkyDisplay.displayValue(exposure, radiance);
+            result[channel] = (float) SkyDisplay.displayValue(exposure, radiance * lightScale[channel]);
         }
         greyByWeather(result, 0.6F, rainLevel);
         greyByWeather(result, 0.2F, thunderLevel);
+    }
+
+    /**
+     * Writes the sky light on the terrain into the result for a light at full strength, as the other form does with a
+     * light scale of 1 in every channel.
+     */
+    public void daylightColor(double sunWeight, double depthWeight, double exposure, float rainLevel, float skyDarken,
+            float[] result) {
+        daylightColor(sunWeight, depthWeight, exposure, FULL_LIGHT, rainLevel, skyDarken, result);
     }
 
     /**
@@ -112,16 +136,17 @@ public final class SkyViewSet {
      * In clear weather it is the ground as the sky's exposure displays it, relative to snow under a sun of unit
      * irradiance at the zenith, scaled down where a channel would pass 1, and at least vanilla's sky light at night.
      * The ground radiance of the views is blended as in horizonDisplayColor, and rain blends the result into vanilla's
-     * sky light for the given sky darkness.
+     * sky light for the given sky darkness. The light scale multiplies the ground radiance but not the snow it is
+     * relative to.
      */
-    public void daylightColor(double sunWeight, double depthWeight, double exposure, float rainLevel, float skyDarken,
-            float[] result) {
+    public void daylightColor(double sunWeight, double depthWeight, double exposure, double[] lightScale,
+            float rainLevel, float skyDarken, float[] result) {
         double brightest = SkyDisplay.encodeSrgb(1.0 - Math.exp(-exposure * SkyAtmosphere.GROUND_ALBEDO / Math.PI));
         for (int channel = 0; channel < CHANNELS; channel++) {
             double radiance = blend(views[slot(0, 0)].groundRadiance()[channel],
                     views[slot(0, 1)].groundRadiance()[channel], views[slot(1, 0)].groundRadiance()[channel],
                     views[slot(1, 1)].groundRadiance()[channel], sunWeight, depthWeight);
-            result[channel] = (float) SkyDisplay.displayValue(exposure, radiance);
+            result[channel] = (float) SkyDisplay.displayValue(exposure, radiance * lightScale[channel]);
             brightest = Math.max(brightest, result[channel]);
         }
         for (int channel = 0; channel < CHANNELS; channel++) {

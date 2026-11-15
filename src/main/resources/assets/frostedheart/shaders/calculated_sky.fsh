@@ -19,6 +19,8 @@ uniform sampler2D rowTables;
 uniform mat4 inverseViewProjection;
 uniform vec3 sunDirection;
 uniform float sunSide;
+uniform vec3 lightScale;
+uniform float sunScale;
 uniform float sunHalfTangent;
 uniform float horizonDip;
 uniform float exposure;
@@ -129,7 +131,9 @@ void main() {
     vec2 haloCoordinate = vec2(abs(azimuth) / PI, (elevation - haloLowestElevation) / haloElevationSpan);
     crystalPhase += mix(texture(lowHaloMap, haloCoordinate).rgb, texture(highHaloMap, haloCoordinate).rgb, haloBlend);
     radiance += crystalPhase * ice + texture(haloProfile, vec2(sunAngle / PI, 0.75)).rgb * diffractedIce;
-    radiance += sunCoverage(pixelDirection, pixelAngle) * mix(lowDepthSun, highDepthSun, depthBlend);
+    radiance += sunScale * sunCoverage(pixelDirection, pixelAngle) * mix(lowDepthSun, highDepthSun, depthBlend);
+    // The sun's tables also draw the moon's sky, dimmed and tinted by the light's scale:
+    radiance *= lightScale;
 
     vec3 color = encodeSrgb(1.0 - exp(-exposure * max(radiance, vec3(0.0))));
 

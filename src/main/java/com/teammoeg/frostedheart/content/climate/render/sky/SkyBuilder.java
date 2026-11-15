@@ -149,20 +149,20 @@ public final class SkyBuilder {
     }
 
     /**
-     * Starts a build for the settings and grid indices unless one runs already or the current state is built for
-     * them. The build reuses what the current state has, apart from what a changed setting rebuilds.
+     * Starts a build for the settings, light kind, and grid indices unless one runs already or the current state is
+     * built for them. The build reuses what the current state has, apart from what a changed setting rebuilds.
      */
-    void request(SkySettings settings, int haloIndex, int depthIndex, int viewIndex) {
+    void request(SkySettings settings, SkyLight.Kind lightKind, int haloIndex, int depthIndex, int viewIndex) {
         SkyState current = state;
         if (pendingBuild != null) {
             return;
         }
-        if (current != null && current.isFor(haloIndex, depthIndex, viewIndex)
+        if (current != null && current.isFor(lightKind, haloIndex, depthIndex, viewIndex)
                 && settings.sameBuild(current.settings())) {
             return;
         }
-        pendingBuild = CompletableFuture.supplyAsync(() -> build(current, settings, haloIndex, depthIndex, viewIndex),
-                Util.backgroundExecutor());
+        pendingBuild = CompletableFuture.supplyAsync(
+                () -> build(current, settings, lightKind, haloIndex, depthIndex, viewIndex), Util.backgroundExecutor());
     }
 
     double lastTablesMilliseconds() {
@@ -209,8 +209,8 @@ public final class SkyBuilder {
      * when one that rebuilds halos changed, and the views when either did. Without a previous state everything is
      * built for the given settings.
      */
-    private BuildResult build(@Nullable SkyState previous, SkySettings settings, int haloIndex, int depthIndex,
-            int viewIndex) {
+    private BuildResult build(@Nullable SkyState previous, SkySettings settings, SkyLight.Kind lightKind,
+            int haloIndex, int depthIndex, int viewIndex) {
         buildTablesMilliseconds = Double.NaN;
         buildHaloMapMilliseconds = Double.NaN;
         buildViewMilliseconds = Double.NaN;
@@ -241,8 +241,8 @@ public final class SkyBuilder {
                         viewIndex + sunEnd, tables, haloProfile, lowHalo, highHalo));
             }
         }
-        SkyState next = new SkyState(settings, haloProfile, haloIndex, lowHalo, highHalo, depthIndex, lowDepthTables,
-                highDepthTables, viewIndex, views);
+        SkyState next = new SkyState(settings, lightKind, haloProfile, haloIndex, lowHalo, highHalo, depthIndex,
+                lowDepthTables, highDepthTables, viewIndex, views);
         return new BuildResult(next, buildTablesMilliseconds, haloProfileMilliseconds, buildHaloMapMilliseconds,
                 buildViewMilliseconds);
     }
