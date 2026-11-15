@@ -42,7 +42,7 @@ import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL14;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
-import org.lwjgl.opengl.GL32;
+import org.lwjgl.opengl.GL31;
 import org.slf4j.Logger;
 
 import javax.annotation.Nullable;
@@ -51,14 +51,14 @@ import java.nio.IntBuffer;
 import java.util.Locale;
 
 /**
- * Draws the glints of diamond dust near the eye as one draw of points after the weather, in frames where the
- * calculated sky was drawn and there is diamond dust, for the field that DustGlitterField describes. The points have no
- * vertex data, and diamond_dust.glsl places and lights each one from its index with the sky's halo profile and halo
- * maps and the light's beam at the eye, so the moon's glints need nothing more. Each point is a round sprite with a
- * Gaussian core of dustGlitterSize, which widens where it saturates. They draw into the main target with its
- * depth test, so the scene hides them, add to it with a screen blend, and write no depth. They fade with the rain
- * level. The clock of their drift and twinkle follows time, stands still while the game is paused, and stays at 0 while
- * the screenshot harness takes shots. Render thread only.
+ * Draws the glints of diamond dust near the eye as one instanced draw of quads after the weather, in frames where the
+ * calculated sky was drawn and there is diamond dust, for the field that DustGlitterField describes. The quads have no
+ * vertex data, and diamond_dust.glsl places, moves, and lights each point's glint from its index with the sky's halo
+ * profile and halo maps and the light's beam at the eye, so the moon's glints need nothing more. Each glint is a round
+ * sprite with a Gaussian core of dustGlitterSize, which widens where it saturates and near the eye. They draw into the
+ * main target with its depth test, so the scene hides them, add to it with a screen blend, and write no depth. They
+ * fade with the rain level. The clock of their lives follows time, stands still while the game is paused, and stays at
+ * 0 while the screenshot harness takes shots. Render thread only.
  */
 @OnlyIn(Dist.CLIENT)
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
@@ -186,9 +186,10 @@ public final class DustGlitterRenderer {
     }
 
     /**
-     * Draws the points into the main target, binding its framebuffer for drawing, which in Fabulous graphics replaces
-     * the weather target bound at this stage. Everything it changes is set back after, with the framebuffer bound
-     * before, and vanilla's next immediate draw binds its own vertex array again.
+     * Draws the glints into the main target, binding its framebuffer for drawing, which in Fabulous graphics replaces
+     * the weather target bound at this stage. Face culling is off, since the quads' winding is not kept. Everything it
+     * changes is set back after, with the framebuffer bound before, and vanilla's next immediate draw binds its own
+     * vertex array again.
      */
     private static void draw(SkyState state, SkyFrame frame, Vec3 camera, int count, float extinctionShare,
             float dustBottomHeight, double gain) {
@@ -206,7 +207,7 @@ public final class DustGlitterRenderer {
         boolean depthTest = GL11.glIsEnabled(GL11.GL_DEPTH_TEST);
         int depthFunction = GL11.glGetInteger(GL11.GL_DEPTH_FUNC);
         boolean depthWrites = GL11.glGetBoolean(GL11.GL_DEPTH_WRITEMASK);
-        boolean programPointSize = GL11.glIsEnabled(GL32.GL_PROGRAM_POINT_SIZE);
+        boolean culling = GL11.glIsEnabled(GL11.GL_CULL_FACE);
         viewportBuffer.clear();
         GL11.glGetIntegerv(GL11.GL_VIEWPORT, viewportBuffer);
         int viewportX = viewportBuffer.get(0);
@@ -227,22 +228,23 @@ public final class DustGlitterRenderer {
             RenderSystem.enableBlend();
             RenderSystem.blendEquation(GL14.GL_FUNC_ADD);
             RenderSystem.blendFuncSeparate(GL11.GL_ONE_MINUS_DST_COLOR, GL11.GL_ONE, GL11.GL_ZERO, GL11.GL_ONE);
-            GL11.glEnable(GL32.GL_PROGRAM_POINT_SIZE);
+            RenderSystem.disableCull();
             bindTexture(HALO_PROFILE_UNIT, CalculatedSkyRenderer.haloProfileTexture());
             bindTexture(LOW_HALO_MAP_UNIT, CalculatedSkyRenderer.haloMapTexture(0));
             bindTexture(HIGH_HALO_MAP_UNIT, CalculatedSkyRenderer.haloMapTexture(1));
             program.use(FHShaders.getDiamondDustVertex(), FHShaders.getDiamondDustFragment());
-            program.setFrameUniforms(state, frame, camera, extinctionShare, dustBottomHeight, gain, mainTarget.height);
+            program.setFrameUniforms(state, frame, camera, extinctionShare, dustBottomHeight, gain, mainTarget.width,
+                    mainTarget.height);
             if (vertexArray == 0) {
                 vertexArray = GL30.glGenVertexArrays();
             }
             GL30.glBindVertexArray(vertexArray);
-            GL11.glDrawArrays(GL11.GL_POINTS, 0, count);
+            GL31.glDrawArraysInstanced(GL11.GL_TRIANGLE_STRIP, 0, 4, count);
         } finally {
             GL30.glBindVertexArray(previousVertexArray);
             BufferUploader.invalidate();
-            if (!programPointSize) {
-                GL11.glDisable(GL32.GL_PROGRAM_POINT_SIZE);
+            if (culling) {
+                RenderSystem.enableCull();
             }
             GL20.glUseProgram(previousProgram);
             GL20.glBlendEquationSeparate(colorEquation, alphaEquation);
@@ -289,14 +291,19 @@ public final class DustGlitterRenderer {
         private int kinds;
         private int viewProjectionUniform;
         private int eyeOffsetUniform;
-        private int driftOffsetUniform;
-        private int copyBaseUniform;
-        private int clockShareUniform;
+        private int clockHighUniform;
+        private int clockLowUniform;
+        private int lifeRateUniform;
+        private int timeScaleUniform;
+        private int sizeSpreadUniform;
+        private int fallSpeedUniform;
         private int extinctionShareUniform;
         private int dustBottomHeightUniform;
-        private int pointSizeUniform;
+        private int plainShareUniform;
+        private int ringPhaseUniform;
+        private int halfWidthUniform;
+        private int pixelToClipUniform;
         private int lightUniform;
-        private int floorPhaseUniform;
         private int exposureUniform;
         private int lightDirectionUniform;
         private int lightSideUniform;
@@ -357,28 +364,53 @@ public final class DustGlitterRenderer {
             GL20.glUniform1f(GL20.glGetUniformLocation(programId, "fadeEnd"), DustGlitterField.FADE_END);
             GL20.glUniform1f(GL20.glGetUniformLocation(programId, "falloffDistance"),
                     DustGlitterField.FALLOFF_DISTANCE);
-            GL20.glUniform1f(GL20.glGetUniformLocation(programId, "swayRadius"), DustGlitterField.SWAY_RADIUS);
             GL20.glUniform1f(GL20.glGetUniformLocation(programId, "spriteSpread"),
                     (float) (0.5 * DustGlitterField.SPRITE_RADIUS_SIGMAS * DustGlitterField.SPRITE_RADIUS_SIGMAS));
-            GL20.glUniform1f(GL20.glGetUniformLocation(programId, "twinkleDuty"), DustGlitterField.TWINKLE_DUTY);
-            GL20.glUniform1i(GL20.glGetUniformLocation(programId, "leastTwinkleCycles"),
-                    DustGlitterField.LEAST_TWINKLE_CYCLES);
-            GL20.glUniform1i(GL20.glGetUniformLocation(programId, "twinkleCycleRange"),
-                    DustGlitterField.TWINKLE_CYCLE_RANGE);
-            GL20.glUniform1i(GL20.glGetUniformLocation(programId, "leastSwayCycles"),
-                    DustGlitterField.LEAST_SWAY_CYCLES);
-            GL20.glUniform1i(GL20.glGetUniformLocation(programId, "swayCycleRange"),
-                    DustGlitterField.SWAY_CYCLE_RANGE);
+            GL20.glUniform1f(GL20.glGetUniformLocation(programId, "clockWrap"),
+                    (float) DustGlitterField.CLOCK_WRAP_SECONDS);
+            GL20.glUniform1i(GL20.glGetUniformLocation(programId, "leastLifeCycles"),
+                    DustGlitterField.LEAST_LIFE_CYCLES);
+            GL20.glUniform1i(GL20.glGetUniformLocation(programId, "lifeCycleRange"), DustGlitterField.LIFE_CYCLE_RANGE);
+            GL20.glUniform1f(GL20.glGetUniformLocation(programId, "slowestFallShare"),
+                    DustGlitterField.SLOWEST_FALL_SHARE);
+            GL20.glUniform1f(GL20.glGetUniformLocation(programId, "fallShareRange"), DustGlitterField.FALL_SHARE_RANGE);
+            GL20.glUniform1f(GL20.glGetUniformLocation(programId, "widestTilt"), DustGlitterField.WIDEST_TILT_RADIANS);
+            GL20.glUniform1f(GL20.glGetUniformLocation(programId, "litTimeBase"), DustGlitterField.LIT_TIME_BASE);
+            GL20.glUniform1f(GL20.glGetUniformLocation(programId, "litTimeSlope"), DustGlitterField.LIT_TIME_SLOPE);
+            GL20.glUniform1f(GL20.glGetUniformLocation(programId, "litTimeTail"), DustGlitterField.LIT_TIME_TAIL);
+            GL20.glUniform1f(GL20.glGetUniformLocation(programId, "litTimeTailPower"),
+                    DustGlitterField.LIT_TIME_TAIL_POWER);
+            GL20.glUniform1f(GL20.glGetUniformLocation(programId, "litRamp"), DustGlitterField.LIT_RAMP_SECONDS);
+            GL20.glUniform1f(GL20.glGetUniformLocation(programId, "shownMargin"), DustGlitterField.SHOWN_MARGIN);
+            GL20.glUniform1f(GL20.glGetUniformLocation(programId, "tintShare"), DustGlitterField.TINT_SHARE);
+            GL20.glUniform1f(GL20.glGetUniformLocation(programId, "nearShare"), DustGlitterField.NEAR_SHARE);
+            GL20.glUniform1f(GL20.glGetUniformLocation(programId, "nearShareDistance"),
+                    DustGlitterField.NEAR_SHARE_DISTANCE);
+            GL20.glUniform1f(GL20.glGetUniformLocation(programId, "nearDistance"), DustGlitterField.NEAR_DISTANCE);
+            GL20.glUniform1f(GL20.glGetUniformLocation(programId, "widestNear"), DustGlitterField.WIDEST_NEAR);
+            GL20.glUniform1f(GL20.glGetUniformLocation(programId, "nearestDistance"),
+                    DustGlitterField.NEAREST_DISTANCE);
+            GL20.glUniform1f(GL20.glGetUniformLocation(programId, "nearFadeEnd"), DustGlitterField.NEAR_FADE_END);
+            GL20.glUniform1f(GL20.glGetUniformLocation(programId, "sizeDistance"), DustGlitterField.SIZE_DISTANCE);
+            GL20.glUniform1f(GL20.glGetUniformLocation(programId, "smallestSize"), DustGlitterField.SMALLEST_SIZE);
+            GL20.glUniform1f(GL20.glGetUniformLocation(programId, "largestSize"), DustGlitterField.LARGEST_SIZE);
+            GL20.glUniform1f(GL20.glGetUniformLocation(programId, "smallestRadius"),
+                    DustGlitterField.SMALLEST_SPRITE_RADIUS);
             viewProjectionUniform = GL20.glGetUniformLocation(programId, "viewProjection");
             eyeOffsetUniform = GL20.glGetUniformLocation(programId, "eyeOffset");
-            driftOffsetUniform = GL20.glGetUniformLocation(programId, "driftOffset");
-            copyBaseUniform = GL20.glGetUniformLocation(programId, "copyBase");
-            clockShareUniform = GL20.glGetUniformLocation(programId, "clockShare");
+            clockHighUniform = GL20.glGetUniformLocation(programId, "clockHigh");
+            clockLowUniform = GL20.glGetUniformLocation(programId, "clockLow");
+            lifeRateUniform = GL20.glGetUniformLocation(programId, "lifeRate");
+            timeScaleUniform = GL20.glGetUniformLocation(programId, "timeScale");
+            sizeSpreadUniform = GL20.glGetUniformLocation(programId, "sizeSpread");
+            fallSpeedUniform = GL20.glGetUniformLocation(programId, "fallSpeed");
             extinctionShareUniform = GL20.glGetUniformLocation(programId, "extinctionShare");
             dustBottomHeightUniform = GL20.glGetUniformLocation(programId, "dustBottomHeight");
-            pointSizeUniform = GL20.glGetUniformLocation(programId, "pointSize");
+            plainShareUniform = GL20.glGetUniformLocation(programId, "plainShare");
+            ringPhaseUniform = GL20.glGetUniformLocation(programId, "ringPhase");
+            halfWidthUniform = GL20.glGetUniformLocation(programId, "halfWidth");
+            pixelToClipUniform = GL20.glGetUniformLocation(programId, "pixelToClip");
             lightUniform = GL20.glGetUniformLocation(programId, "light");
-            floorPhaseUniform = GL20.glGetUniformLocation(programId, "floorPhase");
             exposureUniform = GL20.glGetUniformLocation(programId, "exposure");
             lightDirectionUniform = GL20.glGetUniformLocation(programId, "lightDirection");
             lightSideUniform = GL20.glGetUniformLocation(programId, "lightSide");
@@ -389,38 +421,35 @@ public final class DustGlitterRenderer {
         }
 
         /**
-         * Sets the uniforms of this frame on the program in use. The eye and the drift reach it as offsets in their
-         * cubes and the difference of their cubes, computed in double precision. Each kind's lobe scale is blended
-         * between the halo maps and divided by the kind's cross section for the light's elevation.
+         * Sets the uniforms of this frame on the program in use. The eye reaches it as its offset in its cube and the
+         * clock as two parts of its share of the wrap, computed in double precision.
+         * Each kind's lobe scale is blended between the halo maps and divided by the kind's cross section for the
+         * light's elevation.
          */
         private void setFrameUniforms(SkyState state, SkyFrame frame, Vec3 camera, float extinctionShare,
-                float dustBottomHeight, double gain, int windowHeight) {
+                float dustBottomHeight, double gain, int windowWidth, int windowHeight) {
             viewProjection.get(matrixBuffer);
             GL20.glUniformMatrix4fv(viewProjectionUniform, false, matrixBuffer);
-            double driftX = clockSeconds * DustGlitterField.DRIFT_SPEED_X;
-            double driftY = -clockSeconds * DustGlitterField.FALL_SPEED;
-            double driftZ = clockSeconds * DustGlitterField.DRIFT_SPEED_Z;
             GL20.glUniform3f(eyeOffsetUniform, (float) DustGlitterField.cellOffset(camera.x),
                     (float) DustGlitterField.cellOffset(camera.y), (float) DustGlitterField.cellOffset(camera.z));
-            GL20.glUniform3f(driftOffsetUniform, (float) DustGlitterField.cellOffset(driftX),
-                    (float) DustGlitterField.cellOffset(driftY), (float) DustGlitterField.cellOffset(driftZ));
-            GL20.glUniform3i(copyBaseUniform,
-                    DustGlitterField.cellIndex(camera.x) - DustGlitterField.cellIndex(driftX),
-                    DustGlitterField.cellIndex(camera.y) - DustGlitterField.cellIndex(driftY),
-                    DustGlitterField.cellIndex(camera.z) - DustGlitterField.cellIndex(driftZ));
-            GL20.glUniform1f(clockShareUniform, (float) (clockSeconds % DustGlitterField.CLOCK_WRAP_SECONDS
-                    / DustGlitterField.CLOCK_WRAP_SECONDS));
+            double clockShare = DustGlitterField.clockShare(clockSeconds);
+            GL20.glUniform1f(clockHighUniform, DustGlitterField.clockHigh(clockShare));
+            GL20.glUniform1f(clockLowUniform, DustGlitterField.clockLow(clockShare));
+            double litSeconds = SkySetting.DUST_GLITTER_LIT_SECONDS.get();
+            GL20.glUniform1f(lifeRateUniform, DustGlitterField.lifeRate(litSeconds));
+            GL20.glUniform1f(timeScaleUniform, DustGlitterField.timeScale(litSeconds));
+            GL20.glUniform1f(sizeSpreadUniform, (float) SkySetting.DUST_GLITTER_SIZE_SPREAD.get());
+            GL20.glUniform1f(fallSpeedUniform, (float) SkySetting.DUST_GLITTER_FALL_SPEED.get());
             GL20.glUniform1f(extinctionShareUniform, extinctionShare);
             GL20.glUniform1f(dustBottomHeightUniform, dustBottomHeight);
+            GL20.glUniform1f(plainShareUniform, (float) SkySetting.DUST_GLITTER_PLAIN_SHARE.get());
+            GL20.glUniform1f(ringPhaseUniform, (float) DustGlitterField.ringPhase(state.haloProfile()));
             double coreSigma = SkySetting.DUST_GLITTER_SIZE.get() / DustGlitterField.HALF_MAXIMUM_WIDTH_PER_SIGMA
                     * windowHeight / REFERENCE_WINDOW_HEIGHT;
-            GL20.glUniform1f(pointSizeUniform,
-                    (float) Math.max(1.0, 2.0 * DustGlitterField.SPRITE_RADIUS_SIGMAS * coreSigma));
+            GL20.glUniform1f(halfWidthUniform, (float) (DustGlitterField.SPRITE_RADIUS_SIGMAS * coreSigma));
+            GL20.glUniform2f(pixelToClipUniform, 2.0F / windowWidth, 2.0F / windowHeight);
             GL20.glUniform3f(lightUniform, (float) (beam[0] * gain), (float) (beam[1] * gain),
                     (float) (beam[2] * gain));
-            float floorPhase = (float) DustGlitterField.floorPhase(state.haloProfile(),
-                    SkySetting.DUST_GLITTER_FLOOR.get());
-            GL20.glUniform3f(floorPhaseUniform, floorPhase, floorPhase, floorPhase);
             GL20.glUniform1f(exposureUniform, (float) frame.exposure());
             SkyLight light = frame.light();
             GL20.glUniform3f(lightDirectionUniform, light.x(), light.y(), 0.0F);

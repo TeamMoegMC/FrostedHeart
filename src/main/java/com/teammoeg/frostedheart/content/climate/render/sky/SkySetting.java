@@ -81,16 +81,26 @@ public enum SkySetting {
             + "of it hides its light pillar. Nearer scene hides the pillar, farther scene shows it.", Rebuilds.NOTHING,
             0.5, 0.0, 4.0),
     DUST_GLITTER_BRIGHTNESS("dustGlitterBrightness", "Brightness of the glints of diamond dust near the eye, as a "
-            + "factor on their calibrated brightness. 0 draws none.", Rebuilds.NOTHING, 1.0, 0.0, 10.0),
-    DUST_GLITTER_FLOOR("dustGlitterFloor", "Brightness of the glints of diamond dust in every lit direction, as a "
-            + "share of their brightness on the 22 degree halo. The halos, sun dogs, and pillars add to it.",
-            Rebuilds.NOTHING, 0.03, 0.0, 1.0),
+            + "factor on their calibrated brightness. 0 draws none.", Rebuilds.NOTHING, 2.0, 0.0, 10.0),
+    DUST_GLITTER_PLAIN_SHARE("dustGlitterPlainShare", "Share of the glints of diamond dust that show in directions "
+            + "away from the halos. On the 22 degree halo, the sun dogs, and the pillars all of them show.",
+            Rebuilds.NOTHING, 0.2, 0.0, 1.0),
+    DUST_GLITTER_FALL_SPEED("dustGlitterFallSpeed", "Speed in blocks per second at which the glints of diamond dust "
+            + "fall, give or take 30%, each within 30 degrees of straight down.", Rebuilds.NOTHING, 2.0, 0.0, 3.0),
     DUST_GLITTER_COUNT("dustGlitterCount", "Points drawn for the glints of diamond dust in a cube of 32 blocks around "
-            + "the eye. Those within 16 blocks show where the dust is dense. 0 draws none.", Rebuilds.NOTHING, 16384.0,
+            + "the eye. Each lights a falling crystal for a moment once a life, in a new place each time. Those "
+            + "within 16 blocks show where the dust is dense. 0 draws none.", Rebuilds.NOTHING, 32768.0,
             0.0, 65536.0),
-    DUST_GLITTER_SIZE("dustGlitterSize", "Width in pixels at half its peak of the core of a glint of diamond dust, in "
-            + "a window 1080 pixels high. Larger windows scale it. Bright glints saturate and show wider.",
-            Rebuilds.NOTHING, 3.0, 0.5, 8.0),
+    DUST_GLITTER_SIZE("dustGlitterSize", "Width in pixels at half its peak of the core of a glint of diamond dust 6 "
+            + "blocks away, in a window 1080 pixels high. Larger windows scale it. Bright glints saturate and show "
+            + "wider.", Rebuilds.NOTHING, 3.5, 0.5, 8.0),
+    DUST_GLITTER_SIZE_SPREAD("dustGlitterSizeSpread", "How much glints of diamond dust grow nearer the eye and shrink "
+            + "farther away. Their width goes as 6 blocks over their distance to this power, from a quarter to 4 "
+            + "times dustGlitterSize, with their light spread over it. 0 draws all at the same size.",
+            Rebuilds.NOTHING, 1.5, 0.0, 2.0),
+    DUST_GLITTER_LIT_SECONDS("dustGlitterLitSeconds", "Median time in seconds a glint of diamond dust stays lit. Lit "
+            + "times spread from 0.6 to 3.5 times it, and each crystal's life lasts 5 to 10 times it.",
+            Rebuilds.NOTHING, 1.0, 0.2, 4.0),
     TEXEL_DEGREES("texelDegrees", "Size of the sky's square texels in degrees. They are fixed to the sky like the "
             + "sun's texture. 0 draws a smooth sky.", Rebuilds.HALOS, 0.5, 0.0, 5.0);
 

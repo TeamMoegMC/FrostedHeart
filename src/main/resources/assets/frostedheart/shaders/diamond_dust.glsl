@@ -1,26 +1,56 @@
 // FHShaders prepends the version line and defines VERTEX_SHADER or FRAGMENT_SHADER.
-// The glints of diamond dust near the eye, one point per vertex with no vertex data, as DustGlitterField places, culls, and lights them.
-// A point's index gives it a fixed position in a cube of cellSize blocks that repeats over the world, and it shows at its copy nearest the eye.
-// Its light is the light's beam times the sky's ice phase toward it, as calculated_sky.fsh looks it up, without the diffraction peak.
-// The vertex stage computes each glint's light times the exposure, and the fragment stage spreads it over a round sprite with a Gaussian core and displays it for a screen blend.
+// The glints of diamond dust near the eye, one instance of four corners per point with no vertex data, as DustGlitterField places, culls, and lights them.
+// Each point lives one life after another, each a crystal that starts at a hashed place in a cube of cellSize blocks repeating over the world, falls in a straight line, and is lit once.
+// The sky's ice phase toward a glint, as calculated_sky.fsh looks it up without the diffraction peak, sets how many lives show there and tints them.
+// The vertex stage computes each glint's light times the exposure and spans its sprite, and the fragment stage spreads the light over a round sprite with a Gaussian core and displays it for a screen blend.
 #ifdef VERTEX_SHADER
 // Takes positions relative to the camera, with view bobbing in the projection:
 uniform mat4 viewProjection;
-// The offsets of the eye and of the drift in their cubes, and the eye's cube less the drift's cube:
+// The offset of the eye in its cube:
 uniform vec3 eyeOffset;
-uniform vec3 driftOffset;
-uniform ivec3 copyBase;
-// The clock over its wrap, from 0 up to 1:
-uniform float clockShare;
+// The clock's share of its wrap, as a whole number of 1 / 4096 steps and the rest:
+uniform float clockHigh;
+uniform float clockLow;
+uniform float clockWrap;
+uniform int leastLifeCycles;
+uniform int lifeCycleRange;
+// The share of the reference count of lives, and how much longer than at the reference lit windows last:
+uniform float lifeRate;
+uniform float timeScale;
+uniform float fallSpeed;
+uniform float slowestFallShare;
+uniform float fallShareRange;
+uniform float widestTilt;
+uniform float litTimeBase;
+uniform float litTimeSlope;
+uniform float litTimeTail;
+uniform float litTimeTailPower;
+uniform float litRamp;
 // The share of points the dust's extinction draws, and the dust's bottom relative to the eye, above which glints thin:
 uniform float extinctionShare;
 uniform float dustBottomHeight;
 uniform float scaleHeight;
-// The sprite's width in pixels:
-uniform float pointSize;
-// The light's beam at the eye per channel times the gain, and the floor of the phase:
+// The share of lives shown away from the halos, the phase on the 22 degree halo, and the margin of a shown share:
+uniform float plainShare;
+uniform float ringPhase;
+uniform float shownMargin;
+uniform float tintShare;
+uniform float nearShare;
+uniform float nearShareDistance;
+uniform float nearDistance;
+uniform float widestNear;
+uniform float nearestDistance;
+uniform float nearFadeEnd;
+// The size at a distance, as DustGlitterField.sizeFactor, the sprite's radius in pixels at dustGlitterSize, its least radius, and the size of a pixel in clip space over w:
+uniform float sizeDistance;
+uniform float sizeSpread;
+uniform float smallestSize;
+uniform float largestSize;
+uniform float halfWidth;
+uniform float smallestRadius;
+uniform vec2 pixelToClip;
+// The light's beam at the eye per channel times the gain:
 uniform vec3 light;
-uniform vec3 floorPhase;
 uniform float exposure;
 uniform vec3 lightDirection;
 uniform float lightSide;
@@ -41,19 +71,15 @@ uniform float cellSize;
 uniform float fadeStart;
 uniform float fadeEnd;
 uniform float falloffDistance;
-uniform float swayRadius;
-uniform float twinkleDuty;
-uniform int leastTwinkleCycles;
-uniform int twinkleCycleRange;
-uniform int leastSwayCycles;
-uniform int swayCycleRange;
 
 flat out vec3 glintLight;
+noperspective out vec2 spriteCorner;
 
 const float PI = 3.14159265358979;
 const float INVERSE_SQUARE_ROOT_OF_TWO_PI = 0.3989422804014327;
 const float SMALLEST_SIGMA = 1.0e-9;
 const uint POINT_SEED = 0x2545f491u;
+const uint LIFE_SALT = 0x6c8e9cf5u;
 const vec4 OUTSIDE_CLIP = vec4(2.0, 2.0, 2.0, 1.0);
 
 // The lowbias32 integer hash by Chris Wellons, as DustGlitterField.hashOf:
@@ -71,19 +97,9 @@ float uniformOf(uint hashed) {
     return float(hashed >> 8) / 16777216.0;
 }
 
-// As DustGlitterField.cyclePhase:
-float cyclePhase(uint hashed, int leastCycles, int cycleRange) {
-    uint cycles = uint(leastCycles) + hashOf(hashed) % uint(cycleRange);
-    return fract(clockShare * float(cycles) + uniformOf(hashed));
-}
-
-// As DustGlitterField.twinkle:
-float twinkle(float phase) {
-    if (!(phase < twinkleDuty)) {
-        return 0.0;
-    }
-    float sine = sin(PI * phase / twinkleDuty);
-    return 2.0 / twinkleDuty * sine * sine;
+// As DustGlitterField.shownWeight:
+float shownWeight(float shownShare, float hashShare) {
+    return clamp((shownShare - hashShare) / shownMargin + 0.5, 0.0, 1.0);
 }
 
 float gaussian(float offset, float sigma) {
@@ -119,41 +135,8 @@ vec3 mirrorLobe(float elevation, float sideAngle) {
     return grazingSine * slabReflectance(grazingSine) * lobe;
 }
 
-void hide() {
-    gl_Position = OUTSIDE_CLIP;
-    gl_PointSize = 1.0;
-    glintLight = vec3(0.0);
-}
-
-void main() {
-    uint xHash = hashOf(uint(gl_VertexID) ^ POINT_SEED);
-    uint yHash = hashOf(xHash);
-    uint zHash = hashOf(yHash);
-    uint densityHash = hashOf(zHash);
-    uint swayHash = hashOf(densityHash);
-    uint twinkleHash = hashOf(swayHash);
-    vec3 relative = vec3(uniformOf(xHash), uniformOf(yHash), uniformOf(zHash)) * cellSize + driftOffset - eyeOffset;
-    vec3 copyShift = floor(relative / cellSize + 0.5);
-    vec3 offset = relative - cellSize * copyShift;
-    float fade = 1.0 - smoothstep(fadeStart, fadeEnd, length(offset));
-    if (!(fade > 0.0) || !(uniformOf(densityHash) < extinctionShare)) {
-        hide();
-        return;
-    }
-    ivec3 copyCell = copyBase - ivec3(copyShift);
-    uint copyHash = hashOf(twinkleHash ^ hashOf(uint(copyCell.x) ^ hashOf(uint(copyCell.y) ^ hashOf(uint(copyCell.z)))));
-    float flash = twinkle(cyclePhase(copyHash, leastTwinkleCycles, twinkleCycleRange));
-    if (!(flash > 0.0)) {
-        hide();
-        return;
-    }
-    // As DustGlitterField.heightWeight:
-    float heightWeight = exp(-max(0.0, offset.y - dustBottomHeight) / scaleHeight);
-    float swayAngle = 2.0 * PI * cyclePhase(swayHash, leastSwayCycles, swayCycleRange);
-    offset.xz += swayRadius * vec2(cos(swayAngle), sin(swayAngle));
-
-    float eyeDistance = max(length(offset), 1.0e-4);
-    vec3 direction = offset / eyeDistance;
+// The sky's ice phase toward a direction, the profile's first row and the halo maps, and below the maps the plates' lobe:
+vec3 icePhase(vec3 direction) {
     float elevation = asin(clamp(direction.y, -1.0, 1.0));
     float azimuth = atan(direction.z, direction.x * lightSide);
     float lightAngle = acos(clamp(dot(direction, lightDirection), -1.0, 1.0));
@@ -166,12 +149,110 @@ void main() {
         mapPhase = max(mirrorLobe(elevation, sideAngle)
                 + (mapPhase - mirrorLobe(haloLowestElevation, sideAngle)) * rowFade, vec3(0.0));
     }
-    vec3 phase = floorPhase + texture(haloProfile, vec2(lightAngle / PI, 0.25)).rgb + mapPhase;
+    return texture(haloProfile, vec2(lightAngle / PI, 0.25)).rgb + mapPhase;
+}
+
+void hide() {
+    gl_Position = OUTSIDE_CLIP;
+    glintLight = vec3(0.0);
+    spriteCorner = vec2(0.0);
+}
+
+void main() {
+    uint pointSeed = hashOf(uint(gl_InstanceID) ^ POINT_SEED);
+    uint densityHash = hashOf(pointSeed);
+    if (!(uniformOf(densityHash) < extinctionShare)) {
+        hide();
+        return;
+    }
+    // The life's number and age, as DustGlitterField.lifeNumber and lifeAge:
+    uint lifeClockHash = hashOf(densityHash);
+    uint referenceCycles = uint(leastLifeCycles) + hashOf(lifeClockHash) % uint(lifeCycleRange);
+    float cycleCount = max(1.0, floor(float(referenceCycles) * lifeRate));
+    uint cycles = uint(cycleCount);
+    float scaled = clockHigh * cycleCount;
+    float whole = floor(scaled);
+    float rest = (scaled - whole) + clockLow * cycleCount + uniformOf(lifeClockHash);
+    float restWhole = floor(rest);
+    uint life = (uint(whole) + uint(restWhole)) % cycles;
+    float lifeSeconds = clockWrap / cycleCount;
+    float age = (rest - restWhole) * lifeSeconds;
+
+    // The life's numbers, as DustGlitterField.lifeHash, from LIT_TIME_HASH to NEAR_HASH:
+    uint litTimeHash = hashOf(pointSeed ^ hashOf(life ^ LIFE_SALT));
+    uint litStartHash = hashOf(litTimeHash);
+    float litTimeShare = uniformOf(litTimeHash);
+    float litSeconds = timeScale
+            * (litTimeBase + litTimeSlope * litTimeShare + litTimeTail * pow(litTimeShare, litTimeTailPower));
+    float litStart = uniformOf(litStartHash) * (lifeSeconds - litSeconds);
+    float ramp = litRamp * timeScale;
+    float envelope = smoothstep(0.0, ramp, age - litStart) * smoothstep(0.0, ramp, litStart + litSeconds - age);
+    if (!(envelope > 0.0)) {
+        hide();
+        return;
+    }
+    uint startXHash = hashOf(litStartHash);
+    uint startYHash = hashOf(startXHash);
+    uint startZHash = hashOf(startYHash);
+    uint speedHash = hashOf(startZHash);
+    uint tiltHash = hashOf(speedHash);
+    uint azimuthHash = hashOf(tiltHash);
+    uint directionHash = hashOf(azimuthHash);
+    uint nearHash = hashOf(directionHash);
+
+    // As DustGlitterField.velocity, lifeStart, and nearestOffset:
+    float speed = fallSpeed * (slowestFallShare + fallShareRange * uniformOf(speedHash));
+    float tilt = widestTilt * uniformOf(tiltHash);
+    float fallAzimuth = 2.0 * PI * uniformOf(azimuthHash);
+    vec3 velocity = speed * vec3(sin(tilt) * cos(fallAzimuth), -cos(tilt), sin(tilt) * sin(fallAzimuth));
+    vec3 start = vec3(uniformOf(startXHash), uniformOf(startYHash), uniformOf(startZHash)) * cellSize;
+    vec3 relative = start + velocity * age - eyeOffset;
+    vec3 offset = relative - cellSize * floor(relative / cellSize + 0.5);
+    float eyeDistance = length(offset);
+    float fade = 1.0 - smoothstep(fadeStart, fadeEnd, eyeDistance);
+    float nearFade = smoothstep(nearestDistance, nearFadeEnd, eyeDistance);
+    if (!(fade > 0.0) || !(nearFade > 0.0)) {
+        hide();
+        return;
+    }
+    // Where the glint is at the middle of its lit window, as DustGlitterField.middleOffset:
+    vec3 middleOffset = offset + velocity * (litStart + 0.5 * litSeconds - age);
+    float middleDistance = max(length(middleOffset), 1.0e-4);
+    // As DustGlitterField.nearShare:
+    float nearWeight = shownWeight(nearShare + (1.0 + 0.5 * shownMargin - nearShare)
+            * smoothstep(nearShareDistance, nearDistance, middleDistance), uniformOf(nearHash));
+    if (!(nearWeight > 0.0)) {
+        hide();
+        return;
+    }
+
+    vec3 phase = max(icePhase(middleOffset / middleDistance), vec3(0.0));
+    float largestPhase = max(phase.r, max(phase.g, phase.b));
+    // As DustGlitterField.ringShare, shownShare, and tint:
+    float ringShare = ringPhase > 0.0 ? min(1.0, largestPhase / ringPhase) : 1.0;
+    float shown = shownWeight(plainShare + (1.0 + 0.5 * shownMargin - plainShare) * ringShare,
+            uniformOf(directionHash));
+    if (!(shown > 0.0)) {
+        hide();
+        return;
+    }
+    vec3 tint = largestPhase > 0.0 ? mix(vec3(1.0), phase / largestPhase, tintShare * ringShare) : vec3(1.0);
+    // As DustGlitterField.heightWeight, nearBlur, sizeFactor, spriteRadius, and peakFactor:
+    float heightWeight = exp(-max(0.0, offset.y - dustBottomHeight) / scaleHeight);
+    float blur = clamp(nearDistance / eyeDistance, 1.0, widestNear);
+    float size = clamp(pow(sizeDistance / eyeDistance, sizeSpread), smallestSize, largestSize);
+    float radius = max(smallestRadius, halfWidth * size);
+    float widening = radius / halfWidth;
     float ratio = eyeDistance / falloffDistance;
-    vec3 value = light * phase * (flash * fade * heightWeight / (1.0 + ratio * ratio));
-    glintLight = exposure * max(value, vec3(0.0));
-    gl_Position = viewProjection * vec4(offset, 1.0);
-    gl_PointSize = pointSize;
+    float weight = envelope * fade * nearFade * nearWeight * shown * heightWeight
+            / ((1.0 + ratio * ratio) * blur * blur * widening * widening);
+    glintLight = exposure * max(light * tint * weight, vec3(0.0));
+
+    vec2 corner = vec2(float(gl_VertexID & 1), float(gl_VertexID >> 1)) * 2.0 - 1.0;
+    vec4 center = viewProjection * vec4(offset, 1.0);
+    center.xy += corner * radius * pixelToClip * center.w;
+    gl_Position = center;
+    spriteCorner = corner;
 }
 #endif
 
@@ -180,6 +261,7 @@ void main() {
 uniform float spriteSpread;
 
 flat in vec3 glintLight;
+noperspective in vec2 spriteCorner;
 out vec4 fragColor;
 
 vec3 encodeSrgb(vec3 linear) {
@@ -189,8 +271,7 @@ vec3 encodeSrgb(vec3 linear) {
 
 // The core's Gaussian, tapered to 0 at the sprite's rim, so a glint whose core saturates shows wider:
 void main() {
-    vec2 fromCenter = 2.0 * gl_PointCoord - 1.0;
-    float squaredRadius = dot(fromCenter, fromCenter);
+    float squaredRadius = dot(spriteCorner, spriteCorner);
     if (!(squaredRadius < 1.0)) {
         discard;
     }
