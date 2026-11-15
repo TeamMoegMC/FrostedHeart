@@ -408,9 +408,9 @@ iron/diamond/netherite four-piece sets have explicit totals 3.6/5.4/6.3/7.2/9/10
 normalized over their combined area 0.95. Other armor retains the existing fallback.
 Weight is a gameplay unit. Total weight at most 10 has no heavy-load effect;
 above 10, amplifier is `floor((weight - 10) / 5)` (displayed level amplifier + 1).
-Iron plus full hay/wool is approximately 9.7515; hide plus wool 9.79; hide plus
+Iron plus full hay/wool is approximately 9.7515; hide plus wool 9.3555; hide plus
 rabbit 13.518; reversed rabbit plus hide 15.75 (one lining glove,
-using the inner set glove; hands cannot wear two lining gloves); polar bear alone 11.2.
+using the inner set glove and an empty main hand; hands cannot wear two lining gloves); polar bear alone 11.2.
 
 Direct severe-exposure injury uses `getExposureTemperatureC` and clothing
 transmission, preserving the ±100/150/200/250°C bands. The expected hit count
