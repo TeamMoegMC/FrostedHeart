@@ -50,7 +50,7 @@ public enum SkySetting {
             + "gone a climate day later.", true, DUST_EXTINCTION),
     MOONLIGHT_BRIGHTNESS("moonlightBrightness", "Irradiance of the full moon as a share of the sun's, with which the "
             + "moon lights the sky at night. Other phases are dimmer. The real full moon gives 0.0000025, too little to "
-            + "show.", Rebuilds.NOTHING, 0.025, 0.0, 0.2),
+            + "show.", Rebuilds.NOTHING, 0.0125, 0.0, 0.2),
     MOONLIGHT_BLUE_SHIFT("moonlightBlueShift", "Color of moonlight, from the moon's own faintly red light at 0 to the "
             + "blue that eyes adapted to the dark see at 1.", Rebuilds.NOTHING, 0.5, 0.0, 1.0),
     MOONLIGHT_SWITCH_DEGREES("moonlightSwitchDegrees", "Sun elevation in degrees below which the moon lights the sky "

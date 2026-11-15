@@ -131,11 +131,19 @@ void main() {
     vec2 haloCoordinate = vec2(abs(azimuth) / PI, (elevation - haloLowestElevation) / haloElevationSpan);
     crystalPhase += mix(texture(lowHaloMap, haloCoordinate).rgb, texture(highHaloMap, haloCoordinate).rgb, haloBlend);
     radiance += crystalPhase * ice + texture(haloProfile, vec2(sunAngle / PI, 0.75)).rgb * diffractedIce;
-    radiance += sunScale * sunCoverage(pixelDirection, pixelAngle) * mix(lowDepthSun, highDepthSun, depthBlend);
     // The sun's tables also draw the moon's sky, dimmed and tinted by the light's scale:
     radiance *= lightScale;
+    vec3 sunRadiance = sunScale * sunCoverage(pixelDirection, pixelAngle) * mix(lowDepthSun, highDepthSun, depthBlend)
+            * lightScale;
 
     vec3 color = encodeSrgb(1.0 - exp(-exposure * max(radiance, vec3(0.0))));
+    vec3 sunAdded = vec3(0.0);
+    if (any(greaterThan(sunRadiance, vec3(0.0)))) {
+        // In clear weather the sun adds what it adds to the sky's radiance, and as the rain level rises its own display, as vanilla adds its sun:
+        vec3 litColor = encodeSrgb(1.0 - exp(-exposure * max(radiance + sunRadiance, vec3(0.0))));
+        vec3 sunColor = encodeSrgb(1.0 - exp(-exposure * sunRadiance));
+        sunAdded = mix(litColor - color, sunColor, rainLevel);
+    }
 
     // Same weather graying as ClientLevel.getSkyColor and SkyViewSet.horizonDisplayColor:
     float rainGray = dot(color, vec3(0.3, 0.59, 0.11)) * 0.6;
@@ -144,7 +152,10 @@ void main() {
     color = mix(vec3(thunderGray), color, 1.0 - thunderLevel * 0.75);
 
     color = mix(color, fogColor, rainLevel);
-    color = mix(fogColor, color, smoothstep(0.0, HORIZON_FADE, direction.y));
+    float horizonFade = smoothstep(0.0, HORIZON_FADE, direction.y);
+    color = mix(fogColor, color, horizonFade);
+    // The sun goes over the weather faded by the rain level, as vanilla's sun does, so it shows through snow:
+    color += sunAdded * ((1.0 - rainLevel) * horizonFade);
     color += (interleavedGradientNoise(noisePosition) - 0.5) / 255.0;
     fragColor = vec4(color, 1.0);
 }

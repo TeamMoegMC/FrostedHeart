@@ -161,6 +161,23 @@ public final class CalculatedSkyGameTests {
     private static final double SWITCH_AZIMUTH_STEP_DEGREES = 5.0;
     private static final double SWITCH_ELEVATION_STEP_DEGREES = 0.5;
     private static final double SWITCH_DISPLAY_STEPS = 0.5;
+    /**
+     * The phases whose night sky is checked, the full moon, the half moon, and the new moon.
+     */
+    private static final int[] MOON_NIGHT_PHASES = {0, 2, 4};
+    private static final int MOON_NIGHT_AZIMUTH_COUNT = 4;
+    private static final double MOON_NIGHT_AZIMUTH_STEP_DEGREES = 90.0;
+    /**
+     * The sun stands at the nadir, which puts the moon overhead, and the sky is read 30 degrees from the moon.
+     */
+    private static final double MOON_NIGHT_SUN_ELEVATION_DEGREES = -90.0;
+    private static final double MOON_NIGHT_SKY_ELEVATION_DEGREES = 60.0;
+    private static final double FULL_MOON_GREEN_SKY_STEPS_MINIMUM = 6.0;
+    private static final double FULL_MOON_GREEN_SKY_STEPS_MAXIMUM = 35.0;
+    private static final double FULL_MOON_GREEN_FOG_STEPS_MINIMUM = 15.0;
+    private static final double FULL_MOON_GREEN_FOG_STEPS_MAXIMUM = 55.0;
+    private static final double NIGHT_SKY_STEPS_LIMIT = 64.0;
+    private static final double NEW_MOON_STEPS_LIMIT = 0.5;
 
     @GameTest(template = "phase0a_empty", timeoutTicks = 100)
     public static void mieMatchesPublishedAndRayleighLimits(GameTestHelper helper) {
@@ -1169,6 +1186,118 @@ public final class CalculatedSkyGameTests {
                             + "the state");
                 })
                 .thenSucceed();
+    }
+
+    /**
+     * The full moon at the default settings lights the sky 30 degrees from it and the fog to a faint blue night sky,
+     * and the half moon lights both dimmer in every channel, down to the new moon, which lights neither.
+     */
+    @GameTest(template = "phase0a_empty", timeoutTicks = 200)
+    public static void fullMoonDisplaysAsANightSky(GameTestHelper helper) {
+        SkyLight light = new SkyLight();
+        double[][] lightScales = new double[MOON_NIGHT_PHASES.length][SkyAtmosphere.CHANNEL_COUNT];
+        for (int phaseIndex = 0; phaseIndex < MOON_NIGHT_PHASES.length; phaseIndex++) {
+            int phase = MOON_NIGHT_PHASES[phaseIndex];
+            MoonLight.chooseLight(light, timeOfDayAngle(MOON_NIGHT_SUN_ELEVATION_DEGREES, false), phase,
+                    SkySetting.MOONLIGHT_SWITCH_DEGREES.defaultValue(),
+                    SkySetting.MOONLIGHT_FADE_DEGREES.defaultValue(),
+                    SkySetting.MOONLIGHT_BRIGHTNESS.defaultValue(),
+                    SkySetting.MOONLIGHT_BLUE_SHIFT.defaultValue());
+            helper.assertTrue(light.kind() == SkyLight.Kind.MOON, "The moon at phase " + phase + " with the sun at "
+                    + MOON_NIGHT_SUN_ELEVATION_DEGREES + " degrees has the kind " + light.kind()
+                    + " instead of MOON");
+            for (int channel = 0; channel < SkyAtmosphere.CHANNEL_COUNT; channel++) {
+                lightScales[phaseIndex][channel] = light.radianceScale(channel, SkyLight.Kind.MOON);
+            }
+        }
+        SkyTables tables = new SkyTables(SkySettings.DEFAULT.withIceOpticalDepth(IceWeatherLaw.CLEAR_MINIMUM_DEPTH));
+        IceCrystalData data = IceCrystalData.get();
+        double blurSigma = IceHaloMap.blurSigma(SkySettings.DEFAULT.actualTexelDegrees());
+        IceHaloProfile profile = new IceHaloProfile(data, blurSigma);
+        IceHaloMap map = new IceHaloMap(data, Math.toRadians(90.0), blurSigma);
+        SkyView view = tables.computeView(Math.toRadians(90.0), profile, map);
+        SkyViewSet views = SkyViewSet.of(view);
+        double[][][] skySteps = new double[MOON_NIGHT_PHASES.length][MOON_NIGHT_AZIMUTH_COUNT]
+                [SkyAtmosphere.CHANNEL_COUNT];
+        double[][][] fogSteps = new double[MOON_NIGHT_PHASES.length][MOON_NIGHT_AZIMUTH_COUNT]
+                [SkyAtmosphere.CHANNEL_COUNT];
+        float[] fog = new float[SkyAtmosphere.CHANNEL_COUNT];
+        for (int phaseIndex = 0; phaseIndex < MOON_NIGHT_PHASES.length; phaseIndex++) {
+            int phase = MOON_NIGHT_PHASES[phaseIndex];
+            for (int azimuthIndex = 0; azimuthIndex < MOON_NIGHT_AZIMUTH_COUNT; azimuthIndex++) {
+                double azimuthDegrees = MOON_NIGHT_AZIMUTH_STEP_DEGREES * azimuthIndex;
+                double azimuth = Math.toRadians(azimuthDegrees);
+                views.horizonDisplayColor(0.0, 0.0, azimuth, 1.0, DEFAULT_EXPOSURE, lightScales[phaseIndex], 0F, 0F,
+                        fog);
+                for (int channel = 0; channel < SkyAtmosphere.CHANNEL_COUNT; channel++) {
+                    double radiance = view.radiance(channel, azimuth,
+                            Math.toRadians(MOON_NIGHT_SKY_ELEVATION_DEGREES), profile, map,
+                            tables.diffractionWeights());
+                    skySteps[phaseIndex][azimuthIndex][channel] = SkyDisplay.displaySteps(DEFAULT_EXPOSURE,
+                            radiance * lightScales[phaseIndex][channel]);
+                    fogSteps[phaseIndex][azimuthIndex][channel] = 255.0 * fog[channel];
+                }
+                LogUtils.getLogger().info("MoonLight night phase " + phase + " azimuth " + azimuthDegrees + " sky "
+                        + skySteps[phaseIndex][azimuthIndex][0] + "," + skySteps[phaseIndex][azimuthIndex][1] + ","
+                        + skySteps[phaseIndex][azimuthIndex][2] + " fog " + fogSteps[phaseIndex][azimuthIndex][0] + ","
+                        + fogSteps[phaseIndex][azimuthIndex][1] + "," + fogSteps[phaseIndex][azimuthIndex][2]);
+            }
+        }
+        double[][] fullMoonSky = skySteps[0];
+        double[][] fullMoonFog = fogSteps[0];
+        for (int azimuthIndex = 0; azimuthIndex < MOON_NIGHT_AZIMUTH_COUNT; azimuthIndex++) {
+            String where = "The full moon at azimuth " + MOON_NIGHT_AZIMUTH_STEP_DEGREES * azimuthIndex
+                    + " degrees";
+            double greenSky = fullMoonSky[azimuthIndex][SkyAtmosphere.GREEN_CHANNEL];
+            helper.assertTrue(greenSky >= FULL_MOON_GREEN_SKY_STEPS_MINIMUM
+                            && greenSky <= FULL_MOON_GREEN_SKY_STEPS_MAXIMUM, where + " has the green sky at "
+                    + greenSky + " steps, not within " + FULL_MOON_GREEN_SKY_STEPS_MINIMUM + " to "
+                    + FULL_MOON_GREEN_SKY_STEPS_MAXIMUM);
+            double greenFog = fullMoonFog[azimuthIndex][SkyAtmosphere.GREEN_CHANNEL];
+            helper.assertTrue(greenFog >= FULL_MOON_GREEN_FOG_STEPS_MINIMUM
+                            && greenFog <= FULL_MOON_GREEN_FOG_STEPS_MAXIMUM, where + " has the green fog at "
+                    + greenFog + " steps, not within " + FULL_MOON_GREEN_FOG_STEPS_MINIMUM + " to "
+                    + FULL_MOON_GREEN_FOG_STEPS_MAXIMUM);
+            for (int channel = 0; channel < SkyAtmosphere.CHANNEL_COUNT; channel++) {
+                helper.assertTrue(fullMoonSky[azimuthIndex][channel] < NIGHT_SKY_STEPS_LIMIT, where + " has the sky "
+                        + "at " + fullMoonSky[azimuthIndex][channel] + " steps in channel " + channel + ", not below "
+                        + NIGHT_SKY_STEPS_LIMIT);
+                helper.assertTrue(fullMoonFog[azimuthIndex][channel] < NIGHT_SKY_STEPS_LIMIT, where + " has the fog "
+                        + "at " + fullMoonFog[azimuthIndex][channel] + " steps in channel " + channel + ", not below "
+                        + NIGHT_SKY_STEPS_LIMIT);
+            }
+            helper.assertTrue(fullMoonSky[azimuthIndex][2] > fullMoonSky[azimuthIndex][0], where + " has the sky blue "
+                    + fullMoonSky[azimuthIndex][2] + " and red " + fullMoonSky[azimuthIndex][0]
+                    + " steps, where blue should be above red");
+            helper.assertTrue(fullMoonFog[azimuthIndex][2] > fullMoonFog[azimuthIndex][0], where + " has the fog blue "
+                    + fullMoonFog[azimuthIndex][2] + " and red " + fullMoonFog[azimuthIndex][0]
+                    + " steps, where blue should be above red");
+        }
+        for (int azimuthIndex = 0; azimuthIndex < MOON_NIGHT_AZIMUTH_COUNT; azimuthIndex++) {
+            for (int channel = 0; channel < SkyAtmosphere.CHANNEL_COUNT; channel++) {
+                helper.assertTrue(skySteps[1][azimuthIndex][channel] < skySteps[0][azimuthIndex][channel], "The half "
+                        + "moon at azimuth " + MOON_NIGHT_AZIMUTH_STEP_DEGREES * azimuthIndex + " degrees has the sky at "
+                        + skySteps[1][azimuthIndex][channel] + " steps in channel " + channel + ", not below the full "
+                        + "moon's " + skySteps[0][azimuthIndex][channel]);
+                helper.assertTrue(fogSteps[1][azimuthIndex][channel] < fogSteps[0][azimuthIndex][channel], "The half "
+                        + "moon at azimuth " + MOON_NIGHT_AZIMUTH_STEP_DEGREES * azimuthIndex + " degrees has the fog at "
+                        + fogSteps[1][azimuthIndex][channel] + " steps in channel " + channel + ", not below the full "
+                        + "moon's " + fogSteps[0][azimuthIndex][channel]);
+            }
+        }
+        for (int azimuthIndex = 0; azimuthIndex < MOON_NIGHT_AZIMUTH_COUNT; azimuthIndex++) {
+            for (int channel = 0; channel < SkyAtmosphere.CHANNEL_COUNT; channel++) {
+                helper.assertTrue(skySteps[2][azimuthIndex][channel] < NEW_MOON_STEPS_LIMIT, "The new moon at azimuth "
+                        + MOON_NIGHT_AZIMUTH_STEP_DEGREES * azimuthIndex + " degrees has the sky at "
+                        + skySteps[2][azimuthIndex][channel] + " steps in channel " + channel + ", not below "
+                        + NEW_MOON_STEPS_LIMIT);
+                helper.assertTrue(fogSteps[2][azimuthIndex][channel] < NEW_MOON_STEPS_LIMIT, "The new moon at azimuth "
+                        + MOON_NIGHT_AZIMUTH_STEP_DEGREES * azimuthIndex + " degrees has the fog at "
+                        + fogSteps[2][azimuthIndex][channel] + " steps in channel " + channel + ", not below "
+                        + NEW_MOON_STEPS_LIMIT);
+            }
+        }
+        helper.succeed();
     }
 
     /**

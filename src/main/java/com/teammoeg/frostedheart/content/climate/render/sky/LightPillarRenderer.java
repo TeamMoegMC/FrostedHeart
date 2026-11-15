@@ -216,7 +216,7 @@ public final class LightPillarRenderer {
         SkyFrame frame = SkyFrame.current(level, partialTick);
         double extinctionPerBlock = frame.dustExtinction() / 1000.0;
         double dustBottomY = LightPillarSources.dustBottomY();
-        float opacity = daylightOpacity() * (1.0F - frame.rainLevel());
+        float opacity = daylightOpacity(frame) * (1.0F - frame.rainLevel());
         if (!(extinctionPerBlock > 0.0) || Double.isNaN(dustBottomY) || !(opacity > 0.0F)) {
             return;
         }
@@ -295,9 +295,13 @@ public final class LightPillarRenderer {
     }
 
     /**
-     * Fades pillars out as the fog color brightens, as 1 - Y to the fourth power with Y its luminance as displayed.
+     * Fades pillars out as the fog color brightens by day, as 1 - Y to the fourth power with Y its luminance as
+     * displayed. The moon's fog does not fade them.
      */
-    private static float daylightOpacity() {
+    private static float daylightOpacity(SkyFrame frame) {
+        if (frame.light().kind() == SkyLight.Kind.MOON) {
+            return 1.0F;
+        }
         float[] fogColor = RenderSystem.getShaderFogColor();
         float luminance = 0.2126F * fogColor[0] + 0.7152F * fogColor[1] + 0.0722F * fogColor[2];
         float darkness = 1.0F - Math.max(0.0F, Math.min(1.0F, luminance));

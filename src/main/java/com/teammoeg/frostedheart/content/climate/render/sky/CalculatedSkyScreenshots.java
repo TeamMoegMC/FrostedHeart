@@ -32,6 +32,8 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.logging.LogUtils;
+import com.teammoeg.frostedheart.content.climate.gamedata.climate.ClimateType;
+import com.teammoeg.frostedheart.content.climate.player.PlayerWeatherCompatibilityModel;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -141,7 +143,10 @@ public final class CalculatedSkyScreenshots {
         WORLD("world", 0.0F, 0.0F),
         CLEAR("clear", 0.0F, 0.0F),
         SNOW("snow", 1.0F, 0.0F),
-        STORM("storm", 1.0F, 1.0F);
+        STORM("storm", 1.0F, 1.0F),
+        // The levels the server sends a player in snow and in a blizzard:
+        SNOWFALL("snowfall", PlayerWeatherCompatibilityModel.fromClimate(ClimateType.SNOW)),
+        BLIZZARD("blizzard", PlayerWeatherCompatibilityModel.fromClimate(ClimateType.BLIZZARD));
 
         private final String key;
         private final float rainLevel;
@@ -151,6 +156,10 @@ public final class CalculatedSkyScreenshots {
             this.key = key;
             this.rainLevel = rainLevel;
             this.thunderLevel = thunderLevel;
+        }
+
+        Weather(String key, PlayerWeatherCompatibilityModel.VanillaWeatherState state) {
+            this(key, state.rainStrength(), state.thunderStrength());
         }
 
         @Nullable
@@ -214,7 +223,7 @@ public final class CalculatedSkyScreenshots {
     static void addCommands(LiteralArgumentBuilder<CommandSourceStack> command) {
         LiteralArgumentBuilder<CommandSourceStack> weather = literal("weather")
                 .then(literal("off").executes(CalculatedSkyScreenshots::releaseWeatherCommand));
-        for (Weather value : List.of(Weather.CLEAR, Weather.SNOW, Weather.STORM)) {
+        for (Weather value : List.of(Weather.CLEAR, Weather.SNOW, Weather.STORM, Weather.SNOWFALL, Weather.BLIZZARD)) {
             weather.then(literal(value.key).executes(context -> holdWeather(context, value)));
         }
         command.then(literal("screenshots")
@@ -458,10 +467,15 @@ public final class CalculatedSkyScreenshots {
         if (heldWeather != null) {
             return heldWeather;
         }
+        float rainLevel = level.getRainLevel(1.0F);
+        boolean fullRain = rainLevel >= 0.9F;
         if (level.getThunderLevel(1.0F) >= 0.5F) {
-            return Weather.STORM;
+            return fullRain ? Weather.STORM : Weather.BLIZZARD;
         }
-        return level.getRainLevel(1.0F) >= 0.5F ? Weather.SNOW : Weather.CLEAR;
+        if (rainLevel >= 0.5F) {
+            return fullRain ? Weather.SNOW : Weather.SNOWFALL;
+        }
+        return Weather.CLEAR;
     }
 
     /**
@@ -748,7 +762,7 @@ public final class CalculatedSkyScreenshots {
             if (weather != null) {
                 weathers.add(weather);
             } else {
-                warnings.add("Skipped the weather " + element + ". Use world, clear, snow, or storm.");
+                warnings.add("Skipped the weather " + element + ". Use world, clear, snow, storm, snowfall, or blizzard.");
             }
         }
         return weathers;
