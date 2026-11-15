@@ -355,7 +355,9 @@ OVERRIDE不需要这项读取。场合成后统一量化0.25°C，保留原prior
 同Page仍有其他材料、区域完全退出或同一region缩小时，旧范围也进入下一次增量回包。
 已无材料与解析场的Brick发送显式INVALID，清除客户端旧热色，不依赖重新登录或整页presence改变。
 并发发布导致Page/slot/cursor不一致时，整份读取最多重试两次；仍未读到一致cut则返回null，
-请求处理器发送ACK，客户端保留显示并按原节奏请求，不把读竞争编码成材料删除。
+请求处理器发送ACK，客户端保留显示并按原节奏请求，不把读竞争编码成材料删除。客户端没有可读材料基准
+（`knownReadable=false`）时没有可被误删的东西：此时一个尚未发布过的温场（`QueryPublication.beginRead`失败，
+例如新世界里运行时已启动、但还没有任何驻留）按“没有温场”抓取，窗口、休眠材料、解析场和自然温度气候照常送达。
 全局物理cut稳定invalid或超过40 ticks时
 返回field-only full，恢复后full重建。同一不可读状态可以继续delta。FIRST切换显示origin，
 收到的Page立即上传；只有LAST才确认epoch、generation、两个Page位图及完整增量基准。

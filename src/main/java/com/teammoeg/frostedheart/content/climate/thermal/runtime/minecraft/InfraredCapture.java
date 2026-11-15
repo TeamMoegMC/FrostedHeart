@@ -158,6 +158,7 @@ final class InfraredCapture implements AutoCloseable {
             long storedEpoch = DormantChunkThermalState.currentMaterialRevision();
             // A concurrent publication exchange is not a material deletion. Retry, then retain the
             // client baseline.
+            QueryPublication read = publication;
             captureAttempt:
             for (int attempt = 0; attempt < 2; attempt++) {
                 InfraredDisplayCache.Page[] displayPages = cache && hasFieldPages()
@@ -168,9 +169,15 @@ final class InfraredCapture implements AutoCloseable {
                 cursor.clear();
                 Arrays.fill(presence, 0L);
                 Arrays.fill(localHandles, null);
-                if (publication != null && !publication.beginRead(cursor)) continue;
+                if (read != null && !read.beginRead(cursor)) {
+                    // Only a readable client baseline can be mistaken for deleted. A client without one loses
+                    // nothing, so a field that has published nothing yet is captured as no field: the window,
+                    // stored bodies, analytic fields and the natural climate still reach it.
+                    if (attempt == 0 || knownReadable) continue;
+                    read = null;
+                }
                 boolean readable =
-                        publication != null
+                        read != null
                                 && cursor.hasFreshSample(tick, MAX_PUBLICATION_AGE_TICKS);
                 int epoch = readable ? cursor.infraredEpoch() : 0;
                 boolean full =
@@ -181,7 +188,7 @@ final class InfraredCapture implements AutoCloseable {
                                 || knownStoredSampleTick > tick
                                 || knownReadable != readable
                                 || readable && (reactivated || lastEpoch == 0 || lastEpoch > epoch);
-                if (publication != null) collectMaterials(pages, cx, cy, cz, readable);
+                if (read != null) collectMaterials(pages, cx, cy, cz, readable);
                 // Nearby Pages reach the first receipt window, before distant field volumes.
                 for (int local : PAGE_ORDER) {
                     int word=local>>>6;
@@ -203,7 +210,7 @@ final class InfraredCapture implements AutoCloseable {
                     MaterialSectionState stored =
                             state == null ? null : state.materials(sectionY);
                     ThermalPageHandle handle = localHandles[local];
-                    if (handle == null && publication != null && stored != null) {
+                    if (handle == null && read != null && stored != null) {
                         handle =
                                 pages.handle(
                                         SectionPos.asLong(
@@ -307,7 +314,7 @@ final class InfraredCapture implements AutoCloseable {
                 }
                 // Regional frames remain pinned; fixed-space readers validate the accepted cut.
                 // Never acknowledge a packet assembled across two fixed publications.
-                if (publication != null && !cursor.valid()) continue captureAttempt;
+                if (read != null && !cursor.valid()) continue captureAttempt;
                 boolean changedPresence = !Arrays.equals(presence, knownPresence);
                 if (!full
                         && !moved

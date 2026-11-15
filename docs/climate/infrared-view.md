@@ -51,6 +51,10 @@ T = max(absoluteZero, D + B(Brick中心) + A(y) + climate[窗口区块][min(cove
   客户端区块到达时重算该列；客户端已读过覆盖层的区块里方块变化时，`LevelChunkMixin_ClimateCover` 经
   `ClimateCover.clientBlockChanges` 通知，重算所在Page；不透光性改变时，同一列下方的Page也重算。
 
+气候表只随数据回复送达，ACK不带它。所以客户端还没有可读材料基准时，一个尚未发布过的温场按“没有温场”抓取，
+回复照常发出（见[世界温度](world-climate-and-temperature.md)中关于读竞争的规则）；否则新世界里在第一次有驻留发布之前
+（例如点燃第一个篝火之前），整个视野都会停在缺失值。
+
 此前曾有过按Page估计的整窗口背景（729个值的背景包和第二张背景纹理），已经删除；现在没有背景包，也没有第二张纹理。
 
 ## 色标
