@@ -90,15 +90,15 @@ final class InfraredPhysicalE2eClient {
         }
         int[] rgb=pixels(phase);observed.put("frameRgb",rgb);observed.put("baselineRgb",baselineRgb);
         if(phase.equals("heated")||phase.equals("restored")||phase.equals("natural-cleared")) {
-            double[] color=color(gpu[0]==Short.MIN_VALUE?-50:gpu[0]*.25),placeholder=color(-50);
-            double error=0,placeholderError=0;
+            // A missing value leaves the frame untinted.
+            boolean missing=gpu[0]==Short.MIN_VALUE;double[] color=color(gpu[0]*.25);
+            double error=0,untintedError=0;
             for(int c=0;c<3;c++) {
-                double wanted=baselineRgb[c]*.57+color[c]*255*.43;
-                double missing=baselineRgb[c]*.57+placeholder[c]*255*.43;
-                error+=Math.abs(rgb[c]-wanted);placeholderError+=Math.abs(rgb[c]-missing);
+                double wanted=missing?baselineRgb[c]:baselineRgb[c]*.57+color[c]*255*.43;
+                error+=Math.abs(rgb[c]-wanted);untintedError+=Math.abs(rgb[c]-baselineRgb[c]);
             }
-            observed.put("expectedColorError",error);observed.put("placeholderError",placeholderError);
-            if(error>60||phase.equals("heated")&&error+20>=placeholderError)throw new IllegalStateException("Published physical temperature reached GPU but framebuffer does not match: "+observed);
+            observed.put("expectedColorError",error);observed.put("untintedError",untintedError);
+            if(error>60||phase.equals("heated")&&error+20>=untintedError)throw new IllegalStateException("Published physical temperature reached GPU but framebuffer does not match: "+observed);
         }
         write(role+"-round-"+round+"-physics-"+phase+".json",observed);RESULTS.put(phase,observed);
         receipt(phase);

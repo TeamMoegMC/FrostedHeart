@@ -320,7 +320,7 @@ Generator 的半径/温差来自 `GeneratorData.getRadius/getTempMod` 和 `Gener
 有材料且无场时显示材料温度；无材料且无场时发送`Short.MIN_VALUE`。客户端用自己算出的
 逐块自然温度（空气公式，与热场背景相同）填这些方块，见[自然温度底色](infrared-view.md#自然温度底色)。
 现场判别与收包/提交状态见[红外视野架构与诊断](infrared-view.md)。仍没有值的位置
-（空气、未加载区块、尚未算到的Page）使用`MIN_TEMP=-50`的紫色**占位**，不把-50当实测值。`InfraredViewRenderer.toggleInfraredView()`
+（空气、未加载区块、尚未算到的Page）不着色，保持原画面。`InfraredViewRenderer.toggleInfraredView()`
 切换开关后，扫描半径仅由`open`推进或收回，不以材料或解析场Page覆盖作为开启条件；
 附近没有篝火、整个窗口没有温度覆盖或首个响应尚未到达时也能展开扫描。首次捕获前按需
 创建全INVALID显示纹理；重新进入世界时会清除复用mirror中的旧样本。后续材料/解析场响应
@@ -389,7 +389,7 @@ Embeddium在同一solid调用中依次绘制SOLID/CUTOUT；自有renderer在CUTO
 
 实体等遮挡像素采用环境显示近似：从自己的可见表面位置重建camera-relative坐标，加
 `cameraToTemperatureOrigin`，直接读取既有144³显示纹理。已有能量塔等解析场显示可直接复用；
-没有有效值时采用色标下限的紫色基底。此路径不查询/同步真实空气温度，不取脚下块，不建立实体体温或逐实体缓存。
+取样点先沿屏幕空间法线退到表面后面0.05格（见[非地形像素](infrared-view.md#非地形像素读表面后面的方块)），没有有效值时不着色。此路径不查询/同步真实空气温度，不取脚下块，不建立实体体温或逐实体缓存。
 其目的仅是实体融入环境，不能称为实测空气温度或体温；方块本身仍通过精确owner取材料温度。
 不写深度的透明介质/粒子的独立遮挡与热成像尚未实现。
 

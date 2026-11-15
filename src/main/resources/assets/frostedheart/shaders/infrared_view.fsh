@@ -15,6 +15,8 @@ uniform vec3 cameraToTemperatureOrigin;
 uniform mat4 u_InverseViewProjectionMatrix;
 out vec4 FragColor;
 const float SCANNING_WIDTH = 3.0;
+// How far behind a non-terrain surface its temperature is read, in blocks.
+const float SURFACE_DEPTH = 0.05;
 const float MIN_TEMP = -50.0;
 const float MAX_TEMP = 50.0;
 const int INVALID_TEMPERATURE = -32768;
@@ -39,10 +41,13 @@ vec3 temperatureToColor(float temp) {
 void main() {
     ivec2 pixel = ivec2(gl_FragCoord.xy);
     float depth = texelFetch(depthTexture, pixel, 0).r;
-    if (depth == 1.0) discard;
     vec2 uv = (vec2(pixel) + 0.5) / vec2(textureSize(depthTexture, 0));
     vec4 position = u_InverseViewProjectionMatrix * vec4(uv * 2.0 - 1.0, depth * 2.0 - 1.0, 1.0);
-    float distance = length(position.xyz / position.w);
+    vec3 world = position.xyz / position.w;
+    // Taken before any discard, where derivatives are defined: the surface normal of this pixel quad.
+    vec3 normal = cross(dFdx(world), dFdy(world));
+    if (depth == 1.0) discard;
+    float distance = length(world);
     if (!(distance < radius)) discard;
     if (distance > radius - SCANNING_WIDTH) {
         float edge = smoothstep(radius - SCANNING_WIDTH, radius, distance);
@@ -53,11 +58,16 @@ void main() {
     bool terrainVisible = hasTerrainDepth && depth == texelFetch(terrainDepthTexture, pixel, 0).r;
     int value = terrainVisible ? texelFetch(surfaceTemperature, pixel, 0).r : INVALID_TEMPERATURE;
     if (!terrainVisible && hasEnvironmentTemperature) {
-        ivec3 cell = ivec3(floor(position.xyz / position.w + cameraToTemperatureOrigin));
+        // Translucent surfaces such as ice, water and glass lie on a block boundary, where the reconstructed position
+        // flickers between their block and the air in front. Read just behind the surface instead.
+        float facing = dot(normal, world);
+        vec3 inward = dot(normal, normal) > 0.0 && facing != 0.0 ? normalize(normal) * sign(facing) : normalize(world);
+        ivec3 cell = ivec3(floor(world + inward * SURFACE_DEPTH + cameraToTemperatureOrigin));
         if (all(greaterThanEqual(cell, ivec3(0))) && all(lessThan(cell, textureSize(environmentTemperature, 0))))
             value = texelFetch(environmentTemperature, cell, 0).r;
     }
-    float temperature = value == INVALID_TEMPERATURE ? MIN_TEMP : float(value) * 0.25;
+    // A missing value leaves the scene untinted, distinct from a real -50 C.
+    if (value == INVALID_TEMPERATURE) discard;
     // Premultiplied blending preserves the original mix and destination alpha.
-    FragColor = vec4(temperatureToColor(temperature) * 0.43, 0.43);
+    FragColor = vec4(temperatureToColor(float(value) * 0.25) * 0.43, 0.43);
 }
