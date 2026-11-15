@@ -54,6 +54,8 @@ public final class ThermalNetworkLoadServer {
     private static final int SECONDS = Integer.getInteger("frostedheart.thermalLoad.seconds", 1200);
     private static final int RECOVERY_SECONDS = Integer.getInteger("frostedheart.thermalLoad.recoverySeconds", 0);
     private static final boolean RECOVERY_RETURN_HOME = Boolean.getBoolean("frostedheart.thermalLoad.recoveryReturnHome");
+    /** Scout trips cycle through the first this-many trip sites; 0 sends every trip to new terrain. */
+    private static final int SCOUT_SITES = Integer.getInteger("frostedheart.thermalLoad.scoutSites", 0);
     private static final int WIDTH = SOURCE_SIDE * 4, HEIGHT = 7;
     private static final boolean LIFECYCLE_TRACE = Boolean.getBoolean("frostedheart.thermalLoad.lifecycleTrace");
     private static final java.util.concurrent.ArrayBlockingQueue<String> lifecycleEvents = LIFECYCLE_TRACE ? new java.util.concurrent.ArrayBlockingQueue<>(4096) : null;
@@ -442,7 +444,8 @@ public final class ThermalNetworkLoadServer {
             sampleWorkers();
             write("measuring.json", Map.of("pid", ProcessHandle.current().pid(), "targetTicks", SECONDS * 20L,
                     "runtime", runtimeKind, "gameTick", measurementStartedTick, "ignitionStartedTick", ignitionStartedTick,
-                    "ignitionCompletedTick", ignitionCompletedTick, "warmupTicksAfterIgnition", measurementStartedTick - ignitionCompletedTick));
+                    "ignitionCompletedTick", ignitionCompletedTick, "warmupTicksAfterIgnition", measurementStartedTick - ignitionCompletedTick,
+                    "scoutSites", SCOUT_SITES));
         } else if (phase == Phase.MEASURING) {
             if (measuredTicks % 1200 == 0) for (var fire : fires) if (level.hasChunkAt(fire)) {
                 refuel(fire);
@@ -472,9 +475,11 @@ public final class ThermalNetworkLoadServer {
 
     private static void moveScouts(int cycle, boolean home) {
         var level = server.overworld();
+        // With a bounded site count, later trips revisit terrain earlier trips generated: chunk loads, no worldgen.
+        int site = SCOUT_SITES > 0 ? cycle % SCOUT_SITES : cycle;
         for (int group = 0; group < 5; group++) {
-            int target = 1 + (cycle * 5 + group) % (BASES - 1);
-            BlockPos remote = origin(target).offset(8192 + cycle * 256, 0, 8192 + group * 256);
+            int target = 1 + (site * 5 + group) % (BASES - 1);
+            BlockPos remote = origin(target).offset(8192 + site * 256, 0, 8192 + group * 256);
             if (!home) for (int x = -4; x <= 4; x++) for (int z = -4; z <= 4; z++)
                 level.setBlockAndUpdate(remote.offset(x, 0, z), Blocks.STONE.defaultBlockState());
             for (var player : server.getPlayerList().getPlayers()) {

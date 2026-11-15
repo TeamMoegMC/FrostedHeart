@@ -21,7 +21,7 @@ gradle.beforeProject { project ->
         def workerTiming = project.providers.gradleProperty('thermalLoadWorkerTiming').getOrElse('false').toBoolean()
         run.property('frostedheart.thermalLoad.workerTiming', workerTiming.toString())
         if (workerTiming) run.arg('-mixin.config=frostedheart.thermal-load-worker-timing.mixins.json')
-        ['players': '100', 'bases': '25', 'sourceSide': '8', 'seconds': '1200', 'recoverySeconds': '0'].each { key, fallback ->
+        ['players': '100', 'bases': '25', 'sourceSide': '8', 'seconds': '1200', 'recoverySeconds': '0', 'scoutSites': '0'].each { key, fallback ->
             run.property('frostedheart.thermalLoad.' + key,
                     project.providers.gradleProperty('thermalLoad' + key.capitalize()).getOrElse(fallback))
         }
