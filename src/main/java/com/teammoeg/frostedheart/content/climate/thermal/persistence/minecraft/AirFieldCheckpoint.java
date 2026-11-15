@@ -111,6 +111,31 @@ public final class AirFieldCheckpoint {
         var result = new AirFieldCheckpoint(minX, minY, minZ, retained);
         return result.brickMask == 0 ? null : result;
     }
+    /**
+     * Capture-time filter, without cooling: keeps a Brick while any block departs from its own natural temperature,
+     * {@code naturalAt} of its Page block.
+     */
+    public AirFieldCheckpoint retain(long eligibleBricks, java.util.function.IntToDoubleFunction naturalAt) {
+        Brick[] retained = null;
+        for (int index = 0; index < 64; index++) {
+            var value = bricks[index];
+            if (value == null || (eligibleBricks & 1L << index) == 0) continue;
+            double departure = 0;
+            long blocks = value.blocks;
+            for (int valueIndex = 0; blocks != 0; valueIndex++, blocks &= blocks - 1) {
+                int pageBlock = com.teammoeg.frostedheart.content.climate.thermal.mesh.BlockBrickLayout.pageBlock(
+                        index, Long.numberOfTrailingZeros(blocks));
+                // NaN propagates through max, and an unreadable value is retained.
+                departure = Math.max(departure, Math.abs(value.temperaturesC[valueIndex] - naturalAt.applyAsDouble(pageBlock)));
+            }
+            if (ThermalRetentionPolicy.retains(departure)) continue;
+            if (retained == null) retained = bricks.clone();
+            retained[index] = null;
+        }
+        if (retained == null) return this;
+        var result = new AirFieldCheckpoint(minX, minY, minZ, retained);
+        return result.brickMask == 0 ? null : result;
+    }
     /** New captures replace only their own Bricks and preserve individual accepted times. */
     public static AirFieldCheckpoint mergeDated(AirFieldCheckpoint first, long firstTick,
             AirFieldCheckpoint second, long secondTick, long secondBricks) {

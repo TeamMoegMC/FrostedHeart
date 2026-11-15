@@ -26,6 +26,7 @@ import com.teammoeg.chorda.io.NBTSerializable;
 import com.teammoeg.chorda.math.BaseRandomSource;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
+import com.teammoeg.frostedheart.content.climate.ClimateCover;
 import com.teammoeg.frostedheart.content.climate.event.ClimateCommonEvents;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.DayClimateData.HourData;
 import com.teammoeg.frostedheart.content.climate.network.FHClimatePacket;
@@ -101,6 +102,7 @@ public class WorldClimate implements NBTSerializable {
     protected DayClimateData daycache;
     protected Long2ObjectOpenHashMap<WhiteCurtainCacheEntry> whitecurtainCache=new Long2ObjectOpenHashMap<>();
     protected long whiteCurtainGeneration;
+    private final CoveredClimateHistory coveredClimate = new CoveredClimateHistory();
     private boolean clockDiscontinuityPending;
     protected long lastday = -1;
     private boolean isInitialEventAdded;
@@ -371,6 +373,16 @@ public class WorldClimate implements NBTSerializable {
     }
 
     /**
+     * 被 {@code cover} 个不透光满方块覆盖处的气候；0 覆盖等于 {@link #getTemp(LevelAccessor, BlockPos)}。
+     * <p>
+     * Climate reaching a place under {@code cover} opaque full blocks; zero cover is
+     * {@link #getTemp(LevelAccessor, BlockPos)}.
+     */
+    public static float getCoveredTemp(LevelAccessor world, BlockPos pos, int cover) {
+        return getCapability(world).map(t -> t.getCoveredTemp(pos, cover)).orElse(0f);
+    }
+
+    /**
      * Retrieves hourly updated wind from cache
      * Useful in client-side tick-frequency temperature rendering
      *
@@ -505,6 +517,7 @@ public class WorldClimate implements NBTSerializable {
         for(ClimateEventTrack track:tracks)
         	track.clear();
         this.dailyTempData.clear();
+        coveredClimate.clear();
         long s = clockSource.secs;
 //    	this.tempEventStream.add(new TempEvent(s-60*50,s-45*50,-5,s+32*50,-23,s+100*50,s+136*50,true));
         //model : 8->0 : 0->-30 : -30->-50= 1 : 2 : 2
@@ -685,6 +698,74 @@ public class WorldClimate implements NBTSerializable {
     	}
     	return 0;
     }
+
+    /**
+     * The open-air climate of this place, low-pass filtered by its cover. A white curtain that still exists keeps its
+     * past hours in the filter; one already pruned no longer does.
+     */
+    public float getCoveredTemp(BlockPos pos, int cover) {
+        if (cover <= 0 || daycache == null) return getTemp(pos);
+        int chunkX = pos.getX() >> 4, chunkZ = pos.getZ() >> 4;
+        WhiteCurtainInfo curtain = affectingWhiteCurtain(chunkX, chunkZ);
+        ChunkPos chunk = new ChunkPos(chunkX, chunkZ);
+        float covered = coveredClimate.covered(cover, ClimateCover.limit(), clockSource.getHours(),
+                curtain == null ? Long.MIN_VALUE : chunk.toLong(), whiteCurtainGeneration,
+                curtain == null
+                        ? OPEN_CLIMATE
+                        : (hour, global) -> Math.min(global, WhiteCurtainFieldModel.sampleGameplay(
+                                curtain.descriptor(), hour * WorldClockSource.secondsPerHour, chunk).temperature()));
+        return Float.isNaN(covered) ? getTemp(pos) : covered;
+    }
+
+    /** Local climate of a chunk no white curtain reaches, as {@link #getTemp(BlockPos)} composes it. */
+    private static final CoveredClimateHistory.LocalClimate OPEN_CLIMATE =
+            (hour, global) -> Math.min(global, ClimateResult.EMPTY.temperature());
+
+    /**
+     * Climate reaching cover 0 through {@code limit} in a chunk no white curtain reaches; index 0 is the open air.
+     * Every such chunk shares this table.
+     */
+    public float[] openCoveredClimates(int limit) {
+        float[] result = new float[limit + 1];
+        float open = daycache == null ? 0 : Math.min(daycache.getTemp(hourInDay), ClimateResult.EMPTY.temperature());
+        result[0] = open;
+        for (int cover = 1; cover <= limit; cover++) {
+            float covered = daycache == null ? Float.NaN : coveredClimate.covered(cover, limit, clockSource.getHours(),
+                    Long.MIN_VALUE, whiteCurtainGeneration, OPEN_CLIMATE);
+            result[cover] = Float.isNaN(covered) ? open : covered;
+        }
+        return result;
+    }
+
+    /** Climate reaching cover 0 through {@code limit} in one chunk, white curtain included. */
+    public float[] coveredClimates(int chunkX, int chunkZ, int limit) {
+        float[] result = new float[limit + 1];
+        BlockPos pos = new BlockPos(chunkX << 4, 0, chunkZ << 4);
+        for (int cover = 0; cover <= limit; cover++) result[cover] = getCoveredTemp(pos, cover);
+        return result;
+    }
+
+    /** Whether a white curtain reaches this chunk, so its climate differs from {@link #openCoveredClimates}. */
+    public boolean hasWhiteCurtainAt(int chunkX, int chunkZ) {
+        return affectingWhiteCurtain(chunkX, chunkZ) != null;
+    }
+
+    private WhiteCurtainInfo affectingWhiteCurtain(int chunkX, int chunkZ) {
+        if (whitecurtains.isEmpty()) return null;
+        ChunkPos pos = new ChunkPos(chunkX, chunkZ);
+        for (WhiteCurtainInfo curtain : whitecurtains)
+            if (curtain.isAffected(pos)) return curtain;
+        return null;
+    }
+
+    /** The global climate of an absolute climate hour still held in the day cache, else the current hour's. */
+    private double globalTemperatureAtHour(long hour) {
+        long day = Math.floorDiv(hour, WorldClockSource.hoursPerDay);
+        int hourOfDay = (int) Math.floorMod(hour, WorldClockSource.hoursPerDay);
+        for (DayClimateData data : dailyTempData)
+            if (data.day == day) return data.getTemp(hourOfDay);
+        return daycache == null ? 0 : daycache.getTemp(hourInDay);
+    }
     public int getWind() {
     	if(daycache!=null)
     		return daycache.getWind(hourInDay);
@@ -836,6 +917,7 @@ public class WorldClimate implements NBTSerializable {
                 updateDayCache(date);
             }
             updateHourCache(hours);
+            coveredClimate.recordThrough(hours, ClimateCover.limit(), this::globalTemperatureAtHour);
             whitecurtainCache.clear();
             if(forecast.shouldUpdateNewFrames(hours))
             	forecast.updateFrames(hours,this.getFrames());
@@ -901,6 +983,7 @@ public class WorldClimate implements NBTSerializable {
         nbt.put("hourlyTempStream", CodecUtil.toNBTList(dailyTempData, DayClimateData.CODEC));
         nbt.put("whiteCurtainInfos", CodecUtil.toNBTList(whitecurtains, WhiteCurtainInfo.CODEC));
         nbt.putBoolean("isInitialEventAdded", isInitialEventAdded);
+        if (!isPacket) nbt.put("coveredClimate", coveredClimate.save());
 	}
 
 	@Override
@@ -912,6 +995,7 @@ public class WorldClimate implements NBTSerializable {
         whitecurtains.addAll(CodecUtil.fromNBTList(nbt.getList("whiteCurtainInfos", Tag.TAG_COMPOUND), WhiteCurtainInfo.CODEC));
         invalidateWhiteCurtainCache();
         setInitialEventAdded(nbt.getBoolean("isInitialEventAdded"));
+        if (!isPacket) coveredClimate.load(nbt.getCompound("coveredClimate"));
         readCache();
 	}
 

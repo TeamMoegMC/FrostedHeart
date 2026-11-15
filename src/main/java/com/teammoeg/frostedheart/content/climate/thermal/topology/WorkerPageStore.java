@@ -163,7 +163,7 @@ public final class WorkerPageStore implements AutoCloseable, AirGeometryView {
                     if ((page.residentBrickMask & bit) != 0) {
                         var topology = page.brick(brick);
                         double threshold = (state.hot & bit) == 0 ? ThermalRetentionPolicy.ENTER_C : ThermalRetentionPolicy.EXIT_C;
-                        boolean hot = fixedField != null && fixedField.activeBrick(page.handle.sectionKey(), brick, page.naturalTemperatureC, threshold);
+                        boolean hot = fixedField != null && fixedField.activeBrick(page.handle.sectionKey(), brick, threshold);
                         for (int slot = topology.span.firstSlot(); slot < topology.span.endSlotExclusive(); slot++) {
                             if (arena.hasMaterialTransition(slot)) phaseDirty.accept(slot);
                         }
@@ -634,7 +634,8 @@ public final class WorkerPageStore implements AutoCloseable, AirGeometryView {
                 if (fixedField != null) {
                     if (!fixedField.read(position, true, fixedSample)) continue;
                     var law = fixedSample.law();
-                    double backgroundC = law.temperatureC(law.enthalpyAtTemperature(page.naturalTemperatureC), law.initialBranch(page.naturalTemperatureC));
+                    double naturalC = fixedSample.naturalC();
+                    double backgroundC = law.temperatureC(law.enthalpyAtTemperature(naturalC), law.initialBranch(naturalC));
                     perturbationC = Math.abs(fixedSample.temperatureC() - backgroundC);
                 } else return;
                 if (perturbationC < ThermalRetentionPolicy.EXIT_C) continue;
@@ -710,7 +711,7 @@ public final class WorkerPageStore implements AutoCloseable, AirGeometryView {
                 if (face == BlockFace.POSITIVE_Y && topPortDirectSky(page, brick, patch)) continue;
                 long position = AirRouteCompiler.blockPosition(origin, BlockBrickLayout.faceBlock(axis, side, patch));
                 if (fixedField.read(position, false, fixedSample))
-                    residual = Math.max(residual, Math.abs(fixedSample.temperatureC() - page.naturalTemperatureC));
+                    residual = Math.max(residual, Math.abs(fixedSample.temperatureC() - fixedSample.naturalC()));
             }
             return residual;
         }

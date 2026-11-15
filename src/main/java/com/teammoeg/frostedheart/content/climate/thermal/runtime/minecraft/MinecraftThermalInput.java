@@ -213,6 +213,9 @@ public final class MinecraftThermalInput implements AutoCloseable {
     private final MinecraftThermalProfiles.Snapshot profiles;
     private final double referenceTemperatureC;
     private final ThermalAnalyticFieldIndex analyticFields;
+    /** Per-block natural backgrounds; outlives worker restarts so a new field picks them up at once. */
+    private final com.teammoeg.frostedheart.content.climate.thermal.solver.NaturalProfiles naturalProfiles =
+            new com.teammoeg.frostedheart.content.climate.thermal.solver.NaturalProfiles();
     private final MinecraftEnvironmentCapture environment;
     private final MinecraftPageManager pages;
     private final PhysicalSourceSpatialIndex physicalSources;
@@ -274,7 +277,7 @@ public final class MinecraftThermalInput implements AutoCloseable {
         lastCompletedTargetTick = initialTick;
         MinecraftSignatureCapture signatureCapture =
                 new MinecraftSignatureCapture(level, profiles.states(), profiles.signatures());
-        environment = new MinecraftEnvironmentCapture(level, accumulator);
+        environment = new MinecraftEnvironmentCapture(level, accumulator, naturalProfiles);
         pages = new MinecraftPageManager(this, level, accumulator, signatureCapture, environment);
         physicalSources =
                 new PhysicalSourceSpatialIndex(
@@ -322,7 +325,8 @@ public final class MinecraftThermalInput implements AutoCloseable {
         var tuning = profiles.tuning();
         var limits = ThermalDimensionLimits.sharedGrid(3200, MAXIMUM_PHYSICAL_SOURCES);
         var field = new TiledThermalField(MEMORY.createCategory(), profiles.signatures(), profiles.materials(),
-                tuning.airHeatCapacityJPerBlockK(), tuning.airMixingWPerBlockK(), 0, limits.maximumPages(), initialTick);
+                tuning.airHeatCapacityJPerBlockK(), tuning.airMixingWPerBlockK(), 0, limits.maximumPages(), initialTick,
+                naturalProfiles);
         QueryPublication publication = null;
         ThermalDimensionEngine engine = null;
         try {
@@ -1109,7 +1113,8 @@ public final class MinecraftThermalInput implements AutoCloseable {
             com.teammoeg.frostedheart.content.climate.network.FHRequestInfraredViewDataSyncPacket request) {
         return captureInfraredSnapshot(player, request.forceFull(), request.knownGeneration(), request.knownCenter(),
                 request.lastEpoch(), request.knownPresence(), request.knownReadable(), request.knownFieldPages(),
-                request.knownStoredEpoch(), request.knownStoredSampleTick(), request.knownDisplayRequestId(), request.requestId());
+                request.knownStoredEpoch(), request.knownStoredSampleTick(), request.knownDisplayRequestId(), request.requestId(),
+                request.knownNaturalRevision());
     }
 
     public static InfraredSnapshot gameplayInfraredSnapshot(
@@ -1124,12 +1129,14 @@ public final class MinecraftThermalInput implements AutoCloseable {
             long knownStoredEpoch,
             long knownStoredSampleTick) {
         return captureInfraredSnapshot(player, forceFull, knownGeneration, knownCenter, lastEpoch, knownPresence,
-                knownReadable, knownFieldPages, knownStoredEpoch, knownStoredSampleTick, -1, -1);
+                knownReadable, knownFieldPages, knownStoredEpoch, knownStoredSampleTick, -1, -1,
+                com.teammoeg.frostedheart.content.climate.network.InfraredNaturalClimate.UNTRACKED);
     }
 
     private static InfraredSnapshot captureInfraredSnapshot(ServerPlayer player, boolean forceFull, long knownGeneration,
             long knownCenter, int lastEpoch, long[] knownPresence, boolean knownReadable, long[] knownFieldPages,
-            long knownStoredEpoch, long knownStoredSampleTick, int knownDisplayRequestId, int requestId) {
+            long knownStoredEpoch, long knownStoredSampleTick, int knownDisplayRequestId, int requestId,
+            long knownNaturalRevision) {
         if (knownPresence.length != InfraredCapture.INFRARED_PRESENCE_WORDS
                 || knownFieldPages.length != 0
                         && knownFieldPages.length != InfraredCapture.INFRARED_PRESENCE_WORDS)
@@ -1149,7 +1156,7 @@ public final class MinecraftThermalInput implements AutoCloseable {
                 knownReadable,
                 knownFieldPages,
                 knownStoredEpoch,
-                knownStoredSampleTick, knownDisplayRequestId, requestId);
+                knownStoredSampleTick, knownDisplayRequestId, requestId, knownNaturalRevision);
     }
 
     static InfraredDisplayCache.Statistics infraredDisplayStatistics() {
@@ -1245,7 +1252,11 @@ public final class MinecraftThermalInput implements AutoCloseable {
         return MinecraftPhaseController.tryAtRandomTick(level, chunk, position, state);
     }
 
-    /** Final display transaction; readable describes the live worker baseline, independent of stored bodies and fields. */
+    /**
+     * Final display transaction; readable describes the live worker baseline, independent of stored bodies and fields.
+     * {@code natural} lets the client fill blocks without a value with their natural temperature; it travels in the
+     * first part only and is null in the others.
+     */
     public record InfraredSnapshot(
             int centerChunkX,
             int centerChunkZ,
@@ -1258,7 +1269,16 @@ public final class MinecraftThermalInput implements AutoCloseable {
             long[] fieldPages,
             byte[][] brickRecords,
             long storedEpoch,
-            long storedSampleTick) {}
+            long storedSampleTick,
+            com.teammoeg.frostedheart.content.climate.network.InfraredNaturalClimate natural) {
+        /** A display transaction without natural climate; the client keeps what it holds. */
+        public InfraredSnapshot(int centerChunkX, int centerChunkZ, int centerSectionY, long generation,
+                int infraredEpoch, boolean readable, boolean full, long[] presence, long[] fieldPages,
+                byte[][] brickRecords, long storedEpoch, long storedSampleTick) {
+            this(centerChunkX, centerChunkZ, centerSectionY, generation, infraredEpoch, readable, full, presence,
+                    fieldPages, brickRecords, storedEpoch, storedSampleTick, null);
+        }
+    }
 
     public static BlockPos nearestGameplayGenerator(
             Level level, BlockPos position, double maximumDistanceBlocks) {
@@ -1629,6 +1649,13 @@ public final class MinecraftThermalInput implements AutoCloseable {
             input.physicalSources.observeMachine(source, target, profile, thermalLevel, enabled);
     }
 
+    /** A block changed opacity at this column; covered Pages below it refresh their natural profile. */
+    public static void onClimateCoverChanged(ServerLevel level, int worldX, int worldZ) {
+        if (!level.getServer().isSameThread()) return;
+        MinecraftThermalInput input = active(level);
+        if (input != null) input.environment.markCoverColumn(worldX, worldZ);
+    }
+
     public static void onPhysicalSourceRemoved(ServerLevel level, BlockPos source) {
         MinecraftThermalInput input = active(level);
         if (input != null)
@@ -1811,15 +1838,19 @@ public final class MinecraftThermalInput implements AutoCloseable {
                 if (cause == ResolvedGeometryBatch.MaterialChanges.REPLACE
                         || cause == ResolvedGeometryBatch.MaterialChanges.MASS_CHANGE)
                     natural = WorldTemperature.naturalAir(level, position);
-                if (!live && cause != ResolvedGeometryBatch.MaterialChanges.REPLACE)
-                    coolingNatural =
-                            stored.naturalTemperature(
-                                    level,
-                                    chunk.getPos().x,
-                                    sectionY,
-                                    chunk.getPos().z,
-                                    level.getGameTime(),
-                                    DORMANT_QUERY_POSITION.get());
+                if (!live && cause != ResolvedGeometryBatch.MaterialChanges.REPLACE) {
+                    // The Section value keeps the material revision current; the body cools toward its own block's
+                    // natural, as every dormant reading does.
+                    stored.naturalTemperature(
+                            level,
+                            chunk.getPos().x,
+                            sectionY,
+                            chunk.getPos().z,
+                            level.getGameTime(),
+                            DORMANT_QUERY_POSITION.get());
+                    coolingNatural = cause == ResolvedGeometryBatch.MaterialChanges.MASS_CHANGE
+                            ? natural : WorldTemperature.naturalAir(level, position);
+                }
             }
             if (stored.applyMaterialChange(
                     sectionY,
@@ -1948,8 +1979,11 @@ public final class MinecraftThermalInput implements AutoCloseable {
                     SectionPos.sectionToBlockCoord(SectionPos.z(section.sectionKey())) + 8);
             double natural = WorldTemperature.naturalAir(level, dormantPosition);
             double airNatural = target.captureNatural(sectionY, section.sampleTick(), natural);
-            var air = section.captureAir(airNatural);
-            var materials = MaterialSectionState.capture(section, materialCapture, natural);
+            // Only departures from each block's own natural are worth keeping; without a profile, the Section value.
+            var profile = naturalProfiles.get(section.sectionKey());
+            var air = profile == null ? section.captureAir(airNatural) : section.captureAir(profile::at);
+            var materials = profile == null ? MaterialSectionState.capture(section, materialCapture, natural)
+                    : MaterialSectionState.capture(section, materialCapture, profile::at);
             var materialState = materials.state();
             var owner = ((MinecraftThermalSectionAttachment) (Object) chunk.getSections()[
                     chunk.getSectionIndex(SectionPos.sectionToBlockCoord(sectionY))]).frostedheart$getThermalInputOwner();

@@ -13,7 +13,7 @@
 | [thermal-storage-optimization.md](thermal-storage-optimization.md) | 局部容量摘要、Debug盘点、热活动维护、无损存储及同配置CPU/分配/服务代价 | Current; control refactor, focused lifecycle checks and per-build performance/resource limits recorded |
 | [thermal-regional-server-validation.md](thermal-regional-server-validation.md) | 当前区域架构的100温度消费者分散负载、资源代价、粗档全程构建与部署配置 | Current for stated multicore and single-worker measurements; full networked server scope stated separately |
 | [thermal-validation-baseline.md](thermal-validation-baseline.md) | 简化前统一真实测试入口、温度重放、负载与分批结果 | Current for recorded baseline; startup repeatability and retirement assertion unqualified |
-| [world-climate-and-temperature.md](world-climate-and-temperature.md) | 逻辑气候时钟、事件轨道、世界/空气/方块温度公式、局部热区 | Current |
+| [world-climate-and-temperature.md](world-climate-and-temperature.md) | 逻辑气候时钟、事件轨道、海拔与覆盖层气候滞后、世界/空气/方块温度公式、热场自然背景、局部热区 | Current |
 | [infrared-view.md](infrared-view.md) | 红外数据架构、传输内容及客户端/服务端现场诊断 | Current for source; overseas-client failure unlocalized |
 | [thermal-legacy-gameplay-parity.md](thermal-legacy-gameplay-parity.md) | 与旧版生存难度、供暖收益的源码数值对照及待校准项目 | Current for source audit; survival/heating balance calibration outstanding |
 | [thermal-gameplay-balance.md](thermal-gameplay-balance.md) | 原始数值差距、后续身体定标、有限食物/强风/真实供暖结果 | Current for selected cold-survival and wind calibration; broader gameplay parity unqualified |

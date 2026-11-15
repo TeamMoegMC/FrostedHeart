@@ -403,8 +403,8 @@ public class FHConfig {
 			public final ForgeConfigSpec.DoubleValue forecastSensitivityCelsius;
 			public final ForgeConfigSpec.DoubleValue climateEventNoiseStandardDeviationCelsius;
 			public final ForgeConfigSpec.DoubleValue warmEventNoiseScale;
-			public final ForgeConfigSpec.IntValue climateStoneInterfaceLevel;
-			public final ForgeConfigSpec.IntValue climateSeaLevel;
+			public final ForgeConfigSpec.DoubleValue coverResponseDaysAtTenBlocks;
+			public final ForgeConfigSpec.IntValue coverMaximumBlocks;
 			public final ForgeConfigSpec.DoubleValue blockMaximumClimateAffection;
 			public final ForgeConfigSpec.DoubleValue blockHeatApplicationMultiplier;
 			public final ForgeConfigSpec.DoubleValue absoluteZeroCelsius;
@@ -506,14 +506,14 @@ public class FHConfig {
 					.defineInRange("forecastSensitivityCelsius", (double) TownModelParameters.Defaults.CLIMATE_FORECAST_SENSITIVITY_CELSIUS, 0.0, 100.0);
 				climateEventNoiseStandardDeviationCelsius = builder.defineInRange("eventNoiseStandardDeviationCelsius", (double) TownModelParameters.Defaults.CLIMATE_EVENT_NOISE_STANDARD_DEVIATION_CELSIUS, 0.0, 1000.0);
 				warmEventNoiseScale = builder.defineInRange("warmNoiseScale", (double) TownModelParameters.Defaults.CLIMATE_WARM_NOISE_SCALE, 0.0, 1000.0);
-				climateStoneInterfaceLevel = builder
-					.comment("At or below this Y level, climate does not affect block temperature.")
-					.defineInRange("stoneInterfaceLevel", TownModelParameters.Defaults.CLIMATE_STONE_INTERFACE_LEVEL, -1000000, 1000000);
-				climateSeaLevel = builder
-					.comment("Above this Y level, block climate affection reaches its configured maximum.")
-					.defineInRange("seaLevel", TownModelParameters.Defaults.CLIMATE_SEA_LEVEL, -1000000, 1000000);
+				coverResponseDaysAtTenBlocks = builder
+					.comment("Climate response time, in game days, under ten opaque full blocks of cover. It scales with the square of the cover: the climate under c blocks follows the open-air climate through a first-order lag of this many days times (c/10)^2. 0 removes the lag.")
+					.defineInRange("coverResponseDaysAtTenBlocks", 3.0, 0.0, 100.0);
+				coverMaximumBlocks = builder
+					.comment("Opaque full blocks of cover counted above a position. Deeper cover adds no further climate lag.")
+					.defineInRange("coverMaximumBlocks", 16, 1, 64);
 				blockMaximumClimateAffection = builder
-					.comment("Maximum alpha multiplying climate temperature in the block-temperature formula.")
+					.comment("Fraction of the climate that reaches block temperature, at every height and cover.")
 					.defineInRange("blockMaximumClimateAffection", (double) TownModelParameters.Defaults.CLIMATE_BLOCK_MAXIMUM_AFFECTION, 0.0, 100.0);
 				blockHeatApplicationMultiplier = builder
 					.comment("Multiplier applied to the maximum heat-field value before the heat-field ceiling is enforced.")

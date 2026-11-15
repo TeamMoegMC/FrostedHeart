@@ -9,6 +9,7 @@ import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialThermalLaw
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialSample;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalCellArena;
 import com.teammoeg.frostedheart.content.climate.thermal.persistence.DormantThermalCooling;
+import com.teammoeg.frostedheart.content.climate.thermal.persistence.ThermalRetentionPolicy;
 import com.teammoeg.frostedheart.content.climate.thermal.persistence.minecraft.AirFieldCheckpoint;
 import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureTable;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.ThermalMemoryBudget;
@@ -48,7 +49,7 @@ public final class TiledThermalField implements AutoCloseable {
     public enum Change { PHYSICAL, REPLACEMENT, PHASE, GAMEPLAY }
 
     public static final class Sample {
-        private double temperatureC, enthalpyJ;
+        private double temperatureC, enthalpyJ, naturalC = Double.NaN;
         private MaterialThermalLaw law;
         private long sampleTick;
         private long requestSequence;
@@ -57,6 +58,8 @@ public final class TiledThermalField implements AutoCloseable {
         private byte branch;
         public double temperatureC() { return temperatureC; }
         public double enthalpyJ() { return enthalpyJ; }
+        /** Natural temperature of the sampled block, the background this field perturbs. */
+        public double naturalC() { return naturalC; }
         public MaterialThermalLaw law() { return law; }
         public long sampleTick() { return sampleTick; }
         public long requestSequence() { return requestSequence; }
@@ -74,6 +77,9 @@ public final class TiledThermalField implements AutoCloseable {
         public final int[] materialGenerations = new int[CELLS];
         public final double[] enthalpyJ = new double[CELLS];
         public final byte[] branches = new byte[CELLS];
+        /** Natural temperature of each captured block; NaN elsewhere, where {@link #ambientC} stands in. */
+        public final double[] naturalC = new double[CELLS];
+        { Arrays.fill(naturalC, Double.NaN); }
     }
 
     private static final class Frame {
@@ -137,6 +143,9 @@ public final class TiledThermalField implements AutoCloseable {
         final long activeBricks;
         final int[] mixingSources;
         final double[] buoyancyFactors;
+        /** Natural temperature of each cell: the background every exchange and threshold is measured against. */
+        final float[] natural;
+        NaturalProfile profile;
         final ThermalMemoryBudget.Reservation storage;
         double ambientC;
         long sampleTick, activeSince;
@@ -160,6 +169,8 @@ public final class TiledThermalField implements AutoCloseable {
             changes = new byte[count * 64]; brickIds = new byte[count]; Arrays.fill(brickSlots, (byte) -1);
             mixingSources = new int[count * 64];
             buoyancyFactors = new double[count * 64];
+            natural = new float[count * 64];
+            Arrays.fill(natural, (float) ambientC);
             long remaining = activeBricks; int ordinal = 0;
             while (remaining != 0) {
                 int brick = Long.numberOfTrailingZeros(remaining); remaining &= remaining - 1;
@@ -222,7 +233,7 @@ public final class TiledThermalField implements AutoCloseable {
     private volatile int stage;
     private int tileCursor, inputCursor, cellCursor;
     private int transportTileCursor, transportCursor;
-    private double routeEnthalpyJ;
+    private double routeEnthalpyJ, routeNaturalC;
     private MaterialThermalLaw routeLaw;
     private byte routeBranch;
     private boolean routeWaiting;
@@ -234,12 +245,23 @@ public final class TiledThermalField implements AutoCloseable {
     private int minimumSectionY = Integer.MAX_VALUE, maximumSectionY = Integer.MIN_VALUE;
     private long pairUpdates, geometryCells, activeNanos;
     private boolean closed;
+    private final NaturalProfiles naturalProfiles;
+    private long appliedProfileRevision = Long.MIN_VALUE;
 
     public TiledThermalField(ThermalMemoryBudget budget, ThermalSignatureTable signatures,
             MaterialBoundaryRegistry materials, double airCapacity, double airConductance,
             double ambientConductance, int maximumTiles, long initialTick) {
+        this(budget, signatures, materials, airCapacity, airConductance, ambientConductance, maximumTiles,
+                initialTick, null);
+    }
+
+    /** {@code naturalProfiles} supplies per-block natural temperatures; without one each Tile uses its ambient. */
+    public TiledThermalField(ThermalMemoryBudget budget, ThermalSignatureTable signatures,
+            MaterialBoundaryRegistry materials, double airCapacity, double airConductance,
+            double ambientConductance, int maximumTiles, long initialTick, NaturalProfiles naturalProfiles) {
         if (!(airCapacity > 0) || !(airConductance >= 0) || !(ambientConductance >= 0)
                 || maximumTiles <= 0 || initialTick < 0) throw new IllegalArgumentException("Invalid tiled field parameters");
+        this.naturalProfiles = naturalProfiles;
         this.budget = budget; this.signatures = signatures; this.materials = materials;
         this.airLaw = MaterialThermalLaw.sensible(airCapacity); inverseAirCapacity = 1 / airCapacity;
         this.airConductance = airConductance; this.ambientConductance = ambientConductance;
@@ -261,7 +283,53 @@ public final class TiledThermalField implements AutoCloseable {
                 + AirBackingMeter.arrayPayloadBytes((count + 63) / 64, 8)
                 + AirBackingMeter.arrayPayloadBytes(count, 8)) + AirBackingMeter.arrayPayloadBytes(count, 1)
                 + AirBackingMeter.arrayPayloadBytes(64, 1) + AirBackingMeter.arrayPayloadBytes(count / 64, 1)
-                + AirBackingMeter.arrayPayloadBytes(count, 4) + AirBackingMeter.arrayPayloadBytes(count, 8);
+                + AirBackingMeter.arrayPayloadBytes(count, 4) + AirBackingMeter.arrayPayloadBytes(count, 8)
+                + AirBackingMeter.arrayPayloadBytes(count, 4);
+    }
+
+    /** Natural temperature of a Page block from the published profile, or the Tile ambient when there is none. */
+    private double naturalOf(Tile tile, NaturalProfile profile, int pageCell) {
+        return profile == null ? tile.ambientC : profile.at(pageCell);
+    }
+
+    /** First natural values of a new Tile, before any cell has energy. */
+    private void initializeNatural(Tile tile) {
+        NaturalProfile profile = naturalProfiles == null ? null : naturalProfiles.get(tile.section);
+        tile.profile = profile;
+        for (int cell = 0; cell < tile.natural.length; cell++)
+            tile.natural[cell] = (float) naturalOf(tile, profile, tile.pageCell(cell));
+    }
+
+    /**
+     * Move an accepted Tile onto its current background. Cells keep their departure from natural, so a background
+     * change reaches every cell at once instead of lingering as a false perturbation; the energy this takes is
+     * external. Waiting phase cells keep their handshake energy, and frozen Tiles relax on activation instead.
+     */
+    private void shiftToNatural(Tile tile) {
+        NaturalProfile profile = naturalProfiles == null ? null : naturalProfiles.get(tile.section);
+        tile.profile = profile;
+        Frame frame = tile.current();
+        for (int cell = 0; cell < tile.natural.length; cell++) {
+            float next = (float) naturalOf(tile, profile, tile.pageCell(cell)), previous = tile.natural[cell];
+            tile.natural[cell] = next;
+            if (next == previous || tile.frozen) continue;
+            var law = law(frame.signatures[cell]);
+            if (law == null || waiting(frame, cell)) continue;
+            double energy = ((double) next - previous) * law.capacityJPerK();
+            frame.h[cell] += energy;
+            acceptedExternalJ -= energy;
+        }
+        invalidateQueries();
+    }
+
+    /** Install every newly published profile at a step boundary. */
+    private void refreshNaturalProfiles() {
+        if (naturalProfiles == null) return;
+        long revision = naturalProfiles.revision();
+        if (revision == appliedProfileRevision) return;
+        appliedProfileRevision = revision;
+        for (var tile : ordered)
+            if (tile.profile != naturalProfiles.get(tile.section)) shiftToNatural(tile);
     }
 
     private int directoryCapacityFor(int required) {
@@ -322,12 +390,14 @@ public final class TiledThermalField implements AutoCloseable {
         try {
             tile = new Tile(section, activeBricks, ambientC, credit);
             tile.sampleTick = tile.activeSince = sampleTick;
+            initializeNatural(tile);
             for (var frame : tile.frames) {
                 for (int cell = 0; cell < frame.h.length; cell++) {
                     frame.signatures[cell] = captured[tile.pageCell(cell)];
                     var law = law(frame.signatures[cell]);
                     if (law != null) {
-                        frame.h[cell] = law.enthalpyAtTemperature(ambientC); frame.branches[cell] = law.initialBranch(ambientC);
+                        double natural = tile.natural[cell];
+                        frame.h[cell] = law.enthalpyAtTemperature(natural); frame.branches[cell] = law.initialBranch(natural);
                         if (law != airLaw && frame == tile.frames[0])
                             frame.materialGenerations[cell] = nextMaterialGeneration = Math.incrementExact(nextMaterialGeneration);
                     }
@@ -422,8 +492,12 @@ public final class TiledThermalField implements AutoCloseable {
             next.reentryHalfLife = previous.reentryHalfLife;
             if (previous.frames[0].requests != null || previous.frames[1].requests != null)
                 for (var frame : next.frames) frame.requests = new long[frame.h.length];
+            // Kept cells keep the background their energy was last shifted onto; new cells start on the current one.
+            next.profile = previous.profile;
+            NaturalProfile current = naturalProfiles == null ? null : naturalProfiles.get(section);
             for (int cell = 0; cell < next.current().h.length; cell++) {
                 int pageCell = next.pageCell(cell), oldCell = previous.index(pageCell);
+                next.natural[cell] = oldCell >= 0 ? previous.natural[oldCell] : (float) naturalOf(next, current, pageCell);
                 if (oldCell >= 0) {
                     for (int slot = 0; slot < 2; slot++) {
                         var from = previous.frames[slot == (previous.current ^ 1) && !previous.geometryChanged ? previous.current : slot]; var to = next.frames[slot];
@@ -439,7 +513,8 @@ public final class TiledThermalField implements AutoCloseable {
                     next.current().signatures[cell] = ThermalSignatureTable.UNRESOLVED;
                     var frame = next.working();
                     frame.signatures[cell] = signature; frame.materialGenerations[cell] = generation;
-                    if (law != null) { frame.h[cell] = law.enthalpyAtTemperature(next.ambientC); frame.branches[cell] = law.initialBranch(next.ambientC); }
+                    double natural = next.natural[cell];
+                    if (law != null) { frame.h[cell] = law.enthalpyAtTemperature(natural); frame.branches[cell] = law.initialBranch(natural); }
                     next.changes[cell] = (byte) (1 << Change.PHYSICAL.ordinal()); next.geometryChanged = true;
                 }
             }
@@ -580,6 +655,8 @@ public final class TiledThermalField implements AutoCloseable {
     public synchronized boolean begin(ThermalHeatStep batch, it.unimi.dsi.fastutil.longs.LongSet sections) {
         if (closed || stage != IDLE || batch == null) return false;
         if (batch.toTick() < batch.fromTick()) throw new IllegalArgumentException("A numerical interval cannot move backwards");
+        // Backgrounds published since the last step take effect at this boundary, before any Working copy.
+        refreshNaturalProfiles();
         stepTiles.clear();
         for (var tile : ordered) if (!tile.frozen && (sections == null || sections.contains(tile.section))) {
             if (batch.toTick() != batch.fromTick() && tile.sampleTick != batch.fromTick()) {
@@ -757,12 +834,14 @@ public final class TiledThermalField implements AutoCloseable {
         if (!airVisible(tile, false, readOwner)) return Double.NaN;
         int cell = tile.index(local(position));
         var frame = tile.current();
-        return cell >= 0 && law(frame.signatures[cell]) == airLaw ? frame.h[cell] / airLaw.capacityJPerK() : Double.NaN;
+        return cell >= 0 && law(frame.signatures[cell]) == airLaw
+                ? frame.h[cell] / airLaw.capacityJPerK() - tile.natural[cell] : Double.NaN;
     }
 
     /**
      * Reconstruct a shared vertex only when queried. It is a view of cell means,
      * never stored energy. Face-connected branches keep solid corners separate.
+     * Values are departures from natural, so a varying background is never smoothed into the result.
      */
     private double queryCorner(Tile owner, int x, int y, int z, int corner) {
         int vx = corner & 1, vy = corner >>> 2, vz = corner >>> 1 & 1, mask = 0;
@@ -787,12 +866,12 @@ public final class TiledThermalField implements AutoCloseable {
             sum += value + ((octant & 1) - .5) * queryGradients[offset] + ((octant >>> 2) - .5) * queryGradients[offset + 1]
                     + ((octant >>> 1 & 1) - .5) * queryGradients[offset + 2];
         }
-        double temperature = sum / Integer.bitCount(members);
+        double departure = sum / Integer.bitCount(members);
         // One-sided extrapolation may not invent cooling in a locally heat-only
         // field, or heating in a cold-only field. This changes the query, never H.
-        if (minimum >= owner.ambientC) temperature = Math.max(owner.ambientC, temperature);
-        if (maximum <= owner.ambientC) temperature = Math.min(owner.ambientC, temperature);
-        return temperature;
+        if (minimum >= 0) departure = Math.max(0, departure);
+        if (maximum <= 0) departure = Math.min(0, departure);
+        return departure;
     }
 
     /** Each actual cell is fetched at most once during this query, including missing cells. */
@@ -828,12 +907,12 @@ public final class TiledThermalField implements AutoCloseable {
             queryKeys[cached] = position; queryCells.put(position, cached);
             nextQueryCell = (cached + 1) % QUERY_CACHE_CELLS;
         } else queryCacheHits++;
-        double temperature = 0;
+        double departure = 0;
         for (int corner = 0; corner < 8; corner++) {
             double weight = ((corner & 1) == 0 ? 1 - fx : fx) * ((corner & 4) == 0 ? 1 - fy : fy) * ((corner & 2) == 0 ? 1 - fz : fz);
-            temperature += weight * queryValues[cached * 8 + corner];
+            departure += weight * queryValues[cached * 8 + corner];
         }
-        return temperature;
+        return tile.natural[cell] + departure;
     }
 
     private void invalidateQueries() {
@@ -863,9 +942,10 @@ public final class TiledThermalField implements AutoCloseable {
         if (conversionKeepsMatter(tile, before, trial, cell))
             return convertedEnthalpy(law(before.signatures[cell]), nextLaw, before.h[cell], before.branches[cell],
                     (tile.changes[cell] & 1 << Change.GAMEPLAY.ordinal()) != 0);
+        double natural = tile.natural[cell];
         return sameMatter(tile, before, trial, cell)
-                ? law(before.signatures[cell]).afterMassChange(before.h[cell], nextLaw, tile.ambientC)
-                : nextLaw.enthalpyAtTemperature(tile.ambientC);
+                ? law(before.signatures[cell]).afterMassChange(before.h[cell], nextLaw, natural)
+                : nextLaw.enthalpyAtTemperature(natural);
     }
 
     private static double convertedEnthalpy(MaterialThermalLaw before, MaterialThermalLaw after,
@@ -883,8 +963,8 @@ public final class TiledThermalField implements AutoCloseable {
         double next = 0;
         if (nextLaw != null) {
             if (converted) next = convertedEnthalpy(oldLaw, nextLaw, frame.h[cell], frame.branches[cell], change == Change.GAMEPLAY);
-            else if (same) next = oldLaw.afterMassChange(frame.h[cell], nextLaw, tile.ambientC);
-            else next = nextLaw.enthalpyAtTemperature(tile.ambientC);
+            else if (same) next = oldLaw.afterMassChange(frame.h[cell], nextLaw, tile.natural[cell]);
+            else next = nextLaw.enthalpyAtTemperature(tile.natural[cell]);
         }
         acceptedExternalJ += frame.h[cell] - next;
         frame.h[cell] = next; frame.signatures[cell] = signature;
@@ -1083,42 +1163,44 @@ public final class TiledThermalField implements AutoCloseable {
             routeLaw = law(frame.signatures[cell]);
             if (routeLaw == null || routeLaw == airLaw) return false;
             routeEnthalpyJ = frame.h[cell]; routeBranch = frame.branches[cell]; routeWaiting = waiting(frame, cell);
+            routeNaturalC = tile.natural[cell];
             return true;
         }
-        double temperature = 0;
+        double temperature = 0, natural = 0;
         for (int index = 0; index < side.positions.length; index++) {
             long position = side.positions[index];
             var tile = bySection.get(section(position));
             int cell = !selected(tile) ? -1 : tile.index(local(position));
             if (cell < 0 || law(tile.working().signatures[cell]) != airLaw) return false;
             temperature += side.weights[index] * tile.working().h[cell] * inverseAirCapacity;
+            natural += side.weights[index] * tile.natural[cell];
         }
         routeLaw = side.effectiveAirLaw; routeEnthalpyJ = temperature * routeLaw.capacityJPerK();
-        routeBranch = 0; routeWaiting = false;
+        routeBranch = 0; routeWaiting = false; routeNaturalC = natural;
         return true;
     }
 
     private void exchangeRoute(Route route) {
         if (!route.validity.valid() || !readRouteSide(route.first)) return;
         var firstLaw = routeLaw;
-        double firstJ = routeEnthalpyJ;
+        double firstJ = routeEnthalpyJ, firstNatural = routeNaturalC;
         byte firstBranch = routeBranch;
         boolean firstWaiting = routeWaiting;
         if (!readRouteSide(route.second)) return;
-        double secondJ = routeEnthalpyJ;
+        double secondJ = routeEnthalpyJ, background = firstNatural - routeNaturalC;
         if (route.first.air() && route.second.air()) {
             double inverse = 1 / firstLaw.capacityJPerK() + 1 / routeLaw.capacityJPerK();
             for (int a = 0; a < route.first.positions.length; a++) for (int b = 0; b < route.second.positions.length; b++)
                 if (route.first.positions[a] == route.second.positions[b])
                     inverse -= 2 * route.first.weights[a] * route.second.weights[b] * inverseAirCapacity;
             if (inverse <= 0) return;
-            double delta = firstJ / firstLaw.capacityJPerK() - secondJ / routeLaw.capacityJPerK();
+            double delta = firstJ / firstLaw.capacityJPerK() - secondJ / routeLaw.capacityJPerK() - background;
             double energy = delta * -Math.expm1(-route.conductance * inverse * halfSeconds) / inverse;
             distributeRouteEnergy(route.first, -energy); distributeRouteEnergy(route.second, energy); pairUpdates++;
             return;
         }
         ThermalExchangeKernel.exchangeMaterialsInto(firstLaw, firstJ, firstBranch, firstWaiting,
-                routeLaw, secondJ, routeBranch, routeWaiting, route.conductance, halfSeconds, materialPair);
+                routeLaw, secondJ, routeBranch, routeWaiting, route.conductance, halfSeconds, background, materialPair);
         writeRouteSide(route.first, firstJ, materialPair.firstJ(), materialPair.firstBranch(), materialPair.firstWaiting());
         writeRouteSide(route.second, secondJ, materialPair.secondJ(), materialPair.secondBranch(), materialPair.secondWaiting());
         pairUpdates += materialPair.updates();
@@ -1174,15 +1256,21 @@ public final class TiledThermalField implements AutoCloseable {
             if (axis == 1) { firstScale *= tile.buoyancyFactors[cell]; secondScale *= other.buoyancyFactors[next]; }
             double g = airConductance * (firstScale + secondScale) / 2;
             if (g == 0) return;
-            ThermalExchangeKernel.exchangePairWithInverseInto(frame.h[cell], airLaw.capacityJPerK(), inverseAirCapacity,
-                    target.h[next], airLaw.capacityJPerK(), inverseAirCapacity, g, halfSeconds, airPair);
-            frame.h[cell] = airPair.enthalpyAJ(); target.h[next] = airPair.enthalpyBJ(); pairUpdates++;
+            // Exchange departures from each cell's own natural, so two cells at natural exchange nothing.
+            double firstBackground = airLaw.capacityJPerK() * tile.natural[cell];
+            double secondBackground = airLaw.capacityJPerK() * other.natural[next];
+            ThermalExchangeKernel.exchangePairWithInverseInto(frame.h[cell] - firstBackground, airLaw.capacityJPerK(),
+                    inverseAirCapacity, target.h[next] - secondBackground, airLaw.capacityJPerK(), inverseAirCapacity,
+                    g, halfSeconds, airPair);
+            frame.h[cell] = airPair.enthalpyAJ() + firstBackground; target.h[next] = airPair.enthalpyBJ() + secondBackground;
+            pairUpdates++;
             return;
         }
         double g = conductance(tile, cell, other, next, axis * 2 + 1);
         if (g == 0) return;
         ThermalExchangeKernel.exchangeMaterialsInto(firstLaw, frame.h[cell], frame.branches[cell], false,
-                secondLaw, target.h[next], target.branches[next], false, g, halfSeconds, materialPair);
+                secondLaw, target.h[next], target.branches[next], false, g, halfSeconds,
+                (double) tile.natural[cell] - other.natural[next], materialPair);
         frame.h[cell] = materialPair.firstJ(); target.h[next] = materialPair.secondJ();
         frame.branches[cell] = materialPair.firstBranch(); target.branches[next] = materialPair.secondBranch();
         setWaiting(frame, cell, materialPair.firstWaiting()); setWaiting(target, next, materialPair.secondWaiting());
@@ -1217,14 +1305,15 @@ public final class TiledThermalField implements AutoCloseable {
         if (conductance == 0 || waiting(frame, cell)) return;
         var law = law(frame.signatures[cell]);
         double oldJ = frame.h[cell];
+        double bath = tile.natural[cell];
         if (law == airLaw) {
-            ThermalExchangeKernel.exchangeFixedBoundaryInto(oldJ, airLaw.capacityJPerK(), 0, tile.ambientC,
+            ThermalExchangeKernel.exchangeFixedBoundaryInto(oldJ, airLaw.capacityJPerK(), 0, bath,
                     conductance, halfSeconds, airBoundary);
             frame.h[cell] = airBoundary.enthalpyJ();
         } else {
             double remaining = halfSeconds;
             for (int part = 0; part < 6 && remaining > 0; part++) {
-                double delta = tile.ambientC - law.temperatureC(frame.h[cell], frame.branches[cell]);
+                double delta = bath - law.temperatureC(frame.h[cell], frame.branches[cell]);
                 if (delta == 0) break;
                 double direction = Math.signum(delta);
                 byte branch = frame.branches[cell] = law.selectBranch(frame.h[cell], frame.branches[cell], direction);
@@ -1266,7 +1355,8 @@ public final class TiledThermalField implements AutoCloseable {
 
     @FunctionalInterface
     public interface RestoredAirCells {
-        double temperatureC(int brick, int cell);
+        /** Saved temperature of one block, relaxed toward {@code naturalC}, that block's current natural. */
+        double temperatureC(int brick, int cell, double naturalC);
     }
 
     /** Import the saved canonical cell temperatures; the sampler is not retained. */
@@ -1276,9 +1366,9 @@ public final class TiledThermalField implements AutoCloseable {
         for (int cell = 0; cell < frame.h.length; cell++) {
             int brick = Byte.toUnsignedInt(tile.brickIds[cell >>> 6]);
             if ((bricks & 1L << brick) == 0 || law(frame.signatures[cell]) != airLaw) continue;
-            double value = temperatures.temperatureC(brick, cell & 63);
+            double value = temperatures.temperatureC(brick, cell & 63, tile.natural[cell]);
             if (!Double.isFinite(value)) continue;
-            double delta = (value - tile.ambientC) * airLaw.capacityJPerK();
+            double delta = (value - tile.natural[cell]) * airLaw.capacityJPerK();
             frame.h[cell] += delta; trialExternalJ -= delta;
         }
     }
@@ -1325,6 +1415,7 @@ public final class TiledThermalField implements AutoCloseable {
         out.enthalpyJ = frame.h[cell]; out.branch = frame.branches[cell];
         out.law = law;
         out.temperatureC = law.temperatureC(frame.h[cell], out.branch);
+        out.naturalC = tile.natural[cell];
         out.sampleTick = tile.sampleTick;
         out.requestSequence = frame.requests == null ? 0 : frame.requests[cell];
         out.materialStateId = material ? signatures.materialStateId(signature) : -1;
@@ -1339,6 +1430,7 @@ public final class TiledThermalField implements AutoCloseable {
         int cell = tile == null ? -1 : tile.index(local(position));
         if (closed || cell < 0 || law(tile.current().signatures[cell]) != airLaw) return false;
         out.temperatureC = sampleAirCell(tile, cell, x - bx, y - by, z - bz);
+        out.naturalC = tile.natural[cell];
         out.sampleTick = tile.sampleTick; out.enthalpyJ = tile.current().h[cell]; out.law = airLaw;
         out.branch = 0; out.materialStateId = -1; out.materialGeneration = 0; out.requestSequence = 0;
         return true;
@@ -1354,7 +1446,9 @@ public final class TiledThermalField implements AutoCloseable {
         var tile = bySection.get(section);
         if (closed || tile == null) return null;
         var frame = tile.current();
-        var capture = new AirFieldCheckpoint.Capture(naturalC).atTick(tile.sampleTick);
+        // A finite naturalC asks for the usual retention filter; each block is measured against its own natural.
+        boolean retainOnlyPerturbed = Double.isFinite(naturalC);
+        var capture = new AirFieldCheckpoint.Capture(Double.NaN).atTick(tile.sampleTick);
         int x0 = SectionPos.x(section) << 4, y0 = SectionPos.y(section) << 4, z0 = SectionPos.z(section) << 4;
         for (int ordinal = 0; ordinal < tile.brickIds.length; ordinal++) {
             int brick = Byte.toUnsignedInt(tile.brickIds[ordinal]);
@@ -1366,12 +1460,15 @@ public final class TiledThermalField implements AutoCloseable {
             }
             if (mask == 0) continue;
             double[] values = new double[Long.bitCount(mask)];
+            double departure = 0;
             long cells = mask; int valueIndex = 0;
             while (cells != 0) {
                 int cell = Long.numberOfTrailingZeros(cells); cells &= cells - 1;
                 values[valueIndex] = (overlay == null ? frame.h[ordinal * 64 + cell] : overlay.enthalpyJ[BlockBrickLayout.pageBlock(brick, cell)]) / airLaw.capacityJPerK();
+                departure = Math.max(departure, Math.abs(values[valueIndex] - tile.natural[ordinal * 64 + cell]));
                 valueIndex++;
             }
+            if (retainOnlyPerturbed && !ThermalRetentionPolicy.retains(departure)) continue;
             capture.addCellBrick(x0, y0, z0, brick, mask, values);
         }
         return capture.finish();
@@ -1424,11 +1521,12 @@ public final class TiledThermalField implements AutoCloseable {
         out.geometryRevision = projectGeometry && tile.geometryChanged && tile.pendingGeometryRevision >= 0
                 ? tile.pendingGeometryRevision : tile.geometryRevision;
         Arrays.fill(out.signatures, ThermalSignatureTable.UNRESOLVED); Arrays.fill(out.materialGenerations, 0);
-        Arrays.fill(out.enthalpyJ, 0); Arrays.fill(out.branches, (byte) 0);
+        Arrays.fill(out.enthalpyJ, 0); Arrays.fill(out.branches, (byte) 0); Arrays.fill(out.naturalC, Double.NaN);
         for (int cell = 0; cell < frame.h.length; cell++) {
             int pageCell = tile.pageCell(cell);
             out.signatures[pageCell] = frame.signatures[cell]; out.materialGenerations[pageCell] = frame.materialGenerations[cell];
             out.enthalpyJ[pageCell] = frame.h[cell];
+            out.naturalC[pageCell] = tile.natural[cell];
             out.branches[pageCell] = frame.branches[cell];
             if (projectGeometry && tile.geometryChanged && tile.changes[cell] != 0) {
                 var trial = tile.working();
@@ -1453,11 +1551,11 @@ public final class TiledThermalField implements AutoCloseable {
         boolean converted = (change == Change.PHASE || change == Change.GAMEPLAY) && material(previous) && material(next);
         boolean same = change != Change.REPLACEMENT && before != null && after != null
                 && signatures.isAir(previous) == signatures.isAir(next) && signatures.sameMaterialType(previous, next);
-        double nextJ = 0;
+        double nextJ = 0, natural = Double.isFinite(out.naturalC[pageCell]) ? out.naturalC[pageCell] : out.ambientC;
         if (after != null) {
             if (converted) nextJ = convertedEnthalpy(before, after, out.enthalpyJ[pageCell], out.branches[pageCell], change == Change.GAMEPLAY);
-            else if (same) nextJ = before.afterMassChange(out.enthalpyJ[pageCell], after, out.ambientC);
-            else nextJ = after.enthalpyAtTemperature(out.ambientC);
+            else if (same) nextJ = before.afterMassChange(out.enthalpyJ[pageCell], after, natural);
+            else nextJ = after.enthalpyAtTemperature(natural);
         }
         out.enthalpyJ[pageCell] = nextJ; out.signatures[pageCell] = next;
         if (!same && !converted) out.materialGenerations[pageCell] = 0;
@@ -1513,7 +1611,7 @@ public final class TiledThermalField implements AutoCloseable {
                         (SectionPos.z(section) << 4) + (pageCell >>> 4 & 15) + .5, savedTick);
                 double factor = DormantThermalCooling.factor(sampled, restoreTick, rate);
                 double value = savedAir.blockCenterC(brick, cell & 63);
-                double temperature = Double.isFinite(value) ? DormantThermalCooling.temperature(value, tile.ambientC, factor)
+                double temperature = Double.isFinite(value) ? DormantThermalCooling.temperature(value, tile.natural[cell], factor)
                         : enthalpyJ[pageCell] * inverseAirCapacity;
                 for (var destination : tile.frames) destination.h[cell] = temperature * airLaw.capacityJPerK();
             }
@@ -1524,8 +1622,18 @@ public final class TiledThermalField implements AutoCloseable {
 
     public synchronized boolean hasSection(long section) { return !closed && bySection.containsKey(section); }
 
-    /** Accepted cell/latent state decides residency; point-query reconstruction owns no heat. */
-    public synchronized boolean activeBrick(long section, int brick, double naturalC, double thresholdC) {
+    /** Natural temperature of the cell at {@code position}; NaN outside every Tile. */
+    public synchronized double naturalC(long position) {
+        var tile = closed ? null : bySection.get(section(position));
+        int cell = tile == null ? -1 : tile.index(local(position));
+        return cell < 0 ? Double.NaN : tile.natural[cell];
+    }
+
+    /**
+     * Accepted cell/latent state decides residency; point-query reconstruction owns no heat. Each cell is measured
+     * against its own natural temperature.
+     */
+    public synchronized boolean activeBrick(long section, int brick, double thresholdC) {
         var tile = bySection.get(section);
         int ordinal = tile == null ? -1 : tile.brickSlots[brick];
         if (closed || ordinal < 0 || !tile.published || tile.frozen) return false;
@@ -1535,7 +1643,8 @@ public final class TiledThermalField implements AutoCloseable {
             if (law == null) continue;
             var edge = law.transition(frame.branches[cell]);
             if (waiting(frame, cell) || edge != null && edge.progress(frame.h[cell]) > 0
-                    || Math.abs(law.temperatureC(frame.h[cell], frame.branches[cell]) - naturalC) >= thresholdC) return true;
+                    || Math.abs(law.temperatureC(frame.h[cell], frame.branches[cell]) - tile.natural[cell]) >= thresholdC)
+                return true;
         }
         return false;
     }
@@ -1610,7 +1719,11 @@ public final class TiledThermalField implements AutoCloseable {
         if (closed || stage != IDLE || !Double.isFinite(ambientC)) return false;
         var tile = bySection.get(section);
         if (tile == null) return false;
-        if (!tile.frozen) { tile.ambientC = ambientC; invalidateQueries(); return true; }
+        if (!tile.frozen) {
+            tile.ambientC = ambientC;
+            if (tile.profile == null) shiftToNatural(tile); else invalidateQueries();
+            return true;
+        }
         tile.activateAt = Math.max(tick, tile.sampleTick); tile.reentryAmbientC = ambientC;
         tile.reentryHalfLife = halfLifeSeconds; activationRevision++;
         return true;
@@ -1630,19 +1743,22 @@ public final class TiledThermalField implements AutoCloseable {
         var tile = bySection.get(section);
         if (tile == null || !tile.frozen || tile.activateAt == Long.MIN_VALUE) return false;
         if (influence != null && !atBoundary(influence, tile.activateAt)) return false;
+        // Dormant cooling relaxes each cell toward its current background; no shift is needed on top of it.
+        tile.ambientC = tile.reentryAmbientC;
+        initializeNatural(tile);
         var frame = tile.current(); double rate = DormantThermalCooling.rate(tile.reentryHalfLife);
         for (int cell = 0; cell < frame.h.length; cell++) {
             var law = law(frame.signatures[cell]);
             if (law == null || waiting(frame, cell)) continue;
             double old = frame.h[cell];
             restoredMaterial.setStored(old, law, frame.branches[cell], tile.sampleTick);
-            DormantThermalCooling.project(restoredMaterial, tile.activateAt, tile.reentryAmbientC, rate);
+            DormantThermalCooling.project(restoredMaterial, tile.activateAt, tile.natural[cell], rate);
             frame.h[cell] = restoredMaterial.enthalpyJ(); frame.branches[cell] = restoredMaterial.branch();
             var edge = law.transition(frame.branches[cell]);
             setWaiting(frame, cell, edge != null && edge.complete(frame.h[cell]));
             acceptedExternalJ += old - frame.h[cell];
         }
-        tile.ambientC = tile.reentryAmbientC; tile.sampleTick = tile.activeSince = tile.activateAt; tile.frozen = false;
+        tile.sampleTick = tile.activeSince = tile.activateAt; tile.frozen = false;
         tile.activateAt = Long.MIN_VALUE; activationRevision++; domainsDirty = true; invalidateQueries();
         return true;
     }
@@ -1656,13 +1772,16 @@ public final class TiledThermalField implements AutoCloseable {
         var tile = bySection.get(section); return tile == null ? Long.MIN_VALUE : tile.activeSince;
     }
 
-    /** Main updates the physical bath at a cut boundary; the energy reference never changes. */
+    /**
+     * Main updates the Section's natural value at a cut boundary. A Tile with a published profile keeps its per-block
+     * background; one without moves every cell onto the new value, keeping its departure.
+     */
     public synchronized boolean ambient(long section, double temperatureC) {
         if (closed || stage != IDLE || !Double.isFinite(temperatureC)) return false;
         var tile = bySection.get(section);
         if (tile == null) return false;
         tile.ambientC = temperatureC;
-        invalidateQueries();
+        if (tile.profile == null) shiftToNatural(tile); else invalidateQueries();
         return true;
     }
 

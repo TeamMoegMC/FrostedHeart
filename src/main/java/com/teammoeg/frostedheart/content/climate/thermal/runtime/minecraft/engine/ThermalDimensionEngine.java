@@ -1037,11 +1037,13 @@ public final class ThermalDimensionEngine implements AutoCloseable, MaterialStat
                         if ((bricks & 1L << brick) == 0 || changeAt(write.page.handle, cell) == TiledThermalField.Change.REPLACEMENT) continue;
                         int signature = write.signatures().get(cell);
                         var profile = table.valid(signature) && !table.isAir(signature) ? materialProfiles.profileOrNull(table.materialProfileId(signature)) : null;
-                        if (profile == null || !state.readMatchingState(body, table.materialStateId(signature), profile.thermalLaw(),
-                                Math.max(material.tick(), Math.max(publicationTick, fixedField.sectionSampleTick(section))),
-                                material.naturalC(), material.coolingRate(), restored)) continue;
                         long position = BlockPos.asLong((SectionPos.x(section) << 4) + (cell & 15),
                                 (SectionPos.y(section) << 4) + (cell >>> 8), (SectionPos.z(section) << 4) + (cell >>> 4 & 15));
+                        // A stored body relaxes toward its own cell's natural, the background the field holds it against.
+                        double natural = fixedField.naturalC(position);
+                        if (profile == null || !state.readMatchingState(body, table.materialStateId(signature), profile.thermalLaw(),
+                                Math.max(material.tick(), Math.max(publicationTick, fixedField.sectionSampleTick(section))),
+                                Double.isFinite(natural) ? natural : material.naturalC(), material.coolingRate(), restored)) continue;
                         fixedField.restorePreparedMaterial(position, restored.enthalpyJ(), restored.branch());
                     }
                 }

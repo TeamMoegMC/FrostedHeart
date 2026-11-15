@@ -29,19 +29,6 @@ public final class BlockTemperatureModel {
     private BlockTemperatureModel() {
     }
 
-    public static float climateBlockAffection(
-            int y,
-            int stoneInterfaceLevel,
-            int seaLevel,
-            float maximumAffection
-    ) {
-        if (y > seaLevel) return maximumAffection;
-        if (y > stoneInterfaceLevel) {
-            return maximumAffection * (y - stoneInterfaceLevel) / (seaLevel - stoneInterfaceLevel);
-        }
-        return 0.0F;
-    }
-
     public static float naturalTemperature(
             float dimensionTemperatureCelsius,
             float biomeTemperatureCelsius,
@@ -73,28 +60,5 @@ public final class BlockTemperatureModel {
                                 + maximumHeatFieldTemperatureCelsius * heatApplicationMultiplier,
                         maximumHeatFieldTemperatureCelsius);
         return Math.max(absoluteZeroCelsius, result);
-    }
-
-    public static float blockTemperature(
-            int y,
-            int stoneInterfaceLevel,
-            int seaLevel,
-            float maximumClimateBlockAffection,
-            float dimensionTemperatureCelsius,
-            float biomeTemperatureCelsius,
-            float altitudeTemperatureCelsius,
-            float climateTemperatureCelsius,
-            float maximumHeatFieldTemperatureCelsius,
-            float heatApplicationMultiplier,
-            float absoluteZeroCelsius
-    ) {
-        float alpha = climateBlockAffection(
-                y, stoneInterfaceLevel, seaLevel, maximumClimateBlockAffection);
-        float natural = naturalTemperature(
-                dimensionTemperatureCelsius, biomeTemperatureCelsius,
-                altitudeTemperatureCelsius, climateTemperatureCelsius, alpha);
-        return applyHeat(
-                natural, maximumHeatFieldTemperatureCelsius,
-                heatApplicationMultiplier, absoluteZeroCelsius);
     }
 }

@@ -26,11 +26,14 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 import java.util.function.Supplier;
 
-/** Client-carried display baseline and previous analytic-field footprint. */
+/**
+ * Client-carried display baseline and previous analytic-field footprint. {@code knownNaturalRevision} is the
+ * {@link InfraredNaturalClimate#revision()} the client holds, 0 for none, or {@link InfraredNaturalClimate#UNTRACKED}.
+ */
 public record FHRequestInfraredViewDataSyncPacket(
         int requestId, boolean forceFull, long knownGeneration, long knownCenter, int lastEpoch,
         long[] knownPresence, boolean knownReadable, long[] knownFieldPages, long knownStoredEpoch,
-        long knownStoredSampleTick, int knownDisplayRequestId) implements CMessage {
+        long knownStoredSampleTick, int knownDisplayRequestId, long knownNaturalRevision) implements CMessage {
     public static final int PRESENCE_WORDS = 12;
 
     public FHRequestInfraredViewDataSyncPacket {
@@ -41,12 +44,21 @@ public record FHRequestInfraredViewDataSyncPacket(
             int lastEpoch, long[] knownPresence, boolean knownReadable, long[] knownFieldPages, long knownStoredEpoch,
             long knownStoredSampleTick) {
         this(requestId, forceFull, knownGeneration, knownCenter, lastEpoch, knownPresence, knownReadable,
-                knownFieldPages, knownStoredEpoch, knownStoredSampleTick, -1);
+                knownFieldPages, knownStoredEpoch, knownStoredSampleTick, -1, InfraredNaturalClimate.UNTRACKED);
+    }
+
+    public FHRequestInfraredViewDataSyncPacket(int requestId, boolean forceFull, long knownGeneration, long knownCenter,
+            int lastEpoch, long[] knownPresence, boolean knownReadable, long[] knownFieldPages, long knownStoredEpoch,
+            long knownStoredSampleTick, int knownDisplayRequestId) {
+        this(requestId, forceFull, knownGeneration, knownCenter, lastEpoch, knownPresence, knownReadable,
+                knownFieldPages, knownStoredEpoch, knownStoredSampleTick, knownDisplayRequestId,
+                InfraredNaturalClimate.UNTRACKED);
     }
 
     public FHRequestInfraredViewDataSyncPacket(FriendlyByteBuf b) {
         this(b.readVarInt(), b.readBoolean(), b.readVarLong(), b.readLong(), b.readVarInt(),
-                readPresence(b), b.readBoolean(), readFieldPages(b), b.readVarLong(), b.readLong(), b.readVarInt());
+                readPresence(b), b.readBoolean(), readFieldPages(b), b.readVarLong(), b.readLong(), b.readVarInt(),
+                b.readLong());
     }
 
     static long[] readPresence(FriendlyByteBuf b) {
@@ -117,6 +129,7 @@ public record FHRequestInfraredViewDataSyncPacket(
         b.writeVarLong(knownStoredEpoch);
         b.writeLong(knownStoredSampleTick);
         b.writeVarInt(knownDisplayRequestId);
+        b.writeLong(knownNaturalRevision);
     }
 
     @Override public void handle(Supplier<NetworkEvent.Context> context) {

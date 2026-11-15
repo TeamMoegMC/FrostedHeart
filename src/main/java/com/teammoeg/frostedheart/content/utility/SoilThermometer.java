@@ -115,6 +115,8 @@ public class SoilThermometer extends FHBaseItem {
 
     private static void reportMaterialTemperature(Player player, net.minecraft.core.BlockPos position) {
         float temperature = WorldTemperature.material(player.level(), position);
+        // Without a live or stored body the block sits at its natural temperature, the field's background there.
+        if (!Float.isFinite(temperature)) temperature = WorldTemperature.naturalAir(player.level(), position);
         player.sendSystemMessage(Float.isFinite(temperature)
                 ? Lang.translateMessage("info.soil_thermometerbody", toTemperatureFloatString(temperature))
                 : Lang.translateMessage("info.material_temperature_unavailable"));

@@ -263,8 +263,11 @@ public final class ThermalInputBatch {
             return hasBrick(brick) ? meanTemperatureC(brick) : Double.NaN;
         }
 
-        /** Read one saved canonical cell at its original sampling time. */
-        public double cellTemperatureC(int brick, int block) {
+        /**
+         * Read one saved canonical cell at its original sampling time, relaxed toward {@code naturalC}, the cell's own
+         * natural temperature. Legacy Brick means relax toward the Section value they were saved against.
+         */
+        public double cellTemperatureC(int brick, int block, double naturalC) {
             var spatial = entry.spatialAir();
             if (spatial == null) return hasBrick(brick) ? meanTemperatureC(brick) : Double.NaN;
             double saved = spatial.blockCenterC(brick, block);
@@ -276,7 +279,7 @@ public final class ThermalInputBatch {
                         spatial.minZ() + (brick >>> 2 & 3) * 4 + (block >>> 2 & 3) + .5, entry.savedGameTick());
                 factor = com.teammoeg.frostedheart.content.climate.thermal.persistence.DormantThermalCooling.factor(sampled, targetTick, coolingRate);
             }
-            return naturalTemperatureC + (saved - naturalTemperatureC) * factor;
+            return naturalC + (saved - naturalC) * factor;
         }
 
         public void fillBlockTemperatures(int brick,double[] target) {

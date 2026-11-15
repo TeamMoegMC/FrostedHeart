@@ -1,9 +1,9 @@
 # 热模拟运行时：固定温场、输入与保存
 
 - Status: `Current for the production fixed-field implementation; retirement validated by full 156/157 plus corrected source-focused 8/8, 157 distinct functional checks; hundred-player performance qualification incomplete`
-- Last verified: `2026-11-14`
-- Scope: 正式生产运行链路、输入所有权、物理时间、查询、热数据v7与关闭恢复。
-- Code anchors: `MinecraftThermalInput.createWorker`、`ThermalDimensionEngine`、`TiledThermalField`、`SpatialSourceIngress`、`SpatialHeatStore`、`SpatialHeatBuffer`、`QueryPublication`、`RegionalCheckpoint`、`AirFieldCheckpoint`、`DormantChunkThermalState`。
+- Last verified: `2026-11-15`（新增“自然背景”一节；其余内容 `2026-11-14`）
+- Scope: 正式生产运行链路、输入所有权、物理时间、逐格自然背景、查询、热数据v7与关闭恢复。
+- Code anchors: `MinecraftThermalInput.createWorker`、`ThermalDimensionEngine`、`TiledThermalField`、`NaturalProfile`、`NaturalProfiles`、`SpatialSourceIngress`、`SpatialHeatStore`、`SpatialHeatBuffer`、`QueryPublication`、`RegionalCheckpoint`、`AirFieldCheckpoint`、`DormantChunkThermalState`。
 
 ## 正式入口与数值状态
 
@@ -20,6 +20,46 @@
 `activeSince`是当前活动寿命的起点，不随求解推进。首次捕获或原生重入之前的控制在该起点初始化；它不代替`sampleTick`。旧Page身份不能约束或退休同坐标的新Page。
 
 真实几何在受影响旧温场到达事件切点后安装。纯扩容留在原Page队列等待容量，已有空间继续计算；混合输入中的实际修改、收缩和退休优先作用于已付费空间。冻结写回期间不安装可选扩容。普通几何不能通过直接修改采样时间冒充补算完成。
+
+## 自然背景
+
+自 `2026-11-15` 起，固定温场模拟相对逐格自然背景的扰动。每个Tile的 `natural[cell]`（float）是该格的背景温度：
+有已发布的 `NaturalProfile` 时取 `NaturalProfile.at(pageBlock)`，否则取Tile的 `ambientC`。背景公式和主线程的
+发布节奏见[世界气候与温度](world-climate-and-temperature.md#6-空气温度)。帧里仍是绝对焓，所以温度、能量守恒
+和存档格式都不变；变的是以下各处的参照：
+
+- 换热按与背景之差计算：空气–空气面对和通路（`exchangeRoute`）减去两侧背景，材料对把两侧背景差作为
+  `ThermalExchangeKernel.exchangeMaterialsInto(..., backgroundOffsetC, ...)` 传入，FarField 和环境面以本格背景为浴温。
+  两格都在各自背景上时没有热流，背景不同也一样。
+- 新格、几何替换和质量变化按本格背景初始化（`admit`、`resizeTile`、`projectedEnthalpy`、`changeFrozenCell`、
+  `projectSnapshotCell`）。`SectionSnapshot.naturalC` 带出每格背景；手工构造的快照为 NaN，此时退回 `ambientC`。
+- 查询对“与背景之差”做角点重构和三线性插值，再加上查询点所在格的背景（`airMean`、`queryCorner`、
+  `sampleAirCell`）；`Sample.naturalC` 返回该格背景。驻留判断 `activeBrick(section, brick, threshold)` 和
+  `WorkerPageStore` 的材料扩张与面残差都以每格自己的背景为准。
+- 背景变化：`NaturalProfiles` 是主线程到 worker 的旁路，带递增 revision。`begin` 先调用
+  `refreshNaturalProfiles`，对 profile 身份变了的Tile执行 `shiftToNatural`：每个非冻结、非相变握手的格加上
+  `(新背景 - 旧背景) × capacity`，计入 `acceptedExternalJ`，因此背景变化同时到达每一格，不留下假扰动。
+  冻结Tile只更新背景，重入时 `activate` 朝新背景做休眠冷却。没有 profile 的Tile在 `ambient`/`stageThaw`
+  改变 `ambientC` 时同样整体平移。
+
+休眠存档仍按 Section 保存绝对温度和一个 Section 自然值。为与逐格背景一致，以下几处改用逐格自然温度：
+
+- 写入区块热数据时的保留过滤（`captureChunkSnapshot`）：有 profile 时用 `RegionalCheckpoint.Section.captureAir(IntToDoubleFunction)`
+  和 `MaterialSectionState.capture(..., IntToDoubleFunction)`，只保留偏离本格背景的 Brick 和材料体；
+  静止在自己背景上的格即使偏离 Section 中心值也不写盘。
+- 重入恢复：`DormantAirCut.cellTemperatureC(brick, block, naturalC)` 由场传入本格背景；材料体按
+  `TiledThermalField.naturalC(position)` 衰减。
+- 休眠读数：空气 `DormantChunkThermalState.sampleAt`，材料 `DormantChunkThermalState.projectMaterial`（温度计、
+  `MinecraftPhaseController`），红外 `InfraredCapture.readStoredPage`，以及休眠方块变化前的冷却
+  （`MinecraftThermalInput` 里 `applyMaterialChange` 的 `coolingNatural`），都朝该方块的 `WorldTemperature.naturalAir`
+  衰减，因此红外与温度计读数一致。这几处仍调用 `DormantChunkThermalState.naturalTemperature`，只为在 Section 值
+  变化时推进材料 revision、让红外刷新。
+
+仍以 Section 自然值为准的是：休眠维护的老化删除（`DormantThermalMaintenance`）、重入准入时的过滤
+（`DormantChunkThermalState.admissionCut`、`MinecraftThermalInput.dormantMaterialAdmissionCut`）、检查点之后写盘之前的
+方块替换（`MinecraftPageManager` 的 `projectMaterialCheckpoint`）以及旧版 Brick 均值残差。这些位置在
+Section 内背景差较大时（地表附近、覆盖层厚度不一的 Section）会偏早或偏晚删除已有扰动，或给检查点后新放的方块
+一个 Section 中心的初值。
 
 ## 查询与读者生命周期
 

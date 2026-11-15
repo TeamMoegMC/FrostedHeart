@@ -90,11 +90,25 @@ public final class ThermalExchangeKernel {
     public static void exchangeMaterialsInto(MaterialThermalLaw first, double firstJ, byte firstBranch,
             boolean firstWaiting, MaterialThermalLaw second, double secondJ, byte secondBranch,
             boolean secondWaiting, double conductance, double duration, MutableMaterialPairResult out) {
+        exchangeMaterialsInto(first, firstJ, firstBranch, firstWaiting, second, secondJ, secondBranch, secondWaiting,
+                conductance, duration, 0, out);
+    }
+
+    /**
+     * Material exchange driven by the difference of each side's departure from its own natural temperature:
+     * {@code backgroundOffsetC} is the first side's natural minus the second's, so two bodies at their natural
+     * temperatures exchange nothing. Plateaus still follow absolute temperature.
+     */
+    public static void exchangeMaterialsInto(MaterialThermalLaw first, double firstJ, byte firstBranch,
+            boolean firstWaiting, MaterialThermalLaw second, double secondJ, byte secondBranch,
+            boolean secondWaiting, double conductance, double duration, double backgroundOffsetC,
+            MutableMaterialPairResult out) {
         int updates = 0;
         if (conductance != 0 && !firstWaiting && !secondWaiting) {
             double remaining = duration;
             for (int segment = 0; segment < 6 && remaining > 0; segment++) {
-                double delta = first.temperatureC(firstJ, firstBranch) - second.temperatureC(secondJ, secondBranch);
+                double delta = first.temperatureC(firstJ, firstBranch) - second.temperatureC(secondJ, secondBranch)
+                        - backgroundOffsetC;
                 if (delta == 0) break;
                 double direction = Math.signum(delta);
                 firstBranch = first.selectBranch(firstJ, firstBranch, -direction);
@@ -102,7 +116,8 @@ public final class ThermalExchangeKernel {
                 double limit = Math.min(first.energyLimitJ(firstJ, firstBranch, -direction),
                         second.energyLimitJ(secondJ, secondBranch, direction));
                 if (limit == 0) break;
-                delta = first.temperatureC(firstJ, firstBranch) - second.temperatureC(secondJ, secondBranch);
+                delta = first.temperatureC(firstJ, firstBranch) - second.temperatureC(secondJ, secondBranch)
+                        - backgroundOffsetC;
                 if (delta == 0 || Math.signum(delta) != direction) break;
                 double slope = first.slopeKPerJ(firstJ, firstBranch) + second.slopeKPerJ(secondJ, secondBranch);
                 double requested = slope == 0 ? Math.abs(delta) * conductance * remaining

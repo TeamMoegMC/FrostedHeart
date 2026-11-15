@@ -433,6 +433,12 @@ public class FHClientEvents {
     }
 
     @SubscribeEvent
+    public static void loadClientChunk(net.minecraftforge.event.level.ChunkEvent.Load event) {
+        if (event.getLevel().isClientSide())
+            InfraredViewRenderer.onClientChunkLoaded(event.getChunk().getPos().x, event.getChunk().getPos().z);
+    }
+
+    @SubscribeEvent
     public static void unloadWorld(LevelEvent.Unload event) {
         ClientUtils.DoApplyGammaValue = false;
         MouseCaptureUtil.stopMouseCapture();

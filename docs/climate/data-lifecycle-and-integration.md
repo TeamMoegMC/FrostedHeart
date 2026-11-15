@@ -293,7 +293,8 @@ replacement/mass changes whose target still has material; removal does not query
 SavedData；警告时间使用 vanilla scheduled block ticks，外观/预警/材料更新标记使用
 BlockState，坠落使用 vanilla falling-block NBT。规则与验证入口见 [icicle.md](icicle.md)。
 
-`SoilThermometer`的方块测量读取`WorldTemperature.material`，不可用时显示明确提示。
+`SoilThermometer`的方块测量读取`WorldTemperature.material`；没有活动或休眠材料状态时，显示该方块的
+`WorldTemperature.naturalAir`，即热场在这里的背景，与红外的自然温度底色相同。
 `SoilThermometerRequestPacket`仍读取`WorldTemperature.block`，因为这条网络路径服务于
 作物生长环境HUD；它不是材料温度计读数。红外仍使用材料基础值与既有解析场显示合成，
 本轮未修改shader、色标、0.43融合或蓝色缺值占位。
@@ -345,8 +346,10 @@ server component instead of using this packet.
 
 `FHRequestInfraredViewDataSyncPacket` carries requestId, forceFull, committed
 display generation/center, material epoch, material presence, known readability,
-previous field footprint, dormant revision/sample tick and `knownDisplayRequestId`.
-The latter is the last data transaction committed at LAST; an ACK does not advance it.
+previous field footprint, dormant revision/sample tick, `knownDisplayRequestId` and
+`knownNaturalRevision`. `knownDisplayRequestId` is the last data transaction committed at LAST; an ACK does not
+advance it. `knownNaturalRevision` is the `InfraredNaturalClimate` content hash the client holds (0 for none,
+`UNTRACKED` for callers that never resend for it); a different value makes an otherwise empty reply non-empty.
 Masks use one-byte empty, dense twelve-long, or ascending sparse Page-index delta
 encoding, selecting sparse only when smaller. An omitted response presence differs
 from a transmitted empty mask: the former preserves presence, the latter clears it.
@@ -363,9 +366,11 @@ recipe invalidation cancel the pending identity and allow a fresh request.
 material epoch and FULL/FIRST/LAST/ACK/READABLE flags, optional changed/full material
 presence, the complete current field footprint, and final display Brick records.
 Empty field footprint explicitly clears its baseline. Only LAST carries presence,
-field footprint and dormant revision/sample tick; intermediate parts carry their
+field footprint and dormant revision/sample tick; only FIRST carries the optional `InfraredNaturalClimate` (covered
+climate per cover for each window chunk, superflat flag, lower clamp) from which the client computes the natural
+temperature of blocks without a value; intermediate parts carry their
 identity, center, generation, material epoch, flags and Brick payload. READABLE describes physical input availability; a field-only or empty
-full is a valid display transaction. There is no background key/grid or separate
+full is a valid display transaction. There is no background value grid or separate
 material-update/control transaction. Matching packet implementations are required
 on both endpoints. If capture returns null because nothing changed or a coherent
 snapshot is temporarily unavailable, the server sends an ACK through the same

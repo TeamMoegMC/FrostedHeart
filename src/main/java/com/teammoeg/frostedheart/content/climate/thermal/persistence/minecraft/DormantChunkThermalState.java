@@ -259,14 +259,15 @@ public final class DormantChunkThermalState {
             MaterialSample out,
             BlockPos.MutableBlockPos naturalPosition) {
         long tick = level.getGameTime();
-        double natural =
-                naturalTemperature(
-                        level,
-                        position.getX() >> 4,
-                        position.getY() >> 4,
-                        position.getZ() >> 4,
-                        tick,
-                        naturalPosition);
+        // The Section value keeps the material revision current; the body relaxes toward its own block's natural.
+        naturalTemperature(
+                level,
+                position.getX() >> 4,
+                position.getY() >> 4,
+                position.getZ() >> 4,
+                tick,
+                naturalPosition);
+        double natural = WorldTemperature.naturalAir(level, naturalPosition.set(position));
         DormantThermalCooling.project(
                 out,
                 tick,
@@ -388,7 +389,9 @@ public final class DormantChunkThermalState {
             int brick = (bx & 15) >>> 2 | ((bz & 15) >>> 2) << 2 | ((by & 15) >>> 2) << 4;
             return sample(sectionY, brick, gameTick, halfLifeSeconds, level, bx >> 4, bz >> 4, naturalPosition);
         }
-        double natural = naturalTemperature(level, bx >> 4, sectionY, bz >> 4, gameTick, naturalPosition);
+        // Stored air relaxes toward the natural temperature of its own block, not one value for the whole Section.
+        naturalTemperature(level, bx >> 4, sectionY, bz >> 4, gameTick, naturalPosition);
+        double natural = WorldTemperature.naturalAir(level, naturalPosition.set(bx, by, bz));
         return entry.spatialAir.sampleC(x, y, z, natural, gameTick, DormantThermalCooling.rate(halfLifeSeconds), entry.savedGameTick);
     }
 

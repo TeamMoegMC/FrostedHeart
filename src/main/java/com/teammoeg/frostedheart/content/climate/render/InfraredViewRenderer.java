@@ -133,8 +133,19 @@ public final class InfraredViewRenderer {
     private static long lastSentNanos;
     private static int lastSentId;
     private static int nextResponsePart;
+    /** Natural temperature of blocks without a server value; uploads show it wherever the mirror is INVALID. */
+    private static final InfraredNaturalFill natural = new InfraredNaturalFill();
+
+    static {
+        com.teammoeg.frostedheart.content.climate.ClimateCover.clientBlockChanges = natural::blockChanged;
+    }
 
     private InfraredViewRenderer() {
+    }
+
+    /** A client chunk arrived; its natural temperatures can now be computed. */
+    public static void onClientChunkLoaded(int chunkX, int chunkZ) {
+        natural.chunkLoaded(chunkX, chunkZ);
     }
 
     public static void setCameraPose(@Nullable PoseStack pose) {
@@ -203,6 +214,7 @@ public final class InfraredViewRenderer {
         }
 
         Minecraft minecraft = Minecraft.getInstance();
+        if (open && minecraft.level != null && natural.advance(minecraft.level)) uploadNaturalPages();
         if (!open || minecraft.player == null || minecraft.level == null || requests.isPending()) {
             return;
         }
@@ -258,7 +270,7 @@ public final class InfraredViewRenderer {
                         forceFull || !deltaBaselineValid,
                         generation, SectionPos.asLong(textureCenterChunkX, textureCenterSectionY, textureCenterChunkZ),
                         infraredEpoch, knownPresence.clone(), materialReadable, knownFieldPages, storedEpoch, storedSampleTick,
-                        knownDisplayRequestId));
+                        knownDisplayRequestId, natural.revision()));
     }
 
     /** Show received Pages progressively; only LAST commits the complete delta baseline. */
@@ -287,6 +299,9 @@ public final class InfraredViewRenderer {
             deltaBaselineValid = false;
             requestedChunkX = data.centerChunkX(); requestedChunkZ = data.centerChunkZ();
             requestedSectionY = data.centerSectionY(); requestCenterValid = true;
+            // The natural climate describes this reply's window.
+            natural.recenter(nextCenter);
+            natural.accept(data.natural());
             ensureTemperatureMirror();
             Arrays.fill(dirtyUploadPages, 0L);
             if (data.full()) clearMirror();
@@ -359,7 +374,8 @@ public final class InfraredViewRenderer {
                 +" ignored="+ignoredReplies+" staging="+receivingResponse+" baseline="+deltaBaselineValid
                 +" validMirrorSamples="+valid+" minC="+(valid==0?Double.NaN:min*.25)+" maxC="+(valid==0?Double.NaN:max*.25)
                 +" materialReadable="+materialReadable+" texture="+(temperatureTexture!=0)+" renderedFrames="+renderedFrames
-                +" terrainDepth="+lastRenderHadTerrainDepth+" center="+textureCenterChunkX+","+textureCenterSectionY+","+textureCenterChunkZ;
+                +" terrainDepth="+lastRenderHadTerrainDepth+" center="+textureCenterChunkX+","+textureCenterSectionY+","+textureCenterChunkZ
+                +" naturalRevision="+natural.revision();
     }
 
     public static void invalidateDisplay() {
@@ -461,15 +477,38 @@ public final class InfraredViewRenderer {
                          GL11.GL_SHORT,
                          0L);
             }
-            temperatureMirror.clear();
-            GL12.glTexSubImage3D(
-                    GL12.GL_TEXTURE_3D,
-                    0,
-                    0, 0, 0,
-                    TEXTURE_SIZE, TEXTURE_SIZE, TEXTURE_SIZE,
-                    GL30.GL_RED_INTEGER,
-                    GL11.GL_SHORT,
-                    temperatureMirror);
+            if (natural.hasValues()) {
+                // Blocks without a server value show their natural temperature; merge Page by Page.
+                for (int page = 0; page < PAGE_WIDTH * PAGE_WIDTH * PAGE_WIDTH; page++) uploadPage(page);
+            } else {
+                temperatureMirror.clear();
+                GL12.glTexSubImage3D(
+                        GL12.GL_TEXTURE_3D,
+                        0,
+                        0, 0, 0,
+                        TEXTURE_SIZE, TEXTURE_SIZE, TEXTURE_SIZE,
+                        GL30.GL_RED_INTEGER,
+                        GL11.GL_SHORT,
+                        temperatureMirror);
+            }
+        } finally {
+            GL11.glBindTexture(GL12.GL_TEXTURE_3D, previousTexture);
+        }
+    }
+
+    /** Upload the Pages whose natural values were just computed; a texture created later merges them anyway. */
+    private static void uploadNaturalPages() {
+        long[] pages = natural.takeComputed();
+        if (temperatureTexture == 0 || temperatureMirror == null) return;
+        int previousTexture = GL11.glGetInteger(GL12.GL_TEXTURE_BINDING_3D);
+        try {
+            resetTextureUploadState();
+            GL11.glBindTexture(GL12.GL_TEXTURE_3D, temperatureTexture);
+            for (int word = 0; word < pages.length; word++)
+                for (long bits = pages[word]; bits != 0L; bits &= bits - 1L) {
+                    int page = (word << 6) + Long.numberOfTrailingZeros(bits);
+                    if (page < PAGE_WIDTH * PAGE_WIDTH * PAGE_WIDTH) uploadPage(page);
+                }
         } finally {
             GL11.glBindTexture(GL12.GL_TEXTURE_3D, previousTexture);
         }
@@ -531,7 +570,8 @@ public final class InfraredViewRenderer {
                 int offset = ((baseZ + z) * TEXTURE_SIZE + baseY + y)
                         * TEXTURE_SIZE + baseX;
                 for (int x = 0; x < BLOCKS_PER_PAGE_AXIS; x++) {
-                    upload.put(temperatureMirror.get(offset + x));
+                    short value = temperatureMirror.get(offset + x);
+                    upload.put(value == InfraredBrickCodec.INVALID_TEMPERATURE ? natural.at(offset + x) : value);
                 }
             }
         }
@@ -688,6 +728,7 @@ public final class InfraredViewRenderer {
         frameTexture = 0;
         Arrays.fill(knownPresence, 0L);
         Arrays.fill(dirtyUploadPages, 0L);
+        natural.reset();
         cameraPose = null;
         int textureToDelete = temperatureTexture;
         temperatureTexture = 0;

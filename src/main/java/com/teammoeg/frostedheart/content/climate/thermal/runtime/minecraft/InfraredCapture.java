@@ -23,8 +23,12 @@ package com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft;
 import static com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput.MAX_PUBLICATION_AGE_TICKS;
 import static com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput.dormantHalfLifeSeconds;
 
+import com.teammoeg.frostedheart.content.climate.ClimateCover;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
+import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClimate;
 import com.teammoeg.frostedheart.content.climate.network.InfraredBrickCodec;
+import com.teammoeg.frostedheart.content.climate.network.InfraredNaturalClimate;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.content.climate.thermal.field.ThermalAnalyticField;
 import com.teammoeg.frostedheart.content.climate.thermal.field.ThermalAnalyticFieldIndex;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.BlockBrickLayout;
@@ -95,6 +99,16 @@ final class InfraredCapture implements AutoCloseable {
     private int originX, originY, originZ;
     private long captureTick;
 
+    /** A capture for a caller that does not track natural climate. */
+    InfraredSnapshot capture(MinecraftPageManager pages, QueryPublication publication, long generation,
+            ServerPlayer player, boolean forceFull, long knownGeneration, long knownCenter, int lastEpoch,
+            long[] knownPresence, boolean knownReadable, long[] knownFieldPages, long knownStoredEpoch,
+            long knownStoredSampleTick, int knownDisplayRequestId, int requestId) {
+        return capture(pages, publication, generation, player, forceFull, knownGeneration, knownCenter, lastEpoch,
+                knownPresence, knownReadable, knownFieldPages, knownStoredEpoch, knownStoredSampleTick,
+                knownDisplayRequestId, requestId, InfraredNaturalClimate.UNTRACKED);
+    }
+
     InfraredSnapshot capture(
             MinecraftPageManager pages,
             QueryPublication publication,
@@ -108,10 +122,11 @@ final class InfraredCapture implements AutoCloseable {
             boolean knownReadable,
             long[] knownFieldPages,
             long knownStoredEpoch,
-            long knownStoredSampleTick, int knownDisplayRequestId, int requestId) {
+            long knownStoredSampleTick, int knownDisplayRequestId, int requestId, long knownNaturalRevision) {
         level = player.serverLevel();
         int cx = Mth.floor(player.getX()) >> 4, cy = Mth.floor(player.getEyeY()) >> 4;
         int cz = Mth.floor(player.getZ()) >> 4;
+        var natural = naturalClimate(cx, cz);
         originX = (cx - 4) * 16;
         originY = (cy - 4) * 16;
         originZ = (cz - 4) * 16;
@@ -222,16 +237,16 @@ final class InfraredCapture implements AutoCloseable {
                             }
                     }
                     long storedMask = storedBrickMask(page, stored);
-                    double storedNatural =
-                            storedMask == 0
-                                    ? 0
-                                    : state.naturalTemperature(
-                                            level,
-                                            cx - 4 + local % 9,
-                                            sectionY,
-                                            cz - 4 + local / 9 % 9,
-                                            tick,
-                                            position);
+                    // The Section value only keeps the material revision current; each body relaxes toward its own
+                    // block's natural, as the thermometer does.
+                    if (storedMask != 0)
+                        state.naturalTemperature(
+                                level,
+                                cx - 4 + local % 9,
+                                sectionY,
+                                cz - 4 + local / 9 % 9,
+                                tick,
+                                position);
                     long storedRevision =
                             attachment == null
                                     ? 0
@@ -265,7 +280,6 @@ final class InfraredCapture implements AutoCloseable {
                                         stored,
                                         storedMask,
                                         local,
-                                        storedNatural,
                                         tick,
                                         knownStoredSampleTick,
                                         changed);
@@ -299,7 +313,9 @@ final class InfraredCapture implements AutoCloseable {
                         && !moved
                         && !changedPresence
                         && payload.size() == 0
-                        && sameFieldPages(knownFieldPages)) return null;
+                        && sameFieldPages(knownFieldPages)
+                        && (knownNaturalRevision == InfraredNaturalClimate.UNTRACKED
+                                || natural.revision() == knownNaturalRevision)) return null;
                 var result = new InfraredSnapshot(
                         cx,
                         cz,
@@ -312,7 +328,8 @@ final class InfraredCapture implements AutoCloseable {
                         hasFieldPages() ? fieldPages.clone() : NO_INFRARED_PRESENCE,
                         payload.finishParts(),
                         DormantChunkThermalState.currentMaterialRevision(),
-                        tick);
+                        tick,
+                        natural);
                 if (cache) displays.put(player.getUUID(), displayPages == null ? null
                         : new InfraredDisplayCache.Display(level.dimension(), generation, center, requestId, displayPages));
                 return result;
@@ -328,6 +345,34 @@ final class InfraredCapture implements AutoCloseable {
             level = null;
             payload.reset();
         }
+    }
+
+    /**
+     * Climate the client needs to fill blocks without a value with their natural temperature
+     * ({@code WorldTemperature.naturalAir}). Chunks a white curtain reaches get their own table.
+     */
+    private InfraredNaturalClimate naturalClimate(int cx, int cz) {
+        int limit = ClimateCover.limit(), levels = limit + 1;
+        var climate = WorldClimate.getCapability(level).resolve().orElse(null);
+        byte[] chunkTables = new byte[InfraredNaturalClimate.WINDOW_CHUNKS];
+        float[] climates;
+        if (climate == null) climates = new float[levels];
+        else {
+            var tables = new java.util.ArrayList<float[]>();
+            tables.add(climate.openCoveredClimates(limit));
+            for (int z = 0; z < InfraredWindow.WIDTH; z++)
+                for (int x = 0; x < InfraredWindow.WIDTH; x++) {
+                    int chunkX = cx - 4 + x, chunkZ = cz - 4 + z;
+                    if (!climate.hasWhiteCurtainAt(chunkX, chunkZ)) continue;
+                    chunkTables[x + InfraredWindow.WIDTH * z] = (byte) tables.size();
+                    tables.add(climate.coveredClimates(chunkX, chunkZ, limit));
+                }
+            climates = new float[levels * tables.size()];
+            for (int table = 0; table < tables.size(); table++)
+                System.arraycopy(tables.get(table), 0, climates, table * levels, levels);
+        }
+        return InfraredNaturalClimate.of(WorldTemperature.hasNoUnderground(level),
+                FHConfig.SERVER.CLIMATE.absoluteZeroCelsius.get().floatValue(), levels, climates, chunkTables);
     }
 
     private void collectMaterials(
@@ -464,7 +509,6 @@ final class InfraredCapture implements AutoCloseable {
             MaterialSectionState stored,
             long mask,
             int local,
-            double natural,
             long tick,
             long previousTick,
             long changed) {
@@ -491,6 +535,7 @@ final class InfraredCapture implements AutoCloseable {
                     != stored.stateId(index)) continue;
             var law = MinecraftThermalProfiles.materialLaw(state);
             if (law == null) continue;
+            double natural = WorldTemperature.naturalAir(level, position);
             if (stored.savedTick(index) != cachedTick) {
                 cachedTick = stored.savedTick(index);
                 currentFraction = DormantThermalCooling.fraction(cachedTick, tick, coolingRate);

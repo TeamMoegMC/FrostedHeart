@@ -64,6 +64,7 @@
     "minecraft.thermal.BiomeMixin_FreezeWater",
     "minecraft.thermal.ChunkMapMixin_ThermalMaintenanceSave",
     "minecraft.thermal.IceBlockMixin_Melt",
+    "minecraft.thermal.LevelChunkMixin_ClimateCover",
     "minecraft.thermal.LevelChunkMixin_DormantThermal",
     "minecraft.thermal.LevelChunkSectionMixin_ThermalInput",
     "minecraft.thermal.ServerLevelMixin_TemperatureUpdate",

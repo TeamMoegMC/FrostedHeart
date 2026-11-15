@@ -37,6 +37,10 @@ public final class RegionalCheckpoint implements AutoCloseable {
         public AirFieldCheckpoint captureAir(double naturalC) {
             return acceptedAir == null ? null : acceptedAir.retain(sampledBricks, naturalC, sampleTick, 0, sampleTick);
         }
+        /** Keeps the Bricks that depart from their own blocks' natural temperatures, {@code naturalAt} a Page block. */
+        public AirFieldCheckpoint captureAir(java.util.function.IntToDoubleFunction naturalAt) {
+            return acceptedAir == null ? null : acceptedAir.retain(sampledBricks, naturalAt);
+        }
     }
 
     /** Installed before the immutable checkpoint is handed to main. */

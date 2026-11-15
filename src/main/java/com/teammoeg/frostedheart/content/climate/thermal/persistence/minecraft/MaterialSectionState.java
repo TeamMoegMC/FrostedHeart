@@ -135,6 +135,8 @@ public final class MaterialSectionState {
     public final class Retirement {
         private final long eligibleBricks, tick;
         private final double naturalC, rate;
+        /** Natural temperature of each Page block, when bodies are measured against their own block. */
+        private final java.util.function.IntToDoubleFunction naturalAt;
         private final long[] removed = new long[64];
         private final MaterialSample sample = new MaterialSample();
         private int cursor, removedCount;
@@ -142,7 +144,13 @@ public final class MaterialSectionState {
         private double fraction;
 
         public Retirement(long eligibleBricks, long tick, double naturalC, double rate) {
+            this(eligibleBricks, tick, naturalC, rate, null);
+        }
+
+        private Retirement(long eligibleBricks, long tick, double naturalC, double rate,
+                java.util.function.IntToDoubleFunction naturalAt) {
             this.eligibleBricks = eligibleBricks; this.tick = tick; this.naturalC = naturalC; this.rate = rate;
+            this.naturalAt = naturalAt;
         }
 
         public boolean advance(int maximumRecords) {
@@ -153,8 +161,9 @@ public final class MaterialSectionState {
                     projectedTick = savedTick(cursor);
                     fraction = DormantThermalCooling.fraction(projectedTick, tick, rate);
                 }
-                read(cursor, law(cursor), tick, naturalC, rate, fraction, sample);
-                if (!ThermalRetentionPolicy.retains(sample.law(), sample.enthalpyJ(), sample.branch(), naturalC))
+                double natural = naturalAt == null ? naturalC : naturalAt.applyAsDouble(position(cursor));
+                read(cursor, law(cursor), tick, natural, rate, fraction, sample);
+                if (!ThermalRetentionPolicy.retains(sample.law(), sample.enthalpyJ(), sample.branch(), natural))
                     remove(cursor);
             }
             return cursor == size();
@@ -190,6 +199,14 @@ public final class MaterialSectionState {
     public MaterialSectionState retain(long eligibleBricks, long tick, double naturalC, double rate) {
         if ((brickMask & eligibleBricks) == 0) return this;
         var retirement = new Retirement(eligibleBricks, tick, naturalC, rate);
+        retirement.advance(size());
+        return retirement.finish();
+    }
+
+    /** Capture-time filter, without cooling: keeps bodies that depart from their own block's natural temperature. */
+    public MaterialSectionState retain(long eligibleBricks, long tick, java.util.function.IntToDoubleFunction naturalAt) {
+        if ((brickMask & eligibleBricks) == 0) return this;
+        var retirement = new Retirement(eligibleBricks, tick, Double.NaN, 0, naturalAt);
         retirement.advance(size());
         return retirement.finish();
     }
@@ -676,6 +693,14 @@ public final class MaterialSectionState {
         if (state != null) state = state.retain(section.sampledBricks(), section.sampleTick(), naturalC, 0);
         return new Capture(true, section.sampledBricks(), state);
 }
+
+    /** As {@link #capture(RegionalCheckpoint.Section, CaptureScratch, double)}, against each block's own natural. */
+    public static Capture capture(RegionalCheckpoint.Section section, CaptureScratch scratch,
+            java.util.function.IntToDoubleFunction naturalAt) {
+        var state = section.acceptedMaterials();
+        if (state != null) state = state.retain(section.sampledBricks(), section.sampleTick(), naturalAt);
+        return new Capture(true, section.sampledBricks(), state);
+    }
 
     private static void resetCapture(CaptureScratch scratch) {
         Arrays.fill(scratch.presence, 0);

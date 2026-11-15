@@ -1,9 +1,9 @@
 # 红外视野的数据路径与现场诊断
 
 - Status: `Current; local WAN timeout reproduced and fixed; reported overseas-client cause remains unconfirmed`
-- Last verified: `2026-11-08`
-- Scope: 红外温度来源、传输内容、接收驱动分片、渐进显示、生命周期及客户端/服务端诊断
-- Code anchors: `FHRequestInfraredViewDataSyncPacket`, `FHContinueInfraredViewPacket`, `InfraredTransfers`, `InfraredCapture`, `InfraredBrickCodec`, `InfraredDisplayCache`, `InfraredViewRenderer`, `InfraredDiagnostics`, `InfraredClientCommand`, `InfraredServerCommand`
+- Last verified: `2026-11-15`（新增“自然温度底色”；其余内容 `2026-11-08`）
+- Scope: 红外温度来源、自然温度底色、传输内容、接收驱动分片、渐进显示、生命周期及客户端/服务端诊断
+- Code anchors: `FHRequestInfraredViewDataSyncPacket`, `FHContinueInfraredViewPacket`, `InfraredTransfers`, `InfraredCapture`, `InfraredBrickCodec`, `InfraredNaturalClimate`, `InfraredNaturalFill`, `InfraredDisplayCache`, `InfraredViewRenderer`, `InfraredDiagnostics`, `InfraredClientCommand`, `InfraredServerCommand`
 
 ## 数据路径
 
@@ -14,6 +14,9 @@ flowchart LR
     C --> D[客户端逐片拉取 / Forge TCP]
     D --> E[144³镜像与整数纹理逐片更新]
     E --> F[客户端Shader热色]
+    G[窗口的覆盖层气候] --> D
+    D --> H[客户端逐块自然温度]
+    H --> E
 ```
 
 服务端继续拥有物理热模拟和材料状态。`InfraredCapture`读取既有材料温度，再按原优先级合成能量塔等解析场；不因红外读取而创建物理驻留。网络发送最终显示值，不发送求解矩阵、材料焓或完整模拟状态。具体温度权威和合成公式见[世界温度](world-climate-and-temperature.md)。
@@ -24,9 +27,37 @@ flowchart LR
 
 网络合同和带宽测量由[数据生命周期与集成](data-lifecycle-and-integration.md#network-and-consumers)维护。固定场去重、窗口重叠和8MiB计量显示缓存属于派生数据优化，不决定真实温度是否存在；缓存miss会重发。
 
+## 自然温度底色
+
+服务端只发送有材料温度或解析场的方块，其余方块是INVALID。客户端用这些方块的自然温度填上，红外因此显示整个
+环境的底色，热场的扰动叠在上面。自然温度与热场静止时的背景（`NaturalProfile`）是同一组项，取空气公式
+`WorldTemperature.naturalAir`（不乘方块气候系数），所以进出热场的方块读数一致：
+
+```text
+T = max(absoluteZero, D + B(Brick中心) + A(y) + climate[窗口区块][min(cover, limit)])
+```
+
+- 服务端只发送客户端算不出的部分：`InfraredNaturalClimate`，即窗口9×9个区块每个覆盖厚度的气候
+  （没有白幕的区块共用一张表，有白幕的区块各一张）、超平坦标志和绝对零度下限。它随回复的第一片发送；
+  没有白幕、覆盖上限16时约160字节（81字节区块索引加17个float）。请求携带客户端已有的
+  `knownNaturalRevision`（内容哈希）；版本相同且没有别的变化时，回复仍可为空。
+  不跟踪它的调用方传 `InfraredNaturalClimate.UNTRACKED`，保持原来的空回复规则。
+- 维度 `D`、群系 `B`、海拔 `A` 和覆盖层 `cover` 由客户端用自己的方块、群系和同步来的 `WorldTempData` /
+  `BiomeTempData` 计算。覆盖层复用 `ClimateCoverColumns`；客户端不读 `WorldTemperature` 的群系/维度缓存，
+  那些缓存属于服务端线程。
+- `InfraredNaturalFill` 保存一份144³的自然温度，空气保持INVALID。只在红外开启时计算，每个客户端tick最多
+  算32个Page，从窗口中心向外。上传时，镜像里INVALID的位置用这份值填。
+- 以下情况重算：新的气候版本（气候每小时变化、白幕、配置）重算全部Page；窗口移动只算新进入的Page；
+  客户端区块到达时重算该列；客户端已读过覆盖层的区块里方块变化时，`LevelChunkMixin_ClimateCover` 经
+  `ClimateCover.clientBlockChanges` 通知，重算所在Page；不透光性改变时，同一列下方的Page也重算。
+
+此前曾有过按Page估计的整窗口背景（729个值的背景包和第二张背景纹理），已经删除；现在没有背景包，也没有第二张纹理。
+
 ## 蓝色不等于已经收到温度
 
-缺失数据采用蓝色占位，而有效值不高于色标下限−20°C也呈蓝色。因此只看蓝色，不能区分尚未回复、空窗口、分片尚未提交、真实冷温度或显示异常。
+缺失数据采用蓝色占位，而有效值不高于色标下限−20°C也呈蓝色。有了自然温度底色以后，方块仍为蓝色只有这几种情况：
+空气（实体等遮挡像素读到的是空气格）、客户端还没加载的区块、刚打开或刚移动后尚未算到的Page，以及真实的
+低温。只看蓝色，仍不能区分这些情况与尚未回复、分片尚未提交或显示异常。
 
 客户端最多一个未完成请求。FIRST开始CPU暂存并上传收到的附近Page，后续每片上传变化Page；缺失位置保持INVALID/蓝色。即使`staging=true`、`commits=0`，已收到的热源也可以显示。LAST才提交完整增量基准、覆盖位图和epoch，并结束pending；部分显示不能作为下一次delta的基准。慢响应不被固定2秒编号更新淘汰。
 

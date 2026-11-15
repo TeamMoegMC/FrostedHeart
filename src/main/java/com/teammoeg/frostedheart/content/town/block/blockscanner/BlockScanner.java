@@ -228,10 +228,10 @@ public class BlockScanner {
 
     private static float sampleNaturalTemperature(ServerLevel level, LoadedTownWorld loadedWorld, BlockPos pos) {
         // Keep the real dimension and climate while reading biome data without loading terrain.
-        float climateAffection = WorldTemperature.blockClimateAffection(level, pos.getY());
         float natural = BlockTemperatureModel.naturalTemperature(
                 WorldTemperature.dimension(level), WorldTemperature.biome(loadedWorld, pos),
-                WorldTemperature.altitude(level, pos), WorldTemperature.climate(level, pos), climateAffection);
+                WorldTemperature.altitude(level, pos), WorldTemperature.coveredClimate(level, pos),
+                WorldTemperature.blockClimateFactor());
         return Math.max(FHConfig.SERVER.CLIMATE.absoluteZeroCelsius.get().floatValue(), natural);
     }
 
