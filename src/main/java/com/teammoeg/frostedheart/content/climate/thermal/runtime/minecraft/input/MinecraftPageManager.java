@@ -1099,6 +1099,11 @@ public final class MinecraftPageManager implements AutoCloseable {
         return pagesByChunk.containsKey(chunkKey) || accumulator.hasPendingRetirementInChunk(chunkKey);
     }
 
+    /** The Chunk test drainMutations applies before an edit may mark a Page sky column. */
+    public boolean hasPageInChunk(long chunkKey) {
+        return pagesByChunk.containsKey(chunkKey);
+    }
+
     public boolean hasLiveChunk(long chunkKey) {
         LongOpenHashSet indexed = pagesByChunk.get(chunkKey);
         if (indexed == null) return false;

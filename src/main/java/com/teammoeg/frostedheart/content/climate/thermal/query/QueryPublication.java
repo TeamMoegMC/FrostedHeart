@@ -181,6 +181,12 @@ public final class QueryPublication implements AutoCloseable {
       return this.readAir(x, y, z, gameTick, maximumAgeTicks, out, true);
    }
 
+   /** The unlocked membership check readAir makes first; false means no fixed Air read can succeed here. */
+   public boolean hasFixedSection(long sectionKey) {
+      var field = this.fixedField;
+      return field != null && field.hasSection(sectionKey);
+   }
+
    private boolean readAir(double x, double y, double z, long gameTick, int maximumAgeTicks, QueryPublication.MutableSample out, boolean captured) {
         out.clear();
         var field = fixedField;

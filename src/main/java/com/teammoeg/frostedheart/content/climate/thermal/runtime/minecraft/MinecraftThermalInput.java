@@ -615,6 +615,12 @@ public final class MinecraftThermalInput implements AutoCloseable {
         // and dormant sampling do not need the dimension publication monitor.
         int blockX = floor(x), blockY = floor(y), blockZ = floor(z);
         long sectionKey = SectionPos.asLong(blockX >> 4, blockY >> 4, blockZ >> 4);
+        int chunkX = blockX >> 4, chunkZ = blockZ >> 4;
+        // Without a Page in this Chunk or a field Tile in this Section, the reads below all fail
+        // and only the dormant record can answer. Skip attaching a mutation owner here: its edits
+        // would feed no capture or sky column. Halo, source and radiation Sections attach their own.
+        if (!pages.hasPageInChunk(ChunkPos.asLong(chunkX, chunkZ)) && !queryPublication.hasFixedSection(sectionKey))
+            return sampleDormant(chunkForThermalCapture(chunkX, chunkZ), x, y, z, sampleTick, out);
         var owner = pages.loadedSectionOrAttach(sectionKey);
         var page = owner == null ? null : owner.page();
         var loadedChunk = owner == null ? null : owner.chunk();

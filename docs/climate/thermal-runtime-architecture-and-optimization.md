@@ -363,10 +363,19 @@ the second bitmap exists only after a non-geometry source-only position needs
 to be excluded. Page center arrays are likewise created at eight entries only
 after the first local geometry mutation. No per-position object is retained.
 
-Lazy runtime startup synchronously attaches every currently loaded section,
-including sections without a source. `MinecraftThermalInput.attachLoadedWorld`
+Lazy runtime startup replays the chunk loads it missed. `MinecraftThermalInput.attachLoadedWorld`
 enumerates visible chunk holders through loaded-only `getChunkNow`; it does not
-scan all blocks or instantiate block entities. Section identity lookup uses the
+scan all blocks or instantiate block entities. `MinecraftPageManager.onChunkLoad`
+attaches owners only to Page and halo sections, and startup attaches its trigger
+section. Other owners come from Page admission, `captureHalo`, physical sources,
+radiation occlusion and `BlockRadiationIndex`, and from Air queries in a Chunk
+that holds a Page or a field Tile. `MinecraftThermalInput.sampleAir` answers a
+query in any other Chunk from the dormant record or natural value and attaches
+nothing (`MinecraftPageManager.hasPageInChunk`, `QueryPublication.hasFixedSection`):
+an owner there would only queue edits that `drainMutations` discards, since sky
+columns are marked only for Chunks in `pagesByChunk`. Within a Page Chunk, an edit in
+a Section above the Page marks its sky column only if that Section already has an
+owner; nothing attaches one for this purpose. Section identity lookup uses the
 existing attachment; `ownersBySection` is the sole owner map. Repeated attachment
 preserves pending mutations. Three inline volatile flags with shared `VarHandle`
 operations retain atomic enqueue/full-resync semantics without per-owner atomic
