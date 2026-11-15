@@ -320,11 +320,12 @@ Generator 的半径/温差来自 `GeneratorData.getRadius/getTempMod` 和 `Gener
 有材料且无场时显示材料温度；无材料且无场时发送`Short.MIN_VALUE`。客户端用自己算出的
 逐块自然温度（空气公式，与热场背景相同）填这些方块，见[自然温度底色](infrared-view.md#自然温度底色)。
 现场判别与收包/提交状态见[红外视野架构与诊断](infrared-view.md)。仍没有值的位置
-（空气、未加载区块、尚未算到的Page）使用`MIN_TEMP=-20`的蓝色**占位**，不把-20当实测值。`InfraredViewRenderer.toggleInfraredView()`
+（空气、未加载区块、尚未算到的Page）使用`MIN_TEMP=-50`的紫色**占位**，不把-50当实测值。`InfraredViewRenderer.toggleInfraredView()`
 切换开关后，扫描半径仅由`open`推进或收回，不以材料或解析场Page覆盖作为开启条件；
 附近没有篝火、整个窗口没有温度覆盖或首个响应尚未到达时也能展开扫描。首次捕获前按需
 创建全INVALID显示纹理；重新进入世界时会清除复用mirror中的旧样本。后续材料/解析场响应
-直接更新已有显示，覆盖变空不关闭视野。真正不高于色标下限的有效温度仍按原色标呈蓝色。
+直接更新已有显示，覆盖变空不关闭视野。真正不高于色标下限的有效温度同样呈紫色；色标见
+[红外色标](infrared-view.md#色标)。
 旧的全窗口自然背景估计、729值背景包和第二张背景纹理已删除；`2026-11-15`起改为上面的客户端逐块计算。
 
 命中场的块中心使用`ThermalAnalyticFieldIndex.Sample`合成。能量塔仍是
@@ -386,7 +387,7 @@ Embeddium在同一solid调用中依次绘制SOLID/CUTOUT；自有renderer在CUTO
 
 实体等遮挡像素采用环境显示近似：从自己的可见表面位置重建camera-relative坐标，加
 `cameraToTemperatureOrigin`，直接读取既有144³显示纹理。已有能量塔等解析场显示可直接复用；
-没有有效值时仍采用蓝色基底。此路径不查询/同步真实空气温度，不取脚下块，不建立实体体温或逐实体缓存。
+没有有效值时采用色标下限的紫色基底。此路径不查询/同步真实空气温度，不取脚下块，不建立实体体温或逐实体缓存。
 其目的仅是实体融入环境，不能称为实测空气温度或体温；方块本身仍通过精确owner取材料温度。
 不写深度的透明介质/粒子的独立遮挡与热成像尚未实现。
 
@@ -397,7 +398,7 @@ Embeddium在同一solid调用中依次绘制SOLID/CUTOUT；自有renderer在CUTO
 独立开发客户端已通过两种格式的真实接入、resize、资源重载、缩圈释放及重开；原图与红外图
 37,246个热表面像素对照RGB误差≤1色阶、alpha精确相同。Forge AFTER_LEVEL与地形入口的
 PoseStack不是同一个对象；最终显示使用已捕获camera pose和本帧主FBO/terrain访问标志。
-稳定圈内保留-20..20°C原色标和`mix(originalRGB,heatColor,0.43)`；最终RGB受原图影响，
+稳定圈内使用−50..50°C的紫→红色标（`2026-11-15`前为−20..20°C）和`mix(originalRGB,heatColor,0.43)`；最终RGB受原图影响，
 不是定量温度图。天空/圈外保留原图，前沿3 blocks保留原扫描动画。
 RGB使用预乘`ONE, ONE_MINUS_SRC_ALPHA`，alpha使用`ZERO, ONE`保留目标alpha。
 混合结束恢复进入前的GL program，保持`ShaderInstance`编号缓存与实际绑定一致；不调用

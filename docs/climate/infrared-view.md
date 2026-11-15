@@ -1,8 +1,8 @@
 # 红外视野的数据路径与现场诊断
 
 - Status: `Current; local WAN timeout reproduced and fixed; reported overseas-client cause remains unconfirmed`
-- Last verified: `2026-11-15`（新增“自然温度底色”；其余内容 `2026-11-08`）
-- Scope: 红外温度来源、自然温度底色、传输内容、接收驱动分片、渐进显示、生命周期及客户端/服务端诊断
+- Last verified: `2026-11-15`（新增“自然温度底色”“色标”；其余内容 `2026-11-08`，“验证边界”中的记录描述当时的蓝色占位）
+- Scope: 红外温度来源、自然温度底色、色标、传输内容、接收驱动分片、渐进显示、生命周期及客户端/服务端诊断
 - Code anchors: `FHRequestInfraredViewDataSyncPacket`, `FHContinueInfraredViewPacket`, `InfraredTransfers`, `InfraredCapture`, `InfraredBrickCodec`, `InfraredNaturalClimate`, `InfraredNaturalFill`, `InfraredDisplayCache`, `InfraredViewRenderer`, `InfraredDiagnostics`, `InfraredClientCommand`, `InfraredServerCommand`
 
 ## 数据路径
@@ -53,13 +53,31 @@ T = max(absoluteZero, D + B(Brick中心) + A(y) + climate[窗口区块][min(cove
 
 此前曾有过按Page估计的整窗口背景（729个值的背景包和第二张背景纹理），已经删除；现在没有背景包，也没有第二张纹理。
 
-## 蓝色不等于已经收到温度
+## 色标
 
-缺失数据采用蓝色占位，而有效值不高于色标下限−20°C也呈蓝色。有了自然温度底色以后，方块仍为蓝色只有这几种情况：
-空气（实体等遮挡像素读到的是空气格）、客户端还没加载的区块、刚打开或刚移动后尚未算到的Page，以及真实的
-低温。只看蓝色，仍不能区分这些情况与尚未回复、分片尚未提交或显示异常。
+`infrared_view.fsh` 的 `temperatureToColor` 在 `MIN_TEMP = -50` 到 `MAX_TEMP = 50`°C 之间按色标点线性插值，
+范围外取端点颜色（`2026-11-15` 起；此前是 −20..20°C 的 蓝→橙→黄→红，色相会折返，−6.8°C 和 +13.2°C 同为橙色）：
 
-客户端最多一个未完成请求。FIRST开始CPU暂存并上传收到的附近Page，后续每片上传变化Page；缺失位置保持INVALID/蓝色。即使`staging=true`、`commits=0`，已收到的热源也可以显示。LAST才提交完整增量基准、覆盖位图和epoch，并结束pending；部分显示不能作为下一次delta的基准。慢响应不被固定2秒编号更新淘汰。
+| 温度 | 颜色 | RGB |
+|---:|---|---|
+| −50°C | 紫 | (0.5, 0, 1) |
+| −30°C | 蓝 | (0, 0, 1) |
+| 0°C | 青 | (0, 1, 1) |
+| 25°C | 绿，适宜温度 | (0, 1, 0) |
+| 37.5°C | 黄 | (1, 1, 0) |
+| 50°C | 红 | (1, 0, 0) |
+
+相邻色标点在色相环上相差一个60°扇区，所以每段线性混合就是一段色相扫描，色相单调、饱和度不变；
+20°C约为 (0, 1, 0.2)，30°C约为 (0.4, 1, 0)，都还是绿。最终颜色乘0.43、alpha 0.43后预乘叠加在原画面上。
+`InfraredPhysicalE2eClient.color` 复刻这张色标，用于真实客户端E2E的帧颜色校验。
+
+## 紫色不等于已经收到温度
+
+缺失数据（INVALID）按色标下限−50°C画成紫色占位，而有效值不高于−50°C也呈紫色。有了自然温度底色以后，方块仍为
+紫色只有这几种情况：空气（实体等遮挡像素读到的是空气格）、客户端还没加载的区块、刚打开或刚移动后尚未算到的Page，
+以及真实的极寒。只看紫色，仍不能区分这些情况与尚未回复、分片尚未提交或显示异常。
+
+客户端最多一个未完成请求。FIRST开始CPU暂存并上传收到的附近Page，后续每片上传变化Page；缺失位置保持INVALID/紫色。即使`staging=true`、`commits=0`，已收到的热源也可以显示。LAST才提交完整增量基准、覆盖位图和epoch，并结束pending；部分显示不能作为下一次delta的基准。慢响应不被固定2秒编号更新淘汰。
 
 `InfraredTransfers`保存每名观察者的当前回复，首次只发送一片。`FHContinueInfraredViewPacket(requestId,nextPart)`在客户端完成处理后申请下一片，LAST也有接收回执；通常requestId和part均较小时正文只有2B。首片上限32KiB，后续片上限128KiB，均预留2048B头部预算；按附近Section优先编码，避免先等待整片远处温场。回复在LAST回执、取消、被新请求取代、离线、换维度、世界卸载或停服时释放。状态意外缺失时发送ACK，让客户端保留可见部分并按既有节奏重新获取full。传输期间按1秒游戏时间维持现有物理输入的红外变化跟踪，不启动新的物理驻留。
 
@@ -86,9 +104,9 @@ T = max(absoluteZero, D + B(Brick中心) + A(y) + climate[窗口区块][min(cove
 | 客户端sent增长，服务端没有对应REQUEST | 请求未进入该服务端红外处理器；需要核对这段实际链路 |
 | 服务端RESPONSE有validSamples，客户端没有PART/ACK | 服务端已生成回复，客户端处理器尚未观察到该回复 |
 | 客户端PART增长但commits不增长，staging=true | 已开始渐进显示，完整基准尚未完成LAST提交 |
-| commits增长、validMirrorSamples>0且maxC>−20，仍全蓝 | 数据已进入客户端镜像；继续检查上传、地形深度捕获和Shader采样 |
+| commits增长、validMirrorSamples>0且maxC>−50，仍全紫 | 数据已进入客户端镜像；继续检查上传、地形深度捕获和Shader采样 |
 | 服务端full探测NO_VALID_SAMPLES | 该次查询未产生有效温度，不应先归因为带宽 |
-| 有效值的maxC≤−20 | 蓝色可能是合法色标结果 |
+| 有效值的maxC≤−50 | 紫色可能是合法色标结果 |
 
 客户端状态包含open、pending、waitMs、请求/回复/ACK/提交/忽略计数、staging、基准有效性、镜像有效样本数及范围、纹理存在、实际叠加帧计数和最近地形深度标记。`validMirrorSamples`描述CPU数据，不能单独证明GPU上传及最终着色成功；`commits`描述完整基准次数，不计部分显示。
 

@@ -90,14 +90,15 @@ final class InfraredPhysicalE2eClient {
         }
         int[] rgb=pixels(phase);observed.put("frameRgb",rgb);observed.put("baselineRgb",baselineRgb);
         if(phase.equals("heated")||phase.equals("restored")||phase.equals("natural-cleared")) {
-            double[] color=color(gpu[0]==Short.MIN_VALUE?-20:gpu[0]*.25);double error=0,blueError=0;
+            double[] color=color(gpu[0]==Short.MIN_VALUE?-50:gpu[0]*.25),placeholder=color(-50);
+            double error=0,placeholderError=0;
             for(int c=0;c<3;c++) {
                 double wanted=baselineRgb[c]*.57+color[c]*255*.43;
-                double blue=baselineRgb[c]*.57+(c==2?255*.43:0);
-                error+=Math.abs(rgb[c]-wanted);blueError+=Math.abs(rgb[c]-blue);
+                double missing=baselineRgb[c]*.57+placeholder[c]*255*.43;
+                error+=Math.abs(rgb[c]-wanted);placeholderError+=Math.abs(rgb[c]-missing);
             }
-            observed.put("expectedColorError",error);observed.put("bluePlaceholderError",blueError);
-            if(error>60||phase.equals("heated")&&error+20>=blueError)throw new IllegalStateException("Published physical temperature reached GPU but framebuffer does not match: "+observed);
+            observed.put("expectedColorError",error);observed.put("placeholderError",placeholderError);
+            if(error>60||phase.equals("heated")&&error+20>=placeholderError)throw new IllegalStateException("Published physical temperature reached GPU but framebuffer does not match: "+observed);
         }
         write(role+"-round-"+round+"-physics-"+phase+".json",observed);RESULTS.put(phase,observed);
         receipt(phase);
@@ -111,11 +112,14 @@ final class InfraredPhysicalE2eClient {
 
     private static void receipt(String stage) { Minecraft.getInstance().player.connection.sendCommand("ir_e2e physical_"+stage); }
 
+    /** The infrared_view.fsh colour scale: violet -50, blue -30, cyan 0, green 25, yellow 37.5, red 50. */
     private static double[] color(double temperature) {
-        double n=Math.max(0,Math.min(1,(temperature+20)/40));
-        if(n<.33){double t=n/.33;return new double[]{t,.5*t,1-t};}
-        if(n<.66){double t=(n-.33)/.33;return new double[]{1,.5+.5*t,0};}
-        return new double[]{1,1-(n-.66)/.34,0};
+        double t=Math.max(-50,Math.min(50,temperature));
+        if(t<-30){double f=(t+50)/20;return new double[]{.5-.5*f,0,1};}
+        if(t<0){double f=(t+30)/30;return new double[]{0,f,1};}
+        if(t<25){double f=t/25;return new double[]{0,1,1-f};}
+        if(t<37.5){double f=(t-25)/12.5;return new double[]{f,1,0};}
+        return new double[]{1,1-(t-37.5)/12.5,0};
     }
 
     private static int[] pixels(String label)throws Exception {

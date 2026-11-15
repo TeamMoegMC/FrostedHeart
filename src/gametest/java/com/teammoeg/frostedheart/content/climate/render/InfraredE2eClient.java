@@ -197,8 +197,8 @@ public final class InfraredE2eClient {
             image.writeToFile(ROOT.resolve("images/"+ROLE+"-r"+round+"-"+label+".png"));
             for(int y=image.getHeight()/5;y<image.getHeight()*4/5;y++)for(int x=image.getWidth()/10;x<image.getWidth()*9/10;x++) {
                 int pixel=image.getPixelRGBA(x,y),r=pixel&255,g=(pixel>>>8)&255,b=(pixel>>>16)&255;
-                // Ambient -11 C is reddish on this palette; count saturated heat separately.
-                if(r>g+64&&r>b+64)red++;if(b>r+32&&b>g+32)blue++;
+                // Heat is yellow through red on this palette (40 C is amber); green, cyan, blue and violet are not.
+                if(r>b+64&&r>=g)red++;if(b>r+32&&b>g+32)blue++;
             }
         }
         return new int[]{red,blue};
