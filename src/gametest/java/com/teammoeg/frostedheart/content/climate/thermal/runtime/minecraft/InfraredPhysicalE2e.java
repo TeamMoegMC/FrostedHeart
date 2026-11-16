@@ -23,7 +23,7 @@ import net.minecraftforge.common.capabilities.ForgeCapabilities;
 
 /** Real world actions and public backend reads only: no analytic field or numerical heat writes. */
 final class InfraredPhysicalE2e {
-    private static final BlockPos WALL=new BlockPos(-4,67,0);
+    private static final BlockPos WALL=new BlockPos(-4,67,0),COLD=new BlockPos(4,67,0);
     private static final Set<String> BOTH=Set.of("IRFast","IRSlow");
     private static final Map<String,Set<String>> RECEIPTS=new HashMap<>();
     private static final MaterialSample MATERIAL=new MaterialSample();
@@ -122,6 +122,9 @@ final class InfraredPhysicalE2e {
         state.put("missingTicks",missingSince<0?0:tick-missingSince);
         state.put("naturalCleared",coolingOnly&&missingSince>=0&&tick-missingSince>=100);
         state.put("naturalC",WorldTemperature.naturalAir(level,WALL));
+        // The natural base clients show at both sampled blocks where the wire has no value.
+        state.put("naturalWarmQ",InfraredBrickCodec.quantize(WorldTemperature.naturalAir(level,WALL)));
+        state.put("naturalColdQ",InfraredBrickCodec.quantize(WorldTemperature.naturalAir(level,COLD)));
         if(coolingOnly&&!probed&&missingSince>=0&&tick-missingSince>=100) {
             var observer=server.getPlayerList().getPlayerByName("IRFast");
             var full=MinecraftThermalInput.gameplayInfraredSnapshot(observer,true,0,0,0,new long[12],false,new long[0],0,0);

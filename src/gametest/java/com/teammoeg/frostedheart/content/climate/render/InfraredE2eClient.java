@@ -189,6 +189,10 @@ public final class InfraredE2eClient {
         x-=ox;y-=oy;z-=oz;
         return x<0||x>=144||y<0||y>=144||z<0||z>=144?Short.MIN_VALUE:READBACK.get((z*144+y)*144+x);
     }
+    /** The client's natural value at the blocks {@link #gpu} reads; the texture shows it where the wire has none. */
+    static short[] natural() {
+        return new short[]{InfraredViewRenderer.naturalAt(-4,67,0),InfraredViewRenderer.naturalAt(4,67,0)};
+    }
 
     private static int[] pixels(String label)throws Exception {
         var mc=Minecraft.getInstance();int red=0,blue=0;
@@ -198,7 +202,8 @@ public final class InfraredE2eClient {
             for(int y=image.getHeight()/5;y<image.getHeight()*4/5;y++)for(int x=image.getWidth()/10;x<image.getWidth()*9/10;x++) {
                 int pixel=image.getPixelRGBA(x,y),r=pixel&255,g=(pixel>>>8)&255,b=(pixel>>>16)&255;
                 // Heat is yellow through red on this palette (40 C is amber); green, cyan, blue and violet are not.
-                if(r>b+64&&r>=g)red++;if(b>r+32&&b>g+32)blue++;
+                // Cold is blue through violet (-40 C): the natural base near -11 C is cyan-blue and must not count.
+                if(r>b+64&&r>=g)red++;if(b>r+32&&b>g+64)blue++;
             }
         }
         return new int[]{red,blue};

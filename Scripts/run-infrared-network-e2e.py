@@ -5,7 +5,7 @@ from pathlib import Path
 REPO=Path(__file__).resolve().parents[1]
 parser=argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--root',type=Path,default=REPO/'build/infrared-network-e2e')
-parser.add_argument('--java',default=str(Path(os.environ['JAVA_HOME'])/'bin/java.exe') if os.environ.get('JAVA_HOME') else shutil.which('java'))
+parser.add_argument('--java',default=str(Path(os.environ['JAVA_HOME'])/'bin'/('java.exe' if os.name=='nt' else 'java')) if os.environ.get('JAVA_HOME') else shutil.which('java'))
 parser.add_argument('--gradle-init',action='append',default=[],type=Path)
 parser.add_argument('--offline',action='store_true')
 parser.add_argument('--reuse-launch',action='store_true',help='Reuse exported manifests for already compiled current sources')
@@ -23,6 +23,14 @@ PROFILES=[dict(round=0,name='300ms-rtt',oneWayMs=150,bytesPerSecond=131072,bulk=
 if OPTIONS.physical_only or not OPTIONS.analytic_stress_only:PROFILES=[dict(round=0,name='physical-campfires-3s-rtt-16KiBps',oneWayMs=1500,bytesPerSecond=16384,bulk=False,physical=True)]
 if OPTIONS.cooling_only:PROFILES=[dict(round=0,name='natural-cooling-3s-rtt-16KiBps',oneWayMs=1500,bytesPerSecond=16384,bulk=False,physical=True,coolingOnly=True)]
 PROCESSES={}
+INVALID=-32768 # InfraredBrickCodec.INVALID_TEMPERATURE
+
+def infrared_discriminator():
+    """CBaseNetwork numbers FHNetwork's messages 1, 2, ... in registration order."""
+    source=(REPO/'src/main/java/com/teammoeg/frostedheart/FHNetwork.java').read_text(encoding='utf8')
+    names=re.findall(r'^\s*registerMessage\("([a-z0-9_]+)"',source[source.index('void registerMessages()'):],re.M)
+    return names.index('infrared_view_s2c')+1
+INFRARED_S2C=infrared_discriminator()
 
 def write(name,data):
     path=ROOT/name;temp=path.with_suffix(path.suffix+'.tmp')
@@ -137,6 +145,13 @@ class WireMeter:
     def temperatures(self,payload,index,request,flags):
         x,z,y=struct.unpack_from('>iii',payload,index);index+=12
         _,index=varint(payload,index,10);_,index=varint(payload,index)
+        natural=index
+        if flags&2: # FIRST may carry the window's InfraredNaturalClimate
+            present=payload[index];index+=1
+            if present: # revision, noUnderground, absoluteZeroC, then the cover and table counts
+                levels,index=varint(payload,index+8+1+4);tables,index=varint(payload,index)
+                index+=levels*tables*4+81 # climate floats, then one table byte per window chunk
+        natural=index-natural
         if flags&4:
             presence=payload[index];index+=1
             if presence:index=self.mask(payload,index)
@@ -170,6 +185,7 @@ class WireMeter:
         if flags&4:
             self.committed=self.staging.copy();self.samples[str(request)]=self.committed.copy()
             if self.label:write(f'wire-samples-{self.label}.json',self.samples)
+        return natural
     def feed(self,data):
         if self.error:return
         try:
@@ -191,12 +207,12 @@ class WireMeter:
                 channel=payload[index:index+size];index+=size
                 if channel!=b'frostedheart:network':continue
                 discriminator,index=varint(payload,index)
-                if discriminator!=61:continue # FHNetwork infrared_view_s2c, existing stable registration order
+                if discriminator!=INFRARED_S2C:continue
                 body=len(payload)-index;request,index=varint(payload,index);flags=payload[index];index+=1
-                if not flags&8:self.temperatures(payload,index,request,flags)
+                natural=0 if flags&8 else self.temperatures(payload,index,request,flags)
                 self.frames.append(dict(requestId=request,first=bool(flags&2),last=bool(flags&4),
                     full=bool(flags&1),ack=bool(flags&8),bodyBytes=body,wireFrameBytes=end,
-                    decodedPacketBytes=len(payload)))
+                    decodedPacketBytes=len(payload),naturalBytes=natural))
         except Exception as error:
             self.error=str(error)
             if self.label:write(f'wire-error-{self.label}.json',{'error':self.error})
@@ -240,17 +256,26 @@ def verify_observations():
                 phases=['heated','cooled','natural-cleared'] if profile.get('coolingOnly') else ['heated','cooled','removed','restored']
                 for phase in phases:
                     record=json.loads((ROOT/f'{role}-round-{n}-physics-{phase}.json').read_text())
-                    if record['backend']['analyticFields']!=0 or record['gpuWarmQ']!=record['wire']['warm'] or record['gpuColdQ']!=record['wire']['cold']:
-                        raise RuntimeError('Physical backend/wire/GPU evidence disagrees')
+                    b=record['backend']
+                    if b['analyticFields']!=0:raise RuntimeError('Physical backend acquired analytic fields')
+                    for point in ['Warm','Cold']:
+                        wire,natural=record['wire'][point.lower()],record[f'natural{point}Q']
+                        # Where the wire has no value the client shows its natural temperature; INVALID only if that is unknown too.
+                        if record[f'gpu{point}Q']!=(wire if wire!=INVALID else natural):
+                            raise RuntimeError(f'Physical GPU differs from the wire and natural base: {role} {phase} {point}')
+                        if natural!=INVALID and abs(natural-b[f'natural{point}Q'])>1:
+                            raise RuntimeError(f"Client natural temperature differs from the server's naturalAir: {role} {phase} {point}")
                     if 'baseline=true' not in record['status'] or 'staging=true' in record['status']:
                         raise RuntimeError('Physical GPU assertion did not observe a committed response')
                     if phase=='heated':
-                        b=record['backend']
-                        if b['materialSource']!='LIVE' or b['airBasisTerms']<8 or b['airNearC']<=b['airFarC']+.05 or b['materialC']<b['baselineC']+.5:
+                        if record['wire']['warm']==INVALID or b['materialSource']!='LIVE' or b['airBasisTerms']<8 or b['airNearC']<=b['airFarC']+.05 or b['materialC']<b['baselineC']+.5:
                             raise RuntimeError('Real campfire did not heat live continuous Air and material')
-                    if phase=='cooled' and not record['backend']['airCooled']:raise RuntimeError('Real Air did not cool after extinguishing')
-                    if phase=='removed' and record['gpuWarmQ']!=-32768:raise RuntimeError('Deleted material still has a GPU temperature')
-                    if phase=='natural-cleared' and (record['gpuWarmQ']!=-32768 or not record['backend']['naturalCleared']):raise RuntimeError('Naturally retired material still has a GPU temperature')
+                    if phase=='cooled' and not b['airCooled']:raise RuntimeError('Real Air did not cool after extinguishing')
+                    if phase=='removed' and record['gpuWarmQ']!=INVALID:raise RuntimeError('Deleted material still has a GPU temperature')
+                    if phase=='restored' and (record['gpuWarmQ']==INVALID or record['wire']['warm']!=INVALID and record['wire']['warm']>b['baselineQ']+2):
+                        raise RuntimeError('Restored material shows no temperature or the old heat')
+                    if phase=='natural-cleared' and (record['wire']['warm']!=INVALID or record['naturalWarmQ']==INVALID or not b['naturalCleared']):
+                        raise RuntimeError('Naturally retired material did not fall back to its natural temperature')
                     if phase in ['heated','restored','natural-cleared'] and record['expectedColorError']>60:raise RuntimeError('Physical framebuffer differs from actual temperature color')
             continue
         roles=['slow'] if profile.get('onlySlow') else ['fast','slow']
