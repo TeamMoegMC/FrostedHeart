@@ -209,6 +209,39 @@ public final class TownViewSyncGameTests {
         } catch (RuntimeException | Error failure) { session.close(); throw failure; }
     }
 
+    /** A building change starts a rescan; until it finishes, the town keeps the links it had. */
+    @GameTest(template = "phase0a_empty", batch = "town_view_rescan", timeoutTicks = 200)
+    public static void rescanKeepsTheLinkedWarehouseWorking(GameTestHelper helper) {
+        Session session = new Session(helper.getLevel(), helper.absolutePos(new BlockPos(2, 2, 2)), null);
+        try {
+            session.warm();
+            helper.startSequence().thenWaitUntil(() -> helper.assertTrue(
+                    session.scanWorks(session.housePos, session.warehousePos),
+                    "wait for the town's road scan to link the house and the warehouse")).thenExecute(() -> {
+                try {
+                    session.placeExtra();
+                    // This town tick sees the new building and hands a rescan to the scan threads.
+                    session.data.tick(session.level, session.holder);
+                    session.data.prepareView(session.level, session.holder);
+                    helper.assertTrue(session.data.buildings.get(session.warehousePos).isBuildingWorkable()
+                                    && session.scanWorks(session.housePos, session.warehousePos),
+                            "a rescan must not unlink the warehouse while it runs");
+                    helper.assertTrue(session.data.resources.getCapacityLeft() >= 100,
+                            "the warehouse keeps its capacity while the rescan runs");
+                    helper.assertTrue(!session.scanWorks(session.extraPos),
+                            "a new building is not linked before a scan includes it");
+                } catch (RuntimeException | Error failure) { session.close(); throw failure; }
+            }).thenIdle(40).thenExecute(() -> {
+                try {
+                    helper.assertTrue(session.scanWorks(session.housePos, session.warehousePos)
+                                    && !session.scanWorks(session.extraPos),
+                            "the finished rescan keeps the rooms on the walkway and leaves the roomless extra out");
+                    helper.succeed();
+                } finally { session.close(); }
+            });
+        } catch (RuntimeException | Error failure) { session.close(); throw failure; }
+    }
+
     @GameTest(template = "phase0a_empty", batch = "town_view_online_recovery", timeoutTicks = 80)
     public static void repeatedRequestsCoalesceAndAbsentViewsFinish(GameTestHelper helper) {
         Session session = new Session(helper.getLevel(), helper.absolutePos(new BlockPos(2, 2, 2)), null);

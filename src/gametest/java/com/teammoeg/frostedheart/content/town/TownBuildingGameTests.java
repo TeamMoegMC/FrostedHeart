@@ -621,11 +621,98 @@ public final class TownBuildingGameTests {
             FHMain.LOGGER.info("TOWN_BUILDING_WORKLOAD buildings={} coldCaptureMs={} cachedCaptureMs={} oneChangedCaptureMs={} forcedSaveMs={} compressedFileBytes={}",
                     buildingCount, coldNanos / 1_000_000.0, cachedNanos / 1_000_000.0,
                     changedNanos / 1_000_000.0, saveNanos / 1_000_000.0, fileBytes);
-            // Measured: drop the town before its first tick. Its chunks unload once this test ends, and a road scan
-            // over unloaded terrain would hold a shared scan thread for a long time, delaying every other town's scan.
+            // Measured: drop the town before its first tick, so later tests do not carry these far-off houses.
             holder.removeData(FHSpecialDataTypes.TOWN_DATA);
         }
         helper.succeed();
+    }
+
+    private static Set<BlockPos> roadWorking(TeamDataHolder holder) {
+        return holder.getOptional(FHSpecialDataTypes.TOWN_DATA)
+                .map(data -> data.connectivityView().view().working()).orElse(Set.of());
+    }
+
+    /**
+     * Two far towns of 150 houses each link over a stone floor, lose their chunks and then change. While their
+     * terrain is not loaded they keep their links, and a one-building town built meanwhile gets its first road scan
+     * without waiting behind theirs.
+     */
+    @GameTest(template = "phase0a_empty", batch = "town_scan_unloaded", timeoutTicks = 1200)
+    public static void unloadedTownsKeepTheirLinksAndLeaveTheScanThreadsFree(GameTestHelper helper) {
+        var level = helper.getLevel();
+        List<TeamDataHolder> far = new java.util.ArrayList<>();
+        List<Set<BlockPos>> farHouses = new java.util.ArrayList<>();
+        Set<net.minecraft.world.level.ChunkPos> chunks = new java.util.HashSet<>();
+        for (int town = 0; town < 2; town++) {
+            TeamDataHolder holder = newTeam(helper, "unloaded-town-" + town);
+            BlockPos origin = new BlockPos(8000 + town * 512, 65, 8000);
+            // The test world has real terrain here: lay the floor and clear the space above it.
+            for (int x = -2; x <= 31; x++) {
+                for (int z = -2; z <= 21; z++) {
+                    BlockPos floor = origin.offset(x, -1, z);
+                    var chunk = new net.minecraft.world.level.ChunkPos(floor);
+                    if (chunks.add(chunk)) level.setChunkForced(chunk.x, chunk.z, true);
+                    level.setBlockAndUpdate(floor, Blocks.STONE.defaultBlockState());
+                    for (int y = 0; y <= 3; y++) level.setBlockAndUpdate(origin.offset(x, y, z), Blocks.AIR.defaultBlockState());
+                }
+            }
+            for (int index = 0; index < 150; index++) {
+                placeCore(helper, holder, origin.offset(index % 15 * 2, 0, index / 15 * 2), FHBlocks.HOUSE.get());
+            }
+            far.add(holder);
+            farHouses.add(Set.copyOf(holder.getData(FHSpecialDataTypes.TOWN_DATA).buildings.keySet()));
+        }
+        TeamDataHolder[] near = {null};
+        BlockPos nearHouse = helper.absolutePos(new BlockPos(2, 2, 2));
+        Runnable cleanup = () -> {
+            chunks.forEach(chunk -> level.setChunkForced(chunk.x, chunk.z, false));
+            far.forEach(holder -> holder.removeData(FHSpecialDataTypes.TOWN_DATA));
+            if (near[0] != null) near[0].removeData(FHSpecialDataTypes.TOWN_DATA);
+        };
+        helper.startSequence()
+                .thenWaitUntil(() -> {
+                    for (int town = 0; town < far.size(); town++) {
+                        helper.assertTrue(roadWorking(far.get(town)).containsAll(farHouses.get(town)),
+                                "wait for the far towns' first road scans, while their chunks are loaded");
+                    }
+                })
+                .thenExecute(() -> chunks.forEach(chunk -> level.setChunkForced(chunk.x, chunk.z, false)))
+                .thenWaitUntil(() -> helper.assertTrue(chunks.stream()
+                                .allMatch(chunk -> level.getChunkSource().getChunkNow(chunk.x, chunk.z) == null),
+                        "wait for the far towns' chunks to unload"))
+                .thenExecute(() -> {
+                    // A new record makes each far town due for a rescan while none of its terrain is loaded.
+                    for (int town = 0; town < far.size(); town++) {
+                        far.get(town).getData(FHSpecialDataTypes.TOWN_DATA).getBuildingStore()
+                                .install(new HouseBuilding(new BlockPos(8000 + town * 512, 65, 8040)));
+                    }
+                })
+                .thenIdle(5)
+                .thenExecute(() -> {
+                    near[0] = newTeam(helper, "loaded-town");
+                    placeCore(helper, near[0], nearHouse, FHBlocks.HOUSE.get());
+                    helper.runAfterDelay(40, () -> {
+                        if (!roadWorking(near[0]).contains(nearHouse)) {
+                            cleanup.run();
+                            helper.fail("a one-building town waited over 40 ticks behind unloaded towns' scans");
+                        }
+                    });
+                })
+                .thenWaitUntil(() -> helper.assertTrue(roadWorking(near[0]).contains(nearHouse),
+                        "wait for the near town's first road scan"))
+                .thenExecute(() -> {
+                    try {
+                        for (int town = 0; town < far.size(); town++) {
+                            var data = far.get(town).getData(FHSpecialDataTypes.TOWN_DATA);
+                            helper.assertTrue(farHouses.get(town).stream()
+                                            .allMatch(pos -> data.buildings.get(pos).isConnectivityWorkable()),
+                                    "a town nobody is near keeps the links its last scan found");
+                        }
+                        helper.succeed();
+                    } finally {
+                        cleanup.run();
+                    }
+                });
     }
 
     @GameTest(template = "phase0a_empty", batch = "townReload", timeoutTicks = 400)

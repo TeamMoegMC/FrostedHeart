@@ -28,6 +28,10 @@ public final class TownSectionSnapshots {
         if(previous!=null&&previous.longValue()==tick)return;
         cache.service(tick,SECTIONS_PER_TICK,key->copySection(level,key));
     }
+    /** Whether the chunk holding {@code pos} is loaded, the same test {@link #copySection} applies. Server thread only. */
+    public static boolean isLoaded(ServerLevel level,BlockPos pos){
+        return level.getChunkSource().getChunkNow(SectionPos.blockToSectionCoord(pos.getX()),SectionPos.blockToSectionCoord(pos.getZ()))!=null;
+    }
     public static byte[] copySection(ServerLevel level,long key){
         SectionPos section=SectionPos.of(key);
         if(level.getChunkSource().getChunkNow(section.x(),section.z())==null)return null;
