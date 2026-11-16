@@ -7,6 +7,7 @@ import com.teammoeg.chorda.client.cui.base.UILayer;
 import com.teammoeg.frostedresearch.FRNetwork;
 import com.teammoeg.frostedresearch.knowledge.client.ui.JournalButton;
 import com.teammoeg.frostedresearch.knowledge.game.AirflowGame;
+import com.teammoeg.frostedresearch.knowledge.game.AirflowParticles;
 import com.teammoeg.frostedresearch.knowledge.network.KnowledgeWorkbenchActionPacket;
 import com.teammoeg.frostedresearch.knowledge.network.KnowledgeWorkbenchActionPacket.Action;
 import net.minecraft.client.gui.GuiGraphics;
@@ -27,11 +28,12 @@ public final class AirflowDeskPanel extends UILayer {
     private final String run, task;
     private final Component projectTitle;
     private final AirflowGame preview = new AirflowGame();
+    private final AirflowParticles gas = new AirflowParticles();
     private final ArrayDeque<AirflowGame.Stroke> pending = new ArrayDeque<>();
     private final DigCanvas canvas = new DigCanvas();
     private CompoundTag board = new CompoundTag();
     private UUID inFlight;
-    private int sent, ticks, wonAt;
+    private int sent, ticks;
     private JournalButton reset;
 
     public AirflowDeskPanel(DrawDeskLayer parent, DrawDeskScreen desk, String run, String task, Component projectTitle) {
@@ -43,18 +45,23 @@ public final class AirflowDeskPanel extends UILayer {
     public Component projectTitle() { return projectTitle; }
     public CompoundTag board() { return board.copy(); }
     public boolean won() { return board.getBoolean("won"); }
+    public boolean failed() { return board.getBoolean("failed"); }
+    public String statusKey() {
+        return failed() ? (AirflowGame.chimneyOpening(board.getInt("leak")) ? "research.airflow_bypass" : "research.airflow_failed")
+            : won() ? "research.airflow_won" : "research.airflow_explain";
+    }
     public void start() { send(Action.START_AIRFLOW, ""); }
     public void receive(CompoundTag payload) {
         if (inFlight != null && inFlight.equals(payload.getUUID("request"))) {
-            for (int i = 0; i < sent; i++) pending.removeFirst();
+            for (int i = 0; i < sent && !pending.isEmpty(); i++) pending.removeFirst();
             inFlight = null; sent = 0;
         }
         if (!payload.contains("airflow")) return;
-        boolean wasWon = won(); board = payload.getCompound("airflow").copy();
-        if (!wasWon && won()) wonAt = ticks;
+        board = payload.getCompound("airflow").copy();
+        if (payload.getString("action").equals("RESET_AIRFLOW")) gas.clear();
         preview.load(board);
-        if (won()) pending.clear();
-        else for (var stroke : pending) preview.dig(stroke.from(), stroke.to());
+        if (won() || failed()) pending.clear();
+        else preview.dig(List.copyOf(pending));
     }
     private UUID send(Action action, String strokes) {
         var packet = new KnowledgeWorkbenchActionPacket(desk.getTile().getBlockPos(), action,
@@ -62,8 +69,11 @@ public final class AirflowDeskPanel extends UILayer {
         FRNetwork.INSTANCE.sendToServer(packet); return packet.requestId();
     }
     private void queue(int from, int to) {
-        if (board.isEmpty() || won() || !preview.dig(from, to)) return;
+        if (board.isEmpty() || won() || failed()) return;
+        int before = preview.dugCount();
         pending.addLast(new AirflowGame.Stroke(from, to));
+        preview.load(board); preview.dig(List.copyOf(pending));
+        if (preview.dugCount() == before) pending.removeLast();
     }
     public void flushPending() {
         int skip = inFlight == null ? 0 : sent, count = 0;
@@ -77,6 +87,7 @@ public final class AirflowDeskPanel extends UILayer {
     }
     @Override public void tick() {
         super.tick(); ticks++;
+        if (!board.isEmpty()) gas.tick(preview);
         if (inFlight == null && !pending.isEmpty() && ticks % 2 == 0) {
             var encoded = new StringBuilder(); sent = 0;
             for (var stroke : pending) {
@@ -102,15 +113,15 @@ public final class AirflowDeskPanel extends UILayer {
         super.render(g, x, y, w, h, hint);
         var title = t("research.airflow_start");
         g.drawString(getFont(), title, x + (w - getFont().width(title)) / 2, y + 3, INK, false);
-        String[] labels = {"airflow_inlet", "airflow_bed", "airflow_outlet", "airflow_soil", "airflow_wall"};
-        int[] colors = {WIND, won() ? 0xFFE6A34D : 0xFF68443A, WIND, 0xFFA57450, 0xFF77766B};
+        String[] labels = {"airflow_inlet", "airflow_bed", "airflow_outlet", "airflow_soil"};
+        int[] colors = {WIND, won() ? 0xFFE6A34D : 0xFF9C5034, WIND, 0xFFB6A06C};
         for (int i = 0; i < labels.length; i++) {
             int ly = y + 24 + i * 14;
             g.fill(x + 133, ly + 1, x + 139, ly + 7, colors[i]);
             g.drawString(getFont(), t("research." + labels[i]), x + 143, ly, INK, false);
         }
-        int ly = y + 99;
-        for (var line : getFont().split(t(won() ? "research.state.completed" : "research.airflow_hint"), 77)) {
+        int ly = y + 86;
+        for (var line : getFont().split(t(failed() ? "research.airflow_leak" : won() ? "research.state.completed" : "research.airflow_hint"), 77)) {
             g.drawString(getFont(), line, x + 133, ly, MUTED, false); ly += 10;
         }
     }
@@ -131,7 +142,7 @@ public final class AirflowDeskPanel extends UILayer {
             queue(last < 0 ? current : last, current); last = current;
         }
         @Override public boolean onMousePressed(MouseButton button) {
-            if (button != MouseButton.LEFT || !isMouseOver() || board.isEmpty() || won()) return false;
+            if (button != MouseButton.LEFT || !isMouseOver() || board.isEmpty() || won() || failed()) return false;
             dragging = true; last = -1; dragX = getMouseX(); dragY = getMouseY(); dig(); return true;
         }
         @Override public boolean onMouseDragged(MouseButton button, double dx, double dy) {
@@ -144,31 +155,41 @@ public final class AirflowDeskPanel extends UILayer {
         }
         @Override public void render(GuiGraphics g, int x, int y, int w, int h, RenderingHint hint) {
             g.fill(x - 1, y - 1, x + w + 1, y + h + 1, 0xFF6A5947);
-            int[] path = board.getIntArray("path");
-            int head = won() ? Math.min(path.length, Math.max(0, ticks - wonAt) * 2) : 0;
-            boolean hot = won() && path.length == 0;
-            for (int i = 0; i < head; i++) if (AirflowGame.terrain(path[i]) == AirflowGame.BED) { hot = true; break; }
+            boolean hot = won();
             for (int cell = 0; cell < AirflowGame.SIZE; cell++) {
-                int bx = x + cell % AirflowGame.WIDTH * CELL, by = y + cell / AirflowGame.WIDTH * CELL;
-                int type = preview.cell(cell);
-                int mixed = cell * 0x45D9F3B, noise = (mixed ^ mixed >>> 16) & 7;
-                int color = type == AirflowGame.SOIL ? (noise < 2 ? 0xFF9F704E : noise < 4 ? 0xFFB3845B : 0xFFAA7953)
-                    : type == AirflowGame.WALL ? 0xFF77766B : type == AirflowGame.BED ? (hot ? 0xFFD28A3F : 0xFF68443A) : 0xFFE1D2AF;
+                int cx = cell % AirflowGame.WIDTH, cy = cell / AirflowGame.WIDTH;
+                int bx = x + cx * CELL, by = y + cy * CELL, type = preview.cell(cell);
+                int brick = (cx + cy / 2 % 2 * 2) / 4 + cy / 2 * 13;
+                int mixed = brick * 0x45D9F3B, noise = (mixed ^ mixed >>> 16) & 3;
+                int color = type == AirflowGame.BRICK || type == AirflowGame.PROTECTED
+                    ? (noise == 0 ? 0xFFB7A16D : noise == 1 ? 0xFFC0AB79 : 0xFFB29A65)
+                    : type == AirflowGame.BED ? (hot ? 0xFFB97835 : 0xFF49332C) : 0xFFE1D2AF;
                 g.fill(bx, by, bx + CELL, by + CELL, color);
-                if (type == AirflowGame.WALL) {
-                    if (cell / AirflowGame.WIDTH % 2 == 0) g.fill(bx, by, bx + CELL, by + 1, 0xFF55564F);
-                    if ((cell % AirflowGame.WIDTH + cell / AirflowGame.WIDTH / 2) % 3 == 0) g.fill(bx, by, bx + 1, by + CELL, 0xFF55564F);
+                if (type == AirflowGame.BRICK || type == AirflowGame.PROTECTED) {
+                    // The inlet rim uses the same bricks, with no special frame or legend.
+                    if (cy % 2 == 0) g.fill(bx, by, bx + CELL, by + 1, 0xFF87754E);
+                    if ((cx + cy / 2 % 2 * 2) % 4 == 0) g.fill(bx, by, bx + 1, by + CELL, 0xFF87754E);
                 } else if (type == AirflowGame.BED) {
-                    g.fill(bx + 1, by + 1, bx + 3, by + 3, hot ? 0xFFFFD078 : 0xFF372E2A);
-                } else if (type == AirflowGame.SOIL && noise == 0) g.fill(bx + 1, by + 1, bx + 2, by + 2, 0xFFC19469);
+                    int pulse = (int)((Math.sin(ticks * .16 + cell * 1.7) + 1) * 13);
+                    int ember = hot ? 0xFFFFB556 + (pulse << 8) : 0xFF873D22 + (pulse << 16) + (pulse / 2 << 8);
+                    g.fill(bx + 1, by + 1, bx + 3, by + 3, ember);
+                }
             }
-            // Particles follow the verified route, not dead-end branches or filled cavities.
-            boolean passedBed = false;
-            for (int i = 0; i < head; i++) {
-                int cell = path[i]; passedBed |= AirflowGame.terrain(cell) == AirflowGame.BED;
-                if ((i - ticks / 2) % 7 != 0) continue;
-                int px = x + cell % AirflowGame.WIDTH * CELL + 1, py = y + cell / AirflowGame.WIDTH * CELL + 1;
-                g.fill(px, py, px + 2, py + 2, passedBed ? 0xFFE6AD62 : WIND);
+            for (var particle : gas.particles()) {
+                int px = x + (int)(particle.x * CELL), py = y + (int)(particle.y * CELL);
+                g.fill(px, py, px + 1, py + 1, particle.heated ? 0xFFF0AC5A : WIND);
+            }
+            if (failed()) {
+                int leak = board.getInt("leak"), lx = leak % AirflowGame.WIDTH, ly = leak / AirflowGame.WIDTH;
+                int bx = x + lx * CELL, by = y + ly * CELL;
+                g.renderOutline(bx - 2, by - 2, CELL + 4, CELL + 4, ticks % 16 < 8 ? 0xFFF2A16C : 0xFFC85A3B);
+                int dx = lx == 0 ? -1 : lx == AirflowGame.WIDTH - 1 ? 1 : 0;
+                int dy = ly == 0 ? -1 : ly == AirflowGame.HEIGHT - 1 ? 1 : 0;
+                for (int i = 0; i < 6; i++) {
+                    int distance = (ticks + i * 5) % 24 / 2;
+                    int px = bx + 1 + dx * distance, py = by + 1 + dy * distance;
+                    g.fill(px, py, px + 1, py + 1, WIND);
+                }
             }
             int iy = y + 20 * CELL + 2, ox = x + 18 * CELL + 2;
             g.fill(x - 7, iy - 1, x + 7, iy + 1, WIND);
@@ -177,13 +198,9 @@ public final class AirflowDeskPanel extends UILayer {
             g.fill(ox - 1, y - 5, ox + 1, y + 7, WIND);
             g.fill(ox - 2, y - 3, ox + 2, y - 1, WIND);
             g.fill(ox - 4, y - 1, ox + 4, y + 1, WIND);
-            if (!won()) {
-                int px = x + (ticks / 2 % 10);
-                g.fill(px, iy - 1, px + 2, iy + 1, 0xFFC4EBEC);
-            }
-            if (isMouseOver() && !won() && !board.isEmpty()) {
+            if (isMouseOver() && !won() && !failed() && !board.isEmpty()) {
                 int cell = hovered();
-                if (cell >= 0 && preview.cell(cell) != AirflowGame.WALL) {
+                if (cell >= 0 && preview.cell(cell) != AirflowGame.PROTECTED) {
                     int bx = x + cell % AirflowGame.WIDTH * CELL, by = y + cell / AirflowGame.WIDTH * CELL;
                     g.renderOutline(bx - CELL, by - CELL, CELL * 3, CELL * 3, 0xB0FFF0CA);
                 }

@@ -66,7 +66,7 @@ public class DrawDeskLayer extends UILayer {
             add(title);
             var help = new com.teammoeg.chorda.client.cui.widgets.TextField(this)
                 .setMaxWidth(108)
-                .setText(com.teammoeg.frostedresearch.knowledge.client.KnowledgePresentation.t(airflow.won() ? "research.airflow_won" : "research.airflow_explain"));
+                .setText(com.teammoeg.frostedresearch.knowledge.client.KnowledgePresentation.t(airflow.statusKey()));
             help.setPosAndSize(16, 42, 108, 44);
             add(help);
             return;

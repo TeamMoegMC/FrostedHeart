@@ -82,6 +82,8 @@ public final class M4ClientValidation {
     private static int[] pendingDug;
     private static int[] reopenedDug;
     private static boolean partialReopened;
+    private static int airflowCheck;
+    private static double firstParticleX, firstParticleY;
     private static java.util.concurrent.CompletableFuture<Void> reload;
 
     private static ResourceLocation id(String text) { return new ResourceLocation(text); }
@@ -257,11 +259,22 @@ public final class M4ClientValidation {
     private static void observe(BlockPos pos) { FRNetwork.INSTANCE.sendToServer(new ObservationActionPacket(ObservationActionPacket.Action.BLOCK, pos, -1)); }
     private static void discard() { FRNetwork.INSTANCE.sendToServer(new ObservationActionPacket(ObservationActionPacket.Action.DISCARD)); }
     private static CompoundTag board() { return Objects.requireNonNull(desk.getAirflowPanel(), "desk airflow panel").board(); }
+    private static void dragCanvas(int... points) throws Exception {
+        var canvas=desk.getAirflowPanel().getElements().stream().filter(e -> e.getWidth()==112 && e.getHeight()==112).findFirst().orElseThrow();
+        var mc=Minecraft.getInstance();int left=(mc.getWindow().getGuiScaledWidth()-desk.getWidth())/2,top=(mc.getWindow().getGuiScaledHeight()-desk.getHeight())/2;
+        double x=left+canvas.getScreenX()+points[0]*4+2,y=top+canvas.getScreenY()+points[1]*4+2;
+        require(mc.screen.mouseClicked(x,y,0),"actual canvas accepts excavation press");
+        for(int i=2;i<points.length;i+=2) {
+            double tx=left+canvas.getScreenX()+points[i]*4+2,ty=top+canvas.getScreenY()+points[i+1]*4+2;
+            require(mc.screen.mouseDragged(tx,ty,0,tx-x,ty-y),"actual canvas accepts excavation drag");x=tx;y=ty;
+        }
+        mc.screen.mouseReleased(x,y,0);
+    }
     private static void digNext() throws Exception {
         int[] dug = board().getIntArray("dug");
         if (!board().contains("cells") || (pendingDug != null && Arrays.equals(dug, pendingDug))) return;
         var canvas = desk.getAirflowPanel().getElements().stream().filter(e -> e.getWidth() == 112 && e.getHeight() == 112).findFirst().orElseThrow();
-        boolean horizontal = board().getIntArray("cells")[20 * 28 + 18] == com.teammoeg.frostedresearch.knowledge.game.AirflowGame.SOIL;
+        boolean horizontal = board().getIntArray("cells")[20 * 28 + 18] == com.teammoeg.frostedresearch.knowledge.game.AirflowGame.BRICK;
         int fromX = horizontal ? 0 : 18, fromY = 20, toX = 18, toY = horizontal ? 20 : 14;
         var mc = Minecraft.getInstance();
         int left = (mc.getWindow().getGuiScaledWidth() - desk.getWidth()) / 2;
@@ -327,17 +340,47 @@ public final class M4ClientValidation {
                     if (!DESK_ONLY && !readingShots("02-airflow-stage")) return; click("research.airflow_start"); next();
                 }
                 case 6 -> {
-                    if (ticks < 15 || board().getIntArray("cells").length != 784) return;
-                    require(!board().getBoolean("won"), "unsolved initial board"); shot("03-airflow-board");
-                    if (DESK_ONLY) {
-                        require(desk.getKnowledgeLayer() == null && desk.getWidth() == 387 && desk.getHeight() == 203, "old drawing-desk surface, not journal details");
-                        var saved = board();
-                        reopenedDug = saved.getIntArray("dug");
-                        desk.onKeyPressed(GLFW.GLFW_KEY_ESCAPE, 1, 0);
-                        require(desk.getAirflowPanel() == null && desk.getKnowledgeLayer() == layer && (Boolean) read(layer,"projectDetails"), "Esc returns to same project details");
-                        require((Integer) read(layer,"projectTab") == 2, "task tab retained");
-                        click("research.airflow_start");
-                        checks.put("reopened_board", saved.toString());
+                    if(board().getIntArray("cells").length!=784)return;
+                    if(airflowCheck==0) {
+                        if(ticks<70)return;
+                        require(!board().getBoolean("won") && !board().getBoolean("failed"),"new board starts in progress");
+                        var cloud=(com.teammoeg.frostedresearch.knowledge.game.AirflowParticles)read(desk.getAirflowPanel(),"gas");
+                        require(!cloud.particles().isEmpty() && cloud.particles().stream().noneMatch(p -> p.heated),"cold air exists before charcoal is reached");
+                        firstParticleX=cloud.particles().get(0).x;firstParticleY=cloud.particles().get(0).y;
+                        shot("03-airflow-board");airflowCheck=1;ticks=0;return;
+                    }
+                    if(airflowCheck==1) {
+                        if(ticks<10)return;
+                        var cloud=(com.teammoeg.frostedresearch.knowledge.game.AirflowParticles)read(desk.getAirflowPanel(),"gas");
+                        require(cloud.particles().get(0).x!=firstParticleX || cloud.particles().get(0).y!=firstParticleY,"cold air moves inside the starter pocket");
+                        checks.put("random_air_before_charcoal",true);
+                        shot("03a-smolder-and-pocket-air");
+                        dragCanvas(3,20,10,20,10,8,18,8);airflowCheck=2;ticks=0;return;
+                    }
+                    if(airflowCheck==2) {
+                        if(ticks<10 || !board().getBoolean("failed"))return;
+                        require(!board().getBoolean("won") && !current().stage().ready(),"cold chimney bypass cannot complete research");
+                        require(com.teammoeg.frostedresearch.knowledge.game.AirflowGame.chimneyOpening(board().getInt("leak")),"failure points to actual chimney leak");
+                        server(() -> require(!allowed(PROTOTYPE),"failed airflow cannot grant the prototype"));
+                        shot("03b-cold-bypass-failed");click("research.airflow_reset");airflowCheck=3;ticks=0;return;
+                    }
+                    if(airflowCheck==3) {
+                        if(ticks<10 || board().getBoolean("failed") || board().getIntArray("dug").length!=0)return;
+                        dragCanvas(3,20,27,20);airflowCheck=4;ticks=0;return;
+                    }
+                    if(airflowCheck==4) {
+                        if(ticks<10 || !board().getBoolean("failed"))return;
+                        require(board().getInt("leak")%28==27,"failure highlights the breached outer edge");
+                        shot("03c-outer-leak-failed");click("research.airflow_reset");airflowCheck=5;ticks=0;return;
+                    }
+                    if(ticks<10 || board().getBoolean("failed") || board().getIntArray("dug").length!=0)return;
+                    checks.put("cold_bypass_and_outer_leak_reset",true);
+                    if(DESK_ONLY) {
+                        require(desk.getKnowledgeLayer()==null && desk.getWidth()==387 && desk.getHeight()==203,"drawing-desk surface");
+                        var saved=board();reopenedDug=saved.getIntArray("dug");
+                        desk.onKeyPressed(GLFW.GLFW_KEY_ESCAPE,1,0);
+                        require(desk.getAirflowPanel()==null && desk.getKnowledgeLayer()==layer && (Boolean)read(layer,"projectDetails"),"Esc returns to same details");
+                        require((Integer)read(layer,"projectTab")==2,"task tab retained");click("research.airflow_start");
                     }
                     next();
                 }
@@ -349,7 +392,7 @@ public final class M4ClientValidation {
                         reopenedDug = null; checks.put("board_retained_on_reopen",true);
                     }
                     if (board().getBoolean("won")) {
-                        if (!current().stage().ready() || ticks < 35) return;
+                        if (!current().stage().ready() || ticks < 100) return;
                         require(Arrays.stream(board().getIntArray("path")).anyMatch(c -> com.teammoeg.frostedresearch.knowledge.game.AirflowGame.terrain(c) == 3), "verified wind route crosses the charcoal bed");
                         checks.put("actual_ui_excavation_strokes", strokes); shot("04-airflow-won"); next();
                     } else { digNext(); ticks = 0; }

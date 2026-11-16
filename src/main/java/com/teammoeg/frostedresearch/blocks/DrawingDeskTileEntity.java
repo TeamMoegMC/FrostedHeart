@@ -98,7 +98,7 @@ public class DrawingDeskTileEntity extends CBlockEntity implements MenuProvider 
         if(record.stageState().completedTasks().contains(task)) return false;
         boolean changed=reset;
         if(reset) airflow.reset();
-        else for(var stroke:strokes) changed |= airflow.dig(stroke.from(),stroke.to());
+        else changed=airflow.dig(strokes);
         if(!changed) return false;
         if(airflow.won()) service.recordMinigameWin(run,task,airflowTarget.experiment());
         setChanged();return true;

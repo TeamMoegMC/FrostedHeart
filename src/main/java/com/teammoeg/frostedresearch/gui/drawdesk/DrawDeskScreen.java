@@ -180,9 +180,9 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
 
     public boolean receiveAirflowReply(CompoundTag payload) {
         if (airflow == null || !java.util.Set.of("START_AIRFLOW", "ROTATE_AIRFLOW", "RESET_AIRFLOW", "DIG_AIRFLOW").contains(payload.getString("action"))) return false;
-        boolean wasWon = airflow.won();
+        boolean wasWon = airflow.won(), wasFailed = airflow.failed();
         airflow.receive(payload);
-        if (wasWon != airflow.won()) p.refresh();
+        if (wasWon != airflow.won() || wasFailed != airflow.failed()) p.refresh();
         return true;
     }
 
