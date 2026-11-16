@@ -1,6 +1,6 @@
 # 作物肥料
 
-状态：已实现，专用 GameTest 2/2 通过；客户端整机和独立进程重启未验收。最后核对：2026-11-16。
+状态：已实现，专用 GameTest 3/3 通过；客户端整机和独立进程重启未验收。最后核对：2026-11-16。
 范围：作物增速、保温、生长期间增产；不改动树苗肥料规则。
 代码锚点：`CropFertilization`、`ClimateCommonEvents.beforeCropGrow`、`BlockFertilizerLootMixin`、`SugarCaneFertilizerMixin`。
 
@@ -15,3 +15,5 @@
 增产记录保存在本维度 SavedData `frostedheart_crop_fertilization`，包含位置、方块注册名和额外倍率。读取掉落时查询，作物替换、年龄回退时清除；无掉落移除在本 tick 结束时清除。不会把肥料储量转换成可追溯的收获收益。掉落预览不会消耗增产记录，真正收获导致的移除或重置负责清理。
 
 专用验证入口：`./gradlew --offline runGameTestServer -PgameTestNamespaces=frostedheart_fertilizer -PgameTestDirectory=build/fertilizer-gametest`。测试代码位于 `src/gametest/java/com/teammoeg/frostedheart/content/agriculture/CropFertilizationGameTests.java`。
+
+连续收割验证：`createConsecutiveHarvests` 调用 Create `HarvesterMovementBehaviour.visitNewPosition` 的收割、种子预留和补种逻辑，仅替换掉落接收端以计数。三轮依次为施肥、不施肥、重新施肥；小麦产量验证为 2、1、2，每轮补种为年龄 0 且旧增产记录为 0。生长阶段由测试推进并调用结算事件，不代表自然随机生长全周期或客户端运动装置验收。
