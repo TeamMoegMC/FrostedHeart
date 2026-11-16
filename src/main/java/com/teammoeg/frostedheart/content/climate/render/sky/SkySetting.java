@@ -103,6 +103,9 @@ public enum SkySetting {
             Rebuilds.NOTHING, 1.0, 0.2, 4.0),
     DUST_GLITTER_OPEN_AIR("dustGlitterOpenAir", "Shows glints of diamond dust only where their crystals could have "
             + "fallen, so none show under roofs, glass, or trees, or in caves.", true, null),
+    DUST_LAMP_GLITTER("dustLampGlitter", "Brightness of the glints of diamond dust that torches, lamps, and other "
+            + "blocks giving light make, at full block light, in vanilla's block light color. They show day and night "
+            + "within 16 blocks, as many as dustGlitterPlainShare. 0 draws none.", Rebuilds.NOTHING, 1.0, 0.0, 10.0),
     TEXEL_DEGREES("texelDegrees", "Size of the sky's square texels in degrees. They are fixed to the sky like the "
             + "sun's texture. 0 draws a smooth sky.", Rebuilds.HALOS, 0.5, 0.0, 5.0);
 

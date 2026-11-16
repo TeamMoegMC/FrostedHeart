@@ -148,10 +148,11 @@ public final class DustColumns {
     }
 
     /**
-     * Whether the window holds a column, which it does for the eye's column from the tick after any jump.
+     * Whether the window holds a column of the client's level, which it does for the eye's column from the tick after
+     * any jump or level change.
      */
     static boolean covers(int x, int z) {
-        return window.contains(x, z);
+        return trackedLevel != null && trackedLevel == Minecraft.getInstance().level && window.contains(x, z);
     }
 
     static int originX() {

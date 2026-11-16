@@ -170,6 +170,7 @@ public final class CalculatedSkyClientCommand {
         send(context, DiamondDustExtinction.describe(Minecraft.getInstance().getFrameTime()));
         send(context, DustGlitterRenderer.describe());
         send(context, DustColumns.describe());
+        send(context, DustLights.describe());
         return Command.SINGLE_SUCCESS;
     }
 
