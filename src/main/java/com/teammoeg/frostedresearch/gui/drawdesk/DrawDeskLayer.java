@@ -157,6 +157,10 @@ public class DrawDeskLayer extends UILayer {
 	@Override
 	public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h, RenderingHint hint) {
 		DrawDeskIcons.Background.draw(matrixStack, x, y, w, h);
+		if (dd.getAirflowPanel() != null) {
+			// The matching-game grid is baked into Background; other games use the blank parchment.
+			DrawDeskIcons.DIALOG.draw(matrixStack, x + 160, y + 19, 215, 170);
+		}
 	}
 
 	@Override

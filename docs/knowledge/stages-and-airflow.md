@@ -1,7 +1,7 @@
 # 有序阶段、临时配方与风道试验
 
 - Status: `Current`（源码与定向服务端回归核对；桌面风道已通过客户端检查，阶段持久化/重启基线见11月12日记录）
-- Last verified: `2026-11-14`（风道迁至绘图台桌面；其它验证范围见各节）
+- Last verified: `2026-11-16`（风道纸面与连连看格子背景分开；其它验证范围见各节）
 - Scope: 有序研究阶段、变体固定、临时配方、绘图台风道、队伍试吹对象关联；正式整合包路线由 iron-bloomery.md 说明。
 - Code anchors: `StageDefinition`、`StageRunState`、`ResearchStages`、`KnowledgeService.advanceStage`、`AirflowGame`、`TuyereTrials`、`PendingResearchProofs`。
 
@@ -72,7 +72,9 @@ $env:JAVA_HOME='C:/Program Files/Java/jdk-17.0.2'
 
 ## M4 管道绘制
 
-风道现由 AirflowDeskPanel 在旧桌面右侧绘制，九格使用30×30 JournalButton和2像素间隔；其上只渲染、不接管输入的 UIElement 按 N/E/S/W=1/2/4/8 从中心画四像素宽管道到格边，墙为暗色块，中行左右显示入口/出口箭头；成功后管线改 ACCENT 色。无新贴图或游戏规则变动。
+风道现由 AirflowDeskPanel 在旧桌面右侧绘制，九格使用30×30 JournalButton和2像素间隔；其上只渲染、不接管输入的 UIElement 按 N/E/S/W=1/2/4/8 从中心画四像素宽管道到格边，墙为暗色块，中行左右显示入口/出口箭头；成功后管线改 ACCENT 色。
+
+`DrawDeskLayer.drawBackground` 按当前小游戏切换纸面：连连看使用 `DrawDeskIcons.Background` 原有格子背景；风道用图集中独立的空白羊皮纸 `DrawDeskIcons.DIALOG` 覆盖右侧画布（160,19,215×170），隐藏原来的网格、外框和右侧组合格。木框、左侧纸面和背包保持原布局，不复制或修改 `textures/gui/draw_desk.png`，不改变小游戏规则。
 
 KnowledgeClientState 把风道操作回复转交当前桌面面板；隐藏的札记也会在研究快照更新时刷新，返回后显示服务端真实进度。旧连连看数据不参与风道结算，小游戏规则与持久化格式不变。
 
