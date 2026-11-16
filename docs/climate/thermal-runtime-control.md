@@ -1,7 +1,7 @@
 # 热模拟运行时：固定温场、输入与保存
 
 - Status: `Current for the production fixed-field implementation; retirement validated by full 156/157 plus corrected source-focused 8/8, 157 distinct functional checks; hundred-player performance qualification incomplete`
-- Last verified: `2026-11-15`（新增“自然背景”一节；其余内容 `2026-11-14`）
+- Last verified: `2026-11-15`（新增“自然背景”与“扩容与内存压力”两节；其余内容 `2026-11-14`）
 - Scope: 正式生产运行链路、输入所有权、物理时间、逐格自然背景、查询、热数据v7与关闭恢复。
 - Code anchors: `MinecraftThermalInput.createWorker`、`ThermalDimensionEngine`、`TiledThermalField`、`NaturalProfile`、`NaturalProfiles`、`SpatialSourceIngress`、`SpatialHeatStore`、`SpatialHeatBuffer`、`QueryPublication`、`RegionalCheckpoint`、`AirFieldCheckpoint`、`DormantChunkThermalState`。
 
@@ -20,6 +20,26 @@
 `activeSince`是当前活动寿命的起点，不随求解推进。首次捕获或原生重入之前的控制在该起点初始化；它不代替`sampleTick`。旧Page身份不能约束或退休同坐标的新Page。
 
 真实几何在受影响旧温场到达事件切点后安装。纯扩容留在原Page队列等待容量，已有空间继续计算；混合输入中的实际修改、收缩和退休优先作用于已付费空间。冻结写回期间不安装可选扩容。普通几何不能通过直接修改采样时间冒充补算完成。
+
+### 扩容与内存压力
+
+自 `2026-11-15` 起，"纯扩容"（`ThermalDimensionEngine.fixedStorageOnly`）有两种：已安装Page的Brick增长（`fixedGrowthOnly`），以及准入一个温场尚未表示的Section——既没有Tile、也没有已安装Page（`fixedOpenAdmission`，热量越过墙外时的邻接Section就是这种）。在安装之前，这样的准入不作用于任何已付费空间，因此和Brick增长一样：
+
+- 不产生物理切点（`refreshFixedBoundaries` 跳过它），边界上的已有Tile照常推进；
+- 应用时刻浮动为 `max(targetTick, 边界最小sampleTick)`，在边界对齐时安装，新Tile从邻居当时的时钟开始；
+- 仍在自己的Page队列里按顺序：等待期间该Section之后的修改留在它后面，安装后再按序应用，不会被当作过期输入丢掉；
+- 只在自己的Section上留一个存储切点（`fixedStorageCuts`，取准入tick）。它进入 `geometryBoundary`，因此只限制源绑定和热量路由：该Section里的源在Section存在之前把J留在生产者里，不在输入仓库里堆积；它不限制任何Tile的数值推进。
+
+扩容和物理修改从不同批（`FixedGeometry` 的 `storage` 标记）：物理批次因此从不为可选扩容等内存。挑选顺序是维护、物理修改、扩容（`nextFixedGeometryInput`）。内存满时（`TiledThermalField.reserveGeometryStorage` 的 `tryReserve` 被拒）：
+
+1. 扩容批次留在几何任务位里等容量；容量变化后的重试只是一次预留，不重新规划。它不切住任何空间，并且给维护输入和任何就绪的物理修改让位（`fixedGeometryYields`），让位时把输入退回各自Page队列。
+2. 被拒后进入存储压力（`fixedStorageWait` 记录被拒时的容量版本）。压力下新的扩容批次只含一个输入，并且只在容量版本变化之后才组成；第一个成功付费的扩容批次退出压力。被跳过的扩容让空闲的协调线程登记容量等待，内存释放后再试，不轮询。
+
+安装扩容前还检查每个扩容输入的边界都停在发布时刻（`FixedGeometry.storageAligned`）；若等待期间边界已分开，就退回重组，而不是把新Tile装在邻居已经离开的时刻。进度诊断 `regionalProgressDescription` 带 `storagePressure`、`storageCuts` 和待处理输入的 `storage` 标记。
+
+在这之前，邻接准入被当作物理事件：它在 `targetTick` 切住整个边界，内存满时连同同批的墙体修改一起等待。100人负载（`2026-11-15` r4/r6）中，一个覆盖748个Section的批次一直等内存，这些基地的温度停在同一tick直到测试结束。GameTest `ThermalResidencyTimeGameTests.anUnpaidNeighbourAdmissionLeavesTheAdjacentBaseOnItsClock` 和 `anEditInsideAWaitingAdmissionIsKeptBehindIt` 覆盖这一情形；旧实现在两者上都停在tick 40。`TiledThermalSaturationGameTests` 覆盖等待中Section里的源（其J留在生产者里、恢复后恰好一次）和两个Section的整批等待。
+
+仍在等待内存的物理输入（例如带新Brick的同坐标生命周期替换）保持原来的切点和等待方式；它们需要的是物理事件的存储，不是可选扩容。
 
 ## 自然背景
 

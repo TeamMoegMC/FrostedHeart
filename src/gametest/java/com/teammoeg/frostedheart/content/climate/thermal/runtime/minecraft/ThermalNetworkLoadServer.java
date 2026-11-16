@@ -119,6 +119,18 @@ public final class ThermalNetworkLoadServer {
     private static final Distribution recoveryAges = new Distribution(1), recoveryTailAges = new Distribution(1);
     private static final Distribution recoveryMain = new Distribution(10_000), recoveryTailMain = new Distribution(10_000);
     private static long recoveryTailFrames, recoveryTailMinimumPlayers = Long.MAX_VALUE;
+    /*
+     * Recovery stall dump: the main thread names the bases whose residents read old or missing air, and the worker
+     * copies their scheduling state at its next round end, where it owns that state. Recovery only, at most
+     * STALL_DUMP_LIMIT dumps, so the measured phase is unaffected.
+     */
+    private static final int STALL_DUMP_LIMIT = 12;
+    private static volatile int[] stallWatchBases;
+    private static volatile Object stallPublication;
+    private static volatile Map<String, Object> stallDump;
+    private static Map<String, Object> stallMain;
+    private static int stallDumps;
+    private static long stallRequestTicks = Long.MIN_VALUE;
     private enum Phase { BUILDING, WAITING_FOR_PLAYERS, WARMUP, MEASURING, RECOVERY, DIAGNOSTIC_HOLD, FINISHING }
 
     public static int workerTimingPhase() { return phase == Phase.MEASURING ? 1 : phase == Phase.RECOVERY ? 2 : 0; }
@@ -198,6 +210,10 @@ public final class ThermalNetworkLoadServer {
                 coordinatorRounds.increment();
                 if (Boolean.getBoolean("frostedheart.thermalLoad.workerTiming") && phase == Phase.MEASURING
                         && coordinatorRounds.sum() % 128 == 0) workerSnapshot = workerSnapshot(engine);
+                var watch = stallWatchBases;
+                if (watch != null && stallPublication != null && readWorker(engine, "queries") == stallPublication) {
+                    stallWatchBases = null; stallDump = stallSnapshot(engine, watch);
+                }
             }
             @Override public void stage(String name, boolean entering) {
                 if (Thread.currentThread().getId() != mainThread) return;
@@ -367,6 +383,7 @@ public final class ThermalNetworkLoadServer {
                 if (phaseTicks >= RECOVERY_SECONDS * 20L) finishRecovery();
             }
             if (LIFECYCLE_TRACE && server.overworld().getGameTime() % 20 == 0) flushLifecycleTrace();
+            writeStallDump();
         } catch (Exception failure) {
             FHMain.LOGGER.error("Thermal network fixture failed", failure);
             try { write("failure.json", Map.of("error", failure.toString(), "phase", phase.name())); } catch (Exception ignored) { }
@@ -527,6 +544,8 @@ public final class ThermalNetworkLoadServer {
     private static void sample() throws java.io.IOException {
         var level = server.overworld(); updateResidents();
         var publication = MinecraftThermalInput.queryPublicationForObservation(level);
+        int[] staleByBase = new int[BASES];
+        var stalePlayers = new ArrayList<Map<String, Object>>();
         for (var player : server.getPlayerList().getPlayers()) {
             int index = index(player); if (index < 0 || level.getGameTime() - arrived[base(index)] <= 100) continue;
             BlockPos origin = origin(base(index));
@@ -537,7 +556,8 @@ public final class ThermalNetworkLoadServer {
             long age = Math.max(0, level.getGameTime() - probe.sampleTick()); ages.add(age);
             oldestByBase[base] = Math.max(oldestByBase[base], age);
             if (age > 40) {
-                ageViolations++; oldByBase[base]++;
+                ageViolations++; oldByBase[base]++; staleByBase[base]++;
+                stalePlayers.add(stalledPlayer(player, index, publication, "old", age));
                 var field = publication.fixedState();
                 if (field == null) oldSectionClockByBase[base]++;
                 else synchronized (field) {
@@ -550,6 +570,8 @@ public final class ThermalNetworkLoadServer {
                 }
             }
         }
+        // Measured stale samples get at most half the dumps; recovery keeps the rest.
+        if (stallDumps < STALL_DUMP_LIMIT / 2) requestStallDump(level, publication, new int[BASES], staleByBase, stalePlayers);
         peakHeap = Math.max(peakHeap, ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().getUsed());
         peakAccounted = Math.max(peakAccounted, MinecraftThermalInput.thermalBudgetUsedBytes()); sampleWorkers();
         sampleComparisonPoints();
@@ -587,16 +609,24 @@ public final class ThermalNetworkLoadServer {
         var publication = MinecraftThermalInput.queryPublicationForObservation(level);
         long available = 0, missing = 0, old = 0, maximumAge = 0;
         boolean tail = phaseTicks > Math.max(0, RECOVERY_SECONDS - 10) * 20L;
+        int[] missingByBase = new int[BASES], oldByBaseNow = new int[BASES];
+        var stalledPlayers = new ArrayList<Map<String, Object>>();
         for (var player : server.getPlayerList().getPlayers()) {
             int index = index(player); if (index < 0 || level.getGameTime() - arrived[base(index)] <= 100) continue;
             var home = origin(base(index));
             if (Math.abs(player.getX() - home.getX() - WIDTH / 2.0) > WIDTH
                     || Math.abs(player.getZ() - home.getZ() - WIDTH / 2.0) > WIDTH) continue;
-            if (publication == null || !publication.tryReadAir(player.getX(), player.getEyeY(), player.getZ(), probe)) { missing++; continue; }
+            if (publication == null || !publication.tryReadAir(player.getX(), player.getEyeY(), player.getZ(), probe)) {
+                missing++; missingByBase[base(index)]++;
+                stalledPlayers.add(stalledPlayer(player, index, publication, "missing", -1));
+                continue;
+            }
             long age = Math.max(0, level.getGameTime() - probe.sampleTick());
-            available++; maximumAge = Math.max(maximumAge, age); if (age > 40) old++;
+            available++; maximumAge = Math.max(maximumAge, age);
+            if (age > 40) { old++; oldByBaseNow[base(index)]++; stalledPlayers.add(stalledPlayer(player, index, publication, "old", age)); }
             recoveryAges.add(age); if (tail) recoveryTailAges.add(age);
         }
+        requestStallDump(level, publication, missingByBase, oldByBaseNow, stalledPlayers);
         recoverySamples += available; recoveryMissing += missing; recoveryOld += old;
         if (tail) {
             recoveryTailSamples += available; recoveryTailMissing += missing; recoveryTailOld += old;
@@ -610,8 +640,251 @@ public final class ThermalNetworkLoadServer {
             recoveryTailRoundsStart = coordinatorRounds.sum();
         }
         var frame = Map.of("ticks", phaseTicks, "gameTick", level.getGameTime(), "startedTick", recoveryStartedTick,
-                "available", available, "missing", missing, "old", old, "maximumAgeTicks", maximumAge);
+                "available", available, "missing", missing, "old", old, "maximumAgeTicks", maximumAge,
+                "missingByBase", missingByBase, "oldByBase", oldByBaseNow);
         Files.writeString(ROOT.resolve("recovery.jsonl"), JSON.toJson(frame) + "\n", StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+    }
+
+    private static Map<String, Object> stalledPlayer(ServerPlayer player, int index, QueryPublication publication, String kind, long age) {
+        var row = new LinkedHashMap<String, Object>();
+        row.put("player", index); row.put("base", base(index)); row.put("kind", kind); row.put("ageTicks", age);
+        var position = BlockPos.containing(player.getX(), player.getEyeY(), player.getZ());
+        row.put("position", position.getX() + "," + position.getY() + "," + position.getZ());
+        long section = net.minecraft.core.SectionPos.asLong(position);
+        row.put("section", sectionString(section));
+        if (publication != null) {
+            row.put("read", publication.describeAirRead(player.getX(), player.getEyeY(), player.getZ()));
+            row.put("hasFixedSection", publication.hasFixedSection(section));
+            var field = publication.fixedState();
+            if (field != null) {
+                row.put("frozen", field.frozen(section)); row.put("sampleTick", field.sectionSampleTick(section));
+                row.put("activateAt", field.pendingActivationTick(section));
+            }
+        }
+        return row;
+    }
+
+    /** Main thread: ask the worker for one copy of the stalled bases' scheduling state, rate-limited. */
+    private static void requestStallDump(ServerLevel level, QueryPublication publication, int[] missingByBase, int[] oldByBase,
+            List<Map<String, Object>> stalledPlayers) {
+        if (publication == null || stallDumps >= STALL_DUMP_LIMIT || stallWatchBases != null || stallMain != null
+                || stallRequestTicks != Long.MIN_VALUE && level.getGameTime() - stallRequestTicks < 60) return;
+        var bases = new it.unimi.dsi.fastutil.ints.IntArrayList();
+        for (int base = 0; base < BASES; base++) if (missingByBase[base] > 0 || oldByBase[base] > 0) bases.add(base);
+        if (bases.isEmpty()) return;
+        var main = new LinkedHashMap<String, Object>();
+        main.put("phase", phase.name()); main.put("phaseTicks", phaseTicks); main.put("gameTick", level.getGameTime());
+        main.put("players", stalledPlayers);
+        var chunks = new ArrayList<Map<String, Object>>();
+        for (int base : bases) {
+            var home = origin(base);
+            for (int dx = 0; dx <= 2; dx++) for (int dz = 0; dz <= 2; dz++) {
+                int cx = (home.getX() >> 4) + dx, cz = (home.getZ() >> 4) + dz;
+                var chunk = level.getChunkSource().getChunkNow(cx, cz);
+                var row = new LinkedHashMap<String, Object>();
+                row.put("base", base); row.put("chunk", cx + "," + cz); row.put("loaded", chunk != null);
+                if (chunk instanceof com.teammoeg.frostedheart.content.climate.thermal.persistence.minecraft.MinecraftThermalChunkAttachment attachment) {
+                    var stored = attachment.frostedheart$getDormantThermalState();
+                    var air = stored == null ? null : stored.air(home.getY() >> 4);
+                    row.put("dormant", stored != null); row.put("dormantAirTick", air == null ? -1 : air.savedGameTick());
+                }
+                chunks.add(row);
+            }
+        }
+        main.put("chunks", chunks);
+        stallMain = main; stallDumps++; stallRequestTicks = level.getGameTime();
+        stallPublication = publication; stallWatchBases = bases.toIntArray();
+    }
+
+    private static void writeStallDump() throws java.io.IOException {
+        if (stallMain == null) return;
+        long now = server.overworld().getGameTime();
+        Object dump = stallDump;
+        if (dump == null) {
+            // A worker without rounds is itself the finding; keep the main-thread view.
+            if (now - (Long) stallMain.get("gameTick") <= 100) return;
+            stallWatchBases = null; dump = "no matching worker round within 100 ticks";
+        }
+        stallDump = null;
+        var row = new LinkedHashMap<String, Object>(stallMain);
+        row.put("writtenGameTick", now); row.put("worker", dump);
+        stallMain = null;
+        Files.writeString(ROOT.resolve("recovery-stall.jsonl"), JSON.toJson(row) + "\n", StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+    }
+
+    private static String sectionString(long section) {
+        return net.minecraft.core.SectionPos.x(section) + "," + net.minecraft.core.SectionPos.y(section) + "," + net.minecraft.core.SectionPos.z(section);
+    }
+    private static String chunkString(long chunk) {
+        return net.minecraft.world.level.ChunkPos.getX(chunk) + "," + net.minecraft.world.level.ChunkPos.getZ(chunk);
+    }
+    private static Object invokeWorker(Object owner, String name, Class<?>[] types, Object... arguments) {
+        try {
+            var method = owner.getClass().getDeclaredMethod(name, types); method.setAccessible(true);
+            return method.invoke(owner, arguments);
+        } catch (ReflectiveOperationException failure) { return "unavailable:" + failure.getClass().getSimpleName(); }
+    }
+
+    /** Worker thread, at a round end: the watched bases' Tiles, their domains, cuts, activations and pending inputs. */
+    private static Map<String, Object> stallSnapshot(com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.engine.ThermalDimensionEngine engine, int[] bases) {
+        var out = new LinkedHashMap<String, Object>();
+        try {
+            com.teammoeg.frostedheart.content.climate.thermal.solver.TiledThermalField field = readWorker(engine, "fixedField");
+            com.teammoeg.frostedheart.content.climate.thermal.source.SpatialSourceIngress ingress = readWorker(engine, "sourceIngress");
+            com.teammoeg.frostedheart.content.climate.thermal.topology.WorkerPageStore pages = readWorker(engine, "pages");
+            it.unimi.dsi.fastutil.longs.Long2LongOpenHashMap cuts = readWorker(engine, "fixedPhysicalCuts");
+            com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.TopologyInbox inbox = readWorker(engine, "topologyInputs");
+            it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap<com.teammoeg.frostedheart.content.climate.thermal.topology.RegionalContinuationBoundary> activations =
+                    readWorker(engine, "fixedActivationBoundaries");
+            java.util.IdentityHashMap<Object, com.teammoeg.frostedheart.content.climate.thermal.topology.RegionalContinuationBoundary> boundaries =
+                    readWorker(engine, "fixedBoundaries");
+            com.teammoeg.frostedheart.content.climate.thermal.runtime.ThermalMemoryBudget budget = readWorker(engine, "airBudget");
+            out.put("bases", bases);
+            out.put("progress", engine.regionalProgressDescription());
+            out.put("transportThrough", (Long) readWorker(engine, "transportThrough"));
+            out.put("offeredThrough", (Long) readWorker(engine, "offeredThrough"));
+            out.put("boundarySequence", (Long) readWorker(engine, "boundarySequence"));
+            out.put("offeredSequence", (Long) readWorker(engine, "offeredSequence"));
+            out.put("fixedCapacityWait", (Long) readWorker(engine, "fixedCapacityWait"));
+            out.put("capacityRevision", budget.capacityRevision());
+            out.put("fieldIdle", field.idle());
+            out.put("claim", readWorker(engine, "fixedClaim") != null);
+            it.unimi.dsi.fastutil.longs.LongSet scope = readWorker(engine, "fixedScope");
+            out.put("scopeSections", scope.size());
+            out.put("fromTick", (Long) readWorker(engine, "fixedFromTick")); out.put("solveTick", (Long) readWorker(engine, "fixedSolveTick"));
+            out.put("structureCommits", (Long) readWorker(engine, "structureCommits"));
+            out.put("hasReadyWork", invokeWorker(engine, "fixedHasReadyWork", new Class<?>[0]));
+            out.put("latestTick", field.latestTick()); out.put("acceptedTick", field.acceptedTick());
+            Object geometry = readWorker(engine, "fixedGeometry");
+            if (geometry != null) {
+                var g = new LinkedHashMap<String, Object>();
+                g.put("stage", (Integer) readWorker(geometry, "stage")); g.put("capacityWait", (Long) readWorker(geometry, "capacityWait"));
+                g.put("returningInputs", (Boolean) readWorker(geometry, "returningInputs"));
+                com.teammoeg.frostedheart.content.climate.thermal.topology.RegionalContinuationBoundary boundary = readWorker(geometry, "boundary");
+                g.put("boundarySections", boundary.sections().size());
+                com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ThermalInputBatch input = readWorker(geometry, "input");
+                g.put("targetTick", input.targetTick()); g.put("ready", invokeWorker(geometry, "ready", new Class<?>[0]));
+                out.put("geometry", g);
+            }
+            Object intake = readWorker(engine, "intakeLock");
+            synchronized (intake) {
+                Object active = readWorker(engine, "activeSnapshot");
+                out.put("activeSnapshot", active == null ? null : describeSnapshot(active));
+                java.util.ArrayDeque<?> requests = readWorker(engine, "snapshotRequests");
+                var queued = new ArrayList<Object>(); for (var request : requests) queued.add(describeSnapshot(request));
+                out.put("snapshotRequests", queued);
+                java.util.ArrayDeque<?> restores = readWorker(engine, "restoreRequests");
+                var restoring = new ArrayList<Object>();
+                for (var restore : restores) {
+                    var r = new LinkedHashMap<String, Object>();
+                    r.put("chunk", chunkString((Long) readWorker(restore, "chunk"))); r.put("tick", (Long) readWorker(restore, "tick"));
+                    r.put("cursor", (Integer) readWorker(restore, "cursor")); r.put("geometryWait", (Long) readWorker(restore, "geometryWait"));
+                    restoring.add(r);
+                }
+                out.put("restoreRequests", restoring);
+            }
+            var watched = new it.unimi.dsi.fastutil.longs.LongOpenHashSet();
+            for (int base : bases) {
+                var home = origin(base);
+                for (int dx = 0; dx <= 2; dx++) for (int dz = 0; dz <= 2; dz++)
+                    watched.add(net.minecraft.core.SectionPos.asLong((home.getX() >> 4) + dx, home.getY() >> 4, (home.getZ() >> 4) + dz));
+            }
+            var sections = new ArrayList<Object>();
+            for (long section : watched) {
+                var s = new LinkedHashMap<String, Object>();
+                s.put("section", sectionString(section)); s.put("has", field.hasSection(section));
+                s.put("published", field.hasPublishedSection(section)); s.put("frozen", field.frozen(section));
+                s.put("activateAt", field.pendingActivationTick(section)); s.put("sampleTick", field.sectionSampleTick(section));
+                s.put("activeSince", field.activeSince(section)); s.put("activeBricks", Long.toHexString(field.activeBricks(section)));
+                s.put("cut", cuts.getOrDefault(section, Long.MAX_VALUE));
+                var activation = activations.get(section);
+                if (activation != null) {
+                    s.put("activationBoundary", activation.sections().size());
+                    long activateAt = field.pendingActivationTick(section);
+                    var blocking = new ArrayList<String>();
+                    for (long member : activation.sections()) if (field.hasSection(member) && !field.frozen(member)
+                            && field.sectionSampleTick(member) != activateAt && blocking.size() < 16)
+                        blocking.add(sectionString(member) + "@" + field.sectionSampleTick(member) + "/cut" + cuts.getOrDefault(member, Long.MAX_VALUE));
+                    s.put("activationBlocking", blocking);
+                }
+                var page = pages.pageAt(section);
+                if (page != null) {
+                    s.put("pageGeometry", pages.geometryRevision(page)); s.put("liveGeometry", page.handle.liveGeometryRevision());
+                    s.put("lifecycle", page.handle.lifecycleGeneration()); s.put("captured", Long.toHexString(pages.capturedBrickMask(section)));
+                } else s.put("page", false);
+                s.put("firstInputTick", inbox.firstTick(section));
+                sections.add(s);
+            }
+            out.put("sections", sections);
+            var domains = new ArrayList<Object>();
+            for (var domain : field.domains()) {
+                var members = new ArrayList<String>();
+                for (long section : domain.sections()) if (watched.contains(section)) members.add(sectionString(section));
+                if (members.isEmpty()) continue;
+                long from = field.minimumTick(domain.sections()), physical = Long.MAX_VALUE;
+                for (long section : domain.sections()) physical = Math.min(physical, cuts.getOrDefault(section, Long.MAX_VALUE));
+                var d = new LinkedHashMap<String, Object>();
+                d.put("watched", members); d.put("sections", domain.sections().size());
+                d.put("minimumTick", from); d.put("maximumTick", field.maximumTick(domain.sections()));
+                d.put("aligned", field.aligned(domain.sections())); d.put("physicalCut", physical);
+                d.put("sourcePrefix", ingress.firstPendingTick(domain.sections(), section -> pages.capturedBrickMask(section) != 0));
+                d.put("numericalThrough", invokeWorker(engine, "fixedNumericalThrough",
+                        new Class<?>[] { it.unimi.dsi.fastutil.longs.LongSet.class, long.class }, domain.sections(), from));
+                d.put("pendingInput", invokeWorker(engine, "fixedPending",
+                        new Class<?>[] { it.unimi.dsi.fastutil.longs.LongSet.class, long.class }, domain.sections(), from));
+                domains.add(d);
+            }
+            out.put("domains", domains);
+            var inputs = new ArrayList<Object>();
+            var inputType = com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.TopologyInbox.Input.class;
+            inbox.forEachPendingInput(input -> {
+                if (inputs.size() >= 64) return;
+                long section = input.page().sectionKey();
+                var boundary = boundaries.get(input);
+                boolean relevant = watched.contains(section);
+                if (!relevant && boundary != null) for (long member : boundary.sections()) if (watched.contains(member)) { relevant = true; break; }
+                if (!relevant) return;
+                var batch = input.batch();
+                var m = new LinkedHashMap<String, Object>();
+                m.put("section", sectionString(section)); m.put("targetTick", batch.targetTick()); m.put("sequence", batch.sequence());
+                Object application = invokeWorker(engine, "fixedApplicationTick", new Class<?>[] { inputType }, input);
+                m.put("applicationTick", application);
+                m.put("growthOnly", invokeWorker(engine, "fixedGrowthOnly", new Class<?>[] { inputType }, input));
+                m.put("ready", invokeWorker(engine, "fixedGeometryReady", new Class<?>[] { inputType }, input));
+                m.put("obsolete", invokeWorker(engine, "fixedInputObsolete", new Class<?>[] { inputType }, input));
+                m.put("maintenance", invokeWorker(engine, "fixedMaintenanceInput", new Class<?>[] { inputType }, input));
+                m.put("boundarySections", boundary == null ? -1 : boundary.sections().size());
+                if (boundary != null && application instanceof Long tick) {
+                    var blocking = new ArrayList<String>();
+                    for (long member : boundary.sections()) if (field.hasSection(member) && !field.frozen(member)
+                            && field.sectionSampleTick(member) != tick && blocking.size() < 16)
+                        blocking.add(sectionString(member) + "@" + field.sectionSampleTick(member) + "/cut" + cuts.getOrDefault(member, Long.MAX_VALUE));
+                    m.put("boundaryBlocking", blocking);
+                }
+                m.put("admissions", batch.admissions().length); m.put("retirements", batch.retirements().length);
+                m.put("residency", batch.residencyUpdates().length); m.put("geometry", batch.geometry().size());
+                m.put("environment", batch.environmentUpdates().length); m.put("mixing", input.mixing().size());
+                m.put("phaseAcks", batch.phaseAcks().length); m.put("phaseIntents", batch.phaseIntents().length);
+                inputs.add(m);
+            });
+            out.put("inputs", inputs);
+        } catch (Throwable failure) {
+            out.put("error", failure.toString());
+        }
+        return out;
+    }
+    private static Map<String, Object> describeSnapshot(Object request) {
+        var m = new LinkedHashMap<String, Object>();
+        m.put("chunk", chunkString((Long) readWorker(request, "chunk")));
+        m.put("purpose", String.valueOf((Object) readWorker(request, "purpose"))); m.put("stage", String.valueOf((Object) readWorker(request, "stage")));
+        m.put("inputsFrozen", (Boolean) readWorker(request, "inputsFrozen")); m.put("unloading", (Boolean) readWorker(request, "unloading"));
+        m.put("finished", readWorker(request, "finished") != null);
+        it.unimi.dsi.fastutil.longs.LongArrayList frozen = readWorker(request, "frozenSections");
+        if (frozen != null) {
+            var names = new ArrayList<String>(); for (long section : frozen) names.add(sectionString(section));
+            m.put("frozenSections", names);
+        }
+        return m;
     }
 
     private static void finishRecovery() throws java.io.IOException {

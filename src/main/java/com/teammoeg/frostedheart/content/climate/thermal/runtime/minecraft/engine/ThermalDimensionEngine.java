@@ -99,6 +99,19 @@ public final class ThermalDimensionEngine implements AutoCloseable, MaterialStat
     private long fixedBoundaryRevision = -1, fixedBoundaryStructure = -1, fixedControlRevision = -1, fixedBoundarySequence = -1, fixedActivationRevision = -1;
     private long sourceFreezeRevision;
     private long fixedCapacityWait = -1;
+    /**
+     * Capacity revision at the last storage refusal, or -1 outside storage pressure. Under pressure, new storage
+     * batches hold one input, form only after capacity has changed, and physical batches never include storage.
+     */
+    private long fixedStorageWait = -1;
+    /**
+     * A waiting admission's own Section, at its admission tick. It bounds source binding and routing there, so a
+     * source in a Section that does not exist yet keeps its J in the producer; it never bounds numerical time.
+     */
+    private it.unimi.dsi.fastutil.longs.Long2LongOpenHashMap fixedStorageCuts = new it.unimi.dsi.fastutil.longs.Long2LongOpenHashMap();
+    private it.unimi.dsi.fastutil.longs.Long2LongOpenHashMap fixedNextStorageCuts = new it.unimi.dsi.fastutil.longs.Long2LongOpenHashMap();
+    /** The last geometry scan passed over storage it could not pay for; an idle coordinator then waits for capacity. */
+    private boolean fixedStorageSkipped;
     private double fixedIncomingJ, fixedDiscardedJ, fixedPendingJ, fixedRejectedJ;
     private int[] fixedSignatures;
     private AirMixingRegion fixedMixing;
@@ -339,7 +352,7 @@ public final class ThermalDimensionEngine implements AutoCloseable, MaterialStat
         if (fixedBoundaryWorkPending()) return true;
         if (fixedActivationReady()) return true;
         if (fixedGeometry != null && fixedGeometry.ready()) return true;
-        if (fixedGeometry != null && !fixedGeometry.ready() && nextFixedMaintenanceInput() != null) return true;
+        if (fixedGeometry != null && !fixedGeometry.ready() && fixedGeometryYields()) return true;
         if (sourceIngress.hasReadyWork()) return true;
         if (fixedGeometry == null && (pages.maintenanceReady(airBudget.capacityRevision()) || nextFixedGeometryInput() != null)) return true;
         return fixedCapacityWait != airBudget.capacityRevision() && nextFixedDomain() != null;
@@ -461,7 +474,7 @@ public final class ThermalDimensionEngine implements AutoCloseable, MaterialStat
             topologyInputs.collapseUninstalledRetirements(fixedField::hasSection, transportThrough);
             refreshFixedBoundaries();
         }
-        if (fixedGeometry != null && fixedField.idle() && !fixedGeometry.ready() && nextFixedMaintenanceInput() != null) {
+        if (fixedGeometry != null && fixedField.idle() && !fixedGeometry.ready() && fixedGeometryYields()) {
             fixedGeometry.returningInputs = true;
             if (fixedGeometry.advance(deadline)) { fixedGeometry.close(); fixedGeometry = null; }
             return;
@@ -521,15 +534,32 @@ public final class ThermalDimensionEngine implements AutoCloseable, MaterialStat
     private TopologyInbox.Input nextFixedMaintenanceInput() {
         return topologyInputs.earliestSchedulableInput(input -> fixedMaintenanceInput(input) && fixedGeometryReady(input), this::fixedGrowthOnly);
     }
+    /** Physical changes go before storage: storage may wait for capacity, while they act on paid space now. */
     private TopologyInbox.Input nextFixedGeometryInput() {
+        fixedStorageSkipped = false;
         var maintenance = nextFixedMaintenanceInput();
         if (maintenance != null) return maintenance;
+        var physical = nextFixedPhysicalInput();
+        if (physical != null) return physical;
+        // Only storage can be left; the cheap checks go before the boundary reads.
         return topologyInputs.earliestSchedulableInput(input -> {
-            if (!fixedGeometryReady(input)) return false;
-            int additions = 0;
-            for (var admission : input.batch().admissions()) if (pages.pageAt(admission.page().sectionKey()) == null) additions++;
-            return pages.activePageCount() + additions <= limits.maximumPages();
+            if (!fixedStorageOnly(input)) return false;
+            if (!fixedStorageAffordable(input)) { fixedStorageSkipped = true; return false; }
+            return fixedGeometryReady(input) && fixedPageRoom(input);
         }, this::fixedGrowthOnly);
+    }
+    private TopologyInbox.Input nextFixedPhysicalInput() {
+        return topologyInputs.earliestSchedulableInput(input -> !fixedStorageOnly(input) && fixedGeometryReady(input)
+                && fixedPageRoom(input), this::fixedGrowthOnly);
+    }
+    private boolean fixedPageRoom(TopologyInbox.Input input) {
+        int additions = 0;
+        for (var admission : input.batch().admissions()) if (pages.pageAt(admission.page().sectionKey()) == null) additions++;
+        return pages.activePageCount() + additions <= limits.maximumPages();
+    }
+    /** A task waiting for capacity yields to maintenance, and a storage one also to any ready physical change. */
+    private boolean fixedGeometryYields() {
+        return nextFixedMaintenanceInput() != null || fixedGeometry.storage && nextFixedPhysicalInput() != null;
     }
 
     private boolean fixedGeometryReady(TopologyInbox.Input input) {
@@ -537,7 +567,7 @@ public final class ThermalDimensionEngine implements AutoCloseable, MaterialStat
         if (fixedInputObsolete(input)) return true;
         var boundary = fixedBoundaries.get(input);
         if (boundary == null) return false;
-        if (!fixedGrowthOnly(input)) return fixedField.atBoundary(boundary.sections(), fixedApplicationTick(input));
+        if (!fixedStorageOnly(input)) return fixedField.atBoundary(boundary.sections(), fixedApplicationTick(input));
         if (fixedField.frozen(input.page().sectionKey())) return false;
         long tick = fixedField.minimumTick(boundary.sections());
         return fixedField.aligned(boundary.sections()) && (tick == Long.MAX_VALUE || tick >= input.batch().targetTick());
@@ -555,7 +585,7 @@ public final class ThermalDimensionEngine implements AutoCloseable, MaterialStat
         long tick = input.batch().targetTick();
         var boundary = fixedBoundaries.get(input);
         if (boundary == null) return tick;
-        if (fixedGrowthOnly(input)) {
+        if (fixedStorageOnly(input)) {
             long current = fixedField.minimumTick(boundary.sections());
             return current == Long.MAX_VALUE ? tick : Math.max(tick, current);
         }
@@ -600,10 +630,14 @@ public final class ThermalDimensionEngine implements AutoCloseable, MaterialStat
         long controls = sourceIngress.controlRevision();
         if (fixedControlRevision == controls && fixedBoundarySequence == sequence
                 && fixedActivationRevision == fixedField.activationRevision()) return;
-        fixedNextPhysicalCuts.clear();
+        fixedNextPhysicalCuts.clear(); fixedNextStorageCuts.clear();
         topologyInputs.forEachPendingInput(input -> {
-            if (!fixedInputObsolete(input) && !fixedGrowthOnly(input))
-                addFixedCut(fixedBoundaries.get(input).sections(), fixedApplicationTick(input));
+            if (fixedInputObsolete(input)) return;
+            if (!fixedStorageOnly(input)) addFixedCut(fixedBoundaries.get(input).sections(), fixedApplicationTick(input));
+            else if (fixedOpenAdmission(input)) {
+                long section = input.page().sectionKey();
+                fixedNextStorageCuts.put(section, Math.min(input.batch().targetTick(), fixedNextStorageCuts.getOrDefault(section, Long.MAX_VALUE)));
+            }
         });
         var footprint = new LongOpenHashSet();
         sourceIngress.forEachPendingControl((source, tick, sourceSequence) -> {
@@ -620,9 +654,11 @@ public final class ThermalDimensionEngine implements AutoCloseable, MaterialStat
             activating.add(section); addFixedCut(fixedActivationBoundary(section).sections(), tick);
         });
         fixedActivationBoundaries.keySet().retainAll(activating);
-        boolean changed = !sameFixedCuts(fixedNextPhysicalCuts, fixedPhysicalCuts);
+        boolean changed = !sameFixedCuts(fixedNextPhysicalCuts, fixedPhysicalCuts) || !sameFixedCuts(fixedNextStorageCuts, fixedStorageCuts);
         var previous = fixedPhysicalCuts; fixedPhysicalCuts = fixedNextPhysicalCuts; fixedNextPhysicalCuts = previous;
         fixedNextPhysicalCuts.clear();
+        var previousStorage = fixedStorageCuts; fixedStorageCuts = fixedNextStorageCuts; fixedNextStorageCuts = previousStorage;
+        fixedNextStorageCuts.clear();
         if (changed) { sourceIngress.dependenciesChanged(); fixedInputs.geometryChanged(); }
         fixedControlRevision = sourceIngress.controlRevision(); fixedBoundarySequence = sequence;
         fixedActivationRevision = fixedField.activationRevision();
@@ -650,7 +686,7 @@ public final class ThermalDimensionEngine implements AutoCloseable, MaterialStat
         return fixedActivationBoundaries.computeIfAbsent(section, key -> {
             var pending = new LongOpenHashSet();
             topologyInputs.forEachPendingInput(input -> {
-                if (!fixedInputObsolete(input) && !fixedGrowthOnly(input)) TopologyUpdatePlanner.collectBoundarySeeds(input.batch(), pending);
+                if (!fixedInputObsolete(input) && !fixedStorageOnly(input)) TopologyUpdatePlanner.collectBoundarySeeds(input.batch(), pending);
             });
             if (fixedGeometry != null) pending.addAll(fixedGeometry.boundary.sections());
             return includeFixedOutlets(topologyPlan.continuationBoundary(LongSets.singleton(key), true, pending));
@@ -684,6 +720,39 @@ public final class ThermalDimensionEngine implements AutoCloseable, MaterialStat
                 || batch.phaseAcks().length != 0 || batch.phaseIntents().length != 0) return false;
         for (var update : batch.residencyUpdates()) if (!pages.onlyAddsResidentBricks(update)) return false;
         return true;
+    }
+
+    /**
+     * Admission of a Section the field does not represent yet, with neither a Tile nor an installed Page. Nothing it
+     * carries acts on paid space before it is installed, so it is storage, like brick growth: it cuts no physical
+     * time and installs at its boundary's first aligned tick from its own. Its Page queue still holds later inputs
+     * behind it.
+     */
+    private boolean fixedOpenAdmission(TopologyInbox.Input input) {
+        var batch = input.batch();
+        if (batch.admissions().length == 0 || batch.retirements().length != 0) return false;
+        long section = input.page().sectionKey();
+        if (fixedField.hasSection(section) || pages.pageAt(section) != null) return false;
+        for (var admission : batch.admissions()) if (admission.page() != input.page()) return false;
+        return true;
+    }
+    /** Storage requests: they float to an aligned tick instead of cutting paid space, and may wait for capacity. */
+    private boolean fixedStorageOnly(TopologyInbox.Input input) {
+        return fixedGrowthOnly(input) || fixedOpenAdmission(input);
+    }
+    /** New Tile storage an input asks for, before its transport payload; zero when it fits in paid space. */
+    private long fixedStorageBytes(TopologyInbox.Input input) {
+        long bricks = 0;
+        for (var admission : input.batch().admissions()) bricks |= admission.residentBrickMask();
+        for (var update : input.batch().residencyUpdates()) bricks |= update.residentBrickMask();
+        return bricks == 0 ? 0 : fixedField.geometryStorageBytes(input.page().sectionKey(), bricks, false);
+    }
+    /**
+     * Outside pressure all storage may form a batch; under pressure only after capacity changed since the refusal. A
+     * refused storage-only batch then waits in the geometry slot, where a retry costs one reservation, not a plan.
+     */
+    private boolean fixedStorageAffordable(TopologyInbox.Input input) {
+        return fixedStorageWait < 0 || fixedStorageWait != airBudget.capacityRevision();
     }
 
     private long sourceGeometryTick(long section) {
@@ -801,6 +870,8 @@ public final class ThermalDimensionEngine implements AutoCloseable, MaterialStat
         long[] restoringBricks;
         long publicationTick;
         long capacityWait = -1;
+        /** A storage batch: it asks for unpaid storage and holds no physical change. */
+        final boolean storage;
         int stage;
         boolean returningInputs;
         boolean ready() {
@@ -814,6 +885,8 @@ public final class ThermalDimensionEngine implements AutoCloseable, MaterialStat
             boolean maintenance = fixedMaintenanceInput(first);
             long applicationTick = fixedApplicationTick(first);
             publicationTick = applicationTick;
+            boolean pressure = fixedStorageWait >= 0;
+            boolean storageFirst = fixedStorageOnly(first) && fixedStorageBytes(first) != 0;
             // Preserve a producer cut, but only include recipients at its real boundary.
             inputs = topologyInputs.freeze(first.batch().targetTick(), first.batch().sequence(), selected -> {
                 if (!fixedGeometryReady(selected)) return false;
@@ -821,12 +894,17 @@ public final class ThermalDimensionEngine implements AutoCloseable, MaterialStat
                 // A full-capacity growth must not hold unrelated retirement or
                 // edits hostage; maintenance retains its existing priority.
                 if (maintenance && !fixedMaintenanceInput(selected)) return false;
+                // Physical changes never wait for unpaid storage: storage forms its own batches, one input at a time
+                // under storage pressure.
+                boolean storageSelected = fixedStorageOnly(selected) && fixedStorageBytes(selected) != 0;
+                if (selected != first && (storageSelected != storageFirst || pressure && storageFirst)) return false;
                 int additions = 0;
                 for (var admission : selected.batch().admissions()) if (pages.pageAt(admission.page().sectionKey()) == null) additions++;
                 if (additions > available[0]) return false;
                 available[0] -= additions; return true;
             }, ThermalDimensionEngine.this::fixedGrowthOnly);
             topologyInputs.separateFrozenGrowth(inputs, fixedField::activeBricks, ThermalDimensionEngine.this::fixedGrowthOnly);
+            storage = storageFirst;
             var seeds = new LongOpenHashSet();
             for (var selected : inputs) {
                 TopologyUpdatePlanner.collectBoundarySeeds(selected.batch(), seeds);
@@ -873,7 +951,16 @@ public final class ThermalDimensionEngine implements AutoCloseable, MaterialStat
                 if (!installation.prepare(deadline)) return false;
                 if (!installation.valid()) throw new IllegalStateException("Fixed topology changed while its sole coordinator prepared it");
                 publicationTick = fixedApplicationTick(inputs.get(0));
-                if (!prepareField()) { capacityWait = airBudget.capacityRevision(); return false; }
+                // Storage installs on its boundary's own clock. If that boundary moved apart while this task was
+                // prepared, re-form rather than install new Tiles at a tick their neighbours have already left.
+                if (storage && !storageAligned()) { returningInputs = true; return false; }
+                if (!prepareField()) {
+                    capacityWait = airBudget.capacityRevision();
+                    // Storage pressure: later storage batches form one input at a time, after a release.
+                    if (storage) fixedStorageWait = capacityWait;
+                    return false;
+                }
+                if (storage) fixedStorageWait = -1;
                 if (!beginGeometryValues()) throw new IllegalStateException("Geometry did not own its recipients' numerical boundary");
                 prepareGameplayValues();
                 stage = 2;
@@ -979,6 +1066,14 @@ public final class ThermalDimensionEngine implements AutoCloseable, MaterialStat
                 changed.add(new QueryPublication.SectionPublication(write.page.handle, write.publication));
             }
             headers = changed.toArray(QueryPublication.SectionPublication[]::new);
+            return true;
+        }
+        /** Each storage input's own boundary stands at the publication tick; physical inputs hold theirs by cuts. */
+        private boolean storageAligned() {
+            for (var selected : inputs) if (fixedStorageOnly(selected)) {
+                var own = fixedBoundaries.get(selected);
+                if (own != null && !fixedField.atBoundary(own.sections(), publicationTick)) return false;
+            }
             return true;
         }
         private boolean beginGeometryValues() {
@@ -1094,6 +1189,7 @@ public final class ThermalDimensionEngine implements AutoCloseable, MaterialStat
             if (fixedGeometry != null) { fixedGeometry.close(); fixedGeometry = null; }
             sourceIngress.close(); topologyIngress.close(); topologyInputs.clear(); fixedInputs.clear();
             fixedBoundaries.clear(); fixedActivationBoundaries.clear(); fixedPhysicalCuts.clear(); fixedNextPhysicalCuts.clear(); fixedScope = LongSets.EMPTY_SET;
+            fixedStorageCuts.clear(); fixedNextStorageCuts.clear();
             if (capacityContinuation != null) { airBudget.cancelCapacityWait(capacityContinuation); capacityContinuation = null; }
             sources.close(); pages.close(); queries.close(); fixedField.close(); fixedHeat.close();
             if (fixedInputCredit != null) { fixedInputCredit.close(); fixedInputCredit = null; }
@@ -1114,6 +1210,7 @@ public final class ThermalDimensionEngine implements AutoCloseable, MaterialStat
                 + ",sections=" + fixedField.tileCount() + ",pendingJ=" + fixedInputs.pendingEnergyJ()
                 + ",commits=" + fixedCommits + ",geometry=" + (fixedGeometry == null ? "none" : fixedGeometry.stage)
                 + ",pendingGeometry=" + describeFixedPendingBoundary()
+                + ",storagePressure=" + (fixedStorageWait >= 0) + ",storageCuts=" + fixedStorageCuts.size()
                 + ",rootBytes=" + airBudget.rootUsedBytes();
 
     }
@@ -1124,7 +1221,7 @@ public final class ThermalDimensionEngine implements AutoCloseable, MaterialStat
         var boundary = fixedBoundaries.get(input);
         return "tick:" + input.batch().targetTick() + ":section:" + input.page().sectionKey()
                 + ":activeSince:" + fixedField.activeSince(input.page().sectionKey()) + ":mixing:" + input.mixing().size()
-                + ":growth:" + fixedGrowthOnly(input) + (boundary == null ? "" : ":range:"
+                + ":growth:" + fixedGrowthOnly(input) + ":storage:" + fixedStorageOnly(input) + (boundary == null ? "" : ":range:"
                 + fixedField.minimumTick(boundary.sections()) + ".." + fixedField.maximumTick(boundary.sections()));
     }
 
@@ -1604,7 +1701,7 @@ public final class ThermalDimensionEngine implements AutoCloseable, MaterialStat
     /** Source coefficients share Page input order; they never create a Page input waiter. */
 
     private long geometryBoundary(long section) {
-        return fixedPhysicalCuts.getOrDefault(section, Long.MAX_VALUE);
+        return Math.min(fixedPhysicalCuts.getOrDefault(section, Long.MAX_VALUE), fixedStorageCuts.getOrDefault(section, Long.MAX_VALUE));
 
     }
 
@@ -1692,6 +1789,8 @@ public final class ThermalDimensionEngine implements AutoCloseable, MaterialStat
         boolean waitingForCapacity = (fixedCapacityWait == capacity
                 || fixedGeometry != null && fixedGeometry.capacityWait == capacity || pages.maintenanceCapacityWait() == capacity);
         if (closeContinuationReady || !closing && hasReadyWork()) { continuation.run(); return; }
+        // Storage passed over for capacity (just found by the readiness scan) resumes on the next release.
+        waitingForCapacity |= fixedStorageSkipped;
         {
             if (capacityContinuation != null) airBudget.cancelCapacityWait(capacityContinuation);
             capacityContinuation = null;
@@ -1775,6 +1874,8 @@ public final class ThermalDimensionEngine implements AutoCloseable, MaterialStat
         meter.container(fixedNextPhysicalCuts, fixedNextPhysicalCuts.size(), 16);
         meter.container(fixedBoundaries, fixedBoundaries.size(), 32);
         meter.container(fixedActivationBoundaries, fixedActivationBoundaries.size(), 16);
+        meter.container(fixedStorageCuts, fixedStorageCuts.size(), 16);
+        meter.container(fixedNextStorageCuts, fixedNextStorageCuts.size(), 16);
         for (var boundary : fixedBoundaries.values()) if (meter.objectOnce(boundary, 64))
             meter.container(boundary.sections(), boundary.sections().size(), 8);
     }

@@ -154,6 +154,89 @@ public final class ThermalResidencyTimeGameTests {
         helper.succeed();
     }
 
+    @GameTest(template = "phase0a_empty", batch = "residency_open_admission", timeoutTicks = 400)
+    public static void anUnpaidNeighbourAdmissionLeavesTheAdjacentBaseOnItsClock(GameTestHelper helper) {
+        openAdmission(helper, new BlockPos(503820, 192, 491520), false);
+        helper.succeed();
+    }
+
+    @GameTest(template = "phase0a_empty", batch = "residency_open_admission_order", timeoutTicks = 400)
+    public static void anEditInsideAWaitingAdmissionIsKeptBehindIt(GameTestHelper helper) {
+        openAdmission(helper, new BlockPos(507916, 192, 491520), true);
+        helper.succeed();
+    }
+
+    /**
+     * A warm base Brick at a Section's east face asks for the empty Section beyond it while the field is full. That
+     * admission must not hold the base's time or a wall edited in the same cut, and once capacity returns it installs
+     * on the base's own clock, keeping an edit made inside it while it waited.
+     */
+    private static void openAdmission(GameTestHelper helper, BlockPos base, boolean editInside) {
+        var level = helper.getLevel();
+        for (int x = 0; x < 8; x++) for (int y = 0; y < 4; y++) for (int z = 0; z < 4; z++)
+            level.setBlockAndUpdate(base.offset(x, y, z), Blocks.AIR.defaultBlockState());
+        MinecraftThermalInput.closeActiveLevel(level);
+        var wall = base.offset(1, 1, 1); var east = base.east(4); var inner = east.offset(1, 1, 1);
+        try (var simulation = new ThermalMaterialBehaviorGameTests.Simulation(helper, base, 4, 4, 4, 0, false);
+                var producer = new SpatialSourceTimeline(simulation.budget.createCategory(), 16)) {
+            long section = SectionPos.asLong(base), neighbour = SectionPos.asLong(east);
+            helper.assertTrue(neighbour != section && (base.getX() & 15) == 12, "The base Brick touches the neighbouring Section");
+            var page = simulation.pages.get(section);
+            var warm = new double[4096]; Arrays.fill(warm, 32 * simulation.fixed.airCapacityJPerK());
+            helper.assertTrue(simulation.fixed.restoreValues(section, warm, new byte[4096]), "Start from a warm base");
+            submit(helper, simulation, producer, 20, ThermalInputBatch.NO_ADMISSIONS, ThermalInputBatch.NO_RESIDENCY_UPDATES);
+            var opened = new ThermalPageHandle(neighbour, 1); simulation.pages.put(neighbour, opened);
+            byte[] sky = new byte[256]; Arrays.fill(sky, (byte) 16);
+            var admission = new ThermalInputBatch.PageAdmission(opened, 0, 1, 0,
+                    simulation.capture.captureBricks(neighbour, null, simulation.capture.unresolvedPage(), 1), 0, sky, null, null);
+            int stone = simulation.profiles.states().signatureId(Blocks.STONE.defaultBlockState());
+            var sample = new TiledThermalField.Sample();
+            try (var pressure = simulation.budget.tryReserve(simulation.budget.limitBytes() - simulation.budget.usedBytes() - 2048)) {
+                helper.assertTrue(pressure != null, "Withhold the storage the neighbouring Section needs");
+                level.setBlockAndUpdate(wall, Blocks.STONE.defaultBlockState());
+                var geometry = new ResolvedGeometryBatch.Builder();
+                geometry.addResolvedCenter(page, page.beginGeometryMutation(), (wall.getX() & 15) | (wall.getZ() & 15) << 4 | (wall.getY() & 15) << 8, stone);
+                simulation.engine.offerInput(new ThermalInputEnvelope(new ThermalInputBatch(1, ++simulation.sequence, 40,
+                        new ThermalInputBatch.PageAdmission[] {admission}, ThermalInputBatch.NO_RETIREMENTS, ThermalInputBatch.NO_RESIDENCY_UPDATES,
+                        geometry.buildAndReset(), ThermalInputBatch.NO_ENVIRONMENT_UPDATES, ThermalInputBatch.NO_PHASE_ACKS, Double.NaN), producer.seal(40)));
+                pump(helper, simulation);
+                if (editInside) {
+                    level.setBlockAndUpdate(inner, Blocks.STONE.defaultBlockState());
+                    var later = new ResolvedGeometryBatch.Builder();
+                    later.addResolvedCenter(opened, opened.beginGeometryMutation(), (inner.getX() & 15) | (inner.getZ() & 15) << 4 | (inner.getY() & 15) << 8, stone);
+                    simulation.engine.offerInput(new ThermalInputEnvelope(new ThermalInputBatch(1, ++simulation.sequence, 60,
+                            ThermalInputBatch.NO_ADMISSIONS, ThermalInputBatch.NO_RETIREMENTS, ThermalInputBatch.NO_RESIDENCY_UPDATES,
+                            later.buildAndReset(), ThermalInputBatch.NO_ENVIRONMENT_UPDATES, ThermalInputBatch.NO_PHASE_ACKS, Double.NaN), producer.seal(60)));
+                    pump(helper, simulation);
+                }
+                for (long tick = 60; tick <= 200; tick += 20) {
+                    offer(simulation, producer, tick, ThermalInputBatch.NO_ADMISSIONS, ThermalInputBatch.NO_RESIDENCY_UPDATES);
+                    pump(helper, simulation);
+                    helper.assertTrue(simulation.fixed.sectionSampleTick(section) == tick,
+                            "The base keeps its physical clock while the neighbouring admission waits for storage; expected=" + tick
+                                    + ",actual=" + simulation.fixed.sectionSampleTick(section));
+                }
+                helper.assertTrue(simulation.fixed.read(wall.asLong(), true, sample), "The same-cut wall is installed on paid space");
+                helper.assertTrue(!simulation.fixed.hasSection(neighbour), "The unpaid admission still waits for capacity");
+            }
+            for (int flush = 0; flush < 3; flush++) {
+                offer(simulation, producer, 220, ThermalInputBatch.NO_ADMISSIONS, ThermalInputBatch.NO_RESIDENCY_UPDATES);
+                pump(helper, simulation);
+            }
+            long baseTick = simulation.fixed.sectionSampleTick(section), neighbourTick = simulation.fixed.sectionSampleTick(neighbour);
+            helper.assertTrue(simulation.fixed.hasSection(neighbour), "Released capacity installs the waiting admission");
+            helper.assertTrue(baseTick == 220 && neighbourTick == 220,
+                    "The new Section joins the base on its own clock; base=" + baseTick + ",neighbour=" + neighbourTick);
+            if (editInside) helper.assertTrue(simulation.fixed.read(inner.asLong(), true, sample),
+                    "An edit made inside the Section while its admission waited is kept, not dropped as obsolete");
+            FHMain.LOGGER.info("THERMAL_OPEN_ADMISSION,editInside={},baseTick={},neighbourTick={},wallInstalled=true", editInside, baseTick, neighbourTick);
+        } finally {
+            level.setBlockAndUpdate(wall, Blocks.AIR.defaultBlockState());
+            level.setBlockAndUpdate(inner, Blocks.AIR.defaultBlockState());
+            MinecraftThermalInput.closeActiveLevel(level);
+        }
+    }
+
     private static Result run(GameTestHelper helper, BlockPos origin, boolean delay, boolean materials) {
         var remote = origin.east(64);
         for (var base : new BlockPos[] {origin, remote}) {
