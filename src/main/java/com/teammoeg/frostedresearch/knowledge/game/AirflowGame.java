@@ -24,8 +24,11 @@ public final class AirflowGame {
         int x = cell % WIDTH, y = cell / WIDTH;
         if ((x == 0 && y >= 19 && y <= 21) || (x >= 1 && x <= 4 && y >= 18 && y <= 22)) return OPEN;
         if (x <= 1 && y >= 16 && y <= 24) return PROTECTED;
-        if (y <= 13 && x >= 15 && x <= 21) return y >= 12 ? BED : OPEN;
+        if (furnaceCavity(cell)) return y >= 12 ? BED : OPEN;
         return BRICK;
+    }
+    public static boolean furnaceCavity(int cell) {
+        return cell >= 0 && cell < SIZE && cell / WIDTH <= 13 && cell % WIDTH >= 15 && cell % WIDTH <= 21;
     }
     public static boolean boundary(int cell) {
         int x = cell % WIDTH, y = cell / WIDTH;
@@ -37,6 +40,7 @@ public final class AirflowGame {
     public int dugCount() { return dug.cardinality(); }
     public boolean won() { return completed; }
     public boolean failed() { return failed; }
+    public int[] path() { return path.clone(); }
     public void restoreCompletion() { completed = true; failed = false; leak = -1; }
     public void reset() { dug.clear(); path = new int[0]; completed = failed = false; leak = -1; }
     public boolean dig(int from, int to) { return dig(List.of(new Stroke(from, to))); }

@@ -29,11 +29,13 @@ public final class AirflowParticleGameTests {
     }
 
     @GameTest(batch="airflow_particles",template="empty",timeoutTicks=20)
-    public static void populationTracksAllCavitiesAndNewParticlesAppearInExcavation(GameTestHelper h) {
+    public static void populationTracksAvailableCavitiesAndNewParticlesAppearInExcavation(GameTestHelper h) {
         var game=new AirflowGame();var cloud=new AirflowParticles(1717);
         for(int tick=0;tick<120;tick++)cloud.tick(game);
         int initial=cloud.targetCount(),area=cloud.openCount();
-        h.assertTrue(initial==(int)Math.ceil(area*AirflowParticles.DENSITY) && cloud.particles().size()==initial,"initial population follows all pre-open cavities");
+        h.assertTrue(initial==(int)Math.ceil(area*AirflowParticles.DENSITY) && cloud.particles().size()==initial,"initial population follows the available air volume");
+        h.assertTrue(initial==6 && area==23,"quarter-cell density counts only the starter pocket before the furnace is ventilated");
+        h.assertTrue(cloud.particles().stream().noneMatch(p -> AirflowGame.furnaceCavity((int)p.y*28+(int)p.x)),"preset furnace cavity has no random air before ventilation");
         var old=Collections.newSetFromMap(new IdentityHashMap<AirflowParticles.Particle,Boolean>());old.addAll(cloud.particles());
         game.dig(8*28+7,10*28+10);
         for(int tick=0;tick<8;tick++)cloud.tick(game);
@@ -41,6 +43,51 @@ public final class AirflowParticleGameTests {
         h.assertTrue(cloud.particles().stream().anyMatch(p -> !old.contains(p) && p.x>5 && p.x<12 && p.y<12),"new air can appear in a disconnected freshly excavated cavity");
         for(var p:cloud.particles())h.assertTrue(AirflowParticles.fits(game,p.x,p.y),"spawn and contact correction keep enlarged colliders outside bricks");
         cloud.clear();h.assertTrue(cloud.particles().isEmpty() && cloud.targetCount()==0,"reset removes population and geometry history");
+        h.succeed();
+    }
+
+    private static double distanceOnPath(AirflowParticles.Particle p,int[] path) {
+        for(int i=0;i<path.length-1;i++) {
+            double x=path[i]%28+.5,y=path[i]/28+.5;
+            int dx=path[i+1]%28-path[i]%28,dy=path[i+1]/28-path[i]/28;
+            double along=(p.x-x)*dx+(p.y-y)*dy,across=(p.x-x)*dy-(p.y-y)*dx;
+            if(Math.abs(across)<1e-8 && along>=-1e-8 && along<=1+1e-8)return i+along;
+        }
+        return -1;
+    }
+
+    @GameTest(batch="airflow_particles",template="empty",timeoutTicks=20)
+    public static void completedGasFollowsRouteWarmsAtBedAndLoopsWithoutCrossingBricks(GameTestHelper h) {
+        var game=new AirflowGame();var cloud=new AirflowParticles(1717);
+        for(int tick=0;tick<120;tick++)cloud.tick(game);
+        long contacts=cloud.collisions();
+        game.dig(java.util.List.of(new AirflowGame.Stroke(20*28,20*28+18),new AirflowGame.Stroke(20*28+18,14*28+18)));
+        h.assertTrue(game.won(),"route fixture wins");
+        int[] path=game.path();int firstBed=0;
+        while(game.cell(path[firstBed])!=AirflowGame.BED)firstBed++;
+        cloud.tick(game);
+        h.assertTrue(cloud.targetCount()==45 && cloud.particles().size()==45,"winning cavity retains halved volume-based population");
+        var tracked=cloud.particles().get(0);double previous=distanceOnPath(tracked,path);boolean looped=false;
+        for(int tick=0;tick<500;tick++) {
+            cloud.tick(game);
+            h.assertTrue(cloud.lastPairChecks()==0 && cloud.collisions()==contacts,"completed presentation bypasses random turns and particle collisions");
+            for(var p:cloud.particles()) {
+                double distance=distanceOnPath(p,path);
+                h.assertTrue(distance>=0 && AirflowParticles.fits(game,p.x,p.y),"every particle stays on the inlet-to-outlet route outside bricks");
+                h.assertTrue(p.heated==(distance>=firstBed-.5),"particles heat at charcoal and become cold again when recycled to inlet");
+            }
+            double distance=distanceOnPath(tracked,path),expected=(previous+.25)%(path.length-1);
+            h.assertTrue(Math.abs(distance-expected)<1e-8,"fixed-speed motion always advances toward the outlet");
+            if(distance<previous) {
+                looped=true;h.assertTrue(tracked.previousX==tracked.x && tracked.previousY==tracked.y,"recycling cannot interpolate a streak across the board");
+            }
+            previous=distance;
+        }
+        h.assertTrue(looped,"completed gas recycles after reaching the outlet");
+        var restored=new AirflowGame();restored.load(game.save());var reopened=new AirflowParticles(1234);reopened.tick(restored);
+        h.assertTrue(reopened.particles().size()==45 && reopened.particles().stream().allMatch(p -> distanceOnPath(p,path)>=0),"reopening a completed board immediately restores directed flow");
+        game.reset();cloud.clear();for(int tick=0;tick<120;tick++)cloud.tick(game);
+        h.assertTrue(cloud.targetCount()==6 && cloud.collisions()>0,"reset restores random air only in the starter pocket");
         h.succeed();
     }
 

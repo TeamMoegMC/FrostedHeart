@@ -259,10 +259,21 @@ public final class M4ClientValidation {
     private static void observe(BlockPos pos) { FRNetwork.INSTANCE.sendToServer(new ObservationActionPacket(ObservationActionPacket.Action.BLOCK, pos, -1)); }
     private static void discard() { FRNetwork.INSTANCE.sendToServer(new ObservationActionPacket(ObservationActionPacket.Action.DISCARD)); }
     private static CompoundTag board() { return Objects.requireNonNull(desk.getAirflowPanel(), "desk airflow panel").board(); }
+    private static boolean onAirflowPath(com.teammoeg.frostedresearch.knowledge.game.AirflowParticles.Particle p,int[] path) {
+        for(int i=0;i<path.length-1;i++) {
+            double x=path[i]%28+.5,y=path[i]/28+.5;
+            int dx=path[i+1]%28-path[i]%28,dy=path[i+1]/28-path[i]/28;
+            double along=(p.x-x)*dx+(p.y-y)*dy,across=(p.x-x)*dy-(p.y-y)*dx;
+            if(Math.abs(across)<1e-8 && along>=-1e-8 && along<=1+1e-8)return true;
+        }
+        return false;
+    }
     private static void dragCanvas(int... points) throws Exception {
         var canvas=desk.getAirflowPanel().getElements().stream().filter(e -> e.getWidth()==112 && e.getHeight()==112).findFirst().orElseThrow();
         var mc=Minecraft.getInstance();int left=(mc.getWindow().getGuiScaledWidth()-desk.getWidth())/2,top=(mc.getWindow().getGuiScaledHeight()-desk.getHeight())/2;
         double x=left+canvas.getScreenX()+points[0]*4+2,y=top+canvas.getScreenY()+points[1]*4+2;
+        desk.updateGui(left,top,x,y,-1);desk.updateMouseOver();
+        require(canvas.isMouseOver(),"test hover matches the excavation press before dispatching the screen event");
         require(mc.screen.mouseClicked(x,y,0),"actual canvas accepts excavation press");
         for(int i=2;i<points.length;i+=2) {
             double tx=left+canvas.getScreenX()+points[i]*4+2,ty=top+canvas.getScreenY()+points[i+1]*4+2;
@@ -281,6 +292,7 @@ public final class M4ClientValidation {
         int top = (mc.getWindow().getGuiScaledHeight() - desk.getHeight()) / 2;
         double x = left + canvas.getScreenX() + fromX * 4 + 2, y = top + canvas.getScreenY() + fromY * 4 + 2;
         double tx = left + canvas.getScreenX() + toX * 4 + 2, ty = top + canvas.getScreenY() + toY * 4 + 2;
+        desk.updateGui(left,top,x,y,-1);desk.updateMouseOver();
         pendingDug = dug.clone();
         require(Minecraft.getInstance().screen.mouseClicked(x,y,0), "actual canvas accepts excavation press");
         require(Minecraft.getInstance().screen.mouseDragged(tx,ty,0,tx-x,ty-y), "actual canvas accepts a fast drag stroke");
@@ -348,6 +360,9 @@ public final class M4ClientValidation {
                         require(!cloud.particles().isEmpty() && cloud.particles().stream().anyMatch(p -> p.y>17 && !p.heated),"cold air exists in the inlet pocket before charcoal is reached");
                         require(cloud.particles().size()==cloud.targetCount() && cloud.collisions()>0,"volume-scaled gas has actual inter-particle contacts");
                         checks.put("initial_particle_target",cloud.targetCount());checks.put("particle_contacts",cloud.collisions());
+                        require(cloud.targetCount()==6,"initial population counts only the starter pocket at quarter-cell density");
+                        require(cloud.particles().stream().noneMatch(p -> com.teammoeg.frostedresearch.knowledge.game.AirflowGame.furnaceCavity((int)p.y*28+(int)p.x)),"unventilated preset furnace contains no random particles");
+                        checks.put("preset_cavity_empty_before_ventilation",true);
                         firstParticleX=cloud.particles().get(0).x;firstParticleY=cloud.particles().get(0).y;
                         shot("03-airflow-board");airflowCheck=1;ticks=0;return;
                     }
@@ -398,12 +413,22 @@ public final class M4ClientValidation {
                         var cloud=(com.teammoeg.frostedresearch.knowledge.game.AirflowParticles)read(desk.getAirflowPanel(),"gas");
                         require(cloud.targetCount()>((Number)checks.get("initial_particle_target")).intValue() && cloud.particles().size()==cloud.targetCount(),"larger excavated volume increases the actual client population");
                         checks.put("completed_particle_target",cloud.targetCount());
-                        require(Arrays.stream(board().getIntArray("path")).anyMatch(c -> com.teammoeg.frostedresearch.knowledge.game.AirflowGame.terrain(c) == 3), "verified wind route crosses the charcoal bed");
+                        int[] path=board().getIntArray("path");
+                        require(cloud.targetCount()==45 && cloud.lastPairChecks()==0,"completed flow uses halved population and no random collision solver");
+                        require(cloud.particles().stream().allMatch(p -> onAirflowPath(p,path)),"all completed particles follow the verified fixed route");
+                        require(cloud.particles().stream().anyMatch(p -> p.heated) && cloud.particles().stream().anyMatch(p -> !p.heated),"fixed route preserves cold inlet and heated chimney particles");
+                        checks.put("completed_fixed_path",true);
+                        firstParticleX=cloud.particles().get(0).x;firstParticleY=cloud.particles().get(0).y;
+                        require(Arrays.stream(path).anyMatch(c -> com.teammoeg.frostedresearch.knowledge.game.AirflowGame.terrain(c) == 3), "verified wind route crosses the charcoal bed");
                         checks.put("actual_ui_excavation_strokes", strokes); shot("04-airflow-won"); next();
                     } else { digNext(); ticks = 0; }
                 }
                 case 8 -> {
                     if (ticks < 25) return; require(current().stage().id().equals("airflow"), "win does not auto-advance");
+                    var cloud=(com.teammoeg.frostedresearch.knowledge.game.AirflowParticles)read(desk.getAirflowPanel(),"gas");
+                    require(cloud.particles().stream().allMatch(p -> onAirflowPath(p,board().getIntArray("path"))),"gas continues following the route after completion");
+                    require(cloud.particles().get(0).x!=firstParticleX || cloud.particles().get(0).y!=firstParticleY,"completed gas visibly advances along the route");
+                    checks.put("completed_fixed_path_moving",true);
                     server(() -> { require(allowed(PROTOTYPE) && !allowed(BLOOMERY) && !allowed(TUYERE), "temporary-only access immediately after win"); checks.put("temporary_before_advance", true); });
                     click("research.airflow_back"); next();
                 }

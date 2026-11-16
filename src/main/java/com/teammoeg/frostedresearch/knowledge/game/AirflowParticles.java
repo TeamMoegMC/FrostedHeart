@@ -8,14 +8,15 @@ import java.util.Random;
 
 /** Cosmetic gas; volume sets population while AirflowGame alone decides research outcomes. */
 public final class AirflowParticles {
-    public static final double DENSITY = .5, RADIUS = .24;
+    public static final double DENSITY = .25, RADIUS = .24;
     public static final int LIMIT = (int)Math.ceil(AirflowGame.SIZE * DENSITY);
-    private static final double DIAMETER = RADIUS * 2, MAX_SPEED = .45;
+    private static final double DIAMETER = RADIUS * 2, MAX_SPEED = .45, PATH_SPEED = .25;
     private static final int SUBSTEPS = 2, SOLVER_PASSES = 2, BIRTHS_PER_TICK = 16;
     public static final class Particle {
         public double x, y, previousX, previousY, vx, vy;
         public boolean heated;
         private int turn;
+        private double pathDistance;
     }
     private final Random random;
     private final List<Particle> particles = new ArrayList<>();
@@ -26,6 +27,8 @@ public final class AirflowParticles {
     private int openCount, emissionCount, target, pairChecks;
     private long collisions;
     private boolean initialFill = true;
+    private int[] path = new int[0];
+    private double heatedFrom;
 
     public AirflowParticles() { this(System.nanoTime()); }
     public AirflowParticles(long seed) { random = new Random(seed); }
@@ -37,11 +40,16 @@ public final class AirflowParticles {
     public void clear() {
         particles.clear(); Arrays.fill(previousOpen,false);
         openCount = emissionCount = target = pairChecks = 0; collisions = 0; initialFill = true;
+        path = new int[0];
+    }
+    private static boolean containsGas(AirflowGame game,int cell) {
+        int type=game.cell(cell);
+        return (type==AirflowGame.OPEN || type==AirflowGame.BED) && (game.won() || !AirflowGame.furnaceCavity(cell));
     }
     private void updateVolume(AirflowGame game) {
         int added = 0; openCount = 0;
         for (int cell = 0; cell < AirflowGame.SIZE; cell++) {
-            int type = game.cell(cell); boolean open = type == AirflowGame.OPEN || type == AirflowGame.BED;
+            boolean open = containsGas(game,cell);
             if (open) { openCells[openCount++] = cell; if (!previousOpen[cell]) newCells[added++] = cell; }
             previousOpen[cell] = open;
         }
@@ -61,8 +69,7 @@ public final class AirflowParticles {
         for (int cy = (int)Math.floor(y-RADIUS); cy <= (int)Math.floor(y+RADIUS); cy++)
             for (int cx = (int)Math.floor(x-RADIUS); cx <= (int)Math.floor(x+RADIUS); cx++) {
                 if (cx < 0 || cx >= AirflowGame.WIDTH || cy < 0 || cy >= AirflowGame.HEIGHT) continue;
-                int type = game.cell(cy * AirflowGame.WIDTH + cx);
-                if (type == AirflowGame.OPEN || type == AirflowGame.BED) continue;
+                if (containsGas(game,cy * AirflowGame.WIDTH + cx)) continue;
                 double dx = x-Math.max(cx,Math.min(x,cx+1)), dy = y-Math.max(cy,Math.min(y,cy+1));
                 if (dx*dx+dy*dy < RADIUS*RADIUS-1e-10) return false;
             }
@@ -115,9 +122,46 @@ public final class AirflowParticles {
                 }
         }
     }
+    private void followPath(AirflowGame game) {
+        boolean entering = path.length == 0;
+        if (entering) {
+            path = game.path();
+            heatedFrom = Double.POSITIVE_INFINITY;
+            for (int i=0;i<path.length;i++) if (game.cell(path[i])==AirflowGame.BED) { heatedFrom=i-.5;break; }
+        }
+        // Old credited saves may have no valid route under today's rules. Keep their completion without drawing through bricks.
+        if (path.length < 2) {
+            for (var p:particles) { p.previousX=p.x;p.previousY=p.y;p.vx=p.vy=0; }
+            return;
+        }
+        double length=path.length-1;
+        while (particles.size()<target) {
+            var p=new Particle();p.pathDistance=random.nextDouble()*length;particles.add(p);
+            positionOnPath(p);p.previousX=p.x;p.previousY=p.y;
+        }
+        for (int i=0;i<particles.size();i++) {
+            var p=particles.get(i);
+            if (entering) { p.pathDistance=i*length/particles.size();positionOnPath(p); }
+            p.previousX=p.x;p.previousY=p.y;
+            p.pathDistance+=PATH_SPEED;
+            boolean wrapped=p.pathDistance>=length;
+            if (wrapped) p.pathDistance-=length;
+            positionOnPath(p);
+            if (wrapped) { p.previousX=p.x;p.previousY=p.y; }
+        }
+    }
+    private void positionOnPath(Particle p) {
+        int segment=(int)p.pathDistance, from=path[segment], to=path[segment+1];
+        double fraction=p.pathDistance-segment;
+        int dx=to%AirflowGame.WIDTH-from%AirflowGame.WIDTH, dy=to/AirflowGame.WIDTH-from/AirflowGame.WIDTH;
+        p.x=from%AirflowGame.WIDTH+.5+dx*fraction;p.y=from/AirflowGame.WIDTH+.5+dy*fraction;
+        p.vx=dx*PATH_SPEED;p.vy=dy*PATH_SPEED;p.heated=p.pathDistance>=heatedFrom;
+    }
     public void tick(AirflowGame game) {
         updateVolume(game);pairChecks=0;
         while (particles.size()>target) particles.remove(particles.size()-1);
+        if (game.won()) { followPath(game);return; }
+        if (path.length>0) { path=new int[0];for(var p:particles)turn(p); }
         for (int born=0;born<BIRTHS_PER_TICK && particles.size()<target;born++) {
             var particle=new Particle();if(place(game,particle))particles.add(particle);
         }
