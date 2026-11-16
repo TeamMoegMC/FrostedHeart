@@ -37,7 +37,7 @@
 
 安装扩容前还检查每个扩容输入的边界都停在发布时刻（`FixedGeometry.storageAligned`）；若等待期间边界已分开，就退回重组，而不是把新Tile装在邻居已经离开的时刻。进度诊断 `regionalProgressDescription` 带 `storagePressure`、`storageCuts` 和待处理输入的 `storage` 标记。
 
-在这之前，邻接准入被当作物理事件：它在 `targetTick` 切住整个边界，内存满时连同同批的墙体修改一起等待。100人负载（`2026-11-15` r4/r6）中，一个覆盖748个Section的批次一直等内存，这些基地的温度停在同一tick直到测试结束。GameTest `ThermalResidencyTimeGameTests.anUnpaidNeighbourAdmissionLeavesTheAdjacentBaseOnItsClock` 和 `anEditInsideAWaitingAdmissionIsKeptBehindIt` 覆盖这一情形；旧实现在两者上都停在tick 40。`TiledThermalSaturationGameTests` 覆盖等待中Section里的源（其J留在生产者里、恢复后恰好一次）和两个Section的整批等待。
+在这之前，邻接准入被当作物理事件：它在 `targetTick` 切住整个边界，内存满时连同同批的墙体修改一起等待。100人负载（`2026-11-15` r4/r6）中，一个覆盖748个Section的批次一直等内存，这些基地的温度停在同一tick直到测试结束。GameTest `ThermalResidencyTimeGameTests.anUnpaidNeighbourAdmissionLeavesTheAdjacentBaseOnItsClock` 和 `anEditInsideAWaitingAdmissionIsKeptBehindIt` 覆盖这一情形；旧实现在两者上都停在tick 40。`TiledThermalSaturationGameTests` 覆盖等待中Section里的源（其J留在生产者里、恢复后恰好一次）和两个Section的整批等待。六次100人运行（r4–r9，含master对照）的结果、保存世界里各基地停住的tick和r6的一条停顿转储见 [validation/thermal-load-100p-2026-11-15.json](validation/thermal-load-100p-2026-11-15.json)。
 
 仍在等待内存的物理输入（例如带新Brick的同坐标生命周期替换）保持原来的切点和等待方式；它们需要的是物理事件的存储，不是可选扩容。
 
