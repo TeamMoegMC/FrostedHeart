@@ -176,7 +176,9 @@ public final class AirflowDeskPanel extends UILayer {
                 }
             }
             for (var particle : gas.particles()) {
-                int px = x + (int)(particle.x * CELL), py = y + (int)(particle.y * CELL);
+                double alpha=Math.max(0,Math.min(1,getPartialTick()));
+                int px = x + (int)((particle.previousX+(particle.x-particle.previousX)*alpha)*CELL);
+                int py = y + (int)((particle.previousY+(particle.y-particle.previousY)*alpha)*CELL);
                 g.fill(px, py, px + 1, py + 1, particle.heated ? 0xFFF0AC5A : WIND);
             }
             if (failed()) {

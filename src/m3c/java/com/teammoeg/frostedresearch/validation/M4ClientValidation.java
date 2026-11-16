@@ -345,7 +345,9 @@ public final class M4ClientValidation {
                         if(ticks<70)return;
                         require(!board().getBoolean("won") && !board().getBoolean("failed"),"new board starts in progress");
                         var cloud=(com.teammoeg.frostedresearch.knowledge.game.AirflowParticles)read(desk.getAirflowPanel(),"gas");
-                        require(!cloud.particles().isEmpty() && cloud.particles().stream().noneMatch(p -> p.heated),"cold air exists before charcoal is reached");
+                        require(!cloud.particles().isEmpty() && cloud.particles().stream().anyMatch(p -> p.y>17 && !p.heated),"cold air exists in the inlet pocket before charcoal is reached");
+                        require(cloud.particles().size()==cloud.targetCount() && cloud.collisions()>0,"volume-scaled gas has actual inter-particle contacts");
+                        checks.put("initial_particle_target",cloud.targetCount());checks.put("particle_contacts",cloud.collisions());
                         firstParticleX=cloud.particles().get(0).x;firstParticleY=cloud.particles().get(0).y;
                         shot("03-airflow-board");airflowCheck=1;ticks=0;return;
                     }
@@ -393,6 +395,9 @@ public final class M4ClientValidation {
                     }
                     if (board().getBoolean("won")) {
                         if (!current().stage().ready() || ticks < 100) return;
+                        var cloud=(com.teammoeg.frostedresearch.knowledge.game.AirflowParticles)read(desk.getAirflowPanel(),"gas");
+                        require(cloud.targetCount()>((Number)checks.get("initial_particle_target")).intValue() && cloud.particles().size()==cloud.targetCount(),"larger excavated volume increases the actual client population");
+                        checks.put("completed_particle_target",cloud.targetCount());
                         require(Arrays.stream(board().getIntArray("path")).anyMatch(c -> com.teammoeg.frostedresearch.knowledge.game.AirflowGame.terrain(c) == 3), "verified wind route crosses the charcoal bed");
                         checks.put("actual_ui_excavation_strokes", strokes); shot("04-airflow-won"); next();
                     } else { digNext(); ticks = 0; }

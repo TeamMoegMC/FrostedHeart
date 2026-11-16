@@ -1,9 +1,9 @@
 # 有序阶段、临时配方与风道试验
 
-- Status: `Current`（源码、15项服务端回归及单客户端漏气/重置/通关核对；阶段持久化/重启基线见11月12日记录）
-- Last verified: `2026-11-16`（砂砖、预留入口空腔、随机空气、阴燃炭床、冷风漏气优先及失败恢复；其它验证范围见各节）
+- Status: `Current`（粒子密度/碰撞已通过11项定向GameTest及正式单客户端；阶段/真实风箱既有证据范围见各节）
+- Last verified: `2026-11-16`（按空腔补生、扩大碰撞体积、粒子碰撞/分离、大空腔耗时与客户端数量增长）
 - Scope: 有序研究阶段、变体固定、临时配方、绘图台风道、队伍试吹对象关联；正式整合包路线由 iron-bloomery.md 说明。
-- Code anchors: `StageDefinition`、`StageRunState`、`ResearchStages`、`KnowledgeService.advanceStage`、`AirflowGame`、`TuyereTrials`、`PendingResearchProofs`。
+- Code anchors: `StageDefinition`、`StageRunState`、`ResearchStages`、`KnowledgeService.advanceStage`、`AirflowGame`、`AirflowParticles`、`AirflowDeskPanel`、`TuyereTrials`、`PendingResearchProofs`。
 
 ## 阶段和任务
 
@@ -41,7 +41,13 @@ StageRunState 保存 order/current/visits/completed_tasks；visit 保存 variant
 
 `AirflowGame.dig(List<Stroke>)` 先完成整批笔段，再统一先判冷风漏口、后判通关，避免同批前半段成功掩盖后半段漏气。未与入口连通的外边界空洞不构成漏风；仅能经炭床到达的其它开口不额外触发冷风失败。入口开口豁免，周围保护格与普通砂砖同色，无单独边框/图例；入口后方初始空腔用于引导继续开凿。
 
-`AirflowParticles` 只负责视觉，不参与通关或失败判定。每个面板最多72粒，冷风随机转向并碰撞反弹，触及炭床后保留受热标记并受向上偏移影响；粒子离开边界或超过寿命后从入口补充。粒子位置不入NBT，重置时清空。炭床未送风时仍有微弱阴燃闪烁，成功时明显增亮。
+`AirflowParticles` 只负责视觉，不参与服务端漏气、炭床连通或成功判定。粒子目标数按所有 `OPEN`/`BED` 空腔面积计算，包括独立空腔和预挖炉腔：`target = ceil(area_cells × DENSITY)`，`DENSITY = 0.5 particle/cell`，28×28地图的理论上限 `LIMIT = 392 particles`。初始在全部空腔分布；新开凿后优先从入口或最近开凿处补入，空间受限时选择其它合法空腔点，每tick最多补16粒至目标数。
+
+图上圆点直径1 GUI像素；逻辑碰撞半径 `RADIUS = 0.24 cell`，`CELL = 4 GUI pixels`，对应碰撞直径1.92 GUI像素。粒子按等质量弹性碰撞并修正重叠，砂砖也用同一半径检测。每tick固定2子步、每子步2轮修正，速度上限 `0.45 cell/tick`；用1格空间桶只查相邻桶。渲染在前后tick位置间插值。
+
+粒子在有效空腔内持续活动，不再按500tick寿命消失；出界或卡入砖格后补回。位置不入NBT，重置清空。初始空腔中的空气也会接触阴燃炭床并升温。炭床未送风仍有微弱闪烁，研究成功时明显增亮。
+
+本轮11项定向GameTest及正式Playtest检查通过。客户端初始目标61粒，示例风道完成后90粒；初始观察阶段记录462次接触修正。最大空腔387粒的1000次更新平均901微秒/tick、末次3381对邻近检查，仅为本机粒子计算测量，不含渲染或整包帧率。见[本轮粒子记录](../../diary/2026-11-16_23-39-00_research-volume-particles-and-collisions.md)。
 绘图台独立保存 airflow_target/airflow_game，不改变旧连连看记录。客户端发送 `DIG_AIRFLOW` 笔段和 `RESET_AIRFLOW` 重置，服务端先判漏气，再判成功并写任务；保留旧 `ROTATE_AIRFLOW` 编号但不执行动作。每批最多32笔段，同一面板一个在途请求，客户端先预览挖掘再按服务端回复重放未确认笔段；离开地图断开笔段，返回或关闭时补发未发送笔段。新 NBT 的 `format=3` 保存 `dug`、`completed` 和 `failed`；读取 format=2 时保留已挖砂砖，旧 rotations 用于重建更早的未完成盘面，已完成研究任务保持完成。关闭重开延续盘面。客户端从知识札记任务按钮切到旧绘图台桌面，由 AirflowDeskPanel 占用连连看原来的区域（165,25,218×164），桌面整体仍为387×203。返回按钮或Esc恢复原项目详情、阶段任务标签和所选记录。小游戏期间不展示旧连连看/旧项目进度控件，桌面三种工具槽停用；玩家背包仍可用。
 
 prototype_tuyere 放置或空手选择任务时绑定 team/run/task/experiment，无个人 owner。多候选须选择。
@@ -82,7 +88,7 @@ $env:JAVA_HOME='C:/Program Files/Java/jdk-17.0.2'
 
 KnowledgeClientState 把风道操作回复转交当前桌面面板；隐藏的札记也会在研究快照更新时刷新，返回后显示服务端真实进度。旧连连看数据不参与风道结算。以下既有11月14日记录验证的是当时旋转管道版本的客户端往返行为，不作为当前挖掘玩法的验证证据。
 
-当前漏气版已通过15项服务端测试及正式Playtest单客户端检查：入口空腔中冷色粒子在到达炭床前活动，绕床接炉顶与直接穿透外边界均失败并可重置；正常通关、43格笔画立即Esc退出补发/重开恢复、临时原型配方和返回任务页通过。人工查看初始、两种失败与成功截图，入口保护无额外框或图例。见[本轮记录](../../diary/2026-11-16_22-01-22_research-airflow-cold-leaks-and-smolder.md)。粒子及炭床闪烁为视觉表现，结果由服务端连通判定；客户端为事件驱动和材料/知识夹具，不代表完整生存或物理键鼠验收。
+此前漏气版已通过15项服务端测试及正式Playtest单客户端检查：入口空腔中冷色粒子在到达炭床前活动，绕床接炉顶与直接穿透外边界均失败并可重置；正常通关、43格笔画立即Esc退出补发/重开恢复、临时原型配方和返回任务页通过。人工查看初始、两种失败与成功截图，入口保护无额外框或图例。见[此前记录](../../diary/2026-11-16_22-01-22_research-airflow-cold-leaks-and-smolder.md)。这些证据不覆盖本轮新增的空腔面积粒子数量、最多每 tick 补生数、粒子间弹性碰撞、碰撞半径/子步及无寿命回收规则；上述内容仍待验证。粒子及炭床闪烁为视觉表现，结果由服务端连通判定；客户端为事件驱动和材料/知识夹具，不代表完整生存或物理键鼠验收。
 
 11月16日正式Playtest新测试世界验证的是本轮之前的挖掘规则：实际Screen鼠标事件与C2S通关、退出重开保留挖掘及炭床路径；13项定向服务端测试覆盖当时的地图/存读档与风箱流程。该轮记录的49格挖掘数属于旧初始空腔布局，不代表本版预挖小房间后的保存格数。该轮未测试本轮新增的冷风漏边优先失败、失败暂停/漏口提示和 format=3 迁移，不构成这些规则的验证证据。材料与知识为夹具，非物理键鼠或完整生存验收，详见[此前记录](../../diary/2026-11-16_20-29-00_research-excavated-charcoal-airflow.md)。
 

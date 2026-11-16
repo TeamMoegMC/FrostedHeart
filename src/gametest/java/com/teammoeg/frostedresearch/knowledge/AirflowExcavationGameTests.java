@@ -77,10 +77,10 @@ public final class AirflowExcavationGameTests {
             for(var p:cloud.particles()) {
                 int type=game.cell((int)p.y*28+(int)p.x);
                 h.assertTrue(p.x>=0 && p.x<28 && p.y>=0 && p.y<28 && (type==AirflowGame.OPEN || type==AirflowGame.BED),"collisions keep air out of solid bricks");
-                h.assertTrue(!p.heated,"unconnected charcoal cannot heat inlet particles");
+                if(p.y>17)h.assertTrue(!p.heated,"unconnected charcoal cannot heat inlet-pocket particles");
             }
         }
-        h.assertTrue(cloud.particles().size()==AirflowParticles.LIMIT,"particle count remains bounded");
+        h.assertTrue(cloud.particles().size()==cloud.targetCount() && cloud.targetCount()<=AirflowParticles.LIMIT,"particle count follows available volume");
         h.assertTrue(cloud.particles().stream().anyMatch(p -> p.vx<0) && cloud.particles().stream().anyMatch(p -> p.vx>0),"cold air wanders both directions");
         h.assertTrue(cloud.particles().stream().anyMatch(p -> p.x>5),"particles enter the excavated channel before reaching charcoal");
         game.dig(good());boolean warmed=false;

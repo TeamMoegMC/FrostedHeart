@@ -83,5 +83,8 @@ Its UTF-8 content is the absolute output root; it enables the M4 desk-only check
 Remove this temporary opt-in and the helper JAR after checking. Ordinary production JARs include neither the helper nor its opt-in loader.
 `AirflowExcavationGameTests` covers diggable side bricks, the unmarked protected inlet and starter pocket,
 cold chimney/outer-wall leaks, whole-batch failure priority, hot-only vents, partial/failed/completed saves,
-format-2 migration and cold-particle collision/warming. The M4 client helper also checks both failures and resets
-through real Screen events before completing the route. Formal Charcoal Pit tests continue through prototype access and blowing.
+format-2 migration and particle collision/warming against bricks. `AirflowParticleGameTests` additionally checks enlarged
+colliders, pair momentum/energy and separation, volume-scaled births in disconnected excavations, and bounded long-running
+clouds with nearby-pair filtering. Its `AIRFLOW_PARTICLE_PROFILE` log records computational timing without asserting machine-specific speed.
+The M4 helper checks real client population growth and contact counters as well as both failures, resets and completion.
+Formal Charcoal Pit tests continue through prototype access and blowing; those integration tests were not rerun for this visual-only change.
