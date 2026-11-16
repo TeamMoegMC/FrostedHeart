@@ -120,6 +120,8 @@ public final class ResearchInstituteGameTests {
         ResearchInstituteBlockEntity core = furnishedInstitute(helper, holder, origin);
         ResearchInstituteBuilding institute = core.getBuilding().orElseThrow();
         core.refresh_safe(institute);
+        // Linked as the road scan would, so the dark-room check below is about light alone.
+        institute.setConnectivityWorkable(true);
         helper.assertTrue(institute.isStructureValid(), "an enclosed room with a door is a valid institute");
         helper.assertTrue(institute.getBookshelves() == 4, "wall bookshelves count, got " + institute.getBookshelves());
         helper.assertTrue(institute.getDesks() == 2, "a two-block drawing desk is one desk, got " + institute.getDesks());
@@ -135,8 +137,13 @@ public final class ResearchInstituteGameTests {
             for (int z = 1; z <= 5; z++)
                 helper.getLevel().setBlockAndUpdate(origin.offset(x, 4, z), Blocks.GLOWSTONE.defaultBlockState());
         // Block light propagates off-thread: rescan each tick until it arrives.
+        // The town's own road scan runs during these ticks and decides the link again: wait until it lets the institute
+        // work (alone in its town, it always does).
+        TeamTownData data = holder.getData(FHSpecialDataTypes.TOWN_DATA);
         helper.succeedWhen(() -> {
             core.refresh_safe(institute);
+            helper.assertTrue(data.connectivityView().view().working().contains(core.getBlockPos()),
+                    "wait for the town's road scan to let the institute work");
             helper.assertTrue(institute.isLightValid(), "a glowstone ceiling lights the room, got " + institute.getAverageLight());
             double minimum = FHConfig.SERVER.TOWN.RESEARCH_INSTITUTE.minimumWorkingTemperatureCelsius.get();
             institute.setTemperature(minimum + 10 - institute.getTemperatureModifier());
@@ -159,9 +166,10 @@ public final class ResearchInstituteGameTests {
         ResearchInstituteBlockEntity core = furnishedInstitute(helper, holder, origin);
         ResearchInstituteBuilding institute = core.getBuilding().orElseThrow();
         core.refresh_safe(institute);
-        // Make the scanned room workable without waiting for light or heat.
+        // Make the scanned room workable without waiting for light, heat or the road scan.
         institute.setAverageLight(15);
         institute.setTemperature(40);
+        institute.setConnectivityWorkable(true);
         helper.assertTrue(institute.isBuildingWorkable(), "the furnished room works once lit and warm");
         TeamTownData data = holder.getData(FHSpecialDataTypes.TOWN_DATA);
         TeamTown town = data.createTeamTown();

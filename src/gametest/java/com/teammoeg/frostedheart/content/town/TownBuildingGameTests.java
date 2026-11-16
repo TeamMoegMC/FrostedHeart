@@ -188,6 +188,9 @@ public final class TownBuildingGameTests {
         raw.getList("blocks", Tag.TAG_COMPOUND).getCompound(0).getCompound("building")
                 .putString("dailyReport", "unreadable display data");
         TeamTownData repaired = replaceTown(fixture.holder(), raw);
+        // Road links are runtime state that a save never carries; link the reloaded house as the road scan would,
+        // so this checks what the repaired record itself restores.
+        repaired.buildings.get(home).setConnectivityWorkable(true);
         helper.assertTrue(repaired.buildings.get(home).isBuildingWorkable(),
                 "repairing a display report must preserve a habitable house");
         CompoundTag brokenContainer = encodedTown(repaired);
@@ -228,6 +231,7 @@ public final class TownBuildingGameTests {
         HouseBuilding alternate = alternateCore.getBuilding().orElseThrow();
         alternate.setInitialized(true);
         alternate.setIsStructureValid(true);
+        alternate.setConnectivityWorkable(true); // about rosters, not roads: link it as the road scan would
         alternate.setArea(64);
         alternate.setVolume(256);
         alternate.setTemperature(20);
@@ -473,9 +477,15 @@ public final class TownBuildingGameTests {
         var core = (HouseBlockEntity) placeCore(helper, holder, origin.offset(3, 0, 3), FHBlocks.HOUSE.get());
         HouseBuilding house = core.getBuilding().orElseThrow();
         core.refresh_safe(house);
+        house.setConnectivityWorkable(true); // about the room scan, not roads: link it as the road scan would
         holder.getData(FHSpecialDataTypes.TOWN_DATA).prepareView(helper.getLevel(), holder);
+        // The test world is too cold for a house, so habitability is judged at a controlled 20 C. The sampled value
+        // goes back afterwards, so the repeated scan below finds the room unchanged.
+        double sampled = house.getTemperature();
+        house.setTemperature(20);
         helper.assertTrue(house.isBuildingWorkable() && house.getBedCount() == 1 && house.hasEntrance(),
                 "a real enclosed room must yield a habitable house with bed and entrance layout");
+        house.setTemperature(sampled);
         saveTown(helper, holder);
         long encodings = holder.getData(FHSpecialDataTypes.TOWN_DATA).getBuildingStore().codecCalls();
         core.refresh_safe(house);
@@ -611,6 +621,9 @@ public final class TownBuildingGameTests {
             FHMain.LOGGER.info("TOWN_BUILDING_WORKLOAD buildings={} coldCaptureMs={} cachedCaptureMs={} oneChangedCaptureMs={} forcedSaveMs={} compressedFileBytes={}",
                     buildingCount, coldNanos / 1_000_000.0, cachedNanos / 1_000_000.0,
                     changedNanos / 1_000_000.0, saveNanos / 1_000_000.0, fileBytes);
+            // Measured: drop the town before its first tick. Its chunks unload once this test ends, and a road scan
+            // over unloaded terrain would hold a shared scan thread for a long time, delaying every other town's scan.
+            holder.removeData(FHSpecialDataTypes.TOWN_DATA);
         }
         helper.succeed();
     }
