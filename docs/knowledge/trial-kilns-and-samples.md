@@ -1,8 +1,8 @@
 # 小炉试烧与研究实物提交
 
 - Status: `Current`（源码与 Forge GameTest 验证范围见最新开发记录；客户端画面、生存获取和独立进程重启另验）
-- Last verified: `2026-11-14`（提交入口扩展为玩家主背包/快捷栏与绘图台物件槽）
-- Scope: M3-A 三组小炉、固定燃料试烧、收取/拆除/保存、当前 run 样品绑定与绘图台实物提交；不包含 TWR 正式解锁或旧研究迁移。
+- Last verified: `2026-11-16`（三种配比观察；消耗提交仍作为通用独立示例）
+- Scope: M3-A 三组小炉、固定燃料试烧、收取/拆除/保存、当前 run 样品绑定、三配比观察与绘图台实物提交；正式解锁及旧研究承接由[土制冶炼炉](earthen-smelter.md)说明。
 - Code anchors: [TrialKilnBlock](../../src/main/java/com/teammoeg/frostedresearch/knowledge/experiment/TrialKilnBlock.java)、[TrialKilnBlockEntity](../../src/main/java/com/teammoeg/frostedresearch/knowledge/experiment/TrialKilnBlockEntity.java)、[ResearchSampleBinding](../../src/main/java/com/teammoeg/frostedresearch/knowledge/experiment/ResearchSampleBinding.java)、[ProjectRequirement](../../src/main/java/com/teammoeg/frostedresearch/knowledge/definition/ProjectRequirement.java)、[KnowledgeService.submitSample](../../src/main/java/com/teammoeg/frostedresearch/knowledge/KnowledgeService.java)。
 
 ## 制作与试烧
@@ -24,8 +24,8 @@ remaining 保存剩余 tick。原版贴图组成低矮小炉模型，烧制时�
 
 ## 关联本次研究
 
-实验标识固定为 frostedresearch:trial_kiln。小炉通过 KnowledgeService.sampleTargets 查询当前队伍的开放 run 中，
-尚未完成且 sample.experiment 匹配的任务，不引用任何 the_winter_rescue 项目 ID。
+保留的消耗提交模式使用实验标识 frostedresearch:trial_kiln；正式三配比观察使用各自的子实验ID，见文末。小炉通过 KnowledgeService.sampleTargets 查询当前队伍的开放 run 中，
+尚未完成且 sample.experiment 匹配的消耗提交任务；同时按本炉配比查找 observation.experiment 匹配的观察任务，不引用任何 the_winter_rescue 项目 ID。
 
 - 只有一个待交目标：投入燃料时自动关联。
 - 多个目标：先空手右键循环选择，提示项目及任务标题，再持木棍起烧；未选择时不扣燃料。
@@ -65,7 +65,7 @@ ProjectRequirement 增加独立 type=sample，例如：
 把实际试样留在玩家主背包或快捷栏，打开绘图台研究详情，选中实物任务，点击“提交试样（消耗1件）”即可；也可继续使用绘图台工具页的检视物槽。无需点击检视或记入知识档案。
 SUBMIT_SAMPLE仍只发送run与任务ID，服务端先尝试桌上实际物品，再按玩家Inventory.items的顺序查找36格主背包/快捷栏；不遍历装备、副手、鼠标携带物或嵌套容器。桌上无效样不会挡住背包中的合格样。
 检查全部通过后，同次操作扣1件并写任务回执；任务已满足或 run 已关闭时不再扣物。之后点击正常完成研究按钮取得项目成果。
-仅本次完好样必交，坏炉不强制计数；不要求三组全部试烧。
+本节描述保留的 sample 消耗提交模式及独立示例；正式土制炉已经改为三种烧后物品观察，不再采用本节提交操作。
 
 ResearchHistory.samples 保存任务 ID 到 {experiment,item} 的回执。存储 schema_version=5，v3以及更旧存档缺这个可选映射时
 读为空，不改变既有 origins/证据/演算/实验进度；v2单 idea 到 origins 的兼容继续保留。所有 with*/完成复制保留 samples，放弃清空任务进度。
@@ -86,3 +86,11 @@ M4将KnowledgeState版本升至5；本页样品绑定与samples回执契约保�
 ## M6 多份合并记录
 
 小炉sampleTargets与研究页采用同一创建时间+UUID顺序；原空手cycle操作不变，文案增加可区分的记录序号、阶段和任务。仅一个目标仍保持原自动绑定，多个目标保持既有明确选择要求。已完成项目的备用run不提供新任务目标，历史阶段与已提交样品进度保留；遗忘后恢复。merge不将来源队伍的世界小炉或未提交ResearchSample改绑到目标队伍，旧样品需重新制作/绑定。
+
+## 正式土制炉的三配比观察
+
+正式路线见[土制冶炼炉](earthen-smelter.md)。小炉只为自己的配比选择 `frostedresearch:trial_kiln/<variant>` 观察目标：`clay_rich`、`sand_rich` 或 `balanced`；多 run 时仍先空手右键选目标。旧 sample 目标 `frostedresearch:trial_kiln` 保留，独立示例和其它消耗提交项目继续可用。
+
+烧后物品的 `TrialKilnVariant` 保存配比，`TrialKilnSampleItem` 显示配比提示。`TrialKilnSamples.registerObservationFields` 将配比映射为受控的 `item.trial_kiln_variant` 观察字段，不复制任意物品 NBT。物品数量保持不变，符合条件的观察直接记录到当前 run 的 completed_tasks，不自动学习为永久档案。坏样必须分别观察，不能重复观察一份坏样凑数。当前观察任务要求收取后的物品，观察世界小炉不代替它。
+
+`TrialKilnSamples.reconcile` 仅承接原 main 阶段单一 submit_intact 任务到新的三配比观察集合，不改变其它项目的阶段变更策略。已提交成功样的信用保留；未完成研究补上两项比较，已完成研究不重置。没有配比的旧样提示重新试烧，不推测失败配比。

@@ -21,8 +21,13 @@ public final class TrialKilnBlockEntity extends BlockEntity {
     public TrialKilnBlockEntity(BlockPos pos, BlockState state) { super(FRContents.BlockEntityTypes.TRIAL_KILN.get(), pos, state); }
     public int remaining() { return remaining; }
     public Optional<ResearchSampleBinding> binding() { return Optional.ofNullable(binding); }
+    private List<ResearchSampleBinding> targets(KnowledgeService service) {
+        var targets = new ArrayList<>(service.sampleTargets(EXPERIMENT));
+        targets.addAll(service.observationTargets(TrialKilnSamples.experiment(TrialKilnSamples.variant(getBlockState()))));
+        return List.copyOf(targets);
+    }
     public Optional<ResearchSampleBinding> cycleTarget(KnowledgeService service) {
-        var targets = service.sampleTargets(EXPERIMENT);
+        var targets = targets(service);
         int current = binding == null ? -1 : targets.indexOf(binding);
         binding = targets.isEmpty() ? null : targets.get((current + 1) % targets.size());
         setChanged(); return binding();
@@ -30,7 +35,7 @@ public final class TrialKilnBlockEntity extends BlockEntity {
     public Start start(KnowledgeService service, ItemStack fuel) {
         if (settled || getBlockState().getValue(TrialKilnBlock.PHASE) != 0 || level == null || level.isClientSide) return Start.UNAVAILABLE;
         if (!fuel.is(Items.STICK) || fuel.getCount() < FUEL) return Start.FUEL_MISSING;
-        var targets = service.sampleTargets(EXPERIMENT);
+        var targets = targets(service);
         if (binding == null || !targets.contains(binding)) {
             if (targets.size() > 1) return Start.CHOOSE_TARGET;
             binding = targets.isEmpty() ? null : targets.get(0);
@@ -52,7 +57,10 @@ public final class TrialKilnBlockEntity extends BlockEntity {
         int phase = getBlockState().getValue(TrialKilnBlock.PHASE);
         ItemStack result = phase < 2 ? new ItemStack(getBlockState().getBlock())
             : new ItemStack(phase == 2 ? FRContents.Items.FIRED_TRIAL_KILN.get() : FRContents.Items.CRACKED_TRIAL_KILN.get());
-        if (phase >= 2 && binding != null) binding.write(result);
+        if (phase >= 2) {
+            result.getOrCreateTag().putString(TrialKilnSamples.TAG, TrialKilnSamples.variant(getBlockState()));
+            if (binding != null) binding.write(result);
+        }
         return result;
     }
     public void collect(net.minecraft.world.entity.player.Player player) {

@@ -722,7 +722,7 @@
   "gui.frostedresearch.journal.research.optional": " (optional)",
   "gui.frostedresearch.journal.research.airflow_start": "Plan the airflow",
   "gui.frostedresearch.journal.research.airflow_explain": "Rotate the pipes to connect the left inlet to the right outlet. No paper or ink is needed.",
-  "gui.frostedresearch.journal.research.observe_target": "Observe your team’s current experiment result in the world.",
+  "gui.frostedresearch.journal.research.observe_target": "Observe the required object. Progress is recorded without archiving.",
   "gui.frostedresearch.journal.research.task_waiting": "Not yet verified",
   "block.frostedresearch.prototype_tuyere": "Prototype tuyere",
   "message.frostedresearch.tuyere.bound": "Bound to your team’s current trial. Place it at a bellows outlet, blow, then observe the result.",
@@ -775,10 +775,14 @@
   "gui.frostedresearch.journal.research.details": "Research details",
   "gui.frostedresearch.journal.research.back_to_list": "Back to projects",
   "gui.frostedresearch.journal.research.tab.description": "Description",
-  "gui.frostedresearch.journal.research.tab.knowledge": "Knowledge",
+  "gui.frostedresearch.journal.research.tab.knowledge": "Starting requirements",
   "gui.frostedresearch.journal.research.tab.tasks": "Stage tasks",
-  "gui.frostedresearch.journal.research.access_none": "This project has no additional knowledge prerequisites.",
+  "gui.frostedresearch.journal.research.access_none": "This project has no additional knowledge requirements to start.",
   "gui.frostedresearch.furnace.no_target": "No research binding needed",
   "gui.frostedresearch.furnace.mode_help": "Experiment mode binds a current research task; production mode uses unlocked production recipes.",
-  "gui.frostedresearch.furnace.cancel_help": "Cancel this batch and return its input. Consumed fuel is not refunded."
+  "gui.frostedresearch.furnace.cancel_help": "Cancel this batch and return its input. Consumed fuel is not refunded.",
+  "tooltip.frostedresearch.trial_kiln.clay_rich": "Clay balls:sand = 3:1 (clay-rich)",
+  "tooltip.frostedresearch.trial_kiln.sand_rich": "Clay balls:sand = 1:3 (sand-rich)",
+  "tooltip.frostedresearch.trial_kiln.balanced": "Clay balls:sand = 2:2 (balanced)",
+  "tooltip.frostedresearch.trial_kiln.unknown": "Mixture unrecorded; fire a new sample to compare mixtures."
 }

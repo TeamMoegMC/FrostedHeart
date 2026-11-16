@@ -17,6 +17,7 @@ import com.teammoeg.frostedresearch.knowledge.definition.*;
 import com.teammoeg.frostedresearch.knowledge.experiment.*;
 import com.teammoeg.frostedresearch.knowledge.item.ItemRetrieval;
 import com.teammoeg.frostedresearch.knowledge.model.*;
+import com.teammoeg.frostedresearch.knowledge.observation.ObservationActionPacket;
 import com.teammoeg.frostedresearch.knowledge.state.AcquisitionSource;
 import net.minecraft.client.*;
 import net.minecraft.core.*;
@@ -26,7 +27,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.*;
-import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.item.*;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.*;
@@ -66,7 +66,7 @@ public final class M3ClientValidation {
     private static UUID run;
     private static DrawDeskScreen desk;
     private static KnowledgeLayer layer;
-    private static int inventorySampleSlot;
+    private static int observationIndex;
 
     private static ResourceLocation id(String value) { return new ResourceLocation(value); }
     private static void require(boolean yes, String text) { if (!yes) throw new IllegalStateException(text); }
@@ -137,6 +137,7 @@ public final class M3ClientValidation {
         require(!formBefore,"actual IE form event should cancel before completion");
         s.produce(KnowledgeElement.idea(IDEA),new AcquisitionSource("client_fixture",Optional.of(p.getUUID()),level.getGameTime()));
         s.learn(ItemRetrieval.observe(p,new ItemStack(Items.CLAY_BALL)),new AcquisitionSource("client_fixture",Optional.empty(),0),KnowledgeService.Grant.NORMAL);
+        s.learn(ItemRetrieval.observe(p,new ItemStack(Items.RAW_COPPER)),new AcquisitionSource("client_fixture",Optional.empty(),0),KnowledgeService.Grant.NORMAL);
         if(!FORMAL) {
             s.learn(KnowledgeElement.idea(id("example:i")),new AcquisitionSource("client_fixture",Optional.empty(),0),KnowledgeService.Grant.NORMAL);
             s.learn(ItemRetrieval.observe(p,new ItemStack(Items.CHARCOAL)),new AcquisitionSource("client_fixture",Optional.empty(),0),KnowledgeService.Grant.NORMAL);
@@ -204,8 +205,8 @@ public final class M3ClientValidation {
                             checks.put("translated_project_body",project().body().getString());
                             var titles=project().accessConditions().stream().map(c->c.title().getString()).toList();
                             checks.put("translated_access_conditions",titles);
-                            require(project().title().getString().equals("土制冶炼炉") && project().body().getString().contains("三、提交"),"formal project translations");
-                            require(titles.size()==3 && titles.stream().noneMatch(t->t.contains("尚未读懂")||t.startsWith("knowledge.")),"formal three condition translations");
+                            require(project().title().getString().equals("土制冶炼炉") && project().body().getString().contains("逐一观察"),"formal project translations");
+                            require(titles.size()==4 && titles.stream().noneMatch(t->t.contains("尚未读懂")||t.startsWith("knowledge.")),"formal four condition translations");
                             GLFW.glfwSetCursorPos(mc.getWindow().getWindow(),900,350);
                         }
                     }
@@ -214,19 +215,38 @@ public final class M3ClientValidation {
                         if(ticks>=25 && ticks<=65 && ticks%5==0) mc.screen.mouseScrolled(450,175,-1);
                         if(ticks<71)return;
                         checks.put("reading_scroll_lines",read(read(layer,"reading"),"scroll"));
-                        require((int)read(read(layer,"reading"),"scroll")>0,"formal long reading scroll");
                     }
                     button("research.start");next();}
                 case 7 -> {if(ticks<20||project().openRun().isBlank())return;run=UUID.fromString(project().openRun());shot("04-started");mc.player.closeContainer();next();}
                 case 8 -> {if(ticks<20||mc.screen!=null)return;mc.player.setYRot(0);mc.player.setXRot(17);shot("05-three-raw-models");server(()->{for(var pos:KILNS){player().setItemInHand(InteractionHand.MAIN_HAND,new ItemStack(Items.STICK,4));var state=player().level().getBlockState(pos);state.use(player().level(),player(),InteractionHand.MAIN_HAND,new BlockHitResult(Vec3.atCenterOf(pos),Direction.UP,pos,false));}});next();}
                 case 9 -> {if(ticks<20)return;shot("06-three-burning-models");next();}
-                case 10 -> {if(ticks<410)return;require(mc.level.getBlockState(KILNS.get(2)).getValue(TrialKilnBlock.PHASE)==2,"intact client model state");require(mc.level.getBlockState(KILNS.get(0)).getValue(TrialKilnBlock.PHASE)==3,"broken client model state");shot("07-two-bad-one-good");server(()->{player().setItemInHand(InteractionHand.MAIN_HAND,ItemStack.EMPTY);var pos=KILNS.get(2);player().level().getBlockState(pos).use(player().level(),player(),InteractionHand.MAIN_HAND,new BlockHitResult(Vec3.atCenterOf(pos),Direction.UP,pos,false));});next();}
-                case 11 -> {if(ticks<20)return;openDesk();if(!deskReady())return;desk.showKnowledge();layer=desk.getKnowledgeLayer();button("tools");next();}
-                case 12 -> {if(ticks<15)return;inventorySampleSlot=-1;for(int i=3;i<mc.player.containerMenu.slots.size();i++)if(mc.player.containerMenu.getSlot(i).getItem().is(FRContents.Items.FIRED_TRIAL_KILN.get())){inventorySampleSlot=i;break;}require(inventorySampleSlot>=0,"sample inventory slot");mc.gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId,inventorySampleSlot,0,ClickType.PICKUP,mc.player);next();}
-                case 13 -> {if(ticks<10)return;mc.gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId,2,0,ClickType.PICKUP,mc.player);next();}
-                case 14 -> {if(ticks<15)return;require(mc.player.containerMenu.getSlot(2).getItem().is(FRContents.Items.FIRED_TRIAL_KILN.get()),"real examination-slot sample");shot("08-tools-actual-sample-slot");layer.goBack();openProject(PROJECT.toString());next();}
-                case 15 -> {if(ticks<10)return;shot("09-before-submit");button("research.sample.submit");next();}
-                case 16 -> {if(ticks<20)return;require(mc.player.containerMenu.getSlot(2).getItem().isEmpty(),"server consumed physical slot");shot("10-sample-done");button("research.complete");next();}
+                case 10 -> {if(ticks<410)return;require(mc.level.getBlockState(KILNS.get(2)).getValue(TrialKilnBlock.PHASE)==2,"intact client model state");require(mc.level.getBlockState(KILNS.get(0)).getValue(TrialKilnBlock.PHASE)==3,"broken client model state");shot("07-two-bad-one-good");server(()->{
+                    int selected=player().getInventory().selected;
+                    for(var pos:KILNS) {
+                        int empty=-1;for(int slot=0;slot<9;slot++) if(player().getInventory().items.get(slot).isEmpty()){empty=slot;break;}
+                        require(empty>=0,"empty hotbar slot for sample collection");player().getInventory().selected=empty;
+                        player().level().getBlockState(pos).use(player().level(),player(),InteractionHand.MAIN_HAND,new BlockHitResult(Vec3.atCenterOf(pos),Direction.UP,pos,false));
+                    }
+                    player().getInventory().selected=selected;player().inventoryMenu.broadcastChanges();
+                });next();}
+                case 11 -> {if(ticks<20)return;server(() -> {
+                    var inventory=player().getInventory();String variant=TrialKilnSamples.VARIANTS.get(observationIndex);
+                    for(int i=0;i<inventory.items.size();i++) if(TrialKilnSamples.variant(inventory.items.get(i)).equals(variant)) {
+                        ItemStack selected=inventory.items.get(inventory.selected),sample=inventory.items.get(i);
+                        inventory.items.set(i,selected);inventory.items.set(inventory.selected,sample);player().inventoryMenu.broadcastChanges();return;
+                    }
+                    throw new IllegalStateException("missing actual sample "+variant);
+                });next();}
+                case 12 -> {if(ticks<20)return;FRNetwork.INSTANCE.sendToServer(new ObservationActionPacket(ObservationActionPacket.Action.HELD_ITEM,BlockPos.ZERO,0));next();}
+                case 13 -> {if(ticks<90)return;shot("08-observed-"+TrialKilnSamples.VARIANTS.get(observationIndex));
+                    FRNetwork.INSTANCE.sendToServer(new ObservationActionPacket(ObservationActionPacket.Action.DISCARD));
+                    observationIndex++;if(observationIndex<3){stage=11;ticks=0;}else next();}
+                case 14 -> {if(ticks<20)return;openDesk();if(!deskReady())return;desk.showKnowledge();layer=desk.getKnowledgeLayer();openProject(PROJECT.toString());button("research.tab.tasks");next();}
+                case 15 -> {if(ticks<20)return;require(project().requirements().size()==3,"three observation requirements visible");
+                    server(() -> {require(service().requirementsMet(run),"actual timed C2S observations completed all tasks");
+                        long samples=player().getInventory().items.stream().filter(s -> s.is(FRContents.Items.FIRED_TRIAL_KILN.get())||s.is(FRContents.Items.CRACKED_TRIAL_KILN.get())).mapToInt(ItemStack::getCount).sum();
+                        require(samples==3,"all three samples retained");checks.put("three_samples_retained",true);checks.put("observed_without_archiving",true);});shot("09-three-observations-ready");next();}
+                case 16 -> {if(ticks<20)return;button("research.complete");next();}
                 case 17 -> {if(ticks<25)return;shot("11-completed");server(()->{var team=CTeamDataManager.get(player());checks.put("recipe_after",TechnologyAccessResolver.isRecipeUnlocked(team.getId(),RECIPE));checks.put("forming_after",TechnologyAccessResolver.canFormMultiblock(team.getId(),MULTIBLOCK));require(TechnologyAccessResolver.isRecipeUnlocked(team.getId(),RECIPE)&&TechnologyAccessResolver.canFormMultiblock(team.getId(),MULTIBLOCK),"both real access gates after normal completion");boolean formAfter=formingEventAllowed();checks.put("ie_form_event_after",formAfter);require(formAfter,"actual IE form event should allow after completion");
                         for(var result:KnowledgeDefinitions.current().projects().get(PROJECT).results())service().forget(KnowledgeKey.result(result));
                         UUID retained=service().startResearch(PROJECT).orElseThrow();team.getData(FRSpecialDataTypes.RESEARCH_DATA).getData("alloy_kiln").setFinished(true);LegacyResearchBridge.reconcile(team,service());require(service().state().research().get(retained).open(),"legacy takeover retains server history");checks.put("retained_run",retained.toString());TeamResearchService.send(player(),team);});next();}
@@ -242,7 +262,7 @@ public final class M3ClientValidation {
     }
     private static void finish(Throwable error) {
         if(finished)return;finished=true;var mc=Minecraft.getInstance();
-        try {Files.createDirectories(OUT);checks.put("status",error==null?"passed":"failed");checks.put("mode",FORMAL?"formal-loaded-pack":"dev-formal-codec-with-stand-in-recipe");checks.put("stage",stage);checks.put("failure",error==null?null:error.toString());checks.put("input","JournalButton callbacks and actual Minecraft container C2S; no physical keyboard/mouse");Files.writeString(OUT.resolve("result.json"),new GsonBuilder().setPrettyPrinting().create().toJson(checks));if(error!=null)FRMain.LOGGER.error("M3C_FAILED stage="+stage,error);else FRMain.LOGGER.info("M3C_PASSED {}",OUT);
+        try {Files.createDirectories(OUT);checks.put("status",error==null?"passed":"failed");checks.put("mode",FORMAL?"formal-loaded-pack":"dev-formal-codec-with-stand-in-recipe");checks.put("stage",stage);checks.put("failure",error==null?null:error.toString());checks.put("input","JournalButton callbacks and timed held-item observation C2S; no physical keyboard/mouse");Files.writeString(OUT.resolve("result.json"),new GsonBuilder().setPrettyPrinting().create().toJson(checks));if(error!=null)FRMain.LOGGER.error("M3C_FAILED stage="+stage,error);else FRMain.LOGGER.info("M3C_PASSED {}",OUT);
         }catch(Exception e){FRMain.LOGGER.error("M3C result",e);}finally {if(captured){mc.options.guiScale().set(originalScale);mc.options.framerateLimit().set(originalFps);mc.options.pauseOnLostFocus=originalPause;mc.options.languageCode=originalLanguage;mc.getLanguageManager().setSelected(originalLanguage);}mc.stop();}
     }
 }

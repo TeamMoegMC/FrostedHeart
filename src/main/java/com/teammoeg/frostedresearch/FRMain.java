@@ -64,6 +64,7 @@ public class FRMain {
     private void setup(final FMLCommonSetupEvent event) {
         
         FRNetwork.INSTANCE.register();
+        event.enqueueWork(com.teammoeg.frostedresearch.knowledge.experiment.TrialKilnSamples::registerObservationFields);
 
     }
 }

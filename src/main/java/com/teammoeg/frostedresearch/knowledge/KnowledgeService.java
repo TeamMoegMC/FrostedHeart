@@ -331,9 +331,11 @@ public final class KnowledgeService {
 
     public void initialize() {
         for (var run : ResearchRuns.sorted(state)) if (runActive(run)) {
-            var prepared=ResearchStages.update(this,run);
+            var definition=KnowledgeDefinitions.current().projects().get(run.project());
+            var prepared=ResearchStages.prepare(this,run);
+            if (definition != null) prepared=com.teammoeg.frostedresearch.knowledge.experiment.TrialKilnSamples.reconcile(prepared,definition);
+            prepared=ResearchStages.update(this,prepared);
             if(!prepared.equals(run)) {
-                var definition=KnowledgeDefinitions.current().projects().get(run.project());
                 if(run.stageState().visits().isEmpty() && definition!=null && !definition.stages().isEmpty()
                     && (!run.calculations().isEmpty() || !run.evidence().isEmpty() || !run.experiments().isEmpty() || !run.samples().isEmpty()))
                     com.teammoeg.frostedresearch.FRMain.LOGGER.info("Research {} adopts its first ordered stage; only matching task IDs retain progress",run.id());

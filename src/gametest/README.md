@@ -38,7 +38,7 @@ M2 behavior and contact checks use `frostedresearch_m2` (`IdeaAcquisitionGameTes
 crafting/furnace/container extraction, use/interaction bridges and repeated observation sessions; fixtures live under resources/m2-fixtures/.
 
 M3-A trial kiln and physical submission checks use `frostedresearch_m3` (`TrialKilnGameTests`), a separate `m3_trial_kiln` batch
-and trial_kiln_empty structure. They cover real loaded ticks, three ratios, lifecycle/settlement, sample binding and schema4 progress.
+and trial_kiln_empty structure. They cover real loaded ticks, three ratios, lifecycle/settlement, sample binding and schema4 progress. The formal project now compares three fired-item observations: current-run binding, separate cracked-mixture identities, no consumption/archive, progress persistence, and upgrading the former single-sample run are checked alongside the retained sample-submission example.
 
 `LegacyResearchBridgeGameTests` (`frostedresearch_m3b`) uses separate synchronous batches for legacy import/retry,
 new-run prerequisite and permission projection, replaced-entry guards/removal recovery, knowledge/receipt merge,

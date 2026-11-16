@@ -145,8 +145,8 @@ public class FRContents {
 				"research_note", () -> new ResearchNoteItem(new Item.Properties()));
 		public static final RegistryObject<UpgradePrototypeItem> UPGRADE_PROTOTYPE = REGISTER.register(
 			"upgrade_prototype", () -> new UpgradePrototypeItem(new Item.Properties().stacksTo(1)));
-        public static final RegistryObject<Item> FIRED_TRIAL_KILN = REGISTER.register("fired_trial_kiln", () -> new Item(new Item.Properties().stacksTo(1)));
-        public static final RegistryObject<Item> CRACKED_TRIAL_KILN = REGISTER.register("cracked_trial_kiln", () -> new Item(new Item.Properties().stacksTo(1)));
+        public static final RegistryObject<Item> FIRED_TRIAL_KILN = REGISTER.register("fired_trial_kiln", () -> new com.teammoeg.frostedresearch.knowledge.item.TrialKilnSampleItem(new Item.Properties().stacksTo(1)));
+        public static final RegistryObject<Item> CRACKED_TRIAL_KILN = REGISTER.register("cracked_trial_kiln", () -> new com.teammoeg.frostedresearch.knowledge.item.TrialKilnSampleItem(new Item.Properties().stacksTo(1)));
 
 		public static final RegistryObject<MagnifyingGlassItem> MAGNIFYING_GLASS = REGISTER.register(
 			"magnifying_glass", () -> new MagnifyingGlassItem(new Item.Properties().stacksTo(1)));

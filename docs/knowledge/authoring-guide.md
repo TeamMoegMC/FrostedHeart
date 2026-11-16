@@ -1,7 +1,7 @@
 # 编写研究内容
 
-- Status: `Verified`：本页核对 M1–M5 已实现格式与服务端测试；各正式项目的客户端及游玩验证范围见其操作文档。
-- Last verified: `2026-11-14`
+- Status: `Verified`：本页核对当前数据格式与服务端实现；各正式项目的客户端及游玩验证范围见其操作文档。
+- Last verified: `2026-11-16`
 - Scope: 数据包内容作者的入口与可复制范例，不替代完整字段参考。
 - Code anchors: [ProjectDefinition](../../src/main/java/com/teammoeg/frostedresearch/knowledge/definition/ProjectDefinition.java)、[StageDefinition](../../src/main/java/com/teammoeg/frostedresearch/knowledge/definition/StageDefinition.java)、[IdeaAcquisitionService.emit](../../src/main/java/com/teammoeg/frostedresearch/knowledge/IdeaAcquisitionService.java)。
 
@@ -11,7 +11,8 @@
 
 | 需求 | 可复制入口 | 需要一起修改 |
 |---|---|---|
-| 单阶段、提交试样 | [土制冶炼炉](../../../TheWinterRescue/kubejs/data/the_winter_rescue/frostedresearch/knowledge/projects/earthen_smelter.json) | 对应想法、两成果、材料观察和 sample 的 experiment/item |
+| 单阶段、提交并消耗实物的旧示例 | [trial_kiln 示例项目](example-datapack/data/example/frostedresearch/knowledge/projects/trial_kiln.json) | 这是 `sample` 任务示例，不是正式土制炉路线；对应想法、成果、观察和 sample 的 experiment/item |
+| 正式土制炉、三种配比结果观察 | [正式土制冶炼炉路线](earthen-smelter.md) | 观察烧后物品的 `item.trial_kiln_variant`（`clay_rich`、`sand_rich`、`balanced`）；实验 ID 为 `frostedresearch:trial_kiln/<variant>`，绑定当前队伍 run。任务观察不消耗、不自动入档 |
 | 两阶段、小游戏与原型 | [冶铁炉](../../../TheWinterRescue/kubejs/data/the_winter_rescue/frostedresearch/knowledge/projects/iron_bloomery.json) | 阶段任务、临时配方、观察任务和最终 Design |
 | 多个想法共同开启 | [joint_study](example-datapack/data/example/frostedresearch/knowledge/projects/joint_study.json) | 开始条件、逐项披露组、对应想法定义 |
 | 成果承接下一研究 | [followup](example-datapack/data/example/frostedresearch/knowledge/projects/followup.json) | 成果入口及开始条件；不必强加想法 |
@@ -20,13 +21,43 @@
 | 知识影响下一阶段提示 | [耐火砖](../../../TheWinterRescue/kubejs/data/the_winter_rescue/frostedresearch/knowledge/projects/refractory_brick.json) | 有序 variants、参考知识与默认路径；进入阶段时固定 |
 | 可选任务减少后续任务 | [阶段格式](stages-and-airflow.md)、[可执行的阶段测试](../../src/gametest/java/com/teammoeg/frostedresearch/knowledge/StageResearchGameTests.java) | when.tasks_all 与 omit_tasks；不改变最终成果 |
 
-复制时保留结构，换掉命名空间、定义 ID、标题键和引用目标。标题、目标、操作方法与结论分别写清，正文也应避免提前透露尚未披露的要求；中英文内容放在资源包语言文件中。完整字段及可用观察谓词见[定义参考](definitions.md)。
+人类或 AI 作者都先填写[研究内容简报模板](content-template.md)，再按其中的系统能力表确定哪些可纯数据配置、哪些要接到已有 Java 事件、哪些要新增机制。正式项目应从实际路线复制；旧 `trial_kiln` sample 是独立示例包中的消耗提交范例，不代表正式土制炉流程。示例包不会自动加载，也不保证任意设备能承载任意任务。
 
-## 三个容易混淆的边界
+简报分别记录阶段目标、方法、判据和结论，便于开发者核对研究逻辑；这些栏目不是玩家文案格式。玩家看到的标题、方法和结论应像研究者自然写下的内容，不必逐项列出简报栏目，也不要提前透露尚未披露的要求。中英文内容放在资源包语言文件中。完整字段及可用观察谓词见[定义参考](definitions.md)。
 
-- **发现和开始分开。** `access.discover_any` 与已学前置想法负责入口，`start_all` 负责开始条件。未知要求仍逐项占位；只有来件不等于掌握。铜/青铜任选可用一个合并物品标签表达，不需要复制两项都必须满足的条件。
-- **开始前置和路径参考分开。** 获取想法时的非必要知识通常仍放入项目开始条件；仅用于改变后续路径的参考知识放进 `variants.when`。进入过的路径不会随补知识重选。任务 ID 在整个项目中唯一，修改显示顺序不应更换 ID。
-- **任务动作和学知识分开。** `sample` 消耗当前队伍、当前 run 的实物；`observation` 读取新鲜观察，绑定实验时还检查本次试件，既有档案或笔记不能顶替。普通永久知识前置仍按有效档案判定。临时配方写在阶段 `completion_recipes`，最终权限写在成果中。
+## 容易混淆的边界
+
+- **五种知识角色分开设计。** 发现入口由 `access.discover_any`（未配置 discover_any 时，默认使用 `start_all` 中的想法条件）决定；行为触发由 `IdeaAcquisition.triggers` 决定；联络使用桌面 `inputs` 和队伍档案中的 `required_knowledge`，`optional_knowledge` 只降低等待时间；开始研究由 `access.start_all` 决定；阶段路径参考放在变体 `when.knowledge_all`。行为触发只有服务端已有发射点才会发生。每个知识条件只在明确配置的环节生效，不会自动扩展到其他环节。字段细节见[定义参考](definitions.md)。
+- **普通前置需要入档，任务观察可以直接完成。** 作为发现、联络、开始或阶段路径条件的普通知识，必须是队伍有效档案中已掌握的知识；仅有未学习来件不算。研究观察本身也是一种知识，但 `type: "observation"` 任务可由符合条件的新鲜观察直接完成，不要求先手动记入档案；完成任务不会自动把这份观察学入永久档案。`team_current_run` 和 `experiment` 等任务观察限制见[定义参考](definitions.md)与[阶段说明](stages-and-airflow.md)。
+- **只有真实消耗实物时才用 `sample`。** 它会消耗绑定当前队伍、当前 run 与任务的物品。观察烧后物品、查看世界对象或完成现场实验观察都不应仅因对象叫“样品”就建成 `sample`；正式土制炉三种配比结果是物品观察任务。保留[独立示例包中的 trial_kiln sample 项目](example-datapack/data/example/frostedresearch/knowledge/projects/trial_kiln.json)作为消耗提交范例。
+- **阶段推进与变体选择是两个时点。** 阶段任务全部就绪后由玩家手动推进。进入阶段时按当时的有效档案知识选择首个匹配变体，并固定该变体；若知识是在更早阶段补齐，则到未来阶段进入时仍可参与选择。丢失已绑定的世界原型时可以重制原型，不能因此要求重做已成功的小游戏或其他任务。详见[阶段说明](stages-and-airflow.md)。
+
+## 任务与可选项
+
+把任务放在它实际适用的阶段，并说明是否必需。阶段的 `optional` 是任务级可选标记；`variants` 的 `omit_tasks` 可按路径移除指定的当前阶段任务。`when.tasks_all` 可在后续阶段参考先前阶段已完成的可选任务。不要只在玩家文案里称某任务“可选”而忘了配置字段。阶段任务完成后仍需玩家手动推进；下一阶段首次进入时才固定路径。
+
+研究观察本身也是知识。当前 run 中完成的符合条件的新鲜观察可以直接满足 `type: "observation"` 任务；不必先抄录或学习入档，任务完成也不会自动把观察永久加入档案。发现、联络、开始和阶段路径中的普通前置则要求已学会的档案知识。`sample` 只用于确实消耗物品的任务。
+
+## 系统能力参考
+
+下表说明内容数据能表达什么，以及何时需要实现支持。JSON 字段以当前定义和示例为准；观察谓词还要求采集端真的记录该值。
+
+| 目标 | 数据可配置 | 需要已有 Java 接点 | 需要新增机制 |
+|---|---|---|---|
+| 发现项目、开始门槛和逐项披露 | `ProjectAccess.discover_any`、`start_all`、`groups`、`conditions`；见 [joint_study](example-datapack/data/example/frostedresearch/knowledge/projects/joint_study.json) | 无 | 新发现界面行为或不同披露规则 |
+| 通过玩家行为获得想法 | `acquisition.required`、`optional`、`triggers`、`chance`；见 [field_idea](example-datapack/data/example/frostedresearch/knowledge/ideas/field_idea.json) | 服务端某处调用 `IdeaAcquisitionService.emit`；仅填写自定义 `event` 不会自动产生事件 | 需要模组当前未提供的行为检测/事件发射 |
+| 联络必需知识与辅助知识 | LinkRule `inputs`、`required_knowledge`、`optional_knowledge`；见 [正式联络规则](../../../TheWinterRescue/kubejs/data/the_winter_rescue/frostedresearch/knowledge/links/) | 通常不需要额外事件接点 | 新联络交互或新的匹配语义 |
+| 按知识开启研究 | `access.start_all`、`discover_any` 和 `groups`；见 [followup](example-datapack/data/example/frostedresearch/knowledge/projects/followup.json) | 无 | 新的启动流程或非知识条件门槛 |
+| 阶段提示和分支 | `stages`、`variants[].when.knowledge_all`、`tasks_all`、`omit_tasks`、`optional`、`completion_recipes`；见[阶段说明](stages-and-airflow.md)及[耐火砖正式项目](../../../TheWinterRescue/kubejs/data/the_winter_rescue/frostedresearch/knowledge/projects/refractory_brick.json) | 任务所依赖的真实世界行为需已有提交接点 | 新阶段选择规则、新任务种类或新任务世界交互 |
+| 观察物品、方块或实体 | `item_retrieval`、`observation.condition`、`experiment`、`team_current_run`；观察字段条件写在[身份与观察快照](definitions.md#身份与观察快照) | 实验或对象的特殊快照值需要已有观察/任务接点写入；土制炉通过 `item.trial_kiln_variant` 识别烧后配比 | 新观察字段的采集器、特殊检视方式或新任务证明机制 |
+| 比较多份观察证据 | `type: "evidence"` 的 `inputs`、`conditions`、`distinct`；支持已有跨记录关系，见[定义参考](definitions.md) | 所需时空、环境或扩展值必须已被采集 | 尚未支持的跨记录比较或新采样字段 |
+| 实验台计时与材料 | `type: "experiment"` 的 `duration`、`materials`、`space`；见[定义参考](definitions.md)中的 cold_trial 范例 | 需有实验台实际执行实验并提交进度 | 新实验设备或不同于现有实验台的运行规则 |
+| 演算与已有小游戏 | `type: "calculation"` 的 `level`、`count` 使用旧连连看；`type: "minigame"` 的 `game` 当前支持 `frostedresearch:airflow` | 已有游戏不需新增接点 | 新游戏实现及任务、界面接入 |
+| 通用控温试验与批量生产 | `frostedresearch:controlled_firing` 配方定义材料、燃料、温度、时长和成功/失败产物；见[控温实验炉](controlled-furnace.md) | 绑定任务的 experiment 必须与设备配方对应 | 尚未支持的设备操作、工艺参数或结果机制 |
+| 消耗绑定物品 | `type: "sample"` 的 `sample.experiment`、`sample.item`；见 [旧 sample 示例](example-datapack/data/example/frostedresearch/knowledge/projects/trial_kiln.json) | 设备需能制作并绑定该试验物品 | 新绑定方式或不同提交/消耗规则 |
+| 研究完成后的权限 | `results` 引用成果；成果可声明当前支持的 Design 等 effect，见 [followup_finding](example-datapack/data/example/frostedresearch/knowledge/results/followup_finding.json) | 配方或机器须调用已有权限检查 | 新权限种类或尚未接入检查的设备 |
+
+遇到“数据里能写，但运行中没有任何路径产生该事件、观察值或任务证明”的需求，应先标记所需 Java 接点或新增机制，不要用看似完整的 JSON 代替实现。
 
 ## 接入一个自定义行为
 
@@ -44,6 +75,8 @@ IdeaAcquisitionService.emit(player,
 ```
 
 若需按物品或方块区分，发送对应 `KnowledgeElement`，并在 trigger 的 `subject` 中填写已有知识条件格式。多个 trigger 是任选入口；必要知识、非必要知识和概率仍由该想法自己的 acquisition 决定。不要把这些条件加到所有外部 `produce` 或 `learn` 授予途径。
+
+这段 JSON 只登记监听条件，不会自行添加监听器。作者若找不到确切的服务端发射点，应在内容需求中标记“需要 Java 事件接点”；不得把一个尚未发射的事件名写成已可运行的行为。
 
 ## 最小验证步骤
 

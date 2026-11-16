@@ -1,7 +1,7 @@
 # 知识定义、观察快照与联络规则
 
 - Status: `Current`
-- Last verified: `2026-11-14`（联络独立前置与辅助知识）
+- Last verified: `2026-11-16`（补充小炉配比物品观察字段）
 - Scope: 知识身份、不可变观察、独立想法/成果定义、项目关系与研究需求、物品检索规则、服务端联络匹配及观察用途判定。
 - Code anchors: [
   `KnowledgeElement`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/model/KnowledgeElement.java)、[
@@ -84,6 +84,8 @@ LinkRule.inputs 仍必填，作者可显式给 0–5 槽。0 槽表示明确配�
 | `source_position.x`、`source_position.y`、`source_position.z`         | 数值     | 从原始来源位置派生，单位格                          |
 
 物品观察没有环境时空、气候、温度和已放置方块状态，也不能录出为研究笔记。`item_data` 不保存物品数量；检索时刻属于队伍接收记录。
+
+烧后小炉物品通过 `TrialKilnSamples.registerObservationFields` 暴露 `item.trial_kiln_variant`，值为 `clay_rich`、`sand_rich`、`balanced`；旧样没有配比则为 `unknown`。试样绑定仍由实际物品检查，不从观察字段或旧档案推断本次研究归属。
 
 ## 数据包目录与定义
 
@@ -202,7 +204,7 @@ research topic 内。类型效果结构见 [成果与权限](../research/results
 | 类型            | 字段                                                    | 含义与校验                                                                                       |
 |---------------|-------------------------------------------------------|---------------------------------------------------------------------------------------------|
 | `evidence`    | `title`（必填）、`inputs`、`conditions`、`distinct`          | 提交一组观察，一份记录占一个槽位。`inputs` 为 1–8 个观察槽位，写法同联络规则；`conditions` 最多 10 条跨条件；不使用 `level`/`count` |
-| `calculation` | `title`（可选）、`level`（0–3，默认 0）、`count`（1–16，默认 1） | 在绘图台赢下 `count` 局难度不低于 `level` 的纸牌局；不读取观察                                                   |
+| `calculation` | `title`（可选）、`level`（0–3，默认 0）、`count`（1–16，默认 1） | 在绘图台赢下 `count` 局难度不低于 `level` 的连连看；不读取观察                                                   |
 | `experiment`  | `title`（必填）、`count`（1–16，默认 1）、`duration`、`materials`、`space` | 在实验台完成 `count` 次实验，每次连续运行 `duration` tick（20–72000）；不读取观察，不使用 `level`                             |
 
 `distinct` 中每组的 `field` 必须是已知观察字段，`slots` 至少列出两个不同的已有槽位，表示这些槽位在该字段上两两不同；校验时展开为两两

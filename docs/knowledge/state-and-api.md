@@ -196,7 +196,7 @@ START/LINK 完成入口仍服务端重新判定，不相信客户端进度。
 | `openRun(project)`                                     | 按创建时间、UUID稳定排序的首份可推进记录；`openRuns(project)` 返回全部可推进记录                                      |
 | `submitEvidence(run, requirement)`                     | 在档案与来件的全部观察中寻找一组满足该证据需求的互异记录，并保存其副本。搜索至多尝试 `EVIDENCE_SEARCH_STEPS = 20000` 个候选，找不到返回 `NO_MATCH`         |
 | `submitEvidence(run, requirement, keys)`               | 按给定记录精确绑定，每个槽位一份                                                                                          |
-| `calculationLevel(run, requirement)`                   | 该计算需求仍需要的纸牌局难度；已满足或启动已结束时为空                                                                               |
+| `calculationLevel(run, requirement)`                   | 该计算需求仍需要的连连看难度；已满足或启动已结束时为空                                                                               |
 | `recordCalculation(run, requirement, level)`           | 记录一局胜利；难度低于要求返回 `INVALID_INPUT`，已满足返回 `ALREADY_OWNED`                                                     |
 | `experimentRequirement(run, requirement)`              | 进行中启动里仍未满足的实验需求定义；已满足、启动已结束或不是实验时为空。实验台据此选用和运行                                                      |
 | `recordExperiment(run, requirement)`                   | 记录一次完成的实验；已满足返回 `ALREADY_OWNED`，没有这项实验或启动已结束返回 `NOT_FOUND`                                           |

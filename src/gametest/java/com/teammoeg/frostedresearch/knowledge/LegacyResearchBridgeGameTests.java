@@ -147,7 +147,8 @@ public final class LegacyResearchBridgeGameTests {
         h.assertTrue(project.legacyReplacement().orElseThrow().effects().equals(Map.of(DN,designId,CN,constructionId)),"formal legacy schema and effect nonces match bridge");
         h.assertTrue(((ResearchResult.Design)design.result()).recipes().equals(List.of(new ResourceLocation("the_winter_rescue:research/alloybrick"))),"formal stable recipe target is exact; actual pack registration is separate");
         h.assertTrue(((ResearchResult.Construction)construction.result()).multiblocks().equals(List.of(MULTIBLOCK)) && blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.getByUniqueName(MULTIBLOCK)!=null,"formal forming target matches real IE registration");
-        h.assertTrue(project.requirements().size()==1 && project.requirements().get(0).sample().orElseThrow().equals(new ProjectRequirement.Sample(new ResourceLocation("frostedresearch:trial_kiln"),new ResourceLocation("frostedresearch:fired_trial_kiln"))),"formal task is M3-A physical successful sample");
+        h.assertTrue(project.requirements().size()==3 && project.requirements().stream().allMatch(task -> task.type()==ProjectRequirement.Type.OBSERVATION
+            && task.observation().orElseThrow().teamCurrentRun()),"formal tasks compare all three current-run fired observations without consuming samples");
         h.succeed();
     }
     @GameTest(batch="m3_bridge_lifecycle",template="empty",timeoutTicks=80)

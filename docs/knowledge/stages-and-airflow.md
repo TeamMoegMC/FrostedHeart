@@ -37,7 +37,7 @@ StageRunState 保存 order/current/visits/completed_tasks；visit 保存 variant
 ## 风道与试吹
 
 风道是3×3固定可解管道拓扑，随机旋转五个可操作格；其余为墙。左侧入口到右侧出口连通即成功。
-绘图台独立保存 airflow_target/airflow_game，不改变旧纸牌记录。客户端仅发选择、旋转和重置，服务端判通路并写任务。
+绘图台独立保存 airflow_target/airflow_game，不改变旧连连看记录。客户端仅发选择、旋转和重置，服务端判通路并写任务。
 风道不耗纸笔，无评分、时限或质量；关闭重开延续原盘面。客户端从知识札记任务按钮切到旧绘图台桌面，由 AirflowDeskPanel 占用连连看原来的区域（165,25,218×164），桌面整体仍为387×203。返回按钮或Esc恢复原项目详情、阶段任务标签和所选记录。小游戏期间不展示旧连连看/旧项目进度控件，桌面三种工具槽停用；玩家背包仍可用。
 
 prototype_tuyere 放置或空手选择任务时绑定 team/run/task/experiment，无个人 owner。多候选须选择。

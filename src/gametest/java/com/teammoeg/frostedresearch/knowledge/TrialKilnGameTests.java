@@ -44,6 +44,29 @@ public final class TrialKilnGameTests {
         KnowledgeDefinitions.install(snapshot);
     }
     private static KnowledgeService service() { return new KnowledgeService(UUID.randomUUID(), new KnowledgeState(), 42, () -> {}); }
+    private static final ResourceLocation FORMAL = new ResourceLocation("the_winter_rescue:earthen_smelter");
+    private static void installFormal() {
+        try (var reader = new java.io.InputStreamReader(Objects.requireNonNull(TrialKilnGameTests.class.getResourceAsStream(
+                "/m3b-formal-fixtures/projects/earthen_smelter.json")), java.nio.charset.StandardCharsets.UTF_8)) {
+            var formal = ProjectDefinition.CODEC.parse(JsonOps.INSTANCE, JsonParser.parseReader(reader)).getOrThrow(false, error -> {});
+            var original = KnowledgeDefinitions.current();
+            // Keep the real formal conditions/tasks; a neutral Finding isolates experiment settlement from IE recipes.
+            var project = new ProjectDefinition(formal.title(), formal.body(), List.of(id("trial_kiln_finding")), formal.requirements(), formal.access());
+            KnowledgeDefinitions.install(new KnowledgeDefinitions.Snapshot(0,
+                Map.of(new ResourceLocation("the_winter_rescue:earthen_smelting"), original.ideas().get(id("trial_kiln"))),
+                original.results(), Map.of(), Map.of(), Map.of(FORMAL, project), List.of()));
+        } catch (java.io.IOException e) { throw new IllegalStateException(e); }
+    }
+    private static UUID beginFormal(KnowledgeService service, ServerPlayer player) {
+        var source = new AcquisitionSource("test_external", Optional.empty(), 42);
+        service.learn(KnowledgeElement.idea(new ResourceLocation("the_winter_rescue:earthen_smelting")), source, KnowledgeService.Grant.NORMAL);
+        for (Item item : List.of(Items.RAW_COPPER, Items.CLAY_BALL, Items.SAND))
+            service.learn(ItemRetrieval.observe(player, new ItemStack(item)), source, KnowledgeService.Grant.NORMAL);
+        return service.startResearch(FORMAL).orElseThrow();
+    }
+    private static boolean taskMet(KnowledgeService service, UUID run, String task) {
+        return service.requirementMet(service.state().research().get(run), KnowledgeDefinitions.current().projects().get(FORMAL).requirement(task).orElseThrow());
+    }
     private static UUID begin(KnowledgeService service, ServerPlayer player) {
         var source = new AcquisitionSource("test_external", Optional.empty(), 42);
         service.learn(KnowledgeElement.idea(id("trial_kiln")), source, KnowledgeService.Grant.NORMAL);
@@ -220,6 +243,80 @@ public final class TrialKilnGameTests {
             h.assertTrue(device.start(service, fuel) == TrialKilnBlockEntity.Start.CHOOSE_TARGET && fuel.getCount() == 4, "ambiguous active targets do not consume fuel or choose silently");
             var chosen = device.cycleTarget(service).orElseThrow();
             h.assertTrue(device.start(service, fuel) == TrialKilnBlockEntity.Start.STARTED && device.binding().orElseThrow().equals(chosen), "empty-hand target choice binds the selected run");
+            h.succeed();
+        } finally { KnowledgeDefinitions.install(previous); }
+    }
+
+    @GameTest(batch = "m3_trial_kiln", template = "trial_kiln_empty", timeoutTicks = 80)
+    public static void threeFiredObservationsAreDistinctNonConsumingAndRunBound(GameTestHelper h) {
+        var previous = KnowledgeDefinitions.current(); install(); installFormal();
+        try (var actor = new PlayerFixture(h)) {
+            var service = KnowledgeService.forPlayer(actor.player); var run = beginFormal(service, actor.player);
+            int archive = service.state().archive().entries().size();
+            var blocks = List.of(FRContents.Blocks.TRIAL_KILN_CLAY_RICH.get(), FRContents.Blocks.TRIAL_KILN_SAND_RICH.get(), FRContents.Blocks.TRIAL_KILN_BALANCED.get());
+            var samples = new ArrayList<ItemStack>();
+            for (int i = 0; i < 3; i++) {
+                var device = kiln(h, new BlockPos(1 + i * 2, 1, 1), blocks.get(i));
+                h.assertTrue(device.start(service, new ItemStack(Items.STICK, 4)) == TrialKilnBlockEntity.Start.STARTED,
+                    "each mixture automatically selects only its observation task");
+                ticks(device, 400);
+                // Reconstruct the actual BE before collection, including the selected task and fired state.
+                var saved = device.saveWithFullMetadata();
+                var restored = (TrialKilnBlockEntity) BlockEntity.loadStatic(device.getBlockPos(), device.getBlockState(), saved);
+                ItemStack sample = restored.settle(); samples.add(sample);
+                h.assertTrue(TrialKilnSamples.variant(sample).equals(TrialKilnSamples.VARIANTS.get(i)), "collected mixture identity survives save/load");
+                var binding = ResearchSampleBinding.read(sample).orElseThrow();
+                h.assertTrue(binding.run().equals(run) && binding.experiment().equals(TrialKilnSamples.experiment(TrialKilnSamples.VARIANTS.get(i))), "sample has the correct run and mixture-specific experiment");
+                h.assertTrue(!service.requirementsMet(run), "firing alone never replaces observation");
+                var observation = ItemRetrieval.observe(actor.player, sample).observation().orElseThrow();
+                var wrong = sample.copy(); new ResearchSampleBinding(binding.team(), UUID.randomUUID(), binding.requirement(), binding.experiment()).write(wrong);
+                service.observeResearchTarget(actor.player, observation, null, wrong);
+                h.assertTrue(!taskMet(service, run, binding.requirement()), "a different run's real sample cannot count");
+                service.observeResearchTarget(actor.player, observation, null, sample);
+                service.observeResearchTarget(actor.player, ItemRetrieval.observe(actor.player, sample).observation().orElseThrow(), null, sample);
+                h.assertTrue(service.state().research().get(run).stageState().completedTasks().size() == i + 1 && sample.getCount() == 1,
+                    "repeated observations count one mixture once and never consume it");
+                if (i == 0) h.assertTrue(!taskMet(service, run, "observe_sand_rich"), "clay-rich cracked sample cannot stand in for sand-rich cracked sample");
+            }
+            h.assertTrue(service.state().archive().entries().size() == archive, "no manual archiving or automatic permanent learning is needed");
+            var saved = KnowledgeState.read(service.state().write());
+            h.assertTrue(saved.research().get(run).stageState().completedTasks().size() == 3 && service.requirementsMet(run), "all three observation credits persist and make research ready");
+            h.assertTrue(service.finishResearch(run).stream().allMatch(KnowledgeService.OperationResult::succeeded)
+                && service.state().research().get(run).completed() && samples.stream().allMatch(s -> s.getCount() == 1), "normal finish grants the result without consuming samples");
+            service.initialize();
+            h.assertTrue(service.state().research().get(run).completed(), "completed project stays completed after initialization");
+            h.succeed();
+        } finally { KnowledgeDefinitions.install(previous); }
+    }
+
+    @GameTest(batch = "m3_trial_kiln", template = "trial_kiln_empty", timeoutTicks = 80)
+    public static void previousSingleSampleRunsUpgradeWithoutLosingSubmittedCredit(GameTestHelper h) {
+        var previous = KnowledgeDefinitions.current(); install();
+        try (var actor = new PlayerFixture(h)) {
+            var service = service(); var oldRun = begin(service, actor.player);
+            var sample = FRContents.Items.FIRED_TRIAL_KILN.get().getDefaultInstance(); service.sampleTargets(TrialKilnBlockEntity.EXPERIMENT).get(0).write(sample);
+            h.assertTrue(service.submitSample(oldRun, "submit_intact", sample).succeeded(), "old run has real successful submission credit");
+            var old = service.state().research().get(oldRun);
+            installFormal();
+            // The same saved route ID now resolves to the new three-observation project.
+            var adopted = new ResearchHistory(old.id(), FORMAL, old.origins(), old.time(), false, old.results(), false,
+                old.calculations(), old.evidence(), old.experiments(), old.samples(), old.stageState());
+            service.state().recordResearch(adopted); service.initialize();
+            var upgraded = service.state().research().get(oldRun);
+            h.assertTrue(upgraded.stageState().visits().get("main").tasks().size() == 3
+                && upgraded.stageState().completedTasks().contains("submit_intact") && !upgraded.stageState().visits().get("main").ready(),
+                "old successful sample remains credited; both comparison tasks are added and readiness is recomputed");
+            h.assertTrue(service.observationTargets(TrialKilnSamples.experiment("clay_rich")).size() == 1
+                && service.observationTargets(TrialKilnSamples.experiment("sand_rich")).size() == 1, "upgraded run accepts both missing mixtures without restarting");
+            service.initialize();
+            h.assertTrue(service.state().research().get(oldRun).equals(upgraded), "upgrade is idempotent");
+            service.state().recordResearch(adopted.withStages(StageRunState.legacy())); service.initialize();
+            h.assertTrue(service.state().research().get(oldRun).stageState().completedTasks().contains("submit_intact")
+                && service.state().research().get(oldRun).stageState().visits().get("main").tasks().size() == 3,
+                "schema4 sample receipt without stage_state also retains its intact credit");
+            var completed = adopted.completedWith(List.of(KnowledgeKey.result(id("trial_kiln_finding"))));
+            service.state().recordResearch(completed); service.initialize();
+            h.assertTrue(service.state().research().get(oldRun).equals(completed), "already completed historical runs are untouched");
             h.succeed();
         } finally { KnowledgeDefinitions.install(previous); }
     }
