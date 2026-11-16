@@ -25,17 +25,18 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.NeutralMob;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.animal.PolarBear;
-import java.util.EnumSet;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.ai.util.DefaultRandomPos;
+import net.minecraft.world.entity.animal.PolarBear;
 import net.minecraft.world.phys.Vec3;
-import org.spongepowered.asm.mixin.Unique;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+import java.util.EnumSet;
 
 @Mixin(PolarBear.class)
 public abstract class PolarBearMixin extends net.minecraft.world.entity.animal.Animal implements NeutralMob {
@@ -120,7 +121,8 @@ public abstract class PolarBearMixin extends net.minecraft.world.entity.animal.A
         if (self.distanceToSqr(target) <= 6.0D + target.getBbWidth()
                 && self.getSensing().hasLineOfSight(target)) frostedheart$unreachableTicks = 0;
         else ++frostedheart$unreachableTicks;
-        if (self.getHealth() < self.getMaxHealth() * 0.25F || frostedheart$unreachableTicks >= 300) {
+        if (self.getHealth() < self.getMaxHealth() * 0.25F || frostedheart$unreachableTicks >= 300
+                || (Math.abs(target.position().y-self.position().y) >= 2 && frostedheart$unreachableTicks >= 100)) {
             frostedheart$threat = target;
             frostedheart$fleeTicks = 200;
             frostedheart$unreachableTicks = 0;
