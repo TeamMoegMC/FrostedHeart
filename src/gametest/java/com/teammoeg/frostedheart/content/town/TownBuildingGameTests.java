@@ -8,6 +8,7 @@ import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.frostedheart.content.town.block.AbstractTownBuildingBlockEntity;
 import com.teammoeg.frostedheart.content.town.block.OccupiedZoneInfo;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.BlockScanner;
+import com.teammoeg.frostedheart.content.town.block.blockscanner.SectionSnapshotCache;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.RoomPathfinder.OccupiedCell;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
 import com.teammoeg.frostedheart.content.town.building.BuildingRecordsCodec;
@@ -712,6 +713,49 @@ public final class TownBuildingGameTests {
                     } finally {
                         cleanup.run();
                     }
+                });
+    }
+
+    /**
+     * Three houses stand beside a stone path and a fourth stands far off, its chunks never loaded. Breaking the path
+     * to the third house unlinks it, although part of the town is out of range.
+     */
+    @GameTest(template = "phase0a_empty", batch = "town_scan_out_of_range", timeoutTicks = 400)
+    public static void brokenRoadUnlinksAlthoughPartOfTheTownIsOutOfRange(GameTestHelper helper) {
+        var level = helper.getLevel();
+        TeamDataHolder holder = newTeam(helper, "out-of-range-town");
+        TeamTownData data = holder.getData(FHSpecialDataTypes.TOWN_DATA);
+        for (int x = 1; x <= 14; x++) {
+            level.setBlockAndUpdate(helper.absolutePos(new BlockPos(x, 1, 3)), Blocks.STONE.defaultBlockState());
+        }
+        BlockPos first = helper.absolutePos(new BlockPos(2, 2, 4));
+        BlockPos second = helper.absolutePos(new BlockPos(6, 2, 4));
+        BlockPos third = helper.absolutePos(new BlockPos(12, 2, 4));
+        for (BlockPos pos : List.of(first, second, third)) placeCore(helper, holder, pos, FHBlocks.HOUSE.get());
+        BlockPos far = new BlockPos(12000, 65, 12000);
+        data.getBuildingStore().install(new HouseBuilding(far));
+        helper.startSequence()
+                .thenWaitUntil(() -> helper.assertTrue(roadWorking(holder).containsAll(List.of(first, second, third)),
+                        "wait for the path to link the three houses"))
+                .thenExecute(() -> {
+                    for (int x = 8; x <= 10; x++) {
+                        level.setBlockAndUpdate(helper.absolutePos(new BlockPos(x, 1, 3)), Blocks.AIR.defaultBlockState());
+                    }
+                })
+                // Scans read section copies that may lag a block change by DIRTY_TTL_TICKS plus GRACE_TICKS.
+                .thenIdle(SectionSnapshotCache.DIRTY_TTL_TICKS + SectionSnapshotCache.GRACE_TICKS + 20)
+                .thenExecute(() -> {
+                    // Terrain alone waits for the periodic rescan; a building change starts one now.
+                    data.getBuildingStore().install(new HouseBuilding(far.offset(0, 0, 64)));
+                })
+                .thenWaitUntil(() -> helper.assertTrue(!roadWorking(holder).contains(third)
+                                && !data.buildings.get(third).isConnectivityWorkable(),
+                        "the house cut off from the path stops working, although part of the town is out of range"))
+                .thenExecute(() -> {
+                    helper.assertTrue(roadWorking(holder).containsAll(List.of(first, second)),
+                            "the houses still on the path keep working");
+                    holder.removeData(FHSpecialDataTypes.TOWN_DATA);
+                    helper.succeed();
                 });
     }
 

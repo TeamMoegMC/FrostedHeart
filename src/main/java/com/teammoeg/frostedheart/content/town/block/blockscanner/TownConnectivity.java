@@ -1,5 +1,7 @@
 package com.teammoeg.frostedheart.content.town.block.blockscanner;
 
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -27,21 +29,21 @@ public final class TownConnectivity {
         final Map<BlockPos, List<BlockPos>> entrances;
         final BlockPos tower;
         final Object dimension;
-        /** A building or the tower lay outside loaded terrain, so this scan sees only part of the town. */
-        final boolean partial;
+        /** Routes the previous scan found; they still hold wherever their terrain is not loaded. */
+        final List<Route> known;
         /** Sections this scan found unloaded. One worker runs a batch, so a plain map is enough. */
         final Map<Long, SectionSnapshotCache.Snapshot> missing = new HashMap<>();
         volatile boolean cancelled;
         CompletableFuture<Result> result;
         Batch(Map<BlockPos, AbstractTownBuilding> buildings, BlockPos tower, Object dimension, SectionSnapshotCache cache,
-                boolean partial) {
+                List<Route> known) {
             this.cache = cache;
             this.buildings = new HashMap<>(buildings);
             this.entrances = new HashMap<>();
             buildings.forEach((pos, building) -> this.entrances.put(pos, building.getRoadEntrances()));
             this.tower = tower;
             this.dimension = dimension;
-            this.partial = partial;
+            this.known = List.copyOf(known);
         }
     }
     public record Route(BlockPos from, BlockPos to, List<BlockPos> steps, boolean powered) {
@@ -51,10 +53,30 @@ public final class TownConnectivity {
         public Result { connected = Set.copyOf(connected); working = Set.copyOf(working); routes = List.copyOf(routes); }
         public Result(Set<BlockPos> connected, List<Route> routes) { this(connected, connected, routes); }
     }
-    private Result view = new Result(Set.of(), List.of());
+    public static final Result EMPTY = new Result(Set.of(), List.of());
+    private static final Codec<List<BlockPos>> POSITIONS = Codec.LONG_STREAM.xmap(
+            stream -> stream.mapToObj(BlockPos::of).toList(), list -> list.stream().mapToLong(BlockPos::asLong));
+    private static final Codec<Route> ROUTE_CODEC = RecordCodecBuilder.create(instance -> instance.group(
+            BlockPos.CODEC.fieldOf("from").forGetter(Route::from),
+            BlockPos.CODEC.fieldOf("to").forGetter(Route::to),
+            POSITIONS.fieldOf("steps").forGetter(Route::steps),
+            Codec.BOOL.optionalFieldOf("powered", false).forGetter(Route::powered)
+    ).apply(instance, Route::new));
+    /** The saved form of a view: its routes are what the scans after a restart check first. */
+    public static final Codec<Result> RESULT_CODEC = RecordCodecBuilder.create(instance -> instance.group(
+            POSITIONS.fieldOf("connected").forGetter(result -> result.connected().stream().sorted().toList()),
+            POSITIONS.fieldOf("working").forGetter(result -> result.working().stream().sorted().toList()),
+            ROUTE_CODEC.listOf().fieldOf("routes").forGetter(Result::routes)
+    ).apply(instance, (connected, working, routes) -> new Result(Set.copyOf(connected), Set.copyOf(working), routes)));
+    private Result view = EMPTY;
     private UUID version = UUID.randomUUID();
     public Result view() { return view; }
     public UUID version() { return version; }
+    /** Takes a saved view back before the first scan; the caller restores the buildings' own links. */
+    public void restore(Result saved) {
+        view = saved;
+        version = UUID.randomUUID();
+    }
     private void publish(Result value) {
         if (!view.equals(value)) { view = value; version = UUID.randomUUID(); }
     }
@@ -91,16 +113,9 @@ public final class TownConnectivity {
         }
         if (batch != null) {
             if (!batch.result.isDone()) return;
-            long wait = INTERVAL_TICKS;
             try {
                 Result result = batch.result.join();
-                if (batch.cancelled) {
-                    // Superseded: the rescan starts below.
-                } else if (!inLoadedTerrain(level, batch)) {
-                    wait = UNLOADED_RETRY_TICKS; // its terrain unloaded while it ran: keep the links, look again later
-                } else if (batch.partial) {
-                    grant(result, buildings, batch);
-                } else {
+                if (!batch.cancelled) {
                     buildings.forEach((pos, building) -> building.updateBatch(() -> {
                         building.setConnectedToTower(result.connected().contains(pos));
                         building.setConnectivityWorkable(result.working().contains(pos));
@@ -113,21 +128,23 @@ public final class TownConnectivity {
             }
             boolean changed = batch.cancelled;
             batch = null;
-            nextScan = level.getGameTime() + (changed ? 0 : wait);
+            nextScan = level.getGameTime() + (changed ? 0 : INTERVAL_TICKS);
         }
         if (buildings.isEmpty() || level.getGameTime() < nextScan) return;
-        // A scan judges only loaded terrain. Buildings outside it keep their links; with none inside, look again later.
-        Map<BlockPos, AbstractTownBuilding> seen = new HashMap<>();
-        buildings.forEach((pos, building) -> {
-            if (inLoadedTerrain(level, pos, building.getRoadEntrances())) seen.put(pos, building);
-        });
-        BlockPos seenTower = tower != null && inLoadedTerrain(level, tower, List.of()) ? tower.immutable() : null;
-        if (seen.isEmpty()) {
+        // Terrain only changes while it is loaded, so a town with none of it loaded has nothing new to find.
+        boolean anyLoaded = false;
+        for (var entry : buildings.entrySet()) {
+            if (inLoadedTerrain(level, entry.getKey(), entry.getValue().getRoadEntrances())) {
+                anyLoaded = true;
+                break;
+            }
+        }
+        if (!anyLoaded) {
             nextScan = level.getGameTime() + UNLOADED_RETRY_TICKS;
             return;
         }
-        Batch started = new Batch(seen, seenTower, level.dimension(), TownSectionSnapshots.get(level),
-                seen.size() < buildings.size() || seenTower == null && tower != null);
+        Batch started = new Batch(buildings, tower == null ? null : tower.immutable(), level.dimension(),
+                TownSectionSnapshots.get(level), view.routes());
         batch = started;
         started.result = CompletableFuture.supplyAsync(() -> calculate(started), WORKERS);
     }
@@ -139,12 +156,6 @@ public final class TownConnectivity {
             for (int dz = -2; dz <= 2; dz += 4)
                 if (!TownSectionSnapshots.isLoaded(level, core.offset(dx, 0, dz))) return false;
         for (BlockPos entrance : entrances) if (!TownSectionSnapshots.isLoaded(level, entrance)) return false;
-        return true;
-    }
-
-    private static boolean inLoadedTerrain(ServerLevel level, Batch batch) {
-        if (batch.tower != null && !inLoadedTerrain(level, batch.tower, List.of())) return false;
-        for (var entry : batch.entrances.entrySet()) if (!inLoadedTerrain(level, entry.getKey(), entry.getValue())) return false;
         return true;
     }
 
@@ -161,55 +172,17 @@ public final class TownConnectivity {
         return new Result(connected, working, routes);
     }
 
-    /**
-     * Applies a scan that saw only part of the town. It cannot know what lies outside loaded terrain, so it only adds
-     * links: a scanned building works once its part of the network holds a working building or the tower. A town
-     * with no working building yet takes the rule's verdict on the part it saw.
-     */
-    private void grant(Result result, Map<BlockPos, AbstractTownBuilding> buildings, Batch scanned) {
-        Map<BlockPos, BlockPos> parents = new HashMap<>();
-        for (Route route : result.routes()) parents.put(root(parents, route.from()), root(parents, route.to()));
-        Set<BlockPos> anchors = new HashSet<>();
-        for (BlockPos pos : scanned.buildings.keySet()) {
-            AbstractTownBuilding building = buildings.get(pos);
-            if (building != null && building.isConnectivityWorkable()) anchors.add(root(parents, pos));
-        }
-        Set<BlockPos> working = new HashSet<>();
-        if (anchors.isEmpty()) {
-            working.addAll(result.working());
-        } else {
-            if (scanned.tower != null) anchors.add(root(parents, scanned.tower));
-            for (BlockPos pos : scanned.buildings.keySet()) if (anchors.contains(root(parents, pos))) working.add(pos);
-        }
-        buildings.forEach((pos, building) -> building.updateBatch(() -> {
-            if (result.connected().contains(pos)) building.setConnectedToTower(true);
-            if (working.contains(pos)) building.setConnectivityWorkable(true);
-        }));
-        // Routes between scanned nodes come from this scan; the unscanned part keeps the routes it had.
-        Set<BlockPos> nodes = new HashSet<>(scanned.buildings.keySet());
-        if (scanned.tower != null) nodes.add(scanned.tower);
-        List<Route> routes = new ArrayList<>(result.routes());
-        for (Route route : view.routes()) if (!nodes.contains(route.from()) || !nodes.contains(route.to())) routes.add(route);
-        Set<BlockPos> connected = new HashSet<>(view.connected());
-        connected.addAll(result.connected());
-        working.addAll(view.working());
-        publish(new Result(connected, working, routes));
-    }
-
-    private static BlockPos root(Map<BlockPos, BlockPos> parents, BlockPos pos) {
-        BlockPos parent = parents.get(pos);
-        if (parent == null || parent.equals(pos)) return pos;
-        BlockPos top = root(parents, parent);
-        parents.put(pos, top);
-        return top;
-    }
-
     private static final class Snapshot implements AbstractWorld {
         private final Batch batch;
         private record Local(SectionSnapshotCache.Snapshot snapshot,long checkedUntil,long expiryObserved) {}
         private final Map<SectionPos,Local> sections=new HashMap<>();
         Snapshot(Batch batch){this.batch=batch;}
         public BlockType getBlockType(BlockPos pos){
+            return TYPES[local(pos).snapshot().valueAt(((pos.getY()&15)<<8)|((pos.getZ()&15)<<4)|(pos.getX()&15))];
+        }
+        /** Unloaded terrain is unknown: the scan reads it as walls, and remembered routes take it as it was. */
+        @Override public boolean isKnown(BlockPos pos){return !local(pos).snapshot().missing();}
+        private Local local(BlockPos pos){
             if(batch.cancelled)throw new CancellationException();
             SectionPos section=SectionPos.of(pos);Local local=sections.get(section);long now=batch.cache.currentTick();
             if(local==null||local.snapshot().retired()||now>=local.checkedUntil()
@@ -222,7 +195,7 @@ public final class TownConnectivity {
                 long check=snapshot.missing()?Long.MAX_VALUE:Math.min(snapshot.removeAt(),snapshot.expiresAt()>now?snapshot.expiresAt():now+1);
                 local=new Local(snapshot,check,snapshot.expiresAt());sections.put(section,local);
             }
-            return TYPES[local.snapshot().valueAt(((pos.getY()&15)<<8)|((pos.getZ()&15)<<4)|(pos.getX()&15))];
+            return local;
         }
         private SectionSnapshotCache.Snapshot load(SectionPos section){
             if(batch.cancelled)throw new CancellationException();
@@ -253,7 +226,8 @@ public final class TownConnectivity {
     }
 
     private static Result calculate(Batch batch) {
-        return calculateView(batch.buildings.keySet(), batch.tower, () -> new Snapshot(batch), () -> batch.cancelled, batch.entrances);
+        return calculateView(batch.buildings.keySet(), batch.tower, () -> new Snapshot(batch), () -> batch.cancelled,
+                batch.entrances, batch.known);
     }
 
     static Set<BlockPos> calculate(Set<BlockPos> buildings, BlockPos tower,
@@ -269,6 +243,17 @@ public final class TownConnectivity {
     static Result calculateView(Set<BlockPos> buildings, BlockPos tower,
             java.util.function.Supplier<AbstractWorld> worlds, java.util.function.BooleanSupplier cancelled,
             Map<BlockPos, List<BlockPos>> ports) {
+        return calculateView(buildings, tower, worlds, cancelled, ports, List.of());
+    }
+
+    /**
+     * Clusters and the working set. {@code known} are routes an earlier scan found: unloaded terrain cannot change,
+     * so a route still holds where the world does not know its terrain, while every step where it does must still be
+     * walkable. They link first; the searches then only look for what they do not already link.
+     */
+    static Result calculateView(Set<BlockPos> buildings, BlockPos tower,
+            java.util.function.Supplier<AbstractWorld> worlds, java.util.function.BooleanSupplier cancelled,
+            Map<BlockPos, List<BlockPos>> ports, Collection<Route> known) {
         if (cancelled.getAsBoolean()) return new Result(Set.of(), List.of());
         List<Route> routes = new ArrayList<>();
         List<BlockPos> nodes = new ArrayList<>(buildings);
@@ -279,6 +264,19 @@ public final class TownConnectivity {
                 .mapToInt(node::distManhattan).max().orElse(2));
         int[] parents = new int[nodes.size()];
         for (int i = 0; i < parents.length; i++) parents[i] = i;
+        if (!known.isEmpty()) {
+            Map<BlockPos, Integer> index = new HashMap<>();
+            for (int i = 0; i < nodes.size(); i++) index.put(nodes.get(i), i);
+            AbstractWorld world = worlds.get();
+            for (Route route : known) {
+                if (cancelled.getAsBoolean()) return new Result(Set.of(), List.of());
+                Integer from = index.get(route.from()), to = index.get(route.to());
+                if (from == null || to == null || find(parents, from) == find(parents, to)) continue;
+                if (!intact(world, route, ports)) continue;
+                parents[find(parents, to)] = find(parents, from);
+                routes.add(route);
+            }
+        }
         for (int source = 0; source < nodes.size(); source++) {
             AbstractWorld world = worlds.get(); // Release each source's section cache after its search.
             Map<BlockPos, List<Integer>> targets = new HashMap<>();
@@ -347,6 +345,24 @@ public final class TownConnectivity {
                 connected.contains(route.from()) || route.from().equals(tower))).toList();
         return new Result(connected, working, marked);
     }
+    /** Whether a remembered route still holds: steps in unknown terrain stand as they were, known ones are checked. */
+    private static boolean intact(AbstractWorld world, Route route, Map<BlockPos, List<BlockPos>> ports) {
+        List<BlockPos> steps = route.steps();
+        if (steps.isEmpty()) return false;
+        BlockPos first = steps.get(0), last = steps.get(steps.size() - 1);
+        if (world.isKnown(first) && !entrances(world, route.from(), ports).contains(first)) return false;
+        if (world.isKnown(last) && !entrances(world, route.to(), ports).contains(last)) return false;
+        for (int i = 1; i < steps.size(); i++) {
+            BlockPos previous = steps.get(i - 1), step = steps.get(i);
+            if (!world.isKnown(step)) continue;
+            boolean walkable = world.isKnown(previous)
+                    ? RoomPathfinder.getNeighbors(world, route.from(), previous).contains(step)
+                    : RoomPathfinder.canStandAt(world, step);
+            if (!walkable) return false;
+        }
+        return true;
+    }
+
     private static int find(int[] parents, int node) {
         while (parents[node] != node) { parents[node] = parents[parents[node]]; node = parents[node]; }
         return node;

@@ -19,7 +19,10 @@ public final class TownConnectivityGameTests {
     private static final BlockPos START = new BlockPos(0, 1, 0);
     private static final class World implements AbstractWorld {
         final Map<BlockPos, BlockType> cells = new HashMap<>();
-        public BlockType getBlockType(BlockPos pos) { return cells.getOrDefault(pos, BlockType.WALL); }
+        /** Cells this world does not know, as a scan does not know unloaded chunks: read as walls. */
+        final Set<BlockPos> unknown = new java.util.HashSet<>();
+        public BlockType getBlockType(BlockPos pos) { return unknown.contains(pos) ? BlockType.WALL : cells.getOrDefault(pos, BlockType.WALL); }
+        @Override public boolean isKnown(BlockPos pos) { return !unknown.contains(pos); }
         public int getMaxY(BlockPos pos) { return 256; }
         void air(int x, int y, int z) { cells.put(new BlockPos(x, y, z), BlockType.AIR); }
         void corridor(int end) {
@@ -272,6 +275,27 @@ public final class TownConnectivityGameTests {
         helper.assertTrue(world.solve(Set.of(), new BlockPos(12, 1, 0)).isEmpty(), "empty town must have no connected buildings");
         helper.assertTrue(TownConnectivity.calculate(Set.of(START), new BlockPos(12, 1, 0), () -> world, () -> true).isEmpty(),
                 "cancelled batch must not publish connections");
+        helper.succeed();
+    }
+
+    @GameTest(template = "phase0a_empty")
+    public static void rememberedRoutesHoldOnlyWhereTerrainIsUnknown(GameTestHelper helper) {
+        World world = new World();
+        world.corridor(30);
+        BlockPos far = new BlockPos(30, 1, 0);
+        Set<BlockPos> both = Set.of(START, far);
+        var seen = TownConnectivity.calculateView(both, null, () -> world, () -> false, Map.of(), java.util.List.of());
+        helper.assertTrue(seen.routes().size() == 1 && seen.working().equals(both), "the corridor links both ends");
+        for (int x = 10; x < 20; x++) for (int y = 0; y <= 2; y++) world.unknown.add(new BlockPos(x, y, 0));
+        var blind = TownConnectivity.calculateView(both, null, () -> world, () -> false, Map.of(), java.util.List.of());
+        helper.assertTrue(blind.routes().isEmpty(), "without a remembered route, unknown terrain cuts the corridor");
+        var remembered = TownConnectivity.calculateView(both, null, () -> world, () -> false, Map.of(), seen.routes());
+        helper.assertTrue(remembered.routes().equals(seen.routes()) && remembered.working().equals(both),
+                "the remembered route holds through terrain the world does not know");
+        world.cells.put(new BlockPos(5, 1, 0), AbstractWorld.BlockType.WALL);
+        var broken = TownConnectivity.calculateView(both, null, () -> world, () -> false, Map.of(), seen.routes());
+        helper.assertTrue(broken.routes().isEmpty() && broken.working().size() == 1,
+                "a remembered route breaks where its terrain is known and blocked");
         helper.succeed();
     }
 }

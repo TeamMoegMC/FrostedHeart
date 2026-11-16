@@ -129,8 +129,10 @@ store 以 `changeVersion` 与 `encodedVersion` 判断单栋缓存是否过期。
 
 ## 道路连接与能量塔（2026-11-13）
 
-状态：已实现，编译及 18 项连通性、10 项居民道路 GameTest 通过；2026-11-15 起重扫保留资格、只检测已加载地形，
-另由 `rescanKeepsTheLinkedWarehouseWorking`、`unloadedTownsKeepTheirLinksAndLeaveTheScanThreadsFree` 覆盖；尚未进行完整城镇游戏场景验收。代码锚点：`TownConnectivity`、
+状态：已实现，编译及 18 项连通性、10 项居民道路 GameTest 通过；2026-11-15 起重扫保留资格、沿用记下的路线、道路视图随存档保存，
+另由 `rescanKeepsTheLinkedWarehouseWorking`、`unloadedTownsKeepTheirLinksAndLeaveTheScanThreadsFree`、
+`brokenRoadUnlinksAlthoughPartOfTheTownIsOutOfRange`、`savedTownKeepsItsRoadLinks`、`rememberedRoutesHoldOnlyWhereTerrainIsUnknown`
+覆盖，并在真实客户端中验证过拆路、离开城镇与重启（见 2026-11-15 日记）；尚未在多队伍服务器上验收。代码锚点：`TownConnectivity`、
 `RoomPathfinder.getNeighbors`、`AbstractTownBuilding.isBuildingWorkable`、`TeamTownData.tick`。
 
 先计算建筑之间的连通集群，再选择可工作集群。只以当前队伍在城镇所在维度的能量塔作为塔端点，
@@ -152,20 +154,24 @@ store 以 `changeVersion` 与 `encodedVersion` 判断单栋缓存是否过期。
 一批完成并在主线程应用后等待 1200 tick（正常 20 TPS 下 60 秒），再启动下一批。
 建筑集合、入口、维度或塔位置变化使旧批作废，并立即安排重算（已有批次先结束）；同一城镇不会重叠启动两批。
 重算完成前各建筑保留原有资格：已拆除的建筑从视图中去掉，以它或旧塔为端点的路线一并去掉；新建筑在被检测到之前没有资格。
-只有维度变化会先清除全部资格。无塔也进行建筑间寻路。首次检测完成前默认无资格；普通道路变化在下一批完成时生效。
+只有维度变化会先清除全部资格。无塔也进行建筑间寻路。从未检测过、也没有存档视图的城镇默认无资格；普通道路变化在下一批完成时生效。
 
-检测只判断已加载地形（2026-11-15）。启动一批时，控制方块周围 5×5 格与全部入口所在区块都已加载的建筑才参与，塔同理；
-一座都没有时不检测、保留现有资格，`UNLOADED_RETRY_TICKS`（100 tick）后再看。所以没人在附近的城镇保留最后一次检测的结果，
-不会因区块卸载而失去资格，也不会占用共享线程。有建筑或塔不在已加载地形中时，这一批只增加资格、不取消资格（`TownConnectivity.grant`）：
-参与检测的建筑所在连通部分若含已工作建筑或塔，整部分获得资格；城镇当时没有任何工作建筑时，按完整规则对可见部分的结论补资格；
-连到塔的建筑补上 `connectedToTower`。视图里可见部分的路线换成新结果，其余保留。全部建筑和塔都在已加载地形中时，
-按完整规则应用，可以取消资格。结果应用前若参与检测的建筑或塔所在区块已卸载，丢弃结果，100 tick 后再试。
-已知局限：一座建筑长期不在加载范围内的城镇，只会补资格；拆掉道路后，要等全部建筑同时加载时才会断开。
-重启后资格不恢复，没人在附近的城镇在有人靠近、完成检测之前没有资格。
+记下的路线与未加载地形（2026-11-15）。区块只有加载时才会变化，未加载的地形保持卸载前的样子。所以每一批都把上一次的路线
+（视图里的 `routes`）当作已知连接先检查（`TownConnectivity.calculateView` 的 `known`、`intact`）：路线经过已加载地形的每一步按实时地形复查，
+包括入口和相邻移动，有一步不通就作废；经过未加载地形的步骤保持原样。然后对仍未连上的建筑照常寻路，未加载地形当作墙。
+所有建筑与塔都参与，每一批都按完整规则应用，既能连上也能断开；看不见的部分靠记下的路线保持原来的连接。
+城镇的建筑核心（周围 5×5 格）与入口所在区块一个都没加载时不启动检测，`UNLOADED_RETRY_TICKS`（100 tick）后再看：
+此时既无变化可查，也不必占用共享线程。已知缺口：只记得当时用到的那条路线；若它在已加载地形中断开，而另一条备用路线要穿过未加载地形，
+会暂时判为断开，直到那边加载后再次检测。在区块卸载前不到一个检测间隔内拆掉的路，要等下次加载后才生效。
+
+道路视图随存档保存（`TeamTownData` 的 `roads` 字段，`TownConnectivity.RESULT_CODEC`：连到塔与可工作的位置、各路线的步骤）。
+读档时恢复视图和各建筑的两项资格，重启后没人在附近的城镇也保持原有连接，随后的检测从这些路线开始。
+视图发生变化（`TownConnectivity.version`）时 `TeamTownData.tick` 标记存档需要写入。旧存档没有该字段，资格由首次检测得出。
+客户端管理视图（`MANAGEMENT_CODEC`）不带路线，资格随各建筑记录同步；路线仍按需通过 `TownRoadViewPacket` 获取。
 
 连接状态变更发送建筑可用性事件，并通过 `ITownBuilding.CODEC` 同步给客户端。
 `connectedToTower` 只表示真实连到本队塔，`connectivityWorkable` 表示通过连通集群规则获准工作；
-两者分别同步到客户端，磁盘恢复后重新计算。正常工作判定和非住宅每日工作入口要求
+两者分别同步到客户端，并随道路视图写入存档。正常工作判定和非住宅每日工作入口要求
 `connectivityWorkable`；住宅原有独立日结维护流程保留。
 后台请求在 30 秒未被服务时终止并记录失败，后续按正常间隔重试；被作废的批次不记录失败。
 

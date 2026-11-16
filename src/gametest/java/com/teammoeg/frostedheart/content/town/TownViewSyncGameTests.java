@@ -242,6 +242,38 @@ public final class TownViewSyncGameTests {
         } catch (RuntimeException | Error failure) { session.close(); throw failure; }
     }
 
+    /** A saved town keeps its road links and routes; the client copy gets the links with its buildings, no routes. */
+    @GameTest(template = "phase0a_empty", batch = "town_view_saved_roads", timeoutTicks = 200)
+    public static void savedTownKeepsItsRoadLinks(GameTestHelper helper) {
+        Session session = new Session(helper.getLevel(), helper.absolutePos(new BlockPos(2, 2, 2)), null);
+        try {
+            session.warm();
+            helper.startSequence().thenWaitUntil(() -> helper.assertTrue(
+                    session.scanWorks(session.housePos, session.warehousePos),
+                    "wait for the town's road scan to link the house and the warehouse")).thenExecute(() -> {
+                try {
+                    var ops = net.minecraft.nbt.NbtOps.INSTANCE;
+                    var view = session.data.connectivityView().view();
+                    TeamTownData restored = TeamTownData.CODEC.parse(ops,
+                            TeamTownData.CODEC.encodeStart(ops, session.data).getOrThrow(false, message -> {}))
+                            .getOrThrow(false, message -> {});
+                    helper.assertTrue(!view.routes().isEmpty() && restored.connectivityView().view().equals(view),
+                            "a saved town keeps its road view, routes included");
+                    helper.assertTrue(restored.buildings.get(session.housePos).isConnectivityWorkable()
+                                    && restored.buildings.get(session.warehousePos).isConnectivityWorkable(),
+                            "a saved town keeps its buildings' links");
+                    TeamTownData client = TeamTownData.MANAGEMENT_CODEC.parse(ops,
+                            TeamTownData.MANAGEMENT_CODEC.encodeStart(ops, session.data).getOrThrow(false, message -> {}))
+                            .getOrThrow(false, message -> {});
+                    helper.assertTrue(client.buildings.get(session.warehousePos).isConnectivityWorkable()
+                                    && client.connectivityView().view().routes().isEmpty(),
+                            "the client copy gets the links with its buildings and no routes");
+                    helper.succeed();
+                } finally { session.close(); }
+            });
+        } catch (RuntimeException | Error failure) { session.close(); throw failure; }
+    }
+
     @GameTest(template = "phase0a_empty", batch = "town_view_online_recovery", timeoutTicks = 80)
     public static void repeatedRequestsCoalesceAndAbsentViewsFinish(GameTestHelper helper) {
         Session session = new Session(helper.getLevel(), helper.absolutePos(new BlockPos(2, 2, 2)), null);

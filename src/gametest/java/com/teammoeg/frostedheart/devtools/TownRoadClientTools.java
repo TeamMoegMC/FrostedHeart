@@ -65,10 +65,22 @@ public final class TownRoadClientTools {
                     }
                     client.put("added",added);
                     if(added<4) throw new IllegalStateException("housing not ready: only added "+added);
-                } else if(!action.equals("status")) throw new IllegalArgumentException("roads setup|populate|status");
-                var connectivity=town.getTownData().orElseThrow().connectivityView();
+                } else if (action.startsWith("outpost")) {
+                    // A real house far from the fixture, so that part of the town can sit outside loaded terrain.
+                    String[] at=action.split("\\s+");
+                    int x=Integer.parseInt(at[1]), z=Integer.parseInt(at[2]);
+                    fill(level,new BlockPos(x-2,63,z-2),new BlockPos(x+8,63,z+8),Blocks.STONE.defaultBlockState());
+                    house(level,player,x,64,z,false);
+                } else if(!action.equals("status")) throw new IllegalArgumentException("roads setup|populate|outpost <x> <z>|status");
+                var data=town.getTownData().orElseThrow();
+                var connectivity=data.connectivityView();
                 client.put("workingBuildings",connectivity.view().working().size());
                 client.put("routes",connectivity.view().routes().size());
+                client.put("buildings",town.getTownBuildings().size());
+                client.put("linked",town.getTownBuildings().values().stream().filter(b->b.isConnectivityWorkable()).count());
+                client.put("working",connectivity.view().working().stream().sorted().map(BlockPos::toShortString).toList());
+                client.put("loaded",town.getTownBuildings().keySet().stream().sorted().map(p->p.toShortString()+"="
+                        +com.teammoeg.frostedheart.content.town.block.blockscanner.TownSectionSnapshots.isLoaded(level,p)).toList());
                 client.put("residents",town.getResidents().size());
                 List<Object> simulations=new ArrayList<>();
                 var scheduler=CitizenSimScheduler.get(level);
