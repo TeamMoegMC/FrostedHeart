@@ -139,6 +139,49 @@ public abstract class LevelRendererMixin {
     }
 
     /**
+     * Tints vanilla's moon by the calculated sky's moon color. The call sets the color of the sun and the moon, and
+     * vanilla's sun has no size while the calculated sky is drawn.
+     */
+    @ModifyArg(method = "renderSky", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;setShaderColor(FFFF)V", ordinal = 2), index = 0)
+    private float frostedheart$tintMoonRed(float red) {
+        return CalculatedSkyRenderer.isDrawnThisFrame() ? red * CalculatedSkyRenderer.moonColor(0) : red;
+    }
+
+    @ModifyArg(method = "renderSky", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;setShaderColor(FFFF)V", ordinal = 2), index = 1)
+    private float frostedheart$tintMoonGreen(float green) {
+        return CalculatedSkyRenderer.isDrawnThisFrame() ? green * CalculatedSkyRenderer.moonColor(1) : green;
+    }
+
+    @ModifyArg(method = "renderSky", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;setShaderColor(FFFF)V", ordinal = 2), index = 2)
+    private float frostedheart$tintMoonBlue(float blue) {
+        return CalculatedSkyRenderer.isDrawnThisFrame() ? blue * CalculatedSkyRenderer.moonColor(2) : blue;
+    }
+
+    /**
+     * Dims vanilla's stars by the calculated sky's star scale. Vanilla uses the star brightness as the color and the
+     * alpha of the stars, so each is scaled.
+     */
+    @ModifyArg(method = "renderSky", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;setShaderColor(FFFF)V", ordinal = 3), index = 0)
+    private float frostedheart$dimStarsRed(float red) {
+        return CalculatedSkyRenderer.isDrawnThisFrame() ? red * CalculatedSkyRenderer.starScale() : red;
+    }
+
+    @ModifyArg(method = "renderSky", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;setShaderColor(FFFF)V", ordinal = 3), index = 1)
+    private float frostedheart$dimStarsGreen(float green) {
+        return CalculatedSkyRenderer.isDrawnThisFrame() ? green * CalculatedSkyRenderer.starScale() : green;
+    }
+
+    @ModifyArg(method = "renderSky", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;setShaderColor(FFFF)V", ordinal = 3), index = 2)
+    private float frostedheart$dimStarsBlue(float blue) {
+        return CalculatedSkyRenderer.isDrawnThisFrame() ? blue * CalculatedSkyRenderer.starScale() : blue;
+    }
+
+    @ModifyArg(method = "renderSky", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;setShaderColor(FFFF)V", ordinal = 3), index = 3)
+    private float frostedheart$dimStarsAlpha(float alpha) {
+        return CalculatedSkyRenderer.isDrawnThisFrame() ? alpha * CalculatedSkyRenderer.starScale() : alpha;
+    }
+
+    /**
      * Always use rain rendering.
      *
      * @author alcatrazEscapee

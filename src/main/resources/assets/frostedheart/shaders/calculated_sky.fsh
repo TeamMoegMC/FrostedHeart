@@ -33,6 +33,8 @@ uniform float haloElevationSpan;
 uniform vec3 fogColor;
 uniform float rainLevel;
 uniform float thunderLevel;
+// Linear per channel, as NightSkyDimming.floorColor gives it:
+uniform vec3 nightFloor;
 
 in vec2 texCoord;
 out vec4 fragColor;
@@ -43,6 +45,11 @@ const float HORIZON_FADE = 0.08;
 vec3 encodeSrgb(vec3 linear) {
     vec3 clamped = clamp(linear, 0.0, 1.0);
     return mix(clamped * 12.92, 1.055 * pow(clamped, vec3(1.0 / 2.4)) - 0.055, step(0.0031308, clamped));
+}
+
+// Same as SkyDisplay.withFloor, so a black sky shows the night floor and a white one stays white:
+vec3 withFloor(vec3 toneMapped) {
+    return 1.0 - (1.0 - toneMapped) * (1.0 - nightFloor);
 }
 
 float interleavedGradientNoise(vec2 pixel) {
@@ -136,11 +143,11 @@ void main() {
     vec3 sunRadiance = sunScale * sunCoverage(pixelDirection, pixelAngle) * mix(lowDepthSun, highDepthSun, depthBlend)
             * lightScale;
 
-    vec3 color = encodeSrgb(1.0 - exp(-exposure * max(radiance, vec3(0.0))));
+    vec3 color = encodeSrgb(withFloor(1.0 - exp(-exposure * max(radiance, vec3(0.0)))));
     vec3 sunAdded = vec3(0.0);
     if (any(greaterThan(sunRadiance, vec3(0.0)))) {
         // In clear weather the sun adds what it adds to the sky's radiance, and as the rain level rises its own display, as vanilla adds its sun:
-        vec3 litColor = encodeSrgb(1.0 - exp(-exposure * max(radiance + sunRadiance, vec3(0.0))));
+        vec3 litColor = encodeSrgb(withFloor(1.0 - exp(-exposure * max(radiance + sunRadiance, vec3(0.0)))));
         vec3 sunColor = encodeSrgb(1.0 - exp(-exposure * sunRadiance));
         sunAdded = mix(litColor - color, sunColor, rainLevel);
     }

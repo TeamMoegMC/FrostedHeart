@@ -46,6 +46,24 @@ final class SkyDisplay {
     }
 
     /**
+     * The linear value of an sRGB encoded value, clamped to the range from 0 to 1.
+     */
+    static double decodeSrgb(double encoded) {
+        double clamped = Math.max(0.0, Math.min(1.0, encoded));
+        if (clamped <= 0.04045) {
+            return clamped / 12.92;
+        }
+        return Math.pow((clamped + 0.055) / 1.055, 2.4);
+    }
+
+    /**
+     * The tone mapped value lifted by a floor, so that a radiance of 0 shows the floor and 1 stays 1.
+     */
+    static double withFloor(double toneMapped, double floor) {
+        return 1.0 - (1.0 - toneMapped) * (1.0 - floor);
+    }
+
+    /**
      * The displayed value of a radiance, from 0 to 1.
      */
     static double displayValue(double exposure, double radiance) {

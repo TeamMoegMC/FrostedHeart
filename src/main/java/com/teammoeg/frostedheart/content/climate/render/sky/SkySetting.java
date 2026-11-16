@@ -58,6 +58,12 @@ public enum SkySetting {
             -18.0, -2.0),
     MOONLIGHT_FADE_DEGREES("moonlightFadeDegrees", "Degrees the sun sinks below moonlightSwitchDegrees while the "
             + "moon's light fades in, and rises before dawn while it fades out.", Rebuilds.NOTHING, 4.0, 0.0, 30.0),
+    NIGHT_SKY_FLOOR("nightSkyFloor", "Displayed brightness of a sky with no light at all, such as a night without a "
+            + "moon, in the sky and the fog, tinted like moonlight. Lighter skies take less of it. 0 leaves the night "
+            + "black.", Rebuilds.NOTHING, 0.04, 0.0, 0.25),
+    STAR_TWILIGHT_DISPLAY("starTwilightDisplay", "Displayed brightness of the sky overhead at which the stars are gone. "
+            + "Stars fade as the sky overhead grows brighter toward it, at dusk and a little under a full moon.",
+            Rebuilds.NOTHING, 0.25, 0.01, 1.0),
     PILLAR_BRIGHTNESS("pillarBrightness", "Brightness of light pillars, as a factor on their calibrated brightness.",
             Rebuilds.NOTHING, 0.3, 0.0, 10.0),
     PILLAR_NEAR_FADE("pillarNearFade", "Distance in blocks from the eye beyond which ice crystals fully show light "

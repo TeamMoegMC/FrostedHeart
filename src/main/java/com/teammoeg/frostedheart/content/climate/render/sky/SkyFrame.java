@@ -29,7 +29,7 @@ import net.minecraftforge.fml.common.Mod;
 
 /**
  * What the calculated sky draws from in one frame, which is the light, the ice optical depth, the grid indices they
- * call for, the diamond dust, the exposure, and the weather. It is filled at its first use in a frame and reused by the
+ * call for, the diamond dust, the exposure, the night sky floor, and the weather. It is filled at its first use in a frame and reused by the
  * draw, the fog color, the daylight, and CalculatedSkyRenderer.isSettled, so the renderer calls IceWeatherDepth.update
  * and DiamondDustExtinction.update once per frame.
  * A new frame begins with each render tick, and a call with another partial tick fills it again. Render thread only.
@@ -51,6 +51,7 @@ public final class SkyFrame {
     private int viewIndex;
     private double dustExtinction;
     private double exposure;
+    private final double[] nightFloor = new double[SkyAtmosphere.CHANNEL_COUNT];
     private float rainLevel;
     private float thunderLevel;
 
@@ -94,6 +95,7 @@ public final class SkyFrame {
         viewIndex = SkyBuilder.viewGridIndex(light.elevationRadians());
         dustExtinction = DiamondDustExtinction.update(partialTick);
         exposure = SkySetting.EXPOSURE.get();
+        NightSkyDimming.floorColor(SkySetting.NIGHT_SKY_FLOOR.get(), SkySetting.MOONLIGHT_BLUE_SHIFT.get(), nightFloor);
         rainLevel = level.getRainLevel(partialTick);
         thunderLevel = level.getThunderLevel(partialTick);
         stale = false;
@@ -143,6 +145,14 @@ public final class SkyFrame {
 
     public double exposure() {
         return exposure;
+    }
+
+    /**
+     * The floor of the night sky as a linear value per channel, as NightSkyDimming.floorColor gives it. The array is
+     * reused by the next frame.
+     */
+    public double[] nightFloor() {
+        return nightFloor;
     }
 
     public float rainLevel() {

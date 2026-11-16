@@ -43,6 +43,10 @@ public final class SkyViewSet {
      * A light scale of 1 in every channel. Never written.
      */
     private static final double[] FULL_LIGHT = {1.0, 1.0, 1.0};
+    /**
+     * A night sky floor of 0 in every channel. Never written.
+     */
+    private static final double[] NO_FLOOR = {0.0, 0.0, 0.0};
 
     private final SkyView[] views = new SkyView[VIEW_COUNT];
 
@@ -104,22 +108,63 @@ public final class SkyViewSet {
     }
 
     /**
-     * Writes the displayed sky color at the horizon into the result, tone mapped and grayed as calculated_sky.fsh does.
-     * Single scattering by ice is left out, so the color stays smooth near the sun and across halo arcs.
-     * A horizontal fraction of 1 uses the given azimuth, and 0 uses the mean over all azimuths.
-     * The light scale multiplies each channel of the radiance before the tone map, as SkyLight.radianceScale gives it.
+     * Writes the displayed sky color at the horizon into the result with no night sky floor, as the other form does.
      */
     public void horizonDisplayColor(double sunWeight, double depthWeight, double azimuth, double horizontalFraction,
             double exposure, double[] lightScale, float rainLevel, float thunderLevel, float[] result) {
+        horizonDisplayColor(sunWeight, depthWeight, azimuth, horizontalFraction, exposure, lightScale, NO_FLOOR,
+                rainLevel, thunderLevel, result);
+    }
+
+    /**
+     * Writes the displayed sky color at the horizon into the result, tone mapped, lifted by the night sky floor, and
+     * grayed as calculated_sky.fsh does. Single scattering by ice is left out, so the color stays smooth near the sun
+     * and across halo arcs. A horizontal fraction of 1 uses the given azimuth, and 0 uses the mean over all azimuths.
+     * The light scale multiplies each channel of the radiance before the tone map, as SkyLight.radianceScale gives it.
+     * The floor is linear per channel, as NightSkyDimming.floorColor gives it.
+     */
+    public void horizonDisplayColor(double sunWeight, double depthWeight, double azimuth, double horizontalFraction,
+            double exposure, double[] lightScale, double[] floor, float rainLevel, float thunderLevel,
+            float[] result) {
         for (int channel = 0; channel < CHANNELS; channel++) {
             double radiance = blend(views[slot(0, 0)].horizonRadiance(channel, azimuth, horizontalFraction),
                     views[slot(0, 1)].horizonRadiance(channel, azimuth, horizontalFraction),
                     views[slot(1, 0)].horizonRadiance(channel, azimuth, horizontalFraction),
                     views[slot(1, 1)].horizonRadiance(channel, azimuth, horizontalFraction), sunWeight, depthWeight);
-            result[channel] = (float) SkyDisplay.displayValue(exposure, radiance * lightScale[channel]);
+            double toneMapped = SkyDisplay.toneMap(exposure, radiance * lightScale[channel]);
+            result[channel] = (float) SkyDisplay.encodeSrgb(SkyDisplay.withFloor(toneMapped, floor[channel]));
         }
         greyByWeather(result, 0.6F, rainLevel);
         greyByWeather(result, 0.2F, thunderLevel);
+    }
+
+    /**
+     * The displayed luminance of the sky straight overhead, tone mapped as calculated_sky.fsh does, without the night
+     * sky floor and the weather. The ice scatters by the tumbling crystals of the profile at the angle between the
+     * zenith and the view's light, but at least 45 degrees, so the light's own glare does not count.
+     */
+    public double zenithDisplayLuminance(double sunWeight, double depthWeight, double exposure, double[] lightScale,
+            IceHaloProfile haloProfile) {
+        double red = zenithDisplayValue(0, sunWeight, depthWeight, exposure, lightScale, haloProfile);
+        double green = zenithDisplayValue(1, sunWeight, depthWeight, exposure, lightScale, haloProfile);
+        double blue = zenithDisplayValue(2, sunWeight, depthWeight, exposure, lightScale, haloProfile);
+        return NightSkyDimming.displayLuminance(red, green, blue);
+    }
+
+    private double zenithDisplayValue(int channel, double sunWeight, double depthWeight, double exposure,
+            double[] lightScale, IceHaloProfile haloProfile) {
+        double radiance = blend(zenithRadiance(views[slot(0, 0)], channel, haloProfile),
+                zenithRadiance(views[slot(0, 1)], channel, haloProfile),
+                zenithRadiance(views[slot(1, 0)], channel, haloProfile),
+                zenithRadiance(views[slot(1, 1)], channel, haloProfile), sunWeight, depthWeight);
+        return SkyDisplay.displayValue(exposure, radiance * lightScale[channel]);
+    }
+
+    private static double zenithRadiance(SkyView view, int channel, IceHaloProfile haloProfile) {
+        double zenith = Math.PI / 2.0;
+        double lightCosine = Math.min(Math.sin(view.sunElevationRadians()), NightSkyDimming.STAR_PATH_SINE);
+        return SkyView.sample(view.sky(), channel, 0.0, zenith)
+                + haloProfile.phase(channel, lightCosine, 0.0) * SkyView.sample(view.ice(), channel, 0.0, zenith);
     }
 
     /**

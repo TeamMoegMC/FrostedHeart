@@ -46,8 +46,9 @@ import java.nio.FloatBuffer;
 import java.util.concurrent.CompletionException;
 
 /**
- * Draws the calculated sky and its sun over the vanilla sky dome, before vanilla draws the moon and stars, and gives
- * the fog color and the daylight of the same sky. SkyBuilder builds what it is drawn from and SkyTextures holds it on
+ * Draws the calculated sky and its sun over the vanilla sky dome, before vanilla draws the moon and stars, which
+ * LevelRendererMixin dims by the factors of NightSkyDimming set here, and gives the fog color and the daylight of the
+ * same sky. SkyBuilder builds what it is drawn from and SkyTextures holds it on
  * the GPU. The two of each around the light's elevation and the ice depth of IceWeatherDepth are blended by their exact
  * values. The light is the sun by day and the moon at night, as MoonLight chooses it.
  */
@@ -76,6 +77,7 @@ public final class CalculatedSkyRenderer {
     private static final float[] reusedFogColor = new float[CHANNELS];
     private static final double[] reusedLightScale = new double[CHANNELS];
     private static final int[] drawnTextures = new int[TEXTURE_UNITS];
+    private static final float[] moonColor = new float[CHANNELS];
 
     @Nullable
     private static ShaderProgram program;
@@ -99,6 +101,8 @@ public final class CalculatedSkyRenderer {
     private static int fogColorUniform;
     private static int rainLevelUniform;
     private static int thunderLevelUniform;
+    private static int nightFloorUniform;
+    private static float starScale = 1.0F;
     private static boolean failed;
     private static boolean sunDrawn;
     private static long drawnFrameNumber = -1;
@@ -172,11 +176,44 @@ public final class CalculatedSkyRenderer {
             } finally {
                 timer.end();
             }
+            updateNightSky(current, frame);
             sunDrawn = true;
             drawnFrameNumber = SkyFrame.frameNumber();
         } catch (RuntimeException exception) {
             fail("drawing", exception);
         }
+    }
+
+    /**
+     * The factor on vanilla's star brightness in the current frame, as NightSkyDimming.starScale gives it. Only valid
+     * while isDrawnThisFrame is true.
+     */
+    public static float starScale() {
+        return starScale;
+    }
+
+    /**
+     * The factor on a channel of vanilla's moon sprite in the current frame, as NightSkyDimming.moonColor gives it.
+     * Only valid while isDrawnThisFrame is true.
+     */
+    public static float moonColor(int channel) {
+        return moonColor[channel];
+    }
+
+    /**
+     * Sets the star scale and the moon color for the frame from the drawn state. The moon stands opposite the sun.
+     */
+    private static void updateNightSky(SkyState current, SkyFrame frame) {
+        double depthWeight = depthBlend(current, frame);
+        double zenithDisplay = current.views().zenithDisplayLuminance(viewBlend(current, frame), depthWeight,
+                frame.exposure(), lightScale(current, frame), current.haloProfile());
+        starScale = (float) NightSkyDimming.starScale(frame.iceDepth(), zenithDisplay,
+                SkySetting.STAR_TWILIGHT_DISPLAY.get());
+        SkyLight light = frame.light();
+        double moonElevation = light.kind() == SkyLight.Kind.MOON ? light.elevationRadians()
+                : -light.elevationRadians();
+        NightSkyDimming.moonColor(current.lowDepthTables(), current.highDepthTables(), depthWeight, moonElevation,
+                frame.exposure(), moonColor);
     }
 
     /**
@@ -194,8 +231,8 @@ public final class CalculatedSkyRenderer {
         double horizontalFraction = Math.min(1.0, Math.sqrt(look.x() * look.x() + look.z() * look.z()));
         double azimuth = Math.atan2(look.z(), look.x() * frame.light().side());
         current.views().horizonDisplayColor(viewBlend(current, frame), depthBlend(current, frame), azimuth,
-                horizontalFraction, frame.exposure(), lightScale(current, frame), frame.rainLevel(),
-                frame.thunderLevel(), reusedFogColor);
+                horizontalFraction, frame.exposure(), lightScale(current, frame), frame.nightFloor(),
+                frame.rainLevel(), frame.thunderLevel(), reusedFogColor);
         return reusedFogColor;
     }
 
@@ -348,6 +385,8 @@ public final class CalculatedSkyRenderer {
             GL20.glUniform3f(fogColorUniform, fogColor[0], fogColor[1], fogColor[2]);
             GL20.glUniform1f(rainLevelUniform, frame.rainLevel());
             GL20.glUniform1f(thunderLevelUniform, frame.thunderLevel());
+            double[] nightFloor = frame.nightFloor();
+            GL20.glUniform3f(nightFloorUniform, (float) nightFloor[0], (float) nightFloor[1], (float) nightFloor[2]);
             SkyGlPass.drawFullScreenQuad();
         } finally {
             pass.end();
@@ -390,6 +429,7 @@ public final class CalculatedSkyRenderer {
         fogColorUniform = GL20.glGetUniformLocation(programId, "fogColor");
         rainLevelUniform = GL20.glGetUniformLocation(programId, "rainLevel");
         thunderLevelUniform = GL20.glGetUniformLocation(programId, "thunderLevel");
+        nightFloorUniform = GL20.glGetUniformLocation(programId, "nightFloor");
     }
 
     private static ShaderProgram program() {
