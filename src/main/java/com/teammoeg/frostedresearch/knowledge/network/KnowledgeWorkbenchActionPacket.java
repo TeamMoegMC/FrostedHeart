@@ -55,7 +55,7 @@ import net.minecraftforge.network.NetworkEvent;
 public final class KnowledgeWorkbenchActionPacket implements CMessage {
     public enum Action {
         REFRESH, LEARN, DELETE, PREVIEW_LINK, LINK, CANCEL_LINK, RETRIEVE, EXPORT, DREAM_TOPIC, DISCUSS,
-        START_RESEARCH, SUBMIT_EVIDENCE, CALCULATE, STOP_CALCULATION, COMPLETE_RESEARCH, ABANDON_RESEARCH, SUBMIT_SAMPLE, ADVANCE_STAGE, START_AIRFLOW, ROTATE_AIRFLOW, RESET_AIRFLOW
+        START_RESEARCH, SUBMIT_EVIDENCE, CALCULATE, STOP_CALCULATION, COMPLETE_RESEARCH, ABANDON_RESEARCH, SUBMIT_SAMPLE, ADVANCE_STAGE, START_AIRFLOW, ROTATE_AIRFLOW, RESET_AIRFLOW, DIG_AIRFLOW
     }
 
     public static final int REQUIREMENT_LIMIT = 64;
@@ -182,14 +182,20 @@ public final class KnowledgeWorkbenchActionPacket implements CMessage {
                     boolean invited = keys.size() == 1 && partner != null && KnowledgeDiscussion.invite(player, partner, keys.get(0));
                     response.putString("message", invited ? "discussion.invited" : "discussion.unavailable");
                 }
-                case START_AIRFLOW, ROTATE_AIRFLOW, RESET_AIRFLOW -> {
+                case START_AIRFLOW, ROTATE_AIRFLOW, RESET_AIRFLOW, DIG_AIRFLOW -> {
                     boolean accepted;
                     if(action==Action.START_AIRFLOW) accepted=desk.startAirflow(player,run(),requirement);
                     else {
-                        int cell=-1;try { cell=Integer.parseInt(title); } catch(NumberFormatException ignored) {}
-                        accepted=desk.rotateAirflow(player,run(),requirement,cell,action==Action.RESET_AIRFLOW);
+                        var strokes=new java.util.ArrayList<com.teammoeg.frostedresearch.knowledge.game.AirflowGame.Stroke>();
+                        if(action==Action.DIG_AIRFLOW) for(String segment:remarks.split(";",33)) {
+                            String[] ends=segment.split(":",2);
+                            if(ends.length==2) try { strokes.add(new com.teammoeg.frostedresearch.knowledge.game.AirflowGame.Stroke(Integer.parseInt(ends[0]),Integer.parseInt(ends[1]))); }
+                            catch(NumberFormatException ignored) {}
+                            if(strokes.size()==32) break;
+                        }
+                        accepted=action!=Action.ROTATE_AIRFLOW && desk.editAirflow(player,run(),requirement,strokes,action==Action.RESET_AIRFLOW);
                     }
-                    if(accepted || action==Action.START_AIRFLOW) response.put("airflow",desk.airflowView());
+                    response.put("airflow",desk.airflowView());
                     response.putString("message",accepted ? "research.airflow_updated" : "research.unchanged");
                 }
                 case ADVANCE_STAGE -> {

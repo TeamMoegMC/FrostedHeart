@@ -52,7 +52,7 @@
 | 观察物品、方块或实体 | `item_retrieval`、`observation.condition`、`experiment`、`team_current_run`；观察字段条件写在[身份与观察快照](definitions.md#身份与观察快照) | 实验或对象的特殊快照值需要已有观察/任务接点写入；土制炉通过 `item.trial_kiln_variant` 识别烧后配比 | 新观察字段的采集器、特殊检视方式或新任务证明机制 |
 | 比较多份观察证据 | `type: "evidence"` 的 `inputs`、`conditions`、`distinct`；支持已有跨记录关系，见[定义参考](definitions.md) | 所需时空、环境或扩展值必须已被采集 | 尚未支持的跨记录比较或新采样字段 |
 | 实验台计时与材料 | `type: "experiment"` 的 `duration`、`materials`、`space`；见[定义参考](definitions.md)中的 cold_trial 范例 | 需有实验台实际执行实验并提交进度 | 新实验设备或不同于现有实验台的运行规则 |
-| 演算与已有小游戏 | `type: "calculation"` 的 `level`、`count` 使用旧连连看；`type: "minigame"` 的 `game` 当前支持 `frostedresearch:airflow` | 已有游戏不需新增接点 | 新游戏实现及任务、界面接入 |
+| 演算与已有小游戏 | `type: "calculation"` 的 `level`、`count` 使用旧连连看；`type: "minigame"` 的 `game` 当前支持 `frostedresearch:airflow`，即绘图台28×28挖掘风道 | 已有游戏不需新增接点 | 新游戏实现及任务、界面接入 |
 | 通用控温试验与批量生产 | `frostedresearch:controlled_firing` 配方定义材料、燃料、温度、时长和成功/失败产物；见[控温实验炉](controlled-furnace.md) | 绑定任务的 experiment 必须与设备配方对应 | 尚未支持的设备操作、工艺参数或结果机制 |
 | 消耗绑定物品 | `type: "sample"` 的 `sample.experiment`、`sample.item`；见 [旧 sample 示例](example-datapack/data/example/frostedresearch/knowledge/projects/trial_kiln.json) | 设备需能制作并绑定该试验物品 | 新绑定方式或不同提交/消耗规则 |
 | 研究完成后的权限 | `results` 引用成果；成果可声明当前支持的 Design 等 effect，见 [followup_finding](example-datapack/data/example/frostedresearch/knowledge/results/followup_finding.json) | 配方或机器须调用已有权限检查 | 新权限种类或尚未接入检查的设备 |

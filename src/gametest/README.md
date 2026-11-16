@@ -74,6 +74,12 @@ instance. Normal `jar` excludes the helper. See the [M3-C handoff](../../diary/2
 for setup, evidence paths and the distinction between callback tests, full-pack loading and physical input.
 
 The opt-in M4 client helper also supports `-Dfrostedresearch.m4Validation=true -Dfrostedresearch.m4DeskOnly=true`.
-It creates a fresh full-pack fixture world, opens the formal project, solves airflow through the desk buttons,
+It creates a fresh full-pack fixture world, opens the formal project, excavates airflow through the actual screen's press/drag/release handlers,
 checks Esc/button return and retained board state, then exits. It covers the airflow stage only, not the later
 prototype trial or survival materials. Output is `<frostedresearch.m4Root>/build/m4-client/`.
+
+For a running Prism launcher, the helper also accepts an instance-local `research-client-m4-desk-check.txt` in the game directory.
+Its UTF-8 content is the absolute output root; it enables the M4 desk-only check without changing JVM arguments.
+Remove this temporary opt-in and the helper JAR after checking. Ordinary production JARs include neither the helper nor its opt-in loader.
+`AirflowExcavationGameTests` covers immutable furnace walls, required charcoal passage, fast-stroke interpolation,
+partial/completed saves, and old rotating-board replacement; the formal Charcoal Pit tests continue through prototype access and blowing.

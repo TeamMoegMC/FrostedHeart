@@ -170,6 +170,7 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
 
     public void closeAirflow() {
         if (airflow == null) return;
+        airflow.flushPending();
         airflow = null;
         knowledgeOpen = true;
         p.refresh();
@@ -178,9 +179,10 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
     }
 
     public boolean receiveAirflowReply(CompoundTag payload) {
-        if (airflow == null || !java.util.Set.of("START_AIRFLOW", "ROTATE_AIRFLOW", "RESET_AIRFLOW").contains(payload.getString("action"))) return false;
+        if (airflow == null || !java.util.Set.of("START_AIRFLOW", "ROTATE_AIRFLOW", "RESET_AIRFLOW", "DIG_AIRFLOW").contains(payload.getString("action"))) return false;
+        boolean wasWon = airflow.won();
         airflow.receive(payload);
-        p.refresh();
+        if (wasWon != airflow.won()) p.refresh();
         return true;
     }
 
@@ -266,6 +268,7 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
 
 	@Override
 	public void onClosed() {
+		if (airflow != null) airflow.flushPending();
 		restoreExternalWidgets();
 		super.onClosed();
 	}

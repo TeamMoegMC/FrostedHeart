@@ -64,11 +64,10 @@ public final class M7ClientValidation {
     private static final ResourceLocation RESULT = id("the_winter_rescue:iron_bloomery_design"), PROTOTYPE = id("the_winter_rescue:research/prototype_tuyere");
     private static final ResourceLocation BLOOMERY = id("the_winter_rescue:research/main_bloomery"), TUYERE = id("the_winter_rescue:research/sandy_tuyere");
     private static final BlockPos DESK = new BlockPos(0,64,-2), BELLOWS = new BlockPos(-2,64,2), TARGET = BELLOWS.east();
-    private static final int[] SOLUTION = {0,6,12,10,9,3,0,0,0};
     private static final long START = System.nanoTime();
     private static final Map<String,Object> facts = Collections.synchronizedMap(new LinkedHashMap<>());
     private static Path session;
-    private static int phase, ticks, rotations, originalScale;
+    private static int phase, ticks, strokes, originalScale;
     private static String originalLanguage;
     private static boolean captured, originalPause, peerFocused;
     private static volatile boolean busy, finished, partyReady, sameTeam, peerOnline, placedVerified, blowArmed, blown, finalVerified, duplicateVerified;
@@ -77,7 +76,7 @@ public final class M7ClientValidation {
     private static volatile long clickAt = -1;
     private static volatile Throwable failure;
     private static UUID run, firstRun;
-    private static int[] waitingMasks;
+    private static int[] waitingDug;
     private static DrawDeskScreen desk;
     private static KnowledgeLayer layer;
     private static java.util.concurrent.CompletableFuture<Void> reload;
@@ -149,13 +148,18 @@ public final class M7ClientValidation {
         mc().player.setXRot((float)-Math.toDegrees(Math.atan2(delta.y,Math.sqrt(delta.x*delta.x+delta.z*delta.z))));
     }
     private static boolean solve() throws Exception {
-        var board=Objects.requireNonNull(desk.getAirflowPanel()).board();int[] masks=board.getIntArray("masks");
+        var board=Objects.requireNonNull(desk.getAirflowPanel()).board();int[] dug=board.getIntArray("dug");
         if(board.getBoolean("won")) return current()!=null && current().stage().ready();
-        if(masks.length!=9 || (waitingMasks!=null && Arrays.equals(masks,waitingMasks)))return false;
-        var buttons=desk.getAirflowPanel().getElements().stream().filter(JournalButton.class::isInstance).map(JournalButton.class::cast)
-            .filter(b -> b.getWidth()==30 && b.getHeight()==30).sorted(Comparator.comparingInt(JournalButton::getY).thenComparingInt(JournalButton::getX)).toList();
-        require(buttons.size()==9,"airflow cells");
-        for(int i=0;i<9;i++)if(masks[i]!=SOLUTION[i]) {waitingMasks=masks.clone();press(buttons.get(i));rotations++;break;}
+        if(!board.contains("cells") || (waitingDug!=null && Arrays.equals(dug,waitingDug)))return false;
+        var canvas=desk.getAirflowPanel().getElements().stream().filter(e -> e.getWidth()==112 && e.getHeight()==112).findFirst().orElseThrow();
+        boolean horizontal=board.getIntArray("cells")[20*28+18]==0;
+        int left=(mc().getWindow().getGuiScaledWidth()-desk.getWidth())/2,top=(mc().getWindow().getGuiScaledHeight()-desk.getHeight())/2;
+        double x=left+canvas.getScreenX()+(horizontal?0:18)*4+2, y=top+canvas.getScreenY()+20*4+2;
+        double tx=left+canvas.getScreenX()+18*4+2, ty=top+canvas.getScreenY()+(horizontal?20:14)*4+2;
+        waitingDug=dug.clone();
+        require(mc().screen.mouseClicked(x,y,0),"excavation press");
+        require(mc().screen.mouseDragged(tx,ty,0,tx-x,ty-y),"excavation drag");
+        mc().screen.mouseReleased(tx,ty,0);strokes++;
         return false;
     }
     /** Same integrated login/network service as LAN; loopback binding and no LAN advertisement are deliberate fixture settings. */
@@ -296,7 +300,7 @@ public final class M7ClientValidation {
             }
             case 20 -> {if(!step("peer","reconnected-checked")||!peerOnline||logins<2)return;onServer(() -> {require(FTBTeamsAPI.api().getManager().arePlayersInSameTeam(host().getUUID(),peer().getUUID()),"party survives reconnect");service().forget(KnowledgeKey.result(RESULT));facts.put("fixture_forgot_design_for_second_run",true);TeamResearchService.send(host(),CTeamDataManager.get(host()));});next();}
             case 21 -> {if(ticks<20)return;focus();if(!project().startStatus().equals("LEARNABLE"))return;click("research.start");next();}
-            case 22 -> {if(ticks<20||project().openRun().isBlank()||project().openRun().equals(firstRun.toString()))return;run=UUID.fromString(project().openRun());waitingMasks=null;signal("airflow2");click("research.airflow_start");next();}
+            case 22 -> {if(ticks<20||project().openRun().isBlank()||project().openRun().equals(firstRun.toString()))return;run=UUID.fromString(project().openRun());waitingDug=null;signal("airflow2");click("research.airflow_start");next();}
             case 23 -> {if(ticks<5)return;if(!solve()){ticks=0;return;}click("research.airflow_back");next();}
             case 24 -> {if(ticks<20||!step("peer","second-seen"))return;signal("advance2");click("research.advance_stage");next();}
             case 25 -> {
@@ -308,7 +312,7 @@ public final class M7ClientValidation {
             }
             case 26 -> {if(ticks<20||current()==null||!current().status().equals("abandoned"))return;onServer(() -> require(rewards()==1&&!allowed(PROTOTYPE)&&!allowed(BLOOMERY)&&!allowed(TUYERE),"abandoned fixture leaves no new permission/reward"));signal("fixture-end");next();}
             case 27 -> {if(!step("peer","fixture-checked"))return;signal("finish");next();}
-            case 28 -> {if(!step("peer","passed")||peerOnline)return;facts.put("total_ui_rotations",rotations);finish(null);}
+            case 28 -> {if(!step("peer","passed")||peerOnline)return;facts.put("total_ui_excavation_strokes",strokes);finish(null);}
         }
     }
     private static void peerTick() throws Exception {

@@ -83,16 +83,23 @@ public class DrawingDeskTileEntity extends CBlockEntity implements MenuProvider 
         var service=com.teammoeg.frostedresearch.knowledge.KnowledgeService.forPlayer(player);
         if(!service.taskAvailable(run,task,com.teammoeg.frostedresearch.knowledge.definition.ProjectRequirement.Type.MINIGAME)) return false;
         var target=new com.teammoeg.frostedresearch.knowledge.experiment.ResearchSampleBinding(service.teamId(),run,task,new net.minecraft.resources.ResourceLocation("frostedresearch:airflow"));
-        if(!target.equals(airflowTarget)) { airflowTarget=target;airflow.reset(player.getRandom());setChanged(); }
+        if(!target.equals(airflowTarget)) { airflowTarget=target;airflow.reset();setChanged(); }
+        if(service.state().research().get(run).stageState().completedTasks().contains(task) && !airflow.won()) {
+            airflow.restoreCompletion();setChanged();
+        }
         return true;
     }
-    public boolean rotateAirflow(ServerPlayer player,UUID run,String task,int cell,boolean reset) {
+    public boolean editAirflow(ServerPlayer player,UUID run,String task,
+            java.util.List<com.teammoeg.frostedresearch.knowledge.game.AirflowGame.Stroke> strokes,boolean reset) {
         var service=com.teammoeg.frostedresearch.knowledge.KnowledgeService.forPlayer(player);
         if(airflowTarget==null || !airflowTarget.team().equals(service.teamId()) || !airflowTarget.run().equals(run)
             || !airflowTarget.requirement().equals(task) || !service.taskAvailable(run,task,com.teammoeg.frostedresearch.knowledge.definition.ProjectRequirement.Type.MINIGAME)) return false;
         var record=service.state().research().get(run);
         if(record.stageState().completedTasks().contains(task)) return false;
-        if(reset) airflow.reset(player.getRandom());else if(!airflow.rotate(cell)) return false;
+        boolean changed=reset;
+        if(reset) airflow.reset();
+        else for(var stroke:strokes) changed |= airflow.dig(stroke.from(),stroke.to());
+        if(!changed) return false;
         if(airflow.won()) service.recordMinigameWin(run,task,airflowTarget.experiment());
         setChanged();return true;
     }

@@ -67,10 +67,9 @@ public final class M4ClientValidation {
     private static final BlockPos BELLOWS = new BlockPos(-2, 64, 2);
     private static final BlockPos TARGET = BELLOWS.east();
     private static final BlockPos ORDINARY = new BlockPos(2, 64, 3);
-    private static final int[] SOLUTION = {0, 6, 12, 10, 9, 3, 0, 0, 0};
     private static final long START = System.nanoTime();
     private static final Map<String, Object> checks = Collections.synchronizedMap(new LinkedHashMap<>());
-    private static int phase, ticks, readingTicks, rotations, originalScale, originalFps;
+    private static int phase, ticks, readingTicks, strokes, originalScale, originalFps;
     private static boolean captured, originalPause;
     private static volatile boolean busy, finished, bellowsArmed, blown, observationArmed, observed;
     private static volatile long clickAt = -1, observationAt = -1;
@@ -80,8 +79,9 @@ public final class M4ClientValidation {
     private static UUID run;
     private static DrawDeskScreen desk;
     private static KnowledgeLayer layer;
-    private static int[] pendingMasks;
-    private static int[] reopenedMasks;
+    private static int[] pendingDug;
+    private static int[] reopenedDug;
+    private static boolean partialReopened;
     private static java.util.concurrent.CompletableFuture<Void> reload;
 
     private static ResourceLocation id(String text) { return new ResourceLocation(text); }
@@ -257,15 +257,28 @@ public final class M4ClientValidation {
     private static void observe(BlockPos pos) { FRNetwork.INSTANCE.sendToServer(new ObservationActionPacket(ObservationActionPacket.Action.BLOCK, pos, -1)); }
     private static void discard() { FRNetwork.INSTANCE.sendToServer(new ObservationActionPacket(ObservationActionPacket.Action.DISCARD)); }
     private static CompoundTag board() { return Objects.requireNonNull(desk.getAirflowPanel(), "desk airflow panel").board(); }
-    private static void rotateNext() throws Exception {
-        int[] masks = board().getIntArray("masks");
-        if (masks.length != 9 || (pendingMasks != null && Arrays.equals(masks, pendingMasks))) return;
-        pendingMasks = null;
-        var cells = desk.getAirflowPanel().getElements().stream().filter(JournalButton.class::isInstance).map(JournalButton.class::cast)
-            .filter(b -> b.getWidth() == 30 && b.getHeight() == 30).sorted(Comparator.comparingInt(JournalButton::getY).thenComparingInt(JournalButton::getX)).toList();
-        require(cells.size() == 9, "actual airflow UI cells");
-        for (int i = 0; i < 9; i++) if (masks[i] != SOLUTION[i]) { pendingMasks = masks.clone(); press(cells.get(i)); rotations++; return; }
-        throw new IllegalStateException("canonical pipe path is not accepted as connected");
+    private static void digNext() throws Exception {
+        int[] dug = board().getIntArray("dug");
+        if (!board().contains("cells") || (pendingDug != null && Arrays.equals(dug, pendingDug))) return;
+        var canvas = desk.getAirflowPanel().getElements().stream().filter(e -> e.getWidth() == 112 && e.getHeight() == 112).findFirst().orElseThrow();
+        boolean horizontal = board().getIntArray("cells")[20 * 28 + 18] == com.teammoeg.frostedresearch.knowledge.game.AirflowGame.SOIL;
+        int fromX = horizontal ? 0 : 18, fromY = 20, toX = 18, toY = horizontal ? 20 : 14;
+        var mc = Minecraft.getInstance();
+        int left = (mc.getWindow().getGuiScaledWidth() - desk.getWidth()) / 2;
+        int top = (mc.getWindow().getGuiScaledHeight() - desk.getHeight()) / 2;
+        double x = left + canvas.getScreenX() + fromX * 4 + 2, y = top + canvas.getScreenY() + fromY * 4 + 2;
+        double tx = left + canvas.getScreenX() + toX * 4 + 2, ty = top + canvas.getScreenY() + toY * 4 + 2;
+        pendingDug = dug.clone();
+        require(Minecraft.getInstance().screen.mouseClicked(x,y,0), "actual canvas accepts excavation press");
+        require(Minecraft.getInstance().screen.mouseDragged(tx,ty,0,tx-x,ty-y), "actual canvas accepts a fast drag stroke");
+        Minecraft.getInstance().screen.mouseReleased(tx,ty,0); strokes++;
+        int[] previewDug = ((com.teammoeg.frostedresearch.knowledge.game.AirflowGame)read(desk.getAirflowPanel(),"preview")).save().getIntArray("dug");
+        require(previewDug.length > dug.length, "screen input reaches the actual excavation canvas");
+        if (DESK_ONLY && !partialReopened) {
+            reopenedDug = previewDug; partialReopened = true; pendingDug = null;
+            desk.onKeyPressed(GLFW.GLFW_KEY_ESCAPE,1,0); click("research.airflow_start");
+            checks.put("partial_stroke_flushed_before_reopen", previewDug.length);
+        }
     }
     @SubscribeEvent public static void clientTick(TickEvent.ClientTickEvent event) {
         if (!ENABLED || finished || event.phase != TickEvent.Phase.END) return;
@@ -314,12 +327,12 @@ public final class M4ClientValidation {
                     if (!DESK_ONLY && !readingShots("02-airflow-stage")) return; click("research.airflow_start"); next();
                 }
                 case 6 -> {
-                    if (ticks < 15 || board().getIntArray("masks").length != 9) return;
+                    if (ticks < 15 || board().getIntArray("cells").length != 784) return;
                     require(!board().getBoolean("won"), "unsolved initial board"); shot("03-airflow-board");
                     if (DESK_ONLY) {
                         require(desk.getKnowledgeLayer() == null && desk.getWidth() == 387 && desk.getHeight() == 203, "old drawing-desk surface, not journal details");
                         var saved = board();
-                        reopenedMasks = saved.getIntArray("masks");
+                        reopenedDug = saved.getIntArray("dug");
                         desk.onKeyPressed(GLFW.GLFW_KEY_ESCAPE, 1, 0);
                         require(desk.getAirflowPanel() == null && desk.getKnowledgeLayer() == layer && (Boolean) read(layer,"projectDetails"), "Esc returns to same project details");
                         require((Integer) read(layer,"projectTab") == 2, "task tab retained");
@@ -330,15 +343,16 @@ public final class M4ClientValidation {
                 }
                 case 7 -> {
                     if (ticks < 5) return;
-                    if (reopenedMasks != null) {
-                        if (board().getIntArray("masks").length != 9) return;
-                        require(Arrays.equals(reopenedMasks,board().getIntArray("masks")), "reopening retains the server board");
-                        reopenedMasks = null; checks.put("board_retained_on_reopen",true);
+                    if (reopenedDug != null) {
+                        if (board().getIntArray("cells").length != 784) return;
+                        require(Arrays.equals(reopenedDug,board().getIntArray("dug")), "reopening retains the server board");
+                        reopenedDug = null; checks.put("board_retained_on_reopen",true);
                     }
                     if (board().getBoolean("won")) {
-                        if (!current().stage().ready()) return;
-                        checks.put("actual_ui_rotations", rotations); shot("04-airflow-won"); next();
-                    } else { rotateNext(); ticks = 0; }
+                        if (!current().stage().ready() || ticks < 35) return;
+                        require(Arrays.stream(board().getIntArray("path")).anyMatch(c -> com.teammoeg.frostedresearch.knowledge.game.AirflowGame.terrain(c) == 3), "verified wind route crosses the charcoal bed");
+                        checks.put("actual_ui_excavation_strokes", strokes); shot("04-airflow-won"); next();
+                    } else { digNext(); ticks = 0; }
                 }
                 case 8 -> {
                     if (ticks < 25) return; require(current().stage().id().equals("airflow"), "win does not auto-advance");
@@ -416,7 +430,15 @@ public final class M4ClientValidation {
         if (finished) return; finished = true; var mc = Minecraft.getInstance();
         try {
             Files.createDirectories(OUT); checks.put("status", error == null ? "passed" : "failed"); checks.put("phase", phase);
-            if (error != null) { Throwable root = error; while (root.getCause() != null) root = root.getCause(); checks.put("failure", root.toString()); }
+            if (error != null) {
+                Throwable root = error; while (root.getCause() != null) root = root.getCause(); checks.put("failure", root.toString());
+                if (desk != null && desk.getAirflowPanel() != null) {
+                    checks.put("last_dug_count", board().getIntArray("dug").length);
+                    checks.put("last_won", board().getBoolean("won"));
+                    checks.put("pending_strokes", ((java.util.Collection<?>)read(desk.getAirflowPanel(),"pending")).size());
+                    shot("failed");
+                }
+            }
             checks.put("mode", "formal-loaded-pack");
             checks.put("input", "UI callbacks and real inventory/block-use/observation C2S; fixture knowledge/materials; no physical keyboard/mouse or survival claim");
             checks.put("observation_scope", "BLOCK C2S and normal server sampling ticks; no synthetic record grant and no physical held-key/preview-UI claim");

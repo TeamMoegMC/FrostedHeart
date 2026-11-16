@@ -87,10 +87,9 @@ public final class TuyereResearchGameTests {
     static DrawingDeskTileEntity desk(GameTestHelper h,BlockPos local) { h.setBlock(local,FRContents.Blocks.DRAWING_DESK.get());return (DrawingDeskTileEntity)h.getBlockEntity(local); }
     static void solve(DrawingDeskTileEntity desk,Actor actor,UUID run) {
         if(!desk.startAirflow(actor.player,run,"airflow_win")) throw new IllegalStateException("Could not start actual airflow session");
-        int[] solved={0,6,12,10,9,3,0,0,0};
-        for(int cell:new int[]{3,4,1,2,5}) for(int rotation=0;rotation<4 && desk.airflowView().getIntArray("masks")[cell]!=solved[cell] && !desk.airflowView().getBoolean("won");rotation++)
-            desk.rotateAirflow(actor.player,run,"airflow_win",cell,false);
-        if(!desk.airflowView().getBoolean("won")) throw new IllegalStateException("Real rotations failed to solve airflow");
+        var strokes=List.of(new AirflowGame.Stroke(AirflowGame.INLET,20*28+18),new AirflowGame.Stroke(20*28+18,14*28+18));
+        desk.editAirflow(actor.player,run,"airflow_win",strokes,false);
+        if(!desk.airflowView().getBoolean("won")) throw new IllegalStateException("Real excavation failed to connect the charcoal bed");
     }
     static void placePrototype(GameTestHelper h,Actor actor,BlockPos local) {
         h.setBlock(local,FRContents.Blocks.PROTOTYPE_TUYERE.get());
@@ -99,7 +98,7 @@ public final class TuyereResearchGameTests {
     }
     static void guard(Scope scope,Runnable work) { try { work.run(); } catch(RuntimeException|Error error) { scope.close();throw error; } }
     @GameTest(batch="m4_formal_airflow",template="trial_kiln_empty",timeoutTicks=80)
-    public static void formalGroupsRealRotationsAndDeskPersistence(GameTestHelper h) {
+    public static void formalGroupsRealExcavationAndDeskPersistence(GameTestHelper h) {
         try(var scope=new Scope()) {
             install();var actor=scope.actor(h);var service=actor.service();
             h.assertTrue(service.startResearch(PROJECT).isEmpty(),"undiscovered formal project cannot start");
@@ -116,16 +115,16 @@ public final class TuyereResearchGameTests {
             UUID run=service.startResearch(PROJECT).orElseThrow();
             h.assertTrue(!TechnologyAccessResolver.project(actor.team).recipe(PROTOTYPE).allowed(),"prototype managed before airflow success");
             var desk=desk(h,new BlockPos(1,1,1));h.assertTrue(desk.startAirflow(actor.player,run,"airflow_win"),"formal minigame target starts");
-            h.assertTrue(!desk.airflowView().getBoolean("won") && !service.state().research().get(run).stageState().visits().get("airflow").ready(),"shuffled board is not an automatic win");
+            h.assertTrue(!desk.airflowView().getBoolean("won") && !service.state().research().get(run).stageState().visits().get("airflow").ready(),"unexcavated board is not an automatic win");
             var before=desk.airflowView();var saved=desk.saveWithFullMetadata();var reloaded=BlockEntity.loadStatic(desk.getBlockPos(),desk.getBlockState(),saved);
             h.getLevel().setBlockEntity(reloaded);desk=(DrawingDeskTileEntity)reloaded;
             h.assertTrue(desk.airflowView().equals(before) && desk.startAirflow(actor.player,run,"airflow_win"),"desk NBT reload and reopening preserve current board");
             solve(desk,actor,run);
             h.assertTrue(desk.getInventory().getStackInSlot(DrawingDeskTileEntity.PAPER_SLOT).isEmpty() && desk.getInventory().getStackInSlot(DrawingDeskTileEntity.INK_SLOT).isEmpty(),"airflow needs no paper/ink");
             h.assertTrue(TechnologyAccessResolver.project(actor.team).recipe(PROTOTYPE).allowed() && service.state().research().get(run).stageState().current().equals("airflow"),"real win immediately grants prototype without auto advance");
-            var history=service.state().research().get(run);desk.rotateAirflow(actor.player,run,"airflow_win",3,true);
+            var history=service.state().research().get(run);desk.editAirflow(actor.player,run,"airflow_win",List.of(),true);
             h.assertTrue(service.state().research().get(run).equals(history),"repeated winning game cannot duplicate task");
-            service.advanceStage(run,"airflow");h.assertTrue(!desk.rotateAirflow(actor.player,run,"airflow_win",3,false),"old desk callback cannot submit to later stage");
+            service.advanceStage(run,"airflow");h.assertTrue(!desk.editAirflow(actor.player,run,"airflow_win",List.of(new AirflowGame.Stroke(0,1)),false),"old desk callback cannot submit to later stage");
             h.assertTrue(LegacyResearchBridge.isReplaced("iron"),"single Design bridge validates both real recipe targets");
             h.succeed();
         }
