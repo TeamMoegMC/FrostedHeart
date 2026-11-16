@@ -29,6 +29,7 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.client.FHShaders;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -54,9 +55,10 @@ import java.util.Locale;
  * Draws the glints of diamond dust near the eye as one instanced draw of quads after the weather, in frames where the
  * calculated sky was drawn and there is diamond dust, for the field that DustGlitterField describes. The quads have no
  * vertex data, and diamond_dust.glsl places, moves, and lights each point's glint from its index with the sky's halo
- * profile and halo maps and the light's beam at the eye, so the moon's glints need nothing more. Each glint is a round
- * sprite with a Gaussian core of dustGlitterSize, which widens where it saturates and near the eye. They draw into the
- * main target with its depth test, so the scene hides them, add to it with a screen blend, and write no depth. They
+ * profile and halo maps and the light's beam at the eye, so the moon's glints need nothing more. A glint shows only
+ * above its column's first open height in DustColumns' texture, where its crystal could have fallen. Each glint is a
+ * round sprite with a Gaussian core of dustGlitterSize, which widens where it saturates and near the eye. They draw into
+ * the main target with its depth test, so the scene hides them, add to it with a screen blend, and write no depth. They
  * fade with the rain level. The clock of their lives follows time, stands still while the game is paused, and stays at
  * 0 while the screenshot harness takes shots. Render thread only.
  */
@@ -69,7 +71,8 @@ public final class DustGlitterRenderer {
     private static final int HALO_PROFILE_UNIT = 0;
     private static final int LOW_HALO_MAP_UNIT = 1;
     private static final int HIGH_HALO_MAP_UNIT = 2;
-    private static final int TEXTURE_UNITS = 3;
+    private static final int COLUMN_HEIGHTS_UNIT = 3;
+    private static final int TEXTURE_UNITS = 4;
     /**
      * The clock advances by at most this many seconds a frame, so it does not jump after a stall.
      */
@@ -79,6 +82,11 @@ public final class DustGlitterRenderer {
      */
     private static final float REFERENCE_WINDOW_HEIGHT = 1080.0F;
     private static final long NANOS_PER_SECOND = 1_000_000_000L;
+    /**
+     * The eye's height passed while dustGlitterOpenAir is off, which puts every glint above every column. Its negative
+     * hides every glint while the eye's column is outside the window, after a jump and before the next tick follows it.
+     */
+    private static final float ABOVE_EVERY_COLUMN = 2.0F * DustColumnWindow.CLOSED;
     private static final FloatBuffer matrixBuffer = BufferUtils.createFloatBuffer(16);
     private static final FloatBuffer lobeScaleBuffer = BufferUtils.createFloatBuffer(CHANNELS * KINDS);
     private static final IntBuffer viewportBuffer = BufferUtils.createIntBuffer(16);
@@ -153,7 +161,9 @@ public final class DustGlitterRenderer {
         viewProjection.set(event.getProjectionMatrix()).mul(event.getPoseStack().last().pose());
         timer.begin();
         try {
-            draw(state, frame, camera, count, (float) extinctionShare, (float) (dustBottomY - camera.y), gain);
+            int columnHeights = DustColumns.texture();
+            draw(state, frame, camera, columnHeights, count, (float) extinctionShare,
+                    (float) (dustBottomY - camera.y), gain);
         } finally {
             timer.end();
         }
@@ -191,8 +201,8 @@ public final class DustGlitterRenderer {
      * changes is set back after, with the framebuffer bound before, and vanilla's next immediate draw binds its own
      * vertex array again.
      */
-    private static void draw(SkyState state, SkyFrame frame, Vec3 camera, int count, float extinctionShare,
-            float dustBottomHeight, double gain) {
+    private static void draw(SkyState state, SkyFrame frame, Vec3 camera, int columnHeights, int count,
+            float extinctionShare, float dustBottomHeight, double gain) {
         RenderTarget mainTarget = Minecraft.getInstance().getMainRenderTarget();
         int previousProgram = GL11.glGetInteger(GL20.GL_CURRENT_PROGRAM);
         int previousFramebuffer = GL11.glGetInteger(GL30.GL_DRAW_FRAMEBUFFER_BINDING);
@@ -232,6 +242,7 @@ public final class DustGlitterRenderer {
             bindTexture(HALO_PROFILE_UNIT, CalculatedSkyRenderer.haloProfileTexture());
             bindTexture(LOW_HALO_MAP_UNIT, CalculatedSkyRenderer.haloMapTexture(0));
             bindTexture(HIGH_HALO_MAP_UNIT, CalculatedSkyRenderer.haloMapTexture(1));
+            bindTexture(COLUMN_HEIGHTS_UNIT, columnHeights);
             program.use(FHShaders.getDiamondDustVertex(), FHShaders.getDiamondDustFragment());
             program.setFrameUniforms(state, frame, camera, extinctionShare, dustBottomHeight, gain, mainTarget.width,
                     mainTarget.height);
@@ -311,6 +322,10 @@ public final class DustGlitterRenderer {
         private int haloBlendUniform;
         private int lobeScalesUniform;
         private int blurVarianceUniform;
+        private int windowOriginUniform;
+        private int eyeInWindowUniform;
+        private int eyeFractionUniform;
+        private int eyeYUniform;
 
         private void use(Shader newVertex, Shader newFragment) {
             if (program == null || vertex != newVertex || fragment != newFragment) {
@@ -346,6 +361,8 @@ public final class DustGlitterRenderer {
             GL20.glUniform1i(GL20.glGetUniformLocation(programId, "haloProfile"), HALO_PROFILE_UNIT);
             GL20.glUniform1i(GL20.glGetUniformLocation(programId, "lowHaloMap"), LOW_HALO_MAP_UNIT);
             GL20.glUniform1i(GL20.glGetUniformLocation(programId, "highHaloMap"), HIGH_HALO_MAP_UNIT);
+            GL20.glUniform1i(GL20.glGetUniformLocation(programId, "columnHeights"), COLUMN_HEIGHTS_UNIT);
+            GL20.glUniform1i(GL20.glGetUniformLocation(programId, "windowSize"), DustColumnWindow.SIZE);
             GL20.glUniform1f(GL20.glGetUniformLocation(programId, "haloLowestElevation"),
                     (float) IceHaloMap.LOWEST_ELEVATION);
             GL20.glUniform1f(GL20.glGetUniformLocation(programId, "haloElevationSpan"),
@@ -418,6 +435,10 @@ public final class DustGlitterRenderer {
             haloBlendUniform = GL20.glGetUniformLocation(programId, "haloBlend");
             lobeScalesUniform = GL20.glGetUniformLocation(programId, "lobeScales");
             blurVarianceUniform = GL20.glGetUniformLocation(programId, "blurVariance");
+            windowOriginUniform = GL20.glGetUniformLocation(programId, "windowOrigin");
+            eyeInWindowUniform = GL20.glGetUniformLocation(programId, "eyeInWindow");
+            eyeFractionUniform = GL20.glGetUniformLocation(programId, "eyeFraction");
+            eyeYUniform = GL20.glGetUniformLocation(programId, "eyeY");
         }
 
         /**
@@ -471,6 +492,23 @@ public final class DustGlitterRenderer {
             GL20.glUniform3fv(lobeScalesUniform, lobeScaleBuffer);
             double blurSigma = state.lowHalo().blurSigma();
             GL20.glUniform1f(blurVarianceUniform, (float) (blurSigma * blurSigma));
+            int originX = DustColumns.originX();
+            int originZ = DustColumns.originZ();
+            int eyeColumnX = Mth.floor(camera.x);
+            int eyeColumnZ = Mth.floor(camera.z);
+            GL20.glUniform2i(windowOriginUniform, DustColumnWindow.texelOfColumn(originX, 0),
+                    DustColumnWindow.texelOfColumn(originZ, 0));
+            GL20.glUniform2i(eyeInWindowUniform, eyeColumnX - originX, eyeColumnZ - originZ);
+            GL20.glUniform2f(eyeFractionUniform, (float) (camera.x - eyeColumnX), (float) (camera.z - eyeColumnZ));
+            float eyeY;
+            if (!SkySetting.DUST_GLITTER_OPEN_AIR.isOn()) {
+                eyeY = ABOVE_EVERY_COLUMN;
+            } else if (!DustColumns.covers(eyeColumnX, eyeColumnZ)) {
+                eyeY = -ABOVE_EVERY_COLUMN;
+            } else {
+                eyeY = (float) camera.y;
+            }
+            GL20.glUniform1f(eyeYUniform, eyeY);
         }
     }
 

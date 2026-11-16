@@ -1,6 +1,7 @@
 // FHShaders prepends the version line and defines VERTEX_SHADER or FRAGMENT_SHADER.
 // The glints of diamond dust near the eye, one instance of four corners per point with no vertex data, as DustGlitterField places, culls, and lights them.
 // Each point lives one life after another, each a crystal that starts at a hashed place in a cube of cellSize blocks repeating over the world, falls in a straight line, and is lit once.
+// A life shows only where its crystal could have fallen, at or above the first open height of its column at the middle of its lit window and where it is now.
 // The sky's ice phase toward a glint, as calculated_sky.fsh looks it up without the diffraction peak, sets how many lives show there and tints them.
 // The vertex stage computes each glint's light times the exposure and spans its sprite, and the fragment stage spreads the light over a round sprite with a Gaussian core and displays it for a screen blend.
 #ifdef VERTEX_SHADER
@@ -71,6 +72,13 @@ uniform float cellSize;
 uniform float fadeStart;
 uniform float fadeEnd;
 uniform float falloffDistance;
+// The first open height of each column around the eye at its world column modulo windowSize, the texel of the window's first column, the eye's column counted from it, the eye's place in its block, and its height:
+uniform sampler2D columnHeights;
+uniform int windowSize;
+uniform ivec2 windowOrigin;
+uniform ivec2 eyeInWindow;
+uniform vec2 eyeFraction;
+uniform float eyeY;
 
 flat out vec3 glintLight;
 noperspective out vec2 spriteCorner;
@@ -152,6 +160,13 @@ vec3 icePhase(vec3 direction) {
     return texture(haloProfile, vec2(lightAngle / PI, 0.25)).rgb + mapPhase;
 }
 
+// Whether a crystal at an offset from the eye is at or above the first open height of its column, as DustColumnWindow.columnInWindow, texelOfColumn, and isOpenAbove:
+bool isOpenAbove(vec3 offsetFromEye) {
+    ivec2 column = clamp(eyeInWindow + ivec2(floor(eyeFraction + offsetFromEye.xz)), 0, windowSize - 1);
+    float firstOpenY = texelFetch(columnHeights, (windowOrigin + column) & ivec2(windowSize - 1), 0).r;
+    return eyeY + offsetFromEye.y >= firstOpenY;
+}
+
 void hide() {
     gl_Position = OUTSIDE_CLIP;
     glintLight = vec3(0.0);
@@ -222,6 +237,11 @@ void main() {
     float nearWeight = shownWeight(nearShare + (1.0 + 0.5 * shownMargin - nearShare)
             * smoothstep(nearShareDistance, nearDistance, middleDistance), uniformOf(nearHash));
     if (!(nearWeight > 0.0)) {
+        hide();
+        return;
+    }
+    // A crystal can only have fallen where nothing above stops falling things, which the middle of its lit window decides, and it goes out where it falls onto a roof or the ground:
+    if (!isOpenAbove(middleOffset) || !isOpenAbove(offset)) {
         hide();
         return;
     }

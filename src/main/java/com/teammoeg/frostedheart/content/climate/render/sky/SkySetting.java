@@ -101,6 +101,8 @@ public enum SkySetting {
     DUST_GLITTER_LIT_SECONDS("dustGlitterLitSeconds", "Median time in seconds a glint of diamond dust stays lit. Lit "
             + "times spread from 0.6 to 3.5 times it, and each crystal's life lasts 5 to 10 times it.",
             Rebuilds.NOTHING, 1.0, 0.2, 4.0),
+    DUST_GLITTER_OPEN_AIR("dustGlitterOpenAir", "Shows glints of diamond dust only where their crystals could have "
+            + "fallen, so none show under roofs, glass, or trees, or in caves.", true, null),
     TEXEL_DEGREES("texelDegrees", "Size of the sky's square texels in degrees. They are fixed to the sky like the "
             + "sun's texture. 0 draws a smooth sky.", Rebuilds.HALOS, 0.5, 0.0, 5.0);
 

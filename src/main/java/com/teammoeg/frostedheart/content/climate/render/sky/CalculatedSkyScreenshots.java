@@ -1057,7 +1057,8 @@ public final class CalculatedSkyScreenshots {
             boolean moving = moveTarget != null && player.position().distanceToSqr(moveTarget) > ARRIVAL_DISTANCE_SQUARED;
             boolean terrainPending = moveTarget != null && !minecraft.levelRenderer.hasRenderedAllChunks();
             boolean skyDrawn = shot.variant().sky() && CalculatedSkyRenderer.isAllowed(level);
-            boolean skyPending = skyDrawn && !CalculatedSkyRenderer.isSettled(level, event.renderTickTime);
+            boolean skyPending = skyDrawn && (!CalculatedSkyRenderer.isSettled(level, event.renderTickTime)
+                    || DustColumns.isReading());
             boolean ready = !settling && !moving && !terrainPending && !skyPending;
             if (!ready && waited < TIMEOUT_SECONDS) {
                 return;
