@@ -19,6 +19,8 @@
 
 package com.teammoeg.frostedheart.content.town;
 
+import com.teammoeg.frostedheart.content.town.block.blockscanner.TownConnectivity;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -153,9 +155,10 @@ import java.util.Collections;
  * Everything permanent should be saved in this class.
  */
 public class TeamTownData implements com.teammoeg.chorda.dataholders.PersistentComponent {
-    public static final MapCodec<TeamTownData> MAP_CODEC = createMapCodec(BuildingRecordsCodec.DISK);
-    public static final Codec<TeamTownData> MANAGEMENT_CODEC = createMapCodec(BuildingRecordsCodec.MANAGEMENT).codec();
-    private static MapCodec<TeamTownData> createMapCodec(MapCodec<TownBuildingStore> buildingFields) {
+    public static final MapCodec<TeamTownData> MAP_CODEC = createMapCodec(BuildingRecordsCodec.DISK, true);
+    public static final Codec<TeamTownData> MANAGEMENT_CODEC = createMapCodec(BuildingRecordsCodec.MANAGEMENT, false).codec();
+    /** {@code withRoads}: the save keeps the road view; clients get links with each building and ask for routes apart. */
+    private static MapCodec<TeamTownData> createMapCodec(MapCodec<TownBuildingStore> buildingFields, boolean withRoads) {
         return CodecUtil.mapCodec(t->t
     	.add(CodecUtil.wrap(CodecUtil.defaultSupply(Codec.STRING, () -> "Default Town")
     	    .fieldOf("name").forGetter(o -> o.name)))
@@ -191,6 +194,11 @@ public class TeamTownData implements com.teammoeg.chorda.dataholders.PersistentC
     	    .fieldOf("lastRefugeeSpawnDay").forGetter(o -> o.lastRefugeeSpawnDay)))
         .add(CodecUtil.wrap(AutoSettlementState.CODEC.optionalFieldOf("autoSettlement", AutoSettlementState.pendingLegacy())
             .forGetter(TeamTownData::getAutoSettlement)))
+        // Older saves have no road view: their links come back with the first scan, as before.
+        .add(CodecUtil.wrap((withRoads
+                ? CodecUtil.defaultSupply(CodecUtil.catchingCodec(TownConnectivity.RESULT_CODEC), () -> TownConnectivity.EMPTY).fieldOf("roads")
+                : MapCodec.unit(TownConnectivity.EMPTY))
+            .forGetter(o -> o.connectivity.view())))
         .apply(TeamTownData::new));
     }
 
@@ -450,7 +458,7 @@ public class TeamTownData implements com.teammoeg.chorda.dataholders.PersistentC
      * @param lastRefugeeSpawnDay 最近一次难民自然刷新所用的稳定世界日
      */
     public TeamTownData(String name, TeamTownResourceHolder resources, Map<BlockPos, ITownBuilding> buildings, Map<UUID, Resident> residents, Map<TerrainResourceType, TerrainResourceData> terrainResource, List<TownHistoryEntry> history, long townDay, TownStaffingPlan staffingPlan, TownHousingPlan housingPlan, TownPolicyState policyState, TownTransportState transportState, P2PBindingState p2pBindingState, P2PFilterSummaryState p2pFilterSummaryState, long lastRefugeeSpawnDay, AutoSettlementState autoSettlement) {
-        this(name, resources, storeOf(buildings), residents, terrainResource, history, townDay, staffingPlan, housingPlan, policyState, transportState, p2pBindingState, p2pFilterSummaryState, lastRefugeeSpawnDay, autoSettlement);
+        this(name, resources, storeOf(buildings), residents, terrainResource, history, townDay, staffingPlan, housingPlan, policyState, transportState, p2pBindingState, p2pFilterSummaryState, lastRefugeeSpawnDay, autoSettlement, TownConnectivity.EMPTY);
     }
     private static TownBuildingStore storeOf(Map<BlockPos, ITownBuilding> input) {
         TownBuildingStore result = new TownBuildingStore();
@@ -458,7 +466,7 @@ public class TeamTownData implements com.teammoeg.chorda.dataholders.PersistentC
         return result;
     }
 
-    public TeamTownData(String name, TeamTownResourceHolder resources, TownBuildingStore decodedBuildings, Map<UUID, Resident> residents, Map<TerrainResourceType, TerrainResourceData> terrainResource, List<TownHistoryEntry> history, long townDay, TownStaffingPlan staffingPlan, TownHousingPlan housingPlan, TownPolicyState policyState, TownTransportState transportState, P2PBindingState p2pBindingState, P2PFilterSummaryState p2pFilterSummaryState, long lastRefugeeSpawnDay, AutoSettlementState autoSettlement) {
+    public TeamTownData(String name, TeamTownResourceHolder resources, TownBuildingStore decodedBuildings, Map<UUID, Resident> residents, Map<TerrainResourceType, TerrainResourceData> terrainResource, List<TownHistoryEntry> history, long townDay, TownStaffingPlan staffingPlan, TownHousingPlan housingPlan, TownPolicyState policyState, TownTransportState transportState, P2PBindingState p2pBindingState, P2PFilterSummaryState p2pFilterSummaryState, long lastRefugeeSpawnDay, AutoSettlementState autoSettlement, TownConnectivity.Result roads) {
         super();
         this.history = new ArrayList<>(history);
         this.townDay = townDay >= 0L ? townDay : history.size();
@@ -478,6 +486,15 @@ public class TeamTownData implements com.teammoeg.chorda.dataholders.PersistentC
                 ? P2PFilterSummaryState.EMPTY : p2pFilterSummaryState;
         this.lastRefugeeSpawnDay = lastRefugeeSpawnDay;
         this.autoSettlement = autoSettlement;
+        if (!roads.equals(TownConnectivity.EMPTY)) {
+            // Links as last saved: where nobody is near, they stand until a scan can see the terrain again.
+            connectivity.restore(roads);
+            buildings.forEach((pos, building) -> {
+                if (roads.connected().contains(pos)) building.setConnectedToTower(true);
+                if (roads.working().contains(pos)) building.setConnectivityWorkable(true);
+            });
+        }
+        roadVersion = connectivity.version();
         initializeChangeTracking();
     }
 
@@ -977,9 +994,17 @@ public class TeamTownData implements com.teammoeg.chorda.dataholders.PersistentC
             new com.teammoeg.frostedheart.content.town.block.blockscanner.TownConnectivity();
 
     public com.teammoeg.frostedheart.content.town.block.blockscanner.TownConnectivity connectivityView() { return connectivity; }
+    /** The road view version last seen by {@link #tick}; null only for a brand-new town before its first tick. */
+    private transient UUID roadVersion;
 
     public void tick(ServerLevel level, TeamDataHolder teamData) {
         connectivity.tick(level, townGenerator(teamData).map(g -> g.actualPos).orElse(null), buildings);
+        // The road view is saved: a new one makes the town worth saving.
+        if (!connectivity.version().equals(roadVersion)) {
+            boolean first = roadVersion == null;
+            roadVersion = connectivity.version();
+            if (!first) persistentChanged();
+        }
         int dispatchWorkers = buildings.values().stream()
                 .filter(com.teammoeg.frostedheart.content.town.buildings.dispatch.LaborDispatchBuilding.class::isInstance)
                 .map(com.teammoeg.frostedheart.content.town.buildings.dispatch.LaborDispatchBuilding.class::cast)

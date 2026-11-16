@@ -171,7 +171,10 @@ public final class TownViewSyncGameTests {
             session.openHouse();
             var originalMenu = session.first.containerMenu;
             int[] deposits = {0};
-            helper.startSequence().thenExecuteFor(400, () -> {
+            // warm() handed the links to the town's road scan; deposits need the warehouse it links over the walkway.
+            helper.startSequence().thenWaitUntil(() -> helper.assertTrue(
+                    session.scanWorks(session.housePos, session.warehousePos),
+                    "wait for the town's road scan to link the house and the warehouse")).thenExecuteFor(400, () -> {
                 try {
                     int elapsed = ++session.elapsed;
                     if (elapsed % 20 == 0) { session.deposit(); deposits[0]++; }
@@ -200,6 +203,71 @@ public final class TownViewSyncGameTests {
                             deposits[0], session.firstProbe.full, session.secondProbe.full,
                             session.firstProbe.resources, session.secondProbe.resources,
                             session.firstProbe.buildings, session.secondProbe.buildings);
+                    helper.succeed();
+                } finally { session.close(); }
+            });
+        } catch (RuntimeException | Error failure) { session.close(); throw failure; }
+    }
+
+    /** A building change starts a rescan; until it finishes, the town keeps the links it had. */
+    @GameTest(template = "phase0a_empty", batch = "town_view_rescan", timeoutTicks = 200)
+    public static void rescanKeepsTheLinkedWarehouseWorking(GameTestHelper helper) {
+        Session session = new Session(helper.getLevel(), helper.absolutePos(new BlockPos(2, 2, 2)), null);
+        try {
+            session.warm();
+            helper.startSequence().thenWaitUntil(() -> helper.assertTrue(
+                    session.scanWorks(session.housePos, session.warehousePos),
+                    "wait for the town's road scan to link the house and the warehouse")).thenExecute(() -> {
+                try {
+                    session.placeExtra();
+                    // This town tick sees the new building and hands a rescan to the scan threads.
+                    session.data.tick(session.level, session.holder);
+                    session.data.prepareView(session.level, session.holder);
+                    helper.assertTrue(session.data.buildings.get(session.warehousePos).isBuildingWorkable()
+                                    && session.scanWorks(session.housePos, session.warehousePos),
+                            "a rescan must not unlink the warehouse while it runs");
+                    helper.assertTrue(session.data.resources.getCapacityLeft() >= 100,
+                            "the warehouse keeps its capacity while the rescan runs");
+                    helper.assertTrue(!session.scanWorks(session.extraPos),
+                            "a new building is not linked before a scan includes it");
+                } catch (RuntimeException | Error failure) { session.close(); throw failure; }
+            }).thenIdle(40).thenExecute(() -> {
+                try {
+                    helper.assertTrue(session.scanWorks(session.housePos, session.warehousePos)
+                                    && !session.scanWorks(session.extraPos),
+                            "the finished rescan keeps the rooms on the walkway and leaves the roomless extra out");
+                    helper.succeed();
+                } finally { session.close(); }
+            });
+        } catch (RuntimeException | Error failure) { session.close(); throw failure; }
+    }
+
+    /** A saved town keeps its road links and routes; the client copy gets the links with its buildings, no routes. */
+    @GameTest(template = "phase0a_empty", batch = "town_view_saved_roads", timeoutTicks = 200)
+    public static void savedTownKeepsItsRoadLinks(GameTestHelper helper) {
+        Session session = new Session(helper.getLevel(), helper.absolutePos(new BlockPos(2, 2, 2)), null);
+        try {
+            session.warm();
+            helper.startSequence().thenWaitUntil(() -> helper.assertTrue(
+                    session.scanWorks(session.housePos, session.warehousePos),
+                    "wait for the town's road scan to link the house and the warehouse")).thenExecute(() -> {
+                try {
+                    var ops = net.minecraft.nbt.NbtOps.INSTANCE;
+                    var view = session.data.connectivityView().view();
+                    TeamTownData restored = TeamTownData.CODEC.parse(ops,
+                            TeamTownData.CODEC.encodeStart(ops, session.data).getOrThrow(false, message -> {}))
+                            .getOrThrow(false, message -> {});
+                    helper.assertTrue(!view.routes().isEmpty() && restored.connectivityView().view().equals(view),
+                            "a saved town keeps its road view, routes included");
+                    helper.assertTrue(restored.buildings.get(session.housePos).isConnectivityWorkable()
+                                    && restored.buildings.get(session.warehousePos).isConnectivityWorkable(),
+                            "a saved town keeps its buildings' links");
+                    TeamTownData client = TeamTownData.MANAGEMENT_CODEC.parse(ops,
+                            TeamTownData.MANAGEMENT_CODEC.encodeStart(ops, session.data).getOrThrow(false, message -> {}))
+                            .getOrThrow(false, message -> {});
+                    helper.assertTrue(client.buildings.get(session.warehousePos).isConnectivityWorkable()
+                                    && client.connectivityView().view().routes().isEmpty(),
+                            "the client copy gets the links with its buildings and no routes");
                     helper.succeed();
                 } finally { session.close(); }
             });
@@ -340,12 +408,14 @@ public final class TownViewSyncGameTests {
                 level.getServer().getPlayerList().placeNewPlayer(channels.get(channels.size() - 1).pipeline().get(Connection.class), second);
                 buildRoom(origin);
                 buildRoom(origin.offset(10, 0, 0));
+                buildRoad();
                 place(housePos, FHBlocks.HOUSE.get());
                 place(warehousePos, FHBlocks.WAREHOUSE.get());
                 var house = (HouseBlockEntity) level.getBlockEntity(housePos);
                 house.refresh_safe(house.getBuilding().orElseThrow());
                 var warehouse = (WarehouseBlockEntity) level.getBlockEntity(warehousePos);
                 warehouse.refresh_safe(warehouse.getBuilding().orElseThrow());
+                linkAll();
                 data.prepareView(level, holder);
                 if (data.resources.getCapacityLeft() < 100) throw new AssertionError("the real warehouse room must provide capacity");
                 second.setPos(warehousePos.getX() + .5, warehousePos.getY() + 1, warehousePos.getZ() + .5);
@@ -395,6 +465,19 @@ public final class TownViewSyncGameTests {
             return core;
         }
 
+        /**
+         * Marks every building linked, as the town's road scan finds them over {@link #buildRoad()}. The scan runs off
+         * the server thread, so a synchronous step that needs working buildings cannot wait for it.
+         */
+        public void linkAll() {
+            for (AbstractTownBuilding building : data.buildings.values()) building.setConnectivityWorkable(true);
+        }
+
+        /** True once the town's own road scan lets each given building work. */
+        public boolean scanWorks(BlockPos... positions) {
+            return data.connectivityView().view().working().containsAll(List.of(positions));
+        }
+
         public void placeExtra() { place(extraPos, FHBlocks.HUNTING_BASE.get()); }
         public void removeExtra() { level.destroyBlock(extraPos, false, second); }
         public void drain() { if (firstProbe != null) firstProbe.drain(); secondProbe.drain(); }
@@ -410,6 +493,11 @@ public final class TownViewSyncGameTests {
             BlockPos bed = start.offset(2, 1, 3);
             level.setBlockAndUpdate(bed, Blocks.RED_BED.defaultBlockState().setValue(BedBlock.FACING, Direction.SOUTH).setValue(BedBlock.PART, BedPart.FOOT));
             level.setBlockAndUpdate(bed.south(), Blocks.RED_BED.defaultBlockState().setValue(BedBlock.FACING, Direction.SOUTH).setValue(BedBlock.PART, BedPart.HEAD));
+        }
+
+        /** A stone walk along the door side, past the house, warehouse and extra doors (x = 3, 13 and 23). */
+        private void buildRoad() {
+            for (int x = 3; x <= 23; x++) level.setBlockAndUpdate(origin.offset(x, 0, -1), Blocks.STONE.defaultBlockState());
         }
 
         @Override public void close() {

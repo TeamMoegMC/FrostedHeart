@@ -57,6 +57,8 @@ public final class TeamTownPersistenceGameTests {
         BlockPos home = helper.absolutePos(new BlockPos(1, 1, 1));
         HouseBuilding house = new HouseBuilding(home);
         house.setIsStructureValid(true);
+        // No test using this fixture is about roads: link the house as the town's road scan would.
+        house.setConnectivityWorkable(true);
         house.setInitialized(true);
         house.setArea(64);
         house.setVolume(256);

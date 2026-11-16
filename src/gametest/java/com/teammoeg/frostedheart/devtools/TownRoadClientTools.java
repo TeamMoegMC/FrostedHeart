@@ -105,7 +105,13 @@ public final class TownRoadClientTools {
                     BlockPos pos = new BlockPos(Integer.parseInt(at[0]), Integer.parseInt(at[1]), Integer.parseInt(at[2]));
                     level.getBlockState(pos).use(level, player, net.minecraft.world.InteractionHand.MAIN_HAND,
                             new net.minecraft.world.phys.BlockHitResult(net.minecraft.world.phys.Vec3.atCenterOf(pos), Direction.UP, pos, false));
-                } else if(!action.equals("status")) throw new IllegalArgumentException("roads setup|guide|block|dismantle|mend|mine x y z|board x y z|populate|status");
+                } else if (action.startsWith("outpost")) {
+                    // A real house far from the fixture, so that part of the town can sit outside loaded terrain.
+                    String[] at=action.split("\\s+");
+                    int x=Integer.parseInt(at[1]), z=Integer.parseInt(at[2]);
+                    fill(level,new BlockPos(x-2,63,z-2),new BlockPos(x+8,63,z+8),Blocks.STONE.defaultBlockState());
+                    house(level,player,x,64,z,false);
+                } else if(!action.equals("status")) throw new IllegalArgumentException("roads setup|guide|block|dismantle|mend|mine x y z|board x y z|outpost x z|populate|status");
                 var connectivity=town.getTownData().orElseThrow().connectivityView();
                 client.put("workingBuildings",connectivity.view().working().size());
                 client.put("towerBuildings",connectivity.view().connected().size());
@@ -113,6 +119,11 @@ public final class TownRoadClientTools {
                         .filter(e -> e.getValue().requiresRoad() && !connectivity.view().working().contains(e.getKey()))
                         .map(e -> e.getKey().toShortString()).sorted().toList());
                 client.put("routes",connectivity.view().routes().size());
+                client.put("buildings",town.getTownBuildings().size());
+                client.put("linked",town.getTownBuildings().values().stream().filter(b->b.isConnectivityWorkable()).count());
+                client.put("working",connectivity.view().working().stream().sorted().map(BlockPos::toShortString).toList());
+                client.put("loaded",town.getTownBuildings().keySet().stream().sorted().map(p->p.toShortString()+"="
+                        +com.teammoeg.frostedheart.content.town.block.blockscanner.TownSectionSnapshots.isLoaded(level,p)).toList());
                 client.put("residents",town.getResidents().size());
                 List<Object> simulations=new ArrayList<>();
                 var scheduler=CitizenSimScheduler.get(level);

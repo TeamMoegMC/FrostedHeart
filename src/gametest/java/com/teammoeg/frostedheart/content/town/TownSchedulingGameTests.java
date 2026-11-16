@@ -115,6 +115,7 @@ public final class TownSchedulingGameTests {
         warehouse.refresh_safe(warehouse.getBuilding().orElseThrow());
         var hunting = (HuntingBaseBlockEntity) session.place(session.extraPos, FHBlocks.HUNTING_BASE.get());
         hunting.refresh_safe(hunting.getBuilding().orElseThrow());
+        session.linkAll(); // the session's walkway reaches all three doors
         temperate(session);
         if (house.getBuilding().orElseThrow().getMaxResidents() < 3
                 || hunting.getBuilding().orElseThrow().getMaxResidents() < 3)
