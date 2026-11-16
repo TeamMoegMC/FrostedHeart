@@ -87,7 +87,7 @@ public class Fertilizer extends FHBaseItem {
         		level.setBlock(pos,Blocks.DIRT.defaultBlockState(),3);
         		return InteractionResult.sidedSuccess(level.isClientSide);
         	}
-        }else if(blockstate.is(FHTags.Blocks.CROP.get())) {
+        }else if(blockstate.is(FHTags.Blocks.CROP.get()) || blockstate.is(CropFertilization.VERTICAL)) {
         	BlockPos below=pos.below();
         	return transform(level,below,level.getBlockState(below));
         }

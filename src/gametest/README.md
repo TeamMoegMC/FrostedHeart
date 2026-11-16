@@ -59,3 +59,7 @@ capacity eviction, invalidation, failure and rollback. Two real-level cases exer
 温度传感器验证使用命名空间 `frostedheart_temperature_sensor`，入口：
 `./gradlew --offline runGameTestServer -PgameTestNamespaces=frostedheart_temperature_sensor -PgameTestDirectory=build/temperature-sensor-gametest`。
 覆盖真实世界中的阈值等号、反转、六面强/弱输出、负小数配置 NBT 恢复和定时重算；GUI 需客户端验收。
+
+作物肥料验证使用命名空间 `frostedheart_fertilizer`：
+`./gradlew --offline runGameTestServer -PgameTestNamespaces=frostedheart_fertilizer -PgameTestDirectory=build/fertilizer-gametest`。
+覆盖生长增产记账、成熟后施肥、预览、NBT 恢复、重置清理、多层根部及 Create 公共破坏掉落路径。行为与验证边界见[作物肥料](../../docs/climate/crop-fertilization.md)。
