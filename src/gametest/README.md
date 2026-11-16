@@ -55,3 +55,7 @@ Section snapshot TTL checks use `frostedheart_section_cache`. Run it with the ex
 `./gradlew --offline runGameTestServer -PgameTestNamespaces=frostedheart_town_connectivity,frostedheart_citizen_roads,frostedheart_section_cache -PgameTestDirectory=build/town-section-cache-gametest`.
 The deterministic clock cases cover fresh/grace/hard-expiry boundaries, dirty deadlines, FIFO deduplication, coalesced cold readers,
 capacity eviction, invalidation, failure and rollback. Two real-level cases exercise the state-write mixin and section-edge dirty propagation.
+
+温度传感器验证使用命名空间 `frostedheart_temperature_sensor`，入口：
+`./gradlew --offline runGameTestServer -PgameTestNamespaces=frostedheart_temperature_sensor -PgameTestDirectory=build/temperature-sensor-gametest`。
+覆盖真实世界中的阈值等号、反转、六面强/弱输出、负小数配置 NBT 恢复和定时重算；GUI 需客户端验收。

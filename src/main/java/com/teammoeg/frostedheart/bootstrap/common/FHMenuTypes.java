@@ -19,6 +19,8 @@
 
 package com.teammoeg.frostedheart.bootstrap.common;
 
+import com.teammoeg.frostedheart.content.climate.block.sensor.*;
+
 import com.teammoeg.frostedheart.content.town.buildings.dispatch.*;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.logic.IMultiblockState;
 import com.teammoeg.frostedheart.content.town.buildings.house.HouseBlockEntity;
@@ -139,6 +141,9 @@ public class FHMenuTypes {
 			register(WarehouseLevelEmitterBlockEntity.class, "warehouse_level_emitter", WarehouseLevelEmitterMenu::new);
 	public static final RegistryObject<MenuType<P2PTerminalMenu>> P2P_TERMINAL =
 			register(P2PTerminalBlockEntity.class, "p2p_terminal", P2PTerminalMenu::new);
+
+    public static final RegistryObject<MenuType<TemperatureSensorMenu>> TEMPERATURE_SENSOR =
+            register(TemperatureSensorBlockEntity.class, "temperature_sensor", TemperatureSensorMenu::new);
 
 	@SuppressWarnings("unchecked")
 	public static <T extends AbstractContainerMenu, BE extends BlockEntity> RegistryObject<MenuType<T>> register(Class<BE> BEClass, String name, BEMenuFactory<T, BE> factory) {

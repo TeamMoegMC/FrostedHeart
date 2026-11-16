@@ -19,6 +19,8 @@
 
 package com.teammoeg.frostedheart.bootstrap.common;
 
+import com.teammoeg.frostedheart.content.climate.block.sensor.*;
+
 import com.teammoeg.frostedheart.content.town.buildings.dispatch.*;
 import com.google.common.collect.ImmutableMap;
 import com.simibubi.create.AllTags;
@@ -2401,6 +2403,14 @@ public class FHBlocks {
                     .build()
                     .lang("Warehouse Interface")
                     .register();
+
+    public static final BlockEntry<TemperatureSensorBlock> TEMPERATURE_SENSOR =
+            REGISTRATE.block("temperature_sensor", TemperatureSensorBlock::new)
+                    .initialProperties(() -> Blocks.IRON_BLOCK)
+                    .tag(FHTags.Blocks.METAL_MACHINES.tag)
+                    .blockstate(FHBlockStateGen.existed())
+                    .item().model(existingItemModel()).build()
+                    .lang("Temperature Sensor").register();
 
     public static final BlockEntry<WarehouseLevelEmitterBlock> WAREHOUSE_LEVEL_EMITTER =
             REGISTRATE.block("warehouse_level_emitter", WarehouseLevelEmitterBlock::new)

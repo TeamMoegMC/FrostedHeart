@@ -2642,5 +2642,15 @@
   "gui.frostedheart.town_manager.pending_work": "待恢复岗位：%s",
   "gui.frostedheart.town_manager.building_recovery": "待恢复或已保留的建筑记录：%s",
   "gui.frostedheart.town_manager.pending_house": "待恢复住房：%s",
-  "gui.frostedheart.town_manager.recovery_position_unknown": "位置暂不可用"
+  "gui.frostedheart.town_manager.recovery_position_unknown": "位置暂不可用",
+  "block.frostedheart.temperature_sensor": "温度传感器",
+  "gui.frostedheart.temperature_sensor.target": "目标温度（℃）",
+  "gui.frostedheart.temperature_sensor.apply": "应用",
+  "gui.frostedheart.temperature_sensor.normal": "反转关闭：温度达到或高于目标值时输出15级红石信号，低于目标值时不输出。\n点击开启红石反转。",
+  "gui.frostedheart.temperature_sensor.inverted": "反转开启：温度低于目标值时输出15级红石信号，达到或高于目标值时不输出。\n点击关闭红石反转。",
+  "gui.frostedheart.temperature_sensor.current": "当前温度：%s ℃",
+  "gui.frostedheart.temperature_sensor.output": "红石输出：%s",
+  "gui.frostedheart.temperature_sensor.inversion_on": "红石反转：开",
+  "gui.frostedheart.temperature_sensor.inversion_off": "红石反转：关",
+  "gui.frostedheart.temperature_sensor.target_label": "目标温度"
 }

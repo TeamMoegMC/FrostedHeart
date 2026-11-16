@@ -456,3 +456,36 @@ publication，未命中时使用已加载 chunk 的 dormant 温度，再回退 `
 `WorldClimate.save` 当前保存 `WorldClockSource`、`dailyTempData`、`whitecurtains` 和 `isInitialEventAdded`；存盘（不是网络包）还保存覆盖层气候历史 `coveredClimate`，见4.1节。`ClimateEventTrack` 流本身没有写入该 NBT；载入后现有小时缓存先继续使用，轨道在需要生成更远日期时从当前时刻重新增长。预报帧不持久化，而是从缓存重建。
 
 `WorldTemperature.worldCache` 和 `biomeCache` 分别按 `Level` 和 `Biome` 缓存数据配方结果。当前数据重载监听器会替换 `WorldTempData.cacheList`/`BiomeTempData.cacheList`，但源码中没有调用 `WorldTemperature.clear()`；已缓存的维度和群系值可能在 `/reload` 后继续沿用到进程或对应对象生命周期结束。
+
+## 温度传感器（2026-11-16）
+
+- Status: `Current`（实现已核对，验证结果见开发日记）
+- Last verified: `2026-11-16`
+- Scope: `frostedheart:temperature_sensor` 方块、菜单、保存、红石与配方。
+- Code anchors: `TemperatureSensorBlock`, `TemperatureSensorBlockEntity`, `TemperatureSensorMenu`, `TemperatureSensorScreen`, `WorldTemperature.block`。
+
+传感器在自身坐标读取 `WorldTemperature.block(level, worldPosition)`，即供机器使用的环境温度，包含自然背景和局部热场；不是材料本体温度，也不采用带随机采样噪声的 `WorldTemperature.air`。摄氏目标温度默认为 `0`，支持负值和小数。主手右键（不潜行）打开 GUI，输入目标值后点击“应用”；模式按钮切换正常/反转。界面显示当前温度与输出强度。
+
+服务端首次 tick 和随后每 20 tick 采样一次，修改配置立即采样。正常模式 `T >= target` 输出 15，反转模式 `T < target` 输出 15，其余输出 0。六面均提供强、弱红石信号。输出变化和拆除会通知邻居。区块卸载期间不采样，重新加载后首次 tick 重算。此比较不设置回差。
+
+方块实体 NBT `TargetTemperature`（float，摄氏度）与 `Inverted`（boolean）保存配置；输出保存在方块状态 `powered`。非有限温度输入不改变配置。菜单通过 Chorda `CDataSlot<Float>` 将浮点位模式拆成两个 16 位菜单属性同步目标/当前温度，并同步模式和输出，配置消息在服务端应用。破坏掉落方块物品，重新放置使用默认配置。
+
+`src/main/resources/data/frostedheart/recipes/temperature_sensor.json` 为有序合成，形状 `PPP / TCT / IVI`：P 为 `forge:plates/iron` 或 `forge:plates/steel`，T 为红石火把，C 为 `forge:plates/copper`，I 为 `forge:ingots/iron` 或 `forge:ingots/steel`，V 为 `forge:plates/invar`。各格铁/钢可独立混用，产出 1 个。配方由模组提供；已检查配套 TheWinterRescue 的金属配方，未修改整合包仓库（其中未发现 AGENTS.md）。
+
+验证入口：`./gradlew --offline runGameTestServer -PgameTestNamespaces=frostedheart_temperature_sensor -PgameTestDirectory=build/temperature-sensor-gametest`。2026-11-16 已通过真实图形客户端创造世界验收：实际右键放置、打开 GUI、输入并应用 -12.5℃、切换反转、关闭重开后保留设置；默认外观和界面已截取原始 1280×720 游戏帧。详见 `diary/2026-11-16_15-07-00_temperature-sensor-client-acceptance.md`。
+
+### 传感器实现复用（2026-11-16）
+
+`TemperatureSensorBlock` 复用 `CGuiBlock` / `CEntityBlock` 的 GUI 打开、方块实体工厂与 tick 分发；实体使用 `CBlockEntity.readCustomNBT/writeCustomNBT` 和 `CTickableBlockEntity`，配置字段名和存档格式不变。菜单使用 `CBlockEntityMenu`、其 `buildValidator` 提供的实体存在/同维度/8 格距离检查、`CBaseMenu.getPlayer/sendMessage(int,float)`、`CCustomMenuSlot.SLOT_BOOL/SLOT_INT` 与 `MultipleDataSlotConverter`。没有新建网络通道或保存文件。
+
+温度读数的双 16 位属性转换仍是本方块的薄适配：现有 `CCustomMenuSlot.SLOT_FLOAT` 只占一个属性，当前 `ClientboundContainerSetDataPacket` 使用 `writeShort/readShort`，不能完整携带 IEEE float 位模式。界面继续复用 `AbstractContainerScreen`、`EditBox`、`Button`；CUI `RealBox` 需要 `UIElement`/CUI screen adapter，不能直接替换当前原版控件。注册沿用 `REGISTRATE`、`FHBlockEntityTypes.makeType`、`FHMenuTypes.register`、`MenuScreens.register`。红石六面输出和传播没有找到匹配的仓库通用基类：`WarehouseLevelEmitterBlock` 绑定仓库授权/城镇行为，`CBlockEntity.syncData` 只更新中心邻居，不包含强充能经实体方块传播所需的外围通知，因此保留传感器的简短方块状态输出实现。
+
+### 传感器原版风格界面（2026-11-16）
+
+`TemperatureSensorScreen` 使用 196×124 的紧凑布局，直接调用 Chorda `VanillaTheme.INSTANCE.drawUIBackground` 和主题文字配色/阴影设置，不改变 `AbstractContainerScreen`、菜单、数据槽或消息。`Theme` 绘制接口接受 `GuiGraphics` 与坐标，不依赖 `UIElement`，因此可用于原版容器屏幕；这是主题绘制层复用，不会接入 CUI 元素树或其自动主题继承。
+
+温度计物品图标表示当前温度；“目标温度”标注目标输入，`✓` 应用；模式按钮显示“红石反转：关/开”，悬停说明当前模式的输出温度条件、15级信号/无信号效果及点击切换动作；红石火把图标旁显示 `0 / 15` 或 `15 / 15`。说明文本保留在悬停提示，输入框和按钮仍复用原版控件。界面不新增纹理或图标文件，复用已有温度计物品与原版红石火把。
+
+`./gradlew --offline assemble` 构建通过；使用 `./gradlew --offline runClient -I Scripts/dev_client_bridge.init.gradle` 启动真实图形客户端，在已有创造测试世界右键打开界面、输入并应用目标值、切换模式，确认布局和图标正常。原始 1280×720 截图：`run/agent/screenshots/01794842807532683100-temperature-sensor-vanilla-final.png`。客户端通过 bridge `quit` 正常退出，Gradle 成功结束。
+
+2026-11-16 文案排版补充：目标标签改为“目标温度”，输入框右移并缩窄；反转开/关提示中的点击动作说明使用显式换行。已离线构建并在中文真实客户端悬停验收，截图 `run/agent/screenshots/01794843699030940000-temperature-sensor-target-label-tooltip-newline-zh.png`。

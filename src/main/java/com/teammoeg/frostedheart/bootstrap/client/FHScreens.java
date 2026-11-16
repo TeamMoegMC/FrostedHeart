@@ -19,6 +19,8 @@
 
 package com.teammoeg.frostedheart.bootstrap.client;
 
+import com.teammoeg.frostedheart.content.climate.block.sensor.*;
+
 import com.teammoeg.chorda.client.cui.base.PrimaryLayer;
 import com.teammoeg.chorda.client.cui.screenadapter.CUIMenuScreenWrapper;
 import com.teammoeg.frostedheart.bootstrap.common.FHMenuTypes;
@@ -63,6 +65,7 @@ import java.util.function.Function;
 
 public class FHScreens {
     public static void init() {
+        MenuScreens.register(FHMenuTypes.TEMPERATURE_SENSOR.get(), TemperatureSensorScreen::new);
         // Register screens
         MenuScreens.register(FHMenuTypes.GENERATOR_T1.getType(), GeneratorScreen<T1GeneratorState, T1GeneratorLogic>::new);
         MenuScreens.register(FHMenuTypes.GENERATOR_T2.getType(), GeneratorScreen<T2GeneratorState, T2GeneratorLogic>::new);

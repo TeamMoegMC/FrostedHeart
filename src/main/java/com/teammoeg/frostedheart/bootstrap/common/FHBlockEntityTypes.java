@@ -19,6 +19,8 @@
 
 package com.teammoeg.frostedheart.bootstrap.common;
 
+import com.teammoeg.frostedheart.content.climate.block.sensor.*;
+
 import com.teammoeg.frostedheart.content.town.buildings.dispatch.*;
 import com.google.common.collect.ImmutableSet;
 import com.simibubi.create.content.kinetics.base.HalfShaftInstance;
@@ -151,6 +153,8 @@ public class FHBlockEntityTypes {
     public static final RegistryObject<BlockEntityType<WarehouseInterfaceBlockEntity>> WAREHOUSE_INTERFACE = REGISTER.register(
             "warehouse_interface", makeType(WarehouseInterfaceBlockEntity::new, FHBlocks.WAREHOUSE_INTERFACE::get)
     );
+    public static final RegistryObject<BlockEntityType<TemperatureSensorBlockEntity>> TEMPERATURE_SENSOR = REGISTER.register(
+            "temperature_sensor", makeType(TemperatureSensorBlockEntity::new, FHBlocks.TEMPERATURE_SENSOR::get));
     public static final RegistryObject<BlockEntityType<WarehouseLevelEmitterBlockEntity>> WAREHOUSE_LEVEL_EMITTER = REGISTER.register(
             "warehouse_level_emitter", makeType(WarehouseLevelEmitterBlockEntity::new, FHBlocks.WAREHOUSE_LEVEL_EMITTER::get)
     );

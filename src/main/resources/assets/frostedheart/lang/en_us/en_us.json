@@ -2026,5 +2026,15 @@
   "gui.frostedheart.town_manager.pending_work": "Workplace awaiting recovery: %s",
   "gui.frostedheart.town_manager.building_recovery": "Building records awaiting recovery or retained: %s",
   "gui.frostedheart.town_manager.pending_house": "Housing awaiting recovery: %s",
-  "gui.frostedheart.town_manager.recovery_position_unknown": "Position unavailable"
+  "gui.frostedheart.town_manager.recovery_position_unknown": "Position unavailable",
+  "block.frostedheart.temperature_sensor": "Temperature Sensor",
+  "gui.frostedheart.temperature_sensor.target": "Target temperature (°C)",
+  "gui.frostedheart.temperature_sensor.apply": "Apply",
+  "gui.frostedheart.temperature_sensor.normal": "Inversion off: emits redstone strength 15 at or above the target temperature; emits no signal below it.\nClick to enable inversion.",
+  "gui.frostedheart.temperature_sensor.inverted": "Inversion on: emits redstone strength 15 below the target temperature; emits no signal at or above it.\nClick to disable inversion.",
+  "gui.frostedheart.temperature_sensor.current": "Current: %s °C",
+  "gui.frostedheart.temperature_sensor.output": "Redstone output: %s",
+  "gui.frostedheart.temperature_sensor.inversion_on": "Invert: On",
+  "gui.frostedheart.temperature_sensor.inversion_off": "Invert: Off",
+  "gui.frostedheart.temperature_sensor.target_label": "Target"
 }
