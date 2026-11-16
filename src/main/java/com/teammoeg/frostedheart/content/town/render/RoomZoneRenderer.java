@@ -52,6 +52,8 @@ import net.minecraftforge.fml.common.Mod;
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
 public class RoomZoneRenderer {
 	public static boolean visible;
+	/** Room floor, the gaps that leave a room open, and the two blink phases of a room shared with another building. */
+	public static final int ROOM = 0xaa88ff88, ROOM_GAP = 0xaaff8888, OVERLAP = 0xaaffdd88, OVERLAP_BLINK = 0xaaffff88;
 
 	@SubscribeEvent
 	public static void onRenderLevel(RenderLevelStageEvent event) {
@@ -94,11 +96,11 @@ public class RoomZoneRenderer {
 		if (space.getErrorPos() != null || space.getOccupiedCells().size() > 0) {
 			if (space.getErrorPos() != null)
 				for (BlockPos pos : space.getErrorPos()) {
-					tesselator.cube(matrix, new AABB(pos).inflate(0.05f), 0xaaff8888);
+					tesselator.cube(matrix, new AABB(pos).inflate(0.05f), ROOM_GAP);
 				}
-			int color = 0xaa88ff88;
+			int color = ROOM;
 			if (space.isOverlapped()) {
-				color = blink?0xaaffdd88:0xaaffff88;
+				color = blink?OVERLAP:OVERLAP_BLINK;
 			}
 
 			for (OccupiedCell oc : space.getOccupiedCells())

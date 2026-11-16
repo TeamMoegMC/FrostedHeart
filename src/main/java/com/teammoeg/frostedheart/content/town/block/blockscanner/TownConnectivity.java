@@ -57,7 +57,17 @@ public final class TownConnectivity {
     private BlockPos observedTower;
     private Object observedDimension;
 
-    public void tick(ServerLevel level, BlockPos tower, Map<BlockPos, AbstractTownBuilding> buildings) {
+    /** The buildings that take part in the road network; remote sites such as mines stay out of it. */
+    static Map<BlockPos, AbstractTownBuilding> onRoads(Map<BlockPos, AbstractTownBuilding> buildings) {
+        Map<BlockPos, AbstractTownBuilding> linked = new HashMap<>();
+        buildings.forEach((pos, building) -> {
+            if (building.requiresRoad()) linked.put(pos, building);
+        });
+        return linked;
+    }
+
+    public void tick(ServerLevel level, BlockPos tower, Map<BlockPos, AbstractTownBuilding> allBuildings) {
+        Map<BlockPos, AbstractTownBuilding> buildings = onRoads(allBuildings);
         Map<BlockPos, List<BlockPos>> currentEntrances = new HashMap<>();
         buildings.forEach((pos, building) -> currentEntrances.put(pos, building.getRoadEntrances()));
         if (!currentEntrances.equals(observedEntrances) || !Objects.equals(tower, observedTower) || !Objects.equals(level.dimension(), observedDimension)
@@ -142,6 +152,38 @@ public final class TownConnectivity {
                 : declared.stream().filter(pos -> RoomPathfinder.canStandAt(world, pos)).toList();
     }
 
+    /** Horizontal distance from the tower controller to the ring just outside a 3x3 tower base. */
+    static final int TOWER_RING = 2;
+    /** Largest Manhattan offset of a tower entrance from its controller: ring corners, two blocks down. */
+    static final int TOWER_ENTRANCE_RADIUS = 2 * TOWER_RING + 2;
+
+    /**
+     * 能量塔的连接点。成型的能量塔把控制方块包在塔身里，旁边没有能站的格子；这时改用紧贴 3×3 塔底座外侧一圈、
+     * 控制方块下两格到上一格之间能站的格子，路修到塔脚下任一面即可。
+     * <p>
+     * Where roads meet the tower. A formed tower encloses its controller, leaving nothing beside it to stand on; then
+     * the standable cells in the ring just outside its 3x3 base, from two below the controller to one above, are used,
+     * so a road may reach the foot of the tower on any side.
+     */
+    static List<BlockPos> towerEntrances(AbstractWorld world, BlockPos tower) {
+        List<BlockPos> beside = entrances(world, tower);
+        if (!beside.isEmpty()) return beside;
+        List<BlockPos> around = new ArrayList<>();
+        for (int dx = -TOWER_RING; dx <= TOWER_RING; dx++)
+            for (int dz = -TOWER_RING; dz <= TOWER_RING; dz++) {
+                if (Math.max(Math.abs(dx), Math.abs(dz)) != TOWER_RING) continue;
+                for (int dy = -2; dy <= 1; dy++) {
+                    BlockPos pos = tower.offset(dx, dy, dz);
+                    if (RoomPathfinder.canStandAt(world, pos)) around.add(pos);
+                }
+            }
+        return around;
+    }
+
+    private static List<BlockPos> entrances(AbstractWorld world, BlockPos node, BlockPos tower, Map<BlockPos, List<BlockPos>> ports) {
+        return node.equals(tower) ? towerEntrances(world, node) : entrances(world, node, ports);
+    }
+
     private static Result calculate(Batch batch) {
         return calculateView(batch.buildings.keySet(), batch.tower, () -> new Snapshot(batch), () -> batch.cancelled, batch.entrances);
     }
@@ -167,6 +209,7 @@ public final class TownConnectivity {
         Map<BlockPos, Integer> entranceRadii = new HashMap<>();
         for (BlockPos node : nodes) entranceRadii.put(node, ports.getOrDefault(node, List.of()).stream()
                 .mapToInt(node::distManhattan).max().orElse(2));
+        if (tower != null) entranceRadii.put(tower, TOWER_ENTRANCE_RADIUS);
         int[] parents = new int[nodes.size()];
         for (int i = 0; i < parents.length; i++) parents[i] = i;
         for (int source = 0; source < nodes.size(); source++) {
@@ -175,14 +218,14 @@ public final class TownConnectivity {
             for (int target = source + 1; target < nodes.size(); target++) {
                 if (find(parents, source) == find(parents, target)) continue;
                 if (nodes.get(source).distManhattan(nodes.get(target)) > 2 * MAX_DISTANCE + entranceRadii.get(nodes.get(source)) + entranceRadii.get(nodes.get(target))) continue;
-                for (BlockPos entrance : entrances(world, nodes.get(target), ports))
+                for (BlockPos entrance : entrances(world, nodes.get(target), tower, ports))
                     targets.computeIfAbsent(entrance, key -> new ArrayList<>()).add(target);
             }
             if (targets.isEmpty()) continue;
             ArrayDeque<BlockPos> queue = new ArrayDeque<>();
             Map<BlockPos, Integer> distances = new HashMap<>();
             Map<BlockPos, BlockPos> previous = new HashMap<>();
-            for (BlockPos pos : entrances(world, nodes.get(source), ports)) {
+            for (BlockPos pos : entrances(world, nodes.get(source), tower, ports)) {
                 if (distances.putIfAbsent(pos, 0) == null) queue.add(pos);
             }
             final int sourceIndex = source;

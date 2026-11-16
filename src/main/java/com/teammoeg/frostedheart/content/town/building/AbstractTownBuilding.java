@@ -64,6 +64,21 @@ public abstract class AbstractTownBuilding implements ITownBuilding,ITownSpaceOc
     }
     private transient boolean connectivityWorkable;
 
+    /**
+     * 这类建筑是否要用道路连进城镇才能工作。远处的采集点（矿井）由接管它的建筑负责，不参与道路连通。
+     * <p>
+     * Whether this kind of building must be linked into the town by road to work. Remote sites such as mines are
+     * served by the building that takes them over and stay out of the road network.
+     */
+    public boolean requiresRoad() {
+        return true;
+    }
+
+    /** Whether the roads let this building work: as the last road check found, and always when it needs no road. */
+    public boolean isConnectivityWorkable() {
+        return connectivityWorkable || !requiresRoad();
+    }
+
     public void setConnectivityWorkable(boolean value) {
         if (connectivityWorkable != value) {
             connectivityWorkable = value;
@@ -236,7 +251,7 @@ public abstract class AbstractTownBuilding implements ITownBuilding,ITownSpaceOc
 
     @Override
     public boolean isBuildingWorkable(){
-        return connectivityWorkable && initialized && !occupiedVolume.isOverlapped() && isStructureValid;
+        return isConnectivityWorkable() && initialized && !occupiedVolume.isOverlapped() && isStructureValid;
     }
 
     @Override

@@ -98,6 +98,7 @@ public final class HuntingBaseViewPresenter {
         // ---- status
         List<Component> room = BoardPresenters.roomReasons(building, building.getArea(), minArea, building.getVolume(), minVolume);
         List<Component> stopped = new ArrayList<>(room);
+        stopped.addAll(BoardPresenters.roadReasons(building, in.town()));
         if (temperature < minimum) stopped.add(b("reason.cold", (int) Math.ceil(minimum)));
         TownProductionStopReason reason = forecast == null ? TownProductionStopReason.NONE : forecast.stopReason();
         if (stopped.isEmpty() && reason == TownProductionStopReason.NO_ELIGIBLE_WORKERS) stopped.add(b("reason.no_workers"));
@@ -133,6 +134,7 @@ public final class HuntingBaseViewPresenter {
 
         List<Chip> chips = new ArrayList<>();
         chips.add(BoardPresenters.spaceChip(room.isEmpty(), building.getMaxResidents()));
+        BoardPresenters.addRoadChip(chips, building, in.town());
         chips.add(BoardPresenters.temperatureChip(temperature, minimum, Double.POSITIVE_INFINITY));
         if (building.getTemperatureModifier() > 0) chips.add(Chip.of(b("work.chip.heated"), Tone.GOOD));
 
@@ -141,6 +143,8 @@ public final class HuntingBaseViewPresenter {
         List<Note> notes = new ArrayList<>();
         if (!room.isEmpty())
             notes.add(BoardPresenters.improve("structure", room.get(0), BoardPresenters.roomAction(building, building.getArea(), minArea, minVolume), signer));
+        Note road = BoardPresenters.roadNote(building, in.town(), signer);
+        if (road != null) notes.add(road);
         Note cold = BoardPresenters.coldNote(temperature, minimum, signer);
         if (cold != null) notes.add(cold);
         WorkPresenters.crewNotes(notes, in.residents(), people, buildings, t("noun"), signer);

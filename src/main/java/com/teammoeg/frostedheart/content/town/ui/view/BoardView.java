@@ -88,7 +88,7 @@ public final class BoardView {
      */
     public record Note(NoteKind kind, String problem, Component line, Component action, Component signature) {
         /** Faults that stop the building; their notes say 得修 rather than 可以改进. */
-        private static final java.util.Set<String> BLOCKING = java.util.Set.of("structure", "cold", "hot", "dark", "missing");
+        private static final java.util.Set<String> BLOCKING = java.util.Set.of("structure", "road", "cold", "hot", "dark", "missing");
 
         public boolean blocking() {
             return kind == NoteKind.IMPROVE && BLOCKING.contains(problem);

@@ -22,6 +22,10 @@ import net.minecraftforge.fml.common.Mod;
 /** Uses the existing zone-view key. Geometry is deduplicated once per received version. */
 @Mod.EventBusSubscriber(modid = FHMain.MODID, value = Dist.CLIENT)
 public final class TownRoadRenderer {
+    /** Road colours: linked to the tower, the largest group while none is, and every other group. */
+    public static final int ROAD_TOWER = 0xaa44ddff, ROAD_LARGEST = 0xaa88ff88, ROAD_OTHER = 0xaaffbb44;
+    /** Building controller colours, in the same order; red marks a building cut off from the group allowed to work. */
+    public static final int BLOCK_TOWER = 0x5544ddff, BLOCK_LARGEST = 0x5588ff88, BLOCK_CUT_OFF = 0xaaff5555;
     private static final UUID UNKNOWN = new UUID(0, 0);
     private static UUID version = UNKNOWN, holder;
     private static ResourceLocation dimension;
@@ -45,6 +49,12 @@ public final class TownRoadRenderer {
         holder = packet.holder; version = packet.version; dimension = packet.dimension; hasView = true;
     }
     public static boolean matches(UUID id) { return hasView && java.util.Objects.equals(holder, id); }
+    /** Whether the view still waits for the town's first road check: every finished check lets some group work. */
+    public static boolean checking(com.teammoeg.frostedheart.content.town.TeamTown town) {
+        return town.getTownBuildings().values().stream()
+                .anyMatch(com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding::requiresRoad)
+                && (!hasView || working.isEmpty());
+    }
     public static boolean nearRoad(BlockPos pos) {
         for (int dy = -1; dy <= 1; dy++) for (int dx = -1; dx <= 1; dx++) for (int dz = -1; dz <= 1; dz++)
             if (floors.containsKey(pos.offset(dx, dy, dz))) return true;
@@ -79,11 +89,12 @@ public final class TownRoadRenderer {
             floors.forEach((pos, status) -> {
                 if (pos.distSqr(center) <= 96 * 96)
                     RoomZoneRenderer.renderDoubleFloorFace(shapes, matrix, pos.getX(), pos.getY() + 0.09f, pos.getZ(),
-                            status == 2 ? 0xaa44ddff : status == 1 ? 0xaa88ff88 : 0xaaffbb44);
+                            status == 2 ? ROAD_TOWER : status == 1 ? ROAD_LARGEST : ROAD_OTHER);
             });
-            town.getTownBuildings().keySet().forEach(pos -> {
-                if (pos.distSqr(center) <= 96 * 96)
-                    shapes.cube(matrix, new AABB(pos).inflate(0.025), connected.contains(pos) ? 0x5544ddff : working.contains(pos) ? 0x5588ff88 : 0xaaff5555);
+            town.getTownBuildings().forEach((pos, building) -> {
+                // Buildings off the road network, such as mines, get no road verdict.
+                if (building.requiresRoad() && pos.distSqr(center) <= 96 * 96)
+                    shapes.cube(matrix, new AABB(pos).inflate(0.025), connected.contains(pos) ? BLOCK_TOWER : working.contains(pos) ? BLOCK_LARGEST : BLOCK_CUT_OFF);
             });
         } finally { pose.popPose(); }
     }

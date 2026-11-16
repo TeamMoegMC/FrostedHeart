@@ -80,6 +80,12 @@ public class MineBuilding extends AbstractTownBuilding {
 	    fireChange();
 	}
 
+	/** A mine is a remote dig site taken over by a mine base within reach, so it needs no road of its own. */
+	@Override
+	public boolean requiresRoad() {
+		return false;
+	}
+
 	public MineBuilding(BlockPos pos) {
         super(pos);
     }

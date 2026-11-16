@@ -65,9 +65,53 @@ public final class TownRoadClientTools {
                     }
                     client.put("added",added);
                     if(added<4) throw new IllegalStateException("housing not ready: only added "+added);
-                } else if(!action.equals("status")) throw new IllegalArgumentException("roads setup|populate|status");
+                } else if (action.equals("guide")) {
+                    // After setup: a formed T1 tower for the player's team on the street, and a second house beside the
+                    // isolated one so a group that may not work shows its own (orange) road.
+                    var structure = com.teammoeg.frostedheart.bootstrap.common.FHMultiblocks.GENERATOR_T1;
+                    BlockPos origin = new BlockPos(8, 65, 8);
+                    for (var block : structure.getStructure(level)) level.setBlockAndUpdate(origin.offset(block.pos()), block.state());
+                    if (!structure.createStructure(level, origin.offset(structure.getTriggerOffset()), Direction.SOUTH,
+                            net.minecraftforge.common.util.FakePlayerFactory.getMinecraft(level)))
+                        throw new IllegalStateException("the tower did not form");
+                    BlockPos master = origin.offset(structure.getMasterFromOriginOffset());
+                    var tower = (com.teammoeg.frostedheart.content.climate.block.generator.GeneratorState)
+                            com.teammoeg.chorda.multiblock.CMultiblockHelper.getBEHelper(level, master).getState();
+                    tower.setOwner(CTeamDataManager.get(player).getId());
+                    tower.regist(level, master, (short) structure.getMasterFromOriginOffset().getY());
+                    house(level, player, 30, 64, 8, true);
+                    client.put("tower", master.toShortString());
+                } else if (action.equals("block")) {
+                    // 断路: a two-high wall across the top of the stairs cuts the upper house off.
+                    fill(level, new BlockPos(2, 70, 14), new BlockPos(4, 71, 14), Blocks.STONE.defaultBlockState());
+                } else if (action.equals("dismantle")) {
+                    // 拆路: the walkway from the ladder to the high house is taken away.
+                    fill(level, new BlockPos(14, 73, 11), new BlockPos(17, 73, 11), Blocks.AIR.defaultBlockState());
+                } else if (action.equals("mend")) {
+                    fill(level, new BlockPos(2, 70, 14), new BlockPos(4, 71, 14), Blocks.AIR.defaultBlockState());
+                    fill(level, new BlockPos(14, 73, 11), new BlockPos(17, 73, 11), Blocks.STONE.defaultBlockState());
+                } else if (action.startsWith("mine ")) {
+                    // A mine block for the player's town on open ground, with no road to anything.
+                    String[] at = action.substring(5).trim().split("\\s+");
+                    BlockPos pos = new BlockPos(Integer.parseInt(at[0]), Integer.parseInt(at[1]), Integer.parseInt(at[2]));
+                    var block = FHBlocks.MINE.get();
+                    set(level, pos, block.defaultBlockState());
+                    block.setPlacedBy(level, pos, level.getBlockState(pos), player, new ItemStack(block.asItem()));
+                    if (level.getBlockEntity(pos) instanceof AbstractTownBuildingBlockEntity<?> be) be.executeTask();
+                    client.put("mine", pos.toShortString());
+                } else if (action.startsWith("board ")) {
+                    // Opens a building's board as a right-click would, wherever the player stands.
+                    String[] at = action.substring(6).trim().split("\\s+");
+                    BlockPos pos = new BlockPos(Integer.parseInt(at[0]), Integer.parseInt(at[1]), Integer.parseInt(at[2]));
+                    level.getBlockState(pos).use(level, player, net.minecraft.world.InteractionHand.MAIN_HAND,
+                            new net.minecraft.world.phys.BlockHitResult(net.minecraft.world.phys.Vec3.atCenterOf(pos), Direction.UP, pos, false));
+                } else if(!action.equals("status")) throw new IllegalArgumentException("roads setup|guide|block|dismantle|mend|mine x y z|board x y z|populate|status");
                 var connectivity=town.getTownData().orElseThrow().connectivityView();
                 client.put("workingBuildings",connectivity.view().working().size());
+                client.put("towerBuildings",connectivity.view().connected().size());
+                client.put("cutOff",town.getTownBuildings().entrySet().stream()
+                        .filter(e -> e.getValue().requiresRoad() && !connectivity.view().working().contains(e.getKey()))
+                        .map(e -> e.getKey().toShortString()).sorted().toList());
                 client.put("routes",connectivity.view().routes().size());
                 client.put("residents",town.getResidents().size());
                 List<Object> simulations=new ArrayList<>();

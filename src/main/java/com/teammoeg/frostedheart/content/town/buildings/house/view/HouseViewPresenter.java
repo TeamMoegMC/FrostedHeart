@@ -118,6 +118,7 @@ public final class HouseViewPresenter {
         // ---- status: a house that fails its room or temperature takes nobody new in
         List<Component> room = BoardPresenters.roomReasons(house, area, minArea, volume, minVolume);
         List<Component> stopped = new ArrayList<>(room);
+        stopped.addAll(BoardPresenters.roadReasons(house, in.town()));
         if (temperature < minimum) stopped.add(b("reason.cold", (int) Math.ceil(minimum)));
         else if (temperature > maximum) stopped.add(b("reason.hot", (int) Math.floor(maximum)));
         List<Component> limited = new ArrayList<>();
@@ -158,9 +159,10 @@ public final class HouseViewPresenter {
                 List.of(t("stat.temperature.tooltip", (int) Math.ceil(minimum), (int) Math.floor(maximum)),
                         t("stat.temperature.tooltip.effect", (int) Math.round(FHConfig.SERVER.TOWN.BUILDING_SCORING.comfortableTemperatureCelsius.get()))));
 
-        // ---- conditions: the room, then the parts of comfort
+        // ---- conditions: the room and its road, then the parts of comfort
         List<Chip> chips = new ArrayList<>();
         chips.add(BoardPresenters.spaceChip(room.isEmpty(), capacity));
+        BoardPresenters.addRoadChip(chips, house, in.town());
         chips.add(Chip.of(t("chip.beds", house.getBedCount()), Tone.NORMAL));
         chips.add(BoardPresenters.homeTemperatureChip(shown));
         int spaceStars = TownFormat.stars(house.getSpaceRating());
@@ -173,6 +175,8 @@ public final class HouseViewPresenter {
         List<Note> notes = new ArrayList<>();
         if (!room.isEmpty())
             notes.add(BoardPresenters.improve("structure", room.get(0), BoardPresenters.roomAction(house, area, minArea, minVolume), signer));
+        Note road = BoardPresenters.roadNote(house, in.town(), signer);
+        if (road != null) notes.add(road);
         if (temperature < minimum)
             notes.add(BoardPresenters.improve("cold", t("note.cold"), b("note.cold.action", (int) Math.ceil(minimum)), signer));
         else if (temperature > maximum)

@@ -266,6 +266,71 @@ public final class TownConnectivityGameTests {
         helper.succeed();
     }
 
+    /** Mines are remote dig sites their mine base takes over: they stay off the roads and need no road check to work. */
+    @GameTest(template = "phase0a_empty")
+    public static void minesStayOffTheRoads(GameTestHelper helper) {
+        BlockPos housePos = new BlockPos(0, 1, 0), minePos = new BlockPos(500, -40, 500);
+        var house = new com.teammoeg.frostedheart.content.town.buildings.house.HouseBuilding(housePos);
+        var mine = new com.teammoeg.frostedheart.content.town.buildings.mine.MineBuilding(minePos);
+        helper.assertTrue(TownConnectivity.onRoads(Map.of(housePos, house, minePos, mine)).keySet().equals(Set.of(housePos)),
+                "a mine is neither an end nor a relay of the road network");
+        helper.assertTrue(mine.isConnectivityWorkable() && !mine.isConnectedToTower() && !house.isConnectivityWorkable(),
+                "a mine needs no road check; a house still waits for one");
+        mine.setInitialized(true);
+        mine.setIsStructureValid(true);
+        helper.assertTrue(mine.isBuildingWorkable(), "an initialised mine works without any road");
+        helper.succeed();
+    }
+
+    /** A formed tower encloses its controller; roads reach it on the ground around its base. */
+    @GameTest(template = "phase0a_empty")
+    public static void formedT1TowerReachableAtItsBase(GameTestHelper helper) {
+        formedTowerReachableAtItsBase(helper, com.teammoeg.frostedheart.bootstrap.common.FHMultiblocks.GENERATOR_T1);
+    }
+
+    @GameTest(template = "phase0a_empty")
+    public static void formedT2TowerReachableAtItsBase(GameTestHelper helper) {
+        formedTowerReachableAtItsBase(helper, com.teammoeg.frostedheart.bootstrap.common.FHMultiblocks.GENERATOR_T2);
+    }
+
+    private static void formedTowerReachableAtItsBase(GameTestHelper helper,
+            blusunrize.immersiveengineering.api.multiblocks.TemplateMultiblock structure) {
+        var level = helper.getLevel();
+        for (int x = 0; x < 20; x++) for (int z = 0; z < 20; z++)
+            level.setBlockAndUpdate(helper.absolutePos(new BlockPos(x, 0, z)), Blocks.STONE.defaultBlockState());
+        BlockPos origin = helper.absolutePos(new BlockPos(8, 1, 8));
+        for (var block : structure.getStructure(level)) level.setBlockAndUpdate(origin.offset(block.pos()), block.state());
+        helper.assertTrue(structure.createStructure(level, origin.offset(structure.getTriggerOffset()), net.minecraft.core.Direction.SOUTH,
+                net.minecraftforge.common.util.FakePlayerFactory.getMinecraft(level)), "the tower must form");
+        BlockPos tower = origin.offset(structure.getMasterFromOriginOffset());
+        BlockPos building = helper.absolutePos(new BlockPos(2, 1, 9));
+        level.setBlockAndUpdate(building, Blocks.STONE.defaultBlockState());
+        LoadedTownWorld loaded = new LoadedTownWorld(level);
+        AbstractWorld world = new AbstractWorld() {
+            public BlockType getBlockType(BlockPos pos) { return loaded.getPathBlockType(pos); }
+            public int getMaxY(BlockPos pos) { return pos.getY() + 2; }
+        };
+        var entrances = TownConnectivity.towerEntrances(world, tower);
+        helper.assertTrue(!entrances.isEmpty() && entrances.stream().allMatch(pos -> pos.getY() == origin.getY()
+                        && Math.max(Math.abs(pos.getX() - tower.getX()), Math.abs(pos.getZ() - tower.getZ())) == TownConnectivity.TOWER_RING),
+                "a formed tower is entered from the floor just outside its base: " + entrances);
+        var view = TownConnectivity.calculateView(Set.of(building), tower, () -> world, () -> false);
+        helper.assertTrue(view.connected().equals(Set.of(building)) && view.routes().size() == 1 && view.routes().get(0).powered()
+                        && entrances.contains(view.routes().get(0).steps().get(view.routes().get(0).steps().size() - 1)),
+                "a building on open ground beside a formed tower must reach its base: " + view);
+        // A two-high wall round the base leaves only its top, out of a one-block step's reach.
+        for (BlockPos pos : entrances) for (int dy = 0; dy <= 1; dy++) level.setBlockAndUpdate(pos.above(dy), Blocks.STONE.defaultBlockState());
+        LoadedTownWorld walledLoaded = new LoadedTownWorld(level);
+        AbstractWorld walled = new AbstractWorld() {
+            public BlockType getBlockType(BlockPos pos) { return walledLoaded.getPathBlockType(pos); }
+            public int getMaxY(BlockPos pos) { return pos.getY() + 2; }
+        };
+        var blocked = TownConnectivity.calculateView(Set.of(building), tower, () -> walled, () -> false);
+        helper.assertTrue(blocked.connected().isEmpty() && blocked.working().equals(Set.of(building)),
+                "with the base walled off the tower is unreachable and the lone building works as the largest cluster: " + blocked);
+        helper.succeed();
+    }
+
     @GameTest(template = "phase0a_empty")
     public static void emptyAndCancelled(GameTestHelper helper) {
         World world = new World(); world.corridor(12);

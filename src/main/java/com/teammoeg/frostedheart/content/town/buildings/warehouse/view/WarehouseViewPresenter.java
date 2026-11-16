@@ -106,7 +106,9 @@ public final class WarehouseViewPresenter {
         List<Component> limited = new ArrayList<>();
         if (capacity.limit() > 0 && capacity.percent() >= NEARLY_FULL) limited.add(t(capacity.percent() >= 100 ? "reason.full" : "reason.nearly_full"));
         if (days != null && days < FOOD_SHORT) limited.add(t("reason.food"));
-        Header header = BoardPresenters.header(building, in.town(), in.pos(), in.townName(), in.townDay(), room, limited, 0);
+        List<Component> stopped = new ArrayList<>(room);
+        stopped.addAll(BoardPresenters.roadReasons(building, in.town()));
+        Header header = BoardPresenters.header(building, in.town(), in.pos(), in.townName(), in.townDay(), stopped, limited, 0);
 
         // ---- key figures
         // With no room to count against, only what is stored is shown; "224 / 0" would read as nothing.
@@ -126,6 +128,7 @@ public final class WarehouseViewPresenter {
 
         List<Chip> chips = new ArrayList<>();
         chips.add(room.isEmpty() ? Chip.of(t("chip.room.ok"), Tone.GOOD) : Chip.of(t("chip.room.bad"), Tone.BAD));
+        BoardPresenters.addRoadChip(chips, building, in.town());
         chips.add(Chip.of(t("chip.area", building.getArea()), Tone.NORMAL));
         chips.add(Chip.of(t("chip.volume", building.getVolume()), Tone.NORMAL));
         chips.add(Chip.of(t("chip.kinds", kinds), Tone.NORMAL));
@@ -136,6 +139,8 @@ public final class WarehouseViewPresenter {
         if (!room.isEmpty())
             notes.add(BoardPresenters.improve("structure", t("note.structure", room.get(0)),
                     BoardPresenters.roomAction(building, 1, 1, 1), signer));
+        Note road = BoardPresenters.roadNote(building, in.town(), signer);
+        if (road != null) notes.add(road);
         if (capacity.limit() > 0 && capacity.percent() >= NEARLY_FULL)
             notes.add(BoardPresenters.improve("full", t(capacity.percent() >= 100 ? "note.full" : "note.nearly_full"), t("note.full.action"), signer));
         if (days != null && days < FOOD_SHORT)

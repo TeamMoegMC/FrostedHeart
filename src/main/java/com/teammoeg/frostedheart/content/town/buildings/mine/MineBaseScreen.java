@@ -243,6 +243,10 @@ public class MineBaseScreen extends WorkBoardScreen<MineBaseMenu> {
         if (!building.isInitialized()) rows.add(failure("gui.frostedheart.town.failure.uninitialized"));
         if (building.isOccupiedAreaOverlapped()) rows.add(failure("gui.frostedheart.town.failure.overlap"));
         if (!building.isStructureValid()) rows.add(failure("gui.frostedheart.town.failure.structure"));
+        // The same words the board uses, so both views tell one story about the roads.
+        for (Component reason : com.teammoeg.frostedheart.content.town.ui.view.BoardPresenters.roadReasons(building,
+                com.teammoeg.frostedheart.content.town.TeamTownData.getClientTown().orElse(null)))
+            rows.add(TownInfoPanel.Row.colored(Component.literal("• ").append(reason), 0xFFFF5555));
     }
 
     public static TownInfoPanel.Row reason(TownProductionStopReason reason) {

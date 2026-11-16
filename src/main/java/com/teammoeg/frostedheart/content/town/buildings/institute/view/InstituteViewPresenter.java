@@ -99,7 +99,7 @@ public final class InstituteViewPresenter {
         Header header = header(in, building, buildings, hands);
         Research research = research(knowledge, day, hands, bestEducation);
         Association association = association(day, people, knowledge, minEducation, bestEducation);
-        Overview overview = overview(building, people, hands, knowledge, research, association);
+        Overview overview = overview(building, people, hands, knowledge, research, association, in.town());
         List<Note> notes = notes(in, building, people, buildings, knowledge, research, minEducation, bestEducation);
         List<Note> talk = talk(building, people, research, day, Math.max(0, MAX_NOTES - notes.size()));
         Researchers team = new Researchers(researchersHeadline(forecast, hands), people,
@@ -114,7 +114,8 @@ public final class InstituteViewPresenter {
         if (building == null)
             return new Header(t("name.unknown"), Component.empty(), Status.STOPPED, List.of(b("reason.missing")), 0);
         FHConfig.Server.Town.ResearchInstitute config = FHConfig.SERVER.TOWN.RESEARCH_INSTITUTE;
-        List<Component> stopped = stopReasons(building);
+        List<Component> stopped = new ArrayList<>(stopReasons(building));
+        stopped.addAll(BoardPresenters.roadReasons(building, in.town()));
         if (stopped.isEmpty() && TownFormat.whole(hands) == 0 && !TownFormat.underOne(hands))
             stopped = List.of(b("reason.no_workers"));
         List<Component> limited = new ArrayList<>();
@@ -148,7 +149,8 @@ public final class InstituteViewPresenter {
     // ---------------------------------------------------------------- overview
 
     private static Overview overview(ResearchInstituteBuilding building, List<Person> people, double hands,
-                                     KnowledgeJournalData knowledge, Research research, Association association) {
+                                     KnowledgeJournalData knowledge, Research research, Association association,
+                                     @Nullable TeamTown town) {
         FHConfig.Server.Town.ResearchInstitute config = FHConfig.SERVER.TOWN.RESEARCH_INSTITUTE;
         int slots = building == null ? 0 : building.getMaxResidents();
         Stat researchers = BoardPresenters.workersStat(t("stat.researchers"), people, slots);
@@ -170,6 +172,7 @@ public final class InstituteViewPresenter {
         List<Chip> chips = new ArrayList<>();
         if (building != null) {
             chips.add(BoardPresenters.spaceChip(building.isSpaceValid(), building.getMaxResidents()));
+            BoardPresenters.addRoadChip(chips, building, town);
             chips.add(BoardPresenters.temperatureChip(building.getEffectiveTemperature(), config.minimumWorkingTemperatureCelsius.get(),
                     Double.POSITIVE_INFINITY));
             chips.add(BoardPresenters.lightChip(building.getAverageLight(), config.minimumAverageBlockLight.get()));
@@ -441,6 +444,8 @@ public final class InstituteViewPresenter {
         if (!room.isEmpty())
             notes.add(BoardPresenters.improve("structure", room.get(0),
                     BoardPresenters.roomAction(building, building.getArea(), config.minimumFloorAreaBlocks.get(), config.minimumInteriorVolumeBlocks.get()), signer));
+        Note road = BoardPresenters.roadNote(building, in.town(), signer);
+        if (road != null) notes.add(road);
         for (int i = 0; i < people.size() && i < in.researchers().size(); i++) {
             if (people.get(i).duty() == Duty.ON_DUTY || BoardPresenters.fitToWork(in.researchers().get(i))) continue;
             notes.add(BoardPresenters.unfitNote(in.researchers().get(i), people.get(i), people, buildings));

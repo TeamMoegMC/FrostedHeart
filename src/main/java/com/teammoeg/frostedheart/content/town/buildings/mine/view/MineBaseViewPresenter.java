@@ -143,6 +143,7 @@ public final class MineBaseViewPresenter {
         // ---- status: mine bases have no size minimum, so only the checks every room shares apply
         List<Component> room = BoardPresenters.roomReasons(building, 1, 1, 1, 1);
         List<Component> stopped = new ArrayList<>(room);
+        stopped.addAll(BoardPresenters.roadReasons(building, in.town()));
         TownProductionStopReason reason = forecast == null ? TownProductionStopReason.NONE : forecast.stopReason();
         if (stopped.isEmpty() && reason == TownProductionStopReason.NO_USABLE_MINES) stopped.add(t("reason.no_mines"));
         if (stopped.isEmpty() && reason == TownProductionStopReason.NO_ELIGIBLE_WORKERS) stopped.add(b("reason.no_workers"));
@@ -168,6 +169,7 @@ public final class MineBaseViewPresenter {
 
         List<Chip> chips = new ArrayList<>();
         chips.add(room.isEmpty() ? Chip.of(b("work.chip.room.ok"), Tone.GOOD) : Chip.of(b("work.chip.room.bad"), Tone.BAD));
+        BoardPresenters.addRoadChip(chips, building, in.town());
         chips.add(Chip.of(t("chip.mines", usable), usable > 0 ? Tone.GOOD : Tone.BAD));
         int days = forecast == null || forecast.requested() <= 1e-6 ? -1 : TownFormat.days(remainingTotal, forecast.requested());
         if (days >= 0) chips.add(Chip.of(t("chip.deposit_days", days), days < 7 ? Tone.WARN : Tone.NORMAL));
@@ -177,6 +179,8 @@ public final class MineBaseViewPresenter {
         Component signer = BoardPresenters.signer(people, null);
         List<Note> notes = new ArrayList<>();
         if (!room.isEmpty()) notes.add(BoardPresenters.improve("structure", room.get(0), BoardPresenters.roomAction(building, 1, 1, 1), signer));
+        Note road = BoardPresenters.roadNote(building, in.town(), signer);
+        if (road != null) notes.add(road);
         if (reason == TownProductionStopReason.NO_USABLE_MINES)
             notes.add(linked.isEmpty()
                     ? BoardPresenters.improve("no_mines", t("note.no_mines", radius), t("note.no_mines.action", radius), signer)

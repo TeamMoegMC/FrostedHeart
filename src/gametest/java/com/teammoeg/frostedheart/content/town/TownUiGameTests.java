@@ -51,6 +51,7 @@ import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.item.townmanager.view.TownHallPresenter;
 import com.teammoeg.frostedheart.content.town.ui.TownFormat;
 import com.teammoeg.frostedheart.content.town.ui.TownUiMode;
+import com.teammoeg.frostedheart.content.town.ui.view.BoardPresenters;
 import com.teammoeg.frostedheart.content.town.ui.view.BoardView;
 import com.teammoeg.frostedheart.content.town.ui.view.WorkView;
 
@@ -117,6 +118,8 @@ public class TownUiGameTests {
         ResearchInstituteBlockEntity core = ResearchInstituteGameTests.furnishedInstitute(helper, holder, origin);
         ResearchInstituteBuilding institute = core.getBuilding().orElseThrow();
         core.refresh_safe(institute);
+        // On the road group allowed to work, so the board judges the room, warmth and staff alone.
+        institute.setConnectivityWorkable(true);
         institute.setAverageLight(15);
         institute.setTemperature(12.37);
         TeamTownData data = holder.getData(FHSpecialDataTypes.TOWN_DATA);
@@ -162,6 +165,7 @@ public class TownUiGameTests {
         HouseBuilding house = new HouseBuilding(pos);
         house.setInitialized(true);
         house.setIsStructureValid(true);
+        house.setConnectivityWorkable(true);
         house.setArea(64);
         house.setVolume(256);
         house.setMaxResidents(3);
@@ -229,6 +233,7 @@ public class TownUiGameTests {
         HouseBuilding vacant = new HouseBuilding(vacantPos);
         vacant.setInitialized(true);
         vacant.setIsStructureValid(true);
+        vacant.setConnectivityWorkable(true);
         vacant.setMaxResidents(2);
         HouseView never = present(vacant, vacantPos, List.of(), town);
         helper.assertTrue(flatten(never.stats().get(1).sub()).contains("stat.fed.nobody") && never.meal().satisfaction() < 0,
@@ -245,6 +250,7 @@ public class TownUiGameTests {
         WarehouseBuilding warehouse = new WarehouseBuilding(pos);
         warehouse.setInitialized(true);
         warehouse.setIsStructureValid(true);
+        warehouse.setConnectivityWorkable(true);
         warehouse.setArea(30);
         warehouse.setVolume(120);
         warehouse.setCapacity(2345.67);
@@ -309,6 +315,7 @@ public class TownUiGameTests {
         for (var building : List.of(mineBase, hunting, station)) {
             building.setInitialized(true);
             building.setIsStructureValid(true);
+            building.setConnectivityWorkable(true);
             building.setMaxResidents(3);
         }
         hunting.setArea(64);
@@ -387,6 +394,93 @@ public class TownUiGameTests {
         List<String> out = new ArrayList<>();
         for (Component part : parts) out.add(flatten(part));
         return out;
+    }
+
+    /** Roads get their own stop reason and note, worded by where the working group is; a pending check only waits. */
+    @GameTest(template = "phase0a_empty", timeoutTicks = 20)
+    public static void roadsSayWhyABuildingStops(GameTestHelper helper) {
+        TeamDataHolder holder = TownBuildingGameTests.newTeam(helper, "road-reasons");
+        TeamTownData data = holder.getData(FHSpecialDataTypes.TOWN_DATA);
+        BlockPos housePos = helper.absolutePos(new BlockPos(2, 2, 2)), storePos = helper.absolutePos(new BlockPos(8, 2, 2));
+        HouseBuilding house = new HouseBuilding(housePos);
+        house.setInitialized(true);
+        house.setIsStructureValid(true);
+        house.setArea(64);
+        house.setVolume(256);
+        house.setMaxResidents(3);
+        house.setTemperature(Math.min(FHConfig.SERVER.TOWN.HOUSING.maximumTemperatureCelsius.get() - 1,
+                FHConfig.SERVER.TOWN.HOUSING.minimumTemperatureCelsius.get() + 18));
+        WarehouseBuilding store = new WarehouseBuilding(storePos);
+        store.setInitialized(true);
+        store.setIsStructureValid(true);
+        // A mine needs no road, so it always may work; it must not read as the road check having reported.
+        BlockPos minePos = helper.absolutePos(new BlockPos(14, 2, 2));
+        var mine = new com.teammoeg.frostedheart.content.town.buildings.mine.MineBuilding(minePos);
+        mine.setInitialized(true);
+        mine.setIsStructureValid(true);
+        data.applyBuildingUpdate(java.util.Map.of(housePos, house, storePos, store, minePos, mine), java.util.Set.of());
+        String key = "gui.frostedheart.board.";
+
+        HouseView waiting = present(house, housePos, List.of(), data.createTeamTown());
+        helper.assertTrue(waiting.header().status() == BoardView.Status.STOPPED
+                        && reasonKeys(waiting.header()).contains(key + "reason.road.checking") && !problems(waiting.notes()).contains("road"),
+                "before the first road check a house waits for it instead of blaming its road, got " + reasonKeys(waiting.header()));
+        assertRoadChip(helper, waiting, key + "chip.road.checking", BoardView.Tone.MUTED, key + "reason.road.checking", "while the check is out");
+        var mineBoard = com.teammoeg.frostedheart.content.town.buildings.mine.view.MineViewPresenter.present(
+                new com.teammoeg.frostedheart.content.town.buildings.mine.view.MineViewPresenter.Inputs(mine, minePos, data.createTeamTown(), "Cedar Hollow", 3));
+        helper.assertTrue(BoardPresenters.road(mine, data.createTeamTown()) == BoardPresenters.Road.LINKED
+                        && reasonKeys(mineBoard.header()).stream().noneMatch(reason -> reason.contains("reason.road"))
+                        && mineBoard.notes().stream().noneMatch(note -> note.problem().equals("road")),
+                "a mine needs no road and never gets a road reason, got " + reasonKeys(mineBoard.header()));
+        helper.assertTrue(mineBoard.conditions().stream().noneMatch(chip -> translationKeyOf(chip.text()).startsWith(key + "chip.road")),
+                "a mine's conditions carry no road chip");
+
+        store.setConnectivityWorkable(true);
+        HouseView cutOff = present(house, housePos, List.of(), data.createTeamTown());
+        BoardView.Note road = cutOff.notes().stream().filter(note -> note.problem().equals("road")).findFirst().orElse(null);
+        helper.assertTrue(cutOff.header().status() == BoardView.Status.STOPPED && reasonKeys(cutOff.header()).contains(key + "reason.road.largest")
+                        && road != null && road.blocking() && translationKeyOf(road.line()).equals(key + "note.road.largest"),
+                "with nothing on the tower, a house off the largest group says so and must be fixed, got "
+                        + reasonKeys(cutOff.header()) + " " + problems(cutOff.notes()));
+        assertRoadChip(helper, cutOff, key + "chip.road.cut", BoardView.Tone.BAD, key + "reason.road.largest", "off the largest group");
+        helper.assertTrue(road.action().getContents() instanceof TranslatableContents action && action.getArgs().length == 1
+                        && action.getArgs()[0] instanceof Component bound
+                        && bound.getContents() instanceof net.minecraft.network.chat.contents.KeybindContents,
+                "the road note names the view key as the player bound it");
+
+        store.setConnectedToTower(true);
+        HouseView towerCut = present(house, housePos, List.of(), data.createTeamTown());
+        helper.assertTrue(reasonKeys(towerCut.header()).contains(key + "reason.road.tower") && towerCut.notes().stream()
+                        .anyMatch(note -> note.problem().equals("road") && translationKeyOf(note.line()).equals(key + "note.road.tower")),
+                "once a group reaches the tower, the house is told to reach that group, got " + reasonKeys(towerCut.header()));
+        assertRoadChip(helper, towerCut, key + "chip.road.cut", BoardView.Tone.BAD, key + "reason.road.tower", "off the tower's group");
+        TownHallPresenter.TownHallView hall = TownHallPresenter.present(new TownHallPresenter.Inputs(data.createTeamTown(), data, null, 3));
+        helper.assertTrue(hall.buildings().stream().anyMatch(card -> card.pos().equals(housePos) && card.status() == BoardView.Status.STOPPED
+                        && translationKeyOf(card.line()).equals(key + "reason.road.tower")),
+                "the mayor's seal shows the same road reason on the house's card");
+
+        house.setConnectivityWorkable(true);
+        house.setConnectedToTower(true);
+        HouseView linked = present(house, housePos, List.of(), data.createTeamTown());
+        helper.assertTrue(linked.header().status() != BoardView.Status.STOPPED
+                        && reasonKeys(linked.header()).stream().noneMatch(reason -> reason.contains("reason.road")) && !problems(linked.notes()).contains("road"),
+                "a linked house has no road reason or note, got " + linked.header().status() + " " + reasonKeys(linked.header()));
+        assertRoadChip(helper, linked, key + "chip.road.linked", BoardView.Tone.GOOD, key + "chip.road.linked.tower", "linked to the tower");
+        helper.succeed();
+    }
+
+    /** The house's conditions show one road chip, in the given words and tone, its tooltip led by the given line. */
+    private static void assertRoadChip(GameTestHelper helper, HouseView view, String text, BoardView.Tone tone, String firstTip, String state) {
+        List<BoardView.Chip> roads = view.conditions().stream()
+                .filter(chip -> translationKeyOf(chip.text()).startsWith("gui.frostedheart.board.chip.road")).toList();
+        helper.assertTrue(roads.size() == 1 && translationKeyOf(roads.get(0).text()).equals(text) && roads.get(0).tone() == tone
+                        && !roads.get(0).tooltip().isEmpty() && translationKeyOf(roads.get(0).tooltip().get(0)).equals(firstTip),
+                "the house conditions show one road chip " + text + " " + tone + " " + state + ", got "
+                        + roads.stream().map(chip -> translationKeyOf(chip.text()) + " " + chip.tone()).toList());
+    }
+
+    private static List<String> reasonKeys(BoardView.Header header) {
+        return header.reasons().stream().map(TownUiGameTests::translationKeyOf).toList();
     }
 
     @GameTest(template = "phase0a_empty", timeoutTicks = 100)

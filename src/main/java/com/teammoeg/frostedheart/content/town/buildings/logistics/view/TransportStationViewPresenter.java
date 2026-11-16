@@ -97,6 +97,7 @@ public final class TransportStationViewPresenter {
         // ---- status
         List<Component> room = BoardPresenters.roomReasons(building, building.getArea(), minArea, building.getVolume(), minVolume);
         List<Component> stopped = new ArrayList<>(room);
+        stopped.addAll(BoardPresenters.roadReasons(building, in.town()));
         TownProductionStopReason reason = forecast == null ? TownProductionStopReason.NONE : forecast.stopReason();
         if (stopped.isEmpty() && reason == TownProductionStopReason.NO_ELIGIBLE_WORKERS) stopped.add(b("reason.no_workers"));
         if (stopped.isEmpty() && reason == TownProductionStopReason.OUTPUT_DISABLED) stopped.add(t("reason.disabled"));
@@ -122,6 +123,7 @@ public final class TransportStationViewPresenter {
 
         List<Chip> chips = new ArrayList<>();
         chips.add(BoardPresenters.spaceChip(room.isEmpty(), building.getMaxResidents()));
+        BoardPresenters.addRoadChip(chips, building, in.town());
         chips.add(Chip.of(t("chip.area", building.getArea()), Tone.NORMAL));
 
         // ---- notes
@@ -129,6 +131,8 @@ public final class TransportStationViewPresenter {
         List<Note> notes = new ArrayList<>();
         if (!room.isEmpty())
             notes.add(BoardPresenters.improve("structure", room.get(0), BoardPresenters.roomAction(building, building.getArea(), minArea, minVolume), signer));
+        Note road = BoardPresenters.roadNote(building, in.town(), signer);
+        if (road != null) notes.add(road);
         WorkPresenters.crewNotes(notes, in.residents(), people, buildings, t("noun"), signer);
         if (townReport.hasData() && townTotal > 0 && usedPercent >= 90)
             notes.add(BoardPresenters.improve("town_full", t("note.town_full"), t("note.town_full.action"), signer));

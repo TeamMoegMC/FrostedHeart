@@ -329,6 +329,66 @@ public final class BoardPresenters {
         return reasons;
     }
 
+    /**
+     * 一栋建筑在城镇道路里的处境，按客户端最近收到的检查结果：已接入获准工作的那片、全镇还在等检查结果、
+     * 没连到连塔的那片、或（没有建筑连塔时）没连到最大的那片。
+     * <p>
+     * Where a building stands on the town's roads, as of the last check the client heard of: on the group allowed to
+     * work, the whole town still waiting for a result, cut off from the group linked to the tower, or (with no
+     * building linked to the tower) cut off from the largest group.
+     */
+    public enum Road {
+        LINKED, CHECKING, TO_TOWER, TO_LARGEST
+    }
+
+    public static Road road(AbstractTownBuilding building, @Nullable TeamTown town) {
+        if (building.isConnectivityWorkable()) return Road.LINKED;
+        java.util.Collection<AbstractTownBuilding> all = town == null ? List.of(building) : town.getTownBuildings().values();
+        // Every finished check lets some group work, so a town where none may is still waiting for the first result.
+        // Buildings that need no road always may, so they say nothing about the check.
+        if (all.stream().filter(AbstractTownBuilding::requiresRoad).noneMatch(AbstractTownBuilding::isConnectivityWorkable))
+            return Road.CHECKING;
+        return all.stream().anyMatch(AbstractTownBuilding::isConnectedToTower) ? Road.TO_TOWER : Road.TO_LARGEST;
+    }
+
+    /** Why the roads stop this building; empty while it is on the group allowed to work. */
+    public static List<Component> roadReasons(AbstractTownBuilding building, @Nullable TeamTown town) {
+        return switch (road(building, town)) {
+            case LINKED -> List.of();
+            case CHECKING -> List.of(b("reason.road.checking"));
+            case TO_TOWER -> List.of(b("reason.road.tower"));
+            case TO_LARGEST -> List.of(b("reason.road.largest"));
+        };
+    }
+
+    /** What to do when the roads stop this building; null when they do not, or while the town waits for a check. */
+    @Nullable
+    public static Note roadNote(AbstractTownBuilding building, @Nullable TeamTown town, Component signer) {
+        Road road = road(building, town);
+        if (road == Road.LINKED || road == Road.CHECKING) return null;
+        return improve("road", b(road == Road.TO_TOWER ? "note.road.tower" : "note.road.largest"),
+                b("note.road.action", Component.keybind("key.frostedheart.building_area")), signer);
+    }
+
+    /**
+     * 条件栏里的道路标签：接上了是绿的，没接上是红的，检查结果还没出来时是灰的；悬停说明是哪一片、按什么键看道路。
+     * 不需要道路的建筑（矿井）不加这一项。
+     * <p>
+     * The road chip of a board's conditions: green when linked, red when cut off, grey while the check has not
+     * reported; its tooltip names the group and the key that shows the roads. Buildings that need no road (mines) get none.
+     */
+    public static void addRoadChip(List<Chip> chips, AbstractTownBuilding building, @Nullable TeamTown town) {
+        if (!building.requiresRoad()) return;
+        Component view = b("chip.road.view", Component.keybind("key.frostedheart.building_area"));
+        chips.add(switch (road(building, town)) {
+            case LINKED -> new Chip(b("chip.road.linked"), Tone.GOOD, -1,
+                    List.of(b(building.isConnectedToTower() ? "chip.road.linked.tower" : "chip.road.linked.largest"), view));
+            case CHECKING -> new Chip(b("chip.road.checking"), Tone.MUTED, -1, List.of(b("reason.road.checking")));
+            case TO_TOWER -> new Chip(b("chip.road.cut"), Tone.BAD, -1, List.of(b("reason.road.tower"), view));
+            case TO_LARGEST -> new Chip(b("chip.road.cut"), Tone.BAD, -1, List.of(b("reason.road.largest"), view));
+        });
+    }
+
     /** What to do about the first problem {@link #roomReasons} names. */
     public static Component roomAction(AbstractTownBuilding building, int area, int minArea, int minVolume) {
         if (building.isOccupiedAreaOverlapped()) return b("note.structure.overlap");
