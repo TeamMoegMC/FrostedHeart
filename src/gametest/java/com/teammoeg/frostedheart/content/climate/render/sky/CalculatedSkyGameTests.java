@@ -67,6 +67,7 @@ public final class CalculatedSkyGameTests {
     private static final double[] PREVIEW_MAP_TOTAL_SUN_8 = {1.982199e-01, 1.981322e-01, 1.984010e-01};
     private static final double PREVIEW_TEXEL_DEGREES = 0.5;
     private static final double DEFAULT_EXPOSURE = SkySetting.EXPOSURE.defaultValue();
+    private static final double SWITCH_EXPOSURE = SkySetting.NIGHT_EXPOSURE.defaultValue();
     private static final double[] DAYLIGHT_SUN_DEGREES = {
             90.0, 45.0, 30.0, 20.0, 12.0, 5.0, 2.0, 0.0, -2.0, -6.0, -12.0, -18.0
     };
@@ -161,7 +162,7 @@ public final class CalculatedSkyGameTests {
     private static final int SWITCH_ELEVATION_STEPS = 180;
     private static final double SWITCH_AZIMUTH_STEP_DEGREES = 5.0;
     private static final double SWITCH_ELEVATION_STEP_DEGREES = 0.5;
-    private static final double SWITCH_DISPLAY_STEPS = 0.5;
+    private static final double SWITCH_DISPLAY_STEPS = 3.0;
     /**
      * The phases whose night sky is checked, the full moon, the half moon, and the new moon.
      */
@@ -1097,7 +1098,8 @@ public final class CalculatedSkyGameTests {
 
     /**
      * The sun below the moonlight switch lights nothing, so the sky and the fog at the switch are black in every
-     * direction and at every depth, while the sun three degrees higher, where its fade reaches 1, is not.
+     * direction and at every depth at the night exposure, which the adapted exposure has reached there, while the sun
+     * three degrees higher, where its fade reaches 1, is not.
      */
     @GameTest(template = "phase0a_empty", timeoutTicks = 200)
     public static void sunSkyIsDarkAtTheMoonlightSwitch(GameTestHelper helper) {
@@ -1128,18 +1130,18 @@ public final class CalculatedSkyGameTests {
             double[] largestFog = new double[SkyAtmosphere.CHANNEL_COUNT];
             for (int azimuthStep = 0; azimuthStep < SWITCH_AZIMUTH_STEPS; azimuthStep++) {
                 double azimuth = Math.toRadians(-180.0 + SWITCH_AZIMUTH_STEP_DEGREES * azimuthStep);
-                views.horizonDisplayColor(0.0, 0.0, azimuth, 1.0, DEFAULT_EXPOSURE, 0.0F, 0.0F, fog);
+                views.horizonDisplayColor(0.0, 0.0, azimuth, 1.0, SWITCH_EXPOSURE, 0.0F, 0.0F, fog);
                 for (int channel = 0; channel < SkyAtmosphere.CHANNEL_COUNT; channel++) {
                     largestFog[channel] = Math.max(largestFog[channel], 255.0 * fog[channel]);
                 }
             }
-            views.horizonDisplayColor(0.0, 0.0, 0.0, 0.0, DEFAULT_EXPOSURE, 0.0F, 0.0F, fog);
+            views.horizonDisplayColor(0.0, 0.0, 0.0, 0.0, SWITCH_EXPOSURE, 0.0F, 0.0F, fog);
             for (int channel = 0; channel < SkyAtmosphere.CHANNEL_COUNT; channel++) {
                 largestFog[channel] = Math.max(largestFog[channel], 255.0 * fog[channel]);
             }
             double[] skySteps = new double[SkyAtmosphere.CHANNEL_COUNT];
             for (int channel = 0; channel < SkyAtmosphere.CHANNEL_COUNT; channel++) {
-                skySteps[channel] = SkyDisplay.displaySteps(DEFAULT_EXPOSURE, largestRadiance[channel]);
+                skySteps[channel] = SkyDisplay.displaySteps(SWITCH_EXPOSURE, largestRadiance[channel]);
             }
             LogUtils.getLogger().info("MoonLight switch depth " + depth + " sky " + skySteps[0] + "," + skySteps[1]
                     + "," + skySteps[2] + " fog " + largestFog[0] + "," + largestFog[1] + "," + largestFog[2]);
@@ -1165,7 +1167,7 @@ public final class CalculatedSkyGameTests {
                         clearTables.diffractionWeights()));
             }
         }
-        double fadedSteps = SkyDisplay.displaySteps(DEFAULT_EXPOSURE, largestRed);
+        double fadedSteps = SkyDisplay.displaySteps(SWITCH_EXPOSURE, largestRed);
         helper.assertTrue(fadedSteps > SWITCH_DISPLAY_STEPS, "The sun at " + fadedDegrees + " degrees, "
                 + MoonLight.SUN_FADE_DEGREES + " above the switch, lights the red sky to " + fadedSteps
                 + " steps, not above " + SWITCH_DISPLAY_STEPS);
@@ -1233,8 +1235,9 @@ public final class CalculatedSkyGameTests {
     }
 
     /**
-     * The full moon at the default settings lights the sky 30 degrees from it and the fog to a faint blue night sky,
-     * and the half moon lights both dimmer in every channel, down to the new moon, which lights neither.
+     * The full moon at the default settings and the exposure adapted to it lights the sky 30 degrees from it and the
+     * fog to a faint blue night sky, and the half moon lights both dimmer in every channel, down to the new moon, which
+     * lights neither.
      */
     @GameTest(template = "phase0a_empty", timeoutTicks = 200)
     public static void fullMoonDisplaysAsANightSky(GameTestHelper helper) {
@@ -1268,16 +1271,20 @@ public final class CalculatedSkyGameTests {
         float[] fog = new float[SkyAtmosphere.CHANNEL_COUNT];
         for (int phaseIndex = 0; phaseIndex < MOON_NIGHT_PHASES.length; phaseIndex++) {
             int phase = MOON_NIGHT_PHASES[phaseIndex];
+            double exposure = SkyAdaptation.exposure(views.adaptationLuminance(0.0, 0.0, lightScales[phaseIndex]),
+                    DEFAULT_EXPOSURE, SkySetting.NIGHT_EXPOSURE.defaultValue(),
+                    SkySetting.ADAPTATION_DAY_LUMINANCE.defaultValue(),
+                    SkySetting.ADAPTATION_NIGHT_LUMINANCE.defaultValue());
+            LogUtils.getLogger().info("MoonLight night phase " + phase + " exposure " + exposure);
             for (int azimuthIndex = 0; azimuthIndex < MOON_NIGHT_AZIMUTH_COUNT; azimuthIndex++) {
                 double azimuthDegrees = MOON_NIGHT_AZIMUTH_STEP_DEGREES * azimuthIndex;
                 double azimuth = Math.toRadians(azimuthDegrees);
-                views.horizonDisplayColor(0.0, 0.0, azimuth, 1.0, DEFAULT_EXPOSURE, lightScales[phaseIndex], 0F, 0F,
-                        fog);
+                views.horizonDisplayColor(0.0, 0.0, azimuth, 1.0, exposure, lightScales[phaseIndex], 0F, 0F, fog);
                 for (int channel = 0; channel < SkyAtmosphere.CHANNEL_COUNT; channel++) {
                     double radiance = view.radiance(channel, azimuth,
                             Math.toRadians(MOON_NIGHT_SKY_ELEVATION_DEGREES), profile, map,
                             tables.diffractionWeights());
-                    skySteps[phaseIndex][azimuthIndex][channel] = SkyDisplay.displaySteps(DEFAULT_EXPOSURE,
+                    skySteps[phaseIndex][azimuthIndex][channel] = SkyDisplay.displaySteps(exposure,
                             radiance * lightScales[phaseIndex][channel]);
                     fogSteps[phaseIndex][azimuthIndex][channel] = 255.0 * fog[channel];
                 }

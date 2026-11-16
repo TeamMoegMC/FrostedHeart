@@ -109,7 +109,7 @@ public final class CalculatedSkyScreenshots {
     private static final Set<String> GROUP_KEYS = Set.of("poses", "times", "weather", "variants");
     private static final Set<String> POSE_KEYS = Set.of("name", "yaw", "pitch", "position", "offset", "times",
             "sunElevations", "sunBranch", "weather");
-    private static final Set<String> VARIANT_KEYS = Stream.concat(Stream.of("name", "sky"),
+    private static final Set<String> VARIANT_KEYS = Stream.concat(Stream.of("name", "sky", "defaults"),
             Arrays.stream(SkySetting.values()).map(SkySetting::key)).collect(Collectors.toUnmodifiableSet());
     private static final String MANIFEST_HEADER = manifestHeader();
 
@@ -774,9 +774,10 @@ public final class CalculatedSkyScreenshots {
             warnUnknownKeys(entry, VARIANT_KEYS, "a variant", warnings);
             String name = name(entry, "variant" + (variants.size() + 1), warnings);
             boolean sky = bool(entry, "sky", startVariant.sky(), warnings);
-            SkySettings settings = startVariant.settings();
+            SkySettings base = bool(entry, "defaults", false, warnings) ? SkySettings.DEFAULT : startVariant.settings();
+            SkySettings settings = base;
             for (SkySetting setting : SkySetting.values()) {
-                double startValue = startVariant.settings().get(setting);
+                double startValue = base.get(setting);
                 double value;
                 if (setting.isSwitch()) {
                     SkySetting manualValue = setting.manualValue();
@@ -1140,7 +1141,7 @@ public final class CalculatedSkyScreenshots {
                     variant.name(), Boolean.toString(variant.sky())));
             for (SkySetting setting : SkySetting.values()) {
                 double value = variant.settings().get(setting);
-                fields.add(setting.isSwitch() ? Boolean.toString(value != 0.0) : decimal(value));
+                fields.add(setting.isSwitch() ? Boolean.toString(value != 0.0) : Double.toString(value));
             }
             fields.addAll(List.of(decimal(IceWeatherDepth.update(partialTick)),
                     decimal(DiamondDustExtinction.lastValue()), status,

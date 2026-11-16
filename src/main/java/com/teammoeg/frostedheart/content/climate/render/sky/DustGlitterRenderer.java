@@ -495,7 +495,7 @@ public final class DustGlitterRenderer {
             GL20.glUniform2f(pixelToClipUniform, 2.0F / windowWidth, 2.0F / windowHeight);
             GL20.glUniform3f(lightUniform, (float) (beam[0] * gain), (float) (beam[1] * gain),
                     (float) (beam[2] * gain));
-            GL20.glUniform1f(exposureUniform, (float) frame.exposure());
+            GL20.glUniform1f(exposureUniform, (float) CalculatedSkyRenderer.exposure(state, frame));
             SkyLight light = frame.light();
             GL20.glUniform3f(lightDirectionUniform, light.x(), light.y(), 0.0F);
             GL20.glUniform1f(lightSideUniform, light.side());

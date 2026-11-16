@@ -202,6 +202,49 @@ public final class SkyViewSet {
     }
 
     /**
+     * The luminance in candela per square meter that the exposure adapts to, the larger of the sky's adaptation
+     * radiance and its brightest radiance at the horizon, each blended as horizonDisplayColor blends the radiance and
+     * times the light scale.
+     */
+    public double adaptationLuminance(double sunWeight, double depthWeight, double[] lightScale) {
+        return Math.max(skyAdaptationLuminance(sunWeight, depthWeight, lightScale),
+                horizonAdaptationLuminance(sunWeight, depthWeight, lightScale));
+    }
+
+    /**
+     * The luminance in candela per square meter of the views' adaptation radiance, blended and times the light scale.
+     */
+    public double skyAdaptationLuminance(double sunWeight, double depthWeight, double[] lightScale) {
+        double red = blend(views[slot(0, 0)].adaptationRadiance()[0], views[slot(0, 1)].adaptationRadiance()[0],
+                views[slot(1, 0)].adaptationRadiance()[0], views[slot(1, 1)].adaptationRadiance()[0], sunWeight,
+                depthWeight);
+        double green = blend(views[slot(0, 0)].adaptationRadiance()[1], views[slot(0, 1)].adaptationRadiance()[1],
+                views[slot(1, 0)].adaptationRadiance()[1], views[slot(1, 1)].adaptationRadiance()[1], sunWeight,
+                depthWeight);
+        double blue = blend(views[slot(0, 0)].adaptationRadiance()[2], views[slot(0, 1)].adaptationRadiance()[2],
+                views[slot(1, 0)].adaptationRadiance()[2], views[slot(1, 1)].adaptationRadiance()[2], sunWeight,
+                depthWeight);
+        return SkyAdaptation.luminance(red * lightScale[0], green * lightScale[1], blue * lightScale[2]);
+    }
+
+    /**
+     * The luminance in candela per square meter of the views' brightest radiance at the horizon, blended and times the
+     * light scale.
+     */
+    public double horizonAdaptationLuminance(double sunWeight, double depthWeight, double[] lightScale) {
+        double red = blend(views[slot(0, 0)].brightestHorizonRadiance()[0],
+                views[slot(0, 1)].brightestHorizonRadiance()[0], views[slot(1, 0)].brightestHorizonRadiance()[0],
+                views[slot(1, 1)].brightestHorizonRadiance()[0], sunWeight, depthWeight);
+        double green = blend(views[slot(0, 0)].brightestHorizonRadiance()[1],
+                views[slot(0, 1)].brightestHorizonRadiance()[1], views[slot(1, 0)].brightestHorizonRadiance()[1],
+                views[slot(1, 1)].brightestHorizonRadiance()[1], sunWeight, depthWeight);
+        double blue = blend(views[slot(0, 0)].brightestHorizonRadiance()[2],
+                views[slot(0, 1)].brightestHorizonRadiance()[2], views[slot(1, 0)].brightestHorizonRadiance()[2],
+                views[slot(1, 1)].brightestHorizonRadiance()[2], sunWeight, depthWeight);
+        return SkyAdaptation.luminance(red * lightScale[0], green * lightScale[1], blue * lightScale[2]);
+    }
+
+    /**
      * Writes the share of the light's beam that reaches the eye into the result, blended as horizonDisplayColor blends
      * the radiance, times the light scale.
      */

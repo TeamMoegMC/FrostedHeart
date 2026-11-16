@@ -30,7 +30,19 @@ import javax.annotation.Nullable;
  * Where settings are held as numbers, a switch is 1 when on and 0 when off.
  */
 public enum SkySetting {
-    EXPOSURE("exposure", "Display exposure of the calculated sky.", Rebuilds.NOTHING, 6.0, 0.5, 50.0),
+    EXPOSURE("exposure", "Display exposure of the calculated sky by day.", Rebuilds.NOTHING, 6.0, 0.5, 50.0),
+    EXPOSURE_ADAPTS("exposureAdapts", "Lets the exposure adapt to the sky's brightness as the eye does, rising from "
+            + "exposure at dusk to nightExposure at night. Off keeps exposure under the sun and nightExposure under "
+            + "the moon.", true, null),
+    NIGHT_EXPOSURE("nightExposure", "Display exposure of the calculated sky at night, the eye's limit of adaptation "
+            + "in the dark. With the moon at its real brightness it sets how bright moonlit nights look.",
+            Rebuilds.NOTHING, 30000.0, 1000.0, 1000000.0),
+    ADAPTATION_DAY_LUMINANCE("adaptationDayLuminance", "Luminance of the sky in candela per square meter above which "
+            + "the exposure stays at exposure. 800 is a clear sky with the sun at the horizon.",
+            Rebuilds.NOTHING, 800.0, 1.0, 100000.0),
+    ADAPTATION_NIGHT_LUMINANCE("adaptationNightLuminance", "Luminance of the sky in candela per square meter below "
+            + "which the exposure is nightExposure. A full moon high in clear air gives a little more, so it lowers "
+            + "the exposure a little.", Rebuilds.NOTHING, 0.058, 0.0001, 10.0),
     NANOBOT_OPTICAL_DEPTH("nanobotOpticalDepth", "Vertical optical depth of the nanobot layer at 550 nm. 0.25 is "
             + "about 30 megatons worldwide at the default size.", Rebuilds.TABLES, 0.25, 0.0, 4.0),
     NANOBOT_MEDIAN_NANOMETERS("nanobotMedianNanometers", "Median nanobot diameter in nanometers.", Rebuilds.TABLES,
@@ -49,18 +61,19 @@ public enum SkySetting {
     DUST_FOLLOWS_WEATHER("dustFollowsWeather", "Lets the diamond dust follow the weather, forming after each snow and "
             + "gone a climate day later.", true, DUST_EXTINCTION),
     MOONLIGHT_BRIGHTNESS("moonlightBrightness", "Irradiance of the full moon as a share of the sun's, with which the "
-            + "moon lights the sky at night. Other phases are dimmer. The real full moon gives 0.0000025, too little to "
-            + "show.", Rebuilds.NOTHING, 0.0125, 0.0, 0.2),
+            + "moon lights the sky at night. Other phases are dimmer. The real full moon gives 0.0000025.",
+            Rebuilds.NOTHING, 0.0000025, 0.0, 0.0001),
     MOONLIGHT_BLUE_SHIFT("moonlightBlueShift", "Color of moonlight, from the moon's own faintly red light at 0 to the "
             + "blue that eyes adapted to the dark see at 1.", Rebuilds.NOTHING, 0.5, 0.0, 1.0),
     MOONLIGHT_SWITCH_DEGREES("moonlightSwitchDegrees", "Sun elevation in degrees below which the moon lights the sky "
-            + "instead of the sun. The sun's light fades out over the 3 degrees above it.", Rebuilds.NOTHING, -9.5,
+            + "instead of the sun. The sun's light fades out over the 3 degrees above it.", Rebuilds.NOTHING, -15.0,
             -18.0, -2.0),
     MOONLIGHT_FADE_DEGREES("moonlightFadeDegrees", "Degrees the sun sinks below moonlightSwitchDegrees while the "
-            + "moon's light fades in, and rises before dawn while it fades out.", Rebuilds.NOTHING, 4.0, 0.0, 30.0),
+            + "moon's light fades in, and rises before dawn while it fades out.", Rebuilds.NOTHING, 1.0, 0.0, 30.0),
     NIGHT_SKY_FLOOR("nightSkyFloor", "Displayed brightness of a sky with no light at all, such as a night without a "
-            + "moon, in the sky and the fog, tinted like moonlight. Lighter skies take less of it. 0 leaves the night "
-            + "black.", Rebuilds.NOTHING, 0.04, 0.0, 0.25),
+            + "moon, in the sky and the fog, tinted like moonlight. It stands for the gray that eyes see in complete "
+            + "darkness, since the night sky's own glow is too faint to show. Lighter skies take less of it. 0 leaves "
+            + "the night black.", Rebuilds.NOTHING, 0.04, 0.0, 0.25),
     STAR_TWILIGHT_DISPLAY("starTwilightDisplay", "Displayed brightness of the sky overhead at which the stars are gone. "
             + "Stars fade as the sky overhead grows brighter toward it, at dusk and a little under a full moon.",
             Rebuilds.NOTHING, 0.25, 0.01, 1.0),

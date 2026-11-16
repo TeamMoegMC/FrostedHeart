@@ -29,7 +29,7 @@ import net.minecraftforge.fml.common.Mod;
 
 /**
  * What the calculated sky draws from in one frame, which is the light, the ice optical depth, the grid indices they
- * call for, the diamond dust, the exposure, the night sky floor, and the weather. It is filled at its first use in a frame and reused by the
+ * call for, the diamond dust, the day exposure, the night sky floor, and the weather. It is filled at its first use in a frame and reused by the
  * draw, the fog color, the daylight, and CalculatedSkyRenderer.isSettled, so the renderer calls IceWeatherDepth.update
  * and DiamondDustExtinction.update once per frame.
  * A new frame begins with each render tick, and a call with another partial tick fills it again. Render thread only.
@@ -50,7 +50,7 @@ public final class SkyFrame {
     private int depthIndex;
     private int viewIndex;
     private double dustExtinction;
-    private double exposure;
+    private double dayExposure;
     private final double[] nightFloor = new double[SkyAtmosphere.CHANNEL_COUNT];
     private float rainLevel;
     private float thunderLevel;
@@ -94,7 +94,7 @@ public final class SkyFrame {
         depthIndex = IceDepthGrid.index(iceDepth);
         viewIndex = SkyBuilder.viewGridIndex(light.elevationRadians());
         dustExtinction = DiamondDustExtinction.update(partialTick);
-        exposure = SkySetting.EXPOSURE.get();
+        dayExposure = SkySetting.EXPOSURE.get();
         NightSkyDimming.floorColor(SkySetting.NIGHT_SKY_FLOOR.get(), SkySetting.MOONLIGHT_BLUE_SHIFT.get(), nightFloor);
         rainLevel = level.getRainLevel(partialTick);
         thunderLevel = level.getThunderLevel(partialTick);
@@ -143,8 +143,12 @@ public final class SkyFrame {
         return dustExtinction;
     }
 
-    public double exposure() {
-        return exposure;
+    /**
+     * The exposure by day, the setting exposure. CalculatedSkyRenderer.exposure gives the exposure the frame is drawn
+     * with, which adapts to the sky.
+     */
+    public double dayExposure() {
+        return dayExposure;
     }
 
     /**

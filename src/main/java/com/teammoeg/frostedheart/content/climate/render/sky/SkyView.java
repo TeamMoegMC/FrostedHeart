@@ -39,6 +39,8 @@ public final class SkyView {
     private final double[] groundRadiance = new double[CHANNELS];
     private final double[] meanHorizonRadiance = new double[CHANNELS];
     private final double[] lightTransmittance = new double[CHANNELS];
+    private final double[] adaptationRadiance = new double[CHANNELS];
+    private final double[] brightestHorizonRadiance = new double[CHANNELS];
 
     public double sunElevationRadians() {
         return sunElevationRadians;
@@ -70,6 +72,23 @@ public final class SkyView {
      */
     public double[] lightTransmittance() {
         return lightTransmittance;
+    }
+
+    /**
+     * The sky's mean radiance weighted by the cosine to the zenith, which is its irradiance on level ground over pi,
+     * with the light of the ice and the glow of the ground's light in the air, but without the light itself and the
+     * ice's diffraction peak around it. The exposure adapts to it.
+     */
+    public double[] adaptationRadiance() {
+        return adaptationRadiance;
+    }
+
+    /**
+     * The sky table at elevation zero toward the azimuth where its luminance is highest, among the azimuths of the
+     * mean horizon radiance. After sunset it is the glow toward the sun.
+     */
+    public double[] brightestHorizonRadiance() {
+        return brightestHorizonRadiance;
     }
 
     /**

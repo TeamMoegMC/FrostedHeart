@@ -477,12 +477,29 @@ public final class SkyTables {
         }
 
         double[] meanHorizonRadiance = view.meanHorizonRadiance();
+        double[] brightestHorizonRadiance = view.brightestHorizonRadiance();
         Arrays.fill(meanHorizonRadiance, 0.0);
+        double brightestLuminance = -1.0;
         for (int index = 0; index < HORIZON_AZIMUTH_SAMPLES; index++) {
             double azimuth = -Math.PI + 2.0 * Math.PI * (index + 0.5) / HORIZON_AZIMUTH_SAMPLES;
-            for (int channel = 0; channel < CHANNELS; channel++) {
-                meanHorizonRadiance[channel] += SkyView.sample(sky, channel, azimuth, 0.0) / HORIZON_AZIMUTH_SAMPLES;
+            double red = SkyView.sample(sky, 0, azimuth, 0.0);
+            double green = SkyView.sample(sky, 1, azimuth, 0.0);
+            double blue = SkyView.sample(sky, 2, azimuth, 0.0);
+            meanHorizonRadiance[0] += red / HORIZON_AZIMUTH_SAMPLES;
+            meanHorizonRadiance[1] += green / HORIZON_AZIMUTH_SAMPLES;
+            meanHorizonRadiance[2] += blue / HORIZON_AZIMUTH_SAMPLES;
+            double luminance = SkyAdaptation.luminance(red, green, blue);
+            if (luminance > brightestLuminance) {
+                brightestLuminance = luminance;
+                brightestHorizonRadiance[0] = red;
+                brightestHorizonRadiance[1] = green;
+                brightestHorizonRadiance[2] = blue;
             }
+        }
+        double[] adaptationRadiance = view.adaptationRadiance();
+        for (int channel = 0; channel < CHANNELS; channel++) {
+            adaptationRadiance[channel] = (skyIrradiance(sky, channel) + profileIrradiance[channel]
+                    + mapIrradiance[channel]) / Math.PI;
         }
         view.setSunElevationRadians(sunElevationRadians);
     }

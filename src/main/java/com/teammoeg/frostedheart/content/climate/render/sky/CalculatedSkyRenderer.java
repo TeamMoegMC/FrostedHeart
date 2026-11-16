@@ -205,15 +205,31 @@ public final class CalculatedSkyRenderer {
      */
     private static void updateNightSky(SkyState current, SkyFrame frame) {
         double depthWeight = depthBlend(current, frame);
+        double exposure = exposure(current, frame);
         double zenithDisplay = current.views().zenithDisplayLuminance(viewBlend(current, frame), depthWeight,
-                frame.exposure(), lightScale(current, frame), current.haloProfile());
+                exposure, lightScale(current, frame), current.haloProfile());
         starScale = (float) NightSkyDimming.starScale(frame.iceDepth(), zenithDisplay,
                 SkySetting.STAR_TWILIGHT_DISPLAY.get());
         SkyLight light = frame.light();
         double moonElevation = light.kind() == SkyLight.Kind.MOON ? light.elevationRadians()
                 : -light.elevationRadians();
         NightSkyDimming.moonColor(current.lowDepthTables(), current.highDepthTables(), depthWeight, moonElevation,
-                frame.exposure(), moonColor);
+                frame.dayExposure(), moonColor);
+    }
+
+    /**
+     * The exposure the frame is drawn with. While exposureAdapts is on it adapts to the luminance of the sky in the
+     * frame's light, as SkyAdaptation.exposure gives it, and otherwise it is SkyAdaptation.fixedExposure.
+     */
+    static double exposure(SkyState current, SkyFrame frame) {
+        double nightExposure = SkySetting.NIGHT_EXPOSURE.get();
+        if (!SkySetting.EXPOSURE_ADAPTS.isOn()) {
+            return SkyAdaptation.fixedExposure(frame.light().kind(), frame.dayExposure(), nightExposure);
+        }
+        double luminance = current.views().adaptationLuminance(viewBlend(current, frame), depthBlend(current, frame),
+                lightScale(current, frame));
+        return SkyAdaptation.exposure(luminance, frame.dayExposure(), nightExposure,
+                SkySetting.ADAPTATION_DAY_LUMINANCE.get(), SkySetting.ADAPTATION_NIGHT_LUMINANCE.get());
     }
 
     /**
@@ -230,8 +246,9 @@ public final class CalculatedSkyRenderer {
         Vector3f look = camera.getLookVector();
         double horizontalFraction = Math.min(1.0, Math.sqrt(look.x() * look.x() + look.z() * look.z()));
         double azimuth = Math.atan2(look.z(), look.x() * frame.light().side());
+        double exposure = exposure(current, frame);
         current.views().horizonDisplayColor(viewBlend(current, frame), depthBlend(current, frame), azimuth,
-                horizontalFraction, frame.exposure(), lightScale(current, frame), frame.nightFloor(),
+                horizontalFraction, exposure, lightScale(current, frame), frame.nightFloor(),
                 frame.rainLevel(), frame.thunderLevel(), reusedFogColor);
         return reusedFogColor;
     }
@@ -247,7 +264,8 @@ public final class CalculatedSkyRenderer {
             return false;
         }
         SkyFrame frame = SkyFrame.current(level, partialTick);
-        current.views().daylightColor(viewBlend(current, frame), depthBlend(current, frame), frame.exposure(),
+        double exposure = exposure(current, frame);
+        current.views().daylightColor(viewBlend(current, frame), depthBlend(current, frame), exposure,
                 daylightScale(current, frame), frame.rainLevel(), skyDarken, result);
         return true;
     }
@@ -379,7 +397,7 @@ public final class CalculatedSkyRenderer {
             double[] lightScale = lightScale(current, frame);
             GL20.glUniform3f(lightScaleUniform, (float) lightScale[0], (float) lightScale[1], (float) lightScale[2]);
             GL20.glUniform1f(sunScaleUniform, light.kind() == SkyLight.Kind.SUN ? 1.0F : 0.0F);
-            GL20.glUniform1f(exposureUniform, (float) frame.exposure());
+            GL20.glUniform1f(exposureUniform, (float) exposure(current, frame));
             GL20.glUniform1f(texelFaceSizeUniform, current.settings().texelFaceSize());
             GL20.glUniform1f(haloBlendUniform, haloBlend(current, frame));
             GL20.glUniform3f(fogColorUniform, fogColor[0], fogColor[1], fogColor[2]);
