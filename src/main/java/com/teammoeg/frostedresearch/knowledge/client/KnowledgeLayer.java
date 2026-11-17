@@ -539,9 +539,11 @@ public final class KnowledgeLayer extends UILayer {
             }
         }
         var requirements = run != null ? run.requirements() : project.requirements();
+        boolean actionable = requirements.stream().anyMatch(r -> !r.type().equals("observation"));
         var displayed=run!=null ? run : data.runs.stream().filter(r -> r.project().equals(project.id()) && r.status().equals("completed")).reduce((a,b) -> b).orElse(null);
         if(projectTab == 2 && displayed!=null && !displayed.stage().id().isBlank()) {
-            paragraphs.add(displayed.stage().title());paragraphs.add(displayed.stage().objective());paragraphs.add(displayed.stage().method());
+            List.of(displayed.stage().title(), displayed.stage().objective(), displayed.stage().method()).stream()
+                .filter(text -> !text.getString().isBlank()).forEach(paragraphs::add);
             paragraphs.addAll(displayed.stage().conclusions());
             if(run!=null && !run.stage().available()) paragraphs.add(t("research.stage_unavailable"));
             if(run!=null && !run.stage().recipes().isEmpty()) {
@@ -556,8 +558,11 @@ public final class KnowledgeLayer extends UILayer {
         else if (projectTab == 2) {
             paragraphs.add(t("research.requirements"));
             requirementIndex = Math.floorMod(requirementIndex, requirements.size());
-            for (int i = 0; i < requirements.size(); i++)
-                paragraphs.add(requirementLine(requirements.get(i), run != null, run != null && i == requirementIndex));
+            for (int i = 0; i < requirements.size(); i++) {
+                var requirement = requirements.get(i);
+                if (!requirement.method().getString().isBlank()) paragraphs.add(requirement.method());
+                paragraphs.add(requirementLine(requirement, run != null, run != null && actionable && i == requirementIndex));
+            }
             if (run != null) paragraphs.addAll(requirementDetails(requirements.get(requirementIndex)));
         }
         reading.text(paragraphs);
@@ -580,7 +585,7 @@ public final class KnowledgeLayer extends UILayer {
                 projectTab = 2;
                 rebuild();
             });
-        } else if (!requirements.isEmpty()) {
+        } else if (!requirements.isEmpty() && actionable) {
             var requirement = requirements.get(requirementIndex);
             int ax = x, aw = w;
             if (requirements.size() > 1) {
@@ -606,22 +611,23 @@ public final class KnowledgeLayer extends UILayer {
             mode = Mode.ABANDON;
             rebuild();
         });
-        reading.setHeight(Math.max(20, reading.getHeight() - 46));
+        reading.setHeight(Math.max(20, reading.getHeight() - (projectTab != 2 || actionable ? 46 : 23)));
     }
 
     private void requirementAction(KnowledgeJournalData.Requirement requirement, KnowledgeJournalData.Run run, int x, int y, int w) {
+        if (requirement.type().equals("observation")) return;
         if (requirement.satisfied()) {
             button(x, y, w, 19, t("research.requirement_done"), true, () -> {
             }).setEnabled(false);
             return;
         }
-        if (requirement.type().equals("observation") || requirement.type().equals("minigame")) {
-            if(requirement.type().equals("minigame")) button(x,y,w,19,t("research.airflow_start"),false,() -> {
+        if (requirement.type().equals("minigame")) {
+            button(x,y,w,19,t("research.airflow_start"),false,() -> {
                 if (getParent() instanceof DrawDeskScreen desk) {
                     var project = researchProject(run.project());
                     desk.openAirflow(run.id(), requirement.id(), project == null ? t("research.airflow_start") : project.title());
                 }
-            });else button(x,y,w,19,t("research.observe_target"),true,() -> {}).setEnabled(false);
+            });
             return;
         }
         if (requirement.sample()) {
@@ -674,8 +680,8 @@ public final class KnowledgeLayer extends UILayer {
 
     private List<Component> requirementDetails(KnowledgeJournalData.Requirement r) {
         List<Component> lines = new ArrayList<>();
-        if(!r.method().getString().isBlank()) lines.add(r.method());
-        if(r.type().equals("minigame") || r.type().equals("observation")) { lines.add(t(r.type().equals("minigame") ? "research.airflow_explain" : "research.observe_target"));return lines; }
+        if(r.type().equals("observation")) return lines;
+        if(r.type().equals("minigame")) { lines.add(t("research.airflow_explain"));return lines; }
         if (r.sample()) { lines.add(t("research.sample.explain")); return lines; }
         if (r.experiment()) {
             lines.add(t("research.experiment.explain", r.duration() / 20));

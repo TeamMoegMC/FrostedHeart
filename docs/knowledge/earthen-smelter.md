@@ -30,9 +30,9 @@
 
 ## 观察任务与升级
 
-正式项目仍为单阶段，要求观察黏土偏多、沙偏多和均衡配比的烧后物品。实验 ID 分别为 `frostedresearch:trial_kiln/clay_rich`、`sand_rich`、`balanced`（后两项同前缀）；条件同时检查结果物品与 `item.trial_kiln_variant`。两种坏样物品 ID 相同，但配比字段不同。
+正式项目使用显式`main`单阶段，要求观察黏土偏多、沙偏多和均衡配比的烧后物品。阶段`method`说明供燃料和收样，三项`tasks[].method`各给出对应【未烧小炉】的配比；这些准备说明不增加任务数量。实验 ID 分别为 `frostedresearch:trial_kiln/clay_rich`、`sand_rich`、`balanced`（后两项同前缀）；条件同时检查结果物品与 `item.trial_kiln_variant`。两种坏样物品 ID 相同，但配比字段不同。
 
-均衡配比沿用任务 ID `submit_intact` 以承接旧进度，任务类型已经改成 observation。旧未完成 main 阶段会补齐两项比较任务，重新计算就绪状态；已提交的完好样保留对应任务进度。已完成研究、成果和权限不重置。不带配比记录的旧坏样无法分辨配比，需要重新试烧。
+均衡配比沿用任务 ID `submit_intact` 以承接旧进度，任务类型已经改成 observation。`TrialKilnSamples.reconcile`同时支持旧平铺定义和显式`main`单阶段：旧未完成main会补齐两项比较任务，重新计算就绪状态；已提交的完好样保留对应任务进度。已有三观察进度直接沿用相同阶段和任务ID。已完成研究、成果和权限不重置。不带配比记录的旧坏样无法分辨配比，需要重新试烧。
 
 ## 当前验收
 

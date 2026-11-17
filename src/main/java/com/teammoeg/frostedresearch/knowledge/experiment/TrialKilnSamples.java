@@ -42,7 +42,11 @@ public final class TrialKilnSamples {
 
     /** Upgrade only the former single-sample route, keeping its intact-sample credit and run identity. */
     public static ResearchHistory reconcile(ResearchHistory run, ProjectDefinition project) {
-        if (!run.open() || !project.stages().isEmpty() || project.requirements().size() != 3) return run;
+        if (!run.open()) return run;
+        var stages = project.orderedStages();
+        if (stages.size() != 1 || !stages.get(0).id().equals("main")) return run;
+        var requirements = stages.get(0).tasks().stream().map(task -> task.requirement()).toList();
+        if (requirements.size() != 3) return run;
         var visit = run.stageState().visits().get("main");
         if (visit == null) return run;
         boolean oldTasks = visit.tasks().equals(List.of("submit_intact"));
@@ -50,12 +54,12 @@ public final class TrialKilnSamples {
         boolean credit = submitted != null && submitted.experiment().equals(TrialKilnBlockEntity.EXPERIMENT)
             && submitted.item().equals(new ResourceLocation("frostedresearch:fired_trial_kiln"));
         if (!oldTasks && (!credit || run.stageState().completedTasks().contains("submit_intact"))) return run;
-        var experiments = project.requirements().stream().filter(r -> r.type() == ProjectRequirement.Type.OBSERVATION)
+        var experiments = requirements.stream().filter(r -> r.type() == ProjectRequirement.Type.OBSERVATION)
             .flatMap(r -> r.observation().stream()).flatMap(o -> o.experiment().stream()).collect(java.util.stream.Collectors.toSet());
         if (!experiments.equals(Set.copyOf(VARIANTS.stream().map(TrialKilnSamples::experiment).toList()))
             || project.requirement("submit_intact").isEmpty()) return run;
         var state = oldTasks ? run.stageState().enter("main", new StageRunState.Visit(visit.variant(),
-            project.requirements().stream().map(ProjectRequirement::id).toList(), false, visit.temporaryRecipes())) : run.stageState();
+            requirements.stream().map(ProjectRequirement::id).toList(), false, visit.temporaryRecipes())) : run.stageState();
         if (credit) state = state.success("submit_intact");
         return run.withStages(state);
     }
