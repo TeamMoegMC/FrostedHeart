@@ -1049,22 +1049,22 @@ public class FHConfig {
 				BuildingScoring(ForgeConfigSpec.Builder builder) {
 					builder.push("Building Scoring");
 					comfortableTemperatureCelsius = builder
-						.comment("Comfortable indoor temperature used by house and work-building ratings.")
+						.comment("Minimum heating modifier for a supplied house; no longer controls the fixed -15/18/28/45 Celsius rating curve.")
 						.defineInRange("comfortableTemperatureCelsius",
 							TownModelParameters.Defaults.BUILDING_COMFORTABLE_TEMPERATURE_CELSIUS,
 							-1000d, 1000d);
 					minimumTemperatureRating = builder
-						.comment("Constant floor added to the indoor-temperature sigmoid rating.")
+						.comment("Minimum indoor-temperature rating; maps normalized S as minimum + (1 - minimum) * S.")
 						.defineInRange("minimumTemperatureRating",
 							TownModelParameters.Defaults.BUILDING_MINIMUM_TEMPERATURE_RATING,
 							0d, 1d);
 					temperatureRatingSlope = builder
-						.comment("Sigmoid slope per Celsius of distance from the comfortable temperature.")
+						.comment("Legacy sigmoid slope; retained for configuration compatibility, ignored by temperature ratings.")
 						.defineInRange("temperatureRatingSlope",
 							TownModelParameters.Defaults.BUILDING_TEMPERATURE_RATING_SLOPE,
 							0d, 1000d);
 					temperatureRatingHalfPointDifferenceCelsius = builder
-						.comment("Temperature difference from comfort at the sigmoid's one-half point.")
+						.comment("Legacy sigmoid midpoint; retained for configuration compatibility, ignored by temperature ratings.")
 						.defineInRange("temperatureRatingHalfPointDifferenceCelsius",
 							TownModelParameters.Defaults.BUILDING_TEMPERATURE_RATING_HALF_POINT_DIFFERENCE_CELSIUS,
 							0d, 1000d);

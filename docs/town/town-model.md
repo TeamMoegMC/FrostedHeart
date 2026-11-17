@@ -779,25 +779,21 @@ S_{decor}=\min\left(1,\frac{X_{decor}}{d_0+A_b/d_A}\right)
 
 ### 9.4 温度评分
 
-定义：
+最后核实：2026-11-17。代码锚点：`TownMathFunctions.calculateTemperatureRating`。
 
-- \(T_b\)：住宅早晨最近一次扫描的有效温度。
-- \(T_{comfort}\)：舒适温度，当前 `24°C`。
-- \(d_T=|T_b-T_{comfort}|\)：偏离舒适温度的绝对值。
-- \(S_T\)：温度评分。
+住宅、狩猎建筑、评分界面及模拟模型共用非对称平顶曲线。温度 T 单位为摄氏度，归一化评分 S 为 0～1：
 
-\[
-S_T=s_{floor}+\frac{1}{1+\exp(k_T(d_T-d_{mid}))}
-\]
+- T≤−15 或 T≥45：S=0。
+- −15<T<18：u=(T+15)/33，S=u²(2−u)。
+- 18≤T≤28：S=1。
+- 28<T<45：v=(T−28)/17，S=1−(6v⁵−15v⁴+10v³)。
 
-当前参数：
-
-| 参数 | 当前值 | 数学意义 |
-|---|---:|---|
-| `comfortableTemperatureCelsius` \(T_{comfort}\) | `24` | 评分最高的中心温度 |
-| `temperatureRatingFloor` \(s_{floor}\) | `0.017` | 极端温度下仍保留的评分底值 |
-| `temperatureRatingSteepness` \(k_T\) | `0.4` | 舒适区边缘下降的陡峭程度 |
-| `temperatureRatingMidpointDeltaCelsius` \(d_{mid}\) | `10` | 偏离舒适温度 10°C 时进入曲线中点 |
+低温侧在18℃处允许斜率转折；过热侧从28℃以零斜率平缓下降。
+实际评分为 `minimumRating + (maximumRating - minimumRating) * S`。
+现有调用保留 `Building Scoring.minimumTemperatureRating`（默认0.017），满分固定为1；
+三参数接口支持显式指定最低分与满分。旧配置 `comfortableTemperatureCelsius`、
+`temperatureRatingSlope`、`temperatureRatingHalfPointDifferenceCelsius` 及模型对应字段仅为兼容保留，
+不再影响曲线；`comfortableTemperatureCelsius` 仍控制住宅获得供热时的最低温度修正，不是评分中心。五参数兼容入口确保住宅日结算、狩猎、展示和模拟使用同一曲线。
 
 住宅可工作与无直接温度压力的范围当前统一为 `[0,40]°C`。范围之外住宅仍被视为不可工作，因此不会分配新居民；但已有居民的每日食物和状态结算仍会执行。极端温度既通过 \(S_T\) 压低健康恢复和综合舒适度，也通过 9.7 节的独立温度压力直接损伤健康和精神，不再暂停整栋住宅。
 
@@ -2026,7 +2022,7 @@ Stage 3/4 长期模拟从食物 recipe 读取四通道原始值，经共享 `/40
 - **住宅**（`HouseViewPresenter`）：
   - 页签：概览、居民、餐食。
   - 印戳：宜居 / 凑合 / 不宜居。
-  - 舒适由暖和、宽敞、装饰三样组成。弱项按舒适温度分成太冷、太热两种说法。
+  - 舒适由暖和、宽敞、装饰三样组成。温度弱项按固定平顶区间判断冷热，不再使用旧舒适温度配置。住宅与狩猎中英文提示说明18～28℃满分、−15/45℃极端最低分及两侧不同的下降行为；可工作门槛仍单独显示。
   - 便签依次是房间、冷热、没吃饱、共同缺的营养、病人、简陋。
 - **仓库**（`WarehouseViewPresenter`）：
   - 库存页：背包格子固定在左上，账本随窗口伸缩，可以搜索、排序、存取。
@@ -2113,3 +2109,5 @@ Stage 3/4 长期模拟从食物 recipe 读取四通道原始值，经共享 `/40
     城镇有没有塔都照常更新，所以建塔、拆塔都会立刻送到客户端。这个位置不存盘，跟着整份城镇快照
     （`TeamTownDataS2CPacket`）下发，变动时另发 `TownTowerUpdatePacket`。
   - 协议字符串为 `town-view-1:building-data-3:town-ui-3`。
+
+温度展示核实（2026-11-17）：狩猎概览温度卡与条件标签共用冷热判断；超过28℃显示偏热警告，45℃起显示过热。可工作最低温度与评分分别判断，高温提示不新增停工条件。

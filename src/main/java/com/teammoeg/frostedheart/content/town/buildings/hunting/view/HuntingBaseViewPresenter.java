@@ -91,7 +91,11 @@ public final class HuntingBaseViewPresenter {
         HuntingBaseBuilding.HuntingForecast forecast = in.town() == null ? null : building.getForecast(in.town());
         HuntingBaseBuilding.HuntingDailyReport report = building.getDailyReport();
         double temperature = building.getEffectiveTemperature();
-        TownFormat.Temperature shown = TownFormat.temperature(temperature, minimum, BoardPresenters.COOL_MARGIN);
+        TownFormat.Temperature baseTemperature = TownFormat.temperature(temperature, minimum, BoardPresenters.COOL_MARGIN);
+        TownFormat.Temperature shown = temperature > 28.0 && temperature >= minimum
+                ? new TownFormat.Temperature(baseTemperature.shown(), temperature >= 45.0
+                        ? TownFormat.Warmth.HOT : TownFormat.Warmth.STUFFY)
+                : baseTemperature;
         int frost = TownFormat.frost(temperature, minimum);
         int minArea = config.minimumFloorAreaBlocks.get(), minVolume = config.minimumInteriorVolumeBlocks.get();
 
@@ -129,13 +133,13 @@ public final class HuntingBaseViewPresenter {
         Stat tomorrowStat = new Stat(t("stat.tomorrow"), hunts > 0 ? t("stat.tomorrow.value", hunts) : b("work.stat.none"), tomorrowSub,
                 tomorrowTone, List.of(t("stat.tomorrow.tooltip")), TAB_OUTPUT);
         Stat warmth = new Stat(t("stat.temperature"), shown.text(), shown.warmth().text(),
-                shown.warmth() == TownFormat.Warmth.WARM ? Tone.GOOD : shown.warmth() == TownFormat.Warmth.COOL ? Tone.WARN : Tone.BAD,
+                BoardPresenters.warmthTone(shown.warmth()),
                 List.of(t("stat.temperature.tooltip", (int) Math.ceil(minimum))));
 
         List<Chip> chips = new ArrayList<>();
         chips.add(BoardPresenters.spaceChip(room.isEmpty(), building.getMaxResidents()));
         BoardPresenters.addRoadChip(chips, building, in.town());
-        chips.add(BoardPresenters.temperatureChip(temperature, minimum, Double.POSITIVE_INFINITY));
+        chips.add(BoardPresenters.homeTemperatureChip(shown));
         if (building.getTemperatureModifier() > 0) chips.add(Chip.of(b("work.chip.heated"), Tone.GOOD));
 
         // ---- notes

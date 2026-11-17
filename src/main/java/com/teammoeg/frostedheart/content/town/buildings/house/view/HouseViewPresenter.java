@@ -157,7 +157,7 @@ public final class HouseViewPresenter {
                 List.of(t("stat.comfort.tooltip"), t("stat.comfort.tooltip.effect")));
         Stat warmth = new Stat(t("stat.temperature"), shown.text(), shown.warmth().homeText(), BoardPresenters.warmthTone(shown.warmth()),
                 List.of(t("stat.temperature.tooltip", (int) Math.ceil(minimum), (int) Math.floor(maximum)),
-                        t("stat.temperature.tooltip.effect", (int) Math.round(FHConfig.SERVER.TOWN.BUILDING_SCORING.comfortableTemperatureCelsius.get()))));
+                        t("stat.temperature.tooltip.effect")));
 
         // ---- conditions: the room and its road, then the parts of comfort
         List<Chip> chips = new ArrayList<>();
@@ -305,7 +305,7 @@ public final class HouseViewPresenter {
         double spaceGap = (1 - house.getSpaceRating()) * config.spaceComfortWeight.get();
         double decorationGap = (1 - house.getDecorationRating()) * config.decorationComfortWeight.get();
         if (warmthGap >= spaceGap && warmthGap >= decorationGap)
-            return house.getEffectiveTemperature() > FHConfig.SERVER.TOWN.BUILDING_SCORING.comfortableTemperatureCelsius.get()
+            return house.getEffectiveTemperature() > 28.0
                     ? Weakest.HOT : Weakest.COLD;
         return spaceGap >= decorationGap ? Weakest.SPACE : Weakest.DECORATION;
     }

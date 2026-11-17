@@ -149,7 +149,7 @@ final class HouseOverviewElement extends BuildingInfoElement {
         if (temperatureRating >= 0.5) {
             statusKey = "gui.frostedheart.house.temperature_comfortable";
             color = ChatFormatting.GREEN;
-        } else if (temperature < scoring.comfortableTemperatureCelsius.get()) {
+        } else if (temperature < 18.0) {
             statusKey = "gui.frostedheart.house.temperature_too_low";
             color = ChatFormatting.RED;
         } else {
