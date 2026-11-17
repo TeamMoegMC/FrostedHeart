@@ -163,6 +163,12 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
         return knowledgeOpen ? knowledge : null;
     }
 
+    public void showCreativeProject(String project) {
+        if (Minecraft.getInstance().player == null || !Minecraft.getInstance().player.isCreative()) return;
+        showKnowledge();
+        knowledge.openCreativeProject(project, this::showTechTree);
+    }
+
     public AirflowDeskPanel getAirflowPanel() { return airflow; }
 
     public boolean isLinkGameOpen() { return linkGame != null; }

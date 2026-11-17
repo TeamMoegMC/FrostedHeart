@@ -156,6 +156,30 @@ public final class ProjectAccessGameTests {
     }
 
     @GameTest(template = "empty", timeoutTicks = 40)
+    public static void creativeCatalogueRevealsWithoutLearningOrStarting(GameTestHelper h) {
+        var previous = KnowledgeDefinitions.current();
+        try {
+            install(fixture("projects/joint_study", ProjectDefinition.CODEC));
+            var service = service();
+            var saved = service.state().write();
+            var normal = service.snapshot();
+            var creative = KnowledgeView.create(service, true);
+            h.assertTrue(normal.getList("projects", Tag.TAG_COMPOUND).isEmpty()
+                && !normal.contains("creative_projects"), "ordinary snapshot does not disclose the catalogue");
+            h.assertTrue(creative.getList("projects", Tag.TAG_COMPOUND).isEmpty(), "creative preview does not populate normal discoveries");
+            var projects = creative.getList("creative_projects", Tag.TAG_COMPOUND);
+            h.assertTrue(projects.size() == KnowledgeDefinitions.current().projects().size(), "all datapack projects appear before discovery");
+            var joint = projects.stream().map(t -> (CompoundTag)t)
+                .filter(t -> t.getString("id").equals(id("joint_study").toString())).findFirst().orElseThrow();
+            h.assertTrue(!joint.getBoolean("active") && !joint.getString("start_status").equals("LEARNABLE"), "preview retains real locked status");
+            h.assertTrue(joint.getList("access_conditions", Tag.TAG_COMPOUND).stream().noneMatch(t -> ((CompoundTag)t).getBoolean("hidden")), "creative prerequisites have no unknown placeholders");
+            h.assertTrue(saved.equals(service.state().write()) && service.startResearch(id("joint_study")).isEmpty(), "browsing neither mutates state nor bypasses start knowledge");
+            h.assertTrue(!service.snapshot().contains("creative_projects"), "later normal snapshot drops creative disclosure");
+            h.succeed();
+        } finally { KnowledgeDefinitions.install(previous); }
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 40)
     public static void authorExceptionResultEntryAndLegacyCompatibility(GameTestHelper h) {
         var previous = KnowledgeDefinitions.current();
         try {

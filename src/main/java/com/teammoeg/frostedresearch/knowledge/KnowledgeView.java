@@ -31,13 +31,18 @@ import net.minecraft.nbt.*;
 import java.util.*;
 
 /**
- * 只包含队伍已经接触的内容和实际关系，不同步未发现规则。 / Team-visible snapshot only.
+ * Team-visible state, with an optional separate catalogue for creative recipients.
  */
 public final class KnowledgeView {
     private KnowledgeView() {
     }
 
     public static CompoundTag create(KnowledgeService service) {
+        return create(service, false);
+    }
+
+    /** Creative catalogue disclosure is per recipient, never part of team discovery or persistence. */
+    public static CompoundTag create(KnowledgeService service, boolean creative) {
         Map<net.minecraft.resources.ResourceLocation, KnowledgeService.ProjectAccessEvaluation> evaluations = new HashMap<>();
         java.util.function.Function<net.minecraft.resources.ResourceLocation, KnowledgeService.ProjectAccessEvaluation> evaluation =
             id -> evaluations.computeIfAbsent(id, service::projectAccess);
@@ -108,36 +113,14 @@ public final class KnowledgeView {
                 disclosed.put(id, access.sources());
         });
         ListTag projects = new ListTag();
-        disclosed.forEach((id, origins) -> {
-            var definition = KnowledgeDefinitions.current().projects().get(id);
-            if (definition == null) return;
-            CompoundTag project = new CompoundTag();
-            project.putString("id", id.toString());
-            project.putString("title", definition.title());
-            project.put("sources", KnowledgeState.encode(KnowledgeKey.CODEC.listOf(), origins));
-            project.putBoolean("active", evaluation.apply(id).discovered() || service.openRun(id).isPresent());
-            project.putBoolean("completed", ResearchRuns.completed(service.state(),id) || service.legacyCompleted(id));
-            if (service.legacyCompleted(id)) project.putString("completion_source", "legacy");
-            project.putString("body", definition.body());
-            ListTag requirements = new ListTag();
-            if(definition.stages().isEmpty()) definition.requirements().forEach(requirement -> requirements.add(requirement(requirement)));
-            project.putBoolean("staged", !definition.stages().isEmpty());
-            project.put("requirements", requirements);
-            project.putString("start_status", evaluation.apply(id).startStatus().name());
-            accessView(service, id, project, evaluation.apply(id));
-            service.openRun(id).ifPresent(run -> project.putString("open_run", run.id().toString()));
-            ListTag outputs = new ListTag();
-            for (var result : definition.results()) {
-                KnowledgeElement element = service.describe(KnowledgeKey.result(result));
-                CompoundTag output = new CompoundTag();
-                output.put("key", KnowledgeState.encode(KnowledgeKey.CODEC, element.key()));
-                output.putString("title", element.title());
-                outputs.add(output);
-            }
-            project.put("outputs", outputs);
-            projects.add(project);
-        });
+        disclosed.forEach((id, origins) -> projects.add(project(service, id, origins, evaluation.apply(id), false)));
         view.put("projects", projects);
+        if (creative) {
+            ListTag catalogue = new ListTag();
+            KnowledgeDefinitions.current().projects().keySet().stream().sorted(Comparator.comparing(Object::toString))
+                .forEach(id -> catalogue.add(project(service, id, evaluation.apply(id).sources(), evaluation.apply(id), true)));
+            view.put("creative_projects", catalogue);
+        }
         view.put("legacy_replacements", service.legacyProjection());
         ListTag history = new ListTag();
         service.state().acquisitions().forEach(entry -> {
@@ -151,6 +134,52 @@ public final class KnowledgeView {
         return view;
     }
 
+    private static CompoundTag project(KnowledgeService service, net.minecraft.resources.ResourceLocation id,
+            List<KnowledgeKey> origins, KnowledgeService.ProjectAccessEvaluation evaluation, boolean preview) {
+        var definition = KnowledgeDefinitions.current().projects().get(id);
+        CompoundTag project = new CompoundTag();
+        project.putString("id", id.toString());
+        project.putString("title", definition.title());
+        project.put("sources", KnowledgeState.encode(KnowledgeKey.CODEC.listOf(), origins));
+        project.putBoolean("active", evaluation.discovered() || service.openRun(id).isPresent());
+        project.putBoolean("completed", ResearchRuns.completed(service.state(), id) || service.legacyCompleted(id));
+        if (service.legacyCompleted(id)) project.putString("completion_source", "legacy");
+        project.putString("body", definition.body());
+        ListTag requirements = new ListTag();
+        if (preview) {
+            for (var stage : definition.orderedStages()) {
+                boolean first = true;
+                for (var task : stage.tasks()) {
+                    var tag = requirement(task.requirement());
+                    tag.putBoolean("optional", task.optional());
+                    ListTag method = new ListTag();
+                    var lines = first ? List.of(stage.title(), stage.objective(), stage.method(), task.method()) : List.of(task.method());
+                    lines.stream().filter(line -> !line.isBlank()).forEach(line -> method.add(StringTag.valueOf(line)));
+                    tag.put("preview_method", method);
+                    first = false;
+                    requirements.add(tag);
+                }
+            }
+        } else if (definition.stages().isEmpty()) {
+            definition.requirements().forEach(requirement -> requirements.add(requirement(requirement)));
+        }
+        project.putBoolean("staged", !definition.stages().isEmpty());
+        project.put("requirements", requirements);
+        project.putString("start_status", evaluation.startStatus().name());
+        accessView(service, id, project, evaluation, preview);
+        service.openRun(id).ifPresent(run -> project.putString("open_run", run.id().toString()));
+        ListTag outputs = new ListTag();
+        for (var result : definition.results()) {
+            KnowledgeElement element = service.describe(KnowledgeKey.result(result));
+            CompoundTag output = new CompoundTag();
+            output.put("key", KnowledgeState.encode(KnowledgeKey.CODEC, element.key()));
+            output.putString("title", element.title());
+            outputs.add(output);
+        }
+        project.put("outputs", outputs);
+        return project;
+    }
+
     private static List<KnowledgeKey> visibleOrigins(KnowledgeService service, ResearchHistory run, KnowledgeService.ProjectAccessEvaluation evaluation) {
         var definition = KnowledgeDefinitions.current().projects().get(run.project());
         if (definition == null) return List.of();
@@ -160,7 +189,7 @@ public final class KnowledgeView {
             .anyMatch(c -> c.matches(service.describe(key)))).toList();
     }
 
-    private static void accessView(KnowledgeService service, net.minecraft.resources.ResourceLocation id, CompoundTag project, KnowledgeService.ProjectAccessEvaluation evaluation) {
+    private static void accessView(KnowledgeService service, net.minecraft.resources.ResourceLocation id, CompoundTag project, KnowledgeService.ProjectAccessEvaluation evaluation, boolean revealAll) {
         var definition = KnowledgeDefinitions.current().projects().get(id);
         if (definition.access().isEmpty()) return;
         var access = definition.access().get();
@@ -168,7 +197,7 @@ public final class KnowledgeView {
         access.conditions().keySet().forEach(name -> rowIds.put(name, "condition_" + rowIds.size()));
         ListTag rows = new ListTag();
         access.conditions().forEach((name, c) -> {
-            boolean required = access.startAll().contains(name), hidden = !evaluation.revealedConditions().contains(name);
+            boolean required = access.startAll().contains(name), hidden = !revealAll && !evaluation.revealedConditions().contains(name);
             if (!required && hidden) return;
             String rowId = rowIds.get(name);
             CompoundTag row = new CompoundTag(); row.putString("id", rowId);
@@ -188,7 +217,7 @@ public final class KnowledgeView {
         ListTag groups = new ListTag();
         for (var group : access.groups()) {
             CompoundTag tag = new CompoundTag(); tag.putString("id", "group_" + groups.size());
-            tag.putBoolean("hidden", !evaluation.revealedGroups().contains(group.id())); tag.putString("unknown_hint", group.unknownHint());
+            tag.putBoolean("hidden", !revealAll && !evaluation.revealedGroups().contains(group.id())); tag.putString("unknown_hint", group.unknownHint());
             ListTag refs = new ListTag(); group.conditions().stream().map(rowIds::get).filter(Objects::nonNull).forEach(n -> refs.add(StringTag.valueOf(n)));
             tag.put("conditions", refs); groups.add(tag);
         }

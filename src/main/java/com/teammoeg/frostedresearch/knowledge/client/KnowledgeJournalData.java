@@ -99,6 +99,7 @@ public final class KnowledgeJournalData {
     public final List<Relation> relations;
     public final List<Component> hints;
     public final List<Project> projects;
+    public final List<Project> creativeProjects;
     public final List<Run> runs;
     private final Map<KnowledgeKey, Entry> entries;
 
@@ -139,8 +140,19 @@ public final class KnowledgeJournalData {
         }
         relations = List.copyOf(relationships);
         this.runs = runs.stream().sorted(com.teammoeg.frostedresearch.knowledge.ResearchRuns.order(Run::time,Run::id)).toList();
+        this.projects = projects(snapshot.getList("projects", Tag.TAG_COMPOUND));
+        this.creativeProjects = projects(snapshot.getList("creative_projects", Tag.TAG_COMPOUND));
+        Map<String, Component> hints = new LinkedHashMap<>();
+        for (Tag raw : snapshot.getList("hints", Tag.TAG_COMPOUND)) {
+            Component text = KnowledgePresentation.text(((CompoundTag) raw).getString("text"));
+            hints.putIfAbsent(text.getString().strip(), text);
+        }
+        this.hints = List.copyOf(hints.values());
+    }
+
+    private static List<Project> projects(ListTag tags) {
         List<Project> projects = new ArrayList<>();
-        for (Tag raw : snapshot.getList("projects", Tag.TAG_COMPOUND)) {
+        for (Tag raw : tags) {
             CompoundTag project = (CompoundTag) raw;
             List<KnowledgeKey> origins = new ArrayList<>();
             for (Tag origin : project.getList("sources", Tag.TAG_COMPOUND)) {
@@ -155,13 +167,7 @@ public final class KnowledgeJournalData {
                     KnowledgePresentation.text(project.getString("body")), requirements(project.getList("requirements", Tag.TAG_COMPOUND)),
                     project.getString("start_status"), project.getString("open_run"), accessConditions(project), accessGroups(project),project.getBoolean("staged")));
         }
-        this.projects = List.copyOf(projects);
-        Map<String, Component> hints = new LinkedHashMap<>();
-        for (Tag raw : snapshot.getList("hints", Tag.TAG_COMPOUND)) {
-            Component text = KnowledgePresentation.text(((CompoundTag) raw).getString("text"));
-            hints.putIfAbsent(text.getString().strip(), text);
-        }
-        this.hints = List.copyOf(hints.values());
+        return List.copyOf(projects);
     }
 
     public record AccessCondition(String id, boolean required, boolean hidden, Component title, Component hint,
@@ -203,9 +209,19 @@ public final class KnowledgeJournalData {
             }
             result.add(new Requirement(tag.getString("id"), tag.getString("type"), KnowledgePresentation.text(tag.getString("title")),
                     tag.getInt("level"), tag.getInt("count"), tag.getInt("done"), tag.getBoolean("satisfied"), tag.getBoolean("ready"),
-                    List.copyOf(slots), List.copyOf(bound), tag.getInt("duration"),tag.getBoolean("optional"),KnowledgePresentation.text(tag.getString("method"))));
+                    List.copyOf(slots), List.copyOf(bound), tag.getInt("duration"),tag.getBoolean("optional"),requirementMethod(tag)));
         }
         return List.copyOf(result);
+    }
+
+    private static Component requirementMethod(CompoundTag tag) {
+        if (!tag.contains("preview_method")) return KnowledgePresentation.text(tag.getString("method"));
+        var text = Component.empty();
+        for (Tag line : tag.getList("preview_method", Tag.TAG_STRING)) {
+            if (!text.getString().isEmpty()) text.append("\n");
+            text.append(KnowledgePresentation.text(line.getAsString()));
+        }
+        return text;
     }
 
     public Run run(String id) {

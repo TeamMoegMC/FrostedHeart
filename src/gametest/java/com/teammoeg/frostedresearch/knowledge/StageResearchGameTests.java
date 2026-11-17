@@ -15,6 +15,22 @@ import java.util.*;
 public final class StageResearchGameTests {
     static ResourceLocation id(String path) { return new ResourceLocation("stage_test",path); }
     static final AcquisitionSource SOURCE=new AcquisitionSource("test",Optional.empty(),1);
+    @GameTest(batch="m4_stages",template="empty",timeoutTicks=60)
+    public static void creativeCatalogueIncludesFutureStageTasks(GameTestHelper h) {
+        var previous=KnowledgeDefinitions.current();
+        try {
+            install(definition());
+            var service=new KnowledgeService(UUID.randomUUID(),new KnowledgeState(),1,() -> {});
+            var normal=service.snapshot();
+            var preview=KnowledgeView.create(service,true).getList("creative_projects",Tag.TAG_COMPOUND).getCompound(0);
+            h.assertTrue(normal.getList("projects",Tag.TAG_COMPOUND).isEmpty(),"hidden project stays outside ordinary journal");
+            var tasks=preview.getList("requirements",Tag.TAG_COMPOUND);
+            h.assertTrue(tasks.size()==4 && tasks.getCompound(3).getString("id").equals("c_win"),"preview includes all three stages before starting");
+            h.assertTrue(tasks.getCompound(1).getBoolean("optional"),"optional tasks remain labelled optional");
+            h.assertTrue(service.state().research().isEmpty(),"preview creates no run");
+            h.succeed();
+        } finally { KnowledgeDefinitions.install(previous); }
+    }
     static ProjectDefinition definition() {
         return ProjectDefinition.CODEC.parse(JsonOps.INSTANCE,JsonParser.parseString("""
         {"title":"Stages","results":["stage_test:result"],"stages":[

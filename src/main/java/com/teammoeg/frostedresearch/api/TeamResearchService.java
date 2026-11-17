@@ -178,9 +178,11 @@ public final class TeamResearchService {
         // has been attached. The login event sends the snapshot once that listener exists.
         recipients.removeIf(player -> player.connection == null);
         if (recipients.isEmpty()) return;
-        var fragments = KnowledgeSnapshotPacket.create(team);
-        for (ServerPlayer player : recipients)
+        var snapshots = new java.util.HashMap<Boolean, java.util.List<KnowledgeSnapshotPacket>>();
+        for (ServerPlayer player : recipients) {
+            var fragments = snapshots.computeIfAbsent(player.isCreative(), creative -> KnowledgeSnapshotPacket.create(team, creative));
             for (var fragment : fragments) FRNetwork.INSTANCE.sendPlayer(player, fragment);
+        }
     }
 
     public enum Status {

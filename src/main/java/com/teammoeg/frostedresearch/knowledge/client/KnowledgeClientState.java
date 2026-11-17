@@ -24,7 +24,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.CompoundTag;
 
 /**
- * Only the team's visible knowledge, discovered relations, and revealed hints live here.
+ * Team-visible knowledge and relations, plus the separate inspection catalogue for creative players.
  */
 public final class KnowledgeClientState {
     private static CompoundTag snapshot = new CompoundTag();

@@ -40,8 +40,12 @@ public record KnowledgeSyncSnapshot(long catalogRevision, KnowledgeProjection kn
     ).apply(instance, KnowledgeSyncSnapshot::new));
 
     public static KnowledgeSyncSnapshot create(TeamDataHolder team) {
+        return create(team, false);
+    }
+
+    public static KnowledgeSyncSnapshot create(TeamDataHolder team, boolean creative) {
         return new KnowledgeSyncSnapshot(ResearchResultCatalog.current().revision(),
                 TechnologyAccessResolver.projectKnowledge(team.getData(FRSpecialDataTypes.KNOWLEDGE_DATA)),
-                TechnologyAccessResolver.project(team), KnowledgeService.forTeam(team, 0).snapshot());
+                TechnologyAccessResolver.project(team), KnowledgeView.create(KnowledgeService.forTeam(team, 0), creative));
     }
 }

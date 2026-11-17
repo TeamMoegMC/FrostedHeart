@@ -73,6 +73,8 @@ public final class ResearchArchiveLayer extends UILayer {
     private final ResearchGraphViewport graphViewport;
     private final ResearchProjectSummaryPanel projectSummary;
     private final ResearchProjectWorkspace projectWorkspace;
+    private final CreativeProjectCatalogue creativeCatalogue;
+    private boolean creativeCatalogueOpen;
     private long definitionRevision;
     private boolean definitionsInitialized;
     private boolean definitionEditorMode = FHResearch.editor;
@@ -110,6 +112,7 @@ public final class ResearchArchiveLayer extends UILayer {
                 this, state, viewCache, navigation, this::onNavigationChanged);
         this.projectWorkspace = new ResearchProjectWorkspace(
                 this, openContext, state, viewCache, navigation, this::onNavigationChanged);
+        this.creativeCatalogue = new CreativeProjectCatalogue(this);
         this.searchBox.setText(state.searchQuery(), false);
         setScissorEnabled(false);
     }
@@ -122,6 +125,7 @@ public final class ResearchArchiveLayer extends UILayer {
         add(graphViewport);
         add(projectSummary);
         add(projectWorkspace);
+        add(creativeCatalogue);
         if (!definitionsInitialized) {
             rebuildDefinitions();
         }
@@ -129,14 +133,16 @@ public final class ResearchArchiveLayer extends UILayer {
 
     @Override
     public void alignWidgets() {
+        layoutKey = null;
         resizeArchive(getWidth(), getHeight());
     }
 
     public void resizeArchive(int width, int height) {
         int safeWidth = Math.max(280, width);
         int safeHeight = Math.max(188, height);
-        boolean workspaceOpen = state.projectWorkspaceOpen();
-        if (layoutKey != null && layoutKey.matches(safeWidth, safeHeight, workspaceOpen)) {
+        if (!CreativeProjectCatalogue.available()) creativeCatalogueOpen = false;
+        boolean workspaceOpen = !creativeCatalogueOpen && state.projectWorkspaceOpen();
+        if (layoutKey != null && layoutKey.matches(safeWidth, safeHeight, workspaceOpen, creativeCatalogueOpen)) {
             return;
         }
         setSize(safeWidth, safeHeight);
@@ -151,6 +157,8 @@ public final class ResearchArchiveLayer extends UILayer {
         int listWidth = safeWidth >= 620 ? 142 : safeWidth < 340 ? 72 : 92;
         searchBox.setPosAndSize(6, contentTop, listWidth, 17);
         typeList.setPosAndSize(6, contentTop + 21, listWidth, Math.max(36, contentHeight - 21));
+        creativeCatalogue.setPos(6, contentTop + 21);
+        creativeCatalogue.resizeCatalogue(safeWidth - 12, contentHeight - 21, listWidth);
 
         int graphX = typeList.getX() + typeList.getWidth() + 5;
         int summaryWidth = safeWidth >= 620 ? 176 : safeWidth < 340 ? 84 : 112;
@@ -173,13 +181,17 @@ public final class ResearchArchiveLayer extends UILayer {
         }
         fieldTabs.setEnabled(!workspaceOpen);
         searchBox.setEnabled(!workspaceOpen);
-        typeList.setEnabled(!workspaceOpen);
-        graphViewport.setEnabled(!workspaceOpen);
-        graphViewport.setVisible(!workspaceOpen);
-        projectSummary.setEnabled(!workspaceOpen);
+        typeList.setEnabled(!workspaceOpen && !creativeCatalogueOpen);
+        typeList.setVisible(!creativeCatalogueOpen);
+        graphViewport.setEnabled(!workspaceOpen && !creativeCatalogueOpen);
+        graphViewport.setVisible(!workspaceOpen && !creativeCatalogueOpen);
+        projectSummary.setEnabled(!workspaceOpen && !creativeCatalogueOpen);
+        projectSummary.setVisible(!creativeCatalogueOpen);
+        creativeCatalogue.setVisible(creativeCatalogueOpen);
+        creativeCatalogue.setEnabled(creativeCatalogueOpen);
         projectWorkspace.setVisible(workspaceOpen);
         projectWorkspace.setEnabled(workspaceOpen);
-        layoutKey = new ArchiveLayoutKey(safeWidth, safeHeight, workspaceOpen);
+        layoutKey = new ArchiveLayoutKey(safeWidth, safeHeight, workspaceOpen, creativeCatalogueOpen);
     }
 
     public void onResearchDefinitionsChanged() {
@@ -219,9 +231,27 @@ public final class ResearchArchiveLayer extends UILayer {
     }
 
     void setResearchTypeFilter(String researchTypeId) {
+        creativeCatalogueOpen = false;
         state.setResearchTypeFilter(researchTypeId);
         typeList.onFilterChanged();
         graphViewport.onResearchTypeChanged();
+        resizeArchive(getWidth(), getHeight());
+    }
+
+    boolean creativeCatalogueOpen() { return creativeCatalogueOpen; }
+
+    void showCreativeCatalogue() {
+        if (!CreativeProjectCatalogue.available()) return;
+        state.setProjectWorkspaceOpen(false);
+        creativeCatalogueOpen = true;
+        if (getParent() instanceof com.teammoeg.frostedresearch.gui.drawdesk.DrawDeskScreen desk) {
+            com.teammoeg.frostedresearch.FRNetwork.INSTANCE.sendToServer(
+                new com.teammoeg.frostedresearch.knowledge.network.KnowledgeWorkbenchActionPacket(desk.getTile().getBlockPos(),
+                    com.teammoeg.frostedresearch.knowledge.network.KnowledgeWorkbenchActionPacket.Action.REFRESH,
+                    List.of(), "", "", ""));
+        }
+        creativeCatalogue.refresh(state.searchQuery());
+        resizeArchive(getWidth(), getHeight());
     }
 
     boolean refreshEditorModeIfNeeded() {
@@ -327,6 +357,10 @@ public final class ResearchArchiveLayer extends UILayer {
 
     @Override
     public void drawBackground(GuiGraphics graphics, int x, int y, int width, int height, RenderingHint hint) {
+        if (creativeCatalogueOpen) {
+            creativeCatalogue.refresh(state.searchQuery());
+            resizeArchive(width, height);
+        }
         refreshEditorModeIfNeeded();
         if (viewCache.refreshLanguageIfNeeded()) {
             searchBox.ghostText = Component.translatable("gui.frostedresearch.archive.search").getString();
@@ -376,11 +410,11 @@ public final class ResearchArchiveLayer extends UILayer {
                 .collect(Collectors.toUnmodifiableSet());
     }
 
-    private record ArchiveLayoutKey(int width, int height, boolean workspaceOpen) {
-        private boolean matches(int currentWidth, int currentHeight, boolean currentWorkspaceOpen) {
+    private record ArchiveLayoutKey(int width, int height, boolean workspaceOpen, boolean creativeCatalogueOpen) {
+        private boolean matches(int currentWidth, int currentHeight, boolean currentWorkspaceOpen, boolean currentCatalogueOpen) {
             return width == currentWidth
                     && height == currentHeight
-                    && workspaceOpen == currentWorkspaceOpen;
+                    && workspaceOpen == currentWorkspaceOpen && creativeCatalogueOpen == currentCatalogueOpen;
         }
     }
 }

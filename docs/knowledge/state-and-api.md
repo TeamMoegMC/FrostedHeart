@@ -1,7 +1,7 @@
 # 知识状态、API 与生命周期
 
 - Status: `Current`（源码与本轮自动化测试核对；游戏内视觉与多人联机流程尚未人工验收）
-- Last verified: `2026-11-17`（联络辅助札记匹配及难度；其余验证见各节）
+- Last verified: `2026-11-18`（创造模式独立项目目录；其余验证见各节）
 - Scope: 队伍知识身份、档案、来件、学习与忘记、理解与休眠、联络、历史、联想、队伍迁移、权限桥接及同步
 - Code anchors: [`KnowledgeService`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/KnowledgeService.java)、[
   `KnowledgeState`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/state/KnowledgeState.java)、[
@@ -242,12 +242,12 @@ KnowledgeLinkSessions 是每玩家临时联络棋盘，不写存档。关闭绘�
 
 `TeamResearchService.sync(team)` 只把队伍标记为待同步，并丢弃该队伍缓存的权限投影。知识服务的每次提交、旧研究访问效果的授予或重置、换队与
 `/reload` 都只做这一标记。`KnowledgeRuntime` 在 `TickEvent.ServerTickEvent` 的 `END` 阶段调用 `TeamResearchService.flush()`
-，为每个待同步队伍构造一次快照，发给已建立网络连接的在线成员；无人在线的队伍只清除标记，不构造快照。某个队伍构造失败只记录错误，不影响其他队伍。
+，按接收者的创造模式状态为每个待同步队伍构造对应快照，每种模式本轮最多构造一次，发给已建立网络连接的在线成员；无人在线的队伍只清除标记，不构造快照。某个队伍构造失败只记录错误，不影响其他队伍。
 批量学习/删除、联络产出、研究完成和初始知识发放因此各只发送一次快照。
 
 两条路径不等 tick 结束：
 
-- 登录与绘图台 `REFRESH` 调用 `TeamResearchService.send(player, team)`，立即给该玩家发送当前快照；队伍正待同步时，同一份快照也发给其他在线成员并清除标记。
+- 登录与绘图台 `REFRESH` 调用 `TeamResearchService.send(player, team)`，立即给该玩家发送当前快照；队伍正待同步时，也按接收者模式向其他在线成员发送并清除标记。
 - 绘图台其他操作在发送回复前调用 `TeamResearchService.flush(team)`。客户端总是先装入更新后的视图再处理回复，例如 `RETRIEVE` 按
   `retrieved_key` 聚焦新来件。
 
@@ -267,6 +267,8 @@ KnowledgeLinkSessions 是每玩家临时联络棋盘，不写存档。关闭绘�
 
 可见快照还包含 `projects`：列出当前 access 发现的项目，以及已有历史的项目；active 只表示当前发现或存在 open run，纯历史项目在普通视图隐藏。包含经过组披露裁剪的 sources、access_conditions、groups 与成果说明，供未启动项目展示。它与 `research`
 中的实际启动/完成记录分开。项目完成后的多项成果共用一次最终快照，分别保留其学习事件和结果。
+
+仅创造模式接收者的 `archive_view` 额外含 `creative_projects`，由 `KnowledgeView.create(service, true)` 生成：完整项目目录、未裁剪的开始条件、各阶段基础任务与成果。普通 `projects`、知识/权限投影仍保持队伍真实状态；该目录不写入存档，也不进入普通札记或脉络。进入总览的新研究页签时 `REFRESH` 重新按服务端当前游戏模式生成视图；同队生存玩家收到的快照不含此目录。退出创造模式时客户端移除入口并关闭预览。
 
 `KnowledgeSnapshotPacket` 将 `KnowledgeSyncSnapshot`（`catalog_revision`、发现投影 `knowledge`、权限投影 `technology` 与可见视图
 `archive_view`）的 NBT 压缩后按 128 KiB 分片。持久化的队伍状态不进入快照，客户端也不保存它的镜像。客户端收齐一轮后一次替换两份投影和可见视图；传输期间继续显示上一份完整状态。这样容量配置允许的观察档案不会被普通单包

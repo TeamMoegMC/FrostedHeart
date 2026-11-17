@@ -815,5 +815,9 @@
   "gui.frostedresearch.journal.link.difficulty": "缺少 %s 项辅助知识 · 联络难度 %s 级",
   "gui.frostedresearch.journal.link.game_help": "配对亮起的图案，按顺序消除数字，最后点击中央论文。",
   "gui.frostedresearch.draw_desk.idea_for": "推导中的想法",
-  "gui.frostedresearch.draw_desk.idea_difficulty": "难度 %s 级"
+  "gui.frostedresearch.draw_desk.idea_difficulty": "难度 %s 级",
+  "gui.frostedresearch.archive.new_projects": "新研究（创造模式）",
+  "gui.frostedresearch.archive.new_projects.empty": "没有符合条件的新研究。",
+  "gui.frostedresearch.archive.new_projects.locked": "尚未解锁",
+  "gui.frostedresearch.archive.new_projects.preview": "创造模式预览"
 }

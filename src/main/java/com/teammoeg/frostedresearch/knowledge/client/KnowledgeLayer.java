@@ -75,6 +75,7 @@ public final class KnowledgeLayer extends UILayer {
     private KnowledgeKey focused;
     private String focusedProject;
     private boolean projectDetails, chooseOpeningPage;
+    private Runnable creativePreviewBack;
     private int projectTab;
     private final Map<String,String> selectedRuns=new HashMap<>();
     private int hintIndex = -1, candidateIndex, requirementIndex;
@@ -168,6 +169,7 @@ public final class KnowledgeLayer extends UILayer {
     }
 
     public void opened() {
+        creativePreviewBack = null;
         refreshSnapshot();
         mode = Mode.READ;
         projectDetails = false;
@@ -225,7 +227,8 @@ public final class KnowledgeLayer extends UILayer {
         if (page == Page.RESEARCH && projectDetails) {
             var project = researchProject(focusedProject);
             var frame = new ResearchProjectFrame(this, project == null ? t("page.research") : project.title(),
-                    project == null ? Component.empty() : researchState(project),
+                    creativePreviewBack != null ? Component.translatable("gui.frostedresearch.archive.new_projects.preview")
+                        : project == null ? Component.empty() : researchState(project),
                     List.of(t("research.tab.description"), t("research.tab.knowledge"), t("research.tab.tasks")),
                     projectTab, tab -> {
                         projectTab = tab;
@@ -459,6 +462,7 @@ public final class KnowledgeLayer extends UILayer {
      * A project's aims and requirements, with the actions its open run allows. The server judges every action.
      */
     private KnowledgeJournalData.Run selectedRun(String project) {
+        if (creativePreviewBack != null) return null;
         var run=data.openRun(project,selectedRuns.get(project));
         if(run!=null)selectedRuns.put(project,run.id());
         return run;
@@ -488,7 +492,7 @@ public final class KnowledgeLayer extends UILayer {
             reading.setHeight(Math.max(20, reading.getHeight() - 23));
             return;
         }
-        if (project.startStatus().equals("LEGACY_COMPLETED")) {
+        if (creativePreviewBack == null && project.startStatus().equals("LEGACY_COMPLETED")) {
             reading.text(List.of(Component.translatable("knowledge.frostedresearch.research.legacy_completed"), Component.translatable("knowledge.frostedresearch.research.legacy_completed_explain")));
             return;
         }
@@ -540,7 +544,7 @@ public final class KnowledgeLayer extends UILayer {
         }
         var requirements = run != null ? run.requirements() : project.requirements();
         boolean actionable = requirements.stream().anyMatch(r -> !r.type().equals("observation"));
-        var displayed=run!=null ? run : data.runs.stream().filter(r -> r.project().equals(project.id()) && r.status().equals("completed")).reduce((a,b) -> b).orElse(null);
+        var displayed=creativePreviewBack != null ? null : run!=null ? run : data.runs.stream().filter(r -> r.project().equals(project.id()) && r.status().equals("completed")).reduce((a,b) -> b).orElse(null);
         if(projectTab == 2 && displayed!=null && !displayed.stage().id().isBlank()) {
             List.of(displayed.stage().title(), displayed.stage().objective(), displayed.stage().method()).stream()
                 .filter(text -> !text.getString().isBlank()).forEach(paragraphs::add);
@@ -566,6 +570,7 @@ public final class KnowledgeLayer extends UILayer {
             if (run != null) paragraphs.addAll(requirementDetails(requirements.get(requirementIndex)));
         }
         reading.text(paragraphs);
+        if (creativePreviewBack != null) return;
         if (run == null) {
             boolean startable = project.startStatus().equals("LEARNABLE") && (project.staged() || !requirements.isEmpty());
             button(x, bottom - 23, w, 20, t("research.start"), false,
@@ -737,6 +742,11 @@ public final class KnowledgeLayer extends UILayer {
     }
 
     private KnowledgeJournalData.Project researchProject(String id) {
+        if (creativePreviewBack != null) {
+            var player = Minecraft.getInstance().player;
+            return player != null && player.isCreative() ? data.creativeProjects.stream()
+                .filter(project -> project.id().equals(id)).findFirst().orElse(null) : null;
+        }
         return id == null ? null : researchProjects().stream().filter(project -> project.id().equals(id)).findFirst().orElse(null);
     }
 
@@ -767,6 +777,14 @@ public final class KnowledgeLayer extends UILayer {
         projectTab = 0;
         rowsDirty = true;
         rebuild();
+    }
+
+    /** Opens an inspection-only project sheet without changing discoveries, runs or recipe access. */
+    public void openCreativeProject(String project, Runnable returnToArchive) {
+        chooseOpeningPage = false;
+        refreshSnapshot();
+        creativePreviewBack = returnToArchive;
+        openResearch(project);
     }
 
     private void buildTray() {
@@ -986,6 +1004,13 @@ public final class KnowledgeLayer extends UILayer {
     }
 
     private void closeProjectDetails() {
+        if (creativePreviewBack != null) {
+            var returnToArchive = creativePreviewBack;
+            creativePreviewBack = null;
+            projectDetails = false;
+            returnToArchive.run();
+            return;
+        }
         projectDetails = false;
         mode = Mode.READ;
         rebuild();
@@ -1174,6 +1199,10 @@ public final class KnowledgeLayer extends UILayer {
 
     @Override
     public void tick() {
+        if (creativePreviewBack != null && (Minecraft.getInstance().player == null || !Minecraft.getInstance().player.isCreative())) {
+            closeProjectDetails();
+            return;
+        }
         if (noticeTicks > 0 && --noticeTicks == 0) notice = Component.empty();
         if (language != Language.getInstance()) refreshSnapshot();
         if (toolsOpen()) updateRetrieveButton();

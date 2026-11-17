@@ -32,6 +32,8 @@ import com.teammoeg.frostedresearch.research.ResearchCategory;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 
 import java.util.Objects;
 
@@ -43,6 +45,7 @@ final class ResearchFieldTabBar extends UIElement {
     private static final int ICON_SIZE = 16;
     private static final String[] TYPE_IDS = createTypeIds();
     private static final CIcon[] ICONS = createIcons();
+    private static final ItemStack NEW_PROJECT_ICON = new ItemStack(Items.WRITABLE_BOOK);
     private static final Component TYPES_TITLE =
             Component.translatable("gui.frostedresearch.archive.types");
     private static final Component ALL_TYPES_TITLE =
@@ -63,9 +66,11 @@ final class ResearchFieldTabBar extends UIElement {
         graphics.fill(x, y + height - 1, x + width, y + height, ResearchArchiveLayer.COLOR_PANEL_DARK);
 
         int tabWidth = tabWidth();
-        for (int index = 0; index < TAB_COUNT; index++) {
+        for (int index = 0; index < visibleTabCount(); index++) {
             int tabX = x + index * tabWidth;
-            boolean selected = TYPE_IDS[index].equals(state.researchTypeFilter());
+            boolean creative = index == TAB_COUNT;
+            boolean selected = creative ? archive.creativeCatalogueOpen()
+                : !archive.creativeCatalogueOpen() && TYPE_IDS[index].equals(state.researchTypeFilter());
             if (selected) {
                 graphics.fill(tabX, y, tabX + tabWidth, y + height - 1, ResearchArchiveLayer.COLOR_PAPER);
                 int highlightWidth = Math.min(30, tabWidth);
@@ -74,10 +79,11 @@ final class ResearchFieldTabBar extends UIElement {
             }
             int iconX = tabX + Math.max(1, (tabWidth - ICON_SIZE) / 2);
             int iconY = y + (selected ? 5 : 8);
-            ICONS[index].draw(graphics, iconX, iconY, ICON_SIZE, ICON_SIZE);
+            if (creative) graphics.renderItem(NEW_PROJECT_ICON, iconX, iconY);
+            else ICONS[index].draw(graphics, iconX, iconY, ICON_SIZE, ICON_SIZE);
         }
 
-        int labelX = x + TAB_COUNT * tabWidth + 7;
+        int labelX = x + visibleTabCount() * tabWidth + 7;
         if (labelX + getFont().width(TYPES_TITLE) <= x + width - 4) {
             graphics.drawString(getFont(), TYPES_TITLE, labelX, y + 10,
                     ResearchArchiveLayer.COLOR_MUTED_INK, false);
@@ -90,7 +96,8 @@ final class ResearchFieldTabBar extends UIElement {
         if (button != MouseButton.LEFT || index < 0) {
             return false;
         }
-        archive.setResearchTypeFilter(typeId(index));
+        if (index == TAB_COUNT) archive.showCreativeCatalogue();
+        else archive.setResearchTypeFilter(typeId(index));
         return true;
     }
 
@@ -98,6 +105,10 @@ final class ResearchFieldTabBar extends UIElement {
     public void getTooltip(TooltipBuilder tooltip) {
         int index = tabAtMouse();
         if (index < 0) {
+            return;
+        }
+        if (index == TAB_COUNT) {
+            tooltip.accept(Component.translatable("gui.frostedresearch.archive.new_projects"));
             return;
         }
         if (index == 0) {
@@ -119,12 +130,14 @@ final class ResearchFieldTabBar extends UIElement {
             return -1;
         }
         int index = (int) getMouseX() / tabWidth();
-        return index >= 0 && index < TAB_COUNT ? index : -1;
+        return index >= 0 && index < visibleTabCount() ? index : -1;
     }
 
     private int tabWidth() {
-        return Math.max(1, Math.min(MAX_TAB_WIDTH, getWidth() / TAB_COUNT));
+        return Math.max(1, Math.min(MAX_TAB_WIDTH, getWidth() / visibleTabCount()));
     }
+
+    private int visibleTabCount() { return TAB_COUNT + (CreativeProjectCatalogue.available() ? 1 : 0); }
 
     private static String typeId(int index) {
         return TYPE_IDS[index];

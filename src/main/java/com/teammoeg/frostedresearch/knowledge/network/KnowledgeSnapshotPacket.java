@@ -56,8 +56,12 @@ public final class KnowledgeSnapshotPacket implements CMessage {
     }
 
     public static List<KnowledgeSnapshotPacket> create(TeamDataHolder team) {
+        return create(team, false);
+    }
+
+    public static List<KnowledgeSnapshotPacket> create(TeamDataHolder team, boolean creative) {
         CompoundTag tag = (CompoundTag) KnowledgeSyncSnapshot.CODEC.encodeStart(NbtOps.INSTANCE,
-                KnowledgeSyncSnapshot.create(team)).getOrThrow(false, message -> FRMain.LOGGER.error("Knowledge snapshot: {}", message));
+                KnowledgeSyncSnapshot.create(team, creative)).getOrThrow(false, message -> FRMain.LOGGER.error("Knowledge snapshot: {}", message));
         try {
             return KnowledgeSnapshotTransfer.split(tag).stream().map(KnowledgeSnapshotPacket::new).toList();
         } catch (IOException exception) {
