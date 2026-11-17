@@ -255,12 +255,12 @@ public final class ControlledFurnaceGameTests {
                 var s=new KnowledgeService(UUID.randomUUID(),new KnowledgeState(),1,()->{});
                 for(String material:List.of("charcoal_pit:sandy_brick_item","minecraft:clay_ball",kaolin,bauxite))
                     s.learn(ItemRetrieval.observe(actor.player,new ItemStack(item(material))),SOURCE,KnowledgeService.Grant.NORMAL);
-                h.assertTrue(KnowledgeLinkSessions.duration(s,link)==140,"any form pair provides all three auxiliary groups: "+kaolin+" / "+bauxite);
+                h.assertTrue(KnowledgeLinkSessions.numbers(s,link)==0,"any form pair provides all three auxiliary groups: "+kaolin+" / "+bauxite);
                 s.learn(KnowledgeElement.idea(IDEA),SOURCE,KnowledgeService.Grant.NORMAL);
                 h.assertTrue(s.startResearch(PROJECT).isPresent(),"same form pair satisfies project access");
                 for(String extra:kaolins)s.learn(ItemRetrieval.observe(actor.player,new ItemStack(item(extra))),SOURCE,KnowledgeService.Grant.NORMAL);
                 for(String extra:bauxites)s.learn(ItemRetrieval.observe(actor.player,new ItemStack(item(extra))),SOURCE,KnowledgeService.Grant.NORMAL);
-                h.assertTrue(KnowledgeLinkSessions.duration(s,link)==140,"additional forms never count as additional auxiliary groups");
+                h.assertTrue(KnowledgeLinkSessions.numbers(s,link)==0,"additional forms never count as additional auxiliary groups");
             }
             for(var family:List.of(kaolins,bauxites))for(String material:family){
                 var s=new KnowledgeService(UUID.randomUUID(),new KnowledgeState(),1,()->{});
@@ -289,7 +289,7 @@ public final class ControlledFurnaceGameTests {
                 s.learn(record,SOURCE,KnowledgeService.Grant.NORMAL);
                 var keys=List.of(record.key());
                 h.assertTrue(s.matchLink(id("refractory_firing"),keys).isPresent(),"real sandy-brick tag accepts either form without raw-material auxiliaries");
-                h.assertTrue(KnowledgeLinkSessions.duration(s,KnowledgeDefinitions.current().links().get(id("refractory_firing")))==200,"brick-only link costs ten seconds");
+                h.assertTrue(KnowledgeLinkSessions.numbers(s,KnowledgeDefinitions.current().links().get(id("refractory_firing")))==3,"brick-only link has three numbers");
                 s.learn(KnowledgeElement.idea(IDEA),SOURCE,KnowledgeService.Grant.NORMAL);
                 h.assertTrue(s.startResearch(PROJECT).isEmpty(),"idea and mandatory link input do not waive project raw-material knowledge");
                 for(String material:List.of("frostedheart:kaolin","frostedheart:bauxite","minecraft:clay_ball"))

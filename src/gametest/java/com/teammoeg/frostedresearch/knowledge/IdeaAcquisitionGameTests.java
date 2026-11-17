@@ -98,18 +98,18 @@ public final class IdeaAcquisitionGameTests {
                     id("formal_iron"), iron, id("formal_refractory"), refractory));
             var service = service(); service.learn(copper, SOURCE, KnowledgeService.Grant.NORMAL);
             h.assertTrue(service.matchLink(id("formal_earthen"), List.of(copper.key())).isPresent()
-                && KnowledgeLinkSessions.duration(service, earthen) == 200, "mandatory-only link works and costs ten seconds");
+                && KnowledgeLinkSessions.numbers(service, earthen) == 2, "mandatory-only link works at two numbers");
             service.receive(clay, SOURCE);
-            h.assertTrue(KnowledgeLinkSessions.duration(service, earthen) == 200, "inbox auxiliary does not reduce cost");
+            h.assertTrue(KnowledgeLinkSessions.numbers(service, earthen) == 2, "inbox auxiliary does not reduce cost");
             service.learnInbox(clay.key());
-            h.assertTrue(KnowledgeLinkSessions.duration(service, earthen) == 180, "one learned auxiliary saves one second");
+            h.assertTrue(KnowledgeLinkSessions.numbers(service, earthen) == 1, "one learned auxiliary removes one ordered number");
             service.learn(sand, SOURCE, KnowledgeService.Grant.NORMAL);
-            h.assertTrue(KnowledgeLinkSessions.duration(service, earthen) == 160, "both auxiliaries save two seconds");
+            h.assertTrue(KnowledgeLinkSessions.numbers(service, earthen) == 0, "both auxiliaries give a zero-number puzzle");
             var bare = service();
-            h.assertTrue(KnowledgeLinkSessions.duration(bare, refractory) == 200, "refractory base wait is ten seconds");
+            h.assertTrue(KnowledgeLinkSessions.numbers(bare, refractory) == 3, "refractory starts at three numbers");
             for (String material : List.of("frostedheart:kaolin", "frostedheart:bauxite", "minecraft:clay_ball"))
                 bare.learn(observe.apply(material), SOURCE, KnowledgeService.Grant.NORMAL);
-            h.assertTrue(KnowledgeLinkSessions.duration(bare, refractory) == 140, "three refractory auxiliaries save three seconds");
+            h.assertTrue(KnowledgeLinkSessions.numbers(bare, refractory) == 0, "all three refractory auxiliaries give zero numbers");
         } finally { KnowledgeDefinitions.install(previous); }
         h.succeed();
     }
@@ -131,15 +131,15 @@ public final class IdeaAcquisitionGameTests {
             h.assertTrue(s.matchLink(id("none"), List.of()).isPresent() && s.matchLink(id("legacy"), List.of()).isEmpty(), "explicit empty gate overrides while legacy inherits");
             learn(s, "link_gate"); learn(s, "event_bonus");
             h.assertTrue(s.matchLink(id("explicit"), List.of()).isPresent(), "link can run without the event prerequisite");
-            h.assertTrue(KnowledgeLinkSessions.duration(s, explicit) == 200, "event bonus does not reduce explicit link cost");
+            h.assertTrue(KnowledgeLinkSessions.numbers(s, explicit) == 2, "event bonus does not reduce explicit link difficulty");
             learn(s, "link_bonus");
-            h.assertTrue(KnowledgeLinkSessions.duration(s, explicit) == 180 && KnowledgeLinkSessions.duration(s, noGate) == 200, "route auxiliary and explicit no-auxiliary override are independent");
+            h.assertTrue(KnowledgeLinkSessions.numbers(s, explicit) == 1 && KnowledgeLinkSessions.numbers(s, noGate) == 0, "route auxiliary and explicit no-auxiliary override are independent");
             var glass = new Observation(UUID.randomUUID(), Observation.Type.ITEM, new ResourceLocation("minecraft:glass"), Map.of(), Observation.Source.command(), Optional.empty());
             h.assertTrue(KnowledgeDefinitions.current().hasObservationUse(glass), "link-only auxiliary observation is indexed as useful");
-            KnowledgeLinkSessions.start(player, 1, BlockPos.ZERO, s, id("explicit"), List.of(), 0);
-            h.assertTrue(KnowledgeLinkSessions.session(player).orElseThrow().duration() == 180, "actual session uses rule-specific duration");
+            KnowledgeLinkSessions.start(player, 1, BlockPos.ZERO, s, id("explicit"), List.of());
+            h.assertTrue(KnowledgeLinkSessions.session(player).orElseThrow().numbers() == 1, "actual session uses rule-specific difficulty");
             s.forget(KnowledgeKey.idea(id("link_gate")));
-            h.assertTrue(KnowledgeLinkSessions.advance(player, s, 200).state().equals("cancelled"), "link gate is rechecked during wait");
+            h.assertTrue(KnowledgeLinkSessions.check(player, s).state().equals("cancelled"), "link gate is rechecked during the puzzle");
             learn(s, "event_gate");
             IdeaAcquisitionService.fire(s, List.of(new IdeaAcquisitionService.Signal(id("signal"), Optional.empty())), () -> 0);
             h.assertTrue(s.isActive(KnowledgeKey.idea(id("target"))), "event works without link prerequisites");
@@ -198,8 +198,8 @@ public final class IdeaAcquisitionGameTests {
             MinecraftForge.EVENT_BUS.addListener(listener);
             h.assertTrue(service.previewLinks(keys).isEmpty() && service.candidateLinks(10).isEmpty(), "archived outputs are hidden through both candidate APIs");
             UUID player = UUID.randomUUID();
-            h.assertTrue(KnowledgeLinkSessions.start(player, 1, BlockPos.ZERO, service, rule, keys, 0) == KnowledgeService.Status.SUCCESS, "known output can enter normal manual wait");
-            h.assertTrue(KnowledgeLinkSessions.advance(player, service, 200).state().equals("completed"), "original materials loop completes normally");
+            h.assertTrue(KnowledgeLinkSessions.start(player, 1, BlockPos.ZERO, service, rule, keys) == KnowledgeService.Status.ALREADY_OWNED, "known output cannot start a redundant UI puzzle");
+            h.assertTrue(service.link(rule, keys).status() == KnowledgeService.Status.ALREADY_OWNED, "internal history API retains an additional manual path without a puzzle");
             h.assertTrue(service.state().links().size() == 1 && service.state().links().get(rule).output().equals(target), "actual loop binding retained");
             h.assertTrue(service.link(alternative, keys).status() == KnowledgeService.Status.ALREADY_OWNED && service.state().links().size() == 2, "another rule adds a distinct historical path");
             var firstBinding = service.state().links().get(rule); long revision = service.state().mutationRevision();
@@ -344,16 +344,16 @@ public final class IdeaAcquisitionGameTests {
             var deskTile = (com.teammoeg.frostedresearch.blocks.DrawingDeskTileEntity) h.getBlockEntity(new BlockPos(3, 1, 1));
             var deskMenu = new com.teammoeg.frostedresearch.gui.drawdesk.DrawDeskContainer(12, player.getInventory(), deskTile);
             player.containerMenu = deskMenu;
-            h.assertTrue(KnowledgeLinkSessions.start(player.getUUID(), 12, deskTile.getBlockPos(), s, id("wait_rule"), List.of(), player.level().getGameTime()) == KnowledgeService.Status.SUCCESS, "real desk starts waiting");
+            h.assertTrue(KnowledgeLinkSessions.start(player.getUUID(), 12, deskTile.getBlockPos(), s, id("wait_rule"), List.of()) == KnowledgeService.Status.SUCCESS, "real desk starts a link puzzle");
             KnowledgeLinkSessions.tick(new net.minecraftforge.event.TickEvent.PlayerTickEvent(net.minecraftforge.event.TickEvent.Phase.END, player));
-            h.assertTrue(KnowledgeLinkSessions.session(player.getUUID()).isPresent(), "valid desk keeps wait");
+            h.assertTrue(KnowledgeLinkSessions.session(player.getUUID()).isPresent(), "valid desk keeps its puzzle");
             player.closeContainer();
             KnowledgeLinkSessions.tick(new net.minecraftforge.event.TickEvent.PlayerTickEvent(net.minecraftforge.event.TickEvent.Phase.END, player));
             h.assertTrue(KnowledgeLinkSessions.session(player.getUUID()).isEmpty() && !s.isActive(KnowledgeKey.idea(id("wait_target"))), "actual container close cancels without output");
             player.containerMenu = new com.teammoeg.frostedresearch.gui.drawdesk.DrawDeskContainer(13, player.getInventory(), deskTile);
-            KnowledgeLinkSessions.start(player.getUUID(), 13, deskTile.getBlockPos(), s, id("wait_rule"), List.of(), player.level().getGameTime());
+            KnowledgeLinkSessions.start(player.getUUID(), 13, deskTile.getBlockPos(), s, id("wait_rule"), List.of());
             server.getPlayerList().remove(player);
-            h.assertTrue(KnowledgeLinkSessions.session(player.getUUID()).isEmpty(), "actual logout cancels transient wait");
+            h.assertTrue(KnowledgeLinkSessions.session(player.getUUID()).isEmpty(), "actual logout cancels the transient puzzle");
             h.succeed();
         } finally {
             if (server.getPlayerList().getPlayers().contains(player)) server.getPlayerList().remove(player);
@@ -392,7 +392,52 @@ public final class IdeaAcquisitionGameTests {
     }
 
     @GameTest(template = "empty", timeoutTicks = 40)
-    public static void waitingZeroOneLegacyCancellationAndRevalidation(GameTestHelper h) {
+    public static void everyMissingAuxiliaryAddsOneNumberAndAllLevelsAwardOnWin(GameTestHelper h) {
+        var previous = KnowledgeDefinitions.current();
+        try {
+            var conditions = new ArrayList<KnowledgeCondition>();
+            var ideas = new HashMap<ResourceLocation, IdeaDefinition>();
+            for (int n = 0; n < 7; n++) {
+                conditions.add(idea("aux" + n));
+                ideas.put(id("aux" + n), definition(IdeaAcquisition.NONE));
+            }
+            ideas.put(id("target"), definition(new IdeaAcquisition(List.of(), List.of(), conditions, Optional.empty())));
+            var rule = new LinkRule(List.of(), List.of(), id("target"));
+            install(ideas, Map.of(id("all_levels"), rule));
+            for (int known = 0; known <= 7; known++) {
+                var service = service(); var player = UUID.randomUUID();
+                for (int n = 0; n < known; n++) learn(service, "aux" + n);
+                h.assertTrue(KnowledgeLinkSessions.start(player, 1, BlockPos.ZERO, service, id("all_levels"), List.of())
+                        == KnowledgeService.Status.SUCCESS, "every supported cost can start");
+                var session = KnowledgeLinkSessions.session(player).orElseThrow();
+                h.assertTrue(session.missing() == 7 - known && session.numbers() == 7 - known,
+                        "one missing auxiliary maps to one ordered number");
+                var payload = KnowledgeLinkSessions.check(player, service).payload();
+                h.assertTrue(!payload.contains("link_duration") && !payload.contains("link_elapsed")
+                        && payload.getCompound("link_game").getInt("lvl") == session.game().getLvl(),
+                        "UI receives a real board and difficulty, with no timer");
+                winLink(player, service, h);
+                h.assertTrue(service.isActive(KnowledgeKey.idea(id("target"))), "all eight difficulties produce the idea on an ordinary win");
+            }
+            h.succeed();
+        } finally { KnowledgeLinkSessions.clear(); KnowledgeDefinitions.install(previous); }
+    }
+
+    private static void winLink(UUID player, KnowledgeService service, GameTestHelper h) {
+        var session = KnowledgeLinkSessions.session(player).orElseThrow();
+        int level = com.teammoeg.frostedresearch.gui.drawdesk.game.GenerateInfo.levelForNumbers(session.numbers());
+        var moves = session.game().initWithSolution(com.teammoeg.frostedresearch.gui.drawdesk.game.GenerateInfo.all[level], new Random(17));
+        session.game().setLvl(level);
+        var before = session.game().serialize();
+        h.assertTrue(KnowledgeLinkSessions.check(player, service).session().game().serialize().equals(before), "checking never advances or resolves a board by time");
+        for (var pair : moves)
+            h.assertTrue(KnowledgeLinkSessions.play(player, service, pair.getFirst(), pair.getSecond()).state().equals("running"), "ordinary pairs do not grant the idea early");
+        h.assertTrue(!service.query(KnowledgeKey.idea(session.output())).inArchive() && !service.query(KnowledgeKey.idea(session.output())).inInbox(), "all symbol/number pairs still require the final tile");
+        h.assertTrue(KnowledgeLinkSessions.play(player, service, com.teammoeg.frostedresearch.gui.drawdesk.game.ResearchGame.FINAL_CARD, null).state().equals("completed"), "final tile grants the idea immediately");
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 40)
+    public static void puzzlesReplaceWaitingAndRecheckKnowledge(GameTestHelper h) {
         var previous = KnowledgeDefinitions.current();
         try {
             var acquisition = acquisition(List.of(), List.of(idea("required")), List.of(idea("bonus")));
@@ -400,27 +445,34 @@ public final class IdeaAcquisitionGameTests {
             install(Map.of(id("target"), definition(acquisition), id("required"), definition(IdeaAcquisition.NONE), id("bonus"), definition(IdeaAcquisition.NONE)),
                 Map.of(id("zero"), new LinkRule(List.of(), List.of(), id("target")), id("one"), new LinkRule(List.of(single), List.of(), id("target")), id("old"), new LinkRule(List.of(single, second), List.of(), id("target"))));
             var s = service(); UUID player = UUID.randomUUID();
-            h.assertTrue(s.previewLinks(List.of()).isEmpty(), "required acquisition knowledge also gates contact");
+            h.assertTrue(s.previewLinks(List.of()).isEmpty(), "missing required knowledge blocks the puzzle");
             learn(s, "required");
-            h.assertTrue(s.previewLinks(List.of()).size() == 1 && KnowledgeLinkSessions.duration(s, id("target")) == 200, "explicit zero-input rule and default 200 ticks");
-            KnowledgeLinkSessions.start(player, 1, BlockPos.ZERO, s, id("zero"), List.of(), 10);
-            h.assertTrue(KnowledgeLinkSessions.start(player, 1, BlockPos.ZERO, s, id("zero"), List.of(), 100) == KnowledgeService.Status.ACTIVE, "repeated request does not reset wait");
-            h.assertTrue(KnowledgeLinkSessions.advance(player, s, 209).state().equals("running"), "no early completion");
-            h.assertTrue(KnowledgeLinkSessions.advance(player, s, 210).state().equals("completed") && s.isActive(KnowledgeKey.idea(id("target"))), "legal wait completes without random failure");
-            h.assertTrue(KnowledgeLinkSessions.advance(player, s, 211).state().equals("idle"), "completion cannot repeat");
+            var rule = KnowledgeDefinitions.current().links().get(id("zero"));
+            h.assertTrue(s.previewLinks(List.of()).size() == 1 && KnowledgeLinkSessions.numbers(s, rule) == 1, "one absent auxiliary means one number");
+            KnowledgeLinkSessions.start(player, 1, BlockPos.ZERO, s, id("zero"), List.of());
+            var original = KnowledgeLinkSessions.session(player).orElseThrow();
+            h.assertTrue(KnowledgeLinkSessions.start(player, 1, BlockPos.ZERO, s, id("zero"), List.of()) == KnowledgeService.Status.ACTIVE
+                && original == KnowledgeLinkSessions.session(player).orElseThrow(), "repeat start preserves the current board");
+            learn(s, "bonus");
+            h.assertTrue(KnowledgeLinkSessions.check(player, s).session().numbers() == 1, "knowledge gained mid-game keeps this board fixed");
+            h.assertTrue(KnowledgeLinkSessions.reset(player, s).session().numbers() == 0, "reset recalculates difficulty from current learned auxiliaries");
+            winLink(player, s, h);
+            h.assertTrue(s.isActive(KnowledgeKey.idea(id("target"))) && KnowledgeLinkSessions.check(player, s).state().equals("idle"), "zero-number puzzle grants once, not on start or by timer");
             var rich = service(); learn(rich, "required"); learn(rich, "bonus");
-            h.assertTrue(KnowledgeLinkSessions.duration(rich, id("target")) == 180, "optional knowledge reduces time without tray input");
-            KnowledgeLinkSessions.start(player, 1, BlockPos.ZERO, rich, id("zero"), List.of(), 0);
+            KnowledgeLinkSessions.start(player, 1, BlockPos.ZERO, rich, id("zero"), List.of());
             KnowledgeLinkSessions.cancel(player);
-            h.assertTrue(KnowledgeLinkSessions.advance(player, rich, 200).state().equals("idle") && !rich.isActive(KnowledgeKey.idea(id("target"))), "cancel leaves no output");
-            KnowledgeLinkSessions.start(player, 1, BlockPos.ZERO, rich, id("zero"), List.of(), 200);
+            h.assertTrue(KnowledgeLinkSessions.check(player, rich).state().equals("idle") && !rich.isActive(KnowledgeKey.idea(id("target"))), "cancel leaves no output");
+            KnowledgeLinkSessions.start(player, 1, BlockPos.ZERO, rich, id("zero"), List.of());
             rich.forget(KnowledgeKey.idea(id("required")));
-            h.assertTrue(KnowledgeLinkSessions.advance(player, rich, 400).state().equals("cancelled"), "required knowledge rechecked at completion");
+            h.assertTrue(KnowledgeLinkSessions.check(player, rich).state().equals("cancelled"), "required knowledge loss ends the puzzle");
             learn(rich, "required"); Observation a = paper(), b = paper();
             rich.learn(KnowledgeElement.observation(a), SOURCE, KnowledgeService.Grant.NORMAL);
             rich.learn(KnowledgeElement.observation(b), SOURCE, KnowledgeService.Grant.NORMAL);
-            h.assertTrue(rich.previewLinks(List.of(a.key())).size() == 1, "one input never requires an unrelated second note");
-            h.assertTrue(rich.previewLinks(List.of(a.key(), b.key())).size() == 1, "existing two-slot rule still needs distinct records");
+            h.assertTrue(rich.previewLinks(List.of(a.key())).size() == 1, "one-input rules remain independent of auxiliaries");
+            h.assertTrue(rich.previewLinks(List.of(a.key(), b.key())).size() == 1, "two-slot rules still need distinct records");
+            KnowledgeLinkSessions.start(player, 1, BlockPos.ZERO, rich, id("zero"), List.of());
+            rich.receive(KnowledgeElement.idea(id("target")), SOURCE);
+            h.assertTrue(KnowledgeLinkSessions.check(player, rich).state().equals("cancelled"), "a teammate's received idea ends the redundant puzzle");
             h.succeed();
         } finally { KnowledgeLinkSessions.clear(); KnowledgeDefinitions.install(previous); }
     }

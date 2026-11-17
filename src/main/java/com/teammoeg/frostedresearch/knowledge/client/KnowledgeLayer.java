@@ -21,6 +21,7 @@
 package com.teammoeg.frostedresearch.knowledge.client;
 
 import com.teammoeg.frostedresearch.gui.drawdesk.game.GenerateInfo;
+import com.teammoeg.frostedresearch.gui.drawdesk.game.ResearchGame;
 
 import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.*;
@@ -57,7 +58,7 @@ public final class KnowledgeLayer extends UILayer {
 
     private enum Page {INBOX, ARCHIVE, RELATIONS, HINTS, RESEARCH}
 
-    private enum Mode {READ, CANDIDATES, THINK, DELETE, TOOLS, ABANDON}
+    private enum Mode {READ, CANDIDATES, THINK, DELETE, TOOLS, ABANDON, LINK_GAME}
 
     private final DrawDeskContainer menu;
     private final Runnable back, surfaceChanged;
@@ -99,7 +100,9 @@ public final class KnowledgeLayer extends UILayer {
     private boolean inspectedPresent;
     private int noticeTicks;
     private String linkState = "idle";
-    private int linkElapsed, linkDuration;
+    private int linkMissing, linkNumbers;
+    private Component linkTitle = Component.empty();
+    private ResearchGame linkGame;
     private int lastBatchCount = -1;
     private boolean rowsDirty = true;
 
@@ -220,6 +223,10 @@ public final class KnowledgeLayer extends UILayer {
     @Override
     public void addUIElements() {
         learn = remove = combine = null;
+        if (mode == Mode.LINK_GAME && linkGame != null && menu != null) {
+            buildLinkGame();
+            return;
+        }
         if (mode == Mode.TOOLS) {
             buildTools();
             return;
@@ -325,6 +332,20 @@ public final class KnowledgeLayer extends UILayer {
         return b;
     }
 
+    private void buildLinkGame() {
+        int cell = Math.max(1, Math.min(26, Math.min((getWidth() - 36) / 9, (getHeight() - 124) / 9)));
+        var board = new LinkGamePanel(this, menu.getBlock().getBlockPos(), linkGame, cell);
+        board.setPos((getWidth() - cell * 9) / 2, 72);
+        add(board);
+        var help = new JournalText(this);
+        help.setPosAndSize(18, 51, getWidth() - 36, 19);
+        help.text(List.of(t("link.game_help")));
+        add(help);
+        button(18, getHeight() - 43, (getWidth() - 42) / 2, 20, t("link.restart"), false, board::restart);
+        button(getWidth() / 2 + 3, getHeight() - 43, (getWidth() - 42) / 2, 20,
+                t("cancel"), true, () -> send(Action.CANCEL_LINK, List.of(), "", "", ""));
+    }
+
     private void buildReading() {
         int x = layout.rightX(), w = layout.rightWidth(), top = layout.header() + 12, bottom = layout.bottom();
         var entry = data.entry(focused);
@@ -346,13 +367,11 @@ public final class KnowledgeLayer extends UILayer {
             });
             return;
         }
-        if (linkState.equals("running")) {
-            reading.text(List.of(t("link.waiting", linkElapsed / 20.0, linkDuration / 20.0)));
-            button(x, bottom - 21, w, 19, t("cancel"), true, () -> send(Action.CANCEL_LINK, List.of(), "", "", ""));
-            return;
-        }
         if (mode == Mode.CANDIDATES) {
-            reading.text(candidates.isEmpty() ? List.of(t("link.empty")) : List.of(KnowledgePresentation.text(candidates.get(candidateIndex).getString("title")), KnowledgePresentation.text(candidates.get(candidateIndex).getString("body"))));
+            reading.text(candidates.isEmpty() ? List.of(t("link.empty")) : List.of(
+                    KnowledgePresentation.text(candidates.get(candidateIndex).getString("title")),
+                    KnowledgePresentation.text(candidates.get(candidateIndex).getString("body")),
+                    t("link.difficulty", candidates.get(candidateIndex).getInt("missing"), candidates.get(candidateIndex).getInt("numbers"))));
             if (candidates.size() > 1) {
                 button(x, top + 14, 22, 16, Component.literal("‹"), true, () -> {
                     candidateIndex = Math.floorMod(candidateIndex - 1, candidates.size());
@@ -991,6 +1010,10 @@ public final class KnowledgeLayer extends UILayer {
 
     public boolean goBack() {
         chooseOpeningPage = false;
+        if (mode == Mode.LINK_GAME) {
+            send(Action.CANCEL_LINK, List.of(), "", "", "");
+            return true;
+        }
         if (nodeSheet.isVisible()) {
             closeGraphSheet();
             return true;
@@ -1060,11 +1083,20 @@ public final class KnowledgeLayer extends UILayer {
         if (projectDetails && payload.getString("message").equals("research.start.success")) projectTab = 2;
         if (payload.contains("airflow")) return; // Late reply after returning from the desk game.
         if (payload.contains("link_state")) {
-            linkState = payload.getString("link_state"); linkElapsed = payload.getInt("link_elapsed"); linkDuration = payload.getInt("link_duration");
+            linkState = payload.getString("link_state");
+            if (linkState.equals("running") && payload.contains("link_game")) {
+                linkMissing = payload.getInt("link_missing"); linkNumbers = payload.getInt("link_numbers");
+                linkTitle = KnowledgePresentation.text(payload.getString("link_title"));
+                linkGame = new ResearchGame(); linkGame.load(payload.getCompound("link_game"));
+                mode = Mode.LINK_GAME;
+            }
             if (linkState.equals("completed") || linkState.equals("cancelled")) {
-                mode = Mode.READ; candidates.clear(); selected.clear();
+                linkGame = null;
+                mode = Mode.READ; candidates.clear();
+                if (linkState.equals("completed")) selected.clear();
                 notice = t(linkState.equals("completed") ? "link.completed" : "link.cancelled"); noticeTicks = 100;
             }
+            if (linkState.equals("idle") && mode == Mode.LINK_GAME) { mode = Mode.READ; linkGame = null; }
             rebuild(); return;
         }
         boolean retrieval = payload.getString("action").equals("RETRIEVE");
@@ -1187,6 +1219,12 @@ public final class KnowledgeLayer extends UILayer {
 
     @Override
     public void drawBackground(GuiGraphics g, int x, int y, int w, int h, RenderingHint hint) {
+        if (mode == Mode.LINK_GAME) {
+            drawPaper(g, x, y, w, h);
+            g.drawString(getFont(), t("link.game_title", linkTitle), x + 18, y + 17, INK, false);
+            g.drawString(getFont(), t("link.difficulty", linkMissing, linkNumbers), x + 18, y + 36, MUTED, false);
+            return;
+        }
         if (page == Page.RESEARCH && projectDetails && mode != Mode.TOOLS) return;
         drawPaper(g, x, y, w, h);
         if (mode == Mode.TOOLS) {

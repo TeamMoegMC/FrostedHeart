@@ -470,7 +470,7 @@
   "gui.frostedresearch.journal.tray.remove_record": "收起「%s」",
   "gui.frostedresearch.journal.link.try": "联络",
   "gui.frostedresearch.journal.link.possibilities": "思绪渐渐有了轮廓",
-  "gui.frostedresearch.journal.link.accept": "记下这个想法",
+  "gui.frostedresearch.journal.link.accept": "开始推导想法",
   "gui.frostedresearch.journal.link.empty": "这些记录暂时还拼不出新的想法。换几份札记试试看。",
   "gui.frostedresearch.journal.link.discovered": "这条联系已记下。",
   "gui.frostedresearch.journal.relation": "一条发现的脉络",
@@ -681,7 +681,6 @@
   "gui.frostedresearch.journal.research.state.needs_knowledge": "尚缺开始知识；未知要求需要继续探索",
   "gui.frostedresearch.journal.research.state.completable": "任务已齐，可完成",
   "gui.frostedresearch.journal.graph.related_sources": "发现来源",
-  "gui.frostedresearch.journal.link.waiting": "正在联络：%s / %s 秒",
   "gui.frostedresearch.journal.link.completed": "联络完成，关系已记录",
   "gui.frostedresearch.journal.link.cancelled": "联络已取消；再次选择可重新开始",
   "knowledge.frostedresearch.link.completed": "联络完成，关系已记录。",
@@ -812,5 +811,9 @@
   "knowledge.frostedresearch.matching_debug.n4": "消除 4 个顺序数字",
   "knowledge.frostedresearch.matching_debug.n5": "消除 5 个顺序数字",
   "knowledge.frostedresearch.matching_debug.n6": "消除 6 个顺序数字",
-  "knowledge.frostedresearch.matching_debug.n7": "消除 7 个顺序数字"
+  "knowledge.frostedresearch.matching_debug.n7": "消除 7 个顺序数字",
+  "gui.frostedresearch.journal.link.difficulty": "缺少 %s 项辅助知识 · 连连看难度 %s 级",
+  "gui.frostedresearch.journal.link.game_title": "推导想法：%s",
+  "gui.frostedresearch.journal.link.game_help": "配对亮起的图案，按顺序消除数字，最后点击中央论文。",
+  "gui.frostedresearch.journal.link.restart": "重新排列"
 }

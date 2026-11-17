@@ -2,6 +2,15 @@ package com.teammoeg.frostedresearch.validation;
 @net.minecraftforge.fml.common.Mod("research_validation")
 public final class M3ValidationMod {
     public M3ValidationMod() {
+        var linkCheck = net.minecraftforge.fml.loading.FMLPaths.GAMEDIR.get().resolve("research-client-link-check.txt");
+        if (java.nio.file.Files.isRegularFile(linkCheck)) {
+            try {
+                System.setProperty("frostedresearch.linkRoot", java.nio.file.Files.readString(linkCheck).strip());
+                System.setProperty("frostedresearch.linkValidation", "true");
+            } catch (java.io.IOException error) {
+                com.teammoeg.frostedresearch.FRMain.LOGGER.error("Could not read link validation opt-in", error);
+            }
+        }
         // Optional instance-local opt-in avoids changing Prism's cached JVM arguments during another game session.
         var deskCheck = net.minecraftforge.fml.loading.FMLPaths.GAMEDIR.get().resolve("research-client-m4-desk-check.txt");
         if (java.nio.file.Files.isRegularFile(deskCheck)) {
@@ -15,6 +24,7 @@ public final class M3ValidationMod {
         }
         net.minecraftforge.fml.DistExecutor.unsafeRunWhenOn(net.minecraftforge.api.distmarker.Dist.CLIENT,
             () -> () -> net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(
+                Boolean.getBoolean("frostedresearch.linkValidation") ? LinkClientValidation.class :
                 !System.getProperty("frostedresearch.m7Role", "").isBlank() ? M7ClientValidation.class :
                 Boolean.getBoolean("frostedresearch.m6Validation") ? M6ClientValidation.class :
                 Boolean.getBoolean("frostedresearch.m5Validation") ? M5ClientValidation.class :

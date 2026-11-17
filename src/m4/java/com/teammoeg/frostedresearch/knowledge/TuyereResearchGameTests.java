@@ -107,11 +107,11 @@ public final class TuyereResearchGameTests {
             var copper=ItemRetrieval.observe(actor.player,new ItemStack(Items.COPPER_INGOT));service.receive(copper,SOURCE);
             service.learn(ItemRetrieval.observe(actor.player,new ItemStack(Items.COAL)),SOURCE,KnowledgeService.Grant.NORMAL);
             var link=KnowledgeDefinitions.current().links().get(IDEA);
-            h.assertTrue(KnowledgeLinkSessions.duration(service,link)==200,"mandatory fuel and inbox metal do not discount the link");
+            h.assertTrue(KnowledgeLinkSessions.numbers(service,link)==1,"mandatory fuel and inbox metal do not discount the link");
             h.assertTrue(service.startResearch(PROJECT).isEmpty(),"metal in inbox does not satisfy access");service.learnInbox(copper.key());
             h.assertTrue(service.startResearch(PROJECT).isEmpty(),"raw iron observation is also required to start");
             service.learn(ItemRetrieval.observe(actor.player,new ItemStack(Items.RAW_IRON)),SOURCE,KnowledgeService.Grant.NORMAL);
-            h.assertTrue(KnowledgeLinkSessions.duration(service,link)==180,"learned copper/bronze gives the one optional discount");
+            h.assertTrue(KnowledgeLinkSessions.numbers(service,link)==0,"learned copper/bronze gives the one optional discount");
             UUID run=service.startResearch(PROJECT).orElseThrow();
             h.assertTrue(!TechnologyAccessResolver.project(actor.team).recipe(PROTOTYPE).allowed(),"prototype managed before airflow success");
             var desk=desk(h,new BlockPos(1,1,1));h.assertTrue(desk.startAirflow(actor.player,run,"airflow_win"),"formal minigame target starts");

@@ -1,7 +1,7 @@
 # 知识状态、API 与生命周期
 
 - Status: `Current`（源码与本轮自动化测试核对；游戏内视觉与多人联机流程尚未人工验收）
-- Last verified: `2026-11-14`（联络按所选规则计算独立前置与等待；其余验证见各节）
+- Last verified: `2026-11-17`（联络以缺失辅助知识决定连连看难度；其余验证见各节）
 - Scope: 队伍知识身份、档案、来件、学习与忘记、理解与休眠、联络、历史、联想、队伍迁移、权限桥接及同步
 - Code anchors: [`KnowledgeService`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/KnowledgeService.java)、[
   `KnowledgeState`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/state/KnowledgeState.java)、[
@@ -138,13 +138,11 @@ codec 错误而不是异常。`ObservationSampling` 把非有限的坐标与温�
 |---|---|
 | knowledgeBehaviorChance = 0.15 | 未指定 chance 的行为基础概率，0–1 |
 | knowledgeBehaviorOptionalBonus = 0.1 | 每项已掌握 optional 的加概率，0–1 |
-| knowledgeLinkTicks = 200 | 基础联络等待，1–72000 tick；20TPS 时 10 秒 |
-| knowledgeLinkOptionalReduction = 20 | 每项已掌握 optional 减免，0–72000 tick |
-| knowledgeLinkMinimumTicks = 20 | 最短等待，1–72000 tick，并不超过基础等待 |
 
 行为概率 p = min(1, p0 + n × bonus)，p0 为想法 chance 或基础配置；n 为有效档案中满足的 optional 项数。
-联络等待 ticks = max(min(base, minimum), base − n × reduction)，这里 n 取所选 LinkRule.optional_knowledge 的已掌握项数；字段省略时继承想法 acquisition.optional。required_knowledge 同理独立于行为 required，省略才继承。KnowledgeLinkSessions.duration(service, rule) 与实际 start 使用同一所选规则；保留的 duration(service, output) 只计算旧式想法默认耗时。可选知识不需要摆在桌面上；等待在开始时固定，
-中途得到更多参考不改变本次时间，必要知识与所选规则则持续校验。合法等待完成不抽概率。
+联络辅助来自所选`LinkRule.optional_knowledge`，省略才继承想法`acquisition.optional`；显式空列表代表没有辅助条件。`missingOptional(service, rule)`数有效档案尚未满足的条件，`numbers(service, rule)=min(7, missingOptional)`选择实际顺序数字数。每项条件最多计一次，tag内多个形态不会叠加；来件不算掌握。必要前置规则仍独立，省略才继承行为required。没有联络时长配置或时间公式。
+
+`KnowledgeLinkSessions.start`生成可解的`ResearchGame`，本局数字数固定；`reset`按当前档案重新生成，`play`使用普通配对/结束牌规则，只有获胜时调用`KnowledgeService.link`，不抽概率。`check`只重检有效性，不随时间推进。`Update.payload`包含`link_state`及运行时的`link_missing/link_numbers/link_title/link_game`。
 
 物品获得桥接只有两处：实际 ItemPickupEvent 的取得堆叠，以及 AbstractContainerMenu.clicked 前后背包＋光标＋玩家工作网格原料的
 物品/NBT 净增量（同次点击聚合）。因此制作、熔炉输出、外部容器普通/快捷取出可触发，背包内部、背包/光标/玩家工作网格原料之间的
@@ -171,10 +169,7 @@ IdeaAcquisitionService.emit(player, new ResourceLocation("example:field_work"), 
 API 携带真实玩家、队伍与事件 ID；KnowledgeBehaviorEvent 提供 team() / actor() / id() / subject()，供实际采样动作的
 其他消费者监听；不是通用脚本执行器。fire(service, signals, random) 是一次操作的批量入口，同操作多个 signal 对同想法只抽一次。
 
-KnowledgeLinkSessions 是每玩家的临时短计时，不写存档：关闭绘图台容器、离线、换队、必要知识/规则失效会取消；
-容器内翻页或返回旧研究页仍继续，重开已关闭容器须重新选择并从零计时。重复开始不重置现有计时，取消后不能完成旧请求。
-每 tick 只校验选定 rule ID，不重算全部候选。进度通过 LINK_PROGRESS 每20 tick 推送，完成/取消另发状态。
-START/LINK 完成入口仍服务端重新判定，不相信客户端进度。
+KnowledgeLinkSessions 是每玩家临时联络棋盘，不写存档。关闭绘图台、离线、换队、必要知识/规则失效或队友已取得输出会取消；在同一容器中`REFRESH`恢复原局。必要输入与队伍归属在每次操作前重新判定，tick只处理容器离开和每秒重检，不会自动产出想法。内部`KnowledgeService.link`仍供其它系统及历史路径记载调用；玩家界面的游戏代价由会话层负责。
 
 ## 实际联络与研究历史
 

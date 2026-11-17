@@ -60,6 +60,14 @@ public class FHDrawingDeskOperationPacket implements CMessage {
 
     }
 
+    public static FHDrawingDeskOperationPacket linkReset(BlockPos pos) {
+        return new FHDrawingDeskOperationPacket(pos, 4, null, null);
+    }
+
+    public static FHDrawingDeskOperationPacket linkMove(BlockPos pos, CardPos first, CardPos second) {
+        return new FHDrawingDeskOperationPacket(pos, second == null ? 5 : 6, first, second);
+    }
+
     protected FHDrawingDeskOperationPacket(BlockPos pos, int op, CardPos pos1, CardPos pos2) {
         super();
         this.pos = pos;
@@ -80,8 +88,8 @@ public class FHDrawingDeskOperationPacket implements CMessage {
         try {
             BlockPos pos = buffer.readBlockPos();
             byte operation = buffer.readByte();
-            CardPos first = operation > 0 && operation < 3 ? CardPos.valueOf(buffer) : null;
-            CardPos second = operation > 1 && operation < 3 ? CardPos.valueOf(buffer) : null;
+            CardPos first = operation == 1 || operation == 2 || operation == 5 || operation == 6 ? CardPos.valueOf(buffer) : null;
+            CardPos second = operation == 2 || operation == 6 ? CardPos.valueOf(buffer) : null;
             return new Decoded(pos, operation, first, second);
         } catch (RuntimeException e) {
             ResearchNetworkCodec.reject("drawing desk: truncated operation");
@@ -92,12 +100,8 @@ public class FHDrawingDeskOperationPacket implements CMessage {
     public void encode(FriendlyByteBuf buffer) {
         buffer.writeBlockPos(pos);
         buffer.writeByte(op);
-        if (op < 3) {
-            if (op > 0)
-                pos1.write(buffer);
-            if (op > 1)
-                pos2.write(buffer);
-        }
+        if (op == 1 || op == 2 || op == 5 || op == 6) pos1.write(buffer);
+        if (op == 2 || op == 6) pos2.write(buffer);
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {
@@ -106,6 +110,11 @@ public class FHDrawingDeskOperationPacket implements CMessage {
             if (sender == null || !isOperationShapeValid(op, pos1, pos2)) return;
             DrawingDeskTileEntity tile = getAuthorizedTile(sender);
             if (tile == null) return;
+
+            if (op >= 4) {
+                com.teammoeg.frostedresearch.knowledge.KnowledgeLinkSessions.handleDeskOperation(sender, pos, op - 4, pos1, pos2);
+                return;
+            }
 
             boolean changed = true;
             switch (op) {
@@ -149,9 +158,9 @@ public class FHDrawingDeskOperationPacket implements CMessage {
 
     static boolean isOperationShapeValid(byte operation, CardPos first, CardPos second) {
         return switch (operation) {
-            case 0, 3 -> first == null && second == null;
-            case 1 -> first != null && first.isWithinBoard() && second == null;
-            case 2 -> first != null && first.isWithinBoard()
+            case 0, 3, 4 -> first == null && second == null;
+            case 1, 5 -> first != null && first.isWithinBoard() && second == null;
+            case 2, 6 -> first != null && first.isWithinBoard()
                     && second != null && second.isWithinBoard();
             default -> false;
         };

@@ -51,10 +51,13 @@ The client sends `FHDrawingDeskOperationPacket` operations against the desk's `B
 | `1` | flip/select one card position |
 | `2` | try to combine two card positions |
 | `3` | submit the examine-slot item |
+| `4` | reset the current idea-link matching puzzle |
+| `5` | select the final tile of the idea-link puzzle |
+| `6` | combine two tiles of the idea-link puzzle |
 
 `ClientResearchGame` performs interaction/display checks but does not authoritatively advance the game. `DrawingDeskTileEntity` owns game state, consumes paper/pen durability, checks matches, synchronizes its NBT, and completes a `MinigameClue` on success.
 
-The packet endpoint treats its position and card coordinates as untrusted. Before executing an operation, `FHDrawingDeskOperationPacket#handle` requires the sender's current menu to be a `DrawDeskContainer` bound to that exact loaded tile, in the sender's server level, no farther than 8 blocks from the tile center, with an `IOwnerTile` owner equal to the sender's current Chorda team UUID. Operations `0` and `3` accept no card positions, operation `1` accepts exactly one, and operation `2` exactly two; every supplied position must be inside the `9 x 9` board.
+The packet endpoint treats its position and card coordinates as untrusted. Before executing an operation, `FHDrawingDeskOperationPacket#handle` requires the sender's current menu to be a `DrawDeskContainer` bound to that exact loaded tile, in the sender's server level, no farther than 8 blocks from the tile center, with an `IOwnerTile` owner equal to the sender's current Chorda team UUID. Operations `0`, `3` and `4` accept no card positions; operations `1` and `5` accept exactly one, and `2` and `6` exactly two; every supplied position must be inside the `9 x 9` board.
 
 ## Theory Card Game
 
@@ -110,6 +113,8 @@ The mod includes the normally hidden `frostedresearch:matching_debug` idea, proj
 Open the drawing desk's journal, choose **Debug: matching puzzle difficulties** (Chinese: **调试：各难度连连看**), start the project and enter its stage tasks. Eight independent optional tasks cover 0 through 7 numbers, each accepting 16 wins. Choose any task's calculation action to use the ordinary desk and C2S path; a running game's reset button samples another board. Abandon and restart to clear task counts. Basic stone tablets and a charcoal pencil suffice for 0–4 numbers; higher difficulties retain their previous equipment needs. Avoid the operator centre-tile shortcut when checking normal play. The final finding has no production unlocks. The debug idea has no natural acquisition trigger or link recipe, so the project stays hidden until explicitly granted.
 
 Run the `frostedresearch_matching` GameTests for seeded generation, legal completion, save restoration, forced fallback, difficulty ordering and the shipped debug definitions.
+
+The journal also embeds this matching game when linking an idea. `KnowledgeLinkSessions` owns that per-player transient board, and operations `4..6` act only on it. Its number count is the missing optional-knowledge count, capped at the supported seven numbers. It has no timer, paper/pen cost or research-calculation credit. The [knowledge workbench](../knowledge/workbench.md#桌面上的联络) owns its candidate selection, cancellation and settlement rules.
 
 ## Examine-Slot Submission
 

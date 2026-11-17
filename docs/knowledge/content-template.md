@@ -1,7 +1,7 @@
 # 研究内容简报模板
 
 - Status: `Current`（作者填写模板，非可直接加载的数据格式）
-- Last verified: `2026-11-16`
+- Last verified: `2026-11-17`（联络连连看；其它流程见既有验证记录）
 - Scope: 供人类和 AI 作者整理研究逻辑，并据此编写知识数据与玩家文案。
 - Code anchors: `ProjectDefinition`、`ProjectAccess`、`ProjectRequirement`、`StageDefinition`；字段入口见[作者指南](authoring-guide.md)。
 - 填写时删除方括号提示；这份简报不是游戏内文案。
@@ -40,7 +40,7 @@
 
 | 知识 ID / 条件 | 发现入口 | 行为触发 | 联络 | 开始研究 | 阶段路径参考 |
 |---|---|---|---|---|---|
-| `[kind + ID 或 KnowledgeCondition]` | `[access.discover_any / 由 start_all 中的想法发现 / 无]` | `[acquisition.required 必需；optional 增加概率；triggers 事件和 subject；现有发射点 / 需 Java 接点 / 无]` | `[桌面 inputs；required_knowledge；optional_knowledge 仅减等待 / 无]` | `[access.start_all 条件名 / 无]` | `[阶段 ID、variant.when.knowledge_all / 无]` |
+| `[kind + ID 或 KnowledgeCondition]` | `[access.discover_any / 由 start_all 中的想法发现 / 无]` | `[acquisition.required 必需；optional 增加概率；triggers 事件和 subject；现有发射点 / 需 Java 接点 / 无]` | `[桌面 inputs；required_knowledge；optional_knowledge 每缺一项增加一级连连看难度，齐全为0级 / 无]` | `[access.start_all 条件名 / 无]` | `[阶段 ID、variant.when.knowledge_all / 无]` |
 
 普通发现、联络、开始与路径前置都要求知识已在队伍档案中学会。若只希望玩家在当前 run 中做出一次观察即可完成任务，应配置 `type: "observation"` 任务，不要把它误写成永久知识前置。
 

@@ -470,7 +470,7 @@
   "gui.frostedresearch.journal.tray.remove_record": "Put away %s",
   "gui.frostedresearch.journal.link.try": "Connect",
   "gui.frostedresearch.journal.link.possibilities": "A thought takes shape",
-  "gui.frostedresearch.journal.link.accept": "Keep this thought",
+  "gui.frostedresearch.journal.link.accept": "Work out this idea",
   "gui.frostedresearch.journal.link.empty": "No new thought emerges from these records yet. Try a different combination.",
   "gui.frostedresearch.journal.link.discovered": "This connection has been recorded.",
   "gui.frostedresearch.journal.relation": "A discovered connection",
@@ -681,7 +681,6 @@
   "gui.frostedresearch.journal.research.state.needs_knowledge": "Start knowledge missing; explore unknown requirements",
   "gui.frostedresearch.journal.research.state.completable": "Tasks ready to complete",
   "gui.frostedresearch.journal.graph.related_sources": "Discovery sources",
-  "gui.frostedresearch.journal.link.waiting": "Linking: %s / %s seconds",
   "gui.frostedresearch.journal.link.completed": "Link complete; relationship recorded",
   "gui.frostedresearch.journal.link.cancelled": "Link cancelled; choose again to restart",
   "knowledge.frostedresearch.link.completed": "Link complete; relationship recorded.",
@@ -812,5 +811,9 @@
   "knowledge.frostedresearch.matching_debug.n4": "Clear 4 ordered numbers",
   "knowledge.frostedresearch.matching_debug.n5": "Clear 5 ordered numbers",
   "knowledge.frostedresearch.matching_debug.n6": "Clear 6 ordered numbers",
-  "knowledge.frostedresearch.matching_debug.n7": "Clear 7 ordered numbers"
+  "knowledge.frostedresearch.matching_debug.n7": "Clear 7 ordered numbers",
+  "gui.frostedresearch.journal.link.difficulty": "%s optional knowledge missing · puzzle difficulty %s",
+  "gui.frostedresearch.journal.link.game_title": "Work out an idea: %s",
+  "gui.frostedresearch.journal.link.game_help": "Match exposed symbols; clear numbers in order, then click the centre paper.",
+  "gui.frostedresearch.journal.link.restart": "Reset puzzle"
 }

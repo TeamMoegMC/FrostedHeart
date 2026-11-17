@@ -134,10 +134,8 @@ public final class KnowledgeWorkbenchActionPacket implements CMessage {
             switch (action) {
                 case REFRESH -> {
                     TeamResearchService.send(player, CTeamDataManager.get(player));
-                    var wait = com.teammoeg.frostedresearch.knowledge.KnowledgeLinkSessions.session(player.getUUID());
-                    com.teammoeg.frostedresearch.knowledge.KnowledgeLinkSessions.send(player, wait.map(session ->
-                        new com.teammoeg.frostedresearch.knowledge.KnowledgeLinkSessions.Update("running", (int)Math.max(0, player.level().getGameTime() - session.started()), session.duration()))
-                        .orElse(new com.teammoeg.frostedresearch.knowledge.KnowledgeLinkSessions.Update("idle", 0, 0)));
+                    com.teammoeg.frostedresearch.knowledge.KnowledgeLinkSessions.send(player,
+                        com.teammoeg.frostedresearch.knowledge.KnowledgeLinkSessions.check(player.getUUID(), service));
                 }
                 case LEARN ->
                         service.learnInbox(keys.stream().distinct().toList()).forEach(result -> addResult(results, result, service));
@@ -152,6 +150,8 @@ public final class KnowledgeWorkbenchActionPacket implements CMessage {
                         candidate.putString("output", match.rule().output().toString());
                         candidate.putString("title", output.title());
                         candidate.putString("body", output.body());
+                        candidate.putInt("missing", com.teammoeg.frostedresearch.knowledge.KnowledgeLinkSessions.missingOptional(service, match.rule()));
+                        candidate.putInt("numbers", com.teammoeg.frostedresearch.knowledge.KnowledgeLinkSessions.numbers(service, match.rule()));
                         candidates.add(candidate);
                     }
                     response.put("candidates", candidates);
@@ -160,16 +160,15 @@ public final class KnowledgeWorkbenchActionPacket implements CMessage {
                     ResourceLocation chosen = ResourceLocation.tryParse(rule);
                     if (chosen != null) {
                         var status = com.teammoeg.frostedresearch.knowledge.KnowledgeLinkSessions.start(player.getUUID(), player.containerMenu.containerId,
-                            desk.getBlockPos(), service, chosen, keys, player.level().getGameTime());
+                            desk.getBlockPos(), service, chosen, keys);
                         addResult(results, new OperationResult(status, null), service);
-                        var wait = com.teammoeg.frostedresearch.knowledge.KnowledgeLinkSessions.session(player.getUUID());
-                        wait.ifPresent(session -> com.teammoeg.frostedresearch.knowledge.KnowledgeLinkSessions.send(player,
-                            new com.teammoeg.frostedresearch.knowledge.KnowledgeLinkSessions.Update("running", (int)Math.max(0, player.level().getGameTime() - session.started()), session.duration())));
+                        com.teammoeg.frostedresearch.knowledge.KnowledgeLinkSessions.send(player,
+                            com.teammoeg.frostedresearch.knowledge.KnowledgeLinkSessions.check(player.getUUID(), service));
                     }
                 }
                 case CANCEL_LINK -> {
-                    com.teammoeg.frostedresearch.knowledge.KnowledgeLinkSessions.cancel(player.getUUID());
-                    response.putString("link_state", "cancelled"); response.putInt("link_elapsed", 0); response.putInt("link_duration", 0);
+                    boolean cancelled = com.teammoeg.frostedresearch.knowledge.KnowledgeLinkSessions.cancel(player.getUUID());
+                    response.putString("link_state", cancelled ? "cancelled" : "idle");
                 }
                 case RETRIEVE -> retrieve(player, desk, service, results, response);
                 case EXPORT -> export(desk, service, results, response);

@@ -33,7 +33,7 @@
 缺席表示只匹配事件 ID。有多个入口时 OR；同一次操作命中几个入口也只为该想法抽一次概率。
 acquisition.required 限制行为触发；没有单独配置前置的旧联络规则也继承它。不限制外部 receive / produce / learn，understanding 继续只负责学习。
 subject 描述当次行为载荷，required / optional 查询有效档案；不把两者混成同一种事件判断。
-chance 可按想法指定 [0,1]，未指定用服务器 knowledgeBehaviorChance。概率与等待公式见 [API 文档](state-and-api.md#m2-行为事件与短联络)。
+chance 可按想法指定 [0,1]，未指定用服务器 knowledgeBehaviorChance。概率与联络难度公式见 [API 文档](state-and-api.md#m2-行为事件与短联络)。
 
 内置事件 ID：`frostedresearch:item_obtained`、`item_used`、`block_interacted`、`observation_completed`、`knowledge_learned`。
 前三者载荷为对应 item/block Observation，观察完成为当次采样，学习为入档的 KnowledgeElement；
@@ -252,7 +252,7 @@ NBT。未列出的数据不会进入这次观察，物品本身不被消耗。
 
 - `inputs`：必须摆到桌面的已学会知识，精确匹配；顺序无关，不消耗。
 - `required_knowledge`：额外必须掌握的档案知识，不用放到桌面。
-- `optional_knowledge`：只减少等待时间的档案知识，缺少不阻挡联络，也不用放到桌面。
+- `optional_knowledge`：只降低联络连连看难度的档案知识，缺少不阻挡联络，也不用放到桌面。
 
 后两字段分别在省略时继承输出想法的 acquisition.required / optional，兼容旧数据；显式 `[]` 表示本路径没有该类知识。新正式规则显式声明两字段，所以联络门槛与事件门槛可以不同。同一想法的不同联络路径也可有不同辅助知识。项目启动仍由 ProjectAccess.start_all 独立配置，不会自动从配方生成。
 

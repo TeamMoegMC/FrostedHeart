@@ -304,7 +304,7 @@ public final class KnowledgeService {
             .stream().allMatch(c -> matchKnowledge(c).isPresent());
     }
 
-    /** Check one selected rule without enumerating candidates, used by transient waits. */
+    /** Check one selected rule without enumerating candidates, used by transient link puzzles. */
     public Optional<LinkMatcher.Match> matchLink(ResourceLocation ruleId, List<KnowledgeKey> keys) {
         var rule = KnowledgeDefinitions.current().links().get(ruleId);
         if (rule == null || keys.size() > 5 || new HashSet<>(keys).size() != keys.size() || keys.stream().anyMatch(k -> !isActive(k))) return Optional.empty();

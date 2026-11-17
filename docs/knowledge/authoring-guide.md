@@ -1,7 +1,7 @@
 # 编写研究内容
 
 - Status: `Verified`：本页核对当前数据格式与服务端实现；各正式项目的客户端及游玩验证范围见其操作文档。
-- Last verified: `2026-11-16`
+- Last verified: `2026-11-17`（联络连连看；其它流程见既有验证记录）
 - Scope: 数据包内容作者的入口与可复制范例，不替代完整字段参考。
 - Code anchors: [ProjectDefinition](../../src/main/java/com/teammoeg/frostedresearch/knowledge/definition/ProjectDefinition.java)、[StageDefinition](../../src/main/java/com/teammoeg/frostedresearch/knowledge/definition/StageDefinition.java)、[IdeaAcquisitionService.emit](../../src/main/java/com/teammoeg/frostedresearch/knowledge/IdeaAcquisitionService.java)。
 
@@ -27,7 +27,7 @@
 
 ## 容易混淆的边界
 
-- **五种知识角色分开设计。** 发现入口由 `access.discover_any`（未配置 discover_any 时，默认使用 `start_all` 中的想法条件）决定；行为触发由 `IdeaAcquisition.triggers` 决定；联络使用桌面 `inputs` 和队伍档案中的 `required_knowledge`，`optional_knowledge` 只降低等待时间；开始研究由 `access.start_all` 决定；阶段路径参考放在变体 `when.knowledge_all`。行为触发只有服务端已有发射点才会发生。每个知识条件只在明确配置的环节生效，不会自动扩展到其他环节。字段细节见[定义参考](definitions.md)。
+- **五种知识角色分开设计。** 发现入口由 `access.discover_any`（未配置 discover_any 时，默认使用 `start_all` 中的想法条件）决定；行为触发由 `IdeaAcquisition.triggers` 决定；联络使用桌面 `inputs` 和队伍档案中的 `required_knowledge`，`optional_knowledge` 每满足一项少一个需消除的顺序数字，齐全为0数字；开始研究由 `access.start_all` 决定；阶段路径参考放在变体 `when.knowledge_all`。行为触发只有服务端已有发射点才会发生。每个知识条件只在明确配置的环节生效，不会自动扩展到其他环节。字段细节见[定义参考](definitions.md)。
 - **普通前置需要入档，任务观察可以直接完成。** 作为发现、联络、开始或阶段路径条件的普通知识，必须是队伍有效档案中已掌握的知识；仅有未学习来件不算。研究观察本身也是一种知识，但 `type: "observation"` 任务可由符合条件的新鲜观察直接完成，不要求先手动记入档案；完成任务不会自动把这份观察学入永久档案。`team_current_run` 和 `experiment` 等任务观察限制见[定义参考](definitions.md)与[阶段说明](stages-and-airflow.md)。
 - **只有真实消耗实物时才用 `sample`。** 它会消耗绑定当前队伍、当前 run 与任务的物品。观察烧后物品、查看世界对象或完成现场实验观察都不应仅因对象叫“样品”就建成 `sample`；正式土制炉三种配比结果是物品观察任务。保留[独立示例包中的 trial_kiln sample 项目](example-datapack/data/example/frostedresearch/knowledge/projects/trial_kiln.json)作为消耗提交范例。
 - **阶段推进与变体选择是两个时点。** 阶段任务全部就绪后由玩家手动推进。进入阶段时按当时的有效档案知识选择首个匹配变体，并固定该变体；若知识是在更早阶段补齐，则到未来阶段进入时仍可参与选择。丢失已绑定的世界原型时可以重制原型，不能因此要求重做已成功的小游戏或其他任务。详见[阶段说明](stages-and-airflow.md)。
