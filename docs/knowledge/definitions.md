@@ -1,7 +1,7 @@
 # 知识定义、观察快照与联络规则
 
 - Status: `Current`
-- Last verified: `2026-11-17`（连连看兼容编号与0–3数字版本）
+- Last verified: `2026-11-17`（联络辅助札记容错；连连看兼容编号与0–3数字版本）
 - Scope: 知识身份、不可变观察、独立想法/成果定义、项目关系与研究需求、物品检索规则、服务端联络匹配及观察用途判定。
 - Code anchors: [
   `KnowledgeElement`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/model/KnowledgeElement.java)、[
@@ -250,11 +250,13 @@ NBT。未列出的数据不会进入这次观察，物品本身不被消耗。
 
 每条 LinkRule 可独立配置 `required_knowledge` 和 `optional_knowledge`，两者都是 KnowledgeCondition 数组：
 
-- `inputs`：必须摆到桌面的已学会知识，精确匹配；顺序无关，不消耗。
+- `inputs`：必须摆到桌面的已学会知识，每槽匹配一份不同记录，并满足跨槽条件；顺序无关，不消耗。
 - `required_knowledge`：额外必须掌握的档案知识，不用放到桌面。
-- `optional_knowledge`：只降低联络连连看难度的档案知识，缺少不阻挡联络，也不用放到桌面。
+- `optional_knowledge`：只降低联络连连看难度的档案知识，缺少不阻挡联络，不必放到桌面；放入也不阻碍合成。
 
 后两字段分别在省略时继承输出想法的 acquisition.required / optional，兼容旧数据；显式 `[]` 表示本路径没有该类知识。新正式规则显式声明两字段，所以联络门槛与事件门槛可以不同。同一想法的不同联络路径也可有不同辅助知识。项目启动仍由 ProjectAccess.start_all 独立配置，不会自动从配方生成。
+
+手动联络允许桌面比`inputs`多放札记，但每份未绑定札记必须符合本路径生效的`optional_knowledge`条件（包括标签替代物）。必要槽不能被省略，无关札记仍会使该组合不匹配。候选预览与实际开始共用`LinkMatcher.bindWithOptional`；研究证据等用途的`bindExact`仍严格要求每槽一份。
 
 例如砂砖单砖和砂砖方块放入物品标签 `the_winter_rescue:research/sandy_bricks`；观察槽位使用 `object` 的 `tag` 条件即可接受二者任一种。观察只保存对象身份，匹配时查询当前标签，不把标签复制进观察。相同写法适用于触发 subject、辅助知识和项目 access；同一个条件内多个 conditions 是 AND，OR 替代物用同一个标签表达。
 

@@ -73,7 +73,7 @@ public final class IdeaAcquisitionGameTests {
         var earthen = rules.get("earthen_smelting");
         h.assertTrue(LinkMatcher.bindExact(List.of(copper), earthen.pattern(), TagLookup.NONE).isPresent(), "raw copper alone is sufficient for linking");
         h.assertTrue(LinkMatcher.bindExact(List.of(clay, sand), earthen.pattern(), TagLookup.NONE).isEmpty(), "auxiliary records cannot replace raw copper");
-        h.assertTrue(LinkMatcher.bindExact(List.of(copper, clay), earthen.pattern(), TagLookup.NONE).isEmpty(), "auxiliaries belong in the archive, not the exact tray inputs");
+        h.assertTrue(LinkMatcher.bindExact(List.of(copper, clay), earthen.pattern(), TagLookup.NONE).isEmpty(), "generic exact binding remains strict; manual linking handles auxiliaries separately");
         // Inject real authored tag members: this tests predicates, not full-pack registration.
         TagLookup tags = (type, field, value, tag) -> type == Observation.Type.ITEM && field.equals("object") && switch (tag.toString()) {
             case "the_winter_rescue:research/iron_carbon_fuel" -> Set.of("minecraft:coal", "minecraft:charcoal", "immersiveengineering:coal_coke").contains(value.toString());
@@ -105,13 +105,83 @@ public final class IdeaAcquisitionGameTests {
             h.assertTrue(KnowledgeLinkSessions.numbers(service, earthen) == 1, "one learned auxiliary removes one ordered number");
             service.learn(sand, SOURCE, KnowledgeService.Grant.NORMAL);
             h.assertTrue(KnowledgeLinkSessions.numbers(service, earthen) == 0, "both auxiliaries give a zero-number puzzle");
+            for (var selected : List.of(List.of(copper.key(), sand.key()), List.of(clay.key(), copper.key()),
+                    List.of(sand.key(), copper.key(), clay.key()))) {
+                var preview = service.previewLinks(selected);
+                h.assertTrue(preview.size() == 1 && preview.get(0).ruleId().equals(id("formal_earthen"))
+                    && service.matchLink(id("formal_earthen"), selected).orElseThrow().bindings().equals(preview.get(0).bindings()),
+                    "candidate preview and execution both accept mandatory copper with auxiliary tray notes");
+            }
+            var glass = observe.apply("minecraft:glass"); service.learn(glass, SOURCE, KnowledgeService.Grant.NORMAL);
+            for (var selected : List.of(List.of(clay.key(), sand.key()), List.of(copper.key(), glass.key()), List.of(copper.key(), copper.key())))
+                h.assertTrue(service.previewLinks(selected).isEmpty() && service.matchLink(id("formal_earthen"), selected).isEmpty(),
+                    "auxiliaries cannot replace mandatory inputs, unrelated notes and duplicate records remain invalid");
+            UUID player = UUID.randomUUID();
+            h.assertTrue(KnowledgeLinkSessions.start(player, 1, BlockPos.ZERO, service, id("formal_earthen"),
+                    List.of(copper.key(), sand.key(), clay.key())) == KnowledgeService.Status.SUCCESS,
+                    "full auxiliary tray starts a normal link puzzle");
+            h.assertTrue(KnowledgeLinkSessions.session(player).orElseThrow().keys().equals(List.of(copper.key())),
+                    "only mandatory witnesses become session requirements");
+            service.forget(sand.key());
+            h.assertTrue(KnowledgeLinkSessions.check(player, service).session().numbers() == 0,
+                    "losing a selected auxiliary does not cancel or change the current puzzle");
+            h.assertTrue(KnowledgeLinkSessions.reset(player, service).session().numbers() == 1,
+                    "reset uses current archive auxiliaries even when one was removed from the archive");
+            winLink(player, service, h);
+            h.assertTrue(service.isActive(KnowledgeKey.idea(earthen.output()))
+                    && service.state().links().get(id("formal_earthen")).inputs().equals(Map.of("raw_copper", copper.key())),
+                    "ordinary win learns the idea and records only mandatory witnesses");
             var bare = service();
             h.assertTrue(KnowledgeLinkSessions.numbers(bare, refractory) == 3, "refractory starts at three numbers");
             for (String material : List.of("frostedheart:kaolin", "frostedheart:bauxite", "minecraft:clay_ball"))
                 bare.learn(observe.apply(material), SOURCE, KnowledgeService.Grant.NORMAL);
             h.assertTrue(KnowledgeLinkSessions.numbers(bare, refractory) == 0, "all three refractory auxiliaries give zero numbers");
-        } finally { KnowledgeDefinitions.install(previous); }
+        } finally { KnowledgeLinkSessions.clear(); KnowledgeDefinitions.install(previous); }
         h.succeed();
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 40)
+    public static void auxiliarySelectionUsesRouteOverrideAndBacktracks(GameTestHelper h) {
+        var previous = KnowledgeDefinitions.current();
+        try {
+            var inherited = new LinkRule(List.of(item("paper").slot()), List.of(), id("target"));
+            var explicit = new LinkRule(inherited.inputs(), List.of(), id("target"), List.of(),
+                    Optional.of(List.of()), Optional.of(List.of(item("glass"))));
+            var empty = new LinkRule(inherited.inputs(), List.of(), id("target"), List.of(),
+                    Optional.of(List.of()), Optional.of(List.of()));
+            install(Map.of(id("target"), definition(acquisition(List.of(), List.of(), List.of(item("sand"))))),
+                    Map.of(id("inherited"), inherited, id("explicit"), explicit, id("empty"), empty));
+            var s = service(); var notes = new HashMap<String, KnowledgeElement>();
+            for (String name : List.of("paper", "sand", "glass")) {
+                var element = KnowledgeElement.observation(new Observation(UUID.randomUUID(), Observation.Type.ITEM,
+                        new ResourceLocation("minecraft", name), Map.of(), Observation.Source.command(), Optional.empty()));
+                notes.put(name, element); s.learn(element, SOURCE, KnowledgeService.Grant.NORMAL);
+            }
+            var sandKeys = List.of(notes.get("paper").key(), notes.get("sand").key());
+            var glassKeys = List.of(notes.get("paper").key(), notes.get("glass").key());
+            h.assertTrue(s.matchLink(id("inherited"), sandKeys).isPresent() && s.matchLink(id("inherited"), glassKeys).isEmpty(),
+                    "omitted optional list inherits the output idea's auxiliary conditions");
+            h.assertTrue(s.matchLink(id("explicit"), glassKeys).isPresent() && s.matchLink(id("explicit"), sandKeys).isEmpty()
+                    && s.matchLink(id("empty"), glassKeys).isEmpty(), "explicit optional list overrides inheritance, including empty");
+
+            var anyItem = new LinkRule.Slot("required", KnowledgeKey.Kind.OBSERVATION, Optional.empty(), Optional.of(Observation.Type.ITEM), List.of());
+            var pattern = new SlotPattern(List.of(anyItem), List.of());
+            var bonus = KnowledgeElement.observation(new Observation(new UUID(0, 1), Observation.Type.ITEM,
+                    new ResourceLocation("minecraft:glass"), Map.of(), Observation.Source.command(), Optional.empty()));
+            var required = KnowledgeElement.observation(new Observation(new UUID(0, 2), Observation.Type.ITEM,
+                    new ResourceLocation("minecraft:paper"), Map.of(), Observation.Source.command(), Optional.empty()));
+            var bound = LinkMatcher.bindWithOptional(List.of(bonus, required), pattern, List.of(item("glass")), TagLookup.NONE).orElseThrow();
+            h.assertTrue(bound.get("required").key().equals(required.key()),
+                    "overlapping required/optional predicates backtrack rather than leaving an unrelated selected note unused");
+            var glassTag = new KnowledgeCondition(KnowledgeKey.Kind.OBSERVATION, Optional.empty(), Optional.of(Observation.Type.ITEM),
+                    List.of(new FieldCondition("object", FieldCondition.Operator.TAG, Optional.empty(), Optional.of(id("glass_forms")))), "", "");
+            TagLookup tags = (type, field, value, tag) -> tag.equals(id("glass_forms")) && value.toString().equals("minecraft:glass");
+            h.assertTrue(LinkMatcher.bindWithOptional(List.of(bonus, required), pattern, List.of(glassTag), tags).isPresent(),
+                    "optional tray conditions support tag alternatives");
+            h.assertTrue(LinkMatcher.bindWithOptional(List.of(bonus, required), pattern, List.of(glassTag), TagLookup.NONE).isEmpty(),
+                    "a note outside the tag is not silently accepted as auxiliary");
+            h.succeed();
+        } finally { KnowledgeDefinitions.install(previous); }
     }
     @GameTest(template = "empty", timeoutTicks = 40)
     public static void linkKnowledgeOverridesBehaviorWithoutChangingLegacyRules(GameTestHelper h) {

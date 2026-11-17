@@ -82,6 +82,14 @@ public final class LinkClientValidation {
             .filter(b->b.getTitle().getString().equals(label)).findFirst().orElseThrow(()->new IllegalStateException("missing button "+label));
         require(button.isEnabled(),"button enabled: "+label);press(button);
     }
+    private static void selectObservation(Item item) throws Exception {
+        var list=layer.getElements().stream().filter(JournalList.class::isInstance).map(JournalList.class::cast).findFirst().orElseThrow();
+        @SuppressWarnings("unchecked") var rows=(List<JournalList.Row>)read(list,"rows");
+        for(int n=0;n<rows.size();n++)if(!rows.get(n).group()&&rows.get(n).icon().is(item)){
+            pressAt(list,40,n*31+14);return;
+        }
+        throw new IllegalStateException("missing observation row "+item);
+    }
     private static UILayer panel() {
         if (!desk.isLinkGameOpen()) return null;
         var surface = desk.getElements().stream().filter(DrawDeskLayer.class::isInstance).map(DrawDeskLayer.class::cast).findFirst().orElseThrow();
@@ -120,6 +128,7 @@ public final class LinkClientValidation {
         p.teleportTo(.5,64,.5);p.getInventory().clearContent();
         var source=new AcquisitionSource("client_fixture",Optional.of(p.getUUID()),level.getGameTime());
         service().learn(ItemRetrieval.observe(p,new ItemStack(Items.RAW_COPPER)),source,KnowledgeService.Grant.NORMAL);
+        service().learn(ItemRetrieval.observe(p,new ItemStack(Items.SAND)),source,KnowledgeService.Grant.NORMAL);
         require(!service().query(IDEA).inArchive()&&!service().query(IDEA).inInbox(),"fresh idea remains unknown");
         require(!p.hasPermissions(2),"normal completion must not use the operator shortcut");
         p.setItemInHand(InteractionHand.MAIN_HAND,new ItemStack(FRContents.Blocks.DRAWING_DESK.get()));
@@ -145,17 +154,17 @@ public final class LinkClientValidation {
                 case 2 -> {if(mc.player==null||mc.getSingleplayerServer()==null||mc.screen!=null||ticks<30)return;server(LinkClientValidation::prepare);next();}
                 case 3 -> {if(mc.screen==null)mc.gameMode.useItemOn(mc.player,InteractionHand.MAIN_HAND,new BlockHitResult(Vec3.atCenterOf(DESK),Direction.UP,DESK,false));if(!(mc.screen instanceof CUIScreen cui)||!(cui.getPrimaryLayer() instanceof DrawDeskScreen view))return;desk=view;layer=desk.getKnowledgeLayer();if(layer==null)return;next();}
                 case 4 -> {if(ticks<15)return;click("page.archive");next();}
-                case 5 -> {if(ticks<5)return;var list=layer.getElements().stream().filter(JournalList.class::isInstance).findFirst().orElseThrow();pressAt(list,40,14);next();}
-                case 6 -> {if(ticks<5)return;click("tray.add");click("link.try");next();}
-                case 7 -> {if(ticks<10)return;shot("01-candidate-two-numbers");click("link.accept");next();}
-                case 8 -> {if(ticks<10||panel()==null)return;require(desk.linkNumbers()==2,"two missing auxiliaries select difficulty two");
+                case 5 -> {if(ticks<5)return;selectObservation(Items.RAW_COPPER);next();}
+                case 6 -> {if(ticks<5)return;click("tray.add");selectObservation(Items.SAND);click("tray.add");shot("00-copper-and-sand-tray");click("link.try");next();}
+                case 7 -> {if(ticks<10)return;shot("01-candidate-with-auxiliary");click("link.accept");next();}
+                case 8 -> {if(ticks<10||panel()==null)return;require(desk.linkNumbers()==1,"selected sand auxiliary permits the copper recipe and leaves one missing auxiliary");
                     require(desk.getWidth()==387 && desk.getHeight()==203,"uses the original fixed drawing desk surface");
                     require(desk.getKnowledgeLayer()==null && panel().getElements().stream().filter(CardButton.class::isInstance).count()==81,"same MainGamePanel and CardButton grid, no separate journal puzzle");
-                    checks.put("shared_desk_surface",true);shot("02-two-number-board");mc.screen.keyPressed(GLFW.GLFW_KEY_ESCAPE,1,0);next();}
+                    checks.put("shared_desk_surface",true);checks.put("auxiliary_on_tray",true);shot("02-one-number-board-with-auxiliary");mc.screen.keyPressed(GLFW.GLFW_KEY_ESCAPE,1,0);next();}
                 case 9 -> {if(ticks<10||panel()!=null)return;checks.put("escape_cancelled",true);server(()->require(KnowledgeLinkSessions.session(player().getUUID()).isEmpty()&&!service().query(IDEA).inArchive(),"Esc cancels with no idea"));click("link.try");next();}
                 case 10 -> {if(ticks<10)return;click("link.accept");next();}
-                case 11 -> {if(ticks<10||panel()==null)return;server(()->{var source=new AcquisitionSource("client_fixture",Optional.of(player().getUUID()),player().level().getGameTime());for(var item:List.of(Items.CLAY_BALL,Items.SAND))service().learn(ItemRetrieval.observe(player(),new ItemStack(item)),source,KnowledgeService.Grant.NORMAL);TeamResearchService.send(player(),CTeamDataManager.get(player()));});next();}
-                case 12 -> {if(ticks<10||panel()==null)return;require(desk.linkNumbers()==2,"active board difficulty remains fixed");press((UIElement)read(panel(),"reset"));next();}
+                case 11 -> {if(ticks<10||panel()==null)return;server(()->{require(KnowledgeLinkSessions.session(player().getUUID()).orElseThrow().keys().size()==1,"selected auxiliary does not become a mandatory witness");var source=new AcquisitionSource("client_fixture",Optional.of(player().getUUID()),player().level().getGameTime());service().learn(ItemRetrieval.observe(player(),new ItemStack(Items.CLAY_BALL)),source,KnowledgeService.Grant.NORMAL);TeamResearchService.send(player(),CTeamDataManager.get(player()));});next();}
+                case 12 -> {if(ticks<10||panel()==null)return;require(desk.linkNumbers()==1,"active board difficulty remains fixed");press((UIElement)read(panel(),"reset"));next();}
                 case 13 -> {if(ticks<10||panel()==null||desk.linkNumbers()!=0)return;require(count(board())==9,"zero-number board has nine tiles");shot("03-zero-number-after-reset");moves=solve(new ResearchGame(board()),new HashSet<>());require(moves!=null&&moves.size()==4,"independent client search found four symbol pairs");checks.put("reset_recomputed_to_zero",true);moveIndex=0;next();}
                 case 14 -> {if(ticks<4||panel()==null)return;if(remaining>=0){if(count(board())!=remaining)return;remaining=-1;moveIndex++;}if(moveIndex<moves.size()){var pair=moves.get(moveIndex);remaining=count(board())-2;card(pair.getFirst());card(pair.getSecond());ticks=0;return;}require(count(board())==1,"all pairs cleared by Screen events and C2S");card(ResearchGame.FINAL_CARD);next();}
                 case 15 -> {if(ticks<15||panel()!=null)return;require(desk.getKnowledgeLayer()==layer,"returns to the same journal after a win");shot("04-idea-acquired");server(()->{require(service().isActive(IDEA),"normal final click grants the idea");require(KnowledgeLinkSessions.session(player().getUUID()).isEmpty(),"finished session removed");var tile=(DrawingDeskTileEntity)player().level().getBlockEntity(DESK);require(tile.getGame().serialize().equals(originalLegacy),"persisted legacy board remains byte-for-byte equivalent");for(int n=0;n<3;n++)require(tile.getInventory().getStackInSlot(n).isEmpty(),"no paper or ink consumed");});next();}

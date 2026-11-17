@@ -1,7 +1,7 @@
 # 知识状态、API 与生命周期
 
 - Status: `Current`（源码与本轮自动化测试核对；游戏内视觉与多人联机流程尚未人工验收）
-- Last verified: `2026-11-17`（联络以缺失辅助知识决定连连看难度；其余验证见各节）
+- Last verified: `2026-11-17`（联络辅助札记匹配及难度；其余验证见各节）
 - Scope: 队伍知识身份、档案、来件、学习与忘记、理解与休眠、联络、历史、联想、队伍迁移、权限桥接及同步
 - Code anchors: [`KnowledgeService`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/KnowledgeService.java)、[
   `KnowledgeState`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/state/KnowledgeState.java)、[
@@ -143,6 +143,8 @@ codec 错误而不是异常。`ObservationSampling` 把非有限的坐标与温�
 联络辅助来自所选`LinkRule.optional_knowledge`，省略才继承想法`acquisition.optional`；显式空列表代表没有辅助条件。`missingOptional(service, rule)`数有效档案尚未满足的条件，`numbers(service, rule)=min(7, missingOptional)`选择实际顺序数字数。每项条件最多计一次，tag内多个形态不会叠加；来件不算掌握。必要前置规则仍独立，省略才继承行为required。没有联络时长配置或时间公式。
 
 `KnowledgeLinkSessions.start`生成可解的`ResearchGame`，本局数字数固定；`reset`按当前档案重新生成，`play`使用普通配对/结束牌规则，只有获胜时调用`KnowledgeService.link`，不抽概率。`check`只重检有效性，不随时间推进。`Update.payload`包含`link_state`及运行时的`link_missing/link_numbers/link_title/link_game`。
+
+`KnowledgeService.linkOptionalKnowledge`统一解析联络辅助条件，供难度计算及`previewLinks`/`matchLink`的`bindWithOptional`匹配使用。桌面额外札记须属于该规则辅助条件；回溯时仍完整满足互异必要槽和跨槽条件。会话`keys`与最终`LinkDiscovery.inputs`只保留必要槽见证，因此放到桌面的辅助知识不会变成硬前置；中途失去辅助不取消本局，重排时按当前档案重算难度。研究证据提交继续使用严格`bindExact`。
 
 物品获得桥接只有两处：实际 ItemPickupEvent 的取得堆叠，以及 AbstractContainerMenu.clicked 前后背包＋光标＋玩家工作网格原料的
 物品/NBT 净增量（同次点击聚合）。因此制作、熔炉输出、外部容器普通/快捷取出可触发，背包内部、背包/光标/玩家工作网格原料之间的

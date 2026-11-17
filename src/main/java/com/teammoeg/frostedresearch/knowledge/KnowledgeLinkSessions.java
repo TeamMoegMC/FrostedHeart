@@ -4,7 +4,6 @@ import com.teammoeg.frostedresearch.FRMain;
 import com.teammoeg.frostedresearch.FRNetwork;
 import com.teammoeg.frostedresearch.gui.drawdesk.DrawDeskContainer;
 import com.teammoeg.frostedresearch.gui.drawdesk.game.*;
-import com.teammoeg.frostedresearch.knowledge.definition.KnowledgeDefinitions;
 import com.teammoeg.frostedresearch.knowledge.model.KnowledgeKey;
 import com.teammoeg.frostedresearch.knowledge.link.LinkRule;
 import com.teammoeg.frostedresearch.knowledge.network.KnowledgeWorkbenchReplyPacket;
@@ -41,8 +40,7 @@ public final class KnowledgeLinkSessions {
 
     /** Link-specific optional conditions override behavior conditions, including an explicit empty list. */
     public static int missingOptional(KnowledgeService service, LinkRule rule) {
-        var idea = KnowledgeDefinitions.current().ideas().get(rule.output());
-        var optional = rule.optionalKnowledge().orElseGet(() -> idea == null ? List.of() : idea.acquisition().optional());
+        var optional = service.linkOptionalKnowledge(rule);
         return (int) optional.stream().filter(condition -> service.matchKnowledge(condition).isEmpty()).count();
     }
     public static int numbers(KnowledgeService service, LinkRule rule) {
@@ -60,7 +58,8 @@ public final class KnowledgeLinkSessions {
         int missing = missingOptional(service, match.rule()), numbers = Math.min(7, missing);
         var game = new ResearchGame(); int level = GenerateInfo.levelForNumbers(numbers);
         game.init(GenerateInfo.all[level], new Random()); game.setLvl(level);
-        SESSIONS.put(player, new Session(service.teamId(), menu, desk, rule, keys, match.rule().output(),
+        var requiredKeys = match.rule().inputs().stream().map(slot -> match.bindings().get(slot.name())).toList();
+        SESSIONS.put(player, new Session(service.teamId(), menu, desk, rule, requiredKeys, match.rule().output(),
                 service.describe(output).title(), missing, numbers, game));
         return KnowledgeService.Status.SUCCESS;
     }

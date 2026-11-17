@@ -28,9 +28,11 @@ import com.teammoeg.frostedresearch.FRSpecialDataTypes;
 import com.teammoeg.frostedresearch.api.KnowledgeDataAPI;
 import com.teammoeg.frostedresearch.api.TeamResearchService;
 import com.teammoeg.frostedresearch.knowledge.definition.KnowledgeDefinitions;
+import com.teammoeg.frostedresearch.knowledge.definition.KnowledgeCondition;
 import com.teammoeg.frostedresearch.knowledge.definition.ProjectRequirement;
 import com.teammoeg.frostedresearch.knowledge.event.KnowledgeOperationEvent;
 import com.teammoeg.frostedresearch.knowledge.link.LinkMatcher;
+import com.teammoeg.frostedresearch.knowledge.link.LinkRule;
 import com.teammoeg.frostedresearch.knowledge.link.TagLookup;
 import com.teammoeg.frostedresearch.knowledge.model.*;
 import com.teammoeg.frostedresearch.knowledge.state.*;
@@ -285,7 +287,11 @@ public final class KnowledgeService {
     public List<LinkMatcher.Match> previewLinks(List<KnowledgeKey> keys) {
         if (keys.size() > 5 || new HashSet<>(keys).size() != keys.size() || keys.stream().anyMatch(k -> !query(k).active()))
             return List.of();
-        return LinkMatcher.match(keys.stream().map(k -> state.archive().entries().get(k).element()).toList(), KnowledgeDefinitions.current().links()).stream().filter(this::linkCandidate).toList();
+        var selected = keys.stream().map(k -> state.archive().entries().get(k).element()).toList();
+        return KnowledgeDefinitions.current().links().entrySet().stream()
+                .sorted(Map.Entry.comparingByKey(Comparator.comparing(ResourceLocation::toString)))
+                .flatMap(entry -> bindLink(entry.getKey(), entry.getValue(), selected).stream())
+                .filter(this::linkCandidate).toList();
     }
 
     public List<LinkMatcher.Match> candidateLinks(int limit) {
@@ -304,16 +310,26 @@ public final class KnowledgeService {
             .stream().allMatch(c -> matchKnowledge(c).isPresent());
     }
 
+    public List<KnowledgeCondition> linkOptionalKnowledge(LinkRule rule) {
+        var idea = KnowledgeDefinitions.current().ideas().get(rule.output());
+        return rule.optionalKnowledge().orElseGet(() -> idea == null ? List.of() : idea.acquisition().optional());
+    }
+
     /** Check one selected rule without enumerating candidates, used by transient link puzzles. */
     public Optional<LinkMatcher.Match> matchLink(ResourceLocation ruleId, List<KnowledgeKey> keys) {
         var rule = KnowledgeDefinitions.current().links().get(ruleId);
         if (rule == null || keys.size() > 5 || new HashSet<>(keys).size() != keys.size() || keys.stream().anyMatch(k -> !isActive(k))) return Optional.empty();
-        return LinkMatcher.bindExact(keys.stream().map(k -> state.archive().entries().get(k).element()).toList(), rule.pattern(), TagLookup.SERVER)
+        return bindLink(ruleId, rule, keys.stream().map(k -> state.archive().entries().get(k).element()).toList())
+            .filter(this::linkAllowed);
+    }
+
+    private Optional<LinkMatcher.Match> bindLink(ResourceLocation ruleId, LinkRule rule, List<KnowledgeElement> selected) {
+        return LinkMatcher.bindWithOptional(selected, rule.pattern(), linkOptionalKnowledge(rule), TagLookup.SERVER)
             .map(binding -> {
                 Map<String, KnowledgeKey> witnesses = new LinkedHashMap<>();
                 binding.forEach((name, element) -> witnesses.put(name, element.key()));
                 return new LinkMatcher.Match(ruleId, rule, witnesses);
-            }).filter(this::linkAllowed);
+            });
     }
 
     public OperationResult link(ResourceLocation ruleId, List<KnowledgeKey> keys) {

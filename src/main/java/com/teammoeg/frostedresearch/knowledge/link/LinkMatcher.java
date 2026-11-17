@@ -21,9 +21,11 @@
 package com.teammoeg.frostedresearch.knowledge.link;
 
 import com.teammoeg.frostedresearch.knowledge.model.*;
+import com.teammoeg.frostedresearch.knowledge.definition.KnowledgeCondition;
 import net.minecraft.resources.ResourceLocation;
 
 import java.util.*;
+import java.util.function.Predicate;
 
 /**
  * 完整无序匹配；先绑定候选最少的槽位，每一步及时判定可求值的跨输入条件。
@@ -71,6 +73,21 @@ public final class LinkMatcher {
         return bind(selected, pattern, tags, Integer.MAX_VALUE);
     }
 
+    /** Fill every required slot, allowing only declared optional knowledge among the unused selections. */
+    public static Optional<Map<String, KnowledgeElement>> bindWithOptional(List<KnowledgeElement> selected,
+            SlotPattern pattern, List<KnowledgeCondition> optional, TagLookup tags) {
+        if (selected.size() < pattern.inputs().size()
+                || selected.stream().map(KnowledgeElement::key).distinct().count() != selected.size()) return Optional.empty();
+        if (selected.size() == pattern.inputs().size()) return bindExact(selected, pattern, tags);
+        var optionalSlots = optional.stream().map(KnowledgeCondition::slot).toList();
+        Set<KnowledgeKey> mustBind = new HashSet<>();
+        for (var element : selected)
+            if (optionalSlots.stream().noneMatch(condition -> condition.matches(element, tags))) mustBind.add(element.key());
+        if (mustBind.size() > pattern.inputs().size()) return Optional.empty();
+        return bind(selected, pattern, tags, Integer.MAX_VALUE,
+                binding -> binding.values().stream().map(KnowledgeElement::key).toList().containsAll(mustBind));
+    }
+
     /**
      * 从候选池中找出任一组满足模式的互异元素，回溯至多尝试 steps 次；超出预算视为没有找到。
      * Finds any binding of distinct pool elements, trying at most {@code steps} candidates; an exhausted budget finds none.
@@ -97,6 +114,11 @@ public final class LinkMatcher {
     }
 
     private static Optional<Map<String, KnowledgeElement>> bind(List<KnowledgeElement> pool, SlotPattern pattern, TagLookup tags, int steps) {
+        return bind(pool, pattern, tags, steps, binding -> true);
+    }
+
+    private static Optional<Map<String, KnowledgeElement>> bind(List<KnowledgeElement> pool, SlotPattern pattern,
+            TagLookup tags, int steps, Predicate<Map<String, KnowledgeElement>> complete) {
         Map<String, List<KnowledgeElement>> candidates = new LinkedHashMap<>();
         for (LinkRule.Slot slot : pattern.inputs()) {
             List<KnowledgeElement> eligible = pool.stream().filter(k -> slot.matches(k, tags))
@@ -106,20 +128,21 @@ public final class LinkMatcher {
         }
         List<String> order = candidates.keySet().stream().sorted(Comparator.comparingInt(name -> candidates.get(name).size())).toList();
         Map<String, KnowledgeElement> bindings = new LinkedHashMap<>();
-        return bind(0, order, candidates, bindings, new HashSet<>(), pattern.conditions(), new int[]{steps})
+        return bind(0, order, candidates, bindings, new HashSet<>(), pattern.conditions(), new int[]{steps}, complete)
                 ? Optional.of(Map.copyOf(bindings)) : Optional.empty();
     }
 
     private static boolean bind(int index, List<String> order, Map<String, List<KnowledgeElement>> candidates,
                                 Map<String, KnowledgeElement> bindings, Set<KnowledgeKey> used,
-                                List<LinkRule.CrossCondition> conditions, int[] budget) {
-        if (index == order.size()) return true;
+                                List<LinkRule.CrossCondition> conditions, int[] budget,
+                                Predicate<Map<String, KnowledgeElement>> complete) {
+        if (index == order.size()) return complete.test(bindings);
         String slot = order.get(index);
         for (KnowledgeElement candidate : candidates.get(slot)) {
             if (--budget[0] < 0) return false;
             if (!used.add(candidate.key())) continue;
             bindings.put(slot, candidate);
-            if (conditions.stream().allMatch(c -> c.matches(bindings)) && bind(index + 1, order, candidates, bindings, used, conditions, budget))
+            if (conditions.stream().allMatch(c -> c.matches(bindings)) && bind(index + 1, order, candidates, bindings, used, conditions, budget, complete))
                 return true;
             bindings.remove(slot);
             used.remove(candidate.key());
