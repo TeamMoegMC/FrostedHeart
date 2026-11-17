@@ -812,7 +812,7 @@
   "knowledge.frostedresearch.matching_debug.n5": "消除 5 个顺序数字",
   "knowledge.frostedresearch.matching_debug.n6": "消除 6 个顺序数字",
   "knowledge.frostedresearch.matching_debug.n7": "消除 7 个顺序数字",
-  "gui.frostedresearch.journal.link.difficulty": "缺少 %s 项辅助知识 · 连连看难度 %s 级",
+  "gui.frostedresearch.journal.link.difficulty": "缺少 %s 项辅助知识 · 联络难度 %s 级",
   "gui.frostedresearch.journal.link.game_help": "配对亮起的图案，按顺序消除数字，最后点击中央论文。",
   "gui.frostedresearch.draw_desk.idea_for": "推导中的想法",
   "gui.frostedresearch.draw_desk.idea_difficulty": "难度 %s 级"

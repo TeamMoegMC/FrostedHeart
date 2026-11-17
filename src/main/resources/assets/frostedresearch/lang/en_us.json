@@ -812,7 +812,7 @@
   "knowledge.frostedresearch.matching_debug.n5": "Clear 5 ordered numbers",
   "knowledge.frostedresearch.matching_debug.n6": "Clear 6 ordered numbers",
   "knowledge.frostedresearch.matching_debug.n7": "Clear 7 ordered numbers",
-  "gui.frostedresearch.journal.link.difficulty": "%s optional knowledge missing · puzzle difficulty %s",
+  "gui.frostedresearch.journal.link.difficulty": "%s optional knowledge missing · linking difficulty %s",
   "gui.frostedresearch.journal.link.game_help": "Match exposed symbols; clear numbers in order, then click the centre paper.",
   "gui.frostedresearch.draw_desk.idea_for": "Idea in progress",
   "gui.frostedresearch.draw_desk.idea_difficulty": "Difficulty %s"
