@@ -91,3 +91,7 @@ Its `AIRFLOW_PARTICLE_PROFILE` log records computational timing without assertin
 The M4 helper checks real client population growth, contact counters and completed fixed-path flow as well as both failures, resets and completion.
 Before synthetic Screen press events, it updates the drawing desk's hover cache at the event coordinates, matching normal render preparation independently of the physical cursor.
 Formal Charcoal Pit tests continue through prototype access and blowing; those integration tests were not rerun for this visual-only change.
+
+Matching puzzle checks use `frostedresearch_matching` (`MatchingDifficultyGameTests`):
+`./gradlew runGameTestServer -PgameTestNamespaces=frostedresearch_matching`.
+They play 256 seeds for each of the eight difficulties (2048 boards) through ordinary legal moves after NBT restoration, including the final tile; no `forceWin` is used. Separate cases force the bounded fallback, check the full difficulty comparison matrix and legacy tool tiers, load the shipped opt-in debug project to verify discovery, per-task credits and persistence, and exercise actual desk starts, charcoal pencil durability, paper consumption and ordinary win credit. The player route is documented under [debug research](../../docs/research/gameplay-and-integrations.md#debug-research).

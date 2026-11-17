@@ -19,6 +19,8 @@
 
 package com.teammoeg.frostedresearch;
 
+import com.teammoeg.frostedresearch.gui.drawdesk.game.GenerateInfo;
+
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -141,7 +143,7 @@ public final class ResearchCatalogPreflight {
             }
             if ("game".equals(string(clue, "type"))) {
                 int level = clue.has("level") ? clue.get("level").getAsInt() : -1;
-                if (level < 0 || level > 3) errors.add(owner + ": minigame level must be within [0,3]");
+                if (level < 0 || level > GenerateInfo.MAX_LEVEL) errors.add(owner + ": minigame level must be within [0,7]");
             }
             if ("item".equals(string(clue, "type")) && clue.has("item")) {
                 int count = count(clue.get("item"));

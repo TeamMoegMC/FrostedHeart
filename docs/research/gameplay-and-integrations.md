@@ -1,7 +1,7 @@
 # Research Gameplay And Integrations
 
 - Status: `Current`
-- Last verified: `2026-08-25`
+- Last verified: `2026-11-17` (matching difficulties and debug route; other sections retain their previous scope)
 - Scope: Player entry points, legacy progression, the knowledge experiment table, V2 result command/prototype shell, unified unlock enforcement, APIs, events, commands, and compatibility modules
 - Code anchors: [`ResearchHooks`](../../src/main/java/com/teammoeg/frostedresearch/ResearchHooks.java), [`TechnologyAccessResolver`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/TechnologyAccessResolver.java), [`TeamResearchService`](../../src/main/java/com/teammoeg/frostedresearch/api/TeamResearchService.java), [`UpgradePrototypeItem`](../../src/main/java/com/teammoeg/frostedresearch/item/UpgradePrototypeItem.java), [`ResearchCommand`](../../src/main/java/com/teammoeg/frostedresearch/ResearchCommand.java), [`JEICompat`](../../src/main/java/com/teammoeg/frostedresearch/compat/JEICompat.java)
 
@@ -63,12 +63,12 @@ The packet endpoint treats its position and card coordinates as untrusted. Befor
 Starting a game requires:
 
 - a current unfinished minigame clue;
-- one paper matched by a `ResearchPaperRecipe` whose `level` is at least the clue level;
-- an `IPen` whose level is at least the clue level and which can pay `5` durability/uses.
+- one paper matched by a `ResearchPaperRecipe` whose tier meets `GenerateInfo.toolLevel(clue level)`;
+- an `IPen` whose tier meets that same tool level and which can pay `5` durability/uses.
 
-The desk consumes one paper and the initial pen cost, then creates a server-side `ResearchGame` using `GenerateInfo.all[level]`. Each successful combine attempt costs another `1` pen use. When the board finishes, `ResearchHooks#commitGameLevel` completes the first unfinished minigame clue whose required level is less than or equal to the won level.
+The desk consumes one paper and the initial pen cost, then creates a server-side `ResearchGame` using `GenerateInfo.all[level]`. Each successful combine attempt costs another `1` pen use. When the board finishes, `ResearchHooks#commitGameLevel` completes the first unfinished minigame clue whose required number count is no greater than that of the won game.
 
-The same board also serves knowledge research calculations. The journal's research page sends `CALCULATE`, which stores a target on the desk: `calculation_run`, `calculation_requirement` and `calculation_level` in the block entity NBT, synchronized to clients. While the target's requirement still needs a game (`KnowledgeService#calculationLevel`), operation `0` starts a game at that level with the same paper and pen rules, and a win calls `KnowledgeService#recordCalculation` instead of `commitGameLevel`. The target clears itself once the requirement is satisfied or its run is no longer open, and `STOP_CALCULATION` clears it explicitly; either way the desk returns to the legacy clue level. `MainGamePanel` treats a desk with a target as playable even when the current legacy research has no minigame clue. While a target is set, the desk's top-left research corner, `DeskProgressPanel`, shows the knowledge project the games count toward, the wins out of `count` and the level from the client knowledge snapshot instead of the legacy research progress; it rebuilds when the target or the snapshot serial changes.
+The same board also serves knowledge research calculations. The journal's research page sends `CALCULATE`, which stores a target on the desk: `calculation_run`, `calculation_requirement` and `calculation_level` in the block entity NBT, synchronized to clients. While the target's requirement still needs a game (`KnowledgeService#calculationLevel`), operation `0` starts a game at that level with the same paper and pen rules, and a win calls `KnowledgeService#recordCalculation` instead of `commitGameLevel`. The target clears itself once the requirement is satisfied or its run is no longer open, and `STOP_CALCULATION` clears it explicitly; either way the desk returns to the legacy clue level. `MainGamePanel` treats a desk with a target as playable even when the current legacy research has no minigame clue. While a target is set, the desk's top-left research corner, `DeskProgressPanel`, shows the knowledge project the games count toward, the wins out of `count` and the number count derived from the client knowledge snapshot instead of the legacy research progress; it rebuilds when the target or the snapshot serial changes.
 
 Testing shortcut: a player with permission level `2` or higher (cheats allowed in singleplayer, or an operator) can click the final card at the board centre, `ResearchGame.FINAL_CARD` = `(4, 4)`, while a game is running. The client shows a hand cursor and a tooltip and sends the ordinary single-card operation `1`. `DrawingDeskTileEntity#tryCombine` checks the permission again and calls `ResearchGame#forceWin`, which clears the board and marks the game won without spending pen uses. The win is then credited exactly like a normal one: a knowledge calculation target or the legacy minigame clue.
 
@@ -82,7 +82,34 @@ The built-in recipe JSON shape is:
 }
 ```
 
-The code indexes `GenerateInfo.all[level]`; both the codec and whole-catalogue validator enforce the supported `0..3` range before a definition can be installed.
+The code indexes `GenerateInfo.all[level]`. The supported IDs are `0..7`; IDs are stable historical identifiers, not a numeric difficulty ordering. `GenerateInfo.numberCount`, `atLeast` and `toolLevel` own comparisons and paper/pen requirements.
+
+| Ordered numbers to clear | Definition `level` | Visible tiles, including centre | Minimum paper/pen tier |
+|---:|---:|---:|---:|
+| 0 | 4 | 9 | 0 |
+| 1 | 5 | 13 | 0 |
+| 2 | 6 | 23 | 0 |
+| 3 | 7 | 29 | 0 |
+| 4, legacy basic | 0 | 39 | 0 |
+| 5, legacy intermediate | 1 | 53 | 1 |
+| 6, legacy advanced | 2 | 65 | 2 |
+| 7, legacy complex | 3 | 81 | 3 |
+
+New starter boards grow from a 3×3 area through 5×3, 5×5 and 7×5 (randomly transposed). The number sequence, matching workload and available layout area increase with difficulty. Zero-number games still contain symbol pairs and the central final tile, which is not counted as an ordered number. Existing level IDs, saved boards, calculation wins and equipment tiers retain their meanings. Player-facing calculation text and the old clue editor show the actual number count.
+
+`ResearchGame.init` constructs a removal order, places it in reverse, and plays every pair plus the final centre click on a copy before accepting a random board. `initWithSolution` additionally returns that removal order for debug tooling without saving or synchronizing the solution; the existing `void init` entry remains compatible. Random placement tries at most 64 times, then constructs a solvable symmetric layout from opposite exposed corners; it does not return an empty game or retry forever. Both paths preserve the requested tile types and counts. This guarantees an initial solution; it does not guarantee that every arbitrary player choice leaves a solution.
+
+### Debug research
+
+The mod includes the normally hidden `frostedresearch:matching_debug` idea, project and finding in `data/frostedresearch/frostedresearch/knowledge/`. Enable it with cheats/operator access:
+
+```mcfunction
+/knowledge grant idea frostedresearch:matching_debug
+```
+
+Open the drawing desk's journal, choose **Debug: matching puzzle difficulties** (Chinese: **调试：各难度连连看**), start the project and enter its stage tasks. Eight independent optional tasks cover 0 through 7 numbers, each accepting 16 wins. Choose any task's calculation action to use the ordinary desk and C2S path; a running game's reset button samples another board. Abandon and restart to clear task counts. Basic stone tablets and a charcoal pencil suffice for 0–4 numbers; higher difficulties retain their previous equipment needs. Avoid the operator centre-tile shortcut when checking normal play. The final finding has no production unlocks. The debug idea has no natural acquisition trigger or link recipe, so the project stays hidden until explicitly granted.
+
+Run the `frostedresearch_matching` GameTests for seeded generation, legal completion, save restoration, forced fallback, difficulty ordering and the shipped debug definitions.
 
 ## Examine-Slot Submission
 

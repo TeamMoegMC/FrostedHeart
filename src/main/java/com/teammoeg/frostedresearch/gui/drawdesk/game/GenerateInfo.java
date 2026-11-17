@@ -138,7 +138,44 @@ public class GenerateInfo {
 		}
 	});// 65 +16E
 	public static final GenerateInfo T4 = new GenerateInfo(6, 5, 4, 7);// 81 +0E
-	public static GenerateInfo[] all = new GenerateInfo[] { T1, T2, T3, T4 };
+	// Keep the four legacy IDs stable in definitions, saved boards and calculation wins.
+	public static final GenerateInfo[] all = { T1, T2, T3, T4,
+		beginner(1, 0, 0, 0, 1, 1),
+		beginner(1, 1, 0, 1, 2, 1),
+		beginner(2, 1, 0, 2, 2, 2),
+		beginner(2, 2, 1, 3, 3, 2) };
+	public static final int MAX_LEVEL = all.length - 1;
+
+	private static GenerateInfo beginner(int elements, int pairs, int wild, int numbers, int rx, int ry) {
+		return new GenerateInfo(elements, pairs, wild, numbers).generators((cards, rnd) -> {
+			boolean transpose = rnd.nextBoolean();
+			for (int x = 0; x < 9; x++)
+				for (int y = 0; y < 9; y++)
+					cards[x][y].unplacable = Math.abs(x - 4) > (transpose ? ry : rx)
+						|| Math.abs(y - 4) > (transpose ? rx : ry);
+		});
+	}
+
+	public static int numberCount(int level) {
+		return validLevel(level) ? all[level].numAdd : -1;
+	}
+
+	public static int levelForNumbers(int numbers) {
+		return numbers < 4 ? numbers + 4 : numbers - 4;
+	}
+
+	public static boolean validLevel(int level) {
+		return level >= 0 && level < all.length;
+	}
+
+	/** IDs are historical identifiers; compare actual puzzle difficulty instead. */
+	public static boolean atLeast(int played, int required) {
+		return validLevel(played) && validLevel(required) && numberCount(played) >= numberCount(required);
+	}
+
+	public static int toolLevel(int level) {
+		return Math.max(0, numberCount(level) - 4);
+	}
 	int numElms;
 	int numPairs;
 	int numWild;

@@ -116,7 +116,7 @@ public class DrawingDeskTileEntity extends CBlockEntity implements MenuProvider 
         ItemStack is = inventory.getStackInSlot(INK_SLOT);
         if (is.isEmpty() || !(is.getItem() instanceof IPen)) return false;
         IPen pen = (IPen) is.getItem();
-        if (pen.getLevel(is, spe) < lvl) return false;
+        if (pen.getLevel(is, spe) < GenerateInfo.toolLevel(lvl)) return false;
         return pen.damage(spe, is, val);
     }
 
@@ -138,7 +138,7 @@ public class DrawingDeskTileEntity extends CBlockEntity implements MenuProvider 
         if (inventory.getStackInSlot(PAPER_SLOT).isEmpty()) return false;
         int lvl = gameLevel(player);
         if (lvl < 0) return false;
-        Optional<ResearchPaperRecipe> pr = CUtils.filterRecipes(this.getLevel().getRecipeManager(), ResearchPaperRecipe.TYPE).stream().filter(r -> r.maxlevel >= lvl && r.paper.test(inventory.getStackInSlot(PAPER_SLOT))).findAny();
+        Optional<ResearchPaperRecipe> pr = CUtils.filterRecipes(this.getLevel().getRecipeManager(), ResearchPaperRecipe.TYPE).stream().filter(r -> r.maxlevel >= GenerateInfo.toolLevel(lvl) && r.paper.test(inventory.getStackInSlot(PAPER_SLOT))).findAny();
         if (!pr.isPresent()) return false;
         //if (EnergyCore.getEnergy(player) <= 0) return;
         if (!damageInk(player, 5, lvl)) return false;
@@ -209,7 +209,7 @@ public class DrawingDeskTileEntity extends CBlockEntity implements MenuProvider 
         ItemStack is = inventory.getStackInSlot(INK_SLOT);
         if (is.isEmpty() || !(is.getItem() instanceof IPen)) return false;
         IPen pen = (IPen) is.getItem();
-        return pen.getLevel(is, ClientUtils.getPlayer()) >= clientGameLevel() && pen.canUse(ClientUtils.getPlayer(), is, val);
+        return pen.getLevel(is, ClientUtils.getPlayer()) >= GenerateInfo.toolLevel(clientGameLevel()) && pen.canUse(ClientUtils.getPlayer(), is, val);
     }
 
     @OnlyIn(Dist.CLIENT)
@@ -217,7 +217,7 @@ public class DrawingDeskTileEntity extends CBlockEntity implements MenuProvider 
         ItemStack is = inventory.getStackInSlot(PAPER_SLOT);
         if (is.isEmpty()) return false;
         int lvl = clientGameLevel();
-        return CUtils.filterRecipes(this.getLevel().getRecipeManager(), ResearchPaperRecipe.TYPE).stream().anyMatch(r -> r.maxlevel >= lvl && r.paper.test(is));
+        return CUtils.filterRecipes(this.getLevel().getRecipeManager(), ResearchPaperRecipe.TYPE).stream().anyMatch(r -> r.maxlevel >= GenerateInfo.toolLevel(lvl) && r.paper.test(is));
     }
 
 
@@ -260,7 +260,7 @@ public class DrawingDeskTileEntity extends CBlockEntity implements MenuProvider 
         ItemStack is = inventory.getStackInSlot(INK_SLOT);
         if (is.isEmpty() || !(is.getItem() instanceof IPen)) return false;
         IPen pen = (IPen) is.getItem();
-        if (pen.getLevel(is, player) < game.getLvl())
+        if (pen.getLevel(is, player) < GenerateInfo.toolLevel(game.getLvl()))
             return false;
         return pen.tryDamage(player, is, 1, () -> {
             if (game.tryCombine(cp1, cp2)) {

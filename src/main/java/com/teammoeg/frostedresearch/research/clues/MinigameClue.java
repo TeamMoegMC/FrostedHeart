@@ -19,6 +19,8 @@
 
 package com.teammoeg.frostedresearch.research.clues;
 
+import com.teammoeg.frostedresearch.gui.drawdesk.game.GenerateInfo;
+
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
@@ -31,7 +33,7 @@ import net.minecraft.network.chat.Component;
 public class MinigameClue extends CustomClue {
     public static final MapCodec<MinigameClue> CODEC = RecordCodecBuilder.mapCodec(t -> t.group(
             Clue.BASE_CODEC.forGetter(o -> o.getData()),
-            Codec.intRange(0, 3).fieldOf("level").forGetter(o -> o.level)
+            Codec.intRange(0, GenerateInfo.MAX_LEVEL).fieldOf("level").forGetter(o -> o.level)
     ).apply(t, MinigameClue::new));
     int level = 0;
 
@@ -53,7 +55,7 @@ public class MinigameClue extends CustomClue {
 
 	@Override
     public String getBrief() {
-        return "Complete game level " + this.level;
+        return "Complete matching puzzle with " + GenerateInfo.numberCount(level) + " ordered numbers";
     }
 
 
@@ -62,7 +64,7 @@ public class MinigameClue extends CustomClue {
     }
 
     public void setLevel(int level) {
-        this.level = Math.min(Math.max(level, 0), 3);
+        this.level = Math.min(Math.max(level, 0), GenerateInfo.MAX_LEVEL);
     }
 
     @Override

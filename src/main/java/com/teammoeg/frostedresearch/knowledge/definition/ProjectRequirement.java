@@ -20,6 +20,8 @@
 /* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedresearch.knowledge.definition;
 
+import com.teammoeg.frostedresearch.gui.drawdesk.game.GenerateInfo;
+
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
@@ -49,7 +51,7 @@ public record ProjectRequirement(String id, Type type, String title, int level, 
 
     public static final int MAX_EVIDENCE_SLOTS = 8;
     public static final int MAX_EVIDENCE_CONDITIONS = 10;
-    public static final int MAX_CALCULATION_LEVEL = 3;
+    public static final int MAX_CALCULATION_LEVEL = GenerateInfo.MAX_LEVEL;
     public static final int MAX_CALCULATION_COUNT = 16;
     /** Experiment table material slots. */
     public static final int MAX_MATERIALS = 3;

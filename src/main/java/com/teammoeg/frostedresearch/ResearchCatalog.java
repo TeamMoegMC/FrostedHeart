@@ -19,6 +19,8 @@
 
 package com.teammoeg.frostedresearch;
 
+import com.teammoeg.frostedresearch.gui.drawdesk.game.GenerateInfo;
+
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.mojang.datafixers.util.Pair;
@@ -160,8 +162,8 @@ public final class ResearchCatalog {
                 errors.add(owner + ": contribution must be finite and within [0,1]");
             }
             if (clue instanceof MinigameClue minigame
-                    && (minigame.getLevel() < 0 || minigame.getLevel() > 3)) {
-                errors.add(owner + ": minigame level must be within [0,3]");
+                    && (minigame.getLevel() < 0 || minigame.getLevel() > GenerateInfo.MAX_LEVEL)) {
+                errors.add(owner + ": minigame level must be within [0," + GenerateInfo.MAX_LEVEL + "]");
             }
             if (clue instanceof ItemClue item && item.getRequiredCount() <= 0) {
                 errors.add(owner + ": item count must be greater than zero");

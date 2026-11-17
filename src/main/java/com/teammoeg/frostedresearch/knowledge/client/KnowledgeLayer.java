@@ -20,6 +20,8 @@
 /* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedresearch.knowledge.client;
 
+import com.teammoeg.frostedresearch.gui.drawdesk.game.GenerateInfo;
+
 import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.*;
 import com.teammoeg.chorda.client.cui.widgets.TextBox;
@@ -650,7 +652,7 @@ public final class KnowledgeLayer extends UILayer {
                     () -> send(Action.STOP_CALCULATION, List.of(), run.id(), "", "", requirement.id()));
         } else button(x, y, w, 19, t("research.calculation.start"), false,
                 () -> send(Action.CALCULATE, List.of(), run.id(), "", "", requirement.id()))
-                .tooltip(t("research.calculation.explain", requirement.level()));
+                .tooltip(t("research.calculation.explain", GenerateInfo.numberCount(requirement.level())));
     }
 
     private boolean calculating(KnowledgeJournalData.Run run, KnowledgeJournalData.Requirement requirement) {
@@ -684,7 +686,7 @@ public final class KnowledgeLayer extends UILayer {
             return lines;
         }
         if (!r.evidence()) {
-            lines.add(t("research.calculation.explain", r.level()));
+            lines.add(t("research.calculation.explain", GenerateInfo.numberCount(r.level())));
             return lines;
         }
         if (r.satisfied()) {

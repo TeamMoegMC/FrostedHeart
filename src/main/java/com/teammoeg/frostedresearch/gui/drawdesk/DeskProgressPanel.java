@@ -19,6 +19,8 @@
 
 package com.teammoeg.frostedresearch.gui.drawdesk;
 
+import com.teammoeg.frostedresearch.gui.drawdesk.game.GenerateInfo;
+
 import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UIElement;
@@ -126,7 +128,7 @@ public class DeskProgressPanel extends UILayer {
         PAPER.draw(g, x + 3, y + 12, 32, 32);
         CGuiHelper.resetGuiDrawing();
         DrawDeskTheme.INSTANCE.drawProgressBar(g, x + 40, y + 32, 70, 8, target.done() / (float) target.count());
-        g.drawString(getFont(), Lang.translateGui("draw_desk.calculation_progress", target.done(), target.count(), target.level()),
+        g.drawString(getFont(), Lang.translateGui("draw_desk.calculation_progress", target.done(), target.count(), GenerateInfo.numberCount(target.level())),
                 x + 40, y + 40, ink, false);
         TechIcons.HLINE_LR.draw(g, x + 1, y + BODY, w - 1, 3);
     }
@@ -139,7 +141,7 @@ public class DeskProgressPanel extends UILayer {
         }
         list.accept(target.project());
         list.accept(target.requirement());
-        list.accept(Component.translatable("gui.frostedresearch.journal.research.calculation.explain", target.level()));
+        list.accept(Component.translatable("gui.frostedresearch.journal.research.calculation.explain", GenerateInfo.numberCount(target.level())));
     }
 
     @Override

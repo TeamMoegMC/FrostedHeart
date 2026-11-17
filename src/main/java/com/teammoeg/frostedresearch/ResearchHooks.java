@@ -19,6 +19,8 @@
 
 package com.teammoeg.frostedresearch;
 
+import com.teammoeg.frostedresearch.gui.drawdesk.game.GenerateInfo;
+
 import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -180,7 +182,7 @@ public class ResearchHooks {
 			for (Clue cl : rs.getClues()) {
 				if (data.get().isClueCompleted(rs, cl)) continue;
 				if (cl instanceof MinigameClue) {
-					if (((MinigameClue) cl).getLevel() <= lvl) {
+					if (GenerateInfo.atLeast(lvl, ((MinigameClue) cl).getLevel())) {
 						data.get().setClueCompleted(data.team(), rs, cl, true);
 						return true;
 					}

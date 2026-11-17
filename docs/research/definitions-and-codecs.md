@@ -1,7 +1,7 @@
 # Research Definitions And Codecs
 
 - Status: `Current`
-- Last verified: `2026-08-25`
+- Last verified: `2026-11-17` (minigame level IDs; other schemas retain their previous scope)
 - Scope: Legacy definitions plus V2 Phase 1 result/profile datapack schema, stable identities, validation, and reload
 - Code anchors: [`FHResearch#init/#reloadCatalog`](../../src/main/java/com/teammoeg/frostedresearch/FHResearch.java), [`ResearchCatalog`](../../src/main/java/com/teammoeg/frostedresearch/ResearchCatalog.java), [`ResearchResult`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/ResearchResult.java), [`ResearchResultCatalogLoader`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/ResearchResultCatalogLoader.java), [`Research.CODEC`](../../src/main/java/com/teammoeg/frostedresearch/research/Research.java), [`Effect.CODEC`](../../src/main/java/com/teammoeg/frostedresearch/research/effects/Effect.java)
 
@@ -143,7 +143,7 @@ The companion and development definitions `coke_oven`, `mechanical_bellows`, `st
 | `advancement` | `advancement`; optional `criterion=""`; listener `always` | advancement/criterion listener |
 | `kill` | `entity`; listener `always` | completes when the team listener receives a kill whose entity type matches `entity` |
 
-`MinigameClue` decodes through `Codec.intRange(0, 3)`, and catalogue validation repeats that invariant before installation.
+`MinigameClue` accepts `level` IDs `0..7`, and catalogue validation repeats that range. Legacy IDs `0..3` retain 4..7 ordered numbers; new IDs `4..7` select 0..3 numbers. Compare difficulty with `GenerateInfo.atLeast`, not the ID. The [difficulty table and debug research](gameplay-and-integrations.md#theory-card-game) own the mapping, paper/pen tiers and generation rules.
 
 `ListenerClue` has its own base codec in which `required`, `value`, and `always` are required JSON fields. This differs from the ordinary clue base where `required` defaults to false. `always: false` listeners are registered only while their research is current for a team. `always: true` listeners are registered during definition indexing with a null team ID, which `ResearchHooks.ListenerList` interprets as global scope: the listener is considered for every team event and its own clue-completion state prevents duplicate completion.
 
@@ -219,7 +219,7 @@ Aliases never become new persistent keys. During team-data reconciliation, a leg
 - blank, missing, self-referential, or cyclic parents;
 - non-positive research points, negative insight, and non-positive research/item-clue counts;
 - non-finite or out-of-range `[0,1]` clue contributions;
-- minigame levels outside `0..3`.
+- minigame levels outside `0..7`.
 
 `./gradlew validateResearchCatalog -PresearchCatalogDir=<path>` performs the registry-independent catalogue preflight used for external pack CI. Actual Forge startup then runs the full production codecs and the same runtime invariants after all required registries are available.
 

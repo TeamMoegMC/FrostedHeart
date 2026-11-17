@@ -44,6 +44,7 @@ public class ResearchGame {
 	}
 
 	public ResearchGame(ResearchGame from) {
+		this();
 		load(from.serialize());
 
 	}
@@ -80,7 +81,7 @@ public class ResearchGame {
 	}
 
 	public boolean canCombine(int x1, int y1, int x2, int y2) {
-		if (isTouchable(x1, y1) && isTouchable(x2, y2)) {
+		if ((x1 != x2 || y1 != y2) && isTouchable(x1, y1) && isTouchable(x2, y2)) {
 			Card c1 = get(x1, y1);
 			Card c2 = get(x2, y2);
 			return c1.match(c2);
@@ -188,20 +189,19 @@ public class ResearchGame {
 	}
 
 	public void init(GenerateInfo gen, Random rnd) {
+		initWithSolution(gen, rnd);
+	}
+
+	/** Builds a solvable board and returns a legal removal order for debug/verification tools. */
+	public List<Pair<CardPos, CardPos>> initWithSolution(GenerateInfo gen, Random rnd) {
 		resetState();
 		List<CardCombo> sol = generateSolution(gen, rnd);
-		int attempt = 0;
-		try {
-			while (!placeSolution(sol, gen, rnd)) {
-				attempt++;
-				if (attempt >= 10) {// maybe it is impossible? change another solution.
-					sol = generateSolution(gen, rnd);
-					attempt = 0;
-				}
-			}
-		} catch (Throwable t) {
-			resetState();
+		for (int attempt = 0; attempt < 64; attempt++) {
+			var solution = placeSolution(sol, gen, rnd);
+			if (solution != null) return solution;
+			if (attempt % 8 == 7) sol = generateSolution(gen, rnd);
 		}
+		return placeFallback(sol);
 	}
 
 	public boolean isEmpty() {
@@ -264,7 +264,7 @@ public class ResearchGame {
 			listener.accept(this);
 	}
 
-	private boolean placeSolution(List<CardCombo> sol, GenerateInfo gen, Random rnd) {
+	private List<Pair<CardPos, CardPos>> placeSolution(List<CardCombo> sol, GenerateInfo gen, Random rnd) {
 		clear();
 		gen.setUnplacable(cards, rnd);
 		Set<CardPos> place = new LinkedHashSet<>();
@@ -276,13 +276,11 @@ public class ResearchGame {
 			getPlacable(place);
 			// System.out.println(place.size());
 			if (place.size() < 2) {
-				return false;// generate attempt failed
+				return null;// generate attempt failed
 			}
 			int r1 = rnd.nextInt(place.size());
-			int r2;
-			do {
-				r2 = rnd.nextInt(place.size());
-			} while (r1 == r2);
+			int r2 = rnd.nextInt(place.size() - 1);
+			if (r2 >= r1) r2++;
 			if (r1 > r2) {// swap
 				int tmp = r1;
 				r1 = r2;
@@ -307,19 +305,55 @@ public class ResearchGame {
 			}
 			// System.out.println(r1+","+r2+""+c1+""+c2);
 			if (c1 == null || c2 == null)
-				return false;// failed
+				return null;// failed
 			if (rnd.nextBoolean())
 				cc.place(c1, c2);
 			else
 				cc.place(c2, c1);
 			trueSolution.add(0, Pair.of(cp1, cp2));
 		}
+		return verifiesSolution(trueSolution) ? List.copyOf(trueSolution) : null;
+	}
+
+	/** Bounded fallback: peel opposite exposed corners, then build inward-to-outward. */
+	private List<Pair<CardPos, CardPos>> placeFallback(List<CardCombo> sol) {
+		clear();
+		for (Card[] column : cards)
+			for (Card card : column) {
+				card.setType(CardType.SIMPLE, 1);
+				card.show();
+			}
+		List<Pair<CardPos, CardPos>> positions = new ArrayList<>();
+		for (int pair = 0; pair < 40; pair++) {
+			outer: for (int x = 0; x < 9; x++)
+				for (int y = 0; y < 9; y++) {
+					if (x == 4 && y == 4 || !isTouchable(x, y)) continue;
+					CardPos first = CardPos.valueOf(x, y), second = CardPos.valueOf(8 - x, 8 - y);
+					positions.add(Pair.of(first, second));
+					get(first).show = false;
+					get(second).show = false;
+					break outer;
+				}
+		}
+		clear();
+		get(FINAL_CARD).setType(CardType.ADDING, 8);
+		get(FINAL_CARD).show();
+		List<Pair<CardPos, CardPos>> solution = new ArrayList<>();
+		for (int i = 0; i < sol.size(); i++) {
+			var pair = positions.get(positions.size() - 1 - i);
+			sol.get(i).place(get(pair.getFirst()), get(pair.getSecond()));
+			solution.add(0, pair);
+		}
+		return List.copyOf(solution);
+	}
+
+	private boolean verifiesSolution(List<Pair<CardPos, CardPos>> trueSolution) {
 		ResearchGame test = new ResearchGame(this);
 		for (Pair<CardPos, CardPos> p : trueSolution) {
 			if (!test.tryCombine(p.getFirst(), p.getSecond()))
 				return false;
 		}
-		return true;
+		return test.tryCombine(FINAL_CARD, null) && test.isFinished();
 	}
 
 	private int pushSimple(List<CardCombo> combos, int type, boolean shouldAdd, float chance, Random rnd) {

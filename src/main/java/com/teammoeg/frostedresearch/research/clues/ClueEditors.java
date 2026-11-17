@@ -29,6 +29,7 @@ import com.teammoeg.chorda.util.struct.CurryApplicativeTemplate.Applicative0;
 import com.teammoeg.chorda.util.struct.CurryApplicativeTemplate.Applicative6;
 import com.teammoeg.chorda.util.struct.CurryApplicativeTemplate.Applicative7;
 import com.teammoeg.frostedresearch.research.Research;
+import com.teammoeg.frostedresearch.gui.drawdesk.game.GenerateInfo;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -61,8 +62,9 @@ public class ClueEditors {
     
     
     public static final Editor<MinigameClue> GAME = EditorDialogBuilder.create(b->applyBase(b)
-    	.add(Editors.selectBox(Arrays.asList(0, 1, 2, 3)).withName("Level").forGetter(e->e.getLevel()))
-    	.apply(MinigameClue::new));
+        .add(Editors.selectBox(Arrays.asList(0, 1, 2, 3, 4, 5, 6, 7)).withName("Numbers").forGetter(e->GenerateInfo.numberCount(e.getLevel())))
+        .apply((nonce, name, desc, hint, value, required, numbers) ->
+            new MinigameClue(nonce, name, desc, hint, value, required, GenerateInfo.levelForNumbers(numbers))));
     public static final Editor<List<Clue>> RESEARCH_GAME = (p, l, clues, c) -> {
     	if(clues==null) {
     		clues=new ArrayList<>();

@@ -1,0 +1,119 @@
+{
+  "title": "knowledge.frostedresearch.matching_debug.project.title",
+  "body": "knowledge.frostedresearch.matching_debug.project.body",
+  "results": [
+    "frostedresearch:matching_debug"
+  ],
+  "access": {
+    "conditions": {
+      "debug": {
+        "kind": "idea",
+        "definition": "frostedresearch:matching_debug",
+        "title": "knowledge.frostedresearch.matching_debug.idea.title"
+      }
+    },
+    "start_all": [
+      "debug"
+    ],
+    "groups": [
+      {
+        "id": "debug",
+        "reveal_any": [
+          "debug"
+        ],
+        "conditions": [
+          "debug"
+        ]
+      }
+    ]
+  },
+  "stages": [
+    {
+      "id": "check",
+      "title": "knowledge.frostedresearch.matching_debug.stage",
+      "method": "knowledge.frostedresearch.matching_debug.method",
+      "tasks": [
+        {
+          "optional": true,
+          "requirement": {
+            "id": "numbers_0",
+            "type": "calculation",
+            "title": "knowledge.frostedresearch.matching_debug.n0",
+            "level": 4,
+            "count": 16
+          }
+        },
+        {
+          "optional": true,
+          "requirement": {
+            "id": "numbers_1",
+            "type": "calculation",
+            "title": "knowledge.frostedresearch.matching_debug.n1",
+            "level": 5,
+            "count": 16
+          }
+        },
+        {
+          "optional": true,
+          "requirement": {
+            "id": "numbers_2",
+            "type": "calculation",
+            "title": "knowledge.frostedresearch.matching_debug.n2",
+            "level": 6,
+            "count": 16
+          }
+        },
+        {
+          "optional": true,
+          "requirement": {
+            "id": "numbers_3",
+            "type": "calculation",
+            "title": "knowledge.frostedresearch.matching_debug.n3",
+            "level": 7,
+            "count": 16
+          }
+        },
+        {
+          "optional": true,
+          "requirement": {
+            "id": "numbers_4",
+            "type": "calculation",
+            "title": "knowledge.frostedresearch.matching_debug.n4",
+            "level": 0,
+            "count": 16
+          }
+        },
+        {
+          "optional": true,
+          "requirement": {
+            "id": "numbers_5",
+            "type": "calculation",
+            "title": "knowledge.frostedresearch.matching_debug.n5",
+            "level": 1,
+            "count": 16
+          }
+        },
+        {
+          "optional": true,
+          "requirement": {
+            "id": "numbers_6",
+            "type": "calculation",
+            "title": "knowledge.frostedresearch.matching_debug.n6",
+            "level": 2,
+            "count": 16
+          }
+        },
+        {
+          "optional": true,
+          "requirement": {
+            "id": "numbers_7",
+            "type": "calculation",
+            "title": "knowledge.frostedresearch.matching_debug.n7",
+            "level": 3,
+            "count": 16
+          }
+        }
+      ]
+    }
+  ]
+}

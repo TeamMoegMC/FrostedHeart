@@ -20,6 +20,8 @@
 /* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedresearch.knowledge;
 
+import com.teammoeg.frostedresearch.gui.drawdesk.game.GenerateInfo;
+
 import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
 import com.teammoeg.frostedresearch.FRConfig;
 import com.teammoeg.frostedresearch.FRSpecialDataTypes;
@@ -549,7 +551,7 @@ public final class KnowledgeService {
 
     public static int calculationsDone(ResearchHistory run, ProjectRequirement requirement) {
         return (int) run.calculations().getOrDefault(requirement.id(), List.of()).stream()
-                .filter(level -> level >= requirement.level()).count();
+                .filter(level -> GenerateInfo.atLeast(level, requirement.level())).count();
     }
 
     public static int experimentsDone(ResearchHistory run, ProjectRequirement requirement) {
@@ -654,7 +656,7 @@ public final class KnowledgeService {
         ProjectRequirement requirement = openRequirement(run, requirementId, ProjectRequirement.Type.CALCULATION);
         if (requirement == null) return result(Status.NOT_FOUND, null);
         if (requirementMet(run, requirement)) return result(Status.ALREADY_OWNED, null);
-        if (level < requirement.level()) return result(Status.INVALID_INPUT, null);
+        if (!GenerateInfo.atLeast(level, requirement.level())) return result(Status.INVALID_INPUT, null);
         state.recordResearch(ResearchStages.update(this, run.withCalculation(requirement.id(), level)));
         notifyChanged();
         return result(Status.SUCCESS, null);
