@@ -5,7 +5,7 @@
 - Scope: the optional overworld sky color calculated from air, titanium dioxide nanobots, and ice crystals, its halo display and sun, moonlight at night, an exposure that adapts to the sky's luminance, vanilla's stars and moon dimmed by it, a floor for the night sky, the fog color taken from it outside snow, the sky light of the lightmap taken from it outside rain, the client config and client command, and a screenshot harness for development. Clouds are unchanged.
 - Primary code anchors: `CalculatedSkyRenderer`, `SkyFrame`, `SkyLight`, `MoonLight`, `SkyAdaptation`, `NightSkyDimming`, `SkyBuilder`, `SkyState`, `SkyTextures`, `SkyGlPass`, `CalculatedSkyEffects`, `CalculatedSkyClientCommand`, `CalculatedSkyScreenshots`, `SunElevationTimes`, `SkyTables`, `SkyView`, `SkyViewSet`, `SkyDisplay`, `BandRows`, `SkyAtmosphere`, `SkyParticleOptics`, `SkyPhase`, `SkySetting`, `SkySettings`, `IceWeatherLaw`, `IceWeatherDepth`, `IceDepthGrid`, `DiamondDustLaw`, `DiamondDustExtinction`, `IceMirror`, `LightPillarOptics`, `LightPillarSources`, `LightPillarClusters`, `LightPillarSelection`, `LightPillarEmitters`, `LightPillarRenderer`, `LightPillarCells`, `DustGlitterRenderer`, `DustGlitterField`, `DustColumns`, `DustColumnWindow`, `DustLights`, `DustLightVolume`, `SkyDrawTimer`, `FHShaders.getLightPillarsVertex`, `FHShaders.getLightPillarCellsVertex`, `FHShaders.getDiamondDustVertex`, `WorldClimate.getLastSnowEndHour`, `WorldClimate.getNextSnowStartHour`, `FHClimatePacket`, `IceCrystalData`, `IceHaloProfile`, `IceHaloMap`, `IceHaloFormulas`, `IcePrism`, `LevelRendererMixin.frostedheart$drawCalculatedSky`, `LevelRendererMixin.frostedheart$hideVanillaSun`, `LevelRendererMixin.frostedheart$tintMoonRed`, `LevelRendererMixin.frostedheart$dimStarsAlpha`, `FogRendererMixin.frostedheart$useCalculatedSkyFogColor`, `FHClientEventsMod.registerDimensionEffects`, `assets/frostedheart/shaders/calculated_sky.fsh`, `assets/frostedheart/shaders/light_pillars.glsl`, `assets/frostedheart/shaders/diamond_dust.glsl`, `assets/frostedheart/datasets/ice_halos`, `assets/frostedheart/datasets/light_pillars`
 
-The feature is off by default. The plan and later stages are in [the calculated sky plan](../../plans/2026-11-05_21-16-30_calculated-sky.md).
+The feature is on by default. The plan and later stages are in [the calculated sky plan](../../plans/2026-11-05_21-16-30_calculated-sky.md).
 
 ## 1. Model
 
@@ -482,7 +482,7 @@ Client config, group `CalculatedSky`. `enabled` is `FHConfig.Client.calculatedSk
 
 | Key | Java anchor | Default | Range | A change rebuilds |
 |---|---|---:|---|---|
-| `enabled` | `FHConfig.Client.calculatedSky` | `false` | | |
+| `enabled` | `FHConfig.Client.calculatedSky` | `true` | | |
 | `exposure` | `SkySetting.EXPOSURE` | `6.0` | `0.5..50` | nothing |
 | `exposureAdapts` | `SkySetting.EXPOSURE_ADAPTS` | `true` | | nothing |
 | `nightExposure` | `SkySetting.NIGHT_EXPOSURE` | `30000` | `1000..1000000` | nothing |

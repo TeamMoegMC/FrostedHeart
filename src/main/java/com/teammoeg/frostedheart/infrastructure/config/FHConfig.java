@@ -205,7 +205,7 @@ public class FHConfig {
 			builder.push("CalculatedSky");
 			calculatedSky = builder
 				.comment("Draws the overworld sky from light scattered by air, titanium dioxide nanobots, and ice crystals. Off when a shader pack is active.")
-				.define("enabled", false);
+				.define("enabled", true);
 			SkySetting.define(builder);
 			builder.pop();
 
