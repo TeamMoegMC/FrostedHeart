@@ -873,7 +873,7 @@ public record TownModelParameters(
         public static final double HOUSING_MAXIMUM_MENTAL_RECOVERY_PER_RESIDENT_DAY = 1.5;
         public static final int HOUSING_MINIMUM_FLOOR_AREA_BLOCKS = 4;
         public static final int HOUSING_MINIMUM_INTERIOR_VOLUME_BLOCKS = 8;
-        public static final double HOUSING_MINIMUM_TEMPERATURE_CELSIUS = 0.0;
+        public static final double HOUSING_MINIMUM_TEMPERATURE_CELSIUS = -10.0;
         public static final double HOUSING_MAXIMUM_TEMPERATURE_CELSIUS = 40.0;
         public static final double HOUSING_TEMPERATURE_FULL_STRESS_DISTANCE_CELSIUS = 20.0;
         public static final double HOUSING_TEMPERATURE_STRESS_PENALTY_EXPONENT = 2.0;
@@ -1037,7 +1037,7 @@ public record TownModelParameters(
         public static final int RESEARCH_INSTITUTE_MINIMUM_FLOOR_AREA_BLOCKS = 9;
         public static final int RESEARCH_INSTITUTE_MINIMUM_INTERIOR_VOLUME_BLOCKS = 18;
         public static final double RESEARCH_INSTITUTE_FLOOR_BLOCKS_PER_RESEARCHER = 4.0;
-        public static final double RESEARCH_INSTITUTE_MINIMUM_WORKING_TEMPERATURE_CELSIUS = 10.0;
+        public static final double RESEARCH_INSTITUTE_MINIMUM_WORKING_TEMPERATURE_CELSIUS = -10.0;
         public static final double RESEARCH_INSTITUTE_MINIMUM_AVERAGE_BLOCK_LIGHT = 8.0;
         public static final double RESEARCH_INSTITUTE_PHYSICAL_ACTIVITY = 0.1;
         public static final double RESEARCH_INSTITUTE_LEARNING_ACTIVITY = 1.0;
@@ -1084,7 +1084,7 @@ public record TownModelParameters(
         public static final int HUNTING_MINIMUM_WORKER_SLOTS = 1;
         public static final int HUNTING_MINIMUM_FLOOR_AREA_BLOCKS = 4;
         public static final int HUNTING_MINIMUM_INTERIOR_VOLUME_BLOCKS = 8;
-        public static final double HUNTING_MINIMUM_WORKING_TEMPERATURE_CELSIUS = 0.0;
+        public static final double HUNTING_MINIMUM_WORKING_TEMPERATURE_CELSIUS = -10.0;
         public static final double HUNTING_HEALTH_WEIGHT = 25.0;
         public static final double HUNTING_MENTAL_WEIGHT = 20.0;
         public static final double HUNTING_STRENGTH_WEIGHT = 25.0;
