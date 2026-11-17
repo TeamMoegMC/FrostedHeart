@@ -22,6 +22,12 @@ import net.minecraft.world.level.block.state.properties.*;
 /** Opt-in agent bridge fixture and observations; never included in production builds. */
 public final class TownRoadClientTools {
     public static CompletableFuture<Map<String,Object>> run(Minecraft mc, String action) {
+        if (action.startsWith("language ")) {
+            mc.getLanguageManager().setSelected(action.substring(9).trim());
+            mc.options.languageCode = action.substring(9).trim();
+            mc.options.save();
+            return mc.reloadResourcePacks().thenApply(unused -> Map.<String,Object>of("language", mc.options.languageCode));
+        }
         if (action.startsWith("path")) return TownPathPerformance.run(mc, action);
         if (action.startsWith("perf")) return TownRoadPerformance.run(mc, action);
         var future = new CompletableFuture<Map<String,Object>>();
@@ -56,6 +62,39 @@ public final class TownRoadClientTools {
                     house(level,player,12,73,12,true);
                     player.setGameMode(net.minecraft.world.level.GameType.SPECTATOR);
                     player.teleportTo(level,19,88,39,180,42);
+                } else if (action.startsWith("temperature ")) {
+                    double temperature = Double.parseDouble(action.substring(12).trim());
+                    for (var building : town.getTownBuildings().values()) {
+                        // Keep disposable UI samples stable while the normal town snapshot syncs.
+                        if (level.getBlockEntity(building.getPos()) instanceof AbstractTownBuildingBlockEntity<?> core) {
+                            for (String name : new String[]{"nextStructureRefresh", "nextEnvironmentRefresh"}) {
+                                var field = AbstractTownBuildingBlockEntity.class.getDeclaredField(name);
+                                field.setAccessible(true); field.setLong(core, Long.MAX_VALUE);
+                            }
+                        }
+                        if (building instanceof HouseBuilding house) house.updateBatch(() -> {
+                            house.setTemperature(temperature); house.setTemperatureModifier(0);
+                        });
+                        if (building instanceof com.teammoeg.frostedheart.content.town.buildings.hunting.HuntingBaseBuilding hunting)
+                            hunting.updateBatch(() -> {
+                                hunting.setTemperature(temperature); hunting.setTemperatureModifier(0);
+                                hunting.setRating(com.teammoeg.frostedheart.content.town.buildings.hunting.HuntingBaseBlockEntity.computeRating(
+                                        hunting.getVolume(), hunting.getArea(), temperature, 0));
+                            });
+                    }
+                    com.teammoeg.frostedheart.content.town.TownSync.requestFull(player, "temperature_ui_fixture");
+                    client.put("temperatureCelsius", temperature);
+                    client.put("temperatures", town.getTownBuildings().values().stream()
+                            .filter(com.teammoeg.frostedheart.content.town.building.ITownTemperatureBuilding.class::isInstance)
+                            .map(b -> Map.of("pos", b.getPos().toShortString(), "temperature",
+                                    ((com.teammoeg.frostedheart.content.town.building.ITownTemperatureBuilding)b).getEffectiveTemperature())).toList());
+                } else if (action.equals("hunting")) {
+                    house(level, player, 50, 64, 0, false);
+                    BlockPos pos = new BlockPos(53,65,3);
+                    var block = FHBlocks.HUNTING_BASE.get();
+                    set(level,pos,block.defaultBlockState());
+                    block.setPlacedBy(level,pos,level.getBlockState(pos),player,new ItemStack(block.asItem()));
+                    ((AbstractTownBuildingBlockEntity<?>)level.getBlockEntity(pos)).executeTask();
                 } else if (action.equals("populate")) {
                     for(var building:town.getTownBuildings().values()) if(building instanceof HouseBuilding house) house.setTemperature(20);
                     int added=0;

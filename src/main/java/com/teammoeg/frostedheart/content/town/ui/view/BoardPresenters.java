@@ -255,7 +255,7 @@ public final class BoardPresenters {
     public static TownFormat.Temperature homeWarmth(double celsius) {
         FHConfig.Server.Town.Housing housing = FHConfig.SERVER.TOWN.HOUSING;
         var scoring = FHConfig.SERVER.TOWN.BUILDING_SCORING;
-        double comfortable = scoring.comfortableTemperatureCelsius.get();
+        double comfortable = 23.0; // Midpoint of the fixed 18–28 Celsius plateau.
         double rating = Double.isFinite(celsius) ? com.teammoeg.frostedheart.content.town.TownMathFunctions.calculateTemperatureRating(
                 celsius, comfortable, scoring.minimumTemperatureRating.get(), scoring.temperatureRatingSlope.get(),
                 scoring.temperatureRatingHalfPointDifferenceCelsius.get()) : 0;

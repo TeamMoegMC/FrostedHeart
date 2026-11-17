@@ -169,7 +169,7 @@ public final class TownFormat {
      * <p>
      * A home's warmth in the one word its board, chip, comfort line and residents' cards share: livable first (too
      * cold, too hot), then how near the cold limit (chilly), then comfort (not warm enough, a bit warm), and warm only
-     * when all of them pass. {@code comfortRating} is the temperature's own comfort rating, 1 at the comfortable value.
+     * when all of them pass. {@code comfortRating} is the temperature's own comfort rating, 1 throughout the 18–28 Celsius plateau.
      */
     public static Temperature homeTemperature(double celsius, double minimum, double maximum, double coolMargin,
                                               double comfortRating, double comfortable) {
