@@ -78,7 +78,12 @@ public class TownCommand {
                                     var executionLevel = TeamTownData.executionLevel(holder);
                                     if (executionLevel == null) {
                                         ct.getSource().sendFailure(Component.literal(
-                                                "The town is waiting for its energy tower in its building dimension"));
+                                                "The town has no buildings or energy tower yet"));
+                                        return 0;
+                                    }
+                                    if (TeamTownData.townGenerator(holder).filter(tower -> tower.actualPos != null).isEmpty()) {
+                                        ct.getSource().sendFailure(Component.literal(
+                                                "Refugees only come to a town with an energy tower in its own dimension"));
                                         return 0;
                                     }
                                     data.get().debugSpawnRefugeeBatch(executionLevel, holder);
@@ -360,6 +365,7 @@ public class TownCommand {
                             .then(Commands.literal("blocks")
                                     .then(listBlocks)
                             )
+                            .then(com.teammoeg.frostedheart.content.town.ui.TownUiMode.command())
                     )
             );
         }
@@ -386,6 +392,7 @@ public class TownCommand {
                 .then(Commands.literal("blocks")
                         .then(listBlocks)
                 )
+                .then(com.teammoeg.frostedheart.content.town.ui.TownUiMode.command())
         );
     }
 
@@ -530,7 +537,7 @@ public class TownCommand {
                 var teamData = CTeamDataManager.get(player);
                 var executionLevel = TeamTownData.executionLevel(teamData);
                 if (executionLevel == null) {
-                    source.sendFailure(Component.literal("The town is waiting for its energy tower in its building dimension"));
+                    source.sendFailure(Component.literal("The town has no buildings or energy tower yet"));
                     return 0;
                 }
                 for (int index = 0; index < repeats; index++) {

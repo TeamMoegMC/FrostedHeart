@@ -38,6 +38,9 @@ public class HeatingDeviceContext {
     private ServerPlayer player;
     private double elapsedSeconds;
     private double physiologicalSeconds;
+    private double sharedBodyPowerW;
+    private double evaporationScale = 1.0D;
+    private double firePowerW;
     private final double[] weights = new double[BodyPart.VALUES.length];
     private int consumedHeatingSeconds;
     private final ThermalEnvironmentSample environmentSample =
@@ -46,6 +49,7 @@ public class HeatingDeviceContext {
     private final HeatingDeviceSlot curiosSlot = new HeatingDeviceSlot();
     private final double[] partTemperatureC = new double[BodyPart.VALUES.length];
     private final double[] powerW = new double[BodyPart.VALUES.length];
+    private final double[] radiantPowerW = new double[BodyPart.VALUES.length];
     private final double[] dryConductanceWPerK = new double[BodyPart.VALUES.length];
     private final double[] weightedBoundaryWPerK = new double[BodyPart.VALUES.length];
     private final double[] wetConductanceWPerK = new double[BodyPart.VALUES.length];
@@ -65,6 +69,9 @@ public class HeatingDeviceContext {
         this.player = player;
         this.elapsedSeconds = elapsedSeconds;
         this.physiologicalSeconds = physiologicalSeconds;
+        this.sharedBodyPowerW = 0.0D;
+        this.evaporationScale = 1.0D;
+        this.firePowerW = 0.0D;
         for (BodyPart part : BodyPart.VALUES) {
             int index = part.ordinal();
             partTemperatureC[index] = data.getAbsoluteBodyTempByPart(part);
@@ -112,6 +119,7 @@ public class HeatingDeviceContext {
             BodyPart part,
             double dryConductanceWPerK,
             double weightedBoundaryWPerK,
+            double radiantPowerW,
             double wetConductanceWPerK,
             double operativeTemperatureC,
             double radiantHeatProof,
@@ -121,6 +129,7 @@ public class HeatingDeviceContext {
         int index = part.ordinal();
         this.dryConductanceWPerK[index] = dryConductanceWPerK;
         this.weightedBoundaryWPerK[index] = weightedBoundaryWPerK;
+        this.radiantPowerW[index] = radiantPowerW;
         this.wetConductanceWPerK[index] = wetConductanceWPerK;
         this.operativeTemperatureC[index] = operativeTemperatureC;
         this.radiantHeatProof[index] = radiantHeatProof;
@@ -134,6 +143,10 @@ public class HeatingDeviceContext {
 
     double getWeightedBoundaryWPerK(BodyPart part) {
         return weightedBoundaryWPerK[part.ordinal()];
+    }
+
+    double getRadiantPowerW(BodyPart part) {
+        return radiantPowerW[part.ordinal()];
     }
 
     double getWetConductanceWPerK(BodyPart part) {
@@ -155,7 +168,37 @@ public class HeatingDeviceContext {
     public double getPassivePowerW(BodyPart part) {
         int index = part.ordinal();
         return weightedBoundaryWPerK[index]
-                - dryConductanceWPerK[index] * partTemperatureC[index];
+                + radiantPowerW[index]
+                - dryConductanceWPerK[index] * partTemperatureC[index]
+                + appliedWetConductanceWPerK(part)
+                        * (operativeTemperatureC[index] - partTemperatureC[index]);
+    }
+
+    void setBodyRegulation(double sharedBodyPowerW, double evaporationScale,
+                           boolean onFire, double lavaHeightRatio) {
+        this.sharedBodyPowerW = sharedBodyPowerW;
+        this.evaporationScale = evaporationScale;
+        this.firePowerW = onFire && lavaHeightRatio <= 0.0D
+                ? PlayerThermalModel.ON_FIRE_HEAT_POWER_W : 0.0D;
+    }
+
+    private double appliedWetConductanceWPerK(BodyPart part) {
+        int index = part.ordinal();
+        return wetConductanceWPerK[index]
+                * (partTemperatureC[index] > operativeTemperatureC[index] ? evaporationScale : 1.0D);
+    }
+
+    /** A controlled heater supplements the other equipment and the current body balance. */
+    public double remainingHeatingDemandW(BodyPart part, double controlGainWPerK) {
+        double temperatureC = getBodyTemperatureC(part);
+        double netPowerW = getPassivePowerW(part) + sharedBodyPowerW * part.area
+                + firePowerW * part.area * (1.0D - getRadiantHeatProof(part));
+        double feedbackW = (PlayerThermalModel.CORE_REFERENCE_TEMPERATURE_C - temperatureC)
+                * controlGainWPerK - netPowerW;
+        double stepLimitW = PlayerThermalModel.equipmentHeatingLimitW(temperatureC,
+                getDryConductanceWPerK(part) + appliedWetConductanceWPerK(part), netPowerW,
+                PlayerThermalModel.partHeatCapacityJPerK(part), physiologicalSeconds);
+        return Math.max(0.0D, Math.min(feedbackW, stepLimitW) - getPowerW(part));
     }
 
     public double getPhysiologicalSeconds() {

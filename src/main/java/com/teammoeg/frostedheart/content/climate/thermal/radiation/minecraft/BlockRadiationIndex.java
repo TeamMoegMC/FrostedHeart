@@ -798,11 +798,16 @@ public final class BlockRadiationIndex
         if (crossedAxes > 1) {
             // A lava side face also samples above its neighbor. At an edge that
             // position belongs to a diagonal section, not one of the six faces.
-            LevelChunk chunk = level.getChunkSource().getChunkNow(
-                    SectionPos.x(currentSectionKey) + dx, SectionPos.z(currentSectionKey) + dz);
+            int targetX = SectionPos.x(currentSectionKey) + dx;
+            int targetY = SectionPos.y(currentSectionKey) + dy;
+            int targetZ = SectionPos.z(currentSectionKey) + dz;
+            LevelChunk chunk = level.getChunkSource().getChunkNow(targetX, targetZ);
             if (chunk != null) {
-                int index = chunk.getSectionIndexFromSectionY(SectionPos.y(currentSectionKey) + dy);
-                if (index >= 0 && index < chunk.getSections().length) section = chunk.getSections()[index];
+                int index = chunk.getSectionIndexFromSectionY(targetY);
+                if (index >= 0 && index < chunk.getSections().length) {
+                    section = pages.loadedSectionOrAttach(
+                            SectionPos.asLong(targetX, targetY, targetZ), chunk, index).section();
+                }
             }
         } else {
             int face = dx < 0 ? NEGATIVE_X : dx > 0 ? POSITIVE_X
@@ -839,27 +844,19 @@ public final class BlockRadiationIndex
         int x = SectionPos.x(currentSectionKey);
         int y = SectionPos.y(currentSectionKey);
         int z = SectionPos.z(currentSectionKey);
+        int targetX = x + (face == NEGATIVE_X ? -1 : face == POSITIVE_X ? 1 : 0);
+        int targetY = y + (face == NEGATIVE_Y ? -1 : face == POSITIVE_Y ? 1 : 0);
+        int targetZ = z + (face == NEGATIVE_Z ? -1 : face == POSITIVE_Z ? 1 : 0);
+        LevelChunk chunk = targetX == x && targetZ == z ? currentChunk
+                : level.getChunkSource().getChunkNow(targetX, targetZ);
         LevelChunkSection result = null;
-        if (face == NEGATIVE_Y || face == POSITIVE_Y) {
-            int targetY = y + (face == NEGATIVE_Y ? -1 : 1);
-            int sectionIndex = currentChunk.getSectionIndexFromSectionY(targetY);
-            if (sectionIndex >= 0
-                    && sectionIndex < currentChunk.getSections().length) {
-                result = currentChunk.getSections()[sectionIndex];
-            }
-        } else {
-            int targetX = x + (face == NEGATIVE_X ? -1
-                    : face == POSITIVE_X ? 1 : 0);
-            int targetZ = z + (face == NEGATIVE_Z ? -1
-                    : face == POSITIVE_Z ? 1 : 0);
-            LevelChunk chunk = level.getChunkSource().getChunkNow(
-                    targetX, targetZ);
-            if (chunk != null) {
-                int sectionIndex = chunk.getSectionIndexFromSectionY(y);
-                if (sectionIndex >= 0
-                        && sectionIndex < chunk.getSections().length) {
-                    result = chunk.getSections()[sectionIndex];
-                }
+        if (chunk != null) {
+            int sectionIndex = chunk.getSectionIndexFromSectionY(targetY);
+            if (sectionIndex >= 0 && sectionIndex < chunk.getSections().length) {
+                // Cached lava faces depend on these neighbor states as well as
+                // their own Section; observe only neighbors actually read.
+                result = pages.loadedSectionOrAttach(
+                        SectionPos.asLong(targetX, targetY, targetZ), chunk, sectionIndex).section();
             }
         }
         neighborSections[face] = result;

@@ -79,8 +79,8 @@ public class VAWTBlock extends KineticBlock implements IBE<VAWTBlockEntity> {
             ALL_TYPES.put(name, this);
         }
 
-        public int getDurability() {
-            return (int)(durability * FHConfig.SERVER.VAWT.vawtDurability.get());
+        public long getDurability() {
+            return (long)(durability * FHConfig.SERVER.VAWT.vawtDurability.get());
         }
     }
 
@@ -98,7 +98,7 @@ public class VAWTBlock extends KineticBlock implements IBE<VAWTBlockEntity> {
     @Override
     public void appendHoverText(ItemStack stack, @Nullable BlockGetter level, List<Component> tooltip, TooltipFlag flag) {
         super.appendHoverText(stack, level, tooltip, flag);
-        long durability = stack.getMaxDamage()-stack.getDamageValue();
+        long durability = Math.max(0L, type.getDurability() - VAWTItem.getWear(stack));
 
         if (durability <= 0) {
             tooltip.add(Component.translatable("message.frostedheart.vawt.state.damaged").withStyle(ChatFormatting.RED));
@@ -129,7 +129,7 @@ public class VAWTBlock extends KineticBlock implements IBE<VAWTBlockEntity> {
     public static ItemStack setNBTOnStack(ItemStack stack, BlockEntity be, BlockState state) {
         if (be instanceof VAWTBlockEntity v) {
             // 不使用 saveToItem 的原因是会额外储存机械动力的网络数据
-        	stack.setDamageValue(v.getDamage());
+            VAWTItem.setWear(stack, v.getDamage());
         }
         if (state.getValue(DAMAGED)) {
             var stateTag = new CompoundTag();
@@ -144,7 +144,7 @@ public class VAWTBlock extends KineticBlock implements IBE<VAWTBlockEntity> {
 		super.setPlacedBy(worldIn, pos, state, placer, stack);
 		BlockEntity blockEntity = worldIn.getBlockEntity(pos);
 		if (blockEntity instanceof VAWTBlockEntity vawt)
-			vawt.setDamage(stack.getDamageValue());
+			vawt.setDamage(VAWTItem.getWear(stack));
 
 	}
 

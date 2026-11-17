@@ -1,0 +1,763 @@
+{
+  "cases": [
+    {
+      "label": "n0-flywheel-idle",
+      "mode": "idle",
+      "offsets": true,
+      "backend": "flywheel_instancing",
+      "clientCitizens": 0,
+      "presented": 0,
+      "citizenRenderSubmission": {
+        "latestFrameNanos": 300,
+        "averageFrameNanos": 433,
+        "p95FrameNanos": 600,
+        "sampleCount": 256,
+        "cacheCount": 0,
+        "detailedCount": 0,
+        "frustumBatchCount": 0,
+        "bodyCount": 0,
+        "billboardCount": 0,
+        "drawCalls": 0,
+        "lightSamples": 0,
+        "instanceDirtyBytes": 0,
+        "peakInstanceDirtyBytes": 0
+      },
+      "wallSeconds": 20.1165018,
+      "serverTick": {
+        "maxMs": 24.1494,
+        "samples": 403,
+        "meanMs": 3.0989322580645164,
+        "p99Ms": 8.4843,
+        "p50Ms": 2.7383,
+        "p95Ms": 5.4351
+      },
+      "clientTick": {
+        "maxMs": 6.6961,
+        "samples": 403,
+        "meanMs": 2.6711761786600494,
+        "p99Ms": 5.4929,
+        "p50Ms": 2.4706,
+        "p95Ms": 4.6336
+      },
+      "frameInterval": {
+        "maxMs": 100.2242,
+        "samples": 477,
+        "meanMs": 42.08066352201258,
+        "p99Ms": 84.4922,
+        "p50Ms": 36.3004,
+        "p95Ms": 72.4971
+      },
+      "gcCollections": 0,
+      "gcMs": 0,
+      "usedHeapBytes": 1678736176,
+      "meanMovingWithXZ": 0.0,
+      "meanPositionChanges": 0.0,
+      "population": 0,
+      "estimatedFPS": 23.763883843630357,
+      "observedTPS": 20.033304200037403
+    },
+    {
+      "label": "n100-flywheel-moving",
+      "mode": "moving",
+      "offsets": true,
+      "backend": "flywheel_instancing",
+      "clientCitizens": 100,
+      "presented": 100,
+      "citizenRenderSubmission": {
+        "latestFrameNanos": 100,
+        "averageFrameNanos": 156,
+        "p95FrameNanos": 200,
+        "sampleCount": 256,
+        "cacheCount": 100,
+        "detailedCount": 0,
+        "frustumBatchCount": 100,
+        "bodyCount": 100,
+        "billboardCount": 0,
+        "drawCalls": 7,
+        "lightSamples": 374,
+        "instanceDirtyBytes": 75516,
+        "peakInstanceDirtyBytes": 82824
+      },
+      "wallSeconds": 21.2800599,
+      "serverTick": {
+        "maxMs": 10.0243,
+        "samples": 425,
+        "meanMs": 2.8102771764705885,
+        "p99Ms": 6.2545,
+        "p50Ms": 2.6673,
+        "p95Ms": 5.2215
+      },
+      "clientTick": {
+        "maxMs": 131.5284,
+        "samples": 404,
+        "meanMs": 2.8596769801980195,
+        "p99Ms": 5.2628,
+        "p50Ms": 2.3794,
+        "p95Ms": 4.3249
+      },
+      "frameInterval": {
+        "maxMs": 1543.9462,
+        "samples": 491,
+        "meanMs": 43.16581751527495,
+        "p99Ms": 90.4148,
+        "p50Ms": 36.6042,
+        "p95Ms": 69.9959
+      },
+      "gcCollections": 2,
+      "gcMs": 1444,
+      "usedHeapBytes": 1223893992,
+      "meanMovingWithXZ": 75.70823529411764,
+      "meanPositionChanges": 91.87294117647059,
+      "population": 100,
+      "estimatedFPS": 23.16647888450469,
+      "observedTPS": 19.971748293810016
+    },
+    {
+      "label": "n1000-flywheel-idle",
+      "mode": "idle",
+      "offsets": true,
+      "backend": "flywheel_instancing",
+      "clientCitizens": 1000,
+      "presented": 1000,
+      "citizenRenderSubmission": {
+        "latestFrameNanos": 0,
+        "averageFrameNanos": 72,
+        "p95FrameNanos": 200,
+        "sampleCount": 256,
+        "cacheCount": 1000,
+        "detailedCount": 0,
+        "frustumBatchCount": 1000,
+        "bodyCount": 1000,
+        "billboardCount": 0,
+        "drawCalls": 7,
+        "lightSamples": 482,
+        "instanceDirtyBytes": 1392,
+        "peakInstanceDirtyBytes": 323872
+      },
+      "wallSeconds": 21.8177537,
+      "serverTick": {
+        "maxMs": 8.2709,
+        "samples": 436,
+        "meanMs": 2.571828211009174,
+        "p99Ms": 5.9503,
+        "p50Ms": 2.4889,
+        "p95Ms": 4.9859
+      },
+      "clientTick": {
+        "maxMs": 1260.3086,
+        "samples": 404,
+        "meanMs": 9.739801732673268,
+        "p99Ms": 12.1404,
+        "p50Ms": 3.3003,
+        "p95Ms": 6.6696
+      },
+      "frameInterval": {
+        "maxMs": 1318.7302,
+        "samples": 308,
+        "meanMs": 70.58672954545455,
+        "p99Ms": 140.1788,
+        "p50Ms": 57.7774,
+        "p95Ms": 103.377
+      },
+      "gcCollections": 4,
+      "gcMs": 2461,
+      "usedHeapBytes": 1503016016,
+      "meanMovingWithXZ": 0.0,
+      "meanPositionChanges": 0.38073394495412843,
+      "population": 1000,
+      "estimatedFPS": 14.166968868504481,
+      "observedTPS": 19.983725455659535
+    },
+    {
+      "label": "n1000-flywheel-moving",
+      "mode": "moving",
+      "offsets": true,
+      "backend": "flywheel_instancing",
+      "clientCitizens": 1000,
+      "presented": 1000,
+      "citizenRenderSubmission": {
+        "latestFrameNanos": 100,
+        "averageFrameNanos": 113,
+        "p95FrameNanos": 200,
+        "sampleCount": 256,
+        "cacheCount": 1000,
+        "detailedCount": 0,
+        "frustumBatchCount": 1000,
+        "bodyCount": 1000,
+        "billboardCount": 0,
+        "drawCalls": 7,
+        "lightSamples": 234,
+        "instanceDirtyBytes": 55158,
+        "peakInstanceDirtyBytes": 747794
+      },
+      "wallSeconds": 22.6426533,
+      "serverTick": {
+        "maxMs": 1240.6721,
+        "samples": 453,
+        "meanMs": 6.316621633554084,
+        "p99Ms": 6.8379,
+        "p50Ms": 3.5331,
+        "p95Ms": 5.9665
+      },
+      "clientTick": {
+        "maxMs": 1246.27,
+        "samples": 404,
+        "meanMs": 6.8557705445544554,
+        "p99Ms": 9.9551,
+        "p50Ms": 3.5975,
+        "p95Ms": 6.351
+      },
+      "frameInterval": {
+        "maxMs": 1378.1415,
+        "samples": 295,
+        "meanMs": 72.33164237288135,
+        "p99Ms": 137.3313,
+        "p50Ms": 59.2853,
+        "p95Ms": 97.4688
+      },
+      "gcCollections": 6,
+      "gcMs": 3724,
+      "usedHeapBytes": 1439695192,
+      "meanMovingWithXZ": 773.1192052980133,
+      "meanPositionChanges": 928.9690949227373,
+      "population": 1000,
+      "estimatedFPS": 13.825207989123735,
+      "observedTPS": 20.006489257157863
+    },
+    {
+      "label": "n1000-flywheel-moving-no-offsets",
+      "mode": "moving",
+      "offsets": false,
+      "backend": "flywheel_instancing",
+      "clientCitizens": 1000,
+      "presented": 0,
+      "citizenRenderSubmission": {
+        "latestFrameNanos": 100,
+        "averageFrameNanos": 346,
+        "p95FrameNanos": 200,
+        "sampleCount": 256,
+        "cacheCount": 1000,
+        "detailedCount": 0,
+        "frustumBatchCount": 1000,
+        "bodyCount": 1000,
+        "billboardCount": 0,
+        "drawCalls": 7,
+        "lightSamples": 547,
+        "instanceDirtyBytes": 41412,
+        "peakInstanceDirtyBytes": 272310
+      },
+      "wallSeconds": 20.9953605,
+      "serverTick": {
+        "maxMs": 1308.2935,
+        "samples": 420,
+        "meanMs": 6.944534285714285,
+        "p99Ms": 7.5021,
+        "p50Ms": 3.791,
+        "p95Ms": 5.9785
+      },
+      "clientTick": {
+        "maxMs": 4.6649,
+        "samples": 404,
+        "meanMs": 1.9093398514851485,
+        "p99Ms": 3.6598,
+        "p50Ms": 1.9939,
+        "p95Ms": 2.7913
+      },
+      "frameInterval": {
+        "maxMs": 1383.4598,
+        "samples": 324,
+        "meanMs": 64.59574691358024,
+        "p99Ms": 126.6963,
+        "p50Ms": 58.247,
+        "p95Ms": 69.1101
+      },
+      "gcCollections": 2,
+      "gcMs": 1303,
+      "usedHeapBytes": 1403373352,
+      "meanMovingWithXZ": 800.1880952380952,
+      "meanPositionChanges": 924.6476190476191,
+      "population": 1000,
+      "estimatedFPS": 15.480895380586825,
+      "observedTPS": 20.00441954783296
+    },
+    {
+      "label": "n1000-cpu-moving",
+      "mode": "moving",
+      "offsets": true,
+      "backend": "cpu_batch",
+      "clientCitizens": 1000,
+      "presented": 1000,
+      "citizenRenderSubmission": {
+        "latestFrameNanos": 17382000,
+        "averageFrameNanos": 15505039,
+        "p95FrameNanos": 17512500,
+        "sampleCount": 256,
+        "cacheCount": 1000,
+        "detailedCount": 0,
+        "frustumBatchCount": 1000,
+        "bodyCount": 1000,
+        "billboardCount": 0,
+        "drawCalls": 7,
+        "lightSamples": 240,
+        "instanceDirtyBytes": 0,
+        "peakInstanceDirtyBytes": 0
+      },
+      "wallSeconds": 22.747325,
+      "serverTick": {
+        "maxMs": 1277.3865,
+        "samples": 455,
+        "meanMs": 8.720434725274725,
+        "p99Ms": 6.6295,
+        "p50Ms": 3.4123,
+        "p95Ms": 5.0536
+      },
+      "clientTick": {
+        "maxMs": 9.745,
+        "samples": 404,
+        "meanMs": 3.5011762376237625,
+        "p99Ms": 7.6645,
+        "p50Ms": 3.4232,
+        "p95Ms": 5.5733
+      },
+      "frameInterval": {
+        "maxMs": 1390.9874,
+        "samples": 280,
+        "meanMs": 80.97545821428572,
+        "p99Ms": 1367.7269,
+        "p50Ms": 65.8958,
+        "p95Ms": 77.1014
+      },
+      "gcCollections": 6,
+      "gcMs": 3783,
+      "usedHeapBytes": 1384215504,
+      "meanMovingWithXZ": 797.8593406593407,
+      "meanPositionChanges": 919.9758241758242,
+      "population": 1000,
+      "estimatedFPS": 12.34942070168588,
+      "observedTPS": 20.002351924896665
+    },
+    {
+      "label": "n1000-flywheel-moving-repeat",
+      "mode": "moving",
+      "offsets": true,
+      "backend": "flywheel_instancing",
+      "clientCitizens": 1000,
+      "presented": 1000,
+      "citizenRenderSubmission": {
+        "latestFrameNanos": 100,
+        "averageFrameNanos": 85,
+        "p95FrameNanos": 200,
+        "sampleCount": 256,
+        "cacheCount": 1000,
+        "detailedCount": 0,
+        "frustumBatchCount": 1000,
+        "bodyCount": 1000,
+        "billboardCount": 0,
+        "drawCalls": 7,
+        "lightSamples": 211,
+        "instanceDirtyBytes": 53708,
+        "peakInstanceDirtyBytes": 751100
+      },
+      "wallSeconds": 22.7532892,
+      "serverTick": {
+        "maxMs": 1260.3084,
+        "samples": 455,
+        "meanMs": 5.941172967032967,
+        "p99Ms": 6.2249,
+        "p50Ms": 3.3505,
+        "p95Ms": 4.9753
+      },
+      "clientTick": {
+        "maxMs": 1280.8658,
+        "samples": 404,
+        "meanMs": 9.692348267326732,
+        "p99Ms": 6.8963,
+        "p50Ms": 3.3759,
+        "p95Ms": 5.3542
+      },
+      "frameInterval": {
+        "maxMs": 1362.3372,
+        "samples": 317,
+        "meanMs": 71.57434826498422,
+        "p99Ms": 114.5985,
+        "p50Ms": 58.4669,
+        "p95Ms": 64.5835
+      },
+      "gcCollections": 6,
+      "gcMs": 3801,
+      "usedHeapBytes": 1339869056,
+      "meanMovingWithXZ": 798.1252747252747,
+      "meanPositionChanges": 919.1494505494505,
+      "population": 1000,
+      "estimatedFPS": 13.971485933728333,
+      "observedTPS": 19.99710881361276
+    }
+  ],
+  "hardware": {
+    "processors": 1,
+    "maxHeapBytes": 1854930944,
+    "java": "17.0.21.0.3",
+    "os": "Linux",
+    "gpu": "llvmpipe (LLVM 21.1.8, 256 bits)",
+    "gl": "4.5 (Core Profile) Mesa 26.0.8-1ubuntu0.3",
+    "window": [
+      1280,
+      720
+    ],
+    "vsync": false,
+    "fpsLimit": 260,
+    "renderDistance": 6
+  },
+  "fixtureBootstrapSeconds": 2.013025500025833,
+  "graphMicrobenchmark": {
+    "syntheticGraph": [
+      {
+        "build": {
+          "maxMs": 3.1472,
+          "samples": 8,
+          "meanMs": 1.2380125,
+          "p99Ms": 3.1472,
+          "p50Ms": 0.7355,
+          "p95Ms": 3.1472
+        },
+        "buildings": 32,
+        "checksum": 4970000,
+        "segmentSteps": 16,
+        "cacheHitNs": 1914.89,
+        "waypoints": 497,
+        "coldRouteMs": 6.4363
+      },
+      {
+        "build": {
+          "maxMs": 3.625,
+          "samples": 8,
+          "meanMs": 2.8014375,
+          "p99Ms": 3.625,
+          "p50Ms": 3.1068,
+          "p95Ms": 3.625
+        },
+        "buildings": 128,
+        "checksum": 20330000,
+        "segmentSteps": 16,
+        "cacheHitNs": 1311.53,
+        "waypoints": 2033,
+        "coldRouteMs": 1.9627
+      },
+      {
+        "build": {
+          "maxMs": 9.984,
+          "samples": 8,
+          "meanMs": 8.6301,
+          "p99Ms": 9.984,
+          "p50Ms": 8.8609,
+          "p95Ms": 9.984
+        },
+        "buildings": 512,
+        "checksum": 81770000,
+        "segmentSteps": 16,
+        "cacheHitNs": 1324.35,
+        "waypoints": 8177,
+        "coldRouteMs": 4.5936
+      }
+    ],
+    "includesWorldSectionSampling": false
+  },
+  "jfr": {
+    "jfr": "/home/aiagent/project/khjxiaogu/FrostedHeart/run/./agent/perf/citizen-roads-profile.jfr"
+  },
+  "screenshot": "/home/aiagent/project/khjxiaogu/FrostedHeart/run/agent/screenshots/01794556094703908000-citizen-road-performance-1000.png",
+  "testedProductionCommit": "86eedc23a",
+  "camera": {
+    "position": [
+      19.0,
+      88.0,
+      39.0
+    ],
+    "yaw": 174.61,
+    "pitch": 39.73
+  },
+  "profile": {
+    "steadyWindowSeconds": 22.18961191177368,
+    "boundaryPolicy": "trim first 2s and last 1s; exclude first allocation sample per thread due anomalous accumulated weights",
+    "excludedFirstSamples": [
+      {
+        "thread": "Server thread",
+        "weightBytes": 3732275296
+      },
+      {
+        "thread": "Netty Local Client IO #0",
+        "weightBytes": 59382288
+      },
+      {
+        "thread": "town-connectivity",
+        "weightBytes": 7408824
+      },
+      {
+        "thread": "Thread-4",
+        "weightBytes": 363418400
+      },
+      {
+        "thread": "Render thread",
+        "weightBytes": 14268141712
+      },
+      {
+        "thread": "Netty Server IO #1",
+        "weightBytes": 2667376
+      },
+      {
+        "thread": "frosted-heart-thermal-1",
+        "weightBytes": 3636552
+      },
+      {
+        "thread": "JFR Periodic Tasks",
+        "weightBytes": 1136568
+      },
+      {
+        "thread": "Sound engine",
+        "weightBytes": 362720
+      },
+      {
+        "thread": "IO-Worker-6",
+        "weightBytes": 11999728
+      },
+      {
+        "thread": "JEI Config File Watcher",
+        "weightBytes": 35528
+      }
+    ],
+    "executionSamplesByThread": {
+      "Server thread": 842,
+      "Render thread": 605,
+      "Netty Local Client IO #0": 1
+    },
+    "inclusiveFamilies": [
+      {
+        "thread": "Server thread",
+        "family": "TownRoadNavigation",
+        "samples": 518,
+        "percentOfThreadSamples": 61.52
+      },
+      {
+        "thread": "Render thread",
+        "family": "CitizenRoadPresentation",
+        "samples": 334,
+        "percentOfThreadSamples": 55.21
+      },
+      {
+        "thread": "Render thread",
+        "family": "RoadPresentation",
+        "samples": 190,
+        "percentOfThreadSamples": 31.4
+      },
+      {
+        "thread": "Server thread",
+        "family": "TownRoadPerformance",
+        "samples": 39,
+        "percentOfThreadSamples": 4.63
+      },
+      {
+        "thread": "Server thread",
+        "family": "TownRoadNetwork",
+        "samples": 19,
+        "percentOfThreadSamples": 2.26
+      },
+      {
+        "thread": "Server thread",
+        "family": "TownConnectivity",
+        "samples": 1,
+        "percentOfThreadSamples": 0.12
+      }
+    ],
+    "topLeafMethods": [
+      {
+        "thread": "Server thread",
+        "method": "java.lang.Long.hashCode",
+        "samples": 71
+      },
+      {
+        "thread": "Render thread",
+        "method": "net.minecraft.world.phys.shapes.CubePointRange.getDouble",
+        "samples": 69
+      },
+      {
+        "thread": "Server thread",
+        "method": "net.minecraft.world.level.ChunkPos.asLong",
+        "samples": 42
+      },
+      {
+        "thread": "Server thread",
+        "method": "java.lang.String.equals",
+        "samples": 42
+      },
+      {
+        "thread": "Server thread",
+        "method": "java.lang.invoke.MethodHandleImpl.profileBoolean",
+        "samples": 40
+      },
+      {
+        "thread": "Server thread",
+        "method": "java.lang.Math.addExact",
+        "samples": 37
+      },
+      {
+        "thread": "Server thread",
+        "method": "java.util.HashMap.get",
+        "samples": 33
+      },
+      {
+        "thread": "Render thread",
+        "method": "net.minecraft.world.level.levelgen.SingleThreadedRandomSource.next",
+        "samples": 32
+      },
+      {
+        "thread": "Render thread",
+        "method": "net.minecraft.world.level.biome.BiomeManager.getBiome",
+        "samples": 29
+      },
+      {
+        "thread": "Server thread",
+        "method": "java.util.HashMap.getNode",
+        "samples": 27
+      },
+      {
+        "thread": "Render thread",
+        "method": "net.minecraft.world.level.Level.dimensionType",
+        "samples": 27
+      },
+      {
+        "thread": "Server thread",
+        "method": "net.minecraft.world.phys.shapes.CubePointRange.getDouble",
+        "samples": 26
+      }
+    ],
+    "allocationSampleWeightBytes": 1148691792,
+    "allocationFirstOwner": [
+      {
+        "method": "com.teammoeg.frostedheart.content.town.citizen.nav.RoadPresentation.surface",
+        "weightBytes": 549058336,
+        "percent": 47.8
+      },
+      {
+        "method": "com.teammoeg.frostedheart.content.town.citizen.nav.RoadPresentation.clearBody",
+        "weightBytes": 290589440,
+        "percent": 25.3
+      },
+      {
+        "method": "com.teammoeg.frostedheart.content.town.render.TownRoadRenderer.nearRoad",
+        "weightBytes": 84744440,
+        "percent": 7.38
+      },
+      {
+        "method": "com.teammoeg.frostedheart.content.town.block.blockscanner.LoadedTownWorld.getBlockType",
+        "weightBytes": 45268312,
+        "percent": 3.94
+      },
+      {
+        "method": "com.teammoeg.frostedheart.content.town.citizen.nav.TownRoadNavigation.tick",
+        "weightBytes": 26996688,
+        "percent": 2.35
+      },
+      {
+        "method": "it.unimi.dsi.fastutil.objects.Object2BooleanOpenHashMap$KeySet.iterator",
+        "weightBytes": 19034256,
+        "percent": 1.66
+      },
+      {
+        "method": "net.minecraft.world.phys.Vec3.add",
+        "weightBytes": 16743640,
+        "percent": 1.46
+      },
+      {
+        "method": "com.teammoeg.frostedheart.content.town.block.blockscanner.RoomPathfinder.canStandAt",
+        "weightBytes": 16689248,
+        "percent": 1.45
+      },
+      {
+        "method": "java.util.concurrent.ConcurrentHashMap$ValuesView.iterator",
+        "weightBytes": 13496784,
+        "percent": 1.17
+      },
+      {
+        "method": "com.teammoeg.frostedheart.content.town.citizen.sync.S2CCitizenBatchPacket.encode",
+        "weightBytes": 10721008,
+        "percent": 0.93
+      },
+      {
+        "method": "com.teammoeg.frostedheart.content.town.citizen.nav.RoadPresentation.resolve",
+        "weightBytes": 8447368,
+        "percent": 0.74
+      },
+      {
+        "method": "com.teammoeg.frostedheart.content.town.citizen.client.CitizenRoadPresentation.tick",
+        "weightBytes": 8371864,
+        "percent": 0.73
+      }
+    ],
+    "allocationClasses": [
+      {
+        "class": "net.minecraft.world.phys.shapes.VoxelShape$$Lambda$1631+0x00007c17a86b22a0.1058644816",
+        "weightBytes": 227608944
+      },
+      {
+        "class": "net.minecraft.core.BlockPos",
+        "weightBytes": 165678088
+      },
+      {
+        "class": "net.minecraft.world.phys.AABB",
+        "weightBytes": 100397736
+      },
+      {
+        "class": "net.minecraft.world.phys.shapes.VoxelShape$$Lambda$19007+0x00007c17aa13f698.535573511",
+        "weightBytes": 92965264
+      },
+      {
+        "class": "[J",
+        "weightBytes": 84668968
+      },
+      {
+        "class": "net.minecraft.world.phys.shapes.CubePointRange",
+        "weightBytes": 83888896
+      },
+      {
+        "class": "java.util.ArrayList",
+        "weightBytes": 75982960
+      },
+      {
+        "class": "java.util.BitSet",
+        "weightBytes": 59070784
+      }
+    ],
+    "gc": [
+      {
+        "startTime": "2026-11-13T07:47:57.259640700Z",
+        "duration": "PT1.2811338S",
+        "gcId": 187,
+        "name": "SerialOld",
+        "cause": "Allocation Failure",
+        "sumOfPauses": "PT1.2811338S",
+        "longestPause": "PT1.2811338S"
+      },
+      {
+        "startTime": "2026-11-13T07:48:07.098180700Z",
+        "duration": "PT1.2829433S",
+        "gcId": 189,
+        "name": "SerialOld",
+        "cause": "Allocation Failure",
+        "sumOfPauses": "PT1.2829433S",
+        "longestPause": "PT1.2829433S"
+      }
+    ]
+  },
+  "restoration": {
+    "restoreCommandSucceeded": true,
+    "quitCommandSucceeded": true,
+    "saveConfirmedInLog": true
+  },
+  "limits": [
+    "single logical CPU and llvmpipe software rasterizer",
+    "integrated client/server process; no dedicated-server-only or physical GPU result",
+    "housing capacity overridden for real managed population; five fixed buildings and three representative routes",
+    "one measurement per condition plus one 1000-moving repeat; allocation samples are estimated weights",
+    "renderer submission timing is not full frame time or GPU time; GPU visible count is not proven by instance count"
+  ]
+}

@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart.content.town.buildings.logistics;
 
+import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -81,6 +82,11 @@ public class TransportStationBuilding extends AbstractTownResidentWorkBuilding {
             addedCapacity = Math.min(plannedCapacity, sanitize(addedCapacity));
             stopReason = stopReason == null ? TownProductionStopReason.NONE : stopReason;
         }
+
+        // EMPTY must not initialize the enclosing building while this CODEC is still unset.
+        private static double sanitize(double value) {
+            return Double.isFinite(value) ? Math.max(0.0, value) : 0.0;
+        }
     }
 
     /** Predicted result for the next town settlement before resource mutation. */
@@ -92,13 +98,13 @@ public class TransportStationBuilding extends AbstractTownResidentWorkBuilding {
     ) {
         public TransportStationForecast {
             workerCount = Math.max(0, workerCount);
-            totalProductivity = sanitize(totalProductivity);
-            plannedCapacity = sanitize(plannedCapacity);
+            totalProductivity = TransportStationDailyReport.sanitize(totalProductivity);
+            plannedCapacity = TransportStationDailyReport.sanitize(plannedCapacity);
             stopReason = stopReason == null ? TownProductionStopReason.NONE : stopReason;
         }
     }
 
-    public static final MapCodec<TransportStationBuilding> MAP_CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
+    public static final MapCodec<TransportStationBuilding> MAP_CODEC = AbstractTownBuilding.named(RecordCodecBuilder.mapCodec(instance -> instance.group(
             strict(BlockPos.CODEC).optionalFieldOf("pos", BlockPos.ZERO).forGetter(building -> building.pos),
             strict(Codec.BOOL).optionalFieldOf("initialized", false).forGetter(TransportStationBuilding::isInitialized),
             strict(Codec.BOOL).optionalFieldOf("isStructureValid", false)
@@ -112,7 +118,7 @@ public class TransportStationBuilding extends AbstractTownResidentWorkBuilding {
             strict(Codec.INT).optionalFieldOf("maxResidents", 0).forGetter(TransportStationBuilding::getMaxResidents),
             strict(TransportStationDailyReport.CODEC).optionalFieldOf("dailyReport", TransportStationDailyReport.EMPTY)
                     .forGetter(TransportStationBuilding::getDailyReport)
-    ).apply(instance, TransportStationBuilding::new));
+    ).apply(instance, TransportStationBuilding::new)));
         public static final Codec<TransportStationBuilding> CODEC = MAP_CODEC.codec();
 
 
@@ -343,7 +349,4 @@ public class TransportStationBuilding extends AbstractTownResidentWorkBuilding {
         }
     }
 
-    private static double sanitize(double value) {
-        return Double.isFinite(value) ? Math.max(0.0, value) : 0.0;
-    }
 }

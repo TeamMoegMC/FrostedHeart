@@ -144,6 +144,64 @@ public final class CompactThermalDataGameTests {
         return preparing.layout();
     }
 
+    @GameTest(template = "phase0a_empty", timeoutTicks = 100)
+    public static void rowGraphKeepsCanonicalEdgesAndEveryOriginalContribution(GameTestHelper helper) throws ReflectiveOperationException {
+        int checked = 0;
+        for (int mode = 0; mode < 4; mode++) {
+            int count = mode == 0 ? 0 : mode == 3 ? 16 : 400;
+            int nodes = mode == 2 ? 40 : count * 8;
+            var parts = new AirFieldLayout.Component[count];
+            var volumes = new AirOperatorFragment[count];
+            var random = new java.util.Random(7710);
+            for (int index = 0; index < count; index++) {
+                int[] addresses = new int[8];
+                for (int corner = 0; corner < 8; corner++) addresses[corner] = mode == 2 ? random.nextInt(nodes) : index * 8 + corner;
+                parts[index] = new AirFieldLayout.Component(index, 1, index * 4, 64, 0,
+                        -1L, addresses, new ThermalPageHandle[0], new long[0]);
+                volumes[index] = AirOperatorFragment.coarseGridVolume(parts[index], 128, mode == 3 ? 0 : 1, new AirMixingRegion());
+            }
+            var layout = new AirFieldLayout(parts, new Long2ObjectOpenHashMap<>(), nodes);
+            var actual = operator(layout, volumes, new CoupledThermalOperator.Contacts());
+            // A sorted pair specification is independent of count/prefix/scatter
+            // construction, and also covers non-unit coarse rows and self pairs.
+            var canonical = new TreeMap<Long, Integer>();
+            long[] occurrences = new long[count * 12]; Arrays.fill(occurrences, Long.MIN_VALUE);
+            int position = 0;
+            for (var volume : volumes) {
+                int ordinal = 0;
+                for (int row = 0; row < 8; row++) for (int column = row + 1; column < 8; column++) {
+                    if (Integer.bitCount(row ^ column) != 1) continue;
+                    int entry = row * 8 - row * (row - 1) / 2 + column - row;
+                    int a = volume.index(0, row), b = volume.index(0, column);
+                    if (a != b && (volume.horizontal(0)[entry] != 0 || volume.vertical(0)[entry] != 0)) {
+                        long key = (long) Math.min(a, b) << 32 | (Math.max(a, b) & 0xffffffffL);
+                        occurrences[position + ordinal] = key; canonical.put(key, 0);
+                    }
+                    ordinal++;
+                }
+                position += 12;
+            }
+            int[] first = (int[]) field(actual, "transportFirst"), second = (int[]) field(actual, "transportSecond");
+            int[] scatter = (int[]) field(actual, "pairwiseVolumeEdgePositions");
+            helper.assertTrue(first.length == canonical.size() && second.length == first.length && scatter.length == occurrences.length,
+                    "Empty, disconnected, overlapping and zero-conductance layouts retain their exact graph sizes");
+            int edge = 0;
+            for (var pair : canonical.entrySet()) {
+                pair.setValue(edge);
+                helper.assertTrue(first[edge] == (int) (pair.getKey() >>> 32) && second[edge] == pair.getKey().intValue(),
+                        "The pair sweep keeps its original lexicographic ordering");
+                edge++; checked++;
+            }
+            for (int index = 0; index < occurrences.length; index++) {
+                int expected = occurrences[index] == Long.MIN_VALUE ? -1 : canonical.get(occurrences[index]);
+                helper.assertTrue(scatter[index] == expected, "Each original contribution maps to its canonical edge, including inactive entries");
+                checked++;
+            }
+        }
+        FHMain.LOGGER.info("THERMAL_ROW_GRAPH_RESULT,scenarios=4,checked={},canonicalEdgesAndScatterExact=true", checked);
+        helper.succeed();
+    }
+
     private static AirOperatorFragment[] fragments(AirFieldLayout layout) throws ReflectiveOperationException {
         var bySection = new Long2ObjectOpenHashMap<int[]>(); bySection.put(SectionPos.asLong(-1, 4, 0), new int[]{0});
         var constructor = FrozenSources.class.getDeclaredConstructor(long[].class, byte[].class, Long2ObjectOpenHashMap.class,

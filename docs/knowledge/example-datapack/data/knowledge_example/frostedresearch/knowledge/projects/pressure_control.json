@@ -31,6 +31,16 @@
             "count": 8
           }
         ]
+      },
+      "labor": {
+        "workers": 2,
+        "days": 1,
+        "items": [
+          {
+            "tag": "minecraft:planks",
+            "count": 4
+          }
+        ]
       }
     }
   ]

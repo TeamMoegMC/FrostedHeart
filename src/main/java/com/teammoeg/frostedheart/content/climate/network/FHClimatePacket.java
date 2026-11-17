@@ -32,6 +32,7 @@ import com.teammoeg.frostedheart.content.climate.render.weather.ClientWeatherSta
 
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.Mth;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.api.distmarker.Dist;
@@ -46,6 +47,8 @@ public class FHClimatePacket implements CMessage {
     private final ClimateType globalClimate;
     private final int wind;
     private final float humidity;
+    // Current chunk climate baseline, excluding biome/altitude and local heating.
+    private final short climateDeciC;
     private final long lastSnowEndHour;
     private final long nextSnowStartHour;
 
@@ -57,11 +60,12 @@ public class FHClimatePacket implements CMessage {
         globalClimate = ClimateType.NONE;
         wind = 0;
         humidity = 0;
+        climateDeciC = 0;
         lastSnowEndHour = -1;
         nextSnowStartHour = -1;
     }
 
-    private FHClimatePacket(FriendlyByteBuf buffer) {
+    public FHClimatePacket(FriendlyByteBuf buffer) {
         data = SerializeUtil.readShortArray(buffer);
         sec = buffer.readVarLong();
         clockDayTime = buffer.readVarLong();
@@ -69,6 +73,7 @@ public class FHClimatePacket implements CMessage {
         globalClimate = ClimateType.values()[buffer.readByte() & 0xff];
         wind = buffer.readVarInt();
         humidity = buffer.readFloat();
+        climateDeciC = buffer.readShort();
         lastSnowEndHour = buffer.readLong();
         nextSnowStartHour = buffer.readLong();
     }
@@ -82,6 +87,7 @@ public class FHClimatePacket implements CMessage {
             globalClimate = ClimateType.NONE;
             wind = 0;
             humidity = 0;
+            climateDeciC = 0;
             lastSnowEndHour = -1;
             nextSnowStartHour = -1;
     	}else {
@@ -93,6 +99,8 @@ public class FHClimatePacket implements CMessage {
 	        globalClimate = climateData.getGlobalClimate();
             wind = climateData.getWind();
             humidity = climateData.getHumidity();
+            climateDeciC = (short) Mth.clamp(
+                    Math.round(climateData.getTemp(pos) * 10.0F), Short.MIN_VALUE, Short.MAX_VALUE);
             lastSnowEndHour = climateData.getLastSnowEndHour(pos);
             nextSnowStartHour = climateData.getNextSnowStartHour(pos);
     	}
@@ -107,6 +115,7 @@ public class FHClimatePacket implements CMessage {
         buffer.writeByte((byte) globalClimate.ordinal());
         buffer.writeVarInt(wind);
         buffer.writeFloat(humidity);
+        buffer.writeShort(climateDeciC);
         buffer.writeLong(lastSnowEndHour);
         buffer.writeLong(nextSnowStartHour);
     }
@@ -136,6 +145,7 @@ public class FHClimatePacket implements CMessage {
             ClientClimateData.secs = sec;
             ClientClimateData.wind = wind;
             ClientClimateData.humidity = humidity;
+            ClientClimateData.climateTemperatureC = climateDeciC / 10.0F;
             ClientClimateData.lastSnowEndHour = lastSnowEndHour;
             ClientClimateData.nextSnowStartHour = nextSnowStartHour;
         });

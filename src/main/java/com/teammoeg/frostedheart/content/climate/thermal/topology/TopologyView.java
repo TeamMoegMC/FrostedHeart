@@ -47,7 +47,7 @@ final class TopologyView implements AirGeometryView {
     private record PageRead(WorkerPageStore.PageState page,
             com.teammoeg.frostedheart.content.climate.thermal.mesh.PagePublication publication) {}
     private final Long2ObjectOpenHashMap<PageRead> pageReads = new Long2ObjectOpenHashMap<>();
-    private final it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap haloReads = new it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap();
+    private final it.unimi.dsi.fastutil.longs.Long2LongOpenHashMap haloReadVersions = new it.unimi.dsi.fastutil.longs.Long2LongOpenHashMap();
     private final java.util.LinkedHashMap<com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalPageHandle,
             com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.GeometryHalo> haloWrites = new java.util.LinkedHashMap<>();
     private final java.util.IdentityHashMap<com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalPageHandle,
@@ -61,7 +61,7 @@ final class TopologyView implements AirGeometryView {
         meter.container(materialSurfaceCache, materialSurfaceCache.size(), 12);
         meter.container(materialOwnerCache, materialOwnerCache.size(), 12);
         meter.container(pageReads, pageReads.size(), 16); meter.bytes(32L * pageReads.size());
-        meter.container(haloReads, haloReads.size(), 12); meter.container(haloWrites, haloWrites.size(), 16);
+        meter.container(haloReadVersions, haloReadVersions.size(), 16); meter.container(haloWrites, haloWrites.size(), 16);
         meter.container(previousHalos, previousHalos.size(), 16);
         meter.container(haloReferenceDelta, haloReferenceDelta.size(), 12); meter.container(haloValues, haloValues.size(), 12);
     }
@@ -70,7 +70,7 @@ final class TopologyView implements AirGeometryView {
         return AirBackingMeter.containerBackingBytes(materialSurfaceCache, materialSurfaceCache.size(), 12)
                 + AirBackingMeter.containerBackingBytes(materialOwnerCache, materialOwnerCache.size(), 12)
                 + AirBackingMeter.containerBackingBytes(pageReads, pageReads.size(), 16) + 32L * pageReads.size()
-                + AirBackingMeter.containerBackingBytes(haloReads, haloReads.size(), 12)
+                + AirBackingMeter.containerBackingBytes(haloReadVersions, haloReadVersions.size(), 16)
                 + AirBackingMeter.containerBackingBytes(haloWrites, haloWrites.size(), 16)
                 + AirBackingMeter.containerBackingBytes(previousHalos, previousHalos.size(), 16)
                 + AirBackingMeter.containerBackingBytes(haloReferenceDelta, haloReferenceDelta.size(), 12)
@@ -95,8 +95,8 @@ final class TopologyView implements AirGeometryView {
             var expected = entry.getValue(); var current = pages.find(entry.getLongKey());
             if (current != expected.page || current != null && current.publication != expected.publication) return false;
         }
-        for (var entry : haloReads.long2IntEntrySet())
-            if (pages.haloSignature(entry.getLongKey()) != entry.getIntValue()) return false;
+        for (var entry : haloReadVersions.long2LongEntrySet())
+            if (pages.haloVersion(entry.getLongKey()) != entry.getLongValue()) return false;
         for (var entry : previousHalos.entrySet())
             if (pages.halo(entry.getKey()) != entry.getValue()) return false;
         return true;
@@ -113,35 +113,79 @@ final class TopologyView implements AirGeometryView {
         haloReferenceDelta.clear(); haloValues.clear();
         for (var entry : haloWrites.entrySet()) {
             var previous = previousHalos.get(entry.getKey());
-            if (previous != null) for (long position : previous.positions()) haloReferenceDelta.addTo(position, -1);
             var next = entry.getValue();
+            boolean changedMembership = previous == null || next == null
+                    || !java.util.Arrays.equals(previous.positions(), next.positions());
+            if (changedMembership && previous != null)
+                for (long position : previous.positions()) {
+                    readHaloSection(position); haloReferenceDelta.addTo(position, -1);
+                }
             if (next == null) continue;
             for (int index = 0; index < next.size(); index++) {
                 long position = next.positions()[index];
-                haloReferenceDelta.addTo(position, 1); haloValues.put(position, next.signatures()[index]);
+                if (changedMembership) haloReferenceDelta.addTo(position, 1);
+                readHaloSection(position);
+                int signature = next.signatures()[index];
+                // A later overlapping writer can restore the committed value.
+                // Its final value then needs no private override at all.
+                if (signature == pages.haloSignature(position)) haloValues.remove(position);
+                else haloValues.put(position, signature);
             }
         }
+        var references = haloReferenceDelta.long2IntEntrySet().fastIterator();
+        while (references.hasNext()) if (references.next().getIntValue() == 0) references.remove();
         haloDirty = false;
+    }
+
+    private void readHaloSection(long position) {
+        long section = SectionPos.asLong(BlockPos.getX(position) >> 4, BlockPos.getY(position) >> 4, BlockPos.getZ(position) >> 4);
+        if (!haloReadVersions.containsKey(section)) haloReadVersions.put(section, pages.haloVersion(section));
     }
 
     private int haloSignature(long position) {
         prepareHaloOverlay();
-        if (!haloReads.containsKey(position)) haloReads.put(position, pages.haloSignature(position));
+        readHaloSection(position);
         if (pages.haloReferences(position) + haloReferenceDelta.get(position) == 0) return ThermalSignatureTable.UNRESOLVED;
-        return haloValues.containsKey(position) ? haloValues.get(position) : haloReads.get(position);
+        return haloValues.containsKey(position) ? haloValues.get(position) : pages.haloSignature(position);
+    }
+
+    /** Route invalidation follows changed captured geometry, not every coordinate in a snapshot. */
+    void collectChangedHaloSections(it.unimi.dsi.fastutil.longs.LongSet changed) {
+        prepareHaloOverlay();
+        for (long position : haloValues.keySet()) changed.add(SectionPos.asLong(
+                BlockPos.getX(position) >> 4, BlockPos.getY(position) >> 4, BlockPos.getZ(position) >> 4));
+        for (var entry : haloReferenceDelta.long2IntEntrySet()) {
+            long position = entry.getLongKey();
+            if (pages.haloReferences(position) + entry.getIntValue() == 0
+                    && pages.haloSignature(position) != ThermalSignatureTable.UNRESOLVED)
+                changed.add(SectionPos.asLong(BlockPos.getX(position) >> 4, BlockPos.getY(position) >> 4, BlockPos.getZ(position) >> 4));
+        }
     }
 
     it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap copyHaloSignatures(int capacityBound) {
         prepareHaloOverlay();
         var copy = pages.copyHaloSignatures(captureSections, capacityBound);
-        for (long position : haloReferenceDelta.keySet()) {
+        var references = haloReferenceDelta.long2IntEntrySet().fastIterator();
+        while (references.hasNext()) {
+            var entry = references.next();
+            if (entry.getIntValue() >= 0) continue;
+            long position = entry.getLongKey();
             if (!capturesSection(SectionPos.asLong(BlockPos.getX(position) >> 4,
                     BlockPos.getY(position) >> 4, BlockPos.getZ(position) >> 4))) continue;
-            // The frozen reader records its own section dependencies. Copying
-            // this overlay must not also grow the planner's per-position read cache.
-            int value = haloValues.getOrDefault(position, copy.get(position));
-            if (pages.haloReferences(position) + haloReferenceDelta.get(position) == 0
-                    || value == ThermalSignatureTable.UNRESOLVED) copy.remove(position);
+            if (pages.haloReferences(position) + entry.getIntValue() == 0
+                    || copy.get(position) == ThermalSignatureTable.UNRESOLVED) copy.remove(position);
+        }
+        var values = haloValues.long2IntEntrySet().fastIterator();
+        while (values.hasNext()) {
+            var entry = values.next();
+            long position = entry.getLongKey();
+            if (!capturesSection(SectionPos.asLong(BlockPos.getX(position) >> 4,
+                    BlockPos.getY(position) >> 4, BlockPos.getZ(position) >> 4))) continue;
+            // The frozen reader records its own dependencies too. Neither reader
+            // duplicates the committed signatures into a per-position read cache.
+            int value = entry.getIntValue();
+            // Every staged value has a next owner; count deltas above remove only old coordinates.
+            if (value == ThermalSignatureTable.UNRESOLVED) copy.remove(position);
             else copy.put(position, value);
         }
         return copy;
@@ -172,7 +216,7 @@ final class TopologyView implements AirGeometryView {
     }
 
     void resetPreparation() {
-        resetMaterialContacts(); pageReads.clear(); haloReads.clear(); haloWrites.clear(); previousHalos.clear();
+        resetMaterialContacts(); pageReads.clear(); haloReadVersions.clear(); haloWrites.clear(); previousHalos.clear();
         haloReferenceDelta.clear(); haloValues.clear(); haloDirty = false;
     }
 

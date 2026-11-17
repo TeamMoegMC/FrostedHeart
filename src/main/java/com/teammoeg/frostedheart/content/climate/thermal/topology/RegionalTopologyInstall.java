@@ -105,6 +105,12 @@ public final class RegionalTopologyInstall {
     }
     public void cancel() { token.cancel(); }
 
+    /** Actual installed successors, including their copied arrays; rollback drafts remain in task credit. */
+    public void recordInstalledBacking(com.teammoeg.frostedheart.content.climate.thermal.mesh.AirBackingMeter meter) {
+        for (int index = 0; index < stagedPages.length; index++)
+            if (stagedPages[index] != null && !change.pageWrites[index].retirement) stagedPages[index].recordBacking(meter);
+    }
+
     /** Old spans remain pinned until source successors and every actual geometry reader release them. */
     public boolean cleanup(long deadline) {
         do {

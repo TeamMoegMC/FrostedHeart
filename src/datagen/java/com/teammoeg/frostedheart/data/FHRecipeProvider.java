@@ -221,14 +221,39 @@ public class FHRecipeProvider extends RecipeProvider {
         for(BodyPart part:BodyPart.values()) {
         	if(part.slot!=null) {
         		
-        		out.accept(armorData(FHItems.straw_lining,part,materials.get("hay")[2],materials.get("hay")[1],materials.get("hay")[0],8));
-        		out.accept(armorData(FHItems.buff_coat,part,materials.get("hide")[2],materials.get("hide")[1],materials.get("hide")[0],6));
-        		out.accept(armorData(FHItems.gambeson,part,materials.get("wool")[2],materials.get("wool")[1],materials.get("wool")[0],5));
-        		out.accept(armorData(FHItems.kelp_lining,part,200f,.5f,0.8f,6));
+                out.accept(armorData(FHItems.straw_lining,part,materials.get("hay")[2],materials.get("hay")[1],materials.get("hay")[0],1.1f));
+                out.accept(armorData(FHItems.buff_coat,part,materials.get("hide")[2],materials.get("hide")[1],materials.get("hide")[0],7.2f));
+                out.accept(armorData(FHItems.gambeson,part,materials.get("wool")[2],materials.get("wool")[1],materials.get("wool")[0],3.6f));
+                out.accept(armorData(FHItems.kelp_lining,part,200f,.5f,0.8f,3.6f));
         		//out.accept(armorData(FHItems.cotton,part,500f,.2f,.5f));
         		//out.accept(armorData(FHItems.straw_lining,part,600f,.2f,.7f));
         	}
         }
+
+        out.accept(armorArmorData(net.minecraft.world.item.Items.LEATHER_HELMET, BodyPart.HEAD, 100f, .7f, 1f, 3.6f / .95f));
+        out.accept(armorArmorData(net.minecraft.world.item.Items.LEATHER_CHESTPLATE, BodyPart.TORSO, 100f, .7f, 1f, 3.6f / .95f));
+        out.accept(armorArmorData(net.minecraft.world.item.Items.LEATHER_LEGGINGS, BodyPart.LEGS, 100f, .7f, 1f, 3.6f / .95f));
+        out.accept(armorArmorData(net.minecraft.world.item.Items.LEATHER_BOOTS, BodyPart.FEET, 100f, .7f, 1f, 3.6f / .95f));
+        out.accept(armorArmorData(net.minecraft.world.item.Items.CHAINMAIL_HELMET, BodyPart.HEAD, 100f, .7f, 1f, 5.4f / .95f));
+        out.accept(armorArmorData(net.minecraft.world.item.Items.CHAINMAIL_CHESTPLATE, BodyPart.TORSO, 100f, .7f, 1f, 5.4f / .95f));
+        out.accept(armorArmorData(net.minecraft.world.item.Items.CHAINMAIL_LEGGINGS, BodyPart.LEGS, 100f, .7f, 1f, 5.4f / .95f));
+        out.accept(armorArmorData(net.minecraft.world.item.Items.CHAINMAIL_BOOTS, BodyPart.FEET, 100f, .7f, 1f, 5.4f / .95f));
+        out.accept(armorArmorData(net.minecraft.world.item.Items.GOLDEN_HELMET, BodyPart.HEAD, 100f, .7f, 1f, 6.3f / .95f));
+        out.accept(armorArmorData(net.minecraft.world.item.Items.GOLDEN_CHESTPLATE, BodyPart.TORSO, 100f, .7f, 1f, 6.3f / .95f));
+        out.accept(armorArmorData(net.minecraft.world.item.Items.GOLDEN_LEGGINGS, BodyPart.LEGS, 100f, .7f, 1f, 6.3f / .95f));
+        out.accept(armorArmorData(net.minecraft.world.item.Items.GOLDEN_BOOTS, BodyPart.FEET, 100f, .7f, 1f, 6.3f / .95f));
+        out.accept(armorArmorData(net.minecraft.world.item.Items.IRON_HELMET, BodyPart.HEAD, 100f, .7f, 1f, 7.2f / .95f));
+        out.accept(armorArmorData(net.minecraft.world.item.Items.IRON_CHESTPLATE, BodyPart.TORSO, 100f, .7f, 1f, 7.2f / .95f));
+        out.accept(armorArmorData(net.minecraft.world.item.Items.IRON_LEGGINGS, BodyPart.LEGS, 100f, .7f, 1f, 7.2f / .95f));
+        out.accept(armorArmorData(net.minecraft.world.item.Items.IRON_BOOTS, BodyPart.FEET, 100f, .7f, 1f, 7.2f / .95f));
+        out.accept(armorArmorData(net.minecraft.world.item.Items.DIAMOND_HELMET, BodyPart.HEAD, 100f, .7f, 1f, 9f / .95f));
+        out.accept(armorArmorData(net.minecraft.world.item.Items.DIAMOND_CHESTPLATE, BodyPart.TORSO, 100f, .7f, 1f, 9f / .95f));
+        out.accept(armorArmorData(net.minecraft.world.item.Items.DIAMOND_LEGGINGS, BodyPart.LEGS, 100f, .7f, 1f, 9f / .95f));
+        out.accept(armorArmorData(net.minecraft.world.item.Items.DIAMOND_BOOTS, BodyPart.FEET, 100f, .7f, 1f, 9f / .95f));
+        out.accept(armorArmorData(net.minecraft.world.item.Items.NETHERITE_HELMET, BodyPart.HEAD, 100f, .7f, 1f, 10.8f / .95f));
+        out.accept(armorArmorData(net.minecraft.world.item.Items.NETHERITE_CHESTPLATE, BodyPart.TORSO, 100f, .7f, 1f, 10.8f / .95f));
+        out.accept(armorArmorData(net.minecraft.world.item.Items.NETHERITE_LEGGINGS, BodyPart.LEGS, 100f, .7f, 1f, 10.8f / .95f));
+        out.accept(armorArmorData(net.minecraft.world.item.Items.NETHERITE_BOOTS, BodyPart.FEET, 100f, .7f, 1f, 10.8f / .95f));
 
         out.accept(armorArmorData(FHItems.space_hat,BodyPart.HEAD,500f,.2f,1.0f,10));
         out.accept(armorArmorData(FHItems.space_jacket,BodyPart.TORSO,500f,.2f,1.0f,10));
@@ -236,47 +261,47 @@ public class FHRecipeProvider extends RecipeProvider {
         out.accept(armorArmorData(FHItems.space_boots,BodyPart.FEET,500f,.2f,1.0f,10));
 
 		// leather is good at water resistance but bad insulation
-		out.accept(armorData(FHItems.hide_hat, BodyPart.HEAD, 200f,.2f,0.5f,6));
-		out.accept(armorData(FHItems.hide_jacket, BodyPart.TORSO, 200f,.2f,0.5f,6));
-		out.accept(armorData(FHItems.hide_pants, BodyPart.LEGS, 200f,.2f,0.5f,6));
-		out.accept(armorData(FHItems.hide_boots, BodyPart.FEET, 200f,.2f,0.5f,6));
-		out.accept(armorData(FHItems.hide_gloves, BodyPart.HANDS, 200f,.2f,0.5f,6));
+		out.accept(armorData(FHItems.hide_hat, BodyPart.HEAD, 200f,.2f,0.5f,7.2f));
+		out.accept(armorData(FHItems.hide_jacket, BodyPart.TORSO, 200f,.2f,0.5f,7.2f));
+		out.accept(armorData(FHItems.hide_pants, BodyPart.LEGS, 200f,.2f,0.5f,7.2f));
+		out.accept(armorData(FHItems.hide_boots, BodyPart.FEET, 200f,.2f,0.5f,7.2f));
+		out.accept(armorData(FHItems.hide_gloves, BodyPart.HANDS, 200f,.2f,0.5f,7.2f));
 
-		out.accept(armorData(FHItems.hay_hat, BodyPart.HEAD, 250f,.2f,0.1f,8));
-		out.accept(armorData(FHItems.hay_jacket, BodyPart.TORSO, 250f,.2f,0.1f,8));
-		out.accept(armorData(FHItems.hay_pants, BodyPart.LEGS, 250f,.2f,0.1f,8));
-		out.accept(armorData(FHItems.hay_boots, BodyPart.FEET, 250f,.2f,0.1f,8));
-		out.accept(armorData(FHItems.hay_gloves, BodyPart.HANDS, 250f,.2f,0.1f,8));
+		out.accept(armorData(FHItems.hay_hat, BodyPart.HEAD, 250f,.2f,0.1f,1.1f));
+		out.accept(armorData(FHItems.hay_jacket, BodyPart.TORSO, 250f,.2f,0.1f,1.1f));
+		out.accept(armorData(FHItems.hay_pants, BodyPart.LEGS, 250f,.2f,0.1f,1.1f));
+		out.accept(armorData(FHItems.hay_boots, BodyPart.FEET, 250f,.2f,0.1f,1.1f));
+		out.accept(armorData(FHItems.hay_gloves, BodyPart.HANDS, 250f,.2f,0.1f,1.1f));
 
-		out.accept(armorData(FHItems.rabbit_hat, BodyPart.HEAD, 300f,.2f,0.05f,6));
-		out.accept(armorData(FHItems.rabbit_jacket, BodyPart.TORSO, 300f,.2f,0.05f,6));
-		out.accept(armorData(FHItems.rabbit_pants, BodyPart.LEGS, 300f,.2f,0.05f,6));
-		out.accept(armorData(FHItems.rabbit_fur_socks, BodyPart.FEET, 300f,.2f,0.05f,6));
-		out.accept(armorData(FHItems.rabbit_gloves, BodyPart.HANDS, 300f,.2f,0.05f,6));
+		out.accept(armorData(FHItems.rabbit_hat, BodyPart.HEAD, 300f,.2f,0.05f,3.6f));
+		out.accept(armorData(FHItems.rabbit_jacket, BodyPart.TORSO, 300f,.2f,0.05f,3.6f));
+		out.accept(armorData(FHItems.rabbit_pants, BodyPart.LEGS, 300f,.2f,0.05f,3.6f));
+		out.accept(armorData(FHItems.rabbit_fur_socks, BodyPart.FEET, 300f,.2f,0.05f,3.6f));
+		out.accept(armorData(FHItems.rabbit_gloves, BodyPart.HANDS, 300f,.2f,0.05f,3.6f));
 
-		out.accept(armorData(FHItems.fox_hat, BodyPart.HEAD, 400f,.2f,0.4f,8));
-		out.accept(armorData(FHItems.fox_jacket, BodyPart.TORSO, 400f,.2f,0.4f,8));
-		out.accept(armorData(FHItems.fox_pants, BodyPart.LEGS, 400f,.2f,0.4f,8));
-		out.accept(armorData(FHItems.fox_boots, BodyPart.FEET, 400f,.2f,0.4f,8));
-		out.accept(armorData(FHItems.fox_gloves, BodyPart.HANDS, 400f,.2f,0.4f,8));
+		out.accept(armorData(FHItems.fox_hat, BodyPart.HEAD, 400f,.2f,0.4f,5.4f));
+		out.accept(armorData(FHItems.fox_jacket, BodyPart.TORSO, 400f,.2f,0.4f,5.4f));
+		out.accept(armorData(FHItems.fox_pants, BodyPart.LEGS, 400f,.2f,0.4f,5.4f));
+		out.accept(armorData(FHItems.fox_boots, BodyPart.FEET, 400f,.2f,0.4f,5.4f));
+		out.accept(armorData(FHItems.fox_gloves, BodyPart.HANDS, 400f,.2f,0.4f,5.4f));
 
-		out.accept(armorData(FHItems.wolf_hat, BodyPart.HEAD, 350f,.2f,0.3f,7));
-		out.accept(armorData(FHItems.wolf_jacket, BodyPart.TORSO, 350f,.2f,0.3f,7));
-		out.accept(armorData(FHItems.wolf_pants, BodyPart.LEGS, 350f,.2f,0.3f,7));
-		out.accept(armorData(FHItems.wolf_boots, BodyPart.FEET, 350f,.2f,0.3f,7));
-		out.accept(armorData(FHItems.wolf_gloves, BodyPart.HANDS, 350f,.2f,0.3f,7));
+		out.accept(armorData(FHItems.wolf_hat, BodyPart.HEAD, 350f,.2f,0.3f,4.5f));
+		out.accept(armorData(FHItems.wolf_jacket, BodyPart.TORSO, 350f,.2f,0.3f,4.5f));
+		out.accept(armorData(FHItems.wolf_pants, BodyPart.LEGS, 350f,.2f,0.3f,4.5f));
+		out.accept(armorData(FHItems.wolf_boots, BodyPart.FEET, 350f,.2f,0.3f,4.5f));
+		out.accept(armorData(FHItems.wolf_gloves, BodyPart.HANDS, 350f,.2f,0.3f,4.5f));
 
-		out.accept(armorData(FHItems.polar_bear_hat, BodyPart.HEAD, 900f,.2f,0.85f,12));
-		out.accept(armorData(FHItems.polar_bear_jacket, BodyPart.TORSO,  900f,.2f,0.85f,12));
-		out.accept(armorData(FHItems.polar_bear_pants, BodyPart.LEGS, 900f,.2f,0.85f,12));
-		out.accept(armorData(FHItems.polar_bear_boots, BodyPart.FEET, 900f,.2f,0.85f,12));
-		out.accept(armorData(FHItems.polar_bear_gloves, BodyPart.HANDS, 900f,.2f,0.85f,12));
+		out.accept(armorData(FHItems.polar_bear_hat, BodyPart.HEAD, 900f,.2f,0.85f,11.2f));
+		out.accept(armorData(FHItems.polar_bear_jacket, BodyPart.TORSO,  900f,.2f,0.85f,11.2f));
+		out.accept(armorData(FHItems.polar_bear_pants, BodyPart.LEGS, 900f,.2f,0.85f,11.2f));
+		out.accept(armorData(FHItems.polar_bear_boots, BodyPart.FEET, 900f,.2f,0.85f,11.2f));
+		out.accept(armorData(FHItems.polar_bear_gloves, BodyPart.HANDS, 900f,.2f,0.85f,11.2f));
 
-		out.accept(armorData(FHItems.wool_hat, BodyPart.HEAD, 500f,.2f,0.1f,5));
-		out.accept(armorData(FHItems.wool_jacket, BodyPart.TORSO, 500f,.2f,0.1f,5));
-		out.accept(armorData(FHItems.wool_pants, BodyPart.LEGS, 500f,.2f,0.1f,5));
-		out.accept(armorData(FHItems.wool_boots, BodyPart.FEET, 500f,.2f,0.1f,5));
-		out.accept(armorData(FHItems.wool_gloves, BodyPart.HANDS, 500f,.2f,0.1f,5));
+		out.accept(armorData(FHItems.wool_hat, BodyPart.HEAD, 500f,.2f,0.1f,1.1f));
+		out.accept(armorData(FHItems.wool_jacket, BodyPart.TORSO, 500f,.2f,0.1f,1.1f));
+		out.accept(armorData(FHItems.wool_pants, BodyPart.LEGS, 500f,.2f,0.1f,1.1f));
+		out.accept(armorData(FHItems.wool_boots, BodyPart.FEET, 500f,.2f,0.1f,1.1f));
+		out.accept(armorData(FHItems.wool_gloves, BodyPart.HANDS, 500f,.2f,0.1f,1.1f));
 
 
 		buildTradePolicies(out);

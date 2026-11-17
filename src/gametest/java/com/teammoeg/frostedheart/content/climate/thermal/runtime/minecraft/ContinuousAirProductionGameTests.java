@@ -41,14 +41,13 @@ import net.minecraftforge.common.util.FakePlayerFactory;
 import net.minecraftforge.gametest.GameTestHolder;
 import net.minecraftforge.gametest.PrefixGameTestTemplate;
 
-
 /** World actions and public observations only; never owns an engine or writes thermal state. */
 @GameTestHolder("frostedheart_production")
 @PrefixGameTestTemplate(false)
 public final class ContinuousAirProductionGameTests {
     private ContinuousAirProductionGameTests() {}
 
-    @GameTest(template = "phase0a_empty", timeoutTicks = 1300)
+    @GameTest(template = "phase0a_empty", batch = "thermal_campfire_production", timeoutTicks = 1300)
     public static void campfireHeatsPublishedAirAndRetainsHeatAfterExtinguishing(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
         BlockPos origin = helper.absolutePos(BlockPos.ZERO);
@@ -57,7 +56,7 @@ public final class ContinuousAirProductionGameTests {
         helper.assertTrue(level.getBlockState(fire).getValue(CampfireBlock.LIT),
                 "Flint and steel ignites the actual campfire");
 
-        ThermalEnvironmentSample sample = new ThermalEnvironmentSample();
+        ThermalEnvironmentSample sample = new ThermalEnvironmentSample(), control = new ThermalEnvironmentSample();
         double[] peakRiseC = {Double.NEGATIVE_INFINITY};
         int[] maximumBasisTerms = {0};
         long startedTick = level.getGameTime();
@@ -68,25 +67,33 @@ public final class ContinuousAirProductionGameTests {
                 double naturalC = WorldTemperature.naturalAir(level, near);
                 MinecraftThermalInput.gameplayPlacedReservoirEnvironment(level, near, naturalC, sample);
                 double nearC = sample.airAvailable() ? sample.airTemperatureC() : Double.NaN;
-                double farC = MinecraftThermalInput.gameplayPassiveEnvironment(
-                        level, near.east(4), WorldTemperature.naturalAir(level, near.east(4)));
+                int brickX = fire.getX() & ~3;
+                var farther = new BlockPos((fire.getX() & 3) < 2 ? brickX + 3 : brickX,
+                        near.getY(), near.getZ());
+                MinecraftThermalInput.gameplayPlacedReservoirEnvironment(level, farther,
+                        WorldTemperature.naturalAir(level, farther), control);
+                double farC = control.airAvailable() ? control.airTemperatureC() : Double.NaN;
                 double materialC = WorldTemperature.material(level, fire.below());
                 // Page initialization samples its section baseline, which need not equal the
-                // point-local natural formula. Compare actual Air at the same height instead.
+                // point-local natural formula. Compare two published positions in the same
+                // Brick/cut; a cold far point can legitimately leave numerical residency.
                 double riseC = nearC - farC;
-                if (elapsedTicks <= 600 && sample.airAvailable() && sample.airBasisTerms() > 0) {
+                boolean sameCut = sample.airBasisTerms() > 0 && control.airBasisTerms() > 0
+                        && sample.airSampleTick() == control.airSampleTick();
+                if (elapsedTicks <= 600 && sample.airAvailable() && control.airAvailable() && sameCut) {
                     peakRiseC[0] = Math.max(peakRiseC[0], riseC);
                     maximumBasisTerms[0] = Math.max(maximumBasisTerms[0], sample.airBasisTerms());
                 }
                 FHMain.LOGGER.info(
-                        "THERMAL_PRODUCTION,elapsedTicks={},worldTick={},naturalC={},nearC={},farC={},materialC={},available={},basisTerms={},sampleTick={},lit={}",
+                        "THERMAL_PRODUCTION,elapsedTicks={},worldTick={},naturalC={},nearC={},farC={},materialC={},available={},basisTerms={},sampleTick={},controlTerms={},controlTick={},lit={}",
                         level.getGameTime() - startedTick, level.getGameTime(), naturalC,
-                        nearC, farC, materialC, sample.airAvailable(), sample.airBasisTerms(), sample.airSampleTick(),
+                        nearC, farC, materialC, sample.airAvailable(), sample.airBasisTerms(), sample.airSampleTick(), control.airBasisTerms(), control.airSampleTick(),
                         level.getBlockState(fire).getValue(CampfireBlock.LIT));
                 if (elapsedTicks == 600) {
                     {
                         helper.assertTrue(ContinuousAirProductionTiming.detailedBasis(maximumBasisTerms[0]), "Actual published Air represents near-source detail; terms=" + maximumBasisTerms[0]);
                     }
+                    helper.assertTrue(sameCut, "Heating compares two actual published positions at the same sample tick");
                     helper.assertTrue(peakRiseC[0] > 0.05,
                             "Real campfire must heat published Air; peak rise=" + peakRiseC[0]);
                     helper.assertTrue(Double.isFinite(materialC), "Real floor material is published");
@@ -95,7 +102,7 @@ public final class ContinuousAirProductionGameTests {
                             "Shovel extinguishes the actual source");
                 }
                 if (elapsedTicks == 640) {
-                    helper.assertTrue(sample.airAvailable() && riseC > 0.005,
+                    helper.assertTrue(sample.airAvailable() && sameCut && riseC > 0.005,
                             "Extinguishing retains actual Air heat; rise=" + riseC);
                 }
                 if (elapsedTicks == 1200) {
@@ -204,24 +211,30 @@ public final class ContinuousAirProductionGameTests {
         FHMain.LOGGER.info("THERMAL_PRODUCTION_ROUTE_START,fire={},worldTick={}", fire, level.getGameTime());
         ThermalEnvironmentSample near = new ThermalEnvironmentSample();
         ThermalEnvironmentSample far = new ThermalEnvironmentSample();
+        ThermalEnvironmentSample outer = new ThermalEnvironmentSample();
+        int brickX = fire.getX() & ~3;
+        double fartherX = (fire.getX() & 3) < 2 ? brickX + 3.5 : brickX + .5;
         double[] routedC = {Double.NaN};
         helper.startSequence().thenIdle(600).thenWaitUntil(() -> {
             sampleAt(level, fire.getX() + 0.5, fire.getY() + 2.5, fire.getZ() + 0.5, near);
-            sampleAt(level, fire.getX() + 4.5, fire.getY() + 2.5, fire.getZ() + 0.5, far);
+            sampleAt(level, fartherX, fire.getY() + 2.5, fire.getZ() + 0.5, far);
+            sampleAt(level, fire.getX() + 4.5, fire.getY() + 2.5, fire.getZ() + 0.5, outer);
             if (level.getGameTime() % 200 == 0) FHMain.LOGGER.info(
                     "THERMAL_PRODUCTION_ROUTE_STAGE_1,tick={},nearC={},nearTerms={},nearTick={},farC={},farTerms={},farTick={},lit={}",
                     level.getGameTime(), near.airTemperatureC(), near.airBasisTerms(), near.airSampleTick(),
                     far.airTemperatureC(), far.airBasisTerms(), far.airSampleTick(),
                     level.getBlockState(fire).getValue(CampfireBlock.LIT));
+            if (level.getGameTime() % 200 == 0) logOuterResidency(level, fire.offset(4, 2, 0), outer);
             helper.assertTrue(ContinuousAirProductionTiming.sourceField(near) && far.airBasisTerms() >= 8
                     && near.airSampleTick() == far.airSampleTick(), "Actual slab passage supplies a published local Air field");
             helper.assertTrue(near.airTemperatureC() > far.airTemperatureC() + 0.01,
                     "Real campfire heat leaves the ventilated slab through actual Air outlets");
+            logOuterResidency(level, fire.offset(4, 2, 0), outer);
             routedC[0] = near.airTemperatureC();
         }).thenExecute(() -> level.setBlockAndUpdate(fire.above(), Blocks.AIR.defaultBlockState()))
                 .thenIdle(200).thenWaitUntil(() -> {
             sampleAt(level, fire.getX() + 0.5, fire.getY() + 1.5, fire.getZ() + 0.5, near);
-            sampleAt(level, fire.getX() + 4.5, fire.getY() + 1.5, fire.getZ() + 0.5, far);
+            sampleAt(level, fartherX, fire.getY() + 1.5, fire.getZ() + 0.5, far);
             if (level.getGameTime() % 200 == 0) FHMain.LOGGER.info(
                     "THERMAL_PRODUCTION_ROUTE_STAGE_2,tick={},nearC={},nearTerms={},nearTick={},farC={},farTerms={},farTick={},lit={}",
                     level.getGameTime(), near.airTemperatureC(), near.airBasisTerms(), near.airSampleTick(),
@@ -236,6 +249,18 @@ public final class ContinuousAirProductionGameTests {
             FHMain.LOGGER.info("THERMAL_PRODUCTION_ROUTE,routedC={},directC={},farC={}",
                     routedC[0], near.airTemperatureC(), far.airTemperatureC());
         }).thenSucceed();
+    }
+
+    private static void logOuterResidency(ServerLevel level, BlockPos point, ThermalEnvironmentSample observed) {
+        var publication = MinecraftThermalInput.queryPublicationForObservation(level);
+        var field = publication == null ? null : publication.fixedState();
+        if (field == null) return;
+        long section = net.minecraft.core.SectionPos.asLong(point);
+        int brick = (point.getX() & 15) >>> 2 | ((point.getZ() & 15) >>> 2) << 2 | ((point.getY() & 15) >>> 2) << 4;
+        boolean resident = (field.activeBricks(section) & 1L << brick) != 0;
+        FHMain.LOGGER.info("THERMAL_PRODUCTION_ROUTE_OUTER,point={},worldAir={},sampleTerms={},brickResident={},sectionAdvances={},sectionTick={}",
+                point, level.getBlockState(point).isAir(), observed.airBasisTerms(), resident,
+                field.canAdvance(section), field.sectionSampleTick(section));
     }
 
     static void sampleAt(ServerLevel level, double x, double y, double z, ThermalEnvironmentSample out) {

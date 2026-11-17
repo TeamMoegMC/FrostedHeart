@@ -535,7 +535,7 @@ public final class SyncEngine {
 		if (sim.halt[index] != 0)
 			stateDir |= (byte) CitizenState.HALT_BIT;
 		return new S2CCitizenSpawnPacket.Entry(id, sim.px[index], sim.py[index], sim.pz[index],
-				stateDir, (byte) sim.presentationAge(index), name == null ? "" : name);
+				stateDir, (byte) sim.presentationAge(index), name == null ? "" : name, container.roadTownId());
 	}
 
 	private void flushDeltas(CitizenSimScheduler sched, List<ServerPlayer> players, long gameTime) {

@@ -9,6 +9,7 @@ import com.teammoeg.frostedheart.content.climate.thermal.source.minecraft.Physic
 import com.teammoeg.frostedheart.util.mixin.ICampfireExtra;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
+import net.minecraft.gametest.framework.AfterBatch;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -22,18 +23,32 @@ import net.minecraftforge.gametest.PrefixGameTestTemplate;
 @GameTestHolder("frostedheart_source_input")
 @PrefixGameTestTemplate(false)
 public final class ContinuousAirSourceInputProductionGameTests {
+    private static BlockPos lifecycleFire, directFire, capacityFirst, capacitySecond;
+    private static BlockPos ownedFire, ownedBootstrap, pendingFire;
     @GameTest(template = "phase0a_empty", batch = "source_owned_lifecycle", timeoutTicks = 160)
     public static void capturedRemovalAndSectionReplacementKeepSourceOwnership(GameTestHelper helper) {
         var level = helper.getLevel();
         MinecraftThermalInput.closeActiveLevel(level);
-        BlockPos fire = helper.absolutePos(new BlockPos(768, 2, 8));
+        BlockPos fire = ownedFire = helper.absolutePos(new BlockPos(768, 2, 8));
+        BlockPos bootstrap = ownedBootstrap = fire.east(16);
         level.setChunkForced(fire.getX() >> 4, fire.getZ() >> 4, true);
+        level.setChunkForced(bootstrap.getX() >> 4, bootstrap.getZ() >> 4, true);
         var chunk = level.getChunkAt(fire);
-        level.setBlockAndUpdate(fire.below(), Blocks.STONE.defaultBlockState());
+        for (var position : new BlockPos[] {bootstrap, fire}) {
+            level.setBlockAndUpdate(position.below(), Blocks.STONE.defaultBlockState());
+            level.setBlockAndUpdate(position, Blocks.AIR.defaultBlockState());
+        }
+        MinecraftThermalInput.closeActiveLevel(level);
         var lit = Blocks.CAMPFIRE.defaultBlockState().setValue(CampfireBlock.LIT, true);
+        // Start in another Section so this source must attach its own origin,
+        // rather than inheriting the startup receiver's observation.
+        level.setBlockAndUpdate(bootstrap, lit);
+        ((ICampfireExtra) level.getBlockEntity(bootstrap)).setLifeTime(20_000);
         level.setBlockAndUpdate(fire, lit);
         ((ICampfireExtra) level.getBlockEntity(fire)).setLifeTime(20_000);
-        var input = ThermalLoadedWorldGameTests.owner(level, fire).input();
+        var origin = ThermalLoadedWorldGameTests.owner(level, fire);
+        helper.assertTrue(origin != null, "A newly registered source observes raw Section replacement before geometry capture");
+        var input = origin.input();
         PhysicalSourceSpatialIndex sources = ThermalLoadedWorldGameTests.read(input, "physicalSources");
         int snapshots = level.capturedBlockSnapshots.size();
         try {
@@ -82,8 +97,6 @@ public final class ContinuousAirSourceInputProductionGameTests {
         }).thenIdle(2).thenExecute(() -> {
             helper.assertTrue(!sourcePresent(sources, fire), "identity replacement must recheck existing sources without scanning the Section");
             level.removeBlockEntity(fire);
-            MinecraftThermalInput.closeActiveLevel(level);
-            level.setChunkForced(fire.getX() >> 4, fire.getZ() >> 4, false);
         }).thenSucceed();
     }
 
@@ -103,6 +116,7 @@ public final class ContinuousAirSourceInputProductionGameTests {
         var chunk = level.getChunkAt(fire);
         level.setBlockAndUpdate(fire, Blocks.AIR.defaultBlockState());
         level.setBlockAndUpdate(fire.below(), Blocks.STONE.defaultBlockState());
+        MinecraftThermalInput.closeActiveLevel(level);
         var state = Blocks.CAMPFIRE.defaultBlockState().setValue(CampfireBlock.LIT, true);
         boolean previousCapture = level.captureBlockSnapshots;
         int previousSnapshots = level.capturedBlockSnapshots.size();
@@ -143,7 +157,10 @@ public final class ContinuousAirSourceInputProductionGameTests {
     @GameTest(template = "phase0a_empty", batch = "source_direct_ignition", timeoutTicks = 900)
     public static void litPlacementPublishesWithoutReceiverAdmissionOrChunkReload(GameTestHelper helper) {
         var level = helper.getLevel();
-        BlockPos fire = helper.absolutePos(new BlockPos(128, 2, 8));
+        var horizontal = helper.absolutePos(new BlockPos(128, 2, 8));
+        // The template starts underground, where a far fallback has a steep
+        // geothermal gradient relative to the Section's captured background.
+        BlockPos fire = directFire = new BlockPos(horizontal.getX(), 192, horizontal.getZ());
         level.setChunkForced(fire.getX() >> 4, fire.getZ() >> 4, true);
         level.getChunkAt(fire);
         var sample = new ThermalEnvironmentSample();
@@ -181,37 +198,52 @@ public final class ContinuousAirSourceInputProductionGameTests {
     public static void pendingCampfireIsDiscoveredWithoutInstantiatingItsEntity(GameTestHelper helper) {
         var level = helper.getLevel();
         MinecraftThermalInput.closeActiveLevel(level);
-        BlockPos fire = helper.absolutePos(new BlockPos(256, 2, 8));
+        // Dedicated Chunk outside the generated test grid; unrelated natural
+        // BlockEntities are allowed and must not affect campfire discovery.
+        BlockPos fire = pendingFire = new BlockPos(-32768, 192, -32768);
         level.setChunkForced(fire.getX() >> 4, fire.getZ() >> 4, true);
         var chunk = level.getChunkAt(fire);
-        helper.assertTrue(chunk.getBlockEntitiesPos().isEmpty(), "fixture chunk must start without block entities");
+        level.setBlockAndUpdate(fire, Blocks.AIR.defaultBlockState());
+        helper.assertTrue(!chunk.getBlockEntitiesPos().contains(fire), "the pending campfire position must start without a block entity");
         level.setBlockAndUpdate(fire.below(), Blocks.STONE.defaultBlockState());
         level.setBlockAndUpdate(fire, Blocks.CAMPFIRE.defaultBlockState().setValue(CampfireBlock.LIT, true));
         ((ICampfireExtra) level.getBlockEntity(fire)).setLifeTime(20_000);
         helper.assertTrue(chunk.getBlockEntities().containsKey(fire), "fixture must contain the live campfire");
         var stored = chunk.getBlockEntityNbtForSaving(fire);
         level.removeBlockEntity(fire);
-        helper.assertTrue(chunk.getBlockEntitiesPos().isEmpty(), "removed entity must leave no positions");
+        helper.assertTrue(!chunk.getBlockEntitiesPos().contains(fire), "removing the campfire entity must remove its live position");
         chunk.setBlockEntityNbt(stored);
         helper.assertTrue(chunk.getBlockEntitiesPos().contains(fire), "packed NBT alone must remain discoverable");
         MinecraftThermalInput.closeActiveLevel(level);
         MinecraftThermalInput.onChunkLoad(level, chunk);
-        var owner = ThermalLoadedWorldGameTests.owner(level, fire);
-        helper.assertTrue(owner != null, "loaded pending campfire must bootstrap without player queries");
-        var input = owner.input();
+        // Startup may first restore this Chunk's pending heat. Section listeners
+        // attach when the source is indexed; they are not runtime-start markers.
+        java.util.Map<net.minecraft.server.level.ServerLevel, MinecraftThermalInput> active =
+                ThermalLoadedWorldGameTests.read(MinecraftThermalInput.class, "ACTIVE");
+        var input = active.get(level);
+        helper.assertTrue(input != null, "loaded pending campfire must start its runtime without player queries");
         PhysicalSourceSpatialIndex sources = ThermalLoadedWorldGameTests.read(input, "physicalSources");
         var cursor = new PhysicalSourceSpatialIndex.DiscoveryCursor(chunk);
-        helper.assertTrue(sources.discoverChunk(cursor, 32) == 1 && cursor.complete(),
-                "bounded discovery must restore the sole packed position");
+        int expectedPositions = chunk.getBlockEntitiesPos().size();
+        int visited = 0;
+        for (int remaining = expectedPositions; remaining > 0; remaining -= 32) {
+            int slice = sources.discoverChunk(cursor, 32);
+            helper.assertTrue(slice > 0 && slice <= 32, "discovery advances within its per-slice position budget");
+            visited += slice;
+        }
+        helper.assertTrue(cursor.complete() && visited == expectedPositions,
+                "bounded discovery visits the actual live and packed positions once");
         it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap slots = ThermalLoadedWorldGameTests.read(sources, "slotsById");
         helper.assertTrue(slots.containsKey(fire.asLong()), "pending NBT position must restore the lit source");
         helper.assertTrue(!chunk.getBlockEntities().containsKey(fire),
                 "discovery must not instantiate the pending block entity");
+        var owner = ThermalLoadedWorldGameTests.owner(level, fire);
+        helper.assertTrue(owner != null && owner.input() == input,
+                "The discovered source attaches its origin to the bootstrapped runtime");
+        FHMain.LOGGER.info("THERMAL_PACKED_SOURCE_DISCOVERY,positions={},visited={},runtimeStarted=true,sourceRegistered=true,entityInstantiated=false",
+                expectedPositions, visited);
         helper.runAfterDelay(40, () -> {
             helper.assertTrue(slots.containsKey(fire.asLong()), "discovered source must survive normal ticking");
-            level.setBlockAndUpdate(fire, Blocks.AIR.defaultBlockState());
-            MinecraftThermalInput.closeActiveLevel(level);
-            level.setChunkForced(fire.getX() >> 4, fire.getZ() >> 4, false);
             helper.succeed();
         });
     }
@@ -220,8 +252,10 @@ public final class ContinuousAirSourceInputProductionGameTests {
     public static void sourceAddedAfterSnapshotRecoversWhenCapacityReturns(GameTestHelper helper) {
         var level = helper.getLevel();
         MinecraftThermalInput.closeActiveLevel(level);
-        BlockPos first = helper.absolutePos(new BlockPos(384, 2, 8));
-        BlockPos second = first.east(16);
+        // Two dedicated Chunks, separate from template structures and every
+        // other source fixture even when the selected test catalogue grows.
+        BlockPos first = capacityFirst = new BlockPos(-33024, 192, -32768);
+        BlockPos second = capacitySecond = first.east(16);
         level.setChunkForced(first.getX() >> 4, first.getZ() >> 4, true);
         level.setChunkForced(second.getX() >> 4, second.getZ() >> 4, true);
         level.getChunkAt(second);
@@ -236,11 +270,16 @@ public final class ContinuousAirSourceInputProductionGameTests {
         int highWater = ThermalLoadedWorldGameTests.read(sources, "highWaterMark");
         ThermalLoadedWorldGameTests.write(sources, "maximumSources", highWater);
         var chunk = level.getChunkAt(second);
-        helper.assertTrue(chunk.getBlockEntitiesPos().isEmpty(), "the refused source's chunk must have no BE before onPlace");
+        helper.assertTrue(!chunk.getBlockEntitiesPos().contains(second), "the new source must not exist in the old discovery snapshot");
         long key = chunk.getPos().toLong();
         it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap<PhysicalSourceSpatialIndex.DiscoveryCursor> cursors =
                 ThermalLoadedWorldGameTests.read(input, "sourceDiscoveryCursors");
-        cursors.put(key, new PhysicalSourceSpatialIndex.DiscoveryCursor(chunk));
+        // Natural sculk catalysts or structures may have unrelated BEs. The
+        // regression needs an exhausted snapshot, not an empty world Chunk.
+        var snapshot = new PhysicalSourceSpatialIndex.DiscoveryCursor(chunk);
+        sources.discoverChunk(snapshot, Math.max(1, chunk.getBlockEntitiesPos().size()));
+        helper.assertTrue(snapshot.complete(), "exhaust the existing snapshot before placing the refused source");
+        cursors.put(key, snapshot);
         level.setBlockAndUpdate(second, Blocks.CAMPFIRE.defaultBlockState().setValue(CampfireBlock.LIT, true));
         ((ICampfireExtra) level.getBlockEntity(second)).setLifeTime(20_000);
         helper.assertTrue(!cursors.containsKey(key), "capacity refusal must discard the snapshot made before the new BE");
@@ -248,13 +287,26 @@ public final class ContinuousAirSourceInputProductionGameTests {
         helper.assertTrue(!slots.containsKey(second.asLong()), "the new source must actually encounter full capacity");
         level.setBlockAndUpdate(first, Blocks.AIR.defaultBlockState());
         helper.startSequence().thenWaitUntil(() -> helper.assertTrue(slots.containsKey(second.asLong()),
-                "queued discovery must find the new source after the old slot retires"))
+                "queued discovery must find the new source after the old slot retires; "
+                        + discoveryState(level, input, sources, first, second)))
                 .thenExecute(() -> {
                     level.setBlockAndUpdate(second, Blocks.AIR.defaultBlockState());
                     MinecraftThermalInput.closeActiveLevel(level);
                     level.setChunkForced(first.getX() >> 4, first.getZ() >> 4, false);
                     level.setChunkForced(second.getX() >> 4, second.getZ() >> 4, false);
                 }).thenSucceed();
+    }
+
+    private static String discoveryState(net.minecraft.server.level.ServerLevel level, Object input,
+            PhysicalSourceSpatialIndex sources, BlockPos first, BlockPos second) {
+        return "first=" + level.getBlockState(first) + ",second=" + level.getBlockState(second)
+                + ",max=" + ThermalLoadedWorldGameTests.read(sources, "maximumSources")
+                + ",highWater=" + ThermalLoadedWorldGameTests.read(sources, "highWaterMark")
+                + ",free=" + ThermalLoadedWorldGameTests.read(sources, "freeHead")
+                + ",slots=" + ThermalLoadedWorldGameTests.read(sources, "slotsById")
+                + ",dirty=" + ThermalLoadedWorldGameTests.read(sources, "dirtyOrder")
+                + ",pending=" + ThermalLoadedWorldGameTests.read(input, "pendingSourceChunks")
+                + ",cursors=" + ThermalLoadedWorldGameTests.read(input, "sourceDiscoveryCursors");
     }
 
     @GameTest(template = "phase0a_empty", batch = "source_startup_retry", timeoutTicks = 300)
@@ -303,10 +355,10 @@ public final class ContinuousAirSourceInputProductionGameTests {
                 }).thenSucceed();
     }
 
-    @GameTest(template = "phase0a_empty", timeoutTicks = 2200)
+    @GameTest(template = "phase0a_empty", batch = "source_input_lifecycle", timeoutTicks = 2200)
     public static void sourceInputsSurviveRealExtinctionAndReplacement(GameTestHelper helper) {
         var level = helper.getLevel();
-        BlockPos fire = ContinuousAirProductionGameTests.room(helper, helper.absolutePos(BlockPos.ZERO));
+        BlockPos fire = lifecycleFire = ContinuousAirProductionGameTests.room(helper, helper.absolutePos(BlockPos.ZERO));
         SourceInputProductionObservation.begin(fire);
         ContinuousAirProductionGameTests.useItem(helper, fire, Items.FLINT_AND_STEEL);
         var sample = new ThermalEnvironmentSample();
@@ -352,5 +404,44 @@ public final class ContinuousAirSourceInputProductionGameTests {
             ContinuousAirProductionGameTests.useItem(helper, fire, Items.IRON_SHOVEL);
             SourceInputProductionObservation.end();
         }).thenSucceed();
+    }
+
+    @AfterBatch(batch = "source_owned_lifecycle")
+    public static void cleanupOwnedLifecycle(net.minecraft.server.level.ServerLevel level) {
+        cleanupFire(level, ownedFire); cleanupFire(level, ownedBootstrap);
+        ownedFire = ownedBootstrap = null; MinecraftThermalInput.closeActiveLevel(level);
+    }
+
+    @AfterBatch(batch = "source_pending_chunk")
+    public static void cleanupPendingChunk(net.minecraft.server.level.ServerLevel level) {
+        cleanupFire(level, pendingFire); pendingFire = null;
+        MinecraftThermalInput.closeActiveLevel(level);
+    }
+
+    @AfterBatch(batch = "source_input_lifecycle")
+    public static void cleanupSourceLifecycle(net.minecraft.server.level.ServerLevel level) {
+        if (lifecycleFire == null) return;
+        cleanupFire(level, lifecycleFire); lifecycleFire = null;
+        SourceInputProductionObservation.end(); MinecraftThermalInput.closeActiveLevel(level);
+    }
+
+    @AfterBatch(batch = "source_direct_ignition")
+    public static void cleanupDirectIgnition(net.minecraft.server.level.ServerLevel level) {
+        if (directFire == null) return;
+        cleanupFire(level, directFire); directFire = null;
+        MinecraftThermalInput.closeActiveLevel(level);
+    }
+
+    @AfterBatch(batch = "source_capacity_cursor")
+    public static void cleanupCapacityCursor(net.minecraft.server.level.ServerLevel level) {
+        if (capacityFirst == null) return;
+        cleanupFire(level, capacityFirst); cleanupFire(level, capacitySecond);
+        capacityFirst = capacitySecond = null; MinecraftThermalInput.closeActiveLevel(level);
+    }
+
+    private static void cleanupFire(net.minecraft.server.level.ServerLevel level, BlockPos fire) {
+        if (fire == null) return;
+        level.setBlockAndUpdate(fire, Blocks.AIR.defaultBlockState());
+        level.setChunkForced(fire.getX() >> 4, fire.getZ() >> 4, false);
     }
 }

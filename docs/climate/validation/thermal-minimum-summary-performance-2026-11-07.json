@@ -1,0 +1,825 @@
+{
+  "status": "measurement completed; stable overall speedup not demonstrated",
+  "verified_date": "2026-11-07",
+  "author": "OpenAI Codex / GPT-6; primary measurement agent",
+  "scope": "On-demand minimum summary only; four sequential real Forge normal-load processes in ABBA order",
+  "conclusion": {
+    "overall_speedup_qualified": false,
+    "description": "Small descriptive allocation and registered-memory reductions; timing and cycles vary substantially between repeats, with whole-work and server P99 centers worse.",
+    "timing_percentages_are_descriptive_only": true,
+    "statistical_confidence_interval": null,
+    "runs_per_variant": 2,
+    "no_additional_production_changes": true
+  },
+  "comparison_method": {
+    "sequence": [
+      "before",
+      "after",
+      "after",
+      "before"
+    ],
+    "common_artifact": "build/thermal-baselines/minimum-demand-r3/compiled",
+    "previous_components": "build/thermal-baselines/unified-replay-r6/compiled/classes/java/main",
+    "before_classes": "build/thermal-minimum-performance/before-classes",
+    "main_class_count_per_variant": 3741,
+    "replaced_class_families": [
+      "com/teammoeg/frostedheart/content/climate/thermal/mesh/MinimumThermalState",
+      "com/teammoeg/frostedheart/content/climate/thermal/query/RegionalQuerySnapshot",
+      "com/teammoeg/frostedheart/content/climate/thermal/solver/ContinuousAirSolver",
+      "com/teammoeg/frostedheart/content/climate/thermal/solver/RegionWork",
+      "com/teammoeg/frostedheart/content/climate/thermal/solver/RegionJob",
+      "com/teammoeg/frostedheart/content/climate/thermal/solver/MinimumRegionStep",
+      "com/teammoeg/frostedheart/content/climate/thermal/solver/RegionalQualityControl",
+      "com/teammoeg/frostedheart/content/climate/thermal/solver/RegionalAirRuntime"
+    ],
+    "differing_class_files": 26,
+    "unrelated_main_class_differences": 0,
+    "shared_compiled_gametest_and_resources": true,
+    "historical_source_recompiled": false,
+    "byte_identical_measured_inputs": {
+      "normal-load.config.toml": true,
+      "normal-load.server.properties": true,
+      "normal-load.climate.dat": true
+    },
+    "center": "Median of two independent processes per variant; with two observations this equals their arithmetic mean",
+    "reduction_percent_formula": "100 * (1 - after_center / before_center); negative means a descriptive increase",
+    "allocation_counters": "ThreadMXBean threadAllocatedBytes; worker and Server thread recorded separately",
+    "cycles": "Windows QueryThreadCycleTime on four thermal workers; cycles retained without conversion to CPU seconds",
+    "jfr_active_time": "Execution interval totals; exclude queue waits but include preemption/GC while active; not exact CPU seconds",
+    "slice_time": "Sum of RegionWork time-slice execution intervals; construction and numerical work included, not all coordinator/helper costs",
+    "full_window": "2400 elapsed ticks from fixture observation start; includes initial thermal preparation",
+    "diagnostic_window": "After tick400, selected before inspecting results; does not replace full-window results",
+    "windows_thread_cpu_time_used_for_speedup": false
+  },
+  "profile": {
+    "java": "17.0.12",
+    "cpu": "Intel Core i7-12800HX",
+    "os": "Windows 11",
+    "heap": "4g",
+    "available_processors": 5,
+    "thermal_workers": 4,
+    "jfr": "profile, maxsize128m",
+    "world_type": "minecraft:normal",
+    "seed": "755111011717574879",
+    "clock": "realtime20",
+    "elapsed_ticks": 2400,
+    "sources": 256,
+    "operating_machines": 256,
+    "temperature_consumers": 100,
+    "queries_per_run": 12000,
+    "memory_target_mib": 128,
+    "active_work_budget_ms_per_second": 1000,
+    "reference_climate": "build/thermal-baselines/unified-replay-r5/curves.climate.dat",
+    "synchronous_detailed_profile_logging": false
+  },
+  "runs": [
+    {
+      "label": "minimum-perf-normal-before-1",
+      "variant": "before",
+      "passed": 1,
+      "thermal_errors": 0,
+      "root_zero": true,
+      "scene": {
+        "sources": 256,
+        "receivers": 100,
+        "queries": 12000,
+        "monitoringSince": 55,
+        "rootPeakChargedBytes": 63668104
+      },
+      "clock_result": {
+        "scene": "two_dense_machine_bases_256",
+        "mode": "realtime20",
+        "elapsedTicks": 2400,
+        "wallMs": 121590,
+        "simulatedMs": 120000,
+        "barrierWaitMs": 0
+      },
+      "first_ready_elapsed_tick": 55,
+      "age_violations": 0,
+      "geometry_violations": 0,
+      "receiver_violations": 0,
+      "final_degraded_regions": 0,
+      "accepted_work_by_stage_grid": {
+        "advance_grid1": 4299
+      },
+      "worker_cycles": 41160592208,
+      "worker_cycles_after_tick_400": 29072750860,
+      "accepted_fine_advance": {
+        "count": 4299,
+        "active_ms": 4149.2876,
+        "mean_active_ms": 0.9651750639683647,
+        "median_active_ms": 0.0386,
+        "phase_active_ms": {
+          "source": 0.0,
+          "geometry": 0.0,
+          "partition": 0.0,
+          "air": 0.0,
+          "contacts": 0.0,
+          "operator": 0.0,
+          "projection": 0.0,
+          "transport": 1173.2125000000085,
+          "material": 0.0,
+          "material_internal": 863.5930000000008,
+          "material_contact": 1630.168699999933,
+          "material_state": 482.3133999999997,
+          "accept": 0.0,
+          "publication": 0.0,
+          "exclusive": 4149.287599999998
+        }
+      },
+      "accepted_fine_advance_after_tick_400": {
+        "count": 3965,
+        "active_ms": 3400.4358,
+        "mean_active_ms": 0.8576130643127364,
+        "median_active_ms": 0.0364,
+        "phase_active_ms": {
+          "source": 0.0,
+          "geometry": 0.0,
+          "partition": 0.0,
+          "air": 0.0,
+          "contacts": 0.0,
+          "operator": 0.0,
+          "projection": 0.0,
+          "transport": 975.7176000000042,
+          "material": 0.0,
+          "material_internal": 757.772500000001,
+          "material_contact": 1282.0171999999695,
+          "material_state": 384.9285000000008,
+          "accept": 0.0,
+          "publication": 0.0,
+          "exclusive": 3400.4358000000066
+        }
+      },
+      "region_slice_count": 8909,
+      "region_slice_active_ms": 9579.5526,
+      "construction_slice_active_ms": 5420.5805,
+      "resources": {
+        "scene": "two_dense_machine_bases_256",
+        "workerCpuMs": 843,
+        "workerAllocatedBytes": 1861985120,
+        "serverCpuMs": 671,
+        "serverAllocatedBytes": 2785774472,
+        "gcCollections": 7,
+        "gcMillis": 279,
+        "mainThermalTickP95Us": 542,
+        "mainThermalTickP99Us": 1520,
+        "mainThermalTickMaxUs": 45927,
+        "serverProcessingTickP95Us": 14898,
+        "serverProcessingTickP99Us": 64297,
+        "serverProcessingTickMaxUs": 2751512,
+        "serverProcessingTickMaxObservedAtElapsedTicks": 1,
+        "heapStartBytes": 1155831808,
+        "heapEndBytes": 1462805504,
+        "heapObservedPeakBytes": 2029320672,
+        "saveWaitCalls": 202,
+        "saveWaitUs": 427302,
+        "saveWaitMaxUs": 50065,
+        "saveWaitMaxChunk": 0,
+        "unloadWaitCalls": 0,
+        "unloadWaitUs": 0,
+        "unloadWaitMaxUs": 0,
+        "unloadWaitMaxChunk": 0,
+        "savesWhilePending": 0,
+        "unloadsWhilePending": 0,
+        "unrelatedSaveSkips": 0,
+        "unrelatedUnloadSkips": 0,
+        "unrelatedSavesWhilePending": 0,
+        "maintenanceSaveDeferrals": 0,
+        "maintenanceSaves": 1625,
+        "snapshotCheckpoints": 202,
+        "snapshotFallbacks": 0,
+        "snapshotSavePending": 0,
+        "snapshotUnloadPending": 0,
+        "snapshotMaximumAgeTicks": 20,
+        "snapshotStoredMaximumAgeTicks": 0,
+        "snapshotMaximumUs": 11657,
+        "snapshotMaximumOverlapBytes": 1035072,
+        "nativeCheckpointRequests": 0,
+        "nativeCheckpointDeferred": 0,
+        "nativeCheckpointPrepared": 0,
+        "nativeCheckpointCancelled": 0,
+        "nativeCheckpointFallbacks": 0,
+        "nativeCheckpointPending": 0,
+        "nativeCheckpointPeakPending": 0,
+        "nativeCheckpointMaxAgeTicks": 0
+      },
+      "log": "build/thermal-baselines/minimum-perf-normal-before-1/normal-load.log",
+      "jfr": "build/thermal-baselines/minimum-perf-normal-before-1/normal-load.jfr"
+    },
+    {
+      "label": "minimum-perf-normal-after-1",
+      "variant": "after",
+      "passed": 1,
+      "thermal_errors": 0,
+      "root_zero": true,
+      "scene": {
+        "sources": 256,
+        "receivers": 100,
+        "queries": 12000,
+        "monitoringSince": 54,
+        "rootPeakChargedBytes": 62814208
+      },
+      "clock_result": {
+        "scene": "two_dense_machine_bases_256",
+        "mode": "realtime20",
+        "elapsedTicks": 2400,
+        "wallMs": 121499,
+        "simulatedMs": 120000,
+        "barrierWaitMs": 0
+      },
+      "first_ready_elapsed_tick": 54,
+      "age_violations": 0,
+      "geometry_violations": 0,
+      "receiver_violations": 0,
+      "final_degraded_regions": 0,
+      "accepted_work_by_stage_grid": {
+        "advance_grid1": 4304
+      },
+      "worker_cycles": 37620959788,
+      "worker_cycles_after_tick_400": 26787636386,
+      "accepted_fine_advance": {
+        "count": 4304,
+        "active_ms": 3392.0538,
+        "mean_active_ms": 0.7881165892193308,
+        "median_active_ms": 0.0286,
+        "phase_active_ms": {
+          "source": 0.0,
+          "geometry": 0.0,
+          "partition": 0.0,
+          "air": 0.0,
+          "contacts": 0.0,
+          "operator": 0.0,
+          "projection": 0.0,
+          "transport": 791.5394000000044,
+          "material": 0.0,
+          "material_internal": 780.2984000000024,
+          "material_contact": 1445.8352999999588,
+          "material_state": 374.380699999997,
+          "accept": 0.0,
+          "publication": 0.0,
+          "exclusive": 3392.0538000000083
+        }
+      },
+      "accepted_fine_advance_after_tick_400": {
+        "count": 3970,
+        "active_ms": 2875.8757,
+        "mean_active_ms": 0.7244019395465995,
+        "median_active_ms": 0.0271,
+        "phase_active_ms": {
+          "source": 0.0,
+          "geometry": 0.0,
+          "partition": 0.0,
+          "air": 0.0,
+          "contacts": 0.0,
+          "operator": 0.0,
+          "projection": 0.0,
+          "transport": 657.6605000000011,
+          "material": 0.0,
+          "material_internal": 687.9633000000038,
+          "material_contact": 1241.972899999981,
+          "material_state": 288.27899999999937,
+          "accept": 0.0,
+          "publication": 0.0,
+          "exclusive": 2875.8757000000032
+        }
+      },
+      "region_slice_count": 8411,
+      "region_slice_active_ms": 8437.2195,
+      "construction_slice_active_ms": 5039.0565,
+      "resources": {
+        "scene": "two_dense_machine_bases_256",
+        "workerCpuMs": 1484,
+        "workerAllocatedBytes": 1863663520,
+        "serverCpuMs": 859,
+        "serverAllocatedBytes": 2726477592,
+        "gcCollections": 5,
+        "gcMillis": 291,
+        "mainThermalTickP95Us": 505,
+        "mainThermalTickP99Us": 1508,
+        "mainThermalTickMaxUs": 37491,
+        "serverProcessingTickP95Us": 13662,
+        "serverProcessingTickP99Us": 63239,
+        "serverProcessingTickMaxUs": 2655054,
+        "serverProcessingTickMaxObservedAtElapsedTicks": 1,
+        "heapStartBytes": 1815134720,
+        "heapEndBytes": 1669290224,
+        "heapObservedPeakBytes": 2272264192,
+        "saveWaitCalls": 203,
+        "saveWaitUs": 405789,
+        "saveWaitMaxUs": 49292,
+        "saveWaitMaxChunk": 0,
+        "unloadWaitCalls": 0,
+        "unloadWaitUs": 0,
+        "unloadWaitMaxUs": 0,
+        "unloadWaitMaxChunk": 0,
+        "savesWhilePending": 0,
+        "unloadsWhilePending": 0,
+        "unrelatedSaveSkips": 0,
+        "unrelatedUnloadSkips": 0,
+        "unrelatedSavesWhilePending": 0,
+        "maintenanceSaveDeferrals": 0,
+        "maintenanceSaves": 1588,
+        "snapshotCheckpoints": 203,
+        "snapshotFallbacks": 0,
+        "snapshotSavePending": 0,
+        "snapshotUnloadPending": 0,
+        "snapshotMaximumAgeTicks": 21,
+        "snapshotStoredMaximumAgeTicks": 0,
+        "snapshotMaximumUs": 6960,
+        "snapshotMaximumOverlapBytes": 1035072,
+        "nativeCheckpointRequests": 0,
+        "nativeCheckpointDeferred": 0,
+        "nativeCheckpointPrepared": 0,
+        "nativeCheckpointCancelled": 0,
+        "nativeCheckpointFallbacks": 0,
+        "nativeCheckpointPending": 0,
+        "nativeCheckpointPeakPending": 0,
+        "nativeCheckpointMaxAgeTicks": 0
+      },
+      "log": "build/thermal-baselines/minimum-perf-normal-after-1/normal-load.log",
+      "jfr": "build/thermal-baselines/minimum-perf-normal-after-1/normal-load.jfr"
+    },
+    {
+      "label": "minimum-perf-normal-after-2",
+      "variant": "after",
+      "passed": 1,
+      "thermal_errors": 0,
+      "root_zero": true,
+      "scene": {
+        "sources": 256,
+        "receivers": 100,
+        "queries": 12000,
+        "monitoringSince": 55,
+        "rootPeakChargedBytes": 62874816
+      },
+      "clock_result": {
+        "scene": "two_dense_machine_bases_256",
+        "mode": "realtime20",
+        "elapsedTicks": 2400,
+        "wallMs": 121212,
+        "simulatedMs": 120000,
+        "barrierWaitMs": 0
+      },
+      "first_ready_elapsed_tick": 55,
+      "age_violations": 0,
+      "geometry_violations": 0,
+      "receiver_violations": 0,
+      "final_degraded_regions": 0,
+      "accepted_work_by_stage_grid": {
+        "advance_grid1": 4299
+      },
+      "worker_cycles": 27349928530,
+      "worker_cycles_after_tick_400": 16257258752,
+      "accepted_fine_advance": {
+        "count": 4299,
+        "active_ms": 2263.6866,
+        "mean_active_ms": 0.5265612002791347,
+        "median_active_ms": 0.0261,
+        "phase_active_ms": {
+          "source": 0.0,
+          "geometry": 0.0,
+          "partition": 0.0,
+          "air": 0.0,
+          "contacts": 0.0,
+          "operator": 0.0,
+          "projection": 0.0,
+          "transport": 503.50280000000186,
+          "material": 0.0,
+          "material_internal": 476.1855000000036,
+          "material_contact": 976.2395999999825,
+          "material_state": 307.75870000000003,
+          "accept": 0.0,
+          "publication": 0.0,
+          "exclusive": 2263.6866000000023
+        }
+      },
+      "accepted_fine_advance_after_tick_400": {
+        "count": 3965,
+        "active_ms": 1821.1423,
+        "mean_active_ms": 0.4593044892812106,
+        "median_active_ms": 0.0251,
+        "phase_active_ms": {
+          "source": 0.0,
+          "geometry": 0.0,
+          "partition": 0.0,
+          "air": 0.0,
+          "contacts": 0.0,
+          "operator": 0.0,
+          "projection": 0.0,
+          "transport": 387.7202000000011,
+          "material": 0.0,
+          "material_internal": 410.633300000001,
+          "material_contact": 774.2991999999932,
+          "material_state": 248.48959999999963,
+          "accept": 0.0,
+          "publication": 0.0,
+          "exclusive": 1821.1423000000004
+        }
+      },
+      "region_slice_count": 7240,
+      "region_slice_active_ms": 6092.6063,
+      "construction_slice_active_ms": 3828.0226,
+      "resources": {
+        "scene": "two_dense_machine_bases_256",
+        "workerCpuMs": 3281,
+        "workerAllocatedBytes": 1839157784,
+        "serverCpuMs": 2109,
+        "serverAllocatedBytes": 2759859728,
+        "gcCollections": 7,
+        "gcMillis": 256,
+        "mainThermalTickP95Us": 415,
+        "mainThermalTickP99Us": 1774,
+        "mainThermalTickMaxUs": 34950,
+        "serverProcessingTickP95Us": 12485,
+        "serverProcessingTickP99Us": 51437,
+        "serverProcessingTickMaxUs": 2927638,
+        "serverProcessingTickMaxObservedAtElapsedTicks": 1,
+        "heapStartBytes": 1203974144,
+        "heapEndBytes": 1823373112,
+        "heapObservedPeakBytes": 2084569088,
+        "saveWaitCalls": 205,
+        "saveWaitUs": 386200,
+        "saveWaitMaxUs": 47146,
+        "saveWaitMaxChunk": 0,
+        "unloadWaitCalls": 0,
+        "unloadWaitUs": 0,
+        "unloadWaitMaxUs": 0,
+        "unloadWaitMaxChunk": 0,
+        "savesWhilePending": 0,
+        "unloadsWhilePending": 0,
+        "unrelatedSaveSkips": 0,
+        "unrelatedUnloadSkips": 0,
+        "unrelatedSavesWhilePending": 0,
+        "maintenanceSaveDeferrals": 0,
+        "maintenanceSaves": 1563,
+        "snapshotCheckpoints": 205,
+        "snapshotFallbacks": 0,
+        "snapshotSavePending": 0,
+        "snapshotUnloadPending": 0,
+        "snapshotMaximumAgeTicks": 20,
+        "snapshotStoredMaximumAgeTicks": 0,
+        "snapshotMaximumUs": 4153,
+        "snapshotMaximumOverlapBytes": 1026464,
+        "nativeCheckpointRequests": 0,
+        "nativeCheckpointDeferred": 0,
+        "nativeCheckpointPrepared": 0,
+        "nativeCheckpointCancelled": 0,
+        "nativeCheckpointFallbacks": 0,
+        "nativeCheckpointPending": 0,
+        "nativeCheckpointPeakPending": 0,
+        "nativeCheckpointMaxAgeTicks": 0
+      },
+      "log": "build/thermal-baselines/minimum-perf-normal-after-2/normal-load.log",
+      "jfr": "build/thermal-baselines/minimum-perf-normal-after-2/normal-load.jfr"
+    },
+    {
+      "label": "minimum-perf-normal-before-2",
+      "variant": "before",
+      "passed": 1,
+      "thermal_errors": 0,
+      "root_zero": true,
+      "scene": {
+        "sources": 256,
+        "receivers": 100,
+        "queries": 12000,
+        "monitoringSince": 44,
+        "rootPeakChargedBytes": 63337546
+      },
+      "clock_result": {
+        "scene": "two_dense_machine_bases_256",
+        "mode": "realtime20",
+        "elapsedTicks": 2400,
+        "wallMs": 120259,
+        "simulatedMs": 120000,
+        "barrierWaitMs": 0
+      },
+      "first_ready_elapsed_tick": 44,
+      "age_violations": 0,
+      "geometry_violations": 0,
+      "receiver_violations": 0,
+      "final_degraded_regions": 0,
+      "accepted_work_by_stage_grid": {
+        "advance_grid1": 4299
+      },
+      "worker_cycles": 18528417636,
+      "worker_cycles_after_tick_400": 13767791530,
+      "accepted_fine_advance": {
+        "count": 4299,
+        "active_ms": 1837.9438,
+        "mean_active_ms": 0.42752821586415446,
+        "median_active_ms": 0.0411,
+        "phase_active_ms": {
+          "source": 0.0,
+          "geometry": 0.0,
+          "partition": 0.0,
+          "air": 0.0,
+          "contacts": 0.0,
+          "operator": 0.0,
+          "projection": 0.0,
+          "transport": 413.92109999999957,
+          "material": 0.0,
+          "material_internal": 378.30410000000325,
+          "material_contact": 647.6593999999985,
+          "material_state": 398.0592000000001,
+          "accept": 0.0,
+          "publication": 0.0,
+          "exclusive": 1837.9437999999989
+        }
+      },
+      "accepted_fine_advance_after_tick_400": {
+        "count": 3965,
+        "active_ms": 1582.7211,
+        "mean_active_ms": 0.3991730390920555,
+        "median_active_ms": 0.0398,
+        "phase_active_ms": {
+          "source": 0.0,
+          "geometry": 0.0,
+          "partition": 0.0,
+          "air": 0.0,
+          "contacts": 0.0,
+          "operator": 0.0,
+          "projection": 0.0,
+          "transport": 345.7595000000007,
+          "material": 0.0,
+          "material_internal": 335.9754000000024,
+          "material_contact": 565.2258000000041,
+          "material_state": 335.7604,
+          "accept": 0.0,
+          "publication": 0.0,
+          "exclusive": 1582.7210999999973
+        }
+      },
+      "region_slice_count": 6364,
+      "region_slice_active_ms": 4244.7002,
+      "construction_slice_active_ms": 2400.1319,
+      "resources": {
+        "scene": "two_dense_machine_bases_256",
+        "workerCpuMs": 3609,
+        "workerAllocatedBytes": 1921874328,
+        "serverCpuMs": 4406,
+        "serverAllocatedBytes": 2763764992,
+        "gcCollections": 22,
+        "gcMillis": 256,
+        "mainThermalTickP95Us": 552,
+        "mainThermalTickP99Us": 1807,
+        "mainThermalTickMaxUs": 21676,
+        "serverProcessingTickP95Us": 11607,
+        "serverProcessingTickP99Us": 20007,
+        "serverProcessingTickMaxUs": 1285172,
+        "serverProcessingTickMaxObservedAtElapsedTicks": 1,
+        "heapStartBytes": 982072320,
+        "heapEndBytes": 1390411776,
+        "heapObservedPeakBytes": 1622229504,
+        "saveWaitCalls": 207,
+        "saveWaitUs": 386815,
+        "saveWaitMaxUs": 22949,
+        "saveWaitMaxChunk": 4294967296,
+        "unloadWaitCalls": 0,
+        "unloadWaitUs": 0,
+        "unloadWaitMaxUs": 0,
+        "unloadWaitMaxChunk": 0,
+        "savesWhilePending": 0,
+        "unloadsWhilePending": 0,
+        "unrelatedSaveSkips": 0,
+        "unrelatedUnloadSkips": 0,
+        "unrelatedSavesWhilePending": 0,
+        "maintenanceSaveDeferrals": 0,
+        "maintenanceSaves": 1636,
+        "snapshotCheckpoints": 207,
+        "snapshotFallbacks": 0,
+        "snapshotSavePending": 0,
+        "snapshotUnloadPending": 0,
+        "snapshotMaximumAgeTicks": 20,
+        "snapshotStoredMaximumAgeTicks": 0,
+        "snapshotMaximumUs": 6942,
+        "snapshotMaximumOverlapBytes": 1067840,
+        "nativeCheckpointRequests": 0,
+        "nativeCheckpointDeferred": 0,
+        "nativeCheckpointPrepared": 0,
+        "nativeCheckpointCancelled": 0,
+        "nativeCheckpointFallbacks": 0,
+        "nativeCheckpointPending": 0,
+        "nativeCheckpointPeakPending": 0,
+        "nativeCheckpointMaxAgeTicks": 0
+      },
+      "log": "build/thermal-baselines/minimum-perf-normal-before-2/normal-load.log",
+      "jfr": "build/thermal-baselines/minimum-perf-normal-before-2/normal-load.jfr"
+    }
+  ],
+  "comparison": {
+    "worker_allocated_bytes": {
+      "before_runs": [
+        1861985120,
+        1921874328
+      ],
+      "after_runs": [
+        1863663520,
+        1839157784
+      ],
+      "before_median": 1891929724.0,
+      "after_median": 1851410652.0,
+      "reduction_percent": 2.141679550038089
+    },
+    "server_allocated_bytes": {
+      "before_runs": [
+        2785774472,
+        2763764992
+      ],
+      "after_runs": [
+        2726477592,
+        2759859728
+      ],
+      "before_median": 2774769732.0,
+      "after_median": 2743168660.0,
+      "reduction_percent": 1.138871872341729
+    },
+    "worker_cycles": {
+      "before_runs": [
+        41160592208,
+        18528417636
+      ],
+      "after_runs": [
+        37620959788,
+        27349928530
+      ],
+      "before_median": 29844504922.0,
+      "after_median": 32485444159.0,
+      "reduction_percent": -8.848996637411876
+    },
+    "worker_cycles_after_400": {
+      "before_runs": [
+        29072750860,
+        13767791530
+      ],
+      "after_runs": [
+        26787636386,
+        16257258752
+      ],
+      "before_median": 21420271195.0,
+      "after_median": 21522447569.0,
+      "reduction_percent": -0.4770078449046533
+    },
+    "accepted_fine_advance_active_ms": {
+      "before_runs": [
+        4149.2876,
+        1837.9438
+      ],
+      "after_runs": [
+        3392.0538,
+        2263.6866
+      ],
+      "before_median": 2993.6157,
+      "after_median": 2827.8702000000003,
+      "reduction_percent": 5.536632507639494
+    },
+    "accepted_fine_advance_mean_active_ms": {
+      "before_runs": [
+        0.9651750639683647,
+        0.42752821586415446
+      ],
+      "after_runs": [
+        0.7881165892193308,
+        0.5265612002791347
+      ],
+      "before_median": 0.6963516399162596,
+      "after_median": 0.6573388947492327,
+      "reduction_percent": 5.602448954054074
+    },
+    "accepted_fine_advance_after_400_mean_active_ms": {
+      "before_runs": [
+        0.8576130643127364,
+        0.3991730390920555
+      ],
+      "after_runs": [
+        0.7244019395465995,
+        0.4593044892812106
+      ],
+      "before_median": 0.6283930517023959,
+      "after_median": 0.591853214413905,
+      "reduction_percent": 5.814806065964584
+    },
+    "region_slice_active_ms": {
+      "before_runs": [
+        9579.5526,
+        4244.7002
+      ],
+      "after_runs": [
+        8437.2195,
+        6092.6063
+      ],
+      "before_median": 6912.126400000001,
+      "after_median": 7264.912899999999,
+      "reduction_percent": -5.103878019360275
+    },
+    "construction_slice_active_ms": {
+      "before_runs": [
+        5420.5805,
+        2400.1319
+      ],
+      "after_runs": [
+        5039.0565,
+        3828.0226
+      ],
+      "before_median": 3910.3562,
+      "after_median": 4433.5395499999995,
+      "reduction_percent": -13.379429474992577
+    },
+    "root_peak_charged_bytes": {
+      "before_runs": [
+        63668104,
+        63337546
+      ],
+      "after_runs": [
+        62814208,
+        62874816
+      ],
+      "before_median": 63502825.0,
+      "after_median": 62844512.0,
+      "reduction_percent": 1.0366672663775223
+    },
+    "main_thermal_p95_us": {
+      "before_runs": [
+        542,
+        552
+      ],
+      "after_runs": [
+        505,
+        415
+      ],
+      "before_median": 547.0,
+      "after_median": 460.0,
+      "reduction_percent": 15.904936014625227
+    },
+    "main_thermal_p99_us": {
+      "before_runs": [
+        1520,
+        1807
+      ],
+      "after_runs": [
+        1508,
+        1774
+      ],
+      "before_median": 1663.5,
+      "after_median": 1641.0,
+      "reduction_percent": 1.352569882777277
+    },
+    "server_processing_p95_us": {
+      "before_runs": [
+        14898,
+        11607
+      ],
+      "after_runs": [
+        13662,
+        12485
+      ],
+      "before_median": 13252.5,
+      "after_median": 13073.5,
+      "reduction_percent": 1.3506885493303145
+    },
+    "server_processing_p99_us": {
+      "before_runs": [
+        64297,
+        20007
+      ],
+      "after_runs": [
+        63239,
+        51437
+      ],
+      "before_median": 42152.0,
+      "after_median": 57338.0,
+      "reduction_percent": -36.02676029607137
+    },
+    "gc_millis": {
+      "before_runs": [
+        279,
+        256
+      ],
+      "after_runs": [
+        291,
+        256
+      ],
+      "before_median": 267.5,
+      "after_median": 273.5,
+      "reduction_percent": -2.242990654205612
+    }
+  },
+  "excluded_trial": {
+    "label": "minimum-perf-before-1",
+    "world_type": "minecraft:flat",
+    "qualified": false,
+    "passed": 0,
+    "failed": 1,
+    "thermal_errors": 0,
+    "root_zero": true,
+    "reason": "This preset changed the surrounding geometry workload and the old implementation degraded and violated service deadlines; no before/after speed percentage taken from it",
+    "result": "build/thermal-baselines/minimum-perf-before-1/normal-load.result.json"
+  },
+  "limitations": [
+    "Two processes per variant; substantial timing drift and overlapping ranges prevent a stable causal speedup claim.",
+    "JIT, GC, scheduling, frequency and cache behavior were not independently isolated; no CPU-affinity or operating-system policy changes were made.",
+    "Dynamic construction yields4299/4304/4299/4299 accepted fine advances; same configured workload does not mean identical construction scheduling.",
+    "Registered thermal budget is accounted backing, not exact JVM resident memory; cumulative allocation is not heap residency.",
+    "This is one workload with100 temperature consumers, not100 networked clients or full-modpack capacity.",
+    "No new temperature-curve qualification, forced-coarse capacity or extreme phase-control-latency measurement; earlier numeric checks retain their original scope."
+  ]
+}

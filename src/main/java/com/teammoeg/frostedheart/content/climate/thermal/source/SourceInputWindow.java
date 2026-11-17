@@ -23,7 +23,7 @@ public final class SourceInputWindow {
     private final int routedPorts;
     private final int ports;
     private long through;
-    private boolean first = true, complete;
+    private boolean first = true, complete, awaitingControl;
     private double pendingJ;
 
     SourceInputWindow(SpatialSourceTimeline.Window producer, long sequence, int ordinal,
@@ -72,13 +72,15 @@ public final class SourceInputWindow {
     public boolean first() { return first; }
     public long through() { return through; }
     public boolean complete() { return complete; }
-    public boolean canBind(long tick) { return !complete && (first ? tick >= through : tick > through); }
+    public boolean canBind(long tick) { return !complete && (first || awaitingControl ? tick >= through : tick > through); }
+    public boolean awaitingControl() { return awaitingControl; }
     public boolean hasEventThrough(long tick) {
         if (registration || controlsChanged && boundaryTick <= tick) return true;
         for (var span : spans) if (span.fromTick() == span.toTick() && span.toTick() <= tick) return true;
         return false;
     }
     public long nextControlTick() {
+        if (awaitingControl) return through;
         if (first && registration) return fromTick;
         long next = controlsChanged && boundaryTick > through ? boundaryTick : toTick;
         for (var span : spans) if (span.port() < 0 && !Double.isNaN(span.declaredPowerW()) && span.fromTick() > through)
@@ -87,6 +89,7 @@ public final class SourceInputWindow {
     }
     /** The next control that binding has not applied; continuous heat alone creates no mixing fence. */
     public long pendingControlTick() {
+        if (awaitingControl) return through;
         if (complete || !controlsChanged) return Long.MAX_VALUE;
         if (first && registration) return fromTick;
         if (first && boundaryTick <= through) return through;
@@ -103,17 +106,30 @@ public final class SourceInputWindow {
 
     /** Fractional prefixes retain their remainder, including the final rounding tail. */
     public double take(int record, int port, long from, long to) {
+        return portion(record, port, from, to, true);
+    }
+    /** The original window owns this amount until its receiver has accepted it. */
+    public double energyJ(int record, int port, long from, long to) {
+        return portion(record, port, from, to, false);
+    }
+    private double portion(int record, int port, long from, long to, boolean consume) {
         if (origins[port] == null) return 0; // Declared losses were settled at acceptance.
         var span = spans[record]; int offset = record * routedPorts + routeOffset(port);
         double old = remainingJ[offset];
         double amount = to == span.toTick() ? old : old * ((double) (to - from) / (span.toTick() - from));
-        remainingJ[offset] = old - amount;
         double skipped = Math.copySign(Math.min(Math.abs(amount), Math.abs(exportedJ[offset])), amount);
-        exportedJ[offset] -= skipped;
-        double kept = amount - skipped; pendingJ -= kept;
+        double kept = amount - skipped;
+        if (consume) {
+            remainingJ[offset] = old - amount; exportedJ[offset] -= skipped; pendingJ -= kept;
+        }
         return kept;
     }
-    public void boundThrough(long tick) { through = tick; first = false; complete = tick == toTick; }
+    public void boundThrough(long tick) { boundThrough(tick, true); }
+    /** Heat may reach a control cut before the recipient commits that cut. */
+    public void boundThrough(long tick, boolean appliedControl) {
+        through = tick; first = false; awaitingControl = !appliedControl;
+        complete = tick == toTick && appliedControl;
+    }
     public double declaredPowerAt(long tick) {
         if (tick == toTick) return finalPowerW;
         for (var span : spans) if (span.port() < 0 && span.fromTick() <= tick && tick < span.toTick())

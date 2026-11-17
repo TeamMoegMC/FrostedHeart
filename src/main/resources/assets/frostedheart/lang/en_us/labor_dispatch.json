@@ -1,0 +1,8 @@
+{
+  "block.frostedheart.labor_dispatch": "Labor Dispatch Agency",
+  "container.frostedheart.labor_dispatch": "Labor Dispatch Agency",
+  "gui.frostedheart.labor_dispatch.workers": "Available workers: %s",
+  "gui.frostedheart.labor_dispatch.slots": "Worker slots: %s",
+  "gui.frostedheart.town_manager.building.LaborDispatchBuilding": "Labor Dispatch Agency",
+  "gui.frostedheart.board.doc_mark.LaborDispatchBuilding": "L"
+}

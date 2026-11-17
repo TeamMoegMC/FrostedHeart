@@ -134,6 +134,7 @@ public final class SnowHistoryGameTests {
         buffer.readByte();
         buffer.readVarInt();
         buffer.readFloat();
+        buffer.readShort();
         long lastSnowEndHour = buffer.readLong();
         long nextSnowStartHour = buffer.readLong();
         helper.assertTrue(buffer.readableBytes() == 0,

@@ -47,6 +47,15 @@ Once setup, you can run the following commands in the project:
 
 `gradle runclient` or `./gradlew runclient` will start the game.
 
+`./gradlew runServer` starts a dedicated server in `run/`. To drive it from scripts, set
+`enable-rcon=true` and `rcon.password` in `run/server.properties`, start it with
+`-I Scripts/dev_server_nogui.init.gradle`, and send commands with
+`python3 Scripts/rcon.py run/server.properties "<command>" ...`.
+
+`./gradlew runClient -I Scripts/dev_client_bridge.init.gradle` starts a client that can be driven step by step
+(join, keys, GUI clicks, screenshots) with `python3 Scripts/agent_client.py "<command>" ...`; that script lists
+the commands.
+
 `gradle build` or `./gradlew build` will build the mod.
 
 ## Package organization

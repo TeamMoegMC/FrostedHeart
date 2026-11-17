@@ -31,6 +31,7 @@ knowledge 结构，没有从旧版四个 acquired-ID 集合迁移的逻辑。新
 | `hints`        | 已揭示的提示键或原文，同一内容不重复累计                         |
 | `daily`        | 梦境及玩家与讨论对象的逐日额度                              |
 | `dream_topics` | 玩家选择的队伍知识主题                                  |
+| `labor_report` | 研究所最近一天的人力分配与联想结果，可选                          |
 | `initialized`  | 初始知识是否已经发放；重新加入队伍不重复发放                       |
 
 `KnowledgeKey` 将类型和身份一起保存。观察身份是原始记录 UUID，想法与成果身份是数据包 `ResourceLocation`。`KnowledgeEntry`
@@ -109,12 +110,18 @@ codec 错误而不是异常。`ObservationSampling` 把非有限的坐标与温�
 想法、成果的定义缺失或停用时，档案身份仍然保留，但 `active=false`
 。观察没有当前注册用途时同样休眠。定义或用途恢复会自动恢复有效性，不要求重新学习。单独删除生产规则不让仍存在的想法定义休眠。
 
-观察容量由服务器配置指定：
+观察容量 = 服务器配置的基础值 + 其他系统通过 [`KnowledgeCapacity`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/KnowledgeCapacity.java)
+登记的扩展：
 
-| 配置键                            | 源码默认值 | 单位与范围                             |
-|--------------------------------|------:|-----------------------------------|
-| `knowledgeArchiveObservations` |  4096 | 每队档案原始观察条数，`0..Integer.MAX_VALUE` |
-| `knowledgeInboxObservations`   |   512 | 每队来件原始观察条数，`0..Integer.MAX_VALUE` |
+| 配置键                            | 源码默认值 | 单位与范围                                  |
+|--------------------------------|------:|----------------------------------------|
+| `knowledgeArchiveObservations` |   128 | 每队档案原始观察条数的基础值，`0..Integer.MAX_VALUE` |
+| `knowledgeInboxObservations`   |    64 | 每队来件原始观察条数的基础值，`0..Integer.MAX_VALUE` |
+
+2026-11-09 起默认值由 4096 / 512 降为 128 / 64，容量改由城镇研究所的书架扩展（见 [town-model.md §24](../town/town-model.md)）；已有服务器配置文件保留原值。
+`KnowledgeCapacity.register(id, provider)` 登记的 `Provider` 按队伍返回 `Extension(archive, inbox)`，在服务器线程调用，只读取已保存状态；抛出异常的扩展记一次错误并按 0
+计。`KnowledgeService.forTeam/forPlayer` 构造时计算一次上限，`archiveLimit()`、`inboxLimit()` 与 `archiveBase()`、`inboxBase()`
+分别给出含扩展的上限与配置基础值。扩展变小（例如研究所变冷）时与降低配置相同：已保存的记录不删除，只拒绝新增。
 
 分组不减少数量。达到容量会返回原因，不删除已保存记录。降低配置、合并队伍都保留超过容量的已有记录，随后限制新增。想法和成果没有观察容量限制，因此已完成联络和研究的产出不会因观察区满而丢失。
 
@@ -139,7 +146,7 @@ codec 错误而不是异常。`ObservationSampling` 把非有限的坐标与温�
 ### 研究启动记录
 
 `ResearchHistory` 是一次启动：实际起源想法、启动时间、`completed` / `abandoned` 状态、完成时的成果，以及按需求 `id` 保存的进度——
-`calculations` 记录每局获胜的难度，`evidence` 记录每个槽位提交的观察副本，`experiments` 记录每项实验完成的次数。空进度不写入存档；进度存在但无法解码时整条启动记录按
+`calculations` 记录每局获胜的难度，`evidence` 记录每个槽位提交的观察副本，`experiments` 记录每项实验完成的次数，`labor` 记录研究所投入的人·天（小数）。空进度不写入存档；进度存在但无法解码时整条启动记录按
 [无法解码的条目](#无法解码的条目) 隔离，不会以丢失证据的样子加载。
 
 | 方法                                                     | 行为                                                                                                        |
@@ -149,10 +156,15 @@ codec 错误而不是异常。`ObservationSampling` 把非有限的坐标与温�
 | `openRun(project)`                                     | 该项目进行中的启动                                                                                                 |
 | `submitEvidence(run, requirement)`                     | 在档案与来件的全部观察中寻找一组满足该证据需求的互异记录，并保存其副本。搜索至多尝试 `EVIDENCE_SEARCH_STEPS = 20000` 个候选，找不到返回 `NO_MATCH`         |
 | `submitEvidence(run, requirement, keys)`               | 按给定记录精确绑定，每个槽位一份                                                                                          |
-| `calculationLevel(run, requirement)`                   | 该计算需求仍需要的纸牌局难度；已满足或启动已结束时为空                                                                               |
-| `recordCalculation(run, requirement, level)`           | 记录一局胜利；难度低于要求返回 `INVALID_INPUT`，已满足返回 `ALREADY_OWNED`                                                     |
-| `experimentRequirement(run, requirement)`              | 进行中启动里仍未满足的实验需求定义；已满足、启动已结束或不是实验时为空。实验台据此选用和运行                                                      |
-| `recordExperiment(run, requirement)`                   | 记录一次完成的实验；已满足返回 `ALREADY_OWNED`，没有这项实验或启动已结束返回 `NOT_FOUND`                                           |
+| `calculationLevel(run, requirement)`                   | 该计算需求仍需要的纸牌局难度；玩家这边已无需再做（含研究所代劳的份数）或启动已结束时为空                                                                |
+| `recordCalculation(run, requirement, level)`           | 记录一局胜利；难度低于要求返回 `INVALID_INPUT`，玩家这边已无需再做返回 `ALREADY_OWNED`                                                     |
+| `experimentRequirement(run, requirement)`              | 进行中启动里玩家还需在实验台完成的实验需求定义；无需再做、启动已结束或不是实验时为空。实验台据此选用和运行                                                      |
+| `recordExperiment(run, requirement)`                   | 记录一次完成的实验；无需再做返回 `ALREADY_OWNED`，没有这项实验或启动已结束返回 `NOT_FOUND`                                           |
+| `playerDone` / `playerRemaining(run, requirement)`     | 玩家完成的局数或实验次数；扣除可选协作份数后仍需玩家完成的次数                                                                          |
+| `laborDone` / `laborShares` / `laborRemaining(run, requirement)` | 研究所已投入的人·天；可选协作已完成的份数；人力还能推进这项需求的人·天                                                      |
+| `workLabor(pool, supplies)`                            | 一天的研究所人力分配，见[研究所人力](#研究所人力)                                                                                   |
+| `instituteAssociation(random, day)`                    | 研究所居民的联想，见[研究所人力](#研究所人力)                                                                                     |
+| `recordLaborReport(report)`                            | 保存当天的研究所日报                                                                                                |
 | `requirementMet(run, requirement)` / `requirementsMet(run)` | 按当前定义重新判断。没有需求的项目对 `requirementsMet` 永远不成立                                                              |
 | `finishResearch(run)`                                  | 玩家路径：全部需求满足时调用 `completeResearch`，否则返回 `REQUIREMENTS_UNMET`                                                  |
 | `abandonResearch(run)`                                 | 结束进行中的启动，清空已提交进度；记录保留为已放弃，脉络历史视图可见                                                                        |
@@ -161,8 +173,33 @@ codec 错误而不是异常。`ObservationSampling` 把非有限的坐标与温�
 进度每次按当前定义判断：证据副本必须仍能完整绑定当前槽位与条件，计算只计难度不低于当前 `level` 的胜局，实验按完成次数与当前 `count` 比较。作者修改需求后，玩家可能需要重新提交。
 证据可以来自档案或来件，提交不消耗观察；之后删除来件或忘记档案条目不影响已提交的副本。同一观察可以用于不同项目，同一需求内各槽位必须是不同记录。
 
-每个启动记录只有一个实际起源想法，完成重复调用不会重新产出。获得成果失败时保留来件，研究关系仍属于实际历史。居民参与与原型数值升级尚未实现，
+计算与实验写了 `labor` 时：可选协作每完成一份（`workers × days` 人·天）抵一次玩家的演算或实验，玩家次数加份数达到 `count` 即满足；必须协作要求玩家次数达到
+`count`（可以为 0）且人力达到一份。
+
+每个启动记录只有一个实际起源想法，完成重复调用不会重新产出。获得成果失败时保留来件，研究关系仍属于实际历史。原型数值升级尚未实现，
 见 [研究项目执行计划](../../plans/2026-10-18_23-42-16_knowledge-research-project-execution.md)。
+
+### 研究所人力
+
+城镇研究所每天清晨把研究人力交给知识系统（见 [town-model.md §24](../town/town-model.md)）。知识侧只接收两个接口：
+
+- [`ResearchLaborPool`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/labor/ResearchLaborPool.java)：按教育等级 0–5 分级的人力，以标准研究员计。需求要求教育等级 ≥ E 时，可以使用等级 ≥ E 的人力；取用时先用满足条件的最低等级。
+- [`ResearchSupplies`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/labor/ResearchSupplies.java)：每天物品的来源。`share` 给出现有库存能满足的比例，`take` 要么全部扣除、要么不动。城镇实现从仓库取用，与住宅取食物相同。
+
+`workLabor(pool, supplies)` 的规则：
+
+1. 收集全部进行中启动里写了 `labor` 的需求，当天想要 `min(workers, laborRemaining)` 人·天。已满足的需求、可选协作中玩家已经做完的部分不再要人力。
+2. 按所需教育等级从高到低分配，同级按启动时间、需求顺序。
+3. 实际投入 = min(想要的, 合格人力)；物品按投入比例取用：`count × 投入 / workers`。库存不够时按 `share` 缩减当天投入并记为物品不足；共同取用失败（重叠标签）时减半重试，最多 4 次。
+4. 投入记入启动记录的 `labor`，从 `pool` 中扣除；剩余的就是当天的空闲人力。返回每项需求的 `Allocation(run, requirement, wanted, given, itemsShort)`。
+
+`instituteAssociation(random, day)` 只在调用方判定当天联想成功后调用。它先在有效档案中寻找能完整绑定、输出想法既不在档案也不在来件且定义可用的联络规则（每条规则回溯至多
+`CANDIDATE_SEARCH_STEPS = 20000` 步，按规则 ID 顺序至多取 `CANDIDATE_LIMIT = 64` 个候选），随机选一条按正常联络流程记录发现并 `produce` 想法，获得来源为
+`institute:link:<规则>`，札记显示「研究所的同伴想到的」。没有可产出的新想法时，从有效知识中随机取至多 8 个主题，按现有暗示规则以机会键 `institute` 给出一条暗示（每天一次）。
+仍没有则返回 `NOTHING`。
+
+`recordLaborReport(report)` 保存 [`LaborReport`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/labor/LaborReport.java)：结算日、分配前各级人力、各项需求的投入、剩余人力，以及联想的人力、概率与结果（`NONE` 没有合格空闲人力，`QUIET` 未成功，
+`IDEA`、`HINT`、`NOTHING`）。它存为 `KnowledgeState` 的 `labor_report`，只保留最近一天；读取失败时原样写回，直到新日报替换。城镇某天清晨没有任何研究人力时，仍记着人力投入的日报会被换成一份当天的空日报（只换一次）。
 
 ## 梦境、讨论与暗示
 
@@ -220,6 +257,9 @@ codec 错误而不是异常。`ObservationSampling` 把非有限的坐标与温�
 
 服务端 `KnowledgeView`
 包含档案、来件、已揭示暗示、实际联络、实际研究和获得经历。未发现规则的全部输入条件不进入快照。正常图谱中的联络必须仍能以历史绑定满足当前规则，并且其实际输入/输出有效；历史视图可以查看失效路径和忘记后的引用。数据包重载不重新编造历史绑定。
+
+快照的 `capacity` 给出档案与来件的已用条数、上限和配置基础值；`labor_report` 是附上项目与需求标题的研究所日报；进行中启动的计算与实验需求另带
+`player_done`、`player_remaining`，写了人力协作的需求带 `labor`（人数、天数、教育等级、物品，以及已投入、仍可推进的人·天和已完成份数）。
 
 可见快照还包含 `projects`：仅列出档案中想法已经公开的项目、可用来源与成果说明，供未启动项目展示。它与 `research`
 中的实际启动/完成记录分开。项目完成后的多项成果共用一次最终快照，分别保留其学习事件和结果。

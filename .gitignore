@@ -2,6 +2,7 @@
 .idea/
 /.project
 /.classpath
+/.factorypath
 .settings/
 *.iml
 *.ipr
@@ -137,6 +138,7 @@ run/config/*
 !run/config/fhresearches/
 !run/config/fhresearches/**
 run-gametest/
+run-gametest-deposits/
 run-infrared-validation/
 run-online-latency/
 
@@ -160,3 +162,9 @@ run-online-latency/
 /run/kubejs/config/
 /run/kubejs/client_scripts/
 /run/kubejs/README.txt
+/server-logs/
+
+# Local one-off diagnostics and verification screenshots.
+/Scripts/diagnostics/ThermalCallbackRetentionProof.java
+/docs/climate/validation/infrared-natural-cooling-2026-11-08.png
+/docs/climate/validation/infrared-streaming-e2e-2026-11-08.png

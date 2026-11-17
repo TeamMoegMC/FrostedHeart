@@ -1,0 +1,417 @@
+{
+  "status": "completed recorded baseline; retirement assertion and full-trajectory replay precision remain unqualified",
+  "verified_date": "2026-11-06",
+  "author": "OpenAI Codex / GPT-6.1 Sol; primary implementation and validation agent",
+  "production_code_changed_by_this_task": false,
+  "profile": {
+    "java": 17,
+    "heap_gib": 4,
+    "available_processors": 5,
+    "thermal_workers": 4,
+    "world_seed": "755111011717574879",
+    "memory_target_mib": 128,
+    "active_work_budget_ms_per_second": 1000,
+    "air_capacity_j_per_block_k": 1200,
+    "air_mixing_w_per_block_k": 96,
+    "dormant_half_life_game_seconds": 30,
+    "normal_clock": "realtime20",
+    "blocked_phase_clock": "lockstep"
+  },
+  "selection": {
+    "groups": 17,
+    "required": 29,
+    "passed": 28,
+    "failed": 1,
+    "all_completed_groups_had_no_thermal_save_or_worker_errors": true,
+    "all_completed_groups_released_root_to_zero": true,
+    "interpretation": "Selected cases across the recorded build scopes; not one production JAR full-suite qualification"
+  },
+  "cases": [
+    {
+      "name": "coarse-cooling",
+      "build": "unified-r3",
+      "namespace": "frostedheart_coarse_cooling",
+      "clock": "realtime20",
+      "expected": 1,
+      "passed": 0,
+      "failed": 1,
+      "qualified": false,
+      "thermal_errors": 0,
+      "root_zero": true,
+      "phase_marker_present": true,
+      "result": "build/thermal-baselines/unified-r3/coarse-cooling.result.json"
+    },
+    {
+      "name": "curves",
+      "build": "unified-replay-r6",
+      "namespace": "frostedheart_thermal_baseline",
+      "clock": "realtime20",
+      "expected": 1,
+      "passed": 1,
+      "failed": 0,
+      "qualified": true,
+      "thermal_errors": 0,
+      "root_zero": true,
+      "phase_marker_present": true,
+      "result": "build/thermal-baselines/unified-replay-r6/curves.result.json"
+    },
+    {
+      "name": "precision-room",
+      "build": "unified-curves-r4",
+      "namespace": "frostedheart_precision_room",
+      "clock": "realtime20",
+      "expected": 1,
+      "passed": 1,
+      "failed": 0,
+      "qualified": true,
+      "thermal_errors": 0,
+      "root_zero": true,
+      "phase_marker_present": true,
+      "result": "build/thermal-baselines/unified-curves-r4/precision-room.result.json"
+    },
+    {
+      "name": "background",
+      "build": "unified-r3",
+      "namespace": "frostedheart_regional_background",
+      "clock": "realtime20",
+      "expected": 1,
+      "passed": 1,
+      "failed": 0,
+      "qualified": true,
+      "thermal_errors": 0,
+      "root_zero": true,
+      "phase_marker_present": true,
+      "result": "build/thermal-baselines/unified-r3/background.result.json"
+    },
+    {
+      "name": "materials",
+      "build": "unified-r3",
+      "namespace": "frostedheart_material_runtime",
+      "clock": "realtime20",
+      "expected": 8,
+      "passed": 8,
+      "failed": 0,
+      "qualified": true,
+      "thermal_errors": 0,
+      "root_zero": true,
+      "phase_marker_present": true,
+      "result": "build/thermal-baselines/unified-r3/materials.result.json"
+    },
+    {
+      "name": "retention",
+      "build": "unified-r3",
+      "namespace": "frostedheart_retirement",
+      "clock": "realtime20",
+      "expected": 4,
+      "passed": 4,
+      "failed": 0,
+      "qualified": true,
+      "thermal_errors": 0,
+      "root_zero": true,
+      "phase_marker_present": true,
+      "result": "build/thermal-baselines/unified-r3/retention.result.json"
+    },
+    {
+      "name": "retention-room",
+      "build": "unified-r3",
+      "namespace": "frostedheart_retirement_room",
+      "clock": "realtime20",
+      "expected": 2,
+      "passed": 2,
+      "failed": 0,
+      "qualified": true,
+      "thermal_errors": 0,
+      "root_zero": true,
+      "phase_marker_present": true,
+      "result": "build/thermal-baselines/unified-r3/retention-room.result.json"
+    },
+    {
+      "name": "pending",
+      "build": "unified-r3",
+      "namespace": "frostedheart_retirement_pending",
+      "clock": "realtime20",
+      "expected": 1,
+      "passed": 1,
+      "failed": 0,
+      "qualified": true,
+      "thermal_errors": 0,
+      "root_zero": true,
+      "phase_marker_present": true,
+      "result": "build/thermal-baselines/unified-r3/pending.result.json"
+    },
+    {
+      "name": "reload",
+      "build": "unified-r3",
+      "namespace": "frostedheart_retirement_reload",
+      "clock": "realtime20",
+      "expected": 1,
+      "passed": 1,
+      "failed": 0,
+      "qualified": true,
+      "thermal_errors": 0,
+      "root_zero": true,
+      "phase_marker_present": true,
+      "result": "build/thermal-baselines/unified-r3/reload.result.json"
+    },
+    {
+      "name": "concurrent-save",
+      "build": "unified-r3",
+      "namespace": "frostedheart_concurrent_save",
+      "clock": "realtime20",
+      "expected": 2,
+      "passed": 2,
+      "failed": 0,
+      "qualified": true,
+      "thermal_errors": 0,
+      "root_zero": true,
+      "phase_marker_present": true,
+      "result": "build/thermal-baselines/unified-r3/concurrent-save.result.json"
+    },
+    {
+      "name": "normal-load",
+      "build": "unified-r3",
+      "namespace": "frostedheart_two_dense_machine_bases",
+      "clock": "realtime20",
+      "expected": 1,
+      "passed": 1,
+      "failed": 0,
+      "qualified": true,
+      "thermal_errors": 0,
+      "root_zero": true,
+      "phase_marker_present": true,
+      "result": "build/thermal-baselines/unified-r3/normal-load.result.json"
+    },
+    {
+      "name": "capacity",
+      "build": "unified-r3",
+      "namespace": "frostedheart_geometry_capacity",
+      "clock": "realtime20",
+      "expected": 1,
+      "passed": 1,
+      "failed": 0,
+      "qualified": true,
+      "thermal_errors": 0,
+      "root_zero": true,
+      "phase_marker_present": true,
+      "result": "build/thermal-baselines/unified-r3/capacity.result.json"
+    },
+    {
+      "name": "blocked-phase",
+      "build": "unified-r3",
+      "namespace": "frostedheart_blocked_phase",
+      "clock": "lockstep",
+      "expected": 1,
+      "passed": 1,
+      "failed": 0,
+      "qualified": true,
+      "thermal_errors": 0,
+      "root_zero": true,
+      "phase_marker_present": true,
+      "result": "build/thermal-baselines/unified-r3/blocked-phase.result.json"
+    },
+    {
+      "name": "river",
+      "build": "unified-r3",
+      "namespace": "frostedheart_river_thermal",
+      "clock": "realtime20",
+      "expected": 1,
+      "passed": 1,
+      "failed": 0,
+      "qualified": true,
+      "thermal_errors": 0,
+      "root_zero": true,
+      "phase_marker_present": true,
+      "result": "build/thermal-baselines/unified-r3/river.result.json"
+    },
+    {
+      "name": "restart-write",
+      "build": "unified-r3",
+      "namespace": "frostedheart_retirement_restart",
+      "clock": "realtime20",
+      "expected": 1,
+      "passed": 1,
+      "failed": 0,
+      "qualified": true,
+      "thermal_errors": 0,
+      "root_zero": true,
+      "phase_marker_present": true,
+      "result": "build/thermal-baselines/unified-r3/restart-write.result.json"
+    },
+    {
+      "name": "restart-read",
+      "build": "unified-r3",
+      "namespace": "frostedheart_retirement_restart",
+      "clock": "realtime20",
+      "expected": 1,
+      "passed": 1,
+      "failed": 0,
+      "qualified": true,
+      "thermal_errors": 0,
+      "root_zero": true,
+      "phase_marker_present": true,
+      "result": "build/thermal-baselines/unified-r3/restart-read.result.json"
+    },
+    {
+      "name": "restart-empty",
+      "build": "unified-r3",
+      "namespace": "frostedheart_retirement_restart",
+      "clock": "realtime20",
+      "expected": 1,
+      "passed": 1,
+      "failed": 0,
+      "qualified": true,
+      "thermal_errors": 0,
+      "root_zero": true,
+      "phase_marker_present": true,
+      "result": "build/thermal-baselines/unified-r3/restart-empty.result.json"
+    }
+  ],
+  "build_scopes": [
+    {
+      "labels": [
+        "unified-r3",
+        "unified-curves-r4"
+      ],
+      "main_classes": 3734,
+      "main_class_bytes_equal": true,
+      "change_between_labels": "GameTest fixture corrections only"
+    },
+    {
+      "labels": [
+        "unified-replay-r5",
+        "unified-replay-r6"
+      ],
+      "main_classes": 3735,
+      "main_class_bytes_equal": true,
+      "thermal_core_class_bytes_equal_to_r3": true,
+      "concurrent_workspace_changes_outside_thermal_core": [
+        "content/climate/network/InfraredRequestState",
+        "content/climate/network/FHRequestInfraredViewDataSyncPacket",
+        "content/climate/network/FHResponseInfraredViewDataSyncPacket",
+        "content/climate/render/InfraredViewRenderer"
+      ],
+      "qualification_boundary": "These concurrent infrared request/render changes are not a new client qualification"
+    }
+  ],
+  "temperature_replay": {
+    "reference": "unified-replay-r5",
+    "candidate": "unified-replay-r6",
+    "reference_climate": "build/thermal-baselines/unified-replay-r5/curves.climate.dat",
+    "air_rows_each": 3120,
+    "material_rows_each": 1560,
+    "qualified_for_full_trajectory_0_1c": false,
+    "maximum_air_difference_c": 3.3829712802443836,
+    "worst_elapsed_tick": 280,
+    "air_points_over_0_1c": 15,
+    "maximum_air_difference_from_tick_300_c": 0.0010882150138300517,
+    "maximum_material_temperature_difference_c": 1.0659139384472383E-06,
+    "maximum_material_enthalpy_difference_j": 0.005755935271736234,
+    "material_availability_or_tick_mismatches": 4,
+    "weather_and_radiation_columns_match": true,
+    "air_sample_ticks_and_availability_match": true,
+    "raw_comparison": "build/thermal-baselines/unified-replay-r6/replay-comparison.json",
+    "interpretation": "The large startup frame is retained as a failed reproducibility qualification; the diagnostic later window is not a tolerance exception"
+  },
+  "normal_load": {
+    "real_campfires": 256,
+    "temperature_consumers": 100,
+    "queries": 12000,
+    "age_violations": 0,
+    "geometry_violations": 0,
+    "receiver_violations": 0,
+    "thermal_main_p95_ms": 0.404,
+    "thermal_main_p99_ms": 1.165,
+    "full_server_p95_ms": 8.955,
+    "full_server_p99_ms": 24.11,
+    "full_server_max_ms": 1522.842,
+    "full_server_max_observed_at_elapsed_tick": 1,
+    "registered_peak_bytes": 63593152,
+    "worker_allocated_bytes": 1870466312,
+    "server_allocated_bytes": 2681603128,
+    "sampled_jvm_heap_peak_bytes": 1980760064,
+    "cpu_counter_qualification": "Windows ThreadMXBean worker CPU is retained in raw output but not treated as accurate physical CPU",
+    "interpretation": "One actual Forge test scene with 100 query consumers, not 100 networked players"
+  },
+  "capacity": {
+    "real_sources": 1024,
+    "observed_advances": 77,
+    "maximum_sample_age_ticks": 168,
+    "unavailable_ticks": 43,
+    "longest_unavailable_run_ticks": 43,
+    "native_saves": 3,
+    "admission_refusals": 44529,
+    "registered_end_bytes": 169652720,
+    "interpretation": "The existing continued-service assertions passed; stale/unavailable intervals and registration above the soft target are measured costs, not zero-violation or hard-heap-limit qualification"
+  },
+  "retirement_assertion": {
+    "namespace": "frostedheart_coarse_cooling",
+    "status": "failed original assertion preserved",
+    "last_regional_sample_tick": 2200,
+    "active_air_cells": 4,
+    "active_materials": 0,
+    "latent_bodies": 0,
+    "waiting_bodies": 0,
+    "maximum_air_perturbation_c": 0.5880828499692345,
+    "exit_threshold_c": 0.5,
+    "interpretation": "A probe close to its pointwise natural query did not establish the whole-region exit premise; later save/reload/relight checks in this case were not reached",
+    "remaining": "Determine expected closed-room cooling and captured-background behavior before changing this assertion or retirement policy"
+  },
+  "known_phase_limit": {
+    "status": "existing completed-phase business-condition wait reproduced, not fixed",
+    "initial_wait_game_ticks": 12000,
+    "followed_through_game_ticks": 24000,
+    "interpretation": "Changing actual neighbor conditions permits phase progression and eventual removal; passing the characterization does not fix the blocked plateau"
+  },
+  "river": {
+    "clock": "realtime20",
+    "observed_ticks": 3610,
+    "maximum_far_rise_c": 0,
+    "distance_128m_infrared_code": -32768,
+    "interpretation": "No far material record or natural-phase relay was observed in the stated real tower/pulse/control scenes"
+  },
+  "disk_restart": {
+    "write_tick": 2,
+    "delete_tick": 1251,
+    "empty_tick": 1253,
+    "independent_jvms": 3,
+    "markers": [
+      "THERMAL_RETIREMENT_RESTART_WRITE",
+      "THERMAL_RETIREMENT_RESTART_DELETE",
+      "THERMAL_RETIREMENT_RESTART_EMPTY"
+    ],
+    "exact_enthalpy_branch_and_original_tick_round_trip": true,
+    "deleted_records_do_not_resurrect": true
+  },
+  "retained_attempts": [
+    {
+      "label": "unified-r1",
+      "status": "invalid for qualification",
+      "reason": "Shared compiler outputs changed while the JVM was running; late class loading failed",
+      "class_rewritten_at": "2026-11-06T21:38:41+08:00",
+      "server_started_at": "2026-11-06T21:34:54+08:00"
+    },
+    {
+      "label": "unified-r2",
+      "status": "compile failure before tests",
+      "reason": "The first runner inherited Java21; the runner now explicitly defaults to Java17"
+    },
+    {
+      "label": "unified-r3",
+      "case": "precision-room",
+      "status": "original fixture failed; corrected fixture passed in unified-curves-r4",
+      "reason": "Template origin put the room at Y=-59 in a steep geothermal background; late queries also needed the ordinary-retirement availability contract"
+    },
+    {
+      "label": "unified-r3",
+      "case": "curves",
+      "status": "initial fixture passed generic assertions but is superseded",
+      "reason": "The far doorway did not affect the measured window; the small-room fixture adds an actual doorway-effect assertion"
+    }
+  ],
+  "documentation": "docs/climate/thermal-validation-baseline.md",
+  "remaining": [
+    "Resolve the startup-frame reproducibility difference before using a whole-trajectory 0.1C comparison gate",
+    "Clarify the source-free closed-room retirement assertion and remaining regional responsibility",
+    "The known blocked world-transition plateau remains a separate production issue"
+  ]
+}

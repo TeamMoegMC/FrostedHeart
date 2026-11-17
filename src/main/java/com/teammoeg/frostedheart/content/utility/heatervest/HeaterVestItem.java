@@ -59,7 +59,6 @@ public class HeaterVestItem extends FHBaseItem {
     private static final float STANDBY_HEAT = 0.05F;
     private static final float MAX_POWER_W = 275.0F;
     private static final float HEAT_PER_STORED_UNIT_W = MAX_POWER_W / 6.0F;
-    private static final float TARGET_BODY_TEMPERATURE_C = 37.0F;
     private static final float CONTROL_GAIN_W_PER_K = 55.0F;
     public HeaterVestItem(Properties properties) {
         super(properties);
@@ -123,14 +122,8 @@ public class HeaterVestItem extends FHBaseItem {
 						LazyOptional<HeatStorageCapability> cap=FHCapabilities.ITEM_HEAT.getCapability(stack);
 						if(cap.isPresent()) {
 							HeatStorageCapability t=cap.resolve().get();
-							double passiveLossW = Math.max(0.0D,
-									-data.getPassivePowerW(BodyPart.TORSO));
-							double correctionW = Math.max(0.0D,
-									TARGET_BODY_TEMPERATURE_C
-									- data.getBodyTemperatureC(BodyPart.TORSO))
-									* CONTROL_GAIN_W_PER_K;
-							float requestedPowerW = (float) Math.min(
-									MAX_POWER_W, passiveLossW + correctionW);
+							float requestedPowerW = (float) Math.min(MAX_POWER_W,
+									data.remainingHeatingDemandW(BodyPart.TORSO, CONTROL_GAIN_W_PER_K));
 							if (requestedPowerW > 0.0F) {
 								float requestedUnits = (float) ((
 										STANDBY_HEAT + requestedPowerW
@@ -148,6 +141,11 @@ public class HeaterVestItem extends FHBaseItem {
 							}
 						}
 						
+					}
+
+					@Override
+					public boolean isControlled() {
+						return true;
 					}
 
 					@Override

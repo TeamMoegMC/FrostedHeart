@@ -155,7 +155,7 @@ final class ContinuousAirProductionTiming {
                 if (elapsed % 200 == 0) heapPeak[0] = Math.max(heapPeak[0],
                         java.lang.management.ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().getUsed());
                 if (elapsed == endTick) {
-                    FHMain.LOGGER.info("THERMAL_TIMING_RESULT,scene={},mode=independent_regions,legacyCutTiming=not_applicable,rootPeakChargedBytes={},{}",
+                    FHMain.LOGGER.info("THERMAL_TIMING_RESULT,scene={},mode=fixed_cells,rootPeakChargedBytes={},{}",
                                 scene, MinecraftThermalInput.thermalBudgetPeakBytes(), MinecraftThermalInput.describeWorkerProgress(level));
                 }
                 if (elapsed % 200 == 0 && (PROFILE || OBSERVE_TEMPERATURE_ENVELOPE)) {
@@ -163,10 +163,9 @@ final class ContinuousAirProductionTiming {
                         BlockPos probe = probes[index];
                         float naturalC = WorldTemperature.naturalAir(level, probe);
                         MinecraftThermalInput.gameplayPlacedReservoirEnvironment(level, probe.above(), naturalC, air);
-                        FHMain.LOGGER.info("THERMAL_TEMPERATURE_TRACE,scene={},elapsedTicks={},probe={},gameTick={},sampleTick={},airC={},naturalC={},basisTerms={},toleranceC={}",
+                        FHMain.LOGGER.info("THERMAL_TEMPERATURE_TRACE,scene={},elapsedTicks={},probe={},gameTick={},sampleTick={},airC={},naturalC={},basisTerms={}",
                                 scene, elapsed, index, level.getGameTime(), air.airSampleTick(), air.airTemperatureC(),
-                                naturalC, air.airBasisTerms(),
-                                MinecraftThermalProfiles.prepare().tuning().continuousAirCorrectionToleranceC());
+                                naturalC, air.airBasisTerms());
                     }
                 }
                 if (firstResponse[0]) return;

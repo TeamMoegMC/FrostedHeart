@@ -52,6 +52,9 @@ public class CommandHelper {
     public static RequiredArgumentBuilder<CommandSourceStack, ?> string(String name) {
         return Commands.argument(name, StringArgumentType.string());
     }
+    public static RequiredArgumentBuilder<CommandSourceStack, ?> player(String name) {
+        return Commands.argument(name, EntityArgument.player());
+    }
     public static RequiredArgumentBuilder<CommandSourceStack, ?> players(String name) {
         return Commands.argument(name, EntityArgument.players());
     }
@@ -69,6 +72,9 @@ public class CommandHelper {
         this.ctx = ctx;
     }
 
+    public ServerPlayer getPlayer(String name) throws CommandSyntaxException {
+        return EntityArgument.getPlayer(ctx, name);
+    }
     public @NotNull Collection<ServerPlayer> getPlayers(String name) throws CommandSyntaxException {
         return EntityArgument.getPlayers(ctx, name);
     }

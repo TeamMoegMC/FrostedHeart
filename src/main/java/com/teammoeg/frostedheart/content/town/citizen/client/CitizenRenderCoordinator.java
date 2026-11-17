@@ -138,6 +138,7 @@ public final class CitizenRenderCoordinator {
 	public static void tick(Minecraft minecraft) {
 		ensureClientLevel(minecraft.level);
 		CitizenClientBenchmark.tick(minecraft);
+		CitizenRoadPresentation.tick(minecraft);
 		FakeCitizenManager.tick(minecraft);
 		try {
 			backend.tick(minecraft);
@@ -211,6 +212,7 @@ public final class CitizenRenderCoordinator {
 
 	private static void transitionClientLevel(ClientLevel nextLevel) {
 		lastClientLevel = nextLevel;
+        CitizenRoadPresentation.clear();
 		try {
 			if (!backend.onClientLevelChanged(nextLevel))
 				handleBackendFailure("client level change", null);

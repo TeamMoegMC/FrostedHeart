@@ -564,9 +564,14 @@ public class TeamTownResourceHolder {
      * 将所有服务资源设置为0
      */
     public void resetAllServices(){
+        // Leveled services, such as research labor by education level, are cleared at every level.
         Arrays.stream(VirtualResourceType.values())
                 .filter(type -> type.isService)
-                .forEach(type -> set(type.generateAttribute(0),0));
+                .forEach(type -> {
+                    for (int level = 0; level <= type.getMaxLevel(); level++) {
+                        set(type.generateAttribute(level), 0);
+                    }
+                });
     }
 
     public void resetMaxCapacity(){

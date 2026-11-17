@@ -47,6 +47,8 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.SaplingBlock;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.chunk.ChunkGenerator;
+import net.minecraft.world.level.levelgen.FlatLevelSource;
 import net.minecraft.world.level.levelgen.Heightmap;
 
 /**
@@ -240,22 +242,15 @@ public class WorldTemperature {
     public static final float FEEDED_ANIMAL_ALIVE_TEMPERATURE = -30f;
     public static final float VANILLA_PLANT_GROW_TEMPERATURE_MAX = 50;
 
-    // Altitudes
-    public static final int STRATOSPHERE_LEVEL = 240;
-    public static final int SEA_LEVEL = 63;
-    public static final int BUILD_UPPER_LIMIT = 320;
-    public static final int STONE_INTERFACE_LEVEL = 0;
-    public static final int LAVA_INTERFACE_LEVEL = -55;
-    public static final int BUILD_LOWER_LIMIT = -64;
-    public static final float TEMPERATURE_CHANGE_PER_BLOCK_ABOVE_STRATOSPHERE_LEVEL = -2F;
-    public static final float TEMPERATURE_CHANGE_PER_BLOCK_ABOVE_SEA_LEVEL = -0.1F;
-    public static final float TEMPERATURE_CHANGE_PER_BLOCK_BELOW_STONE_INTERFACE = 0.1F;
-    public static final float TEMPERATURE_CHANGE_PER_BLOCK_BELOW_LAVA_INTERFACE = 20F;
+    // Altitude: long-term gradients only. 0.6 °C colder per 100 blocks above the reference level, 3 °C warmer per
+    // 100 blocks below it. Keeping the weather out is the job of real cover, see coveredClimate.
+    public static final int ALTITUDE_REFERENCE_LEVEL = 64;
+    public static final float TEMPERATURE_CHANGE_PER_BLOCK_ABOVE_REFERENCE = -0.006F;
+    public static final float TEMPERATURE_CHANGE_PER_BLOCK_BELOW_REFERENCE = 0.03F;
 
     // temperature cache
     public static Map<Level, Float> worldCache = new WeakHashMap<>();
     public static Object2FloatOpenHashMap<Biome> biomeCache = new Object2FloatOpenHashMap<>();
-    private static final float[] ALTITUDE_CACHE = buildAltitudeCache();
 
     public static void clear() {
         worldCache.clear();
@@ -309,50 +304,66 @@ public class WorldTemperature {
         return 0;
     }
 
+    /**
+     * 到达此处的气候：露天处就是当前气候 {@link #climate}；被不透光满方块覆盖处是它按覆盖厚度滞后、衰减后的值，
+     * 持续的气候最终原样到达。
+     * <p>
+     * The climate reaching this place: the current climate in the open; under opaque full blocks, that climate low-pass
+     * filtered by the cover, so lasting climate arrives unchanged and shorter changes arrive damped and late.
+     */
+    public static float coveredClimate(LevelReader w, BlockPos pos) {
+        int cover = ClimateCover.coverAbove(w, pos);
+        return cover == 0 ? climate(w, pos) : coveredClimate(w, pos, cover);
+    }
+
+    /** {@link #coveredClimate(LevelReader, BlockPos)} reusing a caller-cached open-air climate. */
+    public static float coveredClimate(LevelReader w, BlockPos pos, float openClimate) {
+        int cover = ClimateCover.coverAbove(w, pos);
+        return cover == 0 ? openClimate : coveredClimate(w, pos, cover);
+    }
+
+    private static float coveredClimate(LevelReader w, BlockPos pos, int cover) {
+        return w instanceof Level level ? WorldClimate.getCoveredTemp(level, pos, cover) : 0;
+    }
+
+    /** Fraction of the climate that reaches block temperature, at every height and cover. */
+    public static float blockClimateFactor() {
+        return FHConfig.SERVER.CLIMATE.blockMaximumClimateAffection.get().floatValue();
+    }
 
     /**
-     * Altitude-induced temperature change, this value is consistent.
-     * Range: [(BUILD_UPPER_LIMIT - SEA_LEVEL) * TEMPERATURE_CHANGE_PER_BLOCK_ABOVE_SEA_LEVEL,
-     * (STONE_INTERFACE_LEVEL - BUILD_LOWER_LIMIT) * TEMPERATURE_CHANGE_PER_BLOCK_BELOW_STONE_INTERFACE]
-     * Now, it is [-25.7, 6.4]
+     * 超平坦维度没有地下：参考高度以下一律按参考高度算，没有地热。按维度的生成器判断，所以超平坦存档里的下界和末地
+     * 照常；拿不到所属服务端世界的读取器按普通地形算。
+     * <p>
+     * A superflat dimension has no underground: everything below the altitude reference level reads as that level,
+     * with no geothermal heat. Decided per dimension by its chunk generator, so a superflat save's Nether and End stay
+     * normal; a reader without a server level counts as normal terrain.
+     */
+    public static boolean hasNoUnderground(LevelReader w) {
+        return w instanceof WorldGenLevel level && hasNoUnderground(level.getLevel().getChunkSource().getGenerator());
+    }
+
+    /** {@link #hasNoUnderground(LevelReader)} for a chunk generator: superflat generators have no underground. */
+    public static boolean hasNoUnderground(ChunkGenerator generator) {
+        return generator instanceof FlatLevelSource;
+    }
+
+    /**
+     * 海拔造成的长期温差：参考高度以上每格 -0.006 °C，以下每格 +0.03 °C，处处连续；超平坦维度参考高度以下为 0。
+     * <p>
+     * Long-term altitude temperature change, continuous everywhere: -0.006 °C per block above the reference level and
+     * +0.03 °C per block below it; 0 below the reference level in a superflat dimension.
      */
     public static float altitude(LevelReader w, BlockPos pos) {
-        // TODO: This is for only overworld
         int y = pos.getY();
-        if (y < BUILD_LOWER_LIMIT || y > BUILD_UPPER_LIMIT) return 0;
-        return ALTITUDE_CACHE[y - BUILD_LOWER_LIMIT];
+        return altitude(y, y <= ALTITUDE_REFERENCE_LEVEL && hasNoUnderground(w));
     }
-    private static float[] buildAltitudeCache() {
-        int min = BUILD_LOWER_LIMIT, max = BUILD_UPPER_LIMIT;
-        float[] cache = new float[max - min + 1];
-        for (int y = min; y <= max; y++) {
-            cache[y - min] = computeAltitude(y);
-        }
-        return cache;
-    }
-    private static float computeAltitude(int y) {
-        // extremely lowers above stratosphere
-        if (y > STRATOSPHERE_LEVEL) {
-            int yc = Mth.clamp(y, STRATOSPHERE_LEVEL, BUILD_UPPER_LIMIT);
-            return (yc - STRATOSPHERE_LEVEL) * TEMPERATURE_CHANGE_PER_BLOCK_ABOVE_STRATOSPHERE_LEVEL;
-        }
-        // decrease above sea
-        if (y > SEA_LEVEL) {
-            int yc = Mth.clamp(y, SEA_LEVEL, BUILD_UPPER_LIMIT);
-            return (yc - SEA_LEVEL) * TEMPERATURE_CHANGE_PER_BLOCK_ABOVE_SEA_LEVEL;
-        }
-        // an insulated zone in normal stone area
-        if (y > STONE_INTERFACE_LEVEL) {
-            return 0;
-        }
-        // increase in deepslate
-        if (y > LAVA_INTERFACE_LEVEL) {
-            int yc = Mth.clamp(y, LAVA_INTERFACE_LEVEL, STONE_INTERFACE_LEVEL);
-            return (STONE_INTERFACE_LEVEL - yc) * TEMPERATURE_CHANGE_PER_BLOCK_BELOW_STONE_INTERFACE;
-        }
-        // significant increase in lava to bedrock
-        int yc = Mth.clamp(y, BUILD_LOWER_LIMIT, LAVA_INTERFACE_LEVEL);
-        return (LAVA_INTERFACE_LEVEL - yc) * TEMPERATURE_CHANGE_PER_BLOCK_BELOW_LAVA_INTERFACE;
+
+    /** The altitude term at height {@code y}; {@code noUnderground} is true in a superflat dimension. */
+    public static float altitude(int y, boolean noUnderground) {
+        if (y > ALTITUDE_REFERENCE_LEVEL)
+            return (y - ALTITUDE_REFERENCE_LEVEL) * TEMPERATURE_CHANGE_PER_BLOCK_ABOVE_REFERENCE;
+        return noUnderground ? 0 : (ALTITUDE_REFERENCE_LEVEL - y) * TEMPERATURE_CHANGE_PER_BLOCK_BELOW_REFERENCE;
     }
 
 
@@ -396,21 +407,21 @@ public class WorldTemperature {
 
     /** Natural block background without local fields or sparse-mesh state. */
     public static float naturalBlock(LevelReader world, BlockPos pos) {
-        return naturalBlock(world, pos, climate(world, pos));
+        return naturalBlockFromClimate(world, pos, coveredClimate(world, pos));
     }
 
-    /** Natural block background reusing a caller-cached climate value. */
+    /** Natural block background reusing a caller-cached open-air climate value. */
     public static float naturalBlock(
             LevelReader world,
             BlockPos pos,
-            float climateBase
+            float openClimate
     ) {
-        float affection = BlockTemperatureModel.climateBlockAffection(
-                pos.getY(), FHConfig.SERVER.CLIMATE.climateStoneInterfaceLevel.get(),
-                FHConfig.SERVER.CLIMATE.climateSeaLevel.get(),
-                FHConfig.SERVER.CLIMATE.blockMaximumClimateAffection.get().floatValue());
+        return naturalBlockFromClimate(world, pos, coveredClimate(world, pos, openClimate));
+    }
+
+    private static float naturalBlockFromClimate(LevelReader world, BlockPos pos, float climateHere) {
         float natural = BlockTemperatureModel.naturalTemperature(
-                dimension(world), biome(world, pos), altitude(world, pos), climateBase, affection);
+                dimension(world), biome(world, pos), altitude(world, pos), climateHere, blockClimateFactor());
         return Math.max(FHConfig.SERVER.CLIMATE.absoluteZeroCelsius.get().floatValue(), natural);
     }
 
@@ -447,24 +458,7 @@ public class WorldTemperature {
     }
 
     private static float naturalAirUnclamped(LevelReader world, BlockPos pos) {
-        int y = pos.getY();
-
-        float climateAirAffection;
-        // above sea level, climate significantly influences air
-        if (y > SEA_LEVEL) {
-            climateAirAffection = 1.0F;
-        }
-        // a thin layer of stone beneath sea level serves as a climate insulation layer
-        else if (y > STONE_INTERFACE_LEVEL) {
-            climateAirAffection = 1.0F * (y - STONE_INTERFACE_LEVEL) / (SEA_LEVEL - STONE_INTERFACE_LEVEL);
-        }
-        // below that, climate no longer affects block temperature
-        else {
-            climateAirAffection = 0.0F;
-        }
-
-        return dimension(world) + biome(world, pos) + altitude(world, pos) +
-                (climateAirAffection == 0.0F ? 0.0F : climate(world,pos) * climateAirAffection);
+        return dimension(world) + biome(world, pos) + altitude(world, pos) + coveredClimate(world, pos);
     }
 
     /**

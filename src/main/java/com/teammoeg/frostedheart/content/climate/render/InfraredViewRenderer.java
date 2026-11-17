@@ -32,9 +32,13 @@ import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.teammoeg.frostedheart.FHNetwork;
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.client.FHShaders;
 import com.teammoeg.frostedheart.content.climate.network.FHRequestInfraredViewDataSyncPacket;
+import com.teammoeg.frostedheart.content.climate.network.FHContinueInfraredViewPacket;
 import com.teammoeg.frostedheart.content.climate.network.InfraredBrickCodec;
+import com.teammoeg.frostedheart.content.climate.network.InfraredRequestState;
+import com.teammoeg.frostedheart.content.climate.network.InfraredWindow;
 import com.teammoeg.frostedheart.content.climate.render.infrared.InfraredSurfaceTarget;
 
 
@@ -103,11 +107,11 @@ public final class InfraredViewRenderer {
     private static boolean surfacePrepared, terrainVisited, terrainDepthCaptured;
     private static int frameTexture, frameOriginX, frameOriginY, frameOriginZ;
     private static boolean open;
-    private static boolean displayHasCoverage;
     private static boolean deltaBaselineValid;
     private static boolean receivingResponse;
     private static boolean requestCenterValid;
-    private static int requestId;
+    private static final InfraredRequestState requests = new InfraredRequestState();
+    private static int knownDisplayRequestId = -1;
     private static long lastRequestTick = Long.MIN_VALUE;
     private static int infraredEpoch;
     private static long storedEpoch;
@@ -124,8 +128,24 @@ public final class InfraredViewRenderer {
     private static int textureCenterSectionY;
     private static int temperatureTexture;
     private static float radius;
+    private static boolean diagnosticTrace, lastRenderHadTerrainDepth;
+    private static long sentRequests, receivedParts, receivedAcks, committedReplies, ignoredReplies, renderedFrames;
+    private static long lastSentNanos;
+    private static int lastSentId;
+    private static int nextResponsePart;
+    /** Natural temperature of blocks without a server value; uploads show it wherever the mirror is INVALID. */
+    private static final InfraredNaturalFill natural = new InfraredNaturalFill();
+
+    static {
+        com.teammoeg.frostedheart.content.climate.ClimateCover.clientBlockChanges = natural::blockChanged;
+    }
 
     private InfraredViewRenderer() {
+    }
+
+    /** A client chunk arrived; its natural temperatures can now be computed. */
+    public static void onClientChunkLoaded(int chunkX, int chunkZ) {
+        natural.chunkLoaded(chunkX, chunkZ);
     }
 
     public static void setCameraPose(@Nullable PoseStack pose) {
@@ -139,7 +159,7 @@ public final class InfraredViewRenderer {
 
     /** Called by our terrain renderer after the original pass has selected its target. */
     public static boolean visitTerrainPass() {
-        if (!displayHasCoverage || radius <= 0 || cameraPose == null || GL11.glGetInteger(GL30.GL_DRAW_FRAMEBUFFER_BINDING)
+        if (radius <= 0 || cameraPose == null || GL11.glGetInteger(GL30.GL_DRAW_FRAMEBUFFER_BINDING)
                 != Minecraft.getInstance().getMainRenderTarget().frameBufferId) return false;
         terrainVisited = true;
         return true;
@@ -148,7 +168,12 @@ public final class InfraredViewRenderer {
     public static boolean prepareSurfaceCapture() {
         if (surfacePrepared) return true;
         Minecraft minecraft = Minecraft.getInstance();
-        if (minecraft.player == null || !displayHasCoverage || temperatureTexture == 0) return false;
+        if (minecraft.player == null) return false;
+        if (temperatureTexture == 0) {
+            // The scan can start before a response; never reuse samples from a previous world.
+            if (!ensureTemperatureMirror()) clearMirror();
+            uploadFullTemperatureTexture();
+        }
         RenderTarget main = minecraft.getMainRenderTarget();
         if (surfaceTarget == null) surfaceTarget = new InfraredSurfaceTarget();
         if (!surfaceTarget.ensure(main.width, main.height, main.getColorTextureId(), main.getDepthTextureId())) return false;
@@ -159,6 +184,16 @@ public final class InfraredViewRenderer {
         frameOriginZ = (textureCenterChunkZ - PAGE_RADIUS) * 16;
         surfacePrepared = true;
         return true;
+    }
+
+    /** The natural value uploads merge at a block of the current window: INVALID outside it, for air, or not computed yet. */
+    static short naturalAt(int x, int y, int z) {
+        x -= (textureCenterChunkX - PAGE_RADIUS) * BLOCKS_PER_PAGE_AXIS;
+        y -= (textureCenterSectionY - PAGE_RADIUS) * BLOCKS_PER_PAGE_AXIS;
+        z -= (textureCenterChunkZ - PAGE_RADIUS) * BLOCKS_PER_PAGE_AXIS;
+        if (x < 0 || x >= TEXTURE_SIZE || y < 0 || y >= TEXTURE_SIZE || z < 0 || z >= TEXTURE_SIZE)
+            return InfraredBrickCodec.INVALID_TEMPERATURE;
+        return natural.at(InfraredNaturalFill.texel(x, y, z));
     }
 
     public static int frameTemperatureTexture() { return frameTexture; }
@@ -180,39 +215,40 @@ public final class InfraredViewRenderer {
     }
 
     public static void clientTick() {
-        if (open && displayHasCoverage && radius < SCAN_RADIUS_BLOCKS) {
+        if (open && radius < SCAN_RADIUS_BLOCKS) {
             radius = Mth.clamp(
                     radius + RADIUS_DUR, 0.0F, SCAN_RADIUS_BLOCKS);
-        } else if ((!open || !displayHasCoverage) && radius > 0.0F) {
+        } else if (!open && radius > 0.0F) {
             radius = Mth.clamp(
                     radius - RADIUS_DUR, 0.0F, SCAN_RADIUS_BLOCKS);
         }
 
         Minecraft minecraft = Minecraft.getInstance();
-        if (!open || minecraft.player == null || minecraft.level == null) {
+        if (open && minecraft.level != null && natural.advance(minecraft.level)) uploadNaturalPages();
+        if (!open || minecraft.player == null || minecraft.level == null || requests.isPending()) {
             return;
         }
         int centerChunkX = Mth.floor(minecraft.player.getX()) >> 4;
         int centerChunkZ = Mth.floor(minecraft.player.getZ()) >> 4;
         int centerSectionY = Mth.floor(minecraft.player.getEyeY()) >> 4;
-        boolean forceFull = !requestCenterValid
+        boolean windowChanged = !requestCenterValid
                 || centerChunkX != requestedChunkX
                 || centerChunkZ != requestedChunkZ
                 || centerSectionY != requestedSectionY;
         long gameTick = minecraft.level.getGameTime();
         boolean awaitingFull = requestCenterValid && !deltaBaselineValid;
-        // All parts are sent together over TCP; let an accepted response finish.
+        // A completed request without a usable full snapshot can retry on the normal cadence.
         boolean retryFull = awaitingFull && !receivingResponse
                 && gameTick - lastRequestTick
                 >= FULL_RETRY_MIN_TICKS + Math.floorMod(
                         minecraft.player.getId(), FULL_RETRY_SPREAD_TICKS);
         boolean periodic = !awaitingFull && Math.floorMod(
                 gameTick + minecraft.player.getId(), REFRESH_TICKS) == 0L;
-        if ((forceFull || retryFull || periodic)
+        if ((windowChanged || retryFull || periodic)
                 && lastRequestTick != gameTick) {
             sendRequest(
                     centerChunkX, centerChunkZ, centerSectionY,
-                    forceFull, gameTick);
+                    !requestCenterValid || !deltaBaselineValid, gameTick);
         }
     }
 
@@ -223,7 +259,11 @@ public final class InfraredViewRenderer {
             boolean forceFull,
             long gameTick
     ) {
-        requestId = nextRequestId(requestId);
+        int requestId = requests.tryBegin();
+        if (requestId == InfraredRequestState.NO_REQUEST) return;
+        sentRequests++; lastSentId=requestId; lastSentNanos=System.nanoTime();
+        if(diagnosticTrace)FHMain.LOGGER.info("IR_CLIENT_SEND id={} full={} center={},{},{} baseline={}",
+                requestId,forceFull,centerChunkX,centerSectionY,centerChunkZ,knownDisplayRequestId);
         receivingResponse = false;
         lastRequestTick = gameTick;
         requestCenterValid = true;
@@ -239,30 +279,53 @@ public final class InfraredViewRenderer {
                         requestId,
                         forceFull || !deltaBaselineValid,
                         generation, SectionPos.asLong(textureCenterChunkX, textureCenterSectionY, textureCenterChunkZ),
-                        infraredEpoch, knownPresence.clone(), materialReadable, knownFieldPages, storedEpoch, storedSampleTick));
+                        infraredEpoch, knownPresence.clone(), materialReadable, knownFieldPages, storedEpoch, storedSampleTick,
+                        knownDisplayRequestId, natural.revision()));
     }
 
-    /** Only LAST commits the complete display baseline, including field-only responses. */
-    /** Apply response parts to the existing CPU mirror; publish the baseline only on the last part. */
+    /** Show received Pages progressively; only LAST commits the complete delta baseline. */
     public static void updateData(int responseRequestId, InfraredSnapshot data, boolean firstPart, boolean lastPart) {
         RenderSystem.assertOnRenderThread();
-        if (!open || responseRequestId != requestId) return;
+        receivedParts++;
+        if(diagnosticTrace)FHMain.LOGGER.info("IR_CLIENT_PART id={} accepted={} first={} last={} full={} readable={} payloadBytes={}",
+                responseRequestId,open&&requests.accepts(responseRequestId),firstPart,lastPart,data.full(),data.readable(),
+                java.util.Arrays.stream(data.brickRecords()).mapToInt(part -> part.length).sum());
+        if (!open || !requests.accepts(responseRequestId)) { ignoredReplies++; return; }
         boolean sameCenter = data.centerChunkX() == textureCenterChunkX
                 && data.centerChunkZ() == textureCenterChunkZ && data.centerSectionY() == textureCenterSectionY;
+        long previousCenter = SectionPos.asLong(textureCenterChunkX, textureCenterSectionY, textureCenterChunkZ);
+        long nextCenter = SectionPos.asLong(data.centerChunkX(), data.centerSectionY(), data.centerChunkZ());
         if (firstPart) {
-            if (!data.full() && (!deltaBaselineValid || !sameCenter || data.generation() != generation)) {
-                deltaBaselineValid = false;
-                requestCenterValid = false;
+            nextResponsePart=1;
+            if (!data.full() && (!deltaBaselineValid || !InfraredWindow.overlaps(previousCenter, nextCenter)
+                    || data.generation() != generation)) {
+                ignoredReplies++;
+                if(diagnosticTrace)FHMain.LOGGER.info("IR_CLIENT_REJECT id={} reason=delta-baseline localGeneration={} replyGeneration={}",
+                        responseRequestId,generation,data.generation());
+                invalidateDisplay();
                 return;
             }
             receivingResponse = true;
             deltaBaselineValid = false;
             requestedChunkX = data.centerChunkX(); requestedChunkZ = data.centerChunkZ();
             requestedSectionY = data.centerSectionY(); requestCenterValid = true;
+            // The natural climate describes this reply's window.
+            natural.recenter(nextCenter);
+            natural.accept(data.natural());
             ensureTemperatureMirror();
             Arrays.fill(dirtyUploadPages, 0L);
             if (data.full()) clearMirror();
-        } else if (!receivingResponse) return;
+            else if (!sameCenter) {
+                InfraredWindow.shift(temperatureMirror, previousCenter, nextCenter);
+                InfraredWindow.remap(knownPresence, dirtyUploadPages, previousCenter, nextCenter);
+                System.arraycopy(dirtyUploadPages, 0, knownPresence, 0, knownPresence.length);
+                Arrays.fill(dirtyUploadPages, 0L);
+            }
+        } else if (!receivingResponse) {
+            ignoredReplies++;
+            if(diagnosticTrace)FHMain.LOGGER.info("IR_CLIENT_REJECT id={} reason=missing-FIRST",responseRequestId);
+            return;
+        }
         for (byte[] records : data.brickRecords()) {
             FriendlyByteBuf input = new FriendlyByteBuf(Unpooled.wrappedBuffer(records));
             try {
@@ -271,7 +334,15 @@ public final class InfraredViewRenderer {
                     writeBrick(brick, decodedBrick);
             } finally { input.release(); }
         }
-        if (!lastPart) return;
+        textureCenterChunkX=data.centerChunkX();textureCenterChunkZ=data.centerChunkZ();
+        textureCenterSectionY=data.centerSectionY();
+        if(firstPart&&(data.full()||!sameCenter))uploadFullTemperatureTexture();
+        else uploadDirtyPages();
+        Arrays.fill(dirtyUploadPages,0L);
+        if (!lastPart) {
+            FHNetwork.INSTANCE.sendToServer(new FHContinueInfraredViewPacket(responseRequestId,nextResponsePart++));
+            return;
+        }
         receivingResponse = false;
         if (data.presence().length != 0)
             System.arraycopy(data.presence(), 0, knownPresence, 0, knownPresence.length);
@@ -280,17 +351,41 @@ public final class InfraredViewRenderer {
         generation = data.generation(); infraredEpoch = data.infraredEpoch();
         storedEpoch = data.storedEpoch();
         storedSampleTick = data.storedSampleTick();
-        if (data.full()) uploadFullTemperatureTexture(); else uploadDirtyPages();
         materialReadable = data.readable();
         deltaBaselineValid = true;
         Arrays.fill(dirtyUploadPages, 0L);
         knownFieldPages = data.fieldPages();
-        displayHasCoverage = hasCoverage(knownPresence) || hasCoverage(knownFieldPages);
+        knownDisplayRequestId = responseRequestId;
+        FHNetwork.INSTANCE.sendToServer(new FHContinueInfraredViewPacket(responseRequestId,nextResponsePart));
+        requests.complete(responseRequestId);
+        committedReplies++;
+        if(diagnosticTrace)FHMain.LOGGER.info("IR_CLIENT_COMMIT {}",diagnosticStatus());
     }
 
-    private static boolean hasCoverage(long[] pages) {
-        for (long word : pages) if (word != 0L) return true;
-        return false;
+    public static void acknowledgeRequest(int responseRequestId) {
+        RenderSystem.assertOnRenderThread();
+        receivedAcks++;
+        boolean accepted=requests.complete(responseRequestId);
+        if(accepted)receivingResponse=false; else ignoredReplies++;
+        if(diagnosticTrace)FHMain.LOGGER.info("IR_CLIENT_ACK id={} accepted={}",responseRequestId,accepted);
+    }
+
+    public static void setDiagnosticTrace(boolean enabled) { diagnosticTrace=enabled; }
+
+    public static String diagnosticStatus() {
+        long valid=0;short min=Short.MAX_VALUE,max=Short.MIN_VALUE;
+        if(temperatureMirror!=null)for(int i=0;i<temperatureMirror.capacity();i++) {
+            short value=temperatureMirror.get(i);
+            if(value!=InfraredBrickCodec.INVALID_TEMPERATURE){valid++;min=(short)Math.min(min,value);max=(short)Math.max(max,value);}
+        }
+        long waitMs=requests.isPending()?(System.nanoTime()-lastSentNanos)/1_000_000:0;
+        return "IR_CLIENT open="+open+" pending="+requests.isPending()+" waitMs="+waitMs+" request="+lastSentId
+                +" sent="+sentRequests+" dataParts="+receivedParts+" acks="+receivedAcks+" commits="+committedReplies+" display="+knownDisplayRequestId
+                +" ignored="+ignoredReplies+" staging="+receivingResponse+" baseline="+deltaBaselineValid
+                +" validMirrorSamples="+valid+" minC="+(valid==0?Double.NaN:min*.25)+" maxC="+(valid==0?Double.NaN:max*.25)
+                +" materialReadable="+materialReadable+" texture="+(temperatureTexture!=0)+" renderedFrames="+renderedFrames
+                +" terrainDepth="+lastRenderHadTerrainDepth+" center="+textureCenterChunkX+","+textureCenterSectionY+","+textureCenterChunkZ
+                +" naturalRevision="+natural.revision();
     }
 
     public static void invalidateDisplay() {
@@ -392,15 +487,38 @@ public final class InfraredViewRenderer {
                          GL11.GL_SHORT,
                          0L);
             }
-            temperatureMirror.clear();
-            GL12.glTexSubImage3D(
-                    GL12.GL_TEXTURE_3D,
-                    0,
-                    0, 0, 0,
-                    TEXTURE_SIZE, TEXTURE_SIZE, TEXTURE_SIZE,
-                    GL30.GL_RED_INTEGER,
-                    GL11.GL_SHORT,
-                    temperatureMirror);
+            if (natural.hasValues()) {
+                // Blocks without a server value show their natural temperature; merge Page by Page.
+                for (int page = 0; page < PAGE_WIDTH * PAGE_WIDTH * PAGE_WIDTH; page++) uploadPage(page);
+            } else {
+                temperatureMirror.clear();
+                GL12.glTexSubImage3D(
+                        GL12.GL_TEXTURE_3D,
+                        0,
+                        0, 0, 0,
+                        TEXTURE_SIZE, TEXTURE_SIZE, TEXTURE_SIZE,
+                        GL30.GL_RED_INTEGER,
+                        GL11.GL_SHORT,
+                        temperatureMirror);
+            }
+        } finally {
+            GL11.glBindTexture(GL12.GL_TEXTURE_3D, previousTexture);
+        }
+    }
+
+    /** Upload the Pages whose natural values were just computed; a texture created later merges them anyway. */
+    private static void uploadNaturalPages() {
+        long[] pages = natural.takeComputed();
+        if (temperatureTexture == 0 || temperatureMirror == null) return;
+        int previousTexture = GL11.glGetInteger(GL12.GL_TEXTURE_BINDING_3D);
+        try {
+            resetTextureUploadState();
+            GL11.glBindTexture(GL12.GL_TEXTURE_3D, temperatureTexture);
+            for (int word = 0; word < pages.length; word++)
+                for (long bits = pages[word]; bits != 0L; bits &= bits - 1L) {
+                    int page = (word << 6) + Long.numberOfTrailingZeros(bits);
+                    if (page < PAGE_WIDTH * PAGE_WIDTH * PAGE_WIDTH) uploadPage(page);
+                }
         } finally {
             GL11.glBindTexture(GL12.GL_TEXTURE_3D, previousTexture);
         }
@@ -462,7 +580,8 @@ public final class InfraredViewRenderer {
                 int offset = ((baseZ + z) * TEXTURE_SIZE + baseY + y)
                         * TEXTURE_SIZE + baseX;
                 for (int x = 0; x < BLOCKS_PER_PAGE_AXIS; x++) {
-                    upload.put(temperatureMirror.get(offset + x));
+                    short value = temperatureMirror.get(offset + x);
+                    upload.put(value == InfraredBrickCodec.INVALID_TEMPERATURE ? natural.at(offset + x) : value);
                 }
             }
         }
@@ -562,6 +681,7 @@ public final class InfraredViewRenderer {
                 buffer.vertex(1, -1, 0).endVertex();
                 buffer.vertex(1, 1, 0).endVertex();
                 BufferUploader.draw(buffer.end());
+                renderedFrames++; lastRenderHadTerrainDepth=terrainDepthCaptured;
             } finally {
                 // ShaderProgram binds raw GL. Restore it raw too, leaving vanilla/Oculus caches unchanged.
                 GL20.glUseProgram(previousProgram);
@@ -602,7 +722,10 @@ public final class InfraredViewRenderer {
         invalidateRequests();
         open = false;
         radius = 0.0F;
-        displayHasCoverage = false;
+        knownDisplayRequestId = -1;
+        diagnosticTrace=false;lastRenderHadTerrainDepth=false;
+        sentRequests=receivedParts=receivedAcks=committedReplies=ignoredReplies=renderedFrames=0;
+        lastSentNanos=0;lastSentId=0;
         deltaBaselineValid = false;
         infraredEpoch = 0;
         storedEpoch = 0;
@@ -615,6 +738,7 @@ public final class InfraredViewRenderer {
         frameTexture = 0;
         Arrays.fill(knownPresence, 0L);
         Arrays.fill(dirtyUploadPages, 0L);
+        natural.reset();
         cameraPose = null;
         int textureToDelete = temperatureTexture;
         temperatureTexture = 0;
@@ -638,14 +762,12 @@ public final class InfraredViewRenderer {
     }
 
     private static void invalidateRequests() {
+        if(requests.isPending()&&Minecraft.getInstance().getConnection()!=null)
+            FHNetwork.INSTANCE.sendToServer(new FHContinueInfraredViewPacket(lastSentId,-1));
         receivingResponse = false;
-        requestId = nextRequestId(requestId);
+        requests.invalidate();
         requestCenterValid = false;
         lastRequestTick = Long.MIN_VALUE;
-    }
-
-    private static int nextRequestId(int current) {
-        return current == Integer.MAX_VALUE ? 0 : current + 1;
     }
 
 }

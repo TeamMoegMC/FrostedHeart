@@ -50,6 +50,7 @@ public final class MinecraftThermalEvents {
 
     @SubscribeEvent
     public static void onServerStarting(ServerStartingEvent event) {
+        DormantThermalMaintenance.clear();
         ThermalWorkerPool.startShared();
     }
 
@@ -135,6 +136,8 @@ public final class MinecraftThermalEvents {
     public static void onLevelUnload(LevelEvent.Unload event) {
         if (event.getLevel() instanceof ServerLevel level) {
             MinecraftThermalInput.closeActiveLevel(level);
+            MinecraftThermalInput.onInfraredLevelUnload(level);
+            DormantThermalMaintenance.unload(level);
             MinecraftGameplayFields.unload(level);
         }
     }
@@ -176,7 +179,13 @@ public final class MinecraftThermalEvents {
     @SubscribeEvent
     public static void onServerStopped(ServerStoppedEvent event) {
         MinecraftThermalInput.closeAll();
+        DormantThermalMaintenance.clear();
         MinecraftGameplayFields.stop();
+    }
+
+    @SubscribeEvent
+    public static void onServerTick(TickEvent.ServerTickEvent event) {
+        if (event.phase == TickEvent.Phase.END) DormantThermalMaintenance.tick();
     }
 
     private static LevelChunk fullChunk(net.minecraft.world.level.chunk.ChunkAccess chunk) {

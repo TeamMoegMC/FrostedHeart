@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart.content.town.buildings.mine;
 
+import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -91,6 +92,11 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
         public double lost() {
             return items.stream().mapToDouble(TownProductionReportItem::lost).sum();
         }
+
+        // EMPTY can initialize before the enclosing building's codec during save loading.
+        private static double sanitize(double value) {
+            return Double.isFinite(value) ? Math.max(0.0, value) : 0.0;
+        }
     }
 
     public record MiningForecast(
@@ -100,7 +106,7 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
             TownProductionStopReason stopReason
     ) {}
 
-	public static final MapCodec<MineBaseBuilding> MAP_CODEC = RecordCodecBuilder.mapCodec(t -> t.group(
+	public static final MapCodec<MineBaseBuilding> MAP_CODEC = AbstractTownBuilding.named(RecordCodecBuilder.mapCodec(t -> t.group(
                     strict(BlockPos.CODEC).optionalFieldOf("pos",BlockPos.ZERO).forGetter(o -> o.pos),
                     strict(Codec.BOOL).optionalFieldOf("initialized", false).forGetter(o -> o.isInitialized()),
                     strict(Codec.BOOL).optionalFieldOf("isStructureValid",false).forGetter(o -> o.isStructureValid()),
@@ -116,7 +122,7 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
                     strict(MiningDailyReport.CODEC).optionalFieldOf("dailyReport", MiningDailyReport.EMPTY)
                             .forGetter(MineBaseBuilding::getDailyReport)
 			)
-			.apply(t, MineBaseBuilding::new));
+			.apply(t, MineBaseBuilding::new)));
         public static final Codec<MineBaseBuilding> CODEC = MAP_CODEC.codec();
 
 
@@ -356,10 +362,6 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
                 .sorted(Comparator.comparingDouble(TownProductionReportItem::produced).reversed()
                         .thenComparing(item -> item.item().getDescriptionId()))
                 .toList();
-    }
-
-    private static double sanitize(double value) {
-        return Double.isFinite(value) ? Math.max(0.0, value) : 0.0;
     }
 
     @Override

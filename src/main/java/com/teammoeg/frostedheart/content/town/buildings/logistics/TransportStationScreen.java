@@ -21,20 +21,27 @@ package com.teammoeg.frostedheart.content.town.buildings.logistics;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import com.teammoeg.chorda.client.cui.base.UILayer;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
-import com.teammoeg.frostedheart.content.town.StandardTownBuildingScreen;
 import com.teammoeg.frostedheart.content.town.TeamTown;
 import com.teammoeg.frostedheart.content.town.building.TownProductionStopReason;
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBaseScreen;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 import com.teammoeg.frostedheart.content.town.resident.ResidentAttributeModel;
-import com.teammoeg.frostedheart.content.town.tabs.AbstractTownTab;
 import com.teammoeg.frostedheart.content.town.tabs.TownInfoPanel;
 import com.teammoeg.frostedheart.content.town.tabs.TownWorkforcePanel;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
+import com.teammoeg.chorda.client.cui.base.UIElement;
+import com.teammoeg.frostedheart.content.town.TeamTownData;
+import com.teammoeg.frostedheart.content.town.client.TownClientUpdates;
+import com.teammoeg.frostedheart.content.town.client.board.BoardWidgets;
+import com.teammoeg.frostedheart.content.town.client.board.WorkBoardScreen;
+import com.teammoeg.frostedheart.content.town.resident.Resident;
+import com.teammoeg.frostedheart.content.town.ui.view.WorkView;
+import com.teammoeg.frostedheart.content.town.buildings.logistics.view.TransportStationViewPresenter;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.Items;
@@ -42,115 +49,84 @@ import net.minecraft.world.item.Items;
 /**
  * Transport-station overview, workforce, and daily production screen.
  */
-public class TransportStationScreen extends StandardTownBuildingScreen<TransportStationMenu> {
+/**
+ * 货运站界面：布告板的概览、搬运工、运力三页；详细模式下的调试页保留原来的文字面板。
+ * <p>
+ * The transport station screen on the notice board: overview, carriers and capacity; the debug tab in detailed mode
+ * keeps the original text panels.
+ */
+public class TransportStationScreen extends WorkBoardScreen<TransportStationMenu> {
     public TransportStationScreen(TransportStationMenu menu) {
         super(menu);
     }
 
     @Override
-    protected void initTabs() {
-        addTab(new OverviewTab(this));
-        addTab(new WorkersTab(this));
-        addTab(new ProductionTab(this));
+    protected WorkView.Board present() {
+        TeamTown town = menu.getTown().orElse(null);
+        long day = TownClientUpdates.currentTown().map(TeamTownData::getTownDay).orElse(0L);
+        return TransportStationViewPresenter.present(new TransportStationViewPresenter.Inputs(menu.getBuilding().orElse(null), pos(),
+                menu.getResidents(), town, town == null ? "" : town.getName(), day));
     }
 
-    private abstract static class TransportStationTab extends AbstractTownTab<TransportStationMenu> {
-        private TransportStationTab(TransportStationScreen screen) {
-            super(screen);
-        }
-
-        @Override
-        public CIcons.CIcon getIcon() {
-            return INACTIVE_TAB;
-        }
-
-        @Override
-        public CIcons.CIcon getActiveIcon() {
-            return ACTIVE_TAB;
-        }
+    @Override
+    protected CIcons.CIcon buildingIcon() {
+        return CIcons.getIcon(FHBlocks.TRANSPORT_STATION.get());
     }
 
-    private static final class OverviewTab extends TransportStationTab {
-        private OverviewTab(TransportStationScreen screen) {
-            super(screen);
-        }
-
-        @Override
-        public CIcons.CIcon getContentIcon() {
-            return CIcons.getIcon(FHBlocks.TRANSPORT_STATION.get());
-        }
-
-        @Override
-        public Component getTitle() {
-            return Component.translatable("gui.frostedheart.transport_station.overview");
-        }
-
-        @Override
-        public void build(UILayer layer) {
-            layer.add(new TownInfoPanel(layer, 8, 4, 160, 130,
-                    () -> overviewRows(getMenu())));
-        }
+    @Override
+    protected CIcons.CIcon crewIcon() {
+        return CIcons.getIcon(Items.CHEST);
     }
 
-    private static final class WorkersTab extends TransportStationTab {
-        private WorkersTab(TransportStationScreen screen) {
-            super(screen);
-        }
-
-        @Override
-        public CIcons.CIcon getContentIcon() {
-            return CIcons.getIcon(Items.CHEST);
-        }
-
-        @Override
-        public Component getTitle() {
-            return Component.translatable("gui.frostedheart.transport_station.workers");
-        }
-
-        @Override
-        public void build(UILayer layer) {
-            layer.add(new TownWorkforcePanel(
-                    layer, 8, 4,
-                    getMenu()::getResidents,
-                    resident -> getMenu().getBuilding()
-                            .map(building -> building.canResidentWork(resident))
-                            .orElse(false),
-                    TransportStationScreen::transportProficiency,
-                    resident -> getMenu().getBuilding()
-                            .map(building -> building.getResidentScore(resident))
-                            .orElse(0.0),
-                    resident -> getMenu().getBuilding()
-                            .map(building -> building.getResidentCapacityContribution(resident))
-                            .orElse(0.0),
-                    TransportStationScreen::dailyProficiencyGain,
-                    Component.translatable("gui.frostedheart.transport_station.transport_proficiency"),
-                    value -> Component.translatable(
-                            "gui.frostedheart.transport_station.personal_contribution",
-                            MineBaseScreen.two(value))
-            ));
-        }
+    @Override
+    protected CIcons.CIcon outputIcon() {
+        return CIcons.getIcon(Items.CHEST_MINECART);
     }
 
-    private static final class ProductionTab extends TransportStationTab {
-        private ProductionTab(TransportStationScreen screen) {
-            super(screen);
-        }
+    @Override
+    protected String key() {
+        return TransportStationViewPresenter.KEY;
+    }
 
-        @Override
-        public CIcons.CIcon getContentIcon() {
-            return CIcons.getIcon(Items.CHEST_MINECART);
-        }
+    @Override
+    protected String townName() {
+        return menu.getTown().map(TeamTown::getName).orElse("");
+    }
 
-        @Override
-        public Component getTitle() {
-            return Component.translatable("gui.frostedheart.transport_station.production");
-        }
+    @Override
+    protected List<BoardWidgets.DebugSection> debugSections() {
+        return List.of(
+                new BoardWidgets.DebugSection(b("work.debug.overview"), (l, x, y, w, h) -> new TownInfoPanel(l, x, y, w, h, () -> overviewRows(menu))),
+                new BoardWidgets.DebugSection(b("work.debug.crew"), (l, x, y, w, h) -> workforcePanel(l, x, y, menu)),
+                new BoardWidgets.DebugSection(b("work.debug.output"), (l, x, y, w, h) -> new TownInfoPanel(l, x, y, w, h, () -> productionRows(menu))));
+    }
 
-        @Override
-        public void build(UILayer layer) {
-            layer.add(new TownInfoPanel(layer, 8, 4, 160, 130,
-                    () -> productionRows(getMenu())));
+    @Override
+    protected String debugText() {
+        StringBuilder out = new StringBuilder(board.header().name().getString()).append(" @ ").append(pos().toShortString()).append('\n');
+        for (List<TownInfoPanel.Row> rows : List.of(overviewRows(menu), productionRows(menu))) {
+            for (TownInfoPanel.Row row : rows) out.append(row.text().getString()).append('\n');
+            out.append('\n');
         }
+        menu.getBuilding().ifPresent(building -> {
+            for (Resident resident : menu.getResidents())
+                out.append(resident).append(String.format(Locale.ROOT, ": score %.3f, capacity %.3f, can work %s%n",
+                        building.getResidentScore(resident), building.getResidentCapacityContribution(resident), building.canResidentWork(resident)));
+        });
+        return out.toString();
+    }
+
+    private static UIElement workforcePanel(UILayer layer, int x, int y, TransportStationMenu menu) {
+        return new TownWorkforcePanel(
+                layer, x, y,
+                menu::getResidents,
+                resident -> menu.getBuilding().map(building -> building.canResidentWork(resident)).orElse(false),
+                TransportStationScreen::transportProficiency,
+                resident -> menu.getBuilding().map(building -> building.getResidentScore(resident)).orElse(0.0),
+                resident -> menu.getBuilding().map(building -> building.getResidentCapacityContribution(resident)).orElse(0.0),
+                TransportStationScreen::dailyProficiencyGain,
+                Component.translatable("gui.frostedheart.transport_station.transport_proficiency"),
+                value -> Component.translatable("gui.frostedheart.transport_station.personal_contribution", MineBaseScreen.two(value)));
     }
 
     private static List<TownInfoPanel.Row> overviewRows(TransportStationMenu menu) {

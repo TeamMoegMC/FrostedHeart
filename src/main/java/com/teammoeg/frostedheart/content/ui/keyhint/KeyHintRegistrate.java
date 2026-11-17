@@ -48,6 +48,11 @@ public class KeyHintRegistrate {
             }
             return List.of(keyMappingHint(FHKeyMappings.key_drink.get()));
         });
+        // The building area and road view explains why a town building works; point it out where players look.
+        registerTrigger(FHMain.rl("town_building_view"), TriggerType.LOOKING_AT_BLOCK, r ->
+                ClientUtils.getWorld().getBlockEntity(r.getBlockPos())
+                        instanceof com.teammoeg.frostedheart.content.town.block.AbstractTownBuildingBlockEntity<?>
+                        ? List.of(keyMappingHint(FHKeyMappings.key_zoneView.get())) : List.of());
         registerTrigger(FHMain.rl("sled_interact"), TriggerType.LOOKING_AT_ENTITY, e -> {
             if (e.getEntity() instanceof SledEntity sled) {
                 var player = ClientUtils.getLocalPlayer();

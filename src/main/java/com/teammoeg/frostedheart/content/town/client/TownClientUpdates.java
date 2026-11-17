@@ -33,29 +33,38 @@ public final class TownClientUpdates {
         return connection != null && connection.getConnection() == origin;
     }
 
+    public static boolean isCurrentHolder(UUID id) { return ready && java.util.Objects.equals(holderId, id); }
+
     public static boolean canApply(net.minecraft.network.Connection origin) {
         return isCurrentConnection(origin) && ready && currentTown().isPresent();
     }
 
     public static Optional<TeamTownData> currentTown() {
-        return ready ? CClientTeamDataManager.INSTANCE.getInstance().getOptional(FHSpecialDataTypes.TOWN_DATA)
-                : Optional.empty();
+        return CClientTeamDataManager.INSTANCE.getInstance().getOptional(FHSpecialDataTypes.TOWN_DATA);
     }
 
     public static void pending(UUID serverHolderId) {
+        boolean sameTown = serverHolderId != null && serverHolderId.equals(holderId);
         holderId = serverHolderId;
         ready = false;
+        if (!pendingRequest || !sameTown) {
+            ticksUntilRequest = 20;
+            retryTicks = 20;
+        }
         pendingRequest = true;
-        ticksUntilRequest = 20;
-        CClientTeamDataManager.INSTANCE.getInstance().removeData(FHSpecialDataTypes.TOWN_DATA);
-        com.teammoeg.frostedheart.content.town.observation.TownOperationalStatusClientCache.reset();
-        TeamTownData.fireClientDataChanged();
+        if (!sameTown) {
+            CClientTeamDataManager.INSTANCE.getInstance().removeData(FHSpecialDataTypes.TOWN_DATA);
+            com.teammoeg.frostedheart.content.town.observation.TownOperationalStatusClientCache.reset();
+            com.teammoeg.frostedheart.content.town.render.TownRoadRenderer.reset();
+            TeamTownData.fireClientDataChanged();
+        }
     }
 
     public static void install(UUID serverHolderId, TeamTownData candidate) {
         if (!java.util.Objects.equals(holderId, serverHolderId) || candidate == null) {
             com.teammoeg.frostedheart.content.town.observation.TownOperationalStatusClientCache.reset();
         }
+        com.teammoeg.frostedheart.content.town.render.TownRoadRenderer.reset();
         holderId = serverHolderId;
         var holder = CClientTeamDataManager.INSTANCE.getInstance();
         if (candidate == null) holder.removeData(FHSpecialDataTypes.TOWN_DATA);
@@ -90,6 +99,7 @@ public final class TownClientUpdates {
 
     @SubscribeEvent
     public static void disconnected(ClientPlayerNetworkEvent.LoggingOut event) {
+        com.teammoeg.frostedheart.content.town.render.TownRoadRenderer.reset();
         ready = false;
         holderId = null;
         pendingRequest = false;
@@ -122,6 +132,12 @@ public final class TownClientUpdates {
      */
     private static boolean inClientBatchFire = false;
     private static long clientSyncBatchId = 0;
+    private static long nameUpdateId;
+
+    /** Arrival of authoritative name data, including an equal-name reply. */
+    public static void nameUpdated() { nameUpdateId++; }
+
+    public static long getNameUpdateId() { return nameUpdateId; }
 
     public static boolean isInClientBatchFire() {
         return inClientBatchFire;
@@ -144,6 +160,7 @@ public final class TownClientUpdates {
     public static void fireClientDataChanged() {
         inClientBatchFire = true;
         clientSyncBatchId++;
+        nameUpdated();
         try {
             fireBuildingsChanged();
             fireResidentsChanged();

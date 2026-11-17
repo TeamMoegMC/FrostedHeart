@@ -42,4 +42,4 @@ neither is evidence of current behavior.
 
 ## Minimum Contribution Step
 
-Before changing this system, identify the owning document above, preserve stable research/clue/effect identifiers or declare explicit `legacyIds`, run `./gradlew test --tests "com.teammoeg.frostedresearch.*"`, validate the production catalogue with `./gradlew validateResearchCatalog -PresearchCatalogDir=<path>`, and update the document plus `diary/` if any documented contract changes.
+Before changing this system, identify the owning document above, preserve stable research/clue/effect identifiers or declare explicit `legacyIds`, run the relevant real Forge GameTest scenarios, validate the production catalogue with `./gradlew validateResearchCatalog -PresearchCatalogDir=<path>`, and update the document plus `diary/` if any documented contract changes. JUnit sources and their build dependency were removed on 2026-10-19 at the user's request.

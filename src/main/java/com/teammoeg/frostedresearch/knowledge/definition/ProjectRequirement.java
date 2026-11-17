@@ -39,12 +39,14 @@ import java.util.*;
 
 /**
  * 研究项目的一项需求；id 在项目内唯一，作为进度身份。证据复用联络规则的槽位与跨条件语言；实验在实验台上进行。
+ * 计算与实验可以写人力协作 {@code labor}，由城镇研究所的研究员完成。
  * One project requirement; its id is the progress identity. Evidence reuses the link slot and cross-condition language;
- * experiments run on an experiment table.
+ * experiments run on an experiment table. Calculations and experiments may ask for {@code labor} from town researchers.
  */
 public record ProjectRequirement(String id, Type type, String title, int level, int count,
                                  List<LinkRule.Slot> inputs, List<LinkRule.CrossCondition> conditions,
-                                 List<Distinct> distinct, int duration, List<Material> materials, Space space) {
+                                 List<Distinct> distinct, int duration, List<Material> materials, Space space,
+                                 Optional<Labor> labor) {
     public enum Type {EVIDENCE, CALCULATION, EXPERIMENT}
 
     public static final int MAX_EVIDENCE_SLOTS = 8;
@@ -58,6 +60,11 @@ public record ProjectRequirement(String id, Type type, String title, int level, 
     /** Largest room the experiment table scans, in air blocks. */
     public static final int MAX_VOLUME = 4096;
     public static final int MAX_SPACE_BLOCKS = 8;
+    public static final int MAX_LABOR_WORKERS = 32;
+    public static final int MAX_LABOR_DAYS = 100;
+    /** Highest resident education level. */
+    public static final int MAX_EDUCATION = 5;
+    public static final int MAX_LABOR_ITEMS = 4;
 
     public static final Codec<ProjectRequirement> CODEC = RecordCodecBuilder.create(i -> i.group(
             Codec.STRING.fieldOf("id").forGetter(ProjectRequirement::id),
@@ -70,7 +77,8 @@ public record ProjectRequirement(String id, Type type, String title, int level, 
             field(Distinct.CODEC.listOf(), "distinct", List.of()).forGetter(ProjectRequirement::distinct),
             field(Codec.INT, "duration", 0).forGetter(ProjectRequirement::duration),
             field(Material.CODEC.listOf(), "materials", List.of()).forGetter(ProjectRequirement::materials),
-            field(Space.CODEC, "space", Space.NONE).forGetter(ProjectRequirement::space)
+            field(Space.CODEC, "space", Space.NONE).forGetter(ProjectRequirement::space),
+            KnowledgeKey.strictOptionalField(Labor.CODEC, "labor").forGetter(ProjectRequirement::labor)
     ).apply(i, ProjectRequirement::new));
 
     /**
@@ -142,24 +150,63 @@ public record ProjectRequirement(String id, Type type, String title, int level, 
         }
     }
 
+    /**
+     * 人力协作：每天至多投入 {@code workers} 名标准研究员，教育等级不低于 {@code education}；一份协作需要
+     * {@code workers × days} 人·天，物品按投入比例每天从城镇仓库扣除。{@code required} 为假时每份协作抵一次玩家的演算或实验，
+     * 为真时玩家的次数与协作都要完成。
+     * Labor from town researchers. Each day at most {@code workers} standard researchers of at least {@code education}
+     * work on it; one share takes {@code workers × days} worker-days and the daily {@code items} are drawn from the town
+     * warehouse in proportion to the labor given. When not {@code required} each share stands in for one of the
+     * player's games or experiments; when required both the player's count and one share must be done.
+     */
+    public record Labor(boolean required, int workers, int days, int education, List<Material> items) {
+        public static final Codec<Labor> CODEC = RecordCodecBuilder.create(i -> i.group(
+                field(Codec.BOOL, "required", false).forGetter(Labor::required),
+                field(Codec.INT, "workers", 1).forGetter(Labor::workers),
+                field(Codec.INT, "days", 1).forGetter(Labor::days),
+                field(Codec.INT, "education", 0).forGetter(Labor::education),
+                field(Material.CODEC.listOf(), "items", List.of()).forGetter(Labor::items)
+        ).apply(i, Labor::new));
+
+        public Labor {
+            items = List.copyOf(items);
+        }
+
+        /** Worker-days one share of this labor takes. */
+        public double share() {
+            return (double) workers * days;
+        }
+    }
+
     public ProjectRequirement {
         inputs = List.copyOf(inputs);
         conditions = List.copyOf(conditions);
         distinct = List.copyOf(distinct);
         materials = List.copyOf(materials);
+        labor = labor == null ? Optional.empty() : labor;
     }
 
     public static ProjectRequirement calculation(String id, String title, int level, int count) {
-        return new ProjectRequirement(id, Type.CALCULATION, title, level, count, List.of(), List.of(), List.of(), 0, List.of(), Space.NONE);
+        return new ProjectRequirement(id, Type.CALCULATION, title, level, count, List.of(), List.of(), List.of(), 0, List.of(), Space.NONE, Optional.empty());
     }
 
     public static ProjectRequirement evidence(String id, String title, List<LinkRule.Slot> inputs,
                                               List<LinkRule.CrossCondition> conditions, List<Distinct> distinct) {
-        return new ProjectRequirement(id, Type.EVIDENCE, title, 0, 1, inputs, conditions, distinct, 0, List.of(), Space.NONE);
+        return new ProjectRequirement(id, Type.EVIDENCE, title, 0, 1, inputs, conditions, distinct, 0, List.of(), Space.NONE, Optional.empty());
     }
 
     public static ProjectRequirement experiment(String id, String title, int count, int duration, List<Material> materials, Space space) {
-        return new ProjectRequirement(id, Type.EXPERIMENT, title, 0, count, List.of(), List.of(), List.of(), duration, materials, space);
+        return new ProjectRequirement(id, Type.EXPERIMENT, title, 0, count, List.of(), List.of(), List.of(), duration, materials, space, Optional.empty());
+    }
+
+    /** The same requirement asking for this labor. */
+    public ProjectRequirement withLabor(Labor labor) {
+        return new ProjectRequirement(id, type, title, level, count, inputs, conditions, distinct, duration, materials, space, Optional.of(labor));
+    }
+
+    /** Whether residents must also work on this requirement. */
+    public boolean laborRequired() {
+        return labor.map(Labor::required).orElse(false);
     }
 
     /**
@@ -186,17 +233,21 @@ public record ProjectRequirement(String id, Type type, String title, int level, 
         if (id.isBlank()) errors.add("Requirement id must not be blank");
         if (type != Type.EXPERIMENT && (duration != 0 || !materials.isEmpty() || !space.equals(Space.NONE)))
             errors.add(id + ": only experiments take duration, materials or space");
+        // Required labor may carry the whole requirement, so the player's own count may then be zero.
+        int minimumCount = laborRequired() ? 0 : 1;
+        labor.ifPresent(value -> validate(value, errors));
         switch (type) {
             case CALCULATION -> {
                 if (level < 0 || level > MAX_CALCULATION_LEVEL)
                     errors.add(id + ": calculation level must be 0 to " + MAX_CALCULATION_LEVEL);
-                if (count < 1 || count > MAX_CALCULATION_COUNT)
-                    errors.add(id + ": calculation count must be 1 to " + MAX_CALCULATION_COUNT);
+                if (count < minimumCount || count > MAX_CALCULATION_COUNT)
+                    errors.add(id + ": calculation count must be " + minimumCount + " to " + MAX_CALCULATION_COUNT);
                 if (!inputs.isEmpty() || !conditions.isEmpty() || !distinct.isEmpty())
                     errors.add(id + ": calculation requirements read no observations");
             }
             case EVIDENCE -> {
                 if (title.isBlank()) errors.add(id + ": evidence needs an author-written title");
+                if (labor.isPresent()) errors.add(id + ": only calculations and experiments take labor");
                 if (level != 0 || count != 1)
                     errors.add(id + ": evidence takes one slot per record; repeat a slot instead of level/count");
                 if (inputs.isEmpty() || inputs.size() > MAX_EVIDENCE_SLOTS)
@@ -213,10 +264,15 @@ public record ProjectRequirement(String id, Type type, String title, int level, 
             case EXPERIMENT -> {
                 if (title.isBlank()) errors.add(id + ": experiments need an author-written title");
                 if (level != 0) errors.add(id + ": experiments take no level");
-                if (count < 1 || count > MAX_CALCULATION_COUNT) errors.add(id + ": experiment count must be 1 to " + MAX_CALCULATION_COUNT);
+                if (count < minimumCount || count > MAX_CALCULATION_COUNT)
+                    errors.add(id + ": experiment count must be " + minimumCount + " to " + MAX_CALCULATION_COUNT);
                 if (!inputs.isEmpty() || !conditions.isEmpty() || !distinct.isEmpty())
                     errors.add(id + ": experiments read no observations");
-                if (duration < MIN_DURATION || duration > MAX_DURATION)
+                if (count == 0) {
+                    // Labor alone carries it: nothing runs on an experiment table.
+                    if (duration != 0 || !materials.isEmpty() || !space.equals(Space.NONE))
+                        errors.add(id + ": an experiment done by labor alone takes no duration, materials or space");
+                } else if (duration < MIN_DURATION || duration > MAX_DURATION)
                     errors.add(id + ": experiment duration must be " + MIN_DURATION + " to " + MAX_DURATION + " ticks");
                 if (materials.size() > MAX_MATERIALS) errors.add(id + ": experiments take at most " + MAX_MATERIALS + " materials");
                 for (Material material : materials) {
@@ -227,6 +283,22 @@ public record ProjectRequirement(String id, Type type, String title, int level, 
                 }
                 validate(space, errors);
             }
+        }
+    }
+
+    private void validate(Labor labor, List<String> errors) {
+        if (labor.workers() < 1 || labor.workers() > MAX_LABOR_WORKERS)
+            errors.add(id + ": labor workers must be 1 to " + MAX_LABOR_WORKERS);
+        if (labor.days() < 1 || labor.days() > MAX_LABOR_DAYS)
+            errors.add(id + ": labor days must be 1 to " + MAX_LABOR_DAYS);
+        if (labor.education() < 0 || labor.education() > MAX_EDUCATION)
+            errors.add(id + ": labor education must be 0 to " + MAX_EDUCATION);
+        if (labor.items().size() > MAX_LABOR_ITEMS) errors.add(id + ": labor takes at most " + MAX_LABOR_ITEMS + " daily items");
+        for (Material item : labor.items()) {
+            if (item.item().isEmpty() && item.tag().isEmpty()) errors.add(id + ": a labor item needs an item or a tag");
+            item.item().filter(name -> !ForgeRegistries.ITEMS.containsKey(name))
+                    .ifPresent(name -> errors.add(id + ": unknown labor item " + name));
+            if (item.count() < 1 || item.count() > 64) errors.add(id + ": labor item count must be 1 to 64");
         }
     }
 

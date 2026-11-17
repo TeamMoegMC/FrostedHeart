@@ -1,0 +1,128 @@
+{
+  "carvers": {
+    "air": [
+      "minecraft:cave",
+      "minecraft:cave_extra_underground",
+      "the_winter_rescue:wide_cave"
+    ]
+  },
+  "creature_spawn_probability": 0.01,
+  "downfall": 0.6,
+  "effects": {
+    "fog_color": 14739967,
+    "grass_color": 13029527,
+    "additions_sound": {
+      "sound": "minecraft:ambient.basalt_deltas.additions",
+      "tick_chance": 0.0111
+    },
+    "mood_sound": {
+      "block_search_extent": 8,
+      "offset": 2,
+      "sound": "minecraft:ambient.cave",
+      "tick_delay": 6000
+    },
+    "music": {
+      "max_delay": 24000,
+      "min_delay": 12000,
+      "replace_current_music": false,
+      "sound": "minecraft:music.overworld.stony_peaks"
+    },
+    "particle": {
+      "options": {
+        "type": "minecraft:white_ash"
+      },
+      "probability": 0.08
+    },
+    "sky_color": 7842047,
+    "water_color": 7856375,
+    "water_fog_color": 329011
+  },
+  "features": [
+    [
+      "the_winter_rescue:cave/diorite"
+    ],
+    [
+      "minecraft:lake_lava_underground",
+      "minecraft:lake_lava_surface",
+      "the_winter_rescue:cave/hydrothermal_lake"
+    ],
+    [
+      "minecraft:amethyst_geode",
+      "the_winter_rescue:cave/hydrothermal_geode"
+    ],
+    [
+      "minecraft:monster_room",
+      "minecraft:monster_room_deep"
+    ],
+    [
+      "the_winter_rescue:cave/hydrothermal_delta"
+    ],
+    [],
+    [
+      "minecraft:ore_gravel",
+      "the_winter_rescue:cave/hydrothermal_nickel_ore",
+      "the_winter_rescue:cave/hydrothermal_pyrite_ore",
+      "the_winter_rescue:cave/hydrothermal_zinc_ore",
+      "the_winter_rescue:cave/hydrothermal_lead_ore",
+      "the_winter_rescue:cave/hydrothermal_silver_ore",
+      "minecraft:ore_coal_upper",
+      "minecraft:ore_coal_lower",
+      "minecraft:ore_iron_upper",
+      "minecraft:ore_iron_middle",
+      "minecraft:ore_iron_small",
+      "minecraft:ore_gold",
+      "minecraft:ore_gold_lower",
+      "minecraft:ore_redstone",
+      "minecraft:ore_redstone_lower",
+      "minecraft:ore_lapis",
+      "minecraft:ore_lapis_buried",
+      "minecraft:ore_copper",
+      "the_winter_rescue:cave/hydrothermal_magma"
+    ],
+    [
+      "the_winter_rescue:cave/calcite_strip",
+      "the_winter_rescue:cave/hydrothermal_vines"
+    ],
+    [
+      "minecraft:spring_water",
+      "minecraft:spring_lava"
+    ],
+    [
+      "minecraft:glow_lichen"
+    ],
+    []
+  ],
+  "has_precipitation": true,
+  "spawn_costs": {},
+  "spawners": {
+    "ambient": [],
+    "axolotls": [],
+    "creature": [],
+    "misc": [],
+    "monster": [
+      {
+        "type": "minecraft:spider",
+        "maxCount": 1,
+        "minCount": 1,
+        "weight": 1
+      },
+      {
+        "type": "minecraft:creeper",
+        "maxCount": 1,
+        "minCount": 1,
+        "weight": 1
+      }
+    ],
+    "underground_water_creature": [
+      {
+        "type": "minecraft:glow_squid",
+        "maxCount": 1,
+        "minCount": 1,
+        "weight": 1
+      }
+    ],
+    "water_ambient": [],
+    "water_creature": []
+  },
+  "temperature": 0.24775
+}

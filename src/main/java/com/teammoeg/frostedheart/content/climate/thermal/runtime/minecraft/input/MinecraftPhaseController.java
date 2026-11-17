@@ -168,7 +168,7 @@ public final class MinecraftPhaseController {
                                     : null;
             if (edge == null) return PhaseAttempt.GAMEPLAY;
             var definition = profiles.transitionData(profileId, edge.heating());
-            if (!canTransition(level, position, state, edge, definition))
+            if (!canTransition(level, position, state, edge, definition, true))
                 return PhaseAttempt.GAMEPLAY;
             boolean changed =
                     IcicleBlock.isIcicle(state) && edge.heating()
@@ -269,11 +269,12 @@ public final class MinecraftPhaseController {
             MaterialThermalLaw.Transition edge,
             double energyJ,
             long tick) {
+        if (!edge.complete(energyJ)) return false;
         var profiles = MinecraftThermalProfiles.prepare();
         int profileId =
                 profiles.signatures().materialProfileId(profiles.states().signatureId(state));
         if (!canTransition(
-                level, position, state, edge, profiles.transitionData(profileId, edge.heating())))
+                level, position, state, edge, profiles.transitionData(profileId, edge.heating()), false))
             return false;
         if (IcicleBlock.isIcicle(state) && edge.heating()) return meltIcicle(level, position);
         BlockState target =
@@ -385,7 +386,7 @@ public final class MinecraftPhaseController {
                 position,
                 state,
                 transition,
-                profiles.transitionData(profile.id(), transition.heating()))) return Outcome.RETRY;
+                profiles.transitionData(profile.id(), transition.heating()), false)) return Outcome.RETRY;
         if (IcicleBlock.isIcicle(state) && transition.heating())
             return meltIcicle(level, position) ? Outcome.APPLIED : Outcome.RETRY;
         BlockState target =
@@ -410,12 +411,9 @@ public final class MinecraftPhaseController {
                         publication.geometryRevision())) return false;
         var brick = publication.brickAt(x & 15, y & 15, z & 15);
         if (brick.firstSlot() < 0 || brick.blockLayout() == null) return false;
-        int nodeIndex = brick.blockLayout().nodeAt((x & 3) | (z & 3) << 2 | (y & 3) << 4);
-        if (nodeIndex < 0) return false;
         var sample = MATERIAL_SAMPLE;
         if (!queries.tryReadMaterial(
-                brick.firstSlot() + nodeIndex,
-                brick.arenaGeneration(),
+                publication, (x & 15) | (z & 15) << 4 | (y & 15) << 8,
                 profiles.signatures().materialStateId(brick.signatureAtBlock((x & 3) | (z & 3) << 2 | (y & 3) << 4)),
                 sample)) return false;
         if (sample.requestSequence() != request.requestSequence()
@@ -431,7 +429,8 @@ public final class MinecraftPhaseController {
             BlockPos position,
             BlockState state,
             MaterialThermalLaw.Transition transition,
-            StateTransitionData.Edge definition) {
+            StateTransitionData.Edge definition,
+            boolean requireFluidBoundary) {
         if (definition == null
                 || Block.BLOCK_STATE_REGISTRY.getId(definition.target())
                         != transition.targetStateId()) return false;
@@ -444,7 +443,9 @@ public final class MinecraftPhaseController {
         if (!transition.heating()
                 && MinecraftGameplayFields.guaranteedFloor(level, position)
                         >= transition.transitionTemperatureC()) return false;
-        if (conditions.fluidBoundary() != null) {
+        // Untracked natural freezing starts at a boundary. A body whose latent
+        // interval already completed commits the funded phase without that start condition.
+        if (requireFluidBoundary && conditions.fluidBoundary() != null) {
             if (!level.isAreaLoaded(position, 1)) return false;
             var neighbor = NEIGHBOR.get();
             var fluid = conditions.fluidBoundary();

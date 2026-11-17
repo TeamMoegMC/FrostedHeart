@@ -1,0 +1,101 @@
+{
+  "status": "implemented_and_focused_validation_passed",
+  "verifiedDate": "2026-11-05",
+  "scope": "Player heat/exposure semantics, clothing radiation transfer, food bounds, heater feedback, equipment weight, thermal illness and attribute operations",
+  "baselineCommit": "61eddf706",
+  "productionChange": {
+    "files": 10,
+    "insertions": 148,
+    "deletions": 278,
+    "netLines": -130,
+    "newProductionTypes": 0,
+    "newMixins": 0,
+    "legacyPlayerTemperatureReset": "preserved_as_explicitly_requested"
+  },
+  "fixes": [
+    "Radiation is integrated as power; no power/conductance equilibrium temperature reaches direct injury",
+    "Clothing insulation limits incoming radiation as well as passive environmental exchange",
+    "Food cannot reverse its heat direction or clamp a pre-existing out-of-range part with zero energy",
+    "Heater vest uses signed feedback and stops replacing cooling of an already overheated body",
+    "First equipment weight effect checks the existing instance before reading it",
+    "Temperature-owned hot/cold illness follows actual torso temperature level, sign and recovery",
+    "Severe exposure hit frequency uses real elapsed seconds and clothing transmission",
+    "Clothing MULTIPLY_BASE aggregation follows vanilla operation semantics"
+  ],
+  "build": {
+    "java": 17,
+    "command": "gradlew.bat assemble compileGameTestJava -I build/thermal-player-release.init.gradle --offline --no-daemon --max-workers=1 --console=plain",
+    "log": "build/thermal-player-release-compile-20261105-final.log",
+    "result": "BUILD SUCCESSFUL in 52s",
+    "outputs": "build/thermal-player-release-20261105",
+    "testCompileExclusion": "Unfinished unrelated src/gametest/java/com/teammoeg/frostedheart/content/world/features/deposit/**; no world-generation source edits",
+    "junitRun": false,
+    "historicalSourceCopyOrBuild": false
+  },
+  "artifact": {
+    "path": "build/thermal-player-release-20261105/libs/frostedheart-1.20.1-0.7.7.jar",
+    "bytes": 14913361,
+    "classCount": 3728,
+    "gameTestClassCount": 0,
+    "installedOrDeployed": false,
+    "workspaceScope": "Built from the current shared workspace, including other pre-existing uncommitted changes; this is not a separately curated release commit"
+  },
+  "verification": {
+    "uniqueCasesWithFinalPassingEvidence": 22,
+    "singleAllGreen22CaseRun": false,
+    "sameFinalProductionCode": true,
+    "finalPlayerGroup": {
+      "cases": 9,
+      "requiredPassed": 9,
+      "requiredFailed": 0,
+      "log": "build/thermal-player-release-20261105-r4.log",
+      "summary": "build/thermal-player-release-20261105-r4.json",
+      "thermalErrors": 0,
+      "shutdownRootBytes": 0
+    },
+    "existingGroups": {
+      "hotSpringCases": 5,
+      "integrationCases": 6,
+      "campfireFuelAndSaveCases": 2,
+      "passedOnFinalProductionCode": true,
+      "log": "build/thermal-player-release-20261105-r3.log",
+      "wholeRunResult": "21 of 22 passed; severe-exposure test expected raw damage without vanilla difficulty scaling",
+      "thermalErrors": 0,
+      "shutdownRootBytes": 0
+    },
+    "playerCases": [
+      "Vanilla attribute operation meaning",
+      "Actual campfire radiation with displayed 12 C air and no equilibrium-based burn",
+      "Clothing insulation reduces received radiation and does not inflate exposure temperature",
+      "Severe real exposure, zero transmission and equal integrated exposure after vanilla damage scaling",
+      "Food positive, negative, zero and out-of-range directionality",
+      "Thermal illness escalation, hot/cold reversal and recovery",
+      "First heavy equipment and removal",
+      "Heater vest feedback and fractional final heating-pad resource interval",
+      "Current body energy save/load and intentional old-body reset"
+    ]
+  },
+  "retainedFailedRuns": [
+    {
+      "log": "build/thermal-player-release-20261105-r1.log",
+      "requiredFailures": 3,
+      "reasons": "New body fixture retained login starting armor and spawn invulnerability; existing lava fixture expected one tick to capture a range larger than its 64-Brick budget"
+    },
+    {
+      "log": "build/thermal-player-release-20261105-r2.log",
+      "requiredFailures": 2,
+      "reasons": "New body fixture still compared against granted starting armor and expected unscaled raw damage"
+    },
+    {
+      "log": "build/thermal-player-release-20261105-r3.log",
+      "requiredFailures": 1,
+      "reasons": "Both instant damage types use scaling=always; Easy difficulty turns raw damage 4 into health loss 3. Test compares equivalent exposure after vanilla scaling in r4. No production injury weakening was made to satisfy this assertion"
+    }
+  ],
+  "limits": [
+    "No claim that every thermal subsystem is free of defects",
+    "No full legacy survival/death/recovery/resource calibration or hundred-player qualification",
+    "Real campfire test validates the reported 12 C plus radiation chain, not a replay of the user's exact enclosed room",
+    "Existing optional-mod missing recipe and resource duplication warnings remain in the stripped GameTest environment"
+  ]
+}

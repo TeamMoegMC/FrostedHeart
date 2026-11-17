@@ -455,11 +455,10 @@ public final class MinecraftPageManager implements AutoCloseable {
             PageEntry page = pages.get(sectionKey);
             int brick =
                     SectionPos.sectionRelative(worldX) >>> 2
-                            | (SectionPos.sectionRelative(worldZ) >>> 2) << 2
-                            | 3 << 4;
+                            | (SectionPos.sectionRelative(worldZ) >>> 2) << 2;
             if (page != null
                     && page.handle != null
-                    && (page.capturedBrickMask & 1L << brick) != 0L) {
+                    && (page.capturedBrickMask & 0x0001_0001_0001_0001L << brick) != 0L) {
                 environment.updateSkyColumn(page.handle, worldX, worldZ, exposedWorldY);
             }
         }
@@ -468,12 +467,12 @@ public final class MinecraftPageManager implements AutoCloseable {
     public void onChunkLoad(LevelChunk chunk) {
         requireMainThread();
         for (int index = 0; index < chunk.getSections().length; index++) {
-            ensureSectionOwner(chunk, index, chunk.getSections()[index]);
-            invalidateHaloConsumers(
-                    SectionPos.asLong(
-                            chunk.getPos().x,
-                            chunk.getSectionYFromSectionIndex(index),
-                            chunk.getPos().z), HaloCause.CHUNK_LOAD);
+            long section = SectionPos.asLong(
+                    chunk.getPos().x, chunk.getSectionYFromSectionIndex(index), chunk.getPos().z);
+            if (pages.containsKey(section) || haloConsumers.containsKey(section)) {
+                ensureSectionOwner(chunk, index, chunk.getSections()[index]);
+            }
+            invalidateHaloConsumers(section, HaloCause.CHUNK_LOAD);
         }
         LongOpenHashSet indexed = pagesByChunk.get(chunk.getPos().toLong());
         if (indexed != null) {
@@ -495,7 +494,13 @@ public final class MinecraftPageManager implements AutoCloseable {
                 PageEntry page = pages.get(sectionKey);
                 if (page != null) {
                     page.restoreSeedMask = 0;
-                    if (page.handle != null) retire(page, !checkpointCaptured);
+                    if (page.handle != null) {
+                        // The unload callback owns this actual Chunk even after getChunkNow stops finding it.
+                        // Normally the native/ordinary chunk checkpoint has already sealed all Pages.
+                        if (!checkpointCaptured && !input.captureDormantPage(page.handle, chunk, page.capturedBrickMask))
+                            checkpointCaptured = input.captureRegionalCheckpoint(chunk, true);
+                        retire(page, false);
+                    }
                     if (!page.interested()) removeEntry(page);
                 }
             }
@@ -516,15 +521,15 @@ public final class MinecraftPageManager implements AutoCloseable {
             LevelChunkSection replacement) {
         requireMainThread();
         SectionOwner old = attachment(previous).frostedheart$getThermalInputOwner();
-        if (old != null && old.manager == this && old.chunk == chunk) {
-            detachSection(old);
-        }
-        attachSection(chunk, sectionIndex, replacement);
         long key =
                 SectionPos.asLong(
                         chunk.getPos().x,
                         chunk.getSectionYFromSectionIndex(sectionIndex),
                         chunk.getPos().z);
+        boolean watched = old != null && old.manager == this && old.chunk == chunk;
+        if (watched) detachSection(old);
+        if (!watched && !pages.containsKey(key) && !haloConsumers.containsKey(key)) return;
+        attachSection(chunk, sectionIndex, replacement);
         SectionOwner next = ownersBySection.get(key);
         if (next != null) {
             next.recordFullResync(ThermalPageHandle.GeometryResyncReason.SECTION_REPLACED);
@@ -716,7 +721,7 @@ public final class MinecraftPageManager implements AutoCloseable {
             if (page.handle.currentPublication() == null
                     || page.handle.pendingFullGeometryResync() != null
                     || page.fullResync || page.centerCount != 0
-                    || !input.captureDormantPage(page.handle)) {
+                    || !input.captureDormantPage(page.handle, page.capturedBrickMask & ~desired)) {
                 shrinkQueue.add(page.sectionKey);
                 continue;
             }
@@ -843,7 +848,9 @@ public final class MinecraftPageManager implements AutoCloseable {
                     if (deferredGeometry) {
                         owner.invalidatePage(mutationScratch.physicalRelevant);
                     }
-                    environment.markSkyColumn(worldX, worldZ);
+                    if (pagesByChunk.containsKey(chunkKey(owner.sectionKey))) {
+                        environment.markSkyColumn(worldX, worldZ);
+                    }
                     if (!fullResync) collectCenter(owner, index, gameTick);
                     geometryChanged = true;
                     remaining &= remaining - 1L;
@@ -903,10 +910,14 @@ public final class MinecraftPageManager implements AutoCloseable {
                 }
             }
         }
-        for (long section : page.haloSections)
+        for (long section : page.haloSections) {
             haloConsumers
                     .computeIfAbsent(section, ignored -> new LongOpenHashSet())
                     .add(page.sectionKey);
+            // Only actual captured dependencies need a mutation owner. Missing
+            // Chunks attach it from the same halo index when they later load.
+            loadedSectionOrAttach(section);
+        }
         if (haloScratch.isEmpty()) return page.capturedHalo = GeometryHalo.EMPTY;
         long[] positions = haloScratch.keySet().toLongArray();
         Arrays.sort(positions);
@@ -1005,12 +1016,13 @@ public final class MinecraftPageManager implements AutoCloseable {
                     }
                     discardLifecycle(page);
                 } else {
-                    retire(page);
+                    if (!retire(page, true)) { withdrawals.add(page.sectionKey); return; }
                 }
             }
             removeEntry(page);
             return;
         }
+        loadedSectionOrAttach(page.sectionKey);
         long missing = page.requestedMask() & ~page.capturedBrickMask;
         if (missing != 0L || page.handle == null) {
             enqueue(page);
@@ -1063,14 +1075,11 @@ public final class MinecraftPageManager implements AutoCloseable {
         }
     }
 
-    private void retire(PageEntry page) {
-        retire(page, true);
-    }
-
-    private void retire(PageEntry page, boolean capture) {
-        if (capture) input.captureDormantPage(page.handle);
+    private boolean retire(PageEntry page, boolean capture) {
+        if (capture && !input.captureDormantPage(page.handle, page.capturedBrickMask)) return false;
         accumulator.retire(page.handle);
         discardLifecycle(page);
+        return true;
     }
 
     private void discardLifecycle(PageEntry page) {
@@ -1088,6 +1097,11 @@ public final class MinecraftPageManager implements AutoCloseable {
 
     public boolean hasTrackedChunk(long chunkKey) {
         return pagesByChunk.containsKey(chunkKey) || accumulator.hasPendingRetirementInChunk(chunkKey);
+    }
+
+    /** The Chunk test drainMutations applies before an edit may mark a Page sky column. */
+    public boolean hasPageInChunk(long chunkKey) {
+        return pagesByChunk.containsKey(chunkKey);
     }
 
     public boolean hasLiveChunk(long chunkKey) {

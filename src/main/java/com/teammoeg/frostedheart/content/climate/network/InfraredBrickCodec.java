@@ -26,14 +26,15 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.util.Mth;
 import net.minecraft.util.SimpleBitStorage;
 
-import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 /** Flat changed-Brick wire codec shared by server encoding and client decode. */
 public final class InfraredBrickCodec {
     public static final int BLOCKS_PER_BRICK = 64;
     public static final int MAX_LOCAL_BRICKS = 729 * 64;
-    public static final int MAX_PACKET_BYTES = 960 * 1024;
+    public static final int FIRST_PACKET_BYTES = 32 * 1024;
+    public static final int MAX_PACKET_BYTES = 128 * 1024;
     // Reserve the complete display header and both Page masks on every part.
     public static final int MAX_PAYLOAD_BYTES = MAX_PACKET_BYTES - 2048;
     public static final short INVALID_TEMPERATURE = Short.MIN_VALUE;
@@ -61,6 +62,7 @@ public final class InfraredBrickCodec {
         private final SimpleBitStorage[] storageByBits = storages();
         private final ArrayList<byte[]> parts = new ArrayList<>();
         private int completedBytes;
+        private final int[] previousOffsets = new int[64];
 
         public void reset() {
             output.clear();
@@ -70,7 +72,70 @@ public final class InfraredBrickCodec {
 
         /** A Page and its rollback point always remain in one bounded buffer. */
         public void beginPage() {
-            if (output.writerIndex() > MAX_PAYLOAD_BYTES - MAX_PAGE_BYTES) flushPart();
+            int budget=parts.isEmpty()?FIRST_PACKET_BYTES-2048:MAX_PAYLOAD_BYTES;
+            if (output.writerIndex() > budget - MAX_PAGE_BYTES) flushPart();
+        }
+
+        public int pageStart() { return output.writerIndex(); }
+
+        /** Canonical addresses are local to one Page; absent records mean INVALID. */
+        public byte[] finishPage(int start, byte[] previous) {
+            int end = output.writerIndex(), length = 0;
+            for (int read = start; read < end;) {
+                int mode = output.getUnsignedByte(read + 2);
+                int size = recordSize(mode, mode == INDEXED ? output.getUnsignedByte(read + 3) : 0);
+                if (mode != INVALID) length += size;
+                read += size;
+            }
+            byte[] canonical = new byte[length];
+            int copied = 0;
+            for (int read = start; read < end;) {
+                int mode = output.getUnsignedByte(read + 2);
+                int size = recordSize(mode, mode == INDEXED ? output.getUnsignedByte(read + 3) : 0);
+                if (mode != INVALID) {
+                    canonical[copied] = 0;
+                    canonical[copied + 1] = (byte) (output.getUnsignedShort(read) & 63);
+                    output.getBytes(read + 2, canonical, copied + 2, size - 2);
+                    copied += size;
+                }
+                read += size;
+            }
+            if (previous == null) return canonical;
+            if (Arrays.equals(canonical, previous)) {
+                output.writerIndex(start);
+                return previous;
+            }
+            Arrays.fill(previousOffsets, -1);
+            for (int read = 0; read < previous.length;) {
+                int mode = previous[read + 2] & 255;
+                previousOffsets[previous[read + 1] & 63] = read;
+                read += recordSize(mode, mode == INDEXED ? previous[read + 3] & 255 : 0);
+            }
+            int written = start;
+            for (int read = start; read < end;) {
+                int mode = output.getUnsignedByte(read + 2);
+                int size = recordSize(mode, mode == INDEXED ? output.getUnsignedByte(read + 3) : 0);
+                int old = previousOffsets[output.getUnsignedShort(read) & 63];
+                boolean same = mode == INVALID ? old < 0 : old >= 0
+                        && size == recordSize(previous[old + 2] & 255,
+                                (previous[old + 2] & 255) == INDEXED ? previous[old + 3] & 255 : 0);
+                if (same && old >= 0) for (int i = 2; i < size; i++)
+                    if (output.getByte(read + i) != previous[old + i]) { same = false; break; }
+                if (!same) for (int i = 0; i < size; i++) output.setByte(written++, output.getByte(read + i));
+                read += size;
+            }
+            output.writerIndex(written);
+            return canonical;
+        }
+
+        private int recordSize(int mode, int dictionarySize) {
+            return switch (mode) {
+                case INVALID -> 3;
+                case UNIFORM -> 5;
+                case INDEXED -> 4 + dictionarySize * 2 + storageByBits[Mth.ceillog2(dictionarySize)].getRaw().length * 8;
+                case RAW -> 3 + 64 * 2;
+                default -> throw new IllegalArgumentException("unknown infrared record mode: " + mode);
+            };
         }
 
         public boolean writeBrick(

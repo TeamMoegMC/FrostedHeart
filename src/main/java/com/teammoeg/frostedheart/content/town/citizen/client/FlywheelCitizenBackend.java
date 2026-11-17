@@ -253,7 +253,7 @@ final class FlywheelCitizenBackend implements CitizenRenderBackend, InstancingEn
 
 	private void syncCitizen(ClientCitizen citizen, Vec3 cameraPos, boolean snapshotDirty,
 			boolean reuseCachedLight, double now) {
-		double[] pos = citizen.renderPos(now);
+		double[] pos = citizen.presentationPos(now);
 		double dx = pos[0] - cameraPos.x;
 		double dy = pos[1] - cameraPos.y;
 		double dz = pos[2] - cameraPos.z;
@@ -272,8 +272,9 @@ final class FlywheelCitizenBackend implements CitizenRenderBackend, InstancingEn
 			return;
 		}
 
-		boolean dirty = snapshotDirty;
-		if (snapshotDirty)
+		boolean dirty = snapshotDirty || entry.roadActive != citizen.roadPoseActive
+                || (citizen.roadPoseActive && entry.roadTime != citizen.roadTime);
+		if (dirty)
 			writeSnapshot(citizen, entry, now);
 		if (sampleLight(citizen, entry.data, pos, false))
 			dirty = true;
@@ -384,22 +385,23 @@ final class FlywheelCitizenBackend implements CitizenRenderBackend, InstancingEn
 
 	private void writeSnapshot(ClientCitizen citizen, Entry entry, double gameNow) {
 		CitizenInstanceData data = entry.data;
-		data.pos0X = (float) (citizen.x0 - originX);
-		data.pos0Y = (float) (citizen.y0 - originY);
-		data.pos0Z = (float) (citizen.z0 - originZ);
-		data.pos1X = (float) (citizen.x1 - originX);
-		data.pos1Y = (float) (citizen.y1 - originY);
-		data.pos1Z = (float) (citizen.z1 - originZ);
+        entry.roadTime = citizen.roadTime; entry.roadActive = citizen.roadPoseActive;
+		data.pos0X = (float) ((citizen.roadPoseActive ? citizen.roadX0 : citizen.x0) - originX);
+		data.pos0Y = (float) ((citizen.roadPoseActive ? citizen.roadY0 : citizen.y0) - originY);
+		data.pos0Z = (float) ((citizen.roadPoseActive ? citizen.roadZ0 : citizen.z0) - originZ);
+		data.pos1X = (float) ((citizen.roadPoseActive ? citizen.roadX1 : citizen.x1) - originX);
+		data.pos1Y = (float) ((citizen.roadPoseActive ? citizen.roadY1 : citizen.y1) - originY);
+		data.pos1Z = (float) ((citizen.roadPoseActive ? citizen.roadZ1 : citizen.z1) - originZ);
 
 		// Keep snapshot timestamps in the same clock domain as shader uniform uTime.
 		float animationNow = AnimationTickHolder.getRenderTime();
 		data.snapshotTime = wrapAnimationTime(animationNow
-				+ (float) ((citizen.snapshotStartSeconds() - gameNow) * 20.0));
+				+ (float) (((citizen.roadPoseActive ? citizen.roadTime : citizen.snapshotStartSeconds()) - gameNow) * 20.0));
 		double interval = Mth.clamp(citizen.snapshotEndSeconds() - citizen.snapshotStartSeconds(), 0.05, 1.0);
-		data.snapshotDuration = (float) (interval * 20.0);
+		data.snapshotDuration = citizen.roadPoseActive ? 1 : (float) (interval * 20.0);
 
 		boolean moving = citizen.isMoving();
-		if (moving) {
+		if (moving && !citizen.roadPoseActive) {
 			float speed = CitizenState.SPEED[citizen.state & 0xFF] / (float) CitizenState.FIXED_SCALE;
 			data.velocityX = CitizenState.DIR_X_16[citizen.dir] / (float) CitizenState.FIXED_SCALE * speed;
 			data.velocityZ = CitizenState.DIR_Z_16[citizen.dir] / (float) CitizenState.FIXED_SCALE * speed;
@@ -409,11 +411,11 @@ final class FlywheelCitizenBackend implements CitizenRenderBackend, InstancingEn
 		}
 
 		int yawStart = citizen.visualYaw(gameNow);
-		int yawTarget = CitizenState.DIR_TO_YAW[citizen.dir & 15] & 0xFF;
+		int yawTarget = citizen.roadClimbing ? citizen.roadYaw : CitizenState.DIR_TO_YAW[citizen.dir & 15] & 0xFF;
 		data.yawStart = yawStart;
 		data.yawDelta = shortYawDelta(yawStart, yawTarget);
 		data.yawTime = wrapAnimationTime(animationNow);
-		data.moving = (byte) (moving ? 1 : 0);
+		data.moving = (byte) (citizen.roadClimbing ? 2 : moving ? 1 : 0);
 		data.sleeping = (byte) ((citizen.state & 0xFF) == CitizenState.SLEEP ? 1 : 0);
 		data.phase = encodeWalkPhase(citizen.walkPhase());
 		data.age = (byte) citizen.age();
@@ -491,6 +493,8 @@ final class FlywheelCitizenBackend implements CitizenRenderBackend, InstancingEn
 		private final CitizenInstanceData data;
 		private final int skin;
 		private final CitizenRenderOwner owner;
+        private double roadTime = Double.NaN;
+        private boolean roadActive;
 
 		private Entry(CitizenInstanceData data, int skin, CitizenRenderOwner owner) {
 			this.data = data;

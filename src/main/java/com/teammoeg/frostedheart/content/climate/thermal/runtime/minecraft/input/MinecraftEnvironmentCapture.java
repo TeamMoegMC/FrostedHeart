@@ -20,8 +20,15 @@
 /* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.input;
 
+import com.teammoeg.frostedheart.content.climate.ClimateCover;
+import com.teammoeg.frostedheart.content.climate.ClimateCoverChunk;
+import com.teammoeg.frostedheart.content.climate.ClimateCoverColumns;
+import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClimate;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalPageHandle;
+import com.teammoeg.frostedheart.content.climate.thermal.solver.NaturalProfile;
+import com.teammoeg.frostedheart.content.climate.thermal.solver.NaturalProfiles;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongLinkedOpenHashSet;
@@ -36,16 +43,23 @@ import java.util.Comparator;
 import java.util.PriorityQueue;
 import java.util.Arrays;
 
-/** Bounded main-thread natural-temperature and sky-column capture. */
+/**
+ * Bounded main-thread natural-temperature and sky-column capture. Each tracked Page also publishes its per-block
+ * natural profile: refreshed with the natural cadence when the covered climate moves, and per column when cover
+ * changes.
+ */
 public final class MinecraftEnvironmentCapture implements AutoCloseable {
     private static final long REFRESH_INTERVAL_TICKS = 200L;
     private static final int MAX_NATURAL_REFRESHES_PER_TICK = 16;
     private static final int MAX_SKY_COLUMNS_PER_TICK = 64;
+    private static final int MAX_COVER_COLUMNS_PER_TICK = 64;
     private static final double NATURAL_DELTA_C = 0.25D;
+    private static final double CLIMATE_DELTA_C = 0.05D;
     private static final double WIND_GAIN = 0.8D;
     private static final double WIND_SCALE_DELTA = 0.05D;
 
     private final ServerLevel level;
+    private final NaturalProfiles profiles;
     private DimensionInputAccumulator accumulator;
     private final Long2ObjectOpenHashMap<Entry> entries =
             new Long2ObjectOpenHashMap<>();
@@ -55,6 +69,8 @@ public final class MinecraftEnvironmentCapture implements AutoCloseable {
                     .thenComparingLong(entry -> entry.handle.sectionKey()));
     private final LongLinkedOpenHashSet dirtyColumns =
             new LongLinkedOpenHashSet();
+    private final LongLinkedOpenHashSet dirtyCoverColumns =
+            new LongLinkedOpenHashSet();
     private final BlockPos.MutableBlockPos temperaturePosition =
             new BlockPos.MutableBlockPos();
     private long nextWindRefreshTick;
@@ -62,10 +78,12 @@ public final class MinecraftEnvironmentCapture implements AutoCloseable {
 
     public MinecraftEnvironmentCapture(
             ServerLevel level,
-            DimensionInputAccumulator accumulator
+            DimensionInputAccumulator accumulator,
+            NaturalProfiles profiles
     ) {
         this.level = level;
         this.accumulator = accumulator;
+        this.profiles = profiles;
     }
 
     Captured capture(long sectionKey, LevelChunk chunk, long residentBrickMask) {
@@ -82,7 +100,8 @@ public final class MinecraftEnvironmentCapture implements AutoCloseable {
         int minX = SectionPos.sectionToBlockCoord(sectionX);
         int minY = SectionPos.sectionToBlockCoord(sectionY);
         int minZ = SectionPos.sectionToBlockCoord(sectionZ);
-        long topBricks = residentBrickMask & 0xffff_0000_0000_0000L;
+        // Every captured column can have an exposed sparse upper boundary, even below the Section roof.
+        long topBricks = (residentBrickMask | residentBrickMask >>> 16 | residentBrickMask >>> 32 | residentBrickMask >>> 48) & 0xffffL;
         while (topBricks != 0L) {
             int brick = Long.numberOfTrailingZeros(topBricks);
             int brickMinX = (brick & 3) << 2;
@@ -99,7 +118,75 @@ public final class MinecraftEnvironmentCapture implements AutoCloseable {
             }
             topBricks &= topBricks - 1L;
         }
-        return new Captured(natural, sky);
+        return new Captured(natural, sky, naturalProfile(sectionKey, chunk));
+    }
+
+    /** {@code WorldTemperature.naturalAir} of every block, split into what changes on different clocks. */
+    private NaturalProfile naturalProfile(long sectionKey, LevelChunk chunk) {
+        int minX = SectionPos.sectionToBlockCoord(SectionPos.x(sectionKey));
+        int minY = SectionPos.sectionToBlockCoord(SectionPos.y(sectionKey));
+        int minZ = SectionPos.sectionToBlockCoord(SectionPos.z(sectionKey));
+        float dimension = WorldTemperature.dimension(level);
+        float[] brickBase = new float[64];
+        for (int brick = 0; brick < 64; brick++) {
+            temperaturePosition.set(minX + ((brick & 3) << 2) + 2, minY + ((brick >>> 4) << 2) + 2,
+                    minZ + ((brick >>> 2 & 3) << 2) + 2);
+            brickBase[brick] = dimension + WorldTemperature.biome(level, temperaturePosition);
+        }
+        byte[] cover = new byte[4096];
+        ClimateCoverColumns columns = ((ClimateCoverChunk) chunk).frostedheart$getClimateCover();
+        int limit = ClimateCover.limit();
+        for (int y = 0; y < 16; y++)
+            for (int z = 0; z < 16; z++)
+                for (int x = 0; x < 16; x++)
+                    cover[x | z << 4 | y << 8] = (byte) columns.coverAbove(chunk, minX + x, minY + y, minZ + z, limit);
+        return new NaturalProfile(brickBase, cover, coveredClimate(sectionKey, limit), minY,
+                WorldTemperature.hasNoUnderground(level),
+                FHConfig.SERVER.CLIMATE.absoluteZeroCelsius.get().floatValue());
+    }
+
+    /** Climate reaching each cover in this Section's chunk; index 0 is the open air. */
+    private float[] coveredClimate(long sectionKey, int limit) {
+        temperaturePosition.set(
+                SectionPos.sectionToBlockCoord(SectionPos.x(sectionKey)) + 8,
+                SectionPos.sectionToBlockCoord(SectionPos.y(sectionKey)) + 8,
+                SectionPos.sectionToBlockCoord(SectionPos.z(sectionKey)) + 8);
+        float[] climate = new float[limit + 1];
+        for (int cover = 0; cover <= limit; cover++)
+            climate[cover] = WorldClimate.getCoveredTemp(level, temperaturePosition, cover);
+        return climate;
+    }
+
+    private static boolean climateMoved(float[] previous, float[] next) {
+        if (previous.length != next.length) return true;
+        for (int index = 0; index < next.length; index++)
+            if (Math.abs(previous[index] - next[index]) >= CLIMATE_DELTA_C) return true;
+        return false;
+    }
+
+    /** A block in this column changed opacity, so the cover below it may differ. */
+    public void markCoverColumn(int worldX, int worldZ) {
+        dirtyCoverColumns.add((long) worldX << 32 | worldZ & 0xffff_ffffL);
+    }
+
+    private void refreshCoverColumn(LevelChunk chunk, int worldX, int worldZ) {
+        ClimateCoverColumns columns = ((ClimateCoverChunk) chunk).frostedheart$getClimateCover();
+        int limit = ClimateCover.limit(), column = (worldX & 15) | (worldZ & 15) << 4;
+        for (int sectionY = chunk.getMinSection(); sectionY < chunk.getMaxSection(); sectionY++) {
+            Entry entry = entries.get(SectionPos.asLong(chunk.getPos().x, sectionY, chunk.getPos().z));
+            if (entry == null || entry.profile == null) continue;
+            byte[] cover = null;
+            for (int y = 0; y < 16; y++) {
+                int index = column | y << 8;
+                int value = columns.coverAbove(chunk, worldX, SectionPos.sectionToBlockCoord(sectionY) + y, worldZ, limit);
+                if (Byte.toUnsignedInt(entry.profile.cover()[index]) == value) continue;
+                if (cover == null) cover = entry.profile.cover().clone();
+                cover[index] = (byte) value;
+            }
+            if (cover == null) continue;
+            entry.profile = entry.profile.withCover(cover);
+            profiles.put(entry.handle.sectionKey(), entry.profile);
+        }
     }
 
     void captureNewBricks(
@@ -111,7 +198,7 @@ public final class MinecraftEnvironmentCapture implements AutoCloseable {
         if (entry == null || entry.handle != handle) {
             return;
         }
-        long topBricks = addedBrickMask & 0xffff_0000_0000_0000L;
+        long topBricks = (addedBrickMask | addedBrickMask >>> 16 | addedBrickMask >>> 32 | addedBrickMask >>> 48) & 0xffffL;
         int minX = SectionPos.sectionToBlockCoord(
                 SectionPos.x(handle.sectionKey()));
         int minY = SectionPos.sectionToBlockCoord(
@@ -150,14 +237,17 @@ public final class MinecraftEnvironmentCapture implements AutoCloseable {
                 captured.naturalTemperatureC,
                 captured.firstExposedLocalY.clone(),
                 nextRefreshTick(handle.sectionKey(), gameTick));
+        entry.profile = captured.profile;
         entries.put(handle.sectionKey(), entry);
         naturalQueue.add(entry);
+        if (entry.profile != null) profiles.put(handle.sectionKey(), entry.profile);
     }
 
     void untrack(ThermalPageHandle handle) {
         Entry entry = entries.get(handle.sectionKey());
         if (entry != null && entry.handle == handle) {
             entries.remove(handle.sectionKey());
+            profiles.remove(handle.sectionKey());
         }
     }
 
@@ -176,7 +266,8 @@ public final class MinecraftEnvironmentCapture implements AutoCloseable {
         }
         return new Captured(
                 entry.naturalTemperatureC,
-                entry.firstExposedLocalY.clone());
+                entry.firstExposedLocalY.clone(),
+                entry.profile);
     }
 
     void markSkyColumn(int worldX, int worldZ) {
@@ -216,6 +307,16 @@ public final class MinecraftEnvironmentCapture implements AutoCloseable {
                     worldZ);
             pages.refreshSkyColumn(
                     worldX, worldZ, exposedY);
+        }
+        remaining = MAX_COVER_COLUMNS_PER_TICK;
+        while (remaining-- > 0 && !dirtyCoverColumns.isEmpty()) {
+            long packed = dirtyCoverColumns.removeFirstLong();
+            int worldX = (int) (packed >> 32);
+            int worldZ = (int) packed;
+            LevelChunk chunk = level.getChunkSource().getChunkNow(
+                    SectionPos.blockToSectionCoord(worldX),
+                    SectionPos.blockToSectionCoord(worldZ));
+            if (chunk != null) refreshCoverColumn(chunk, worldX, worldZ);
         }
     }
 
@@ -259,6 +360,13 @@ public final class MinecraftEnvironmentCapture implements AutoCloseable {
                 entry.naturalTemperatureC = natural;
                 accumulator.updateNaturalTemperature(entry.handle, natural);
             }
+            if (entry.profile != null) {
+                float[] climate = coveredClimate(entry.handle.sectionKey(), ClimateCover.limit());
+                if (climateMoved(entry.profile.coveredClimate(), climate)) {
+                    entry.profile = entry.profile.withClimate(climate);
+                    profiles.put(entry.handle.sectionKey(), entry.profile);
+                }
+            }
             entry.nextRefreshTick = gameTick + REFRESH_INTERVAL_TICKS;
             naturalQueue.add(entry);
         }
@@ -287,11 +395,14 @@ public final class MinecraftEnvironmentCapture implements AutoCloseable {
         entries.clear();
         naturalQueue.clear();
         dirtyColumns.clear();
+        dirtyCoverColumns.clear();
+        profiles.clear();
     }
 
     record Captured(
             double naturalTemperatureC,
-            byte[] firstExposedLocalY
+            byte[] firstExposedLocalY,
+            NaturalProfile profile
     ) {
     }
 
@@ -300,6 +411,7 @@ public final class MinecraftEnvironmentCapture implements AutoCloseable {
         private double naturalTemperatureC;
         private final byte[] firstExposedLocalY;
         private long nextRefreshTick;
+        private NaturalProfile profile;
 
         private Entry(
                 ThermalPageHandle handle,

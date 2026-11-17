@@ -23,8 +23,12 @@ package com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft;
 import static com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput.MAX_PUBLICATION_AGE_TICKS;
 import static com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput.dormantHalfLifeSeconds;
 
+import com.teammoeg.frostedheart.content.climate.ClimateCover;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
+import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClimate;
 import com.teammoeg.frostedheart.content.climate.network.InfraredBrickCodec;
+import com.teammoeg.frostedheart.content.climate.network.InfraredNaturalClimate;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.content.climate.thermal.field.ThermalAnalyticField;
 import com.teammoeg.frostedheart.content.climate.thermal.field.ThermalAnalyticFieldIndex;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.BlockBrickLayout;
@@ -49,11 +53,17 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
 
 import java.util.Arrays;
+import com.teammoeg.frostedheart.content.climate.network.InfraredWindow;
 
 /** Shared main-thread scratch; display reads never start a runtime or load chunks. */
 final class InfraredCapture implements AutoCloseable {
     private static final int INFRARED_ACTIVE_TICKS = 80;
     private static final int INFRARED_PAGE_CAPACITY = 9 * 9 * 9;
+    private static final int[] PAGE_ORDER=java.util.stream.IntStream.range(0,INFRARED_PAGE_CAPACITY).boxed()
+            .sorted(java.util.Comparator.comparingInt(local -> {
+                int x=local%9-4,y=local/81-4,z=local/9%9-4;
+                return x*x+y*y+z*z;
+            })).mapToInt(Integer::intValue).toArray();
     static final int INFRARED_PRESENCE_WORDS = 12;
     private static final long[] NO_INFRARED_PRESENCE = new long[0];
     private final QueryPublication.ReadCursor cursor = new QueryPublication.ReadCursor();
@@ -63,6 +73,9 @@ final class InfraredCapture implements AutoCloseable {
     private final long[] presence = new long[INFRARED_PRESENCE_WORDS];
     private final long[] fieldPages = new long[INFRARED_PRESENCE_WORDS];
     private final long[] storedPresence = new long[INFRARED_PRESENCE_WORDS];
+    private final long[] remappedPresence = new long[INFRARED_PRESENCE_WORDS];
+    private final long[] remappedFields = new long[INFRARED_PRESENCE_WORDS];
+    private final InfraredDisplayCache displays = new InfraredDisplayCache();
     private final LevelChunk[] loadedChunks = new LevelChunk[81];
     private final double[] storedTemperatures = new double[4096];
     private final long[] changedMaterialBlocks = new long[64];
@@ -86,6 +99,16 @@ final class InfraredCapture implements AutoCloseable {
     private int originX, originY, originZ;
     private long captureTick;
 
+    /** A capture for a caller that does not track natural climate. */
+    InfraredSnapshot capture(MinecraftPageManager pages, QueryPublication publication, long generation,
+            ServerPlayer player, boolean forceFull, long knownGeneration, long knownCenter, int lastEpoch,
+            long[] knownPresence, boolean knownReadable, long[] knownFieldPages, long knownStoredEpoch,
+            long knownStoredSampleTick, int knownDisplayRequestId, int requestId) {
+        return capture(pages, publication, generation, player, forceFull, knownGeneration, knownCenter, lastEpoch,
+                knownPresence, knownReadable, knownFieldPages, knownStoredEpoch, knownStoredSampleTick,
+                knownDisplayRequestId, requestId, InfraredNaturalClimate.UNTRACKED);
+    }
+
     InfraredSnapshot capture(
             MinecraftPageManager pages,
             QueryPublication publication,
@@ -99,14 +122,29 @@ final class InfraredCapture implements AutoCloseable {
             boolean knownReadable,
             long[] knownFieldPages,
             long knownStoredEpoch,
-            long knownStoredSampleTick) {
+            long knownStoredSampleTick, int knownDisplayRequestId, int requestId, long knownNaturalRevision) {
         level = player.serverLevel();
         int cx = Mth.floor(player.getX()) >> 4, cy = Mth.floor(player.getEyeY()) >> 4;
         int cz = Mth.floor(player.getZ()) >> 4;
+        var natural = naturalClimate(cx, cz);
         originX = (cx - 4) * 16;
         originY = (cy - 4) * 16;
         originZ = (cz - 4) * 16;
         long center = SectionPos.asLong(cx, cy, cz), tick = level.getGameTime();
+        boolean moved = knownCenter != center;
+        boolean overlap = InfraredWindow.overlaps(knownCenter, center);
+        if (moved && overlap) {
+            InfraredWindow.remap(knownPresence, remappedPresence, knownCenter, center);
+            knownPresence = remappedPresence;
+            if (knownFieldPages.length != 0) {
+                InfraredWindow.remap(knownFieldPages, remappedFields, knownCenter, center);
+                knownFieldPages = remappedFields;
+            }
+        }
+        boolean cache = requestId >= 0;
+        if (cache && forceFull) displays.remove(player.getUUID());
+        var previousDisplay = cache ? displays.find(player.getUUID(), level.dimension(), knownGeneration,
+                knownCenter, knownDisplayRequestId) : null;
         captureTick = tick;
         boolean reactivated =
                 publication != null && publication.noteInfraredRequest(tick, INFRARED_ACTIVE_TICKS);
@@ -120,27 +158,40 @@ final class InfraredCapture implements AutoCloseable {
             long storedEpoch = DormantChunkThermalState.currentMaterialRevision();
             // A concurrent publication exchange is not a material deletion. Retry, then retain the
             // client baseline.
+            QueryPublication read = publication;
             captureAttempt:
             for (int attempt = 0; attempt < 2; attempt++) {
+                InfraredDisplayCache.Page[] displayPages = cache && hasFieldPages()
+                        ? previousDisplay != null && !moved ? previousDisplay.pages()
+                                : new InfraredDisplayCache.Page[INFRARED_PAGE_CAPACITY] : null;
+                boolean sharedPages = displayPages != null && previousDisplay != null && displayPages == previousDisplay.pages();
                 payload.reset();
                 cursor.clear();
                 Arrays.fill(presence, 0L);
                 Arrays.fill(localHandles, null);
-                if (publication != null && !publication.beginRead(cursor)) continue;
+                if (read != null && !read.beginRead(cursor)) {
+                    // Only a readable client baseline can be mistaken for deleted. A client without one loses
+                    // nothing, so a field that has published nothing yet is captured as no field: the window,
+                    // stored bodies, analytic fields and the natural climate still reach it.
+                    if (attempt == 0 || knownReadable) continue;
+                    read = null;
+                }
                 boolean readable =
-                        publication != null
+                        read != null
                                 && cursor.hasFreshSample(tick, MAX_PUBLICATION_AGE_TICKS);
                 int epoch = readable ? cursor.infraredEpoch() : 0;
                 boolean full =
                         forceFull
                                 || knownGeneration != generation
-                                || knownCenter != center
+                                || moved && !overlap
                                 || knownStoredEpoch > storedEpoch
                                 || knownStoredSampleTick > tick
                                 || knownReadable != readable
                                 || readable && (reactivated || lastEpoch == 0 || lastEpoch > epoch);
-                if (publication != null) collectMaterials(pages, cx, cy, cz, readable);
-                for (int word = 0; word < presence.length; word++) {
+                if (read != null) collectMaterials(pages, cx, cy, cz, readable);
+                // Nearby Pages reach the first receipt window, before distant field volumes.
+                for (int local : PAGE_ORDER) {
+                    int word=local>>>6;
                     long previousFields =
                             full || knownFieldPages.length == 0 ? 0 : knownFieldPages[word];
                     long work =
@@ -148,117 +199,131 @@ final class InfraredCapture implements AutoCloseable {
                                     | storedPresence[word]
                                     | fieldPages[word]
                                     | (full ? 0 : knownPresence[word] | previousFields);
-                    while (work != 0) {
-                        int local = word * 64 + Long.numberOfTrailingZeros(work);
-                        work &= work - 1;
-                        if (local >= INFRARED_PAGE_CAPACITY) continue;
-                        LevelChunk chunk = loadedChunks[local % 81];
-                        int sectionY = cy - 4 + local / 81;
-                        var attachment = (MinecraftThermalChunkAttachment) (Object) chunk;
-                        var state =
-                                attachment == null
-                                        ? null
-                                        : attachment.frostedheart$getDormantThermalState();
-                        MaterialSectionState stored =
-                                state == null ? null : state.materials(sectionY);
-                        ThermalPageHandle handle = localHandles[local];
-                        if (handle == null && publication != null && stored != null) {
-                            handle =
-                                    pages.handle(
-                                            SectionPos.asLong(
-                                                    cx - 4 + local % 9,
-                                                    cy - 4 + local / 81,
-                                                    cz - 4 + local / 9 % 9));
-                        }
-                        PagePublication page =
-                                !readable || handle == null ? null : handle.lastPublication();
-                        if (page != null && page.topologyGeneration() > cursor.topologyGeneration())
-                            continue captureAttempt;
-                        if (page == null) {
-                            presence[word] &= ~(1L << (local & 63));
-                        }
-                        if (handle != null && page == null) stored = null;
-                        changedMaterialBricks =
-                                page != null
-                                                && page.geometryRevision()
-                                                        != handle.liveGeometryRevision()
-                                        ? pages.collectMaterialChangesSince(
-                                                handle.sectionKey(),
-                                                page.geometryRevision(),
-                                                changedMaterialBlocks)
-                                        : 0L;
-                        if (changedMaterialBricks != 0L) {
-                            presence[word] &= ~(1L << (local & 63));
-                            for (int b = 0; b < 64; b++)
-                                if (readableSurfaceMask(page.brick(b), b, page.topologyGeneration()) != 0) {
-                                    presence[word] |= 1L << (local & 63);
-                                    break;
-                                }
-                        }
-                        long storedMask = storedBrickMask(page, stored);
-                        double storedNatural =
-                                storedMask == 0
-                                        ? 0
-                                        : state.naturalTemperature(
-                                                level,
+                    if((work & (1L << (local & 63))) == 0)continue;
+                    LevelChunk chunk = loadedChunks[local % 81];
+                    int sectionY = cy - 4 + local / 81;
+                    var attachment = (MinecraftThermalChunkAttachment) (Object) chunk;
+                    var state =
+                            attachment == null
+                                    ? null
+                                    : attachment.frostedheart$getDormantThermalState();
+                    MaterialSectionState stored =
+                            state == null ? null : state.materials(sectionY);
+                    ThermalPageHandle handle = localHandles[local];
+                    if (handle == null && read != null && stored != null) {
+                        handle =
+                                pages.handle(
+                                        SectionPos.asLong(
                                                 cx - 4 + local % 9,
-                                                sectionY,
-                                                cz - 4 + local / 9 % 9,
-                                                tick,
-                                                position);
-                        long storedRevision =
-                                attachment == null
-                                        ? 0
-                                        : Math.max(
-                                                attachment.frostedheart$getMaterialRevision(),
-                                                state == null
-                                                        ? 0
-                                                        : state.materialRevision(sectionY));
-                        if (storedMask != 0) presence[word] |= 1L << (local & 63);
-                        boolean refresh =
-                                presenceBit(fieldPages, local)
-                                        || (previousFields & 1L << (local & 63)) != 0;
-                        boolean replace =
-                                full
-                                        || refresh
-                                        || presenceBit(presence, local)
-                                                != presenceBit(knownPresence, local);
-                        long changed =
-                                replace
-                                        ? -1L
-                                        : page == null
-                                                ? 0
-                                                : changedBricks(page.workerPageSlot(), lastEpoch);
-                        changed |= changedMaterialBricks;
-                        if (storedRevision > knownStoredEpoch
-                                || storedMask != 0 && profileRevision > knownStoredEpoch)
-                            changed = -1L;
-                        if (storedMask != 0)
-                            changed |=
-                                    readStoredPage(
-                                            stored,
-                                            storedMask,
-                                            local,
-                                            storedNatural,
-                                            tick,
-                                            knownStoredSampleTick,
-                                            changed);
-                        if (changed == 0) continue;
-                        payload.beginPage();
-                        if (!writePage(page, storedMask, local, changed, full)
-                                || page != null && handle.lastPublication() != page)
-                            continue captureAttempt;
+                                                cy - 4 + local / 81,
+                                                cz - 4 + local / 9 % 9));
+                    }
+                    PagePublication page =
+                            !readable || handle == null ? null : handle.lastPublication();
+                    if (page != null && page.topologyGeneration() > cursor.topologyGeneration())
+                        continue captureAttempt;
+                    if (page == null) {
+                        presence[word] &= ~(1L << (local & 63));
+                    }
+                    if (handle != null && page == null) stored = null;
+                    changedMaterialBricks =
+                            page != null
+                                            && page.geometryRevision()
+                                                    != handle.liveGeometryRevision()
+                                    ? pages.collectMaterialChangesSince(
+                                            handle.sectionKey(),
+                                            page.geometryRevision(),
+                                            changedMaterialBlocks)
+                                    : 0L;
+                    if (changedMaterialBricks != 0L) {
+                        presence[word] &= ~(1L << (local & 63));
+                        for (int b = 0; b < 64; b++)
+                            if (readableSurfaceMask(page, b) != 0) {
+                                presence[word] |= 1L << (local & 63);
+                                break;
+                            }
+                    }
+                    long storedMask = storedBrickMask(page, stored);
+                    // The Section value only keeps the material revision current; each body relaxes toward its own
+                    // block's natural, as the thermometer does.
+                    if (storedMask != 0)
+                        state.naturalTemperature(
+                                level,
+                                cx - 4 + local % 9,
+                                sectionY,
+                                cz - 4 + local / 9 % 9,
+                                tick,
+                                position);
+                    long storedRevision =
+                            attachment == null
+                                    ? 0
+                                    : Math.max(
+                                            attachment.frostedheart$getMaterialRevision(),
+                                            state == null
+                                                    ? 0
+                                                    : state.materialRevision(sectionY));
+                    if (storedMask != 0) presence[word] |= 1L << (local & 63);
+                    boolean refresh =
+                            presenceBit(fieldPages, local)
+                                    || (previousFields & 1L << (local & 63)) != 0;
+                    boolean replace =
+                            full
+                                    || refresh
+                                    || presenceBit(presence, local)
+                                            != presenceBit(knownPresence, local);
+                    long changed =
+                            replace
+                                    ? -1L
+                                    : page == null
+                                            ? 0
+                                            : changedBricks(page.workerPageSlot(), lastEpoch);
+                    changed |= changedMaterialBricks;
+                    if (storedRevision > knownStoredEpoch
+                            || storedMask != 0 && profileRevision > knownStoredEpoch)
+                        changed = -1L;
+                    if (storedMask != 0)
+                        changed |=
+                                readStoredPage(
+                                        stored,
+                                        storedMask,
+                                        local,
+                                        tick,
+                                        knownStoredSampleTick,
+                                        changed);
+                    if (changed == 0) continue;
+                    payload.beginPage();
+                    int pageStart = payload.pageStart();
+                    if (!writePage(page, storedMask, local, changed, full)
+                            || page != null && handle.lastPublication() != page)
+                        continue captureAttempt;
+                    int oldPage = previousDisplay == null ? -1
+                            : InfraredWindow.previousPage(local, previousDisplay.center(), center);
+                    var previous = oldPage < 0 ? null : previousDisplay.pages()[oldPage];
+                    if (previous != null || displayPages != null && presenceBit(fieldPages, local)) {
+                        byte[] encoded = payload.finishPage(pageStart, full || previous == null ? null : previous.encoded);
+                        InfraredDisplayCache.Page next = null;
+                        if (displayPages != null && presenceBit(fieldPages, local)) {
+                            long section = SectionPos.asLong(cx - 4 + local % 9, sectionY, cz - 4 + local / 9 % 9);
+                            next = displays.page(level.dimension(), section, encoded, previous);
+                        }
+                        if (displayPages != null && displayPages[local] != next) {
+                            if (sharedPages) { displayPages = displayPages.clone(); sharedPages = false; }
+                            displayPages[local] = next;
+                        }
                     }
                 }
-                // Regional values are pinned and each used Page was checked above.
-                // The packet acknowledges the captured epoch, so a newer dirty mask
-                // can only cause an extra resend, never hide the next temperature.
+                // Regional frames remain pinned; fixed-space readers validate the accepted cut.
+                // Never acknowledge a packet assembled across two fixed publications.
+                if (read != null && !cursor.valid()) continue captureAttempt;
                 boolean changedPresence = !Arrays.equals(presence, knownPresence);
                 if (!full
+                        && !moved
                         && !changedPresence
                         && payload.size() == 0
-                        && sameFieldPages(knownFieldPages)) return null;
-                return new InfraredSnapshot(
+                        && sameFieldPages(knownFieldPages)
+                        && (knownNaturalRevision == InfraredNaturalClimate.UNTRACKED
+                                || natural.revision() == knownNaturalRevision)) return null;
+                var result = new InfraredSnapshot(
                         cx,
                         cz,
                         cy,
@@ -270,7 +335,11 @@ final class InfraredCapture implements AutoCloseable {
                         hasFieldPages() ? fieldPages.clone() : NO_INFRARED_PRESENCE,
                         payload.finishParts(),
                         DormantChunkThermalState.currentMaterialRevision(),
-                        tick);
+                        tick,
+                        natural);
+                if (cache) displays.put(player.getUUID(), displayPages == null ? null
+                        : new InfraredDisplayCache.Display(level.dimension(), generation, center, requestId, displayPages));
+                return result;
             }
             return null;
         } finally {
@@ -283,6 +352,34 @@ final class InfraredCapture implements AutoCloseable {
             level = null;
             payload.reset();
         }
+    }
+
+    /**
+     * Climate the client needs to fill blocks without a value with their natural temperature
+     * ({@code WorldTemperature.naturalAir}). Chunks a white curtain reaches get their own table.
+     */
+    private InfraredNaturalClimate naturalClimate(int cx, int cz) {
+        int limit = ClimateCover.limit(), levels = limit + 1;
+        var climate = WorldClimate.getCapability(level).resolve().orElse(null);
+        byte[] chunkTables = new byte[InfraredNaturalClimate.WINDOW_CHUNKS];
+        float[] climates;
+        if (climate == null) climates = new float[levels];
+        else {
+            var tables = new java.util.ArrayList<float[]>();
+            tables.add(climate.openCoveredClimates(limit));
+            for (int z = 0; z < InfraredWindow.WIDTH; z++)
+                for (int x = 0; x < InfraredWindow.WIDTH; x++) {
+                    int chunkX = cx - 4 + x, chunkZ = cz - 4 + z;
+                    if (!climate.hasWhiteCurtainAt(chunkX, chunkZ)) continue;
+                    chunkTables[x + InfraredWindow.WIDTH * z] = (byte) tables.size();
+                    tables.add(climate.coveredClimates(chunkX, chunkZ, limit));
+                }
+            climates = new float[levels * tables.size()];
+            for (int table = 0; table < tables.size(); table++)
+                System.arraycopy(tables.get(table), 0, climates, table * levels, levels);
+        }
+        return InfraredNaturalClimate.of(WorldTemperature.hasNoUnderground(level),
+                FHConfig.SERVER.CLIMATE.absoluteZeroCelsius.get().floatValue(), levels, climates, chunkTables);
     }
 
     private void collectMaterials(
@@ -298,7 +395,7 @@ final class InfraredCapture implements AutoCloseable {
                     || page == null
                     || page.topologyGeneration() > cursor.topologyGeneration()) continue;
             for (int b = 0; b < 64; b++) {
-                if (freshSurfaceMask(page.brick(b), page.topologyGeneration()) == 0) continue;
+                if (freshSurfaceMask(page, b) == 0) continue;
                 presence[local >>> 6] |= 1L << (local & 63);
                 break;
             }
@@ -419,7 +516,6 @@ final class InfraredCapture implements AutoCloseable {
             MaterialSectionState stored,
             long mask,
             int local,
-            double natural,
             long tick,
             long previousTick,
             long changed) {
@@ -446,6 +542,7 @@ final class InfraredCapture implements AutoCloseable {
                     != stored.stateId(index)) continue;
             var law = MinecraftThermalProfiles.materialLaw(state);
             if (law == null) continue;
+            double natural = WorldTemperature.naturalAir(level, position);
             if (stored.savedTick(index) != cachedTick) {
                 cachedTick = stored.savedTick(index);
                 currentFraction = DormantThermalCooling.fraction(cachedTick, tick, coolingRate);
@@ -477,19 +574,22 @@ final class InfraredCapture implements AutoCloseable {
                 : 0L;
     }
 
-    private long freshSurfaceMask(PagePublication.Brick brick, long topology) {
+    private long freshSurfaceMask(PagePublication page, int index) {
+        var brick = page.brick(index);
         long mask = surfaceMask(brick), remaining = mask;
         while (remaining != 0) {
             int node = Long.numberOfTrailingZeros(remaining);
             remaining &= remaining - 1;
-            if (!cursor.freshSlot(brick.firstSlot() + node, brick.arenaGeneration(), topology,
+            int block = Long.numberOfTrailingZeros(brick.blockLayout().nodeBlockMask(node));
+            if (!cursor.freshCell(page, BlockBrickLayout.pageBlock(index, block), page.topologyGeneration(),
                     captureTick, MAX_PUBLICATION_AGE_TICKS)) mask &= ~(1L << node);
         }
         return mask;
     }
 
-    private long readableSurfaceMask(PagePublication.Brick brick, int index, long topology) {
-        long mask = freshSurfaceMask(brick, topology);
+    private long readableSurfaceMask(PagePublication page, int index) {
+        var brick = page.brick(index);
+        long mask = freshSurfaceMask(page, index);
         if ((changedMaterialBricks & 1L << index) == 0L) return mask;
         long nodes = mask;
         while (nodes != 0L) {
@@ -519,7 +619,7 @@ final class InfraredCapture implements AutoCloseable {
             int y,
             int z) {
         var brick = page == null ? null : page.brick(index);
-        long mask = brick == null ? 0 : readableSurfaceMask(brick, index, page.topologyGeneration());
+        long mask = brick == null ? 0 : readableSurfaceMask(page, index);
         int address = localPage * 64 + index;
         boolean compose = !brickFields.isEmpty();
         if (mask == 0 && !stored && !compose) {
@@ -530,9 +630,10 @@ final class InfraredCapture implements AutoCloseable {
         while (remaining != 0) {
             int node = Long.numberOfTrailingZeros(remaining);
             remaining &= remaining - 1;
+            int block = Long.numberOfTrailingZeros(brick.blockLayout().nodeBlockMask(node));
             if (!cursor.tryRead(
-                    brick.firstSlot() + node,
-                    brick.arenaGeneration(),
+                    page,
+                    BlockBrickLayout.pageBlock(index, block),
                     page.topologyGeneration(),
                     sample)) return false;
             if (compose) rawNodes[node] = sample.temperatureC();
@@ -635,7 +736,12 @@ final class InfraredCapture implements AutoCloseable {
     @Override
     public void close() {
         payload.close();
+        displays.clear();
     }
+
+    InfraredDisplayCache.Statistics displayStatistics() { return displays.statistics(); }
+    void forget(java.util.UUID observer) { displays.remove(observer); }
+    void unload(ServerLevel level) { displays.removeDimension(level.dimension()); }
 
     private static boolean presenceBit(long[] presence, int page) {
         return presence.length != 0 && (presence[page >>> 6] & 1L << (page & 63)) != 0;

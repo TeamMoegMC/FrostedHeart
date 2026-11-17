@@ -1,0 +1,128 @@
+{
+  "status": "retention_cause_confirmed_and_source_fix_validated",
+  "created": "2026-11-10",
+  "scope": "Existing compiled production runtime; the leak control restores one pre-fix inner class. Same first12minutes of real block changes, with no continued exploration.",
+  "controlClass": {
+    "name": "RegionalAirRuntime$RebuildPreparation",
+    "normalExecutionDifference": "Its retention listener captures RebuildPreparation.this instead of being created by the outer runtime.",
+    "nonExecutedDifferences": [
+      "Older class omits the passive preparationCreated callback; production observer is null.",
+      "Older class has a shorter exceptional handoff message; no handoff exception occurred."
+    ]
+  },
+  "workload": {
+    "heapGiB": 4,
+    "thermalTargetMiB": 128,
+    "cpuAllowanceMsPerSecond": 1000,
+    "thermalWorkers": 4,
+    "serverFakePlayers": 3,
+    "campfires": 3072,
+    "blocksChangedPerCycle": 12,
+    "cycleTicks": 20,
+    "mutationsAt14400": 7944,
+    "realNetworkClients": false,
+    "originalIncidentWorld": false
+  },
+  "releasedPreparationEvidence": {
+    "conditions": [
+      "preparation.closed=true",
+      "preparation.scratch.released=true"
+    ],
+    "preparations": 140,
+    "installedRegionCallbackOwners": 1669,
+    "uniquelyRetainedObjects": 8427636,
+    "uniquelyRetainedBytes": 1804509496,
+    "heapReachableBytes": 2899698208,
+    "retainedFraction": 0.6223094151734566,
+    "oldAfterFullGcMiB": [
+      2820,
+      3623
+    ]
+  },
+  "fixedCooldown": {
+    "outcome": {
+      "exitCode": 0,
+      "ended": 1794240947.8752832,
+      "outcome": "workload_completed",
+      "lastObservedTick": 24000.0,
+      "heapCaptureAttempted": true
+    },
+    "scenario": {
+      "ticks": 24000.0,
+      "saves": 4.0,
+      "uniqueTrackedChunks": 7420.0,
+      "geometryMutations": 7944.0
+    },
+    "mutationStopTick": 14400,
+    "naturalFullGcCount": 0,
+    "diagnosticFullGcCount": 2,
+    "afterDiagnosticFullGcMiB": [
+      1131,
+      1131
+    ],
+    "midHeapReachableBytes": 1125893152,
+    "endHeapReachableBytes": 1123493256,
+    "releasedPreparationsRetainedAtMidpoint": 0,
+    "releasedPreparationsRetainedAtEnd": 0,
+    "workerFailures": 0,
+    "saveFailures": 0,
+    "oomErrors": 0,
+    "performanceQualified": false
+  },
+  "geometryScale": {
+    "inputTick": 5920,
+    "oldRegions": 551,
+    "newRegions": 3,
+    "reusedRegions": 548,
+    "largestNewRegionCells": 37823,
+    "largestNewRegionAirComponents": 2097,
+    "preparationCreditBytes": 28760392,
+    "changedPositions": 8,
+    "materialChanges": 18,
+    "residencyUpdates": 1,
+    "haloUpdates": 1,
+    "writtenSections": 29,
+    "changedFragments": 255,
+    "mechanism": "A conservative section closure expands through adjacent captured or announced sections and then covers whole affected physical owners."
+  },
+  "qualificationNotes": [
+    "The first control stopped after its planned14400ticks; its final heap was incomplete due to exhausted diagnostic disk space. Retention attribution uses the earlier successfully completed live heap. The disk failure is not classified as Java OOM.",
+    "The fixed run and initial control share the first7944scriptedblock replacements. The fixed run then observed eight minutes of recovery. The extended old-callback control changed blocks continuously for20minutes and completed13704replacements; its entire20minute GC count is not an identically-loaded A/B comparison.",
+    "Original server GC logs have no incident heap; local causal attribution does not enumerate every object from that remote process."
+  ],
+  "localArtifactLocator": "build/thermal-mutation-retention-20261109/diagnostic-location.json",
+  "evidenceTables": "build/thermal-mutation-retention-20261109/causal-heap-tables.json",
+  "previousSemanticValidation": "build/thermal-root-cause-unified-final-20261109.log:10/10",
+  "productionCodeRebuiltThisPhase": false,
+  "extendedControl": {
+    "outcome": {
+      "exitCode": 0,
+      "ended": 1794242676.7741368,
+      "outcome": "workload_completed",
+      "lastObservedTick": 24000.0,
+      "heapCaptureAttempted": true
+    },
+    "scenario": {
+      "ticks": 24000.0,
+      "saves": 4.0,
+      "uniqueTrackedChunks": 7420.0,
+      "geometryMutations": 13704.0
+    },
+    "releasedPreparations": 186,
+    "installedRegionCallbackOwners": 1663,
+    "uniquelyRetainedObjects": 14346479,
+    "uniquelyRetainedBytes": 2820338824,
+    "heapReachableBytes": 3955985264,
+    "retainedFraction": 0.712929557565713,
+    "naturalFullGcDuringWorkload": 38,
+    "naturalFullGcDuringShutdown": 30,
+    "diagnosticFullGcCount": 1,
+    "actualOutOfMemoryException": false,
+    "completeHeapPreserved": true,
+    "maximumGcPauseMs": 957.389,
+    "worstMinuteAllGcPauseMs": 17375.677999999993,
+    "heapExcludingReleasedPreparationRetentionBytes": 1135646440
+  },
+  "userHandoff": "User requested source fix and summary only; release packaging, deployment, further experiments and other follow-up belong to the user.",
+  "remaining": "The callback retention defect is fixed and causally verified. Extreme-load thermal progression and other sources of allocation remain outside this completed retention fix. No incident-server heap was available to enumerate all owners in the original remote process."
+}

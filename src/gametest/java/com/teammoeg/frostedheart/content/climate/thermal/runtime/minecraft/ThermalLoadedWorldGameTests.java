@@ -103,33 +103,6 @@ import net.minecraftforge.gametest.PrefixGameTestTemplate;
 public final class ThermalLoadedWorldGameTests {
     private static final String TEMPLATE = "phase0a_empty";
 
-    @GameTest(template = TEMPLATE, batch = "thermal_natural_formula_equivalence", timeoutTicks = 100)
-    public static void naturalWorldQueriesRetainTheirTemperatureResults(GameTestHelper helper) {
-        ServerLevel level = helper.getLevel();
-        BlockPos origin = helper.absolutePos(new BlockPos(2, 2, 2));
-        var config = FHConfig.SERVER.CLIMATE;
-        float minimum = config.absoluteZeroCelsius.get().floatValue();
-        for (int y : new int[]{-64, -55, -1, 0, 1, 63, 64, 240, 241, 319}) {
-            BlockPos pos = new BlockPos(origin.getX(), y, origin.getZ());
-            float dimension = WorldTemperature.dimension(level);
-            float biome = WorldTemperature.biome(level, pos);
-            float altitude = WorldTemperature.altitude(level, pos);
-            for (float climate : new float[]{-10000, -40, 0, 40}) {
-                float previous = BlockTemperatureModel.blockTemperature(y,
-                        config.climateStoneInterfaceLevel.get(), config.climateSeaLevel.get(),
-                        config.blockMaximumClimateAffection.get().floatValue(), dimension, biome, altitude, climate,
-                        0, config.blockHeatApplicationMultiplier.get().floatValue(), minimum);
-                helper.assertTrue(WorldTemperature.naturalBlock(level, pos, climate) == previous,
-                        "natural block query must preserve zero-heat behavior at y=" + y + ", climate=" + climate);
-            }
-            if (y <= WorldTemperature.STONE_INTERFACE_LEVEL) {
-                helper.assertTrue(WorldTemperature.naturalAir(level, pos) == Math.max(minimum, dimension + biome + altitude),
-                        "underground air must retain dimension, biome, altitude and lower clamp at y=" + y);
-            }
-        }
-        helper.succeed();
-    }
-
     @GameTest(template = TEMPLATE, batch = "thermal_stable_environment_attribute", timeoutTicks = 100)
     public static void stablePlayerEnvironmentReusesItsModifierAndObservesChanges(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();

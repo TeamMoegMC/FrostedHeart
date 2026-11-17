@@ -33,9 +33,14 @@ public class BodyPartData {
     private static final float[] TRIPLE_SLOT_FACTORS = {
             0.1F, 0.2F, 0.3F, 0.4F
     };
+    private static final double[][] EQUIPMENT_WEIGHT_FACTORS = {
+            {}, {1.0D}, {1.1D, 1.7D},
+            {1.5D, 2.3D, 3.5D}, {1.8D, 3.0D, 4.8D, 7.0D}
+    };
     public final ItemStackHandler clothes;
 	double bodyEnergyOffsetJ;
-	float feelingTemperatureC = 37.0F;
+    float exposureTemperatureC = 37.0F;
+    double exposureTransmission;
 
     BodyPartData(int max_count) {
         this.clothes = new ItemStackHandler(max_count) {
@@ -51,6 +56,8 @@ public class BodyPartData {
     }
 
     public void load(CompoundTag itemsTag, boolean energySchema) {
+        exposureTemperatureC = 37.0F;
+        exposureTransmission = 0.0D;
         if (itemsTag.contains("Size")) {
             clothes.deserializeNBT(itemsTag);
         }
@@ -117,17 +124,19 @@ public class BodyPartData {
 		double equipmentWeight = 0.0D;
 		int layer = 0;
 		if (!equipment.isEmpty()) {
+			// Forge builds this view through an event; share it within this clothing sample.
+			var attributes = equipment.getAttributeModifiers(part.slot);
 			double insulationFactor = ClothData.sumAttributes(
-					equipment.getAttributeModifiers(part.slot)
+					attributes
 							.get(FHAttributes.INSULATION.get()));
 			double wind = ClothData.sumAttributesPercentage(
-					equipment.getAttributeModifiers(part.slot)
+					attributes
 							.get(FHAttributes.WIND_PROOF.get()));
 			double radiant = ClothData.sumAttributesPercentage(
-					equipment.getAttributeModifiers(part.slot)
+					attributes
 							.get(FHAttributes.HEAT_PROOF.get()));
 			double weight = ClothData.sumAttributes(
-				equipment.getAttributeModifiers(part.slot)
+					attributes
 						.get(FHAttributes.EQUIPMENT_WEIGHT.get()));
 			double innerWeight = innerWeight(part, layerCount, layer);
 			double outerWeight = outerWeight(part, layer);
@@ -135,7 +144,7 @@ public class BodyPartData {
 			heatProof += outerWeight * radiant;
 			windProof += outerWeight * wind;
 			waterResistance += outerWeight * wind;
-			equipmentWeight += weight;
+			equipmentWeight += weight * EQUIPMENT_WEIGHT_FACTORS[layerCount][layer];
 			layer++;
 		}
 		for (int slot = 0; slot < clothes.getSlots(); slot++) {
@@ -149,7 +158,7 @@ public class BodyPartData {
 			heatProof += outerWeight * armor.getHeatProof();
 			windProof += outerWeight * armor.getFluidResistance();
 			waterResistance += outerWeight * armor.getFluidResistance();
-			equipmentWeight += armor.weight();
+			equipmentWeight += armor.weight() * EQUIPMENT_WEIGHT_FACTORS[layerCount][layer];
 			layer++;
 		}
 		result.set(insulation, heatProof, windProof, waterResistance, equipmentWeight);

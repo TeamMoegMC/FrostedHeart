@@ -33,8 +33,8 @@ public final class EaveIcicleBlock extends Block {
     public static final Direction[] EDGES = {Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST};
     private static final VoxelShape[] SHAPES = new VoxelShape[16];
     static {
-        VoxelShape[] strips = {box(0, 5, 0, 16, 16, 3), box(13, 5, 0, 16, 16, 16),
-                box(0, 5, 13, 16, 16, 16), box(0, 5, 0, 3, 16, 16)};
+        VoxelShape[] strips = {box(0, 8, 0, 16, 16, 3), box(13, 8, 0, 16, 16, 16),
+                box(0, 8, 13, 16, 16, 16), box(0, 8, 0, 3, 16, 16)};
         for (int mask = 0; mask < 16; mask++) {
             VoxelShape shape = Shapes.empty();
             for (int i = 0; i < 4; i++) if ((mask & 1 << i) != 0) shape = Shapes.or(shape, strips[i]);

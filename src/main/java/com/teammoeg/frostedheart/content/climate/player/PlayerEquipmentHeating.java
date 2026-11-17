@@ -34,21 +34,27 @@ public final class PlayerEquipmentHeating {
     }
 
     static void collect(ServerPlayer player, HeatingDeviceContext context) {
+        collect(player, context, false);
+        collect(player, context, true);
+    }
+
+    private static void collect(ServerPlayer player, HeatingDeviceContext context, boolean controlled) {
         if (CompatModule.isCuriosLoaded()) {
             for (Pair<ISlotType, ItemStack> entry
                     : CuriosCompat.getAllCuriosAndSlotsIfVisible(player)) {
-                apply(context.curiosSlot(entry.getFirst()), entry.getSecond(), context);
+                apply(context.curiosSlot(entry.getFirst()), entry.getSecond(), context, controlled);
             }
         }
         for (EquipmentSlot slot : HeatingDeviceSlot.EQUIPMENT_SLOTS) {
-            apply(HeatingDeviceSlot.vanilla(slot), player.getItemBySlot(slot), context);
+            apply(HeatingDeviceSlot.vanilla(slot), player.getItemBySlot(slot), context, controlled);
         }
     }
 
-    private static void apply(HeatingDeviceSlot slot, ItemStack stack, HeatingDeviceContext context) {
+    private static void apply(HeatingDeviceSlot slot, ItemStack stack, HeatingDeviceContext context,
+                              boolean controlled) {
         BodyHeatingCapability heating = FHCapabilities.EQUIPMENT_HEATING
                 .getCapability(stack).orElse(null);
-        if (heating != null) {
+        if (heating != null && heating.isControlled() == controlled) {
             heating.tickHeating(slot, stack, context);
         }
     }

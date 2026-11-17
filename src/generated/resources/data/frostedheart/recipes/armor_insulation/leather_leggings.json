@@ -1,0 +1,9 @@
+{
+  "type": "frostedheart:armor_temp",
+  "factor": 100.0,
+  "heat_proof": 0.7,
+  "item": "minecraft:leather_leggings",
+  "slot": "legs",
+  "weight": 1.3263158,
+  "wind_proof": 1.0
+}

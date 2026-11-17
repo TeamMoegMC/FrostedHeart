@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.content.climate.player.thermalitem;
 
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
+import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureComputation;
 import com.teammoeg.frostedheart.content.climate.thermal.solver.ThermalExchangeKernel;
 import net.minecraft.world.item.ItemStack;
 
@@ -104,7 +105,8 @@ public final class WearableThermalExchangeHandler {
         }
 
         WearableThermalState state = currentState.get();
-        double playerTemperatureC = playerData.getAbsoluteCoreBodyTemp();
+        double playerTemperatureC = playerData.getMeanBodyTemperatureC();
+        double playerCapacityJPerK = PlayerTemperatureComputation.bodyEnergyForTemperatureDeltaJ(1.0D);
         ThermalExchangeKernel.Status exchangeStatus =
                 ThreeNodeWearableHeatExchange.exchangeInto(
                         reservoir.thermalProfile(stack),
@@ -112,6 +114,7 @@ public final class WearableThermalExchangeHandler {
                         state.surfaceTemperatureC(),
                         playerTemperatureC,
                         elapsedSeconds,
+                        playerTemperatureC + playerData.getEquipmentWarmingEnergyJ() / playerCapacityJPerK,
                         exchangeResult,
                         exchangeScratch
                 );
@@ -126,19 +129,19 @@ public final class WearableThermalExchangeHandler {
             return Status.NUMERIC_DEGRADED;
         }
 
-        float playerDelta = (float) (exchangeResult.playerTemperatureC()
-                - playerTemperatureC);
-        if (!Float.isFinite(playerDelta)) {
+        double playerEnergyJ = (exchangeResult.playerTemperatureC()
+                - playerTemperatureC) * playerCapacityJPerK;
+        if (!Double.isFinite(playerEnergyJ)) {
             return Status.PLAYER_UPDATE_REJECTED;
         }
-        if (playerDelta == 0.0F
+        if (playerEnergyJ == 0.0D
                 && nextCoreTemperatureC == state.coreTemperatureC()
                 && nextSurfaceTemperatureC == state.surfaceTemperatureC()) {
             return Status.UNCHANGED;
         }
-        if (!playerData.applyUniformBodyTemperatureDelta(playerDelta)) {
-            return Status.PLAYER_UPDATE_REJECTED;
-        }
+        double appliedJ = playerData.applyReservoirBodyEnergyJ(playerEnergyJ);
+        nextSurfaceTemperatureC += (playerEnergyJ - appliedJ)
+                / (playerCapacityJPerK * reservoir.thermalProfile(stack).surfaceCapacityRatio());
 
         reservoir.setTemperaturesC(
                 stack, nextCoreTemperatureC, nextSurfaceTemperatureC);

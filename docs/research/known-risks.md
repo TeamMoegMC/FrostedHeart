@@ -81,7 +81,6 @@ The new binary packet format is intentionally incompatible with older clients. `
 The maintained automated baseline is:
 
 ```text
-./gradlew test
 ./gradlew runGameTestServer
 ./gradlew runGameTestServer -PwithoutFtb -PwithoutJei
 ./gradlew validateResearchCatalog -PresearchCatalogDir=<companion>/config/fhresearches

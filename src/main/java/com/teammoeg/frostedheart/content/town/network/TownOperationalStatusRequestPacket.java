@@ -54,7 +54,7 @@ public class TownOperationalStatusRequestPacket implements CMessage {
             long now = player.serverLevel().getGameTime();
             if (!shouldRespond(player.getUUID(), now)) return;
             var status = TownOperationalStatusProvider.capture(player);
-            if (status == null) com.teammoeg.frostedheart.content.town.TownSync.requestFull(player);
+            if (status == null) com.teammoeg.frostedheart.content.town.TownSync.ensureCurrent(player);
             else FHNetwork.INSTANCE.sendPlayer(player, new TownOperationalStatusResponsePacket(status));
         });
         context.get().setPacketHandled(true);

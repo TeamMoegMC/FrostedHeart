@@ -45,6 +45,13 @@ public record MaterialThermalLaw(
         return offsetJ + capacityJPerK * temperatureC;
     }
 
+    /** The branch selected when previously untracked matter first enters the simulation. */
+    public byte initialBranch(double naturalC) {
+        if (heating != null && naturalC >= heating.transitionTemperatureC()) return HEATING;
+        if (cooling != null && naturalC <= cooling.transitionTemperatureC()) return COOLING;
+        return SENSIBLE;
+    }
+
     /** Added matter arrives at ambient; removal scales thermal excess into the target energy reference. */
     public double afterMassChange(double energyJ, MaterialThermalLaw target, double ambientC) {
         return target.capacityJPerK >= capacityJPerK

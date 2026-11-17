@@ -9,7 +9,18 @@
       "id": "linkage",
       "type": "calculation",
       "level": 1,
-      "count": 2
+      "count": 2,
+      "labor": {
+        "workers": 1,
+        "days": 1,
+        "education": 1,
+        "items": [
+          {
+            "item": "minecraft:paper",
+            "count": 2
+          }
+        ]
+      }
     }
   ]
 }

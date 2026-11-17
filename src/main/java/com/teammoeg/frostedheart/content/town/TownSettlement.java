@@ -4,7 +4,6 @@ import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
 import com.teammoeg.chorda.math.CMath;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHEntityTypes;
-import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorData;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.WeatherForecast;
@@ -74,6 +73,8 @@ public final class TownSettlement {
 
             stage = "production and meals";
             buildingsWork(data, level);
+            // Research institute labor goes to knowledge research once every building has worked.
+            TownResearchSettlement.settle(data, level, holder);
             TownHousingMealService.settle(level, town, data.getHousingPlan(),
                     data.getPolicyState().careLaw(), data.nextTownDay());
 
@@ -234,7 +235,7 @@ public final class TownSettlement {
         long day = WorldClimate.getWorldDay(world);
         // "当天只结算一次"守卫：/town tick 同日多次调用也不会重复刷批
         if (day == data.lastRefugeeSpawnDay) return;
-        Optional<GeneratorData> genDataOpt = teamData.getOptional(FHSpecialDataTypes.GENERATOR_DATA);
+        Optional<GeneratorData> genDataOpt = TeamTownData.townGenerator(teamData);
         if (genDataOpt.isEmpty() || genDataOpt.get().actualPos == null || !genDataOpt.get().isWorking) {
             // 塔不存在/未开启：置位当天，防止同日反复调用重复判定
             data.lastRefugeeSpawnDay = day;
@@ -265,7 +266,7 @@ public final class TownSettlement {
 
     static void debugSpawnRefugeeBatch(TeamTownData data, ServerLevel world, TeamDataHolder teamData) {
         if (!data.isCurrentExecutionContext(world, teamData)) return;
-        Optional<GeneratorData> genDataOpt = teamData.getOptional(FHSpecialDataTypes.GENERATOR_DATA);
+        Optional<GeneratorData> genDataOpt = TeamTownData.townGenerator(teamData);
         if (genDataOpt.isEmpty() || genDataOpt.get().actualPos == null) return;
         RefugeeSpawnWeather weather = getSpawnWeather(data, world, genDataOpt.get().actualPos);
         int spawned = spawnRefugeeBatch(data, world, teamData, weather);
@@ -278,7 +279,7 @@ public final class TownSettlement {
 
     static int spawnRefugeeBatch(TeamTownData data, ServerLevel world, TeamDataHolder teamData, RefugeeSpawnWeather weather) {
         RefugeeSpawn config = FHConfig.SERVER.TOWN.REFUGEE_SPAWN;
-        Optional<GeneratorData> genDataOpt = teamData.getOptional(FHSpecialDataTypes.GENERATOR_DATA);
+        Optional<GeneratorData> genDataOpt = TeamTownData.townGenerator(teamData);
         if (genDataOpt.isEmpty() || genDataOpt.get().actualPos == null) return 0;
         GeneratorData genData = genDataOpt.get();
         int sizeMod = weather == RefugeeSpawnWeather.WARM ? config.warmSpawnBatchBonus.get()
@@ -392,6 +393,7 @@ public final class TownSettlement {
         data.reloadMaxCapacity();
 
         data.buildings.values().stream()
+                .filter(AbstractTownBuilding::isConnectivityWorkable)
                 .filter(AbstractTownBuilding::shouldRunDailySettlement)
                 .filter(building -> !(building instanceof HouseBuilding))
                 .sorted(Comparator.comparingInt(AbstractTownBuilding::getWorkPriority).reversed()

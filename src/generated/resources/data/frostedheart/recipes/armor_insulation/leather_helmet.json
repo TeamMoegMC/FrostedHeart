@@ -1,0 +1,9 @@
+{
+  "type": "frostedheart:armor_temp",
+  "factor": 100.0,
+  "heat_proof": 0.7,
+  "item": "minecraft:leather_helmet",
+  "slot": "head",
+  "weight": 0.37894735,
+  "wind_proof": 1.0
+}

@@ -1,0 +1,244 @@
+{
+  "status": "Completed implementation and targeted validation; historical failures and build scopes retained",
+  "verifiedDate": "2026-11-06",
+  "author": "Codex; OpenAI GPT-6 Astra and GPT-6.1 Sol",
+  "policy": {
+    "enterDeltaC": 1.0,
+    "exitDeltaC": 0.5,
+    "retainEquality": true,
+    "dormantHalfLifeSeconds": 30,
+    "airHeatCapacityJPerBlockK": 1200,
+    "ordinaryStoneCapacityJPerK": 5400,
+    "ordinaryWoodCapacityJPerK": 2700,
+    "latentEnergyAndPendingJRetained": true
+  },
+  "build": {
+    "unifiedCompile": "build/thermal-retirement-final-compile.log",
+    "finalEmptyOwnerCompile": "build/thermal-retirement-closeout-classes.log",
+    "packageLog": "build/thermal-retirement-package-final.log",
+    "package": {
+      "Artifact": "D:/Frosted-Heart/build/thermal-retirement-isolated-20261105/libs/frostedheart-1.20.1-0.7.8.jar",
+      "Bytes": 14593397,
+      "MainClassFiles": 3734,
+      "MissingMainClasses": [],
+      "IncludedGameTestClasses": [],
+      "RetentionPolicy": true,
+      "Maintenance": true,
+      "BlockDropsEvent": true
+    },
+    "lastRuntimeChange": "Release an empty input-only checkpoint after restoration ownership completes; nonempty paths keep their existing semantics."
+  },
+  "groups": [
+    {
+      "label": "final-core",
+      "total": 7,
+      "passed": 6,
+      "failed": 1,
+      "exit": 1,
+      "thermalErrors": 0,
+      "rootZero": true,
+      "log": "build/thermal-retirement-final-core.log",
+      "failures": [
+        {
+          "test": "ventilatedroomstopsexpandingcoolsandrelights",
+          "message": "The extinguished room must finish its ordinary Page retirement"
+        }
+      ]
+    },
+    {
+      "label": "final-lifecycle",
+      "total": 11,
+      "passed": 10,
+      "failed": 1,
+      "exit": 1,
+      "thermalErrors": 0,
+      "rootZero": true,
+      "log": "build/thermal-retirement-final-lifecycle.log",
+      "failures": [
+        {
+          "test": "ventilatedroomcoolsunloadsretiresandrelights",
+          "message": "The returned room must finish its stored ordinary heat tail without relighting"
+        }
+      ]
+    },
+    {
+      "label": "final-reload",
+      "total": 1,
+      "passed": 1,
+      "failed": 0,
+      "exit": 0,
+      "thermalErrors": 0,
+      "rootZero": true,
+      "log": "build/thermal-retirement-final-reload.log",
+      "failures": []
+    },
+    {
+      "label": "final-load",
+      "total": 1,
+      "passed": 1,
+      "failed": 0,
+      "exit": 0,
+      "thermalErrors": 0,
+      "rootZero": true,
+      "log": "build/thermal-retirement-final-load.log",
+      "failures": []
+    },
+    {
+      "label": "restart-write",
+      "total": 1,
+      "passed": 1,
+      "failed": 0,
+      "exit": 0,
+      "thermalErrors": 0,
+      "rootZero": true,
+      "log": "build/thermal-retirement-restart-write.log",
+      "failures": []
+    },
+    {
+      "label": "restart-read",
+      "total": 1,
+      "passed": 1,
+      "failed": 0,
+      "exit": 0,
+      "thermalErrors": 0,
+      "rootZero": true,
+      "log": "build/thermal-retirement-restart-read.log",
+      "failures": []
+    },
+    {
+      "label": "restart-empty",
+      "total": 1,
+      "passed": 1,
+      "failed": 0,
+      "exit": 0,
+      "thermalErrors": 0,
+      "rootZero": true,
+      "log": "build/thermal-retirement-restart-empty.log",
+      "failures": []
+    },
+    {
+      "label": "closeout-final",
+      "total": 12,
+      "passed": 9,
+      "failed": 3,
+      "exit": 1,
+      "thermalErrors": 0,
+      "rootZero": true,
+      "log": "build/thermal-retirement-closeout-final.log",
+      "failures": [
+        {
+          "test": "acceptingthelastcoldinputreleasesitsemptychunkattachment",
+          "message": "Restoring saved J must not create a physical emitter"
+        },
+        {
+          "test": "sourceinputssurviverealextinctionandreplacement",
+          "message": "Frozen source inputs and commit receipts: freezes=34,retainedChecks=70,checksAcrossEmissionChanges=4,emissionChanges=5,commits=33,futurePendingObserved=0,maxSnapshotBackingBytes=2440,failure=A real build snapshot differs from its event-time source state"
+        },
+        {
+          "test": "sourceaddedaftersnapshotrecoverswhencapacityreturns",
+          "message": "queued discovery must find the new source after the old slot retires"
+        }
+      ]
+    },
+    {
+      "label": "closeout-pending",
+      "total": 1,
+      "passed": 1,
+      "failed": 0,
+      "exit": 0,
+      "thermalErrors": 0,
+      "rootZero": true,
+      "log": "build/thermal-retirement-closeout-pending.log",
+      "failures": []
+    },
+    {
+      "label": "closeout-sources",
+      "total": 7,
+      "passed": 7,
+      "failed": 0,
+      "exit": 0,
+      "thermalErrors": 0,
+      "rootZero": true,
+      "log": "build/thermal-retirement-closeout-sources.log",
+      "failures": []
+    },
+    {
+      "label": "closeout-save",
+      "total": 1,
+      "passed": 1,
+      "failed": 0,
+      "exit": 0,
+      "thermalErrors": 0,
+      "rootZero": true,
+      "log": "build/thermal-retirement-closeout-save.log",
+      "failures": []
+    }
+  ],
+  "qualification": {
+    "ordinaryAndLatentRetirement": "Four named retirement cases passed in final-core; its earlier fixed-time room assertion failed and was replaced by the actual cooling/unload/reload scene.",
+    "skyAndGround": "Passed with original capacities; four exposed heights had 1.835008 C rise, roof changes and online retirement passed; LIVE soil H decreased after extinguishing.",
+    "unloadAndStorage": "Three native unload/cancellation cases and five compact-storage cases passed in final-lifecycle; the room assertion in that group was superseded by final-reload.",
+    "roomReload": "final-reload passed: 3223 ticks after extinguishing includes 2000 ticks unloaded; pages=0, maintenance candidates=0, and actual relighting succeeded.",
+    "restart": "Three JVMs on one disk world: original H/branch/tick read back, expiry deletes checkpoint, third process confirms no resurrection.",
+    "emptyOwner": "Final guard passed against a real finite 20 J restoration, plus isolated source and save regressions.",
+    "mixedFixtures": "closeout-final combined world had three assertion failures; isolated closeout-pending/sources/save passed unchanged assertions. Source and capacity fixtures require independent worlds."
+  },
+  "performance": {
+    "log": "build/thermal-retirement-final-load.log",
+    "jfr": "build/thermal-retirement-final-load.jfr",
+    "ticks": 2400,
+    "nominalSeconds": 120,
+    "realCampfires": 128,
+    "allocatedConsumerObjects": 100,
+    "activeConsumers": "10 through tick 1999, 30 from tick 2000",
+    "consumerQueries": 1601,
+    "ageViolationTicks": 0,
+    "overdueGeometryTicks": 0,
+    "consumerAgeViolationReads": 0,
+    "mainThermalTickP95Ms": 0.338,
+    "mainThermalTickP99Ms": 1.126,
+    "mainThermalTickMaxMs": 40.728,
+    "fullServerTickP95Ms": 9.562,
+    "fullServerTickP99Ms": 56.82,
+    "fullServerTickMaxMs": 861.201,
+    "fullServerTickMaxAtElapsedTick": 1,
+    "rootPeakChargedBytes": 66253016,
+    "workerAllocatedBytes": 1716962848,
+    "rootAfterShutdownBytes": 0,
+    "limits": "Includes cold construction, source/passages changes and JFR. Not a speedup comparison, exact CPU measurement, 100 active consumers or guaranteed 20 TPS. Measured before the final empty-owner-only branch addition."
+  },
+  "productionServer": {
+    "artifact": "build/thermal-retirement-isolated-20261105/libs/frostedheart-1.20.1-0.7.8.jar",
+    "launchTarget": "forgeserver",
+    "startupCompleted": true,
+    "runtimeStarted": true,
+    "lifetimeReadings": [
+      20000,
+      18831
+    ],
+    "worldSaveCompleted": true,
+    "exitCode": 0,
+    "formatVersion": 6,
+    "savedSections": 1,
+    "airComponents": 2,
+    "materialRecords": 0,
+    "pendingRecords": 1,
+    "thermalErrors": 0,
+    "fixtureLimit": "Reduced dependency server; optional missing recipes/catalogue diagnostics are not a full-modpack qualification."
+  },
+  "companionRepository": {
+    "root": "D:/TheWinterRescue",
+    "agentsFile": "Not found by exact-name search in repository and parent",
+    "changedFile": "config/frostedheart-common.toml",
+    "dormantHalfLifeSeconds": 30,
+    "tomlParsed": true,
+    "diffCheckPassed": true
+  },
+  "scopeLimits": [
+    "No real multiple-client infrared rendering run in this batch. Two independent server-side baselines and codec paths were exercised.",
+    "Reduced standalone Forge dependency set emits optional missing-recipe/catalogue diagnostics; this is not the complete modpack acceptance.",
+    "A still-hot sealed room or active latent reservoir is retained. No universal fixed-time deletion promise.",
+    "Performance measurement has the specific 10-to-30-consumer scope above.",
+    "Unrelated unfinished deposit GameTest fixtures excluded, as in the existing thermal verification init script."
+  ]
+}

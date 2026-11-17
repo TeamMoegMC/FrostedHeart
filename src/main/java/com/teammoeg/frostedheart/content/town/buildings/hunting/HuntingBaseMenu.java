@@ -35,7 +35,6 @@ import net.minecraft.world.entity.player.Inventory;
 public class HuntingBaseMenu extends CBlockEntityMenu<HuntingBaseBlockEntity> {
     public HuntingBaseMenu(int id, Inventory inventory, HuntingBaseBlockEntity blockEntity) {
         super(FHMenuTypes.HUNTING_BASE.get(), blockEntity, id, inventory.player, 0);
-        addPlayerInventory(inventory, 8, 140, 197);
     }
 
     public Optional<HuntingBaseBuilding> getBuilding() {

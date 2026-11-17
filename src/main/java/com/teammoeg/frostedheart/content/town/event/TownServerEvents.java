@@ -22,6 +22,7 @@ public final class TownServerEvents {
         if (event.getPlayer() != null) {
             return;
         }
+        com.teammoeg.frostedheart.content.town.block.blockscanner.TownSectionSnapshots.reload();
         TownBuildingTypes.resourcesReloaded();
         com.teammoeg.frostedheart.content.town.buildings.mine.MineBuilding.invalidateRecipeCache();
         var teams = CTeamDataManager.INSTANCE;
@@ -45,11 +46,13 @@ public final class TownServerEvents {
 
     @SubscribeEvent
     public static void serverStopped(ServerStoppedEvent event) {
+        com.teammoeg.frostedheart.content.town.block.blockscanner.TownSectionSnapshots.clear();
         com.teammoeg.frostedheart.content.town.buildings.mine.MineBuilding.invalidateRecipeCache();
     }
     @SubscribeEvent
     public static void tick(TickEvent.ServerTickEvent event) {
         if (event.phase != TickEvent.Phase.END) return;
+        com.teammoeg.frostedheart.content.town.block.blockscanner.TownSectionSnapshots.tick(event.getServer());
         TownRuntimeManager manager = TownRuntimeManager.current();
         if (manager != null) manager.tickEnd();
         SyncEngine.refreshServerVisibility(event.getServer());

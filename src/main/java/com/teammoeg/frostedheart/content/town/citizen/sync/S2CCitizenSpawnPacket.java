@@ -45,7 +45,10 @@ import net.minecraftforge.network.NetworkEvent;
 public final class S2CCitizenSpawnPacket implements CMessage {
 
 	/** 出生条目；已追踪 id 可复用为低频外观刷新 / Spawn entry; tracked ids may reuse it for low-frequency appearance refreshes. */
-	public record Entry(int id, int px, int py, int pz, byte stateDir, byte age, String name) {
+	public record Entry(int id, int px, int py, int pz, byte stateDir, byte age, String name, java.util.UUID roadTown) {
+        public Entry(int id, int px, int py, int pz, byte stateDir, byte age, String name) {
+            this(id, px, py, pz, stateDir, age, name, null);
+        }
 	}
 
 	private final List<Entry> entries;
@@ -59,7 +62,7 @@ public final class S2CCitizenSpawnPacket implements CMessage {
 		this.entries = new ArrayList<>(count);
 		for (int i = 0; i < count; i++)
 			entries.add(new Entry(buf.readVarInt(), buf.readInt(), buf.readInt(), buf.readInt(), buf.readByte(), buf.readByte(),
-					buf.readUtf(64)));
+					buf.readUtf(64), buf.readNullable(FriendlyByteBuf::readUUID)));
 	}
 
 	@Override
@@ -73,6 +76,7 @@ public final class S2CCitizenSpawnPacket implements CMessage {
 			buf.writeByte(e.stateDir());
 			buf.writeByte(e.age());
 			buf.writeUtf(e.name(), 64);
+            buf.writeNullable(e.roadTown(), FriendlyByteBuf::writeUUID);
 		}
 	}
 

@@ -32,6 +32,8 @@ import lombok.Getter;
  *     <li>{@link #MAX_CAPACITY} —— 仓库容量上限（service，不占容量，level 0）。</li>
  *     <li>{@link #TRANSPORT_CAPACITY} —— 运力，代表当天可提供的运输服务能力；由货运站在晨间重建，
  *     不会被单次运输消耗，也不占用仓库容量，level 0。</li>
+ *     <li>{@link #RESEARCH_LABOR} —— 研究人力，以标准研究员计；level 为研究员的教育等级 0–5。由研究所在晨间重建，
+ *     随后由知识系统分配给研究需求与联想，不占仓库容量。</li>
  * </ul>
  */
 public enum VirtualResourceType implements ITownResourceType{
@@ -42,7 +44,12 @@ public enum VirtualResourceType implements ITownResourceType{
      * （{@code maxLevel=0}）。货运站产出统一走 {@code VirtualResourceAttributeAction} 的 ADD 路径；运输使用方
      * 只登记占用，不通过 COST 消耗该资源。
      */
-    TRANSPORT_CAPACITY(false, true, 0);
+    TRANSPORT_CAPACITY(false, true, 0),
+    /**
+     * 研究人力：研究所研究员当天可投入的工作量，以标准研究员计，level 为教育等级（0–5）。
+     * 每日重建的 service，不占仓库容量；同一天由城镇研究结算交给知识系统分配。
+     */
+    RESEARCH_LABOR(false, true, 5);
 
     /**
      * Service will be reset when working.

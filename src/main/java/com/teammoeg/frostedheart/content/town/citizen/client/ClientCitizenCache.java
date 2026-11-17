@@ -70,12 +70,14 @@ public final class ClientCitizenCache {
 		ClientCitizen existing = CITIZENS.get(entry.id());
 		if (existing != null) {
 			existing.setAge(entry.age());
+            existing.roadTown = entry.roadTown();
 			if (listener != null)
 				listener.onApplied(existing, false);
 			return false;
 		}
 		ClientCitizen citizen = new ClientCitizen(entry.id(), entry.px(), entry.py(), entry.pz(),
 				entry.stateDir(), entry.age(), entry.name(), now);
+		citizen.roadTown = entry.roadTown();
 		CITIZENS.put(entry.id(), citizen);
 		if (listener != null)
 			listener.onApplied(citizen, true);
@@ -196,7 +198,7 @@ public final class ClientCitizenCache {
 		double bestT = maxDist;
 		double now = ClientCitizen.currentTimeSeconds();
 		for (ClientCitizen c : CITIZENS.values()) {
-			double[] pos = c.renderPos(now);
+			double[] pos = c.presentationPos(now);
 			double modelScale = c.modelScale();
 			double cx = pos[0] - eye.x;
 			double cy = pos[1] + 0.9 * modelScale - eye.y;

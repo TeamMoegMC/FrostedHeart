@@ -255,14 +255,17 @@ public abstract class P2PTerminalScreen extends AbstractContainerScreen<P2PTermi
                 graphics.drawString(font, Component.translatable(
                         "gui.frostedheart.p2p_terminal.rate"), 7, 98, 0x404040, false);
             }
+            // Whole numbers for players (what is left rounded down, what is still needed rounded up); exact in detailed mode.
+            boolean detailed = com.teammoeg.frostedheart.content.town.client.TownUiModeClient.detailed();
             Component capacity = Component.translatable(
                     "gui.frostedheart.p2p_terminal.capacity",
-                    format(view.townRemainingCapacity()), format(view.townTotalCapacity()));
+                    detailed ? format(view.townRemainingCapacity()) : wholeDown(view.townRemainingCapacity()),
+                    detailed ? format(view.townTotalCapacity()) : wholeRound(view.townTotalCapacity()));
             drawFittedString(graphics, capacity, 7, 116, 162, 0x404040);
             if (view.lastDecision() == P2PBindingDecision.INSUFFICIENT_CAPACITY) {
                 Component required = Component.translatable(
                         "gui.frostedheart.p2p_terminal.capacity_required",
-                        format(view.requiredAdditionalCapacity()));
+                        detailed ? format(view.requiredAdditionalCapacity()) : wholeUp(view.requiredAdditionalCapacity()));
                 drawFittedString(graphics, required, 7,
                         bidirectionalLayout ? 106 : 106, 162, 0x9a2828);
             }
@@ -565,6 +568,18 @@ public abstract class P2PTerminalScreen extends AbstractContainerScreen<P2PTermi
 
     private static String format(double value) {
         return String.format(Locale.ROOT, "%.1f", value);
+    }
+
+    private static String wholeDown(double value) {
+        return com.teammoeg.frostedheart.content.town.ui.TownFormat.count((long) Math.floor(Math.max(0, value) + 1e-6));
+    }
+
+    private static String wholeRound(double value) {
+        return com.teammoeg.frostedheart.content.town.ui.TownFormat.count(Math.round(Math.max(0, value)));
+    }
+
+    private static String wholeUp(double value) {
+        return com.teammoeg.frostedheart.content.town.ui.TownFormat.count((long) Math.ceil(Math.max(0, value) - 1e-6));
     }
 
     private static String compactRate(int rate) {

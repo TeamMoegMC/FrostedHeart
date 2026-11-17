@@ -91,6 +91,8 @@ public class EquipmentTempStats implements TooltipModifier {
 	                    .add(Lang.text(" " + s + " " + TooltipHelper.makeProgressBar(3, progress))
 	                            .style(heat < 0 ? ChatFormatting.AQUA : ChatFormatting.GOLD));
 	            builder.addTo(list);
+	            Lang.translate("tooltip", "temp.item_regulated")
+	                    .style(ChatFormatting.GRAY).addTo(list);
 	        }
         
         }

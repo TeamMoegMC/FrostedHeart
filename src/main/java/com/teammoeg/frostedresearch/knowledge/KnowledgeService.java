@@ -21,20 +21,24 @@
 package com.teammoeg.frostedresearch.knowledge;
 
 import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
-import com.teammoeg.frostedresearch.FRConfig;
 import com.teammoeg.frostedresearch.FRSpecialDataTypes;
 import com.teammoeg.frostedresearch.api.KnowledgeDataAPI;
 import com.teammoeg.frostedresearch.api.TeamResearchService;
 import com.teammoeg.frostedresearch.knowledge.definition.KnowledgeDefinitions;
 import com.teammoeg.frostedresearch.knowledge.definition.ProjectRequirement;
 import com.teammoeg.frostedresearch.knowledge.event.KnowledgeOperationEvent;
+import com.teammoeg.frostedresearch.knowledge.labor.LaborReport;
+import com.teammoeg.frostedresearch.knowledge.labor.ResearchLaborPool;
+import com.teammoeg.frostedresearch.knowledge.labor.ResearchSupplies;
 import com.teammoeg.frostedresearch.knowledge.link.LinkMatcher;
+import com.teammoeg.frostedresearch.knowledge.link.LinkRule;
 import com.teammoeg.frostedresearch.knowledge.link.TagLookup;
 import com.teammoeg.frostedresearch.knowledge.model.*;
 import com.teammoeg.frostedresearch.knowledge.state.*;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.RandomSource;
 import net.minecraftforge.common.MinecraftForge;
 
 import java.util.*;
@@ -53,6 +57,16 @@ public final class KnowledgeService {
      * Candidate tries allowed when evidence is matched against a team's whole archive and inbox.
      */
     public static final int EVIDENCE_SEARCH_STEPS = 20_000;
+    /**
+     * Candidate tries allowed per link rule when institute researchers look for a new idea in the archive.
+     */
+    public static final int CANDIDATE_SEARCH_STEPS = 20_000;
+    /** Link rules institute researchers consider on one day. */
+    public static final int CANDIDATE_LIMIT = 64;
+    /** Topics a day's association tries before giving up on a hint. */
+    public static final int ASSOCIATION_TOPIC_TRIES = 8;
+    /** Tolerance for labor arithmetic, in worker-days. */
+    public static final double LABOR_EPSILON = 1e-6;
 
     public enum Grant {NORMAL, INITIAL, COMMAND}
 
@@ -72,6 +86,8 @@ public final class KnowledgeService {
     private final Runnable changed;
     private final int archiveLimit;
     private final int inboxLimit;
+    private final int archiveBase;
+    private final int inboxBase;
     private long observationsRevision = -1;
     private List<Observation> observations = List.of();
 
@@ -88,6 +104,8 @@ public final class KnowledgeService {
         this.changed = changed;
         this.archiveLimit = archiveLimit;
         this.inboxLimit = inboxLimit;
+        this.archiveBase = archiveLimit;
+        this.inboxBase = inboxLimit;
     }
 
     private UUID testTeamId;
@@ -98,8 +116,12 @@ public final class KnowledgeService {
         this.actor = actor;
         this.time = time;
         this.changed = () -> TeamResearchService.sync(team);
-        this.archiveLimit = FRConfig.SERVER.knowledgeArchiveObservations.get();
-        this.inboxLimit = FRConfig.SERVER.knowledgeInboxObservations.get();
+        // Other systems, such as town research institutes, may grant capacity beyond the configured base.
+        KnowledgeCapacity.Limits limits = KnowledgeCapacity.limits(team);
+        this.archiveLimit = limits.archive();
+        this.inboxLimit = limits.inbox();
+        this.archiveBase = limits.archiveBase();
+        this.inboxBase = limits.inboxBase();
     }
 
     public static KnowledgeService forPlayer(ServerPlayer player) {
@@ -112,6 +134,26 @@ public final class KnowledgeService {
 
     public KnowledgeState state() {
         return state;
+    }
+
+    /** Archived observation records the team may hold, including granted capacity. */
+    public int archiveLimit() {
+        return archiveLimit;
+    }
+
+    /** Inbox observation records the team may hold, including granted capacity. */
+    public int inboxLimit() {
+        return inboxLimit;
+    }
+
+    /** Configured archive capacity before any granted capacity. */
+    public int archiveBase() {
+        return archiveBase;
+    }
+
+    /** Configured inbox capacity before any granted capacity. */
+    public int inboxBase() {
+        return inboxBase;
     }
 
     public UUID teamId() {
@@ -283,15 +325,31 @@ public final class KnowledgeService {
     }
 
     public List<LinkMatcher.Match> candidateLinks(int limit) {
-        return LinkMatcher.candidates(state.archive().entries().values().stream().map(KnowledgeEntry::element).filter(e -> isActive(e.key())).toList(), KnowledgeDefinitions.current().links(), limit);
+        return candidateLinks(KnowledgeDefinitions.current().links(), limit);
+    }
+
+    /**
+     * Combinations of active archive knowledge that satisfy these rules, one per rule. Each rule's search is bounded
+     * by {@link #CANDIDATE_SEARCH_STEPS}; a rule whose budget runs out yields nothing.
+     */
+    public List<LinkMatcher.Match> candidateLinks(Map<ResourceLocation, LinkRule> rules, int limit) {
+        return LinkMatcher.candidates(state.archive().entries().values().stream().map(KnowledgeEntry::element).filter(e -> isActive(e.key())).toList(),
+                rules, limit, TagLookup.SERVER, CANDIDATE_SEARCH_STEPS);
     }
 
     public OperationResult link(ResourceLocation ruleId, List<KnowledgeKey> keys) {
+        return link(ruleId, keys, "link:" + ruleId);
+    }
+
+    /**
+     * Links with an explicit acquisition mechanism, such as {@code institute:link:<rule>} for town researchers.
+     */
+    public OperationResult link(ResourceLocation ruleId, List<KnowledgeKey> keys, String mechanism) {
         var match = previewLinks(keys).stream().filter(m -> m.ruleId().equals(ruleId)).findFirst().orElse(null);
         if (match == null) return result(Status.NO_MATCH, null);
         KnowledgeKey output = KnowledgeKey.idea(match.rule().output());
         boolean discovered = state.discover(new LinkDiscovery(ruleId, output, match.bindings(), time));
-        OperationResult produced = produce(KnowledgeElement.idea(match.rule().output()), new AcquisitionSource("link:" + ruleId, actor, time));
+        OperationResult produced = produce(KnowledgeElement.idea(match.rule().output()), new AcquisitionSource(mechanism, actor, time));
         if (discovered) notifyChanged();
         return produced;
     }
@@ -356,11 +414,13 @@ public final class KnowledgeService {
 
     /**
      * Stored progress counts only while it satisfies the current definition, so changed requirements may need new work.
+     * A calculation or experiment is met once the player's games or experiments, together with any labor shares
+     * standing in for them, reach its count, and any required labor is finished.
      */
     public boolean requirementMet(ResearchHistory run, ProjectRequirement requirement) {
         return switch (requirement.type()) {
-            case CALCULATION -> calculationsDone(run, requirement) >= requirement.count();
-            case EXPERIMENT -> experimentsDone(run, requirement) >= requirement.count();
+            case CALCULATION, EXPERIMENT -> playerRemaining(run, requirement) == 0
+                    && (!requirement.laborRequired() || laborRemaining(run, requirement) <= LABOR_EPSILON);
             case EVIDENCE -> {
                 var binding = run.evidence().get(requirement.id());
                 yield binding != null && LinkMatcher.bindExact(binding.values().stream().map(KnowledgeElement::observation).toList(),
@@ -381,20 +441,65 @@ public final class KnowledgeService {
         return run.experiments().getOrDefault(requirement.id(), 0);
     }
 
+    /** Worker-days town researchers have put into this requirement. */
+    public static double laborDone(ResearchHistory run, ProjectRequirement requirement) {
+        return requirement.labor().isEmpty() ? 0 : run.labor().getOrDefault(requirement.id(), 0.0);
+    }
+
+    /**
+     * Finished shares of optional labor, each standing in for one of the player's games or experiments. Required labor
+     * stands in for nothing.
+     */
+    public static int laborShares(ResearchHistory run, ProjectRequirement requirement) {
+        var labor = requirement.labor().filter(value -> !value.required()).orElse(null);
+        if (labor == null) return 0;
+        return (int) Math.floor((laborDone(run, requirement) + LABOR_EPSILON) / labor.share());
+    }
+
+    /** Games or experiments the player has finished for this requirement. */
+    public static int playerDone(ResearchHistory run, ProjectRequirement requirement) {
+        return switch (requirement.type()) {
+            case CALCULATION -> calculationsDone(run, requirement);
+            case EXPERIMENT -> experimentsDone(run, requirement);
+            case EVIDENCE -> 0;
+        };
+    }
+
+    /**
+     * Games or experiments still to be done at a drawing desk or experiment table, after optional labor shares.
+     */
+    public static int playerRemaining(ResearchHistory run, ProjectRequirement requirement) {
+        if (requirement.type() == ProjectRequirement.Type.EVIDENCE) return 0;
+        return Math.max(0, requirement.count() - playerDone(run, requirement) - laborShares(run, requirement));
+    }
+
+    /**
+     * Worker-days of labor that still advance this requirement: what required labor lacks, or what optional labor
+     * needs to cover the games or experiments the player has not done.
+     */
+    public static double laborRemaining(ResearchHistory run, ProjectRequirement requirement) {
+        var labor = requirement.labor().orElse(null);
+        if (labor == null) return 0;
+        double done = laborDone(run, requirement);
+        if (labor.required()) return Math.max(0, labor.share() - done);
+        int open = Math.max(0, requirement.count() - playerDone(run, requirement));
+        return Math.max(0, open * labor.share() - done);
+    }
+
     /**
      * The experiment requirement while it still needs runs, for an experiment table to work toward.
      */
     public Optional<ProjectRequirement> experimentRequirement(UUID runId, String requirementId) {
         ResearchHistory run = state.research().get(runId);
         ProjectRequirement requirement = openRequirement(run, requirementId, ProjectRequirement.Type.EXPERIMENT);
-        return requirement == null || requirementMet(run, requirement) ? Optional.empty() : Optional.of(requirement);
+        return requirement == null || playerRemaining(run, requirement) == 0 ? Optional.empty() : Optional.of(requirement);
     }
 
     public OperationResult recordExperiment(UUID runId, String requirementId) {
         ResearchHistory run = state.research().get(runId);
         ProjectRequirement requirement = openRequirement(run, requirementId, ProjectRequirement.Type.EXPERIMENT);
         if (requirement == null) return result(Status.NOT_FOUND, null);
-        if (requirementMet(run, requirement)) return result(Status.ALREADY_OWNED, null);
+        if (playerRemaining(run, requirement) == 0) return result(Status.ALREADY_OWNED, null);
         state.recordResearch(run.withExperiment(requirement.id()));
         notifyChanged();
         return result(Status.SUCCESS, null);
@@ -465,14 +570,14 @@ public final class KnowledgeService {
     public OptionalInt calculationLevel(UUID runId, String requirementId) {
         ResearchHistory run = state.research().get(runId);
         ProjectRequirement requirement = openRequirement(run, requirementId, ProjectRequirement.Type.CALCULATION);
-        return requirement == null || requirementMet(run, requirement) ? OptionalInt.empty() : OptionalInt.of(requirement.level());
+        return requirement == null || playerRemaining(run, requirement) == 0 ? OptionalInt.empty() : OptionalInt.of(requirement.level());
     }
 
     public OperationResult recordCalculation(UUID runId, String requirementId, int level) {
         ResearchHistory run = state.research().get(runId);
         ProjectRequirement requirement = openRequirement(run, requirementId, ProjectRequirement.Type.CALCULATION);
         if (requirement == null) return result(Status.NOT_FOUND, null);
-        if (requirementMet(run, requirement)) return result(Status.ALREADY_OWNED, null);
+        if (playerRemaining(run, requirement) == 0) return result(Status.ALREADY_OWNED, null);
         if (level < requirement.level()) return result(Status.INVALID_INPUT, null);
         state.recordResearch(run.withCalculation(requirement.id(), level));
         notifyChanged();
@@ -522,6 +627,124 @@ public final class KnowledgeService {
         List<OperationResult> outputs = results.stream().distinct().map(id -> produce(KnowledgeElement.result(id), new AcquisitionSource("research:" + run, actor, time))).toList();
         notifyChanged();
         return outputs;
+    }
+
+    /**
+     * 城镇研究所的一天：把人力投入各进行中启动的人力协作需求，并按投入比例从 {@code supplies} 扣除每天的物品。
+     * 需求按所需教育等级从高到低分配（同级按启动时间与需求顺序），每项先用满足条件的最低等级人力。
+     * {@code pool} 被就地扣减，剩下的就是当天的空闲人力。
+     * <p>
+     * One day of town research: labor goes to the labor of every open run's requirements, and the daily items are drawn
+     * from {@code supplies} in proportion. Requirements asking for more education are served first (then by run start
+     * and requirement order), each from the lowest qualifying level. {@code pool} is reduced in place; what remains is
+     * the day's idle labor.
+     */
+    public List<LaborReport.Allocation> workLabor(ResearchLaborPool pool, ResearchSupplies supplies) {
+        record Demand(UUID run, ProjectRequirement requirement, ProjectRequirement.Labor labor, double wanted) {
+        }
+        List<Demand> demands = new ArrayList<>();
+        List<ResearchHistory> runs = state.research().values().stream().filter(ResearchHistory::open)
+                .sorted(Comparator.comparingLong(ResearchHistory::time).thenComparing(run -> run.id().toString())).toList();
+        for (ResearchHistory run : runs)
+            for (ProjectRequirement requirement : requirements(run)) {
+                var labor = requirement.labor().orElse(null);
+                if (labor == null) continue;
+                double remaining = laborRemaining(run, requirement);
+                if (remaining > LABOR_EPSILON) demands.add(new Demand(run.id(), requirement, labor, Math.min(labor.workers(), remaining)));
+            }
+        // Stable: equal education keeps run and requirement order.
+        demands.sort(Comparator.comparingInt((Demand demand) -> demand.labor().education()).reversed());
+        List<LaborReport.Allocation> allocations = new ArrayList<>();
+        boolean changed = false;
+        for (Demand demand : demands) {
+            double given = Math.min(demand.wanted(), pool.available(demand.labor().education()));
+            boolean itemsShort = false;
+            List<ProjectRequirement.Material> items = demand.labor().items();
+            if (given > LABOR_EPSILON && !items.isEmpty()) {
+                double share = Math.max(0, Math.min(1, supplies.share(items, dailyItems(demand.labor(), given))));
+                if (share < 1 - LABOR_EPSILON) {
+                    itemsShort = true;
+                    given *= share;
+                }
+                // Overlapping item tags can make a joint take fail where each item alone was in stock; try less.
+                boolean taken = false;
+                for (int attempt = 0; attempt < 4 && given > LABOR_EPSILON; attempt++) {
+                    if (supplies.take(items, dailyItems(demand.labor(), given))) {
+                        taken = true;
+                        break;
+                    }
+                    itemsShort = true;
+                    given /= 2;
+                }
+                if (!taken) given = 0;
+            }
+            if (given > LABOR_EPSILON) {
+                pool.take(demand.labor().education(), given);
+                ResearchHistory current = state.research().get(demand.run());
+                state.recordResearch(current.withLabor(demand.requirement().id(), given));
+                changed = true;
+            } else given = 0;
+            allocations.add(new LaborReport.Allocation(demand.run(), demand.requirement().id(), demand.wanted(), given, itemsShort));
+        }
+        if (changed) notifyChanged();
+        return List.copyOf(allocations);
+    }
+
+    private static List<Double> dailyItems(ProjectRequirement.Labor labor, double given) {
+        double share = given / labor.workers();
+        return labor.items().stream().map(item -> item.count() * share).toList();
+    }
+
+    /**
+     * 研究所居民的联想：先在当前有效档案中寻找能完整绑定、输出想法还不在档案和来件中的联络规则，随机选一条，按正常联络流程产出想法；
+     * 没有时以一项随机的有效知识为主题给出一条暗示。调用方负责判定当天是否联想成功。
+     * <p>
+     * Institute researchers associate: among link rules that the active archive fully satisfies and whose idea is in
+     * neither the archive nor the inbox, one chosen at random links as a player's link would; failing that, a random
+     * active topic receives a hint. The caller decides whether the day's association happens at all.
+     *
+     * @param day 城镇结算日，暗示每天至多一次 / town day; one institute hint per day
+     * @return the outcome, naming the idea produced or the hint's topic; labor and chance are left for the caller
+     */
+    /** The day-map key under which the town day an institute found {@code idea} is kept. */
+    public static String instituteFoundKey(KnowledgeKey idea) {
+        return "institute_found:" + idea.kind().name().toLowerCase(java.util.Locale.ROOT) + "/" + idea.id();
+    }
+
+    public LaborReport.Association instituteAssociation(RandomSource random, long day) {
+        Map<ResourceLocation, LinkRule> fresh = new LinkedHashMap<>();
+        KnowledgeDefinitions.current().links().forEach((id, rule) -> {
+            KnowledgeKey idea = KnowledgeKey.idea(rule.output());
+            // Only ideas the team has not met, and whose definitions are usable now.
+            if (!state.archive().contains(idea) && !state.inbox().contains(idea)
+                    && KnowledgeAvailability.available(KnowledgeElement.idea(rule.output()))) fresh.put(id, rule);
+        });
+        List<LinkMatcher.Match> candidates = fresh.isEmpty() ? List.of() : candidateLinks(fresh, CANDIDATE_LIMIT);
+        if (!candidates.isEmpty()) {
+            LinkMatcher.Match chosen = candidates.get(random.nextInt(candidates.size()));
+            List<KnowledgeKey> keys = chosen.rule().inputs().stream().map(slot -> chosen.bindings().get(slot.name())).toList();
+            link(chosen.ruleId(), keys, "institute:link:" + chosen.ruleId());
+            KnowledgeKey found = KnowledgeKey.idea(chosen.rule().output());
+            // The town day it was found on, so the institute's list can say when.
+            state.markDay(instituteFoundKey(found), day);
+            return new LaborReport.Association(LaborReport.Outcome.IDEA, 0, 0, Optional.of(found));
+        }
+        List<KnowledgeKey> topics = new ArrayList<>(state.archive().entries().keySet().stream().filter(this::isActive)
+                .sorted(Comparator.comparing((KnowledgeKey key) -> key.kind()).thenComparing(KnowledgeKey::id)).toList());
+        for (int i = topics.size() - 1; i > 0; i--) Collections.swap(topics, i, random.nextInt(i + 1));
+        for (KnowledgeKey topic : topics.subList(0, Math.min(ASSOCIATION_TOPIC_TRIES, topics.size()))) {
+            if (associate(topic, day, "institute").succeeded())
+                return new LaborReport.Association(LaborReport.Outcome.HINT, 0, 0, Optional.of(topic));
+        }
+        return new LaborReport.Association(LaborReport.Outcome.NOTHING, 0, 0, Optional.empty());
+    }
+
+    /**
+     * Keeps this day's institute report for the team's members to read.
+     */
+    public void recordLaborReport(LaborReport report) {
+        state.laborReport(report);
+        notifyChanged();
     }
 
     public OperationResult setDreamTopic(UUID player, KnowledgeKey key) {

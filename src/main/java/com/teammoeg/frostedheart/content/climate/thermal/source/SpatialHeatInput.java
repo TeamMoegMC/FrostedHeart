@@ -62,34 +62,6 @@ public final class SpatialHeatInput {
                 incarnations[index], sourceIds[index], sourceGenerations[index], materialStates[index], minimumPages[index]);
     }
 
-    /** Called inside the input admission that already covers the recorded load. */
-    public static SpatialHeatInput takeWorldIdentity(CutLoadBuffer frozen) {
-        if (frozen.size() == 0) return EMPTY;
-        if (!frozen.frozen()) throw new IllegalArgumentException("Source identity must be frozen before intake");
-        var result = new SpatialHeatInput(frozen.size());
-        for (int index = 0; index < result.size(); index++) {
-            if (SourceBinding.isAirTarget(frozen.target(index))) {
-                var load = frozen.airLoad(index, null);
-                result.positions[index] = load.block();
-                result.faces[index] = (byte) load.face().ordinal();
-                result.materialSlots[index] = -1;
-                result.targetGenerations[index] = load.pageGeneration();
-            } else {
-                result.positions[index] = frozen.materialBlock(index);
-                result.faces[index] = MATERIAL;
-                result.materialSlots[index] = SourceBinding.targetIndex(frozen.target(index));
-                result.targetGenerations[index] = frozen.generation(index);
-                result.materialProfiles[index] = frozen.materialProfile(index);
-                result.incarnations[index] = frozen.materialIncarnation(index);
-            }
-            result.starts[index] = frozen.startTick(index);
-            result.sourceIds[index] = frozen.sourceId(index); result.sourceGenerations[index] = frozen.sourceGeneration(index);
-            result.ends[index] = frozen.endTick(index);
-            result.amounts[index] = frozen.amount(index);
-        }
-        return result;
-    }
-
     private void copy(int source, SpatialHeatInput target, int next) {
         target.positions[next] = positions[source]; target.faces[next] = faces[source];
         target.materialSlots[next] = materialSlots[source];

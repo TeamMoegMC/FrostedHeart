@@ -54,8 +54,12 @@ public class TransportStationBlock extends AbstractTownBuildingBlock
             InteractionHand hand,
             BlockHitResult hit
     ) {
-        if (level.isClientSide || hand != InteractionHand.MAIN_HAND) {
+        if (hand != InteractionHand.MAIN_HAND) {
             return InteractionResult.PASS;
+        }
+        // Claim the click on the client too, so a held item (the Mayor's Seal, say) is not used as well.
+        if (level.isClientSide) {
+            return InteractionResult.SUCCESS;
         }
         if (!(level.getBlockEntity(pos) instanceof TransportStationBlockEntity blockEntity)
                 || !(player instanceof ServerPlayer serverPlayer)) {

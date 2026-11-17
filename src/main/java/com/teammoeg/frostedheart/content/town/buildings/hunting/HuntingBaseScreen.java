@@ -26,95 +26,112 @@ import java.util.Locale;
 import com.teammoeg.chorda.client.cui.base.UILayer;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
-import com.teammoeg.frostedheart.content.town.StandardTownBuildingScreen;
 import com.teammoeg.frostedheart.content.town.TeamTown;
 import com.teammoeg.frostedheart.content.town.TownMathFunctions;
 import com.teammoeg.frostedheart.content.town.building.TownProductionReportItem;
 import com.teammoeg.frostedheart.content.town.building.TownProductionStopReason;
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBaseScreen;
 import com.teammoeg.frostedheart.content.town.resident.ResidentAttributeModel;
-import com.teammoeg.frostedheart.content.town.tabs.AbstractTownTab;
 import com.teammoeg.frostedheart.content.town.tabs.TownInfoPanel;
 import com.teammoeg.frostedheart.content.town.tabs.TownWorkforcePanel;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
+import com.teammoeg.chorda.client.cui.base.UIElement;
+import com.teammoeg.frostedheart.content.town.TeamTownData;
+import com.teammoeg.frostedheart.content.town.client.TownClientUpdates;
+import com.teammoeg.frostedheart.content.town.client.board.BoardWidgets;
+import com.teammoeg.frostedheart.content.town.client.board.WorkBoardScreen;
+import com.teammoeg.frostedheart.content.town.resident.Resident;
+import com.teammoeg.frostedheart.content.town.ui.view.WorkView;
+import com.teammoeg.frostedheart.content.town.buildings.hunting.view.HuntingBaseViewPresenter;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.Items;
 
-public class HuntingBaseScreen extends StandardTownBuildingScreen<HuntingBaseMenu> {
+/**
+ * 狩猎基地界面：布告板的概览、猎人、产出三页；详细模式下的调试页保留原来的文字面板。
+ * <p>
+ * The hunting base screen on the notice board: overview, hunters and output; the debug tab in detailed mode keeps
+ * the original text panels.
+ */
+public class HuntingBaseScreen extends WorkBoardScreen<HuntingBaseMenu> {
     public HuntingBaseScreen(HuntingBaseMenu menu) {
         super(menu);
     }
 
     @Override
-    protected void initTabs() {
-        addTab(new OverviewTab(this));
-        addTab(new WorkersTab(this));
-        addTab(new ProductionTab(this));
+    protected WorkView.Board present() {
+        TeamTown town = menu.getTown().orElse(null);
+        long day = TownClientUpdates.currentTown().map(TeamTownData::getTownDay).orElse(0L);
+        return HuntingBaseViewPresenter.present(new HuntingBaseViewPresenter.Inputs(menu.getBuilding().orElse(null), pos(), menu.getResidents(),
+                town, town == null ? "" : town.getName(), day));
     }
 
-    private abstract static class HuntingTab extends AbstractTownTab<HuntingBaseMenu> {
-        private HuntingTab(HuntingBaseScreen screen) { super(screen); }
-        @Override public CIcons.CIcon getIcon() { return INACTIVE_TAB; }
-        @Override public CIcons.CIcon getActiveIcon() { return ACTIVE_TAB; }
+    @Override
+    protected CIcons.CIcon buildingIcon() {
+        return CIcons.getIcon(FHBlocks.HUNTING_BASE.get());
     }
 
-    private static final class OverviewTab extends HuntingTab {
-        private OverviewTab(HuntingBaseScreen screen) { super(screen); }
-        @Override public CIcons.CIcon getContentIcon() {
-            return CIcons.getIcon(FHBlocks.HUNTING_BASE.get());
-        }
-        @Override public Component getTitle() {
-            return Component.translatable("gui.frostedheart.hunting_base.overview");
-        }
-        @Override public void build(UILayer layer) {
-            layer.add(new TownInfoPanel(layer, 8, 4, 160, 130,
-                    () -> overviewRows(getMenu())));
-        }
+    @Override
+    protected CIcons.CIcon crewIcon() {
+        return CIcons.getIcon(Items.BOW);
     }
 
-    private static final class WorkersTab extends HuntingTab {
-        private WorkersTab(HuntingBaseScreen screen) { super(screen); }
-        @Override public CIcons.CIcon getContentIcon() { return CIcons.getIcon(Items.BOW); }
-        @Override public Component getTitle() {
-            return Component.translatable("gui.frostedheart.hunting_base.workers");
-        }
-        @Override public void build(UILayer layer) {
-            HuntingBaseBuilding building = getMenu().getBuilding().orElse(null);
-            FHConfig.Server.Town.ResidentProgression progression =
-                    FHConfig.SERVER.TOWN.RESIDENT_PROGRESSION;
-            layer.add(new TownWorkforcePanel(
-                    layer, 8, 4,
-                    getMenu()::getResidents,
-                    resident -> building != null && building.canResidentWork(resident),
-                    resident -> resident.getWorkProficiency(HuntingBaseBuilding.class),
-                    resident -> building == null ? 0.0 : building.getResidentScore(resident),
-                    resident -> building == null ? 0.0
-                            : building.getResidentScore(resident)
-                            * FHConfig.SERVER.TOWN.HUNTING.expectedLootRollsPerStandardWorkerDay.get(),
-                    resident -> ResidentAttributeModel.calculateDailyProficiencyGain(
-                            resident.getWorkProficiency(HuntingBaseBuilding.class),
-                            progression.proficiencyGrowthAtZeroPerWorkday.get(),
-                            progression.minimumProficiencyGrowthPerWorkday.get(),
-                            progression.maximumWorkProficiency.get()),
-                    Component.translatable("gui.frostedheart.hunting_base.hunting_proficiency"),
-                    value -> Component.translatable(
-                            "gui.frostedheart.hunting_base.personal_contribution",
-                            MineBaseScreen.two(value))
-            ));
-        }
+    @Override
+    protected CIcons.CIcon outputIcon() {
+        return CIcons.getIcon(Items.BEEF);
     }
 
-    private static final class ProductionTab extends HuntingTab {
-        private ProductionTab(HuntingBaseScreen screen) { super(screen); }
-        @Override public CIcons.CIcon getContentIcon() { return CIcons.getIcon(Items.BEEF); }
-        @Override public Component getTitle() {
-            return Component.translatable("gui.frostedheart.hunting_base.production");
+    @Override
+    protected String key() {
+        return HuntingBaseViewPresenter.KEY;
+    }
+
+    @Override
+    protected String townName() {
+        return menu.getTown().map(TeamTown::getName).orElse("");
+    }
+
+    @Override
+    protected List<BoardWidgets.DebugSection> debugSections() {
+        return List.of(
+                new BoardWidgets.DebugSection(b("work.debug.overview"), (l, x, y, w, h) -> new TownInfoPanel(l, x, y, w, h, () -> overviewRows(menu))),
+                new BoardWidgets.DebugSection(b("work.debug.crew"), (l, x, y, w, h) -> workforcePanel(l, x, y, menu)),
+                new BoardWidgets.DebugSection(b("work.debug.output"), (l, x, y, w, h) -> new TownInfoPanel(l, x, y, w, h, () -> productionRows(menu))));
+    }
+
+    @Override
+    protected String debugText() {
+        StringBuilder out = new StringBuilder(board.header().name().getString()).append(" @ ").append(pos().toShortString()).append('\n');
+        for (List<TownInfoPanel.Row> rows : List.of(overviewRows(menu), productionRows(menu))) {
+            for (TownInfoPanel.Row row : rows) out.append(row.text().getString()).append('\n');
+            out.append('\n');
         }
-        @Override public void build(UILayer layer) {
-            layer.add(new TownInfoPanel(layer, 8, 4, 160, 130,
-                    () -> productionRows(getMenu())));
-        }
+        menu.getBuilding().ifPresent(building -> {
+            for (Resident resident : menu.getResidents())
+                out.append(resident).append(String.format(Locale.ROOT, ": score %.3f, proficiency %.3f, can work %s%n",
+                        building.getResidentScore(resident), resident.getWorkProficiency(HuntingBaseBuilding.class), building.canResidentWork(resident)));
+        });
+        return out.toString();
+    }
+
+    private static UIElement workforcePanel(UILayer layer, int x, int y, HuntingBaseMenu menu) {
+        HuntingBaseBuilding building = menu.getBuilding().orElse(null);
+        FHConfig.Server.Town.ResidentProgression progression = FHConfig.SERVER.TOWN.RESIDENT_PROGRESSION;
+        return new TownWorkforcePanel(
+                layer, x, y,
+                menu::getResidents,
+                resident -> building != null && building.canResidentWork(resident),
+                resident -> resident.getWorkProficiency(HuntingBaseBuilding.class),
+                resident -> building == null ? 0.0 : building.getResidentScore(resident),
+                resident -> building == null ? 0.0
+                        : building.getResidentScore(resident) * FHConfig.SERVER.TOWN.HUNTING.expectedLootRollsPerStandardWorkerDay.get(),
+                resident -> ResidentAttributeModel.calculateDailyProficiencyGain(
+                        resident.getWorkProficiency(HuntingBaseBuilding.class),
+                        progression.proficiencyGrowthAtZeroPerWorkday.get(),
+                        progression.minimumProficiencyGrowthPerWorkday.get(),
+                        progression.maximumWorkProficiency.get()),
+                Component.translatable("gui.frostedheart.hunting_base.hunting_proficiency"),
+                value -> Component.translatable("gui.frostedheart.hunting_base.personal_contribution", MineBaseScreen.two(value)));
     }
 
     private static List<TownInfoPanel.Row> overviewRows(HuntingBaseMenu menu) {

@@ -80,7 +80,7 @@ public final class KnowledgeNodeSheet extends UILayer {
     public void addUIElements() {
         if (node == null) return;
         int width = getWidth(), height = getHeight();
-        heading = Language.getInstance().getVisualOrder(getFont().substrByWidth(node.title(), width - 70));
+        heading = Language.getInstance().getVisualOrder(Clip.fit(getFont(), node.title(), width - 70));
         JournalButton dismiss = new JournalButton(this, t("graph.close"), true, close);
         dismiss.setPosAndSize(width - 37, 11, 23, 18);
         add(dismiss);

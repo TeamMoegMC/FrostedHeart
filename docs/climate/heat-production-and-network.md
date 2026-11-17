@@ -1,9 +1,9 @@
 # Heat Production And Network
 
 - Status: `Transitional; current source and material ownership described below, earlier measurements retain their build scope`
-- Last verified: `2026-10-25` for source ownership and internal subsystem retirement; `2026-10-12` for campfire fuel countdown. Other sections retain their existing provenance.
+- Last verified: `2026-11-06` for material-frontier admission and energy-complete phase submission; `2026-10-25` for source ownership and internal subsystem retirement; `2026-10-12` for campfire fuel countdown. Other sections retain their existing provenance.
 - Scope: physical Minecraft sources, worker energy integration, material/phase sinks, and the separate heat-network model
-- Primary code anchors: `MinecraftPhysicalSourceProfile`, `PhysicalSourceSpatialIndex`, `WorkerPhysicalSourceBindings`, `AirMixingRegion`, `SpatialSourceTimeline`, `SpatialSourceIngress`, `SpatialHeatStore`, `ThermalSourceBatch`, `ThermalSourceLedger`, `LocalMaterialBoundary`, `HeatEndpoint`, `HeatNetwork`
+- Primary code anchors: `MinecraftPhysicalSourceProfile`, `PhysicalSourceSpatialIndex`, `WorkerPhysicalSourceBindings`, `AirMixingRegion`, `SpatialSourceTimeline`, `SpatialSourceIngress`, `SpatialHeatStore`, `ThermalSourceBatch`, `ThermalSourceLedger`, `LocalMaterialBoundary`, `MaterialThermalLaw.initialBranch`, `RegionalQuerySnapshot.materialPerturbationAtSlotC`, `WorkerPageStore.collectMaterialFrontier`, `HeatEndpoint`, `HeatNetwork`
 
 ## Physical Sources
 
@@ -145,6 +145,13 @@ The phase plateau is part of H-to-temperature conversion, not a separate reservo
 gameplay phase controls through the selected material owner. Main-thread ACK
 requires the matching block, Page lifecycle, profile, branch and request sequence;
 an applied ACK does not subtract latent energy again.
+`MinecraftPhaseController` applies `world_conditions.fluid_boundary_tag` when an
+untracked body starts a natural transition. A live or dormant body whose actual H
+has completed the latent interval commits without that start-boundary condition;
+interior water can become thin ice after its finite energy interval is complete.
+The dormant entry rejects incomplete H. Random-tick switches, biome exclusions,
+minimum height and analytic floors retain their existing effect. See the
+[completion and cooling contract](thermal-residual-lifecycle.md#自然冻结启动与已完成相变提交).
 Production completions hand off at most 160 requests per 20-tick cut so the main
 thread's 8-per-tick mutation limit can be used throughout the cut. A matching body
 whose Page query has not caught up to topology publication is retried with the same
@@ -159,14 +166,22 @@ Latent energy comes from the source/target C/O references described below.
 The old `phaseBaseEnergyJPerHeatCapacity` probability-derived configuration is removed.
 
 New material bodies initialize from the Page's captured natural temperature.
-Capacity is fixed for a given material state: the initial ordinary-body tuning
-uses six times the former per-face capacity (stone: 5400 J/K; wood: 2700 J/K).
+`MaterialThermalLaw.initialBranch` selects the same initial phase branch for arena
+initialization and material-frontier background calculation. A cold natural water
+or soil body can therefore start on its freezing plateau. Its latent responsibility
+retains that body; outward material admission separately requires an actual surface
+temperature perturbation from that material's natural initialized temperature, with
+the existing 1K/0.5K hysteresis. See [residual ownership and material expansion](thermal-residual-lifecycle.md).
+Capacity is fixed for a given material state: ordinary category defaults use
+stone 5400 J/K and wood 2700 J/K, with explicit recipe capacities taking precedence.
 Exposure changes connections, not capacity. `MaterialSectionState` stores exact
 body H, phase branch and stable BlockState identity separately from compressed Air
-history. Checkpoint format 5 retains actual state times and has no older-format migration reader.
+history. Checkpoint format 6 retains actual state times and has no older-format migration reader.
 Dormant bodies relax toward current Section-center natural temperature on demand,
-using the same default 1800-game-second sensible half-life as Air. Latent heat is
+using the same source-default 30-game-second sensible half-life as Air (explicit existing configuration still applies). Latent heat is
 advanced by energy flux, not by a temperature lerp; no offline source power is integrated.
+Ordinary residuals below 0.5°C can be removed during capture or loaded-checkpoint maintenance;
+latent progress and pending input retain their existing owners. See [residual lifecycle](thermal-residual-lifecycle.md).
 
 `TopologyView.materialContactAllowed` limits material conduction to a geometric
 surface and its second material layer. A second-layer block selects one surface
@@ -262,6 +277,9 @@ disabled cooling declarations in the table, without changing the shipped behavio
 | edge `latent_heat_j` | Used only when target has no material law; default 38,000 J |
 | edge `world_conditions` | Optional flat `min_y_exclusive`, `fluid_boundary_tag`, `excluded_biome_tag` |
 | edge `effect` | Optional presentation enum; default `none`; does not select thermal behavior |
+
+Within `world_conditions`, `fluid_boundary_tag` is a natural initiation condition;
+`min_y_exclusive` and `excluded_biome_tag` also apply to energy-complete submission.
 
 For each state `H=O+C*T`. An edge at Tp has endpoints `Hs=Os+Cs*Tp` and
 `Hd=Od+Cd*Tp`. Heating requires Hd>Hs; cooling requires Hd<Hs. Success preserves H

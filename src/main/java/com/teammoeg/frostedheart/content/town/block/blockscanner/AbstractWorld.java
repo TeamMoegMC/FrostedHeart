@@ -34,4 +34,14 @@ public interface AbstractWorld {
      */
     BlockType getBlockType(BlockPos pos);
     int getMaxY(BlockPos pos);
+
+    /**
+     * 此处地形是否已知。道路检测里未加载的区块未知：检测把它当墙，而记下的路线认为它保持原样。
+     * <p>
+     * Whether this world knows the terrain at {@code pos}. A road scan does not know unloaded chunks: it reads them as
+     * walls, while remembered routes take them as they were.
+     */
+    default boolean isKnown(BlockPos pos) {
+        return true;
+    }
 }

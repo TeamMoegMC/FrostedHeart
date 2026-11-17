@@ -109,6 +109,7 @@ public class ComponentOptimizer implements ContentConsumer<Unit>,StyledContentCo
 		return mstr;
 	}
 	public List<Component> components(){
+		createComponent();
 		return List.copyOf(calculated);
 	}
 	/**

@@ -44,8 +44,8 @@ public class TownManagerItem extends FHBaseItem {
         if (level.isClientSide) {
             DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> TownManagerClientHelper::openScreen);
         } else if (player instanceof ServerPlayer serverPlayer) {
-            // 城镇管理主界面为纯客户端 CUI（无容器菜单钩子），在此服务端分支补一次全量同步兜底
-            com.teammoeg.frostedheart.content.town.TownSync.requestFull(serverPlayer);
+            // The standalone CUI shares the same baseline as building menus.
+            com.teammoeg.frostedheart.content.town.TownSync.ensureCurrent(serverPlayer);
         }
 
         return InteractionResultHolder.success(stack);

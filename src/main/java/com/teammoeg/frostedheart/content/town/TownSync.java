@@ -8,9 +8,12 @@ import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.frostedheart.content.town.building.ITownBuilding;
 import com.teammoeg.frostedheart.content.town.network.TeamTownDataS2CPacket;
 import com.teammoeg.frostedheart.content.town.network.TownBuildingUpdatePacket;
+import com.teammoeg.frostedheart.content.town.network.TownHousingPlanUpdatePacket;
 import com.teammoeg.frostedheart.content.town.network.TownResidentUpdatePacket;
 import com.teammoeg.frostedheart.content.town.network.TownResourceUpdatePacket;
 import com.teammoeg.frostedheart.content.town.network.TownSignalNotificationPacket;
+import com.teammoeg.frostedheart.content.town.network.TownStaffingPlanUpdatePacket;
+import com.teammoeg.frostedheart.content.town.network.TownTowerUpdatePacket;
 import com.teammoeg.frostedheart.content.town.network.TownTransportShortageNotificationPacket;
 import com.teammoeg.frostedheart.content.town.observation.TownSignalEventModel;
 import com.teammoeg.frostedheart.content.town.observation.TownSignalNotice;
@@ -42,42 +45,47 @@ public final class TownSync {
         boolean invalidationSent;
         long nextAttempt;
         int retryTicks = 20;
+        String reason;
     }
     private TownSync() {}
 
     public static void requestFull(ServerPlayer player) {
+        requestFull(player, "snapshot_requested");
+    }
+
+    public static void requestFull(ServerPlayer player, String reason) {
         Baseline state = connections.computeIfAbsent(player.connection, ignored -> new Baseline());
+        if (!state.ready && state.reason != null) return;
         state.ready = false;
         state.invalidationSent = false;
         state.nextAttempt = 0;
         state.retryTicks = 20;
-        tryFull(player, state);
+        state.reason = reason;
     }
 
     public static void invalidate(TeamDataHolder holder) {
-        holder.forEachOnline(player -> {
-            Baseline state = connections.computeIfAbsent(player.connection, ignored -> new Baseline());
-            state.ready = false;
-            state.invalidationSent = false;
-            state.nextAttempt = 0;
-            // Ownership may still be changing. Invalidate now; resolve the final
-            // team at the next boundary rather than creating a temporary holder.
-            try {
-                FHNetwork.INSTANCE.sendPlayer(player, TeamTownDataS2CPacket.pending(null));
-                state.invalidationSent = true;
-            } catch (RuntimeException failure) { sendFailed(player, failure); }
-        });
+        invalidate(holder, "town_changed");
     }
 
-    public static boolean allowDelta(ServerPlayer player) {
+    public static void invalidate(TeamDataHolder holder, String reason) {
+        // Resolve final ownership at the server boundary. A same-town refresh
+        // keeps its holder ID, so clients can retain their current display.
+        holder.forEachOnline(player -> requestFull(player, reason));
+    }
+
+    public static void ensureCurrent(ServerPlayer player) {
         Baseline state = connections.get(player.connection);
         TeamDataHolder holder = CTeamDataManager.get(player);
         TeamTownData data = holder == null ? null : holder.getOptional(FHSpecialDataTypes.TOWN_DATA).orElse(null);
         UUID id = holder == null ? null : holder.getId();
         if (state == null || !Objects.equals(state.holderId, id) || state.data != data) {
-            requestFull(player);
-            state = connections.get(player.connection);
+            requestFull(player, state == null ? "initial_baseline" : "baseline_changed");
         }
+    }
+
+    public static boolean allowDelta(ServerPlayer player) {
+        ensureCurrent(player);
+        Baseline state = connections.get(player.connection);
         return state != null && state.ready && state.data != null;
     }
 
@@ -86,6 +94,7 @@ public final class TownSync {
         state.ready = false;
         state.invalidationSent = false;
         state.nextAttempt = player.server.getTickCount() + 20L;
+        state.reason = "delivery_failed";
         FHMain.LOGGER.error("Town view delivery failed for {}", player.getUUID(), failure);
     }
 
@@ -99,9 +108,13 @@ public final class TownSync {
     }
 
     private static void tryFull(ServerPlayer player, Baseline state) {
+        if (state.reason == null) state.reason = "initial_baseline";
         TeamDataHolder holder = CTeamDataManager.get(player);
-        state.holderId = holder == null ? null : holder.getId();
-        state.data = holder == null ? null : holder.getOptional(FHSpecialDataTypes.TOWN_DATA).orElse(null);
+        UUID id = holder == null ? null : holder.getId();
+        TeamTownData data = holder == null ? null : holder.getOptional(FHSpecialDataTypes.TOWN_DATA).orElse(null);
+        if (!Objects.equals(state.holderId, id) || state.data != data) state.invalidationSent = false;
+        state.holderId = id;
+        state.data = data;
         try {
             if (!state.invalidationSent) {
                 FHNetwork.INSTANCE.sendPlayer(player, TeamTownDataS2CPacket.pending(state.holderId));
@@ -119,8 +132,11 @@ public final class TownSync {
                 packet = TeamTownDataS2CPacket.present(state.holderId, state.data);
             }
             FHNetwork.INSTANCE.sendPlayer(player, packet);
+            FHMain.LOGGER.debug("TOWN_VIEW_FULL,player={},holder={},reason={},present={}",
+                    player.getUUID(), id, state.reason, data != null);
             state.ready = true;
             state.retryTicks = 20;
+            state.reason = null;
         } catch (Exception failure) {
             state.ready = false;
             state.nextAttempt = player.server.getTickCount() + state.retryTicks;
@@ -142,13 +158,17 @@ public final class TownSync {
         Set<BlockPos> buildingsBefore = Set.copyOf(data.dataSyncCache.changedBuildingPos);
         Set<ITownResourceKey> resourcesBefore = Set.copyOf(data.dataSyncCache.changedResourceKey);
         boolean transportBefore = data.dataSyncCache.transportStateChanged;
+        boolean staffingBefore = data.dataSyncCache.staffingPlanChanged;
+        boolean housingBefore = data.dataSyncCache.housingPlanChanged;
         try { flushChanges(data, level, teamData); }
         catch (RuntimeException failure) {
             data.dataSyncCache.changedResidentUUID.addAll(residentsBefore);
             data.dataSyncCache.changedBuildingPos.addAll(buildingsBefore);
             data.dataSyncCache.changedResourceKey.addAll(resourcesBefore);
             data.dataSyncCache.transportStateChanged |= transportBefore;
-            TownSync.invalidate(teamData);
+            data.dataSyncCache.staffingPlanChanged |= staffingBefore;
+            data.dataSyncCache.housingPlanChanged |= housingBefore;
+            TownSync.invalidate(teamData, "incremental_capture_failed");
             FHMain.LOGGER.error("Town {} incremental capture remains pending", teamData.getId(), failure);
         }
     }
@@ -189,6 +209,10 @@ public final class TownSync {
             teamData.sendToOnline(FHNetwork.INSTANCE, new TownResidentUpdatePacket(changedResidents, removedResidents));
         }
 
+        if(data.drainTowerChange()){
+            teamData.sendToOnline(FHNetwork.INSTANCE, new TownTowerUpdatePacket(data.getTowerPos()));
+        }
+
         if(!data.dataSyncCache.changedBuildingPos.isEmpty()){
             Map<BlockPos, ITownBuilding> changedBuildings = new HashMap<>();
             Set<BlockPos> removedBuildings = new HashSet<>();
@@ -201,6 +225,17 @@ public final class TownSync {
                 }
             }
             teamData.sendToOnline(FHNetwork.INSTANCE, new TownBuildingUpdatePacket(changedBuildings, removedBuildings));
+        }
+
+        // Install building records before their authoritative queues. A new record may already
+        // contain workers, whose roster size is not the player's guaranteed staffing target.
+        if (data.dataSyncCache.staffingPlanChanged) {
+            teamData.sendToOnline(FHNetwork.INSTANCE, new TownStaffingPlanUpdatePacket(data.getStaffingPlan()));
+            data.dataSyncCache.staffingPlanChanged = false;
+        }
+        if (data.dataSyncCache.housingPlanChanged) {
+            teamData.sendToOnline(FHNetwork.INSTANCE, new TownHousingPlanUpdatePacket(data.getHousingPlan()));
+            data.dataSyncCache.housingPlanChanged = false;
         }
 
         TownTowerTipThrottle.Result deferredTower = TownTowerTipThrottle.onTick(

@@ -55,6 +55,14 @@ public class LayeredThinIceBlock extends ThinIceBlock {
     }
 
     @Override
+    protected BlockState fractureResult(Level level, BlockPos pos, BlockState state) {
+        // Vanilla flowing water has amounts 1..7; even eight ice layers must not create a source.
+        int amount = Math.min(state.getValue(LAYERS), 7);
+        return net.minecraft.world.level.material.Fluids.FLOWING_WATER
+                .getFlowing(amount, false).createLegacyBlock();
+    }
+
+    @Override
     public int fractureStages(BlockState state) {
         return (state.getValue(LAYERS) + 1) / 2;
     }

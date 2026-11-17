@@ -148,7 +148,7 @@ public record StateTransitionData(
                                         .apply(instance, Edge::new));
     }
 
-    /** Fixed submission constraints, shared by profiles; never stored on energy nodes. */
+    /** Shared world constraints; fluidBoundary selects where untracked natural transitions start. */
     public record WorldConditions(
             int minYExclusive, TagKey<Fluid> fluidBoundary, TagKey<Biome> excludedBiome) {
         public static final WorldConditions NONE =

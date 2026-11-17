@@ -69,6 +69,28 @@ public class ThinIceGameTests {
     }
 
     @GameTest(template = "phase0a_empty", batch = "thin_ice", timeoutTicks = 40)
+    public static void layeredFractureNeverCreatesSourceWithOrWithoutNeighbors(GameTestHelper helper) {
+        var level = helper.getLevel();
+        BlockPos pos = helper.absolutePos(new BlockPos(1, 3, 1));
+        var block = FHBlocks.LAYERED_THIN_ICE.get();
+        for (int layers = 1; layers <= 8; layers++) {
+            for (int neighbor = -1; neighbor < Direction.values().length; neighbor++) {
+                for (Direction face : Direction.values())
+                    level.setBlockAndUpdate(pos.relative(face), Blocks.STONE.defaultBlockState());
+                if (neighbor >= 0)
+                    level.setBlockAndUpdate(pos.relative(Direction.values()[neighbor]), Blocks.WATER.defaultBlockState());
+                level.setBlockAndUpdate(pos, block.defaultBlockState().setValue(LayeredThinIceBlock.LAYERS, layers));
+                block.advanceCrack(level, pos, 4);
+                helper.assertTrue(level.getBlockState(pos).is(Blocks.WATER)
+                                && !level.getFluidState(pos).isSource()
+                                && level.getFluidState(pos).getAmount() == Math.min(layers, 7),
+                        "layer " + layers + ", neighbor " + neighbor + " must produce non-source water");
+            }
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "phase0a_empty", batch = "thin_ice", timeoutTicks = 40)
     public static void thicknessSetsFractureCountAndStackingPreservesDamageRatio(GameTestHelper helper) {
         var level = helper.getLevel();
         BlockPos pos = helper.absolutePos(new BlockPos(1, 3, 1));
@@ -85,7 +107,9 @@ public class ThinIceGameTests {
                 helper.assertTrue(level.getBlockState(pos).getValue(ThinIceBlock.CRACK) == hit, "thickness preserves stage");
             }
             block.impact(level, pos, 2);
-            helper.assertTrue(level.getBlockState(pos).isAir(), "layer " + layers + " fractures after " + hits + " hits");
+            helper.assertTrue(level.getBlockState(pos).is(Blocks.WATER) && !level.getFluidState(pos).isSource()
+                    && level.getFluidState(pos).getAmount() == Math.min(layers, 7),
+                    "layer " + layers + " fractures into matching non-source water after " + hits + " hits");
         }
         helper.assertTrue(LayeredThinIceBlock.inheritedCrack(1, 4, 5) == 2, "half damaged 4-layer ice becomes 2/3 damaged 5-layer ice");
         helper.assertTrue(LayeredThinIceBlock.inheritedCrack(2, 6, 7) == 3, "stacking rounds damage up");
@@ -157,7 +181,7 @@ public class ThinIceGameTests {
             // Drive the real movement/collision/fallOn path, not the impact helper directly.
             pig.fallDistance = 9;
             pig.move(net.minecraft.world.entity.MoverType.SELF, new net.minecraft.world.phys.Vec3(0, -10, 0));
-            helper.assertTrue(level.getBlockState(pos).isAir(), "collision landing must fracture single-layer ice despite cooldown");
+            helper.assertTrue(level.getBlockState(pos).is(Blocks.WATER) && !level.getFluidState(pos).isSource(), "collision landing must fracture single-layer ice into flowing water despite cooldown");
             helper.succeed();
         } finally {
             com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftGameplayFields.remove(level, key);
@@ -259,7 +283,7 @@ public class ThinIceGameTests {
             player.move(net.minecraft.world.entity.MoverType.SELF, new net.minecraft.world.phys.Vec3(0, -10, 0));
             player.fallDistance = 9;
             player.doCheckFallDamage(0, -9, 0, true);
-            helper.assertTrue(level.getBlockState(pos).isAir(), "creative landing must reach single-layer ice without LivingFallEvent");
+            helper.assertTrue(level.getBlockState(pos).is(Blocks.WATER) && !level.getFluidState(pos).isSource(), "creative landing must reach single-layer ice without LivingFallEvent");
             helper.assertTrue(level.getBlockState(pos.below()).is(ice)
                             && level.getBlockState(pos.below()).getValue(ThinIceBlock.CRACK) == 0,
                     "landing must not also damage the lower ice selected by legacy sampling");

@@ -19,6 +19,8 @@
 
 package com.teammoeg.frostedheart.bootstrap.client;
 
+import com.teammoeg.frostedheart.content.climate.block.sensor.*;
+
 import com.teammoeg.chorda.client.cui.base.PrimaryLayer;
 import com.teammoeg.chorda.client.cui.screenadapter.CUIMenuScreenWrapper;
 import com.teammoeg.frostedheart.bootstrap.common.FHMenuTypes;
@@ -42,6 +44,7 @@ import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaScreen;
 import com.teammoeg.frostedheart.content.town.buildings.house.HouseScreen;
 import com.teammoeg.frostedheart.content.town.buildings.hunting.HuntingBaseScreen;
 import com.teammoeg.frostedheart.content.town.buildings.logistics.TransportStationScreen;
+import com.teammoeg.frostedheart.content.town.buildings.institute.ResearchInstituteScreen;
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBaseScreen;
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineScreen;
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseLevelEmitterScreen;
@@ -62,6 +65,7 @@ import java.util.function.Function;
 
 public class FHScreens {
     public static void init() {
+        MenuScreens.register(FHMenuTypes.TEMPERATURE_SENSOR.get(), TemperatureSensorScreen::new);
         // Register screens
         MenuScreens.register(FHMenuTypes.GENERATOR_T1.getType(), GeneratorScreen<T1GeneratorState, T1GeneratorLogic>::new);
         MenuScreens.register(FHMenuTypes.GENERATOR_T2.getType(), GeneratorScreen<T2GeneratorState, T2GeneratorLogic>::new);
@@ -74,6 +78,8 @@ public class FHScreens {
         registerCUIScreen(FHMenuTypes.MINE_BASE.get(), MineBaseScreen::new);
         registerCUIScreen(FHMenuTypes.HUNTING_BASE.get(), HuntingBaseScreen::new);
         registerCUIScreen(FHMenuTypes.TRANSPORT_STATION.get(), TransportStationScreen::new);
+        registerCUIScreen(FHMenuTypes.LABOR_DISPATCH.get(), com.teammoeg.frostedheart.content.town.buildings.dispatch.LaborDispatchScreen::new);
+        registerCUIScreen(FHMenuTypes.RESEARCH_INSTITUTE.get(), ResearchInstituteScreen::new);
         registerCUIScreen(FHMenuTypes.MINE.get(), MineScreen::new);
         registerCUIScreen(FHMenuTypes.WAREHOUSE_INTERFACE.get(), WarehouseInterfaceScreen::new);
         registerCUIScreen(FHMenuTypes.WAREHOUSE_LEVEL_EMITTER.get(), WarehouseLevelEmitterScreen::new);

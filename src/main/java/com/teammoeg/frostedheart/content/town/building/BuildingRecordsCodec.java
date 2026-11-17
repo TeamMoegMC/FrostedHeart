@@ -63,6 +63,13 @@ public final class BuildingRecordsCodec extends MapCodec<TownBuildingStore> {
         if (blocks instanceof ListTag list) {
             for (Tag raw : list) {
                 readEntry(store, raw);
+                if (purpose == Purpose.MANAGEMENT && raw instanceof CompoundTag record) {
+                    AbstractTownBuilding building = store.resolvedMap().get(decodePosition(record.get("pos")));
+                    if (building != null) {
+                        building.setConnectedToTower(record.getBoolean("connectedToTower"));
+                        building.setConnectivityWorkable(record.getBoolean("connectivityWorkable"));
+                    }
+                }
             }
         } else if (blocks != null) {
             archive(store, "container", null, "blocks", blocks, "BAD_CONTAINER");
@@ -130,6 +137,16 @@ public final class BuildingRecordsCodec extends MapCodec<TownBuildingStore> {
     @Override
     public <T> RecordBuilder<T> encode(TownBuildingStore store, DynamicOps<T> ops, RecordBuilder<T> prefix) {
         CompoundTag encoded = purpose == Purpose.MANAGEMENT ? store.captureManagementFields() : store.capturePersistenceFields();
+        if (purpose == Purpose.MANAGEMENT) {
+            for (Tag raw : encoded.getList("blocks", Tag.TAG_COMPOUND)) {
+                CompoundTag record = (CompoundTag) raw;
+                AbstractTownBuilding building = store.resolvedMap().get(decodePosition(record.get("pos")));
+                if (building != null) {
+                    record.putBoolean("connectedToTower", building.isConnectedToTower());
+                    record.putBoolean("connectivityWorkable", building.isConnectivityWorkable());
+                }
+            }
+        }
         for (String key : encoded.getAllKeys()) {
             prefix.add(key, convert(ops, encoded.get(key)));
         }

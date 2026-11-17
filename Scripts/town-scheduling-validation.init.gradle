@@ -1,0 +1,62 @@
+// Real town scheduling server checks and an opt-in rendered Minecraft client.
+gradle.beforeProject { project ->
+    def cachedTools = project.repositories.maven {
+        name = 'Existing Forge tools for town scheduling'
+        url = new File(project.rootDir, 'build/thermal-tool-repository').toURI()
+        content { includeModule 'net.minecraftforge', 'ForgeAutoRenamingTool' }
+        metadataSources { artifact() }
+    }
+    project.repositories.remove(cachedTools)
+    project.repositories.addFirst(cachedTools)
+    project.plugins.withId('net.minecraftforge.gradle') {
+        project.minecraft.runs.create('townSchedulingClient') {
+            parent project.minecraft.runs.maybeCreate('client')
+            client true
+            workingDirectory new File(project.rootDir, 'build/town-scheduling-client-run')
+            property 'frostedheart.townSchedulingValidation', 'true'
+            property 'frostedheart.townSchedulingOutput', project.findProperty('townSchedulingOutput') ?: 'build/town-scheduling-validation'
+            property 'frostedheart.townSchedulingRoot', project.rootDir.absolutePath
+            property 'forge.logging.console.level', 'info'
+            jvmArg '-Xmx4G'
+            jvmArg '-XX:ActiveProcessorCount=8'
+            args '--width', '1280', '--height', '800'
+        }
+    }
+    project.afterEvaluate {
+        project.sourceSets.gameTest.java.setIncludes([
+                'com/teammoeg/frostedheart/content/town/**',
+                'com/teammoeg/frostedheart/item/townmanager/**'])
+        project.sourceSets.gameTest.java.destinationDirectory.set(project.layout.buildDirectory.dir('town-scheduling-test-classes'))
+        project.tasks.named('compileGameTestJava').configure {
+            destinationDirectory.set(project.layout.buildDirectory.dir('town-scheduling-test-classes'))
+        }
+        project.sourceSets.gameTest.output.classesDirs.setFrom(project.layout.buildDirectory.dir('town-scheduling-test-classes'))
+        // This town-only run has no thermal GameTest observer classes.
+        project.minecraft.runs.gameTestServer.args.removeAll {
+            it == '-mixin.config=frostedheart.native-ticket-return.mixins.json'
+        }
+        def catalog = project.tasks.register('prepareTownSchedulingCatalog', Sync) {
+            from new File(project.rootDir, 'src/gametest/catalog')
+            into new File(project.rootDir, 'build/town-scheduling-client-run/config/fhresearches')
+        }
+        project.tasks.matching { it.name == 'runTownSchedulingClient' }.configureEach {
+            dependsOn catalog
+            def result = new File(project.rootDir,
+                    (project.findProperty('townSchedulingOutput') ?: 'build/town-scheduling-validation') + '/result.json')
+            doFirst { result.delete() }
+            doLast {
+                if (!result.isFile() || !new groovy.json.JsonSlurper().parse(result).passed) {
+                    throw new GradleException("Rendered town scheduling checks failed; see ${result}")
+                }
+            }
+        }
+        project.minecraft.runs.townSchedulingClient.mods {
+            frostedheart {
+                source project.sourceSets.main
+                source project.sourceSets.noDatagen
+                source project.sourceSets.client
+                source project.sourceSets.gameTest
+            }
+        }
+    }
+}

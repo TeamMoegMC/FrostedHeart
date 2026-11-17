@@ -214,12 +214,12 @@ public final class SpatialSourceTimeline implements AutoCloseable {
 
     private final ThermalMemoryBudget budget;
     private final int maximumEntries;
-    private final Long2ObjectLinkedOpenHashMap<Entry> active = new Long2ObjectLinkedOpenHashMap<>();
-    private final Long2ObjectLinkedOpenHashMap<Entry> scheduled = new Long2ObjectLinkedOpenHashMap<>();
+    private Long2ObjectLinkedOpenHashMap<Entry> active = new Long2ObjectLinkedOpenHashMap<>();
+    private Long2ObjectLinkedOpenHashMap<Entry> scheduled = new Long2ObjectLinkedOpenHashMap<>();
     private final ArrayDeque<Entry> retired = new ArrayDeque<>();
-    private final ThermalMemoryBudget.Reservation indexCharge;
+    private ThermalMemoryBudget.Reservation indexCharge;
     private int indexCapacity;
-    private boolean captureOpen;
+    private int pendingRegistrations;
     private long latestTick;
     public long latestTick() { return latestTick; }
 
@@ -228,20 +228,73 @@ public final class SpatialSourceTimeline implements AutoCloseable {
         indexCharge = budget.reserveCompletion(1024);
     }
 
-    public boolean register(Descriptor descriptor, double watts, boolean enabled, long tick) {
-        if (descriptor.ports.length >= CHANNELS) throw new IllegalArgumentException("Too many source ports");
-        if (active.containsKey(descriptor.sourceId)) throw new IllegalArgumentException("Source already registered");
-        int size = active.size() + retired.size() + 1;
-        if (size > maximumEntries) return false;
-        if (size > indexCapacity) {
-            int capacity = Math.max(16, Math.max(size, indexCapacity * 2));
-            indexCharge.completeResize(1024L + 128L * capacity);
-            indexCapacity = capacity;
+    /** Prepaid producer lifetime; acquired before a source creates spatial interest. */
+    public static final class Registration implements AutoCloseable {
+        private SpatialSourceTimeline owner;
+        private ThermalMemoryBudget.Reservation credit;
+        private final int ports;
+
+        private Registration(SpatialSourceTimeline owner, int ports, ThermalMemoryBudget.Reservation credit) {
+            this.owner = owner; this.ports = ports; this.credit = credit;
         }
-        // A real producer must record its bounded tail even when detailed
-        // numerical work has exhausted its optional memory target.
-        var reservation = budget.reserveCompletion(ENTRY_BYTES + SpatialSourceIngress.metadataBytes(descriptor.ports.length)
-                + 96L * descriptor.ports.length);
+
+        private ThermalMemoryBudget.Reservation transfer(SpatialSourceTimeline expected, int count) {
+            if (owner != expected || ports != count) throw new IllegalArgumentException("Producer registration does not match its owner or ports");
+            var result = credit;
+            owner.pendingRegistrations--; owner = null; credit = null;
+            return result;
+        }
+
+        @Override public void close() {
+            if (owner == null) return;
+            owner.pendingRegistrations--; owner = null;
+            credit.close(); credit = null;
+        }
+    }
+
+    private static long producerBytes(int ports) {
+        return ENTRY_BYTES + SpatialSourceIngress.metadataBytes(ports) + 96L * ports;
+    }
+
+    /** New producers never use completion credit; both index growth and input are prepaid. */
+    public Registration prepareRegistration(int ports) {
+        if (ports < 0 || ports >= CHANNELS) throw new IllegalArgumentException("Too many source ports");
+        int size = active.size() + retired.size() + pendingRegistrations + 1;
+        if (size > maximumEntries) return null;
+        int capacity = size > indexCapacity ? Math.max(16, Math.max(size, indexCapacity * 2)) : indexCapacity;
+        long replacementBytes = capacity == indexCapacity ? 0 : 1024L + 128L * capacity;
+        var credit = budget.tryReserve(producerBytes(ports) + replacementBytes);
+        if (credit == null) return null;
+        try {
+            if (replacementBytes != 0) {
+                var replacement = credit.split(replacementBytes);
+                try {
+                    var nextActive = new Long2ObjectLinkedOpenHashMap<Entry>(capacity);
+                    var nextScheduled = new Long2ObjectLinkedOpenHashMap<Entry>(capacity);
+                    nextActive.putAll(active); nextScheduled.putAll(scheduled);
+                    active = nextActive; scheduled = nextScheduled;
+                } catch (RuntimeException | Error failure) {
+                    replacement.close(); throw failure;
+                }
+                indexCharge.close(); indexCharge = replacement; indexCapacity = capacity;
+            }
+            pendingRegistrations++;
+            return new Registration(this, ports, credit);
+        } catch (RuntimeException | Error failure) {
+            credit.close(); throw failure;
+        }
+    }
+
+    public boolean register(Descriptor descriptor, double watts, boolean enabled, long tick) {
+        if (active.containsKey(descriptor.sourceId)) throw new IllegalArgumentException("Source already registered");
+        try (var registration = prepareRegistration(descriptor.ports.length)) {
+            return registration != null && register(descriptor, watts, enabled, tick, registration);
+        }
+    }
+
+    public boolean register(Descriptor descriptor, double watts, boolean enabled, long tick, Registration registration) {
+        if (active.containsKey(descriptor.sourceId)) throw new IllegalArgumentException("Source already registered");
+        var reservation = registration.transfer(this, descriptor.ports.length);
         var entry = new Entry(descriptor, watts, enabled, tick, reservation);
         active.put(descriptor.sourceId, entry); scheduled.put(descriptor.sourceId, entry);
         latestTick = Math.max(latestTick, tick);
@@ -321,30 +374,52 @@ public final class SpatialSourceTimeline implements AutoCloseable {
     }
 
     /**
-     * Main freezes production once. The coordinator later subtracts the recording
-     * totals at the same point as its accepted fields; no physical fence is involved.
+     * Main freezes production for a native capture. Its later coordinator turn
+     * resolves targets and subtracts recorded totals together with Accepted.
      */
-    public Capture capture(long tick) {
-        if (captureOpen) return null;
-        captureOpen = true;
-        var values = new ArrayList<Produced>(active.size() + retired.size());
-        try {
-        for (var entry : active.values()) {
-            entry.closeTail(tick);
-            values.add(new Produced(entry.descriptor, entry.totals, entry.totals.produced.clone(), entry.tailTick, entry.backing.retain()));
-        }
-        for (var entry : retired)
-            values.add(new Produced(entry.descriptor, entry.totals, entry.totals.produced.clone(), entry.tailTick, entry.backing.retain()));
-        } catch (RuntimeException | Error failure) {
-            for (var value : values) value.backing.close();
-            captureOpen = false;
-            throw failure;
-        }
-        latestTick = Math.max(latestTick, tick);
-        return new Capture(this, tick, values);
+    public Capture capture(long tick) { return capture(tick, 0, null); }
+
+    /** Main holds Store/publication while selecting and copying related producer totals. */
+    public Capture captureChunk(long tick, long chunk, ChunkPortTarget resolver) {
+        return capture(tick, chunk, resolver);
     }
 
-    private record Produced(Descriptor descriptor, PortTotals totals, double[] joules, long through, ThermalMemoryBudget.BackingLease backing) { }
+    private Capture capture(long tick, long chunk, ChunkPortTarget resolver) {
+        var credit = budget.reserveCompletion(256);
+        var values = new ArrayList<Produced>();
+        try {
+            for (var entry : active.values()) captureEntry(entry, true, tick, chunk, resolver, credit, values);
+            for (var entry : retired) captureEntry(entry, false, tick, chunk, resolver, credit, values);
+        } catch (RuntimeException | Error failure) {
+            for (var value : values) value.backing.close();
+            credit.close();
+            throw failure;
+        } finally { java.util.Arrays.fill(captureTargets, null); }
+        latestTick = Math.max(latestTick, tick);
+        return new Capture(this, tick, values, credit);
+    }
+
+    private final PortDestination[] captureTargets = new PortDestination[CHANNELS];
+    private void captureEntry(Entry entry, boolean active, long tick, long chunk, ChunkPortTarget resolver,
+            ThermalMemoryBudget.Reservation credit, ArrayList<Produced> values) {
+        int ports = entry.descriptor.ports.length;
+        if (resolver != null) {
+            boolean selected = false;
+            for (int port = 0; port < ports; port++) {
+                captureTargets[port] = resolver.resolve(entry.descriptor, port, chunk);
+                selected |= captureTargets[port] != null;
+            }
+            if (!selected) return;
+        }
+        // Metadata and the totals/target arrays are additional to the retained producer backing.
+        credit.completeResize(256L + 1536L * (values.size() + 1));
+        if (active) entry.closeTail(tick);
+        values.add(new Produced(entry.descriptor, entry.totals, entry.totals.produced.clone(), entry.tailTick,
+                entry.backing.retain(), resolver == null ? null : java.util.Arrays.copyOf(captureTargets, ports)));
+    }
+
+    private record Produced(Descriptor descriptor, PortTotals totals, double[] joules, long through,
+            ThermalMemoryBudget.BackingLease backing, PortDestination[] destinations) { }
     private static final class Export {
         final PortTotals totals;
         final int channel;
@@ -366,23 +441,32 @@ public final class SpatialSourceTimeline implements AutoCloseable {
     }
     public record PortDestination(SpatialHeatInput.Target target, boolean declaredLoss) {
         public static PortDestination thermal(SpatialHeatInput.Target target) { return new PortDestination(target, false); }
-        public static PortDestination loss(boolean declared) { return new PortDestination(null, declared); }
+        private static final PortDestination DECLARED = new PortDestination(null, true), DEGRADED = new PortDestination(null, false);
+        public static PortDestination loss(boolean declared) { return declared ? DECLARED : DEGRADED; }
     }
     @FunctionalInterface
     public interface PortTarget { PortDestination resolve(Descriptor descriptor, int port); }
+    /** Null means this port belongs to another Chunk; a loss still belongs to its source origin. */
+    @FunctionalInterface
+    public interface ChunkPortTarget { PortDestination resolve(Descriptor descriptor, int port, long chunk); }
 
     public static final class Capture implements AutoCloseable {
         public final long tick;
         private java.util.List<Produced> values;
-        private final SpatialSourceTimeline owner;
+        private SpatialSourceTimeline owner;
+        private final ThermalMemoryBudget.Reservation credit;
         private boolean closed;
-        private Capture(SpatialSourceTimeline owner, long tick, java.util.List<Produced> values) {
-            this.owner = owner; this.tick = tick; this.values = values;
+        private Capture(SpatialSourceTimeline owner, long tick, java.util.List<Produced> values, ThermalMemoryBudget.Reservation credit) {
+            this.owner = owner; this.tick = tick; this.values = values; this.credit = credit;
+        }
+        private static PortDestination destination(Produced value, int port, PortTarget resolver) {
+            return value.destinations == null ? resolver.resolve(value.descriptor, port) : value.destinations[port];
         }
         public int maximumPendingRecords(long chunk, PortTarget resolver) {
             int count = 0;
             for (var value : values) for (int port = 0; port < value.descriptor.ports.length; port++) {
-                var target = resolver.resolve(value.descriptor, port).target();
+                var destination = destination(value, port, resolver);
+                var target = destination == null ? null : destination.target();
                 if (target != null
                         && net.minecraft.world.level.ChunkPos.asLong(BlockPos.getX(target.position()) >> 4,
                         BlockPos.getZ(target.position()) >> 4) == chunk) count += 2;
@@ -392,7 +476,8 @@ public final class SpatialSourceTimeline implements AutoCloseable {
         public Pending pending(long chunk, PortTarget resolver, SpatialHeatStore.RecordConsumer consumer) {
             var exports = new ArrayList<Export>();
             for (var value : values) for (int port = 0; port < value.descriptor.ports.length; port++) {
-                var destination = resolver.resolve(value.descriptor, port);
+                var destination = destination(value, port, resolver);
+                if (destination == null) continue;
                 var target = destination.target();
                 long ownerChunk = target == null ? net.minecraft.world.level.ChunkPos.asLong(value.descriptor.x >> 4, value.descriptor.z >> 4)
                         : net.minecraft.world.level.ChunkPos.asLong(BlockPos.getX(target.position()) >> 4, BlockPos.getZ(target.position()) >> 4);
@@ -426,7 +511,7 @@ public final class SpatialSourceTimeline implements AutoCloseable {
             if (closed) return;
             closed = true;
             for (var value : values) value.backing.close();
-            values = java.util.List.of(); owner.captureOpen = false;
+            values = java.util.List.of(); owner = null; credit.close();
         }
     }
 

@@ -54,6 +54,31 @@ public final class ClientCitizen {
     private static final double TURN_RATE_FAST = TURN_RATE * 4.0;
 
     public final int id;
+    java.util.UUID roadTown;
+    boolean roadPoseActive, roadClimbing;
+    int roadYaw = -1;
+    double roadX0, roadY0, roadZ0, roadX1, roadY1, roadZ1, roadTime;
+    private final double[] roadBuffer = new double[3];
+    void updateRoadPose(double x, double y, double z, int yaw, double now) {
+        if (roadPoseActive && Math.abs(x - roadX1) + Math.abs(y - roadY1) + Math.abs(z - roadZ1) < .00001 && yaw == roadYaw) return;
+        double[] previous = presentationPos(now);
+        double oldX = previous[0], oldY = previous[1], oldZ = previous[2];
+        boolean snap = !roadPoseActive || Math.abs(x - oldX) + Math.abs(y - oldY) + Math.abs(z - oldZ) > 3;
+        roadX0 = snap ? x : oldX; roadY0 = snap ? y : oldY; roadZ0 = snap ? z : oldZ;
+        roadX1 = x; roadY1 = y; roadZ1 = z; roadTime = now;
+        roadYaw = yaw; roadClimbing = yaw >= 0; roadPoseActive = true;
+    }
+    public boolean hasRoadPresentation() { return roadPoseActive; }
+    public boolean isRoadClimbing() { return roadClimbing; }
+    public double[] presentationPos(double now) {
+        if (!roadPoseActive) return renderPos(now);
+        double blend = Math.max(0, Math.min(1, (now - roadTime) / .05));
+        roadBuffer[0] = roadX0 + (roadX1 - roadX0) * blend;
+        roadBuffer[1] = roadY0 + (roadY1 - roadY0) * blend;
+        roadBuffer[2] = roadZ0 + (roadZ1 - roadZ0) * blend;
+        return roadBuffer;
+    }
+    public double[] presentationPos() { return presentationPos(now()); }
     /** 真实姓名（spawn 包同步，城镇托管居民）；空串 = 未托管，回退 CitizenNames 派生名 */
     public final String name;
 	/** Mirrored Resident age group used only for presentation. */
@@ -155,7 +180,8 @@ public final class ClientCitizen {
         byte newState = (byte) CitizenState.unpackState(stateDir);
         boolean sleepTransition = newState != this.state
                 && (newState == CitizenState.SLEEP || this.state == CitizenState.SLEEP);
-        if (sleepTransition) {
+        if (sleepTransition || Math.abs(px / 1024.0 - x1) + Math.abs(py / 1024.0 - y1) + Math.abs(pz / 1024.0 - z1) > 3) {
+            roadPoseActive = false;
             this.x0 = this.x1 = px / 1024.0;
             this.y0 = this.y1 = py / 1024.0;
             this.z0 = this.z1 = pz / 1024.0;
@@ -217,7 +243,7 @@ public final class ClientCitizen {
 	}
 
 	int visualYaw(double now) {
-		return advanceVisualYaw(now);
+		return roadClimbing ? roadYaw : advanceVisualYaw(now);
     }
 
     private int advanceVisualYaw(double now) {
@@ -305,7 +331,7 @@ public final class ClientCitizen {
 			cullBox = createCullingBox(x0, y0, z0, x1, y1, z1, state & 0xFF, dir, halt, modelScale());
 			cullBoxDirty = false;
 		}
-		return cullBox;
+		return roadPoseActive ? cullBox.inflate(1.05) : cullBox;
 	}
 
 	private void invalidateCullBox() {

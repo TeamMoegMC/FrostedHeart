@@ -39,6 +39,11 @@ public interface BodyHeatingCapability {
      * @param data       	  player temperature data<br>
      */
     void tickHeating(HeatingDeviceSlot slot,ItemStack stack,HeatingDeviceContext data);
+
+    /** Controlled heaters run after fixed-output devices so they only buy missing heat. */
+    default boolean isControlled() {
+        return false;
+    }
     
     /**
      * Get highest theoretical heating power in watts

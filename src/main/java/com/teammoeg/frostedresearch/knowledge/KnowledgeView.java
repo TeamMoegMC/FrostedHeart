@@ -22,6 +22,7 @@ package com.teammoeg.frostedresearch.knowledge;
 
 import com.teammoeg.frostedresearch.knowledge.definition.KnowledgeDefinitions;
 import com.teammoeg.frostedresearch.knowledge.definition.ProjectRequirement;
+import com.teammoeg.frostedresearch.knowledge.labor.LaborReport;
 import com.teammoeg.frostedresearch.knowledge.link.LinkMatcher;
 import com.teammoeg.frostedresearch.knowledge.link.TagLookup;
 import com.teammoeg.frostedresearch.knowledge.model.*;
@@ -43,6 +44,14 @@ public final class KnowledgeView {
         view.putLong("definitions_revision", KnowledgeDefinitions.current().revision());
         view.put("archive", entries(service, service.state().archive().entries().values()));
         view.put("inbox", entries(service, service.state().inbox().entries().values()));
+        CompoundTag capacity = new CompoundTag();
+        capacity.putInt("archive_used", (int) Math.min(Integer.MAX_VALUE, service.state().archive().observationCount()));
+        capacity.putInt("archive_limit", service.archiveLimit());
+        capacity.putInt("archive_base", service.archiveBase());
+        capacity.putInt("inbox_used", (int) Math.min(Integer.MAX_VALUE, service.state().inbox().observationCount()));
+        capacity.putInt("inbox_limit", service.inboxLimit());
+        capacity.putInt("inbox_base", service.inboxBase());
+        view.put("capacity", capacity);
         ListTag links = new ListTag();
         service.state().links().values().forEach(link -> {
             CompoundTag tag = new CompoundTag();
@@ -142,10 +151,60 @@ public final class KnowledgeView {
             tag.put("key", KnowledgeState.encode(KnowledgeKey.CODEC, entry.element().key()));
             tag.putString("source", entry.source().mechanism());
             tag.putLong("time", entry.source().time());
+            long townDay = service.state().lastDay(KnowledgeService.instituteFoundKey(entry.element().key()));
+            if (townDay != Long.MIN_VALUE) tag.putLong("town_day", townDay);
             history.add(tag);
         });
         view.put("acquisitions", history);
+        service.state().laborReport().ifPresent(report -> view.put("labor_report", laborReport(service, report)));
         return view;
+    }
+
+    /**
+     * The institutes' latest day with the titles a reader needs; run and requirement ids stay for matching.
+     */
+    private static CompoundTag laborReport(KnowledgeService service, LaborReport report) {
+        CompoundTag tag = new CompoundTag();
+        tag.putLong("day", report.day());
+        tag.put("labor", doubles(report.labor()));
+        tag.put("idle", doubles(report.idle()));
+        ListTag allocations = new ListTag();
+        for (LaborReport.Allocation allocation : report.allocations()) {
+            CompoundTag entry = new CompoundTag();
+            entry.putString("run", allocation.run().toString());
+            entry.putString("requirement", allocation.requirement());
+            ResearchHistory run = service.state().research().get(allocation.run());
+            var project = run == null ? null : KnowledgeDefinitions.current().projects().get(run.project());
+            if (project != null) {
+                entry.putString("project", run.project().toString());
+                entry.putString("project_title", project.title());
+                project.requirement(allocation.requirement()).ifPresent(requirement -> {
+                    entry.putString("title", requirement.title());
+                    entry.putString("type", requirement.type().name().toLowerCase(Locale.ROOT));
+                });
+            }
+            entry.putDouble("wanted", allocation.wanted());
+            entry.putDouble("given", allocation.given());
+            entry.putBoolean("items_short", allocation.itemsShort());
+            allocations.add(entry);
+        }
+        tag.put("allocations", allocations);
+        CompoundTag association = new CompoundTag();
+        association.putString("outcome", report.association().outcome().name().toLowerCase(Locale.ROOT));
+        association.putDouble("labor", report.association().labor());
+        association.putDouble("chance", report.association().chance());
+        report.association().subject().ifPresent(subject -> {
+            association.put("subject", KnowledgeState.encode(KnowledgeKey.CODEC, subject));
+            association.putString("subject_title", service.describe(subject).title());
+        });
+        tag.put("association", association);
+        return tag;
+    }
+
+    private static ListTag doubles(List<Double> values) {
+        ListTag list = new ListTag();
+        values.forEach(value -> list.add(DoubleTag.valueOf(value)));
+        return list;
     }
 
     private static CompoundTag requirement(ProjectRequirement requirement) {
@@ -156,6 +215,23 @@ public final class KnowledgeView {
         tag.putInt("level", requirement.level());
         tag.putInt("count", requirement.count());
         if (requirement.type() == ProjectRequirement.Type.EXPERIMENT) tag.putInt("duration", requirement.duration());
+        requirement.labor().ifPresent(labor -> {
+            CompoundTag value = new CompoundTag();
+            value.putBoolean("required", labor.required());
+            value.putInt("workers", labor.workers());
+            value.putInt("days", labor.days());
+            value.putInt("education", labor.education());
+            ListTag items = new ListTag();
+            for (ProjectRequirement.Material item : labor.items()) {
+                CompoundTag entry = new CompoundTag();
+                item.item().ifPresent(id -> entry.putString("item", id.toString()));
+                item.tag().ifPresent(id -> entry.putString("tag", id.toString()));
+                entry.putInt("count", item.count());
+                items.add(entry);
+            }
+            value.put("items", items);
+            tag.put("labor", value);
+        });
         return tag;
     }
 
@@ -168,10 +244,18 @@ public final class KnowledgeView {
         CompoundTag tag = requirement(requirement);
         boolean met = service.requirementMet(run, requirement);
         tag.putBoolean("satisfied", met);
-        if (requirement.type() == ProjectRequirement.Type.CALCULATION) {
-            tag.putInt("done", Math.min(requirement.count(), KnowledgeService.calculationsDone(run, requirement)));
-        } else if (requirement.type() == ProjectRequirement.Type.EXPERIMENT) {
-            tag.putInt("done", Math.min(requirement.count(), KnowledgeService.experimentsDone(run, requirement)));
+        if (requirement.type() != ProjectRequirement.Type.EVIDENCE) {
+            // Shares of optional labor stand in for the player's own games or experiments.
+            int player = KnowledgeService.playerDone(run, requirement);
+            int shares = KnowledgeService.laborShares(run, requirement);
+            tag.putInt("done", Math.min(requirement.count(), player + shares));
+            tag.putInt("player_done", player);
+            tag.putInt("player_remaining", KnowledgeService.playerRemaining(run, requirement));
+            if (tag.get("labor") instanceof CompoundTag labor) {
+                labor.putDouble("done", KnowledgeService.laborDone(run, requirement));
+                labor.putDouble("remaining", KnowledgeService.laborRemaining(run, requirement));
+                labor.putInt("shares", shares);
+            }
         } else if (met) {
             tag.put("bound", KnowledgeState.encode(KnowledgeKey.CODEC.listOf(),
                     run.evidence().get(requirement.id()).values().stream().map(Observation::key).sorted(Comparator.comparing(KnowledgeKey::id)).toList()));

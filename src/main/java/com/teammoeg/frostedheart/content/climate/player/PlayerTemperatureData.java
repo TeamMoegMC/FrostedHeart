@@ -30,6 +30,7 @@ import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.climate.FHTemperatureDifficulty;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.ClimateType;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClimate;
+import com.teammoeg.frostedheart.content.climate.thermal.radiation.RadiantEquivalentTemperature;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.util.Lang;
 
@@ -132,8 +133,8 @@ public class PlayerTemperatureData implements NBTSerializable {
     float prevCoreBodyTemp;
     @Getter
     float coreBodyTemp;
-    @Setter
     float envTemp = INVALID_TEMPERATURE;
+    private float displayTemperatureC = INVALID_TEMPERATURE;
     private float environmentEquivalentTemperatureC = INVALID_TEMPERATURE;
     private float netBodyPowerW;
     private float sampledAirTemperatureC;
@@ -142,6 +143,7 @@ public class PlayerTemperatureData implements NBTSerializable {
     private float sampledLocalWindMPerS;
     private boolean sampledCanSeeSky;
     private int lastSyncEnvironment = Integer.MIN_VALUE;
+    private int lastSyncDisplay = Integer.MIN_VALUE;
     private int lastSyncCore = Integer.MIN_VALUE;
     private HeatingDeviceContext thermalContext;
     float blockTemp;
@@ -158,12 +160,15 @@ public class PlayerTemperatureData implements NBTSerializable {
         prevCoreBodyTemp = 0;
         coreBodyTemp = 0;
         envTemp = INVALID_TEMPERATURE;
+        displayTemperatureC = INVALID_TEMPERATURE;
         environmentEquivalentTemperatureC = INVALID_TEMPERATURE;
+        sampledRadiantFluxWPerM2 = 0.0F;
         updateInterval = 0;
 
         for (BodyPartData i : clothesOfParts.values()) {
             i.bodyEnergyOffsetJ = 0.0D;
-			i.feelingTemperatureC = 37.0F;
+            i.exposureTemperatureC = 37.0F;
+            i.exposureTransmission = 0.0D;
         }
         netBodyPowerW = 0.0F;
         forceThermalSync();
@@ -204,7 +209,9 @@ public class PlayerTemperatureData implements NBTSerializable {
         refreshCoreTemperature();
         prevCoreBodyTemp = coreBodyTemp;
         envTemp = INVALID_TEMPERATURE;
+        displayTemperatureC = INVALID_TEMPERATURE;
         environmentEquivalentTemperatureC = INVALID_TEMPERATURE;
+        sampledRadiantFluxWPerM2 = 0.0F;
         netBodyPowerW = 0.0F;
         forceThermalSync();
     }
@@ -229,13 +236,16 @@ public class PlayerTemperatureData implements NBTSerializable {
         prevCoreBodyTemp = 0;
         coreBodyTemp = 0;
         envTemp = INVALID_TEMPERATURE;
+        displayTemperatureC = INVALID_TEMPERATURE;
         environmentEquivalentTemperatureC = INVALID_TEMPERATURE;
+        sampledRadiantFluxWPerM2 = 0.0F;
         smoothedBody = 0;
         netBodyPowerW = 0;
         clearAllClothes();
         for (BodyPartData part : clothesOfParts.values()) {
             part.bodyEnergyOffsetJ = 0.0D;
-            part.feelingTemperatureC = 37.0F;
+            part.exposureTemperatureC = 37.0F;
+            part.exposureTransmission = 0.0D;
         }
         forceThermalSync();
     }
@@ -256,12 +266,11 @@ public class PlayerTemperatureData implements NBTSerializable {
     ) {
         prevCoreBodyTemp = coreBodyTemp;
         refreshCoreTemperature();
-        envTemp = finiteFloat(sampledAirTemperatureC, -20.0F);
+        this.sampledRadiantFluxWPerM2 = finiteFloat(sampledRadiantFluxWPerM2, 0.0F);
+        setEnvTemp(finiteFloat(sampledAirTemperatureC, -20.0F));
         this.environmentEquivalentTemperatureC = finiteFloat(environmentEquivalentTemperatureC, envTemp);
         this.netBodyPowerW = finiteFloat(netBodyPowerW, 0.0F);
         this.sampledAirTemperatureC = envTemp;
-        this.sampledRadiantFluxWPerM2 = finiteFloat(
-                sampledRadiantFluxWPerM2, 0.0F);
         this.sampledOutdoorWindMPerS = finiteFloat(
                 sampledOutdoorWindMPerS, 0.0F);
         this.sampledLocalWindMPerS = finiteFloat(
@@ -295,6 +304,18 @@ public class PlayerTemperatureData implements NBTSerializable {
         return envTemp;
     }
 
+    /** Orb reading only; body exchange and direct injury keep their own physical inputs. */
+    public float getDisplayTemperatureC() {
+        return displayTemperatureC == INVALID_TEMPERATURE ? getEnvTemp() : displayTemperatureC;
+    }
+
+    /** Server observation/command path; clients receive the final orb reading. */
+    public void setEnvTemp(float temperatureC) {
+        envTemp = temperatureC;
+        displayTemperatureC = (float) RadiantEquivalentTemperature.effectiveEnvironmentTemperatureC(
+                getEnvTemp(), sampledRadiantFluxWPerM2);
+    }
+
     public float getEnvironmentEquivalentTemperatureC() {
         if (environmentEquivalentTemperatureC == INVALID_TEMPERATURE)
             return -20;
@@ -319,15 +340,9 @@ public class PlayerTemperatureData implements NBTSerializable {
         refreshCoreTemperature();
     }
 
-    public void setAllPartsFeelTemp(float t) {
+    public void setAllPartsExposureTemperature(float t) {
         for (BodyPart bp : BodyPart.VALUES) {
-            this.clothesOfParts.get(bp).feelingTemperatureC = t;
-        }
-    }
-
-    public void addAllPartsFeelTemp(float added) {
-        for (BodyPart bp : BodyPart.VALUES) {
-            this.clothesOfParts.get(bp).feelingTemperatureC += added;
+            setThermalExposure(bp, t, 1.0D);
         }
     }
 
@@ -374,8 +389,12 @@ public class PlayerTemperatureData implements NBTSerializable {
                 + getBodyTempByPart(bodyPart));
     }
 
-    public float getFeelTempByPart(BodyPart bodyPart) {
-        return clothesOfParts.get(bodyPart).feelingTemperatureC;
+    public float getExposureTemperatureC(BodyPart bodyPart) {
+        return clothesOfParts.get(bodyPart).exposureTemperatureC;
+    }
+
+    double getExposureTransmission(BodyPart bodyPart) {
+        return clothesOfParts.get(bodyPart).exposureTransmission;
     }
 
     public void setBodyTempByPart(BodyPart bodyPart, float t) {
@@ -383,17 +402,15 @@ public class PlayerTemperatureData implements NBTSerializable {
                 * PlayerTemperatureComputation.partHeatCapacityJPerK(bodyPart);
     }
 
-    public void setFeelTempByPart(BodyPart bodyPart, float t) {
-        clothesOfParts.get(bodyPart).feelingTemperatureC = t;
+    void setThermalExposure(BodyPart part, double temperatureC, double transmission) {
+        BodyPartData state = clothesOfParts.get(part);
+        state.exposureTemperatureC = finiteFloat(temperatureC, getAbsoluteBodyTempByPart(part));
+        state.exposureTransmission = Mth.clamp(transmission, 0.0D, 1.0D);
     }
 
     public void addBodyTempByPart(BodyPart bodyPart, float t) {
         addBodyEnergyJ(bodyPart, t
                 * PlayerTemperatureComputation.partHeatCapacityJPerK(bodyPart));
-    }
-
-    public void addFeelTempByPart(BodyPart bodyPart, float t) {
-        clothesOfParts.get(bodyPart).feelingTemperatureC += t;
     }
 
     double getBodyEnergyJ(BodyPart part) {
@@ -411,17 +428,62 @@ public class PlayerTemperatureData implements NBTSerializable {
             float minimumOffsetC,
             float maximumOffsetC
     ) {
-        if (!Double.isFinite(energyJ)) return;
+        if (!Double.isFinite(energyJ) || energyJ == 0.0D) return;
         double temperatureDeltaC = energyJ
                 / PlayerTemperatureComputation.WHOLE_BODY_HEAT_CAPACITY_J_PER_K;
         for (BodyPart part : BodyPart.VALUES) {
-            double next = Mth.clamp(
-                    getBodyTempByPart(part) + temperatureDeltaC,
-                    minimumOffsetC, maximumOffsetC);
+            double current = getBodyTempByPart(part);
+            if (temperatureDeltaC > 0.0D && current >= maximumOffsetC
+                    || temperatureDeltaC < 0.0D && current <= minimumOffsetC) continue;
+            double next = temperatureDeltaC > 0.0D
+                    ? Math.min(current + temperatureDeltaC, maximumOffsetC)
+                    : Math.max(current + temperatureDeltaC, minimumOffsetC);
             setBodyTempByPart(part, (float) next);
         }
         refreshCoreTemperature();
         forceThermalSync();
+    }
+
+    /** Energy-weighted body node used by finite wearable reservoirs. */
+    public double getMeanBodyTemperatureC() {
+        double energyJ = 0.0D;
+        for (BodyPart part : BodyPart.VALUES) energyJ += getBodyEnergyJ(part);
+        return PlayerTemperatureComputation.CORE_REFERENCE_TEMPERATURE_C
+                + energyJ / PlayerTemperatureComputation.WHOLE_BODY_HEAT_CAPACITY_J_PER_K;
+    }
+
+    /** Joules still needed to bring the cold parts to 37 C; hot parts have no warming demand. */
+    public double getEquipmentWarmingEnergyJ() {
+        double neededJ = 0.0D;
+        for (BodyPart part : BodyPart.VALUES) neededJ += Math.max(0.0D, -getBodyEnergyJ(part));
+        return neededJ;
+    }
+
+    /** Returns the energy actually received, so unused heat remains in the reservoir. */
+    public double applyReservoirBodyEnergyJ(double energyJ) {
+        if (!Double.isFinite(energyJ) || energyJ == 0.0D) return 0.0D;
+        if (energyJ > 0.0D) {
+            double neededJ = getEquipmentWarmingEnergyJ();
+            if (!(neededJ > 0.0D)) return 0.0D;
+            energyJ = Math.min(energyJ, neededJ);
+            double fraction = energyJ / neededJ;
+            for (BodyPart part : BodyPart.VALUES) {
+                double deficitJ = Math.max(0.0D, -getBodyEnergyJ(part));
+                addBodyEnergyJ(part, deficitJ * fraction);
+            }
+        } else {
+            double capacityJPerK = 0.0D;
+            for (BodyPart part : BodyPart.VALUES) {
+                capacityJPerK += PlayerTemperatureComputation.partHeatCapacityJPerK(part);
+            }
+            for (BodyPart part : BodyPart.VALUES) {
+                addBodyEnergyJ(part, energyJ
+                        * PlayerTemperatureComputation.partHeatCapacityJPerK(part) / capacityJPerK);
+            }
+        }
+        refreshCoreTemperature();
+        forceThermalSync();
+        return energyJ;
     }
 
     /** Atomically applies one whole-body temperature delta to all five parts. */
@@ -454,74 +516,35 @@ public class PlayerTemperatureData implements NBTSerializable {
 
     public void applyClientThermalSync(
             float environmentTemperatureC,
-            float absoluteCoreTemperatureC
+            float absoluteCoreTemperatureC,
+            float displayTemperatureC
     ) {
         prevCoreBodyTemp = coreBodyTemp;
         coreBodyTemp = absoluteCoreTemperatureC
                 - (float) PlayerTemperatureComputation.CORE_REFERENCE_TEMPERATURE_C;
         envTemp = environmentTemperatureC;
         sampledAirTemperatureC = environmentTemperatureC;
+        this.displayTemperatureC = finiteFloat(displayTemperatureC, environmentTemperatureC);
         environmentEquivalentTemperatureC = INVALID_TEMPERATURE;
     }
 
     public boolean shouldSyncThermalState() {
         int environment = Math.round(getEnvTemp() * 10.0F);
+        int display = Math.round(getDisplayTemperatureC() * 10.0F);
         int core = Math.round(getAbsoluteCoreBodyTemp() * 100.0F);
-        if (environment == lastSyncEnvironment && core == lastSyncCore) {
+        if (environment == lastSyncEnvironment && display == lastSyncDisplay && core == lastSyncCore) {
             return false;
         }
         lastSyncEnvironment = environment;
+        lastSyncDisplay = display;
         lastSyncCore = core;
         return true;
     }
 
     public void forceThermalSync() {
         lastSyncEnvironment = Integer.MIN_VALUE;
+        lastSyncDisplay = Integer.MIN_VALUE;
         lastSyncCore = Integer.MIN_VALUE;
-    }
-
-    public float getHighestFeelTemp() {
-        float highestTemp = Float.NEGATIVE_INFINITY;
-
-        for (BodyPart p : BodyPart.VALUES) {
-        	if(p==BodyPart.HANDS)continue;
-            float temp = getFeelTempByPart(p);
-            if (temp > highestTemp) {
-                highestTemp = temp;
-            }
-        }
-
-        return highestTemp;
-    }
-
-    public float getLowestFeelTemp() {
-        float lowestTemp = Float.POSITIVE_INFINITY;
-
-        for (BodyPart p : BodyPart.VALUES) {
-        	if(p==BodyPart.HANDS)continue;
-            float temp = getFeelTempByPart(p);
-            if (temp < lowestTemp) {
-                lowestTemp = temp;
-            }
-        }
-
-        return lowestTemp;
-    }
-
-    public float getExtremeFeelTemp() {
-        // get the one with largest abs value
-        float extremeAbsTemp = Float.NEGATIVE_INFINITY;
-        float extremeTemp = Float.NEGATIVE_INFINITY;
-        for (BodyPart p : BodyPart.VALUES) {
-            if(p==BodyPart.HANDS)continue;
-            float temp = getFeelTempByPart(p);
-            float absTemp = Math.abs(temp);
-            if (absTemp > extremeAbsTemp) {
-                extremeAbsTemp = absTemp;
-                extremeTemp = temp;
-            }
-        }
-        return extremeTemp;
     }
 
     HeatingDeviceContext thermalContext() {

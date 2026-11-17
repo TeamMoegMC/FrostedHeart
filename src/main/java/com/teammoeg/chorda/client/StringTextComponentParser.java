@@ -252,7 +252,10 @@ public class StringTextComponentParser {
 		ComponentOptimizer co=new ComponentOptimizer(comp);
 		ComponentOptimizer out=new ComponentOptimizer();
 		for(Component c:co.components()) {
-			parseLine(new ParseReader(new StringLineSource(c.getString())),out,c.getStyle());
+			ParseReader parser = new ParseReader(new StringLineSource(c.getString()));
+			while (parser.nextLine()) {
+				parseLine(parser, out, c.getStyle());
+			}
 		}
 		return out.build();
 	}

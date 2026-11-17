@@ -23,6 +23,9 @@ import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.frostedheart.content.town.TeamTownData;
+import com.teammoeg.frostedheart.content.town.client.board.BoardDraw;
+import com.teammoeg.frostedheart.content.town.client.board.NoticeBoardIcons;
+import com.teammoeg.frostedheart.content.town.client.board.NoticeBoardTheme;
 import com.teammoeg.frostedheart.content.town.TownHistoryEntry;
 import com.teammoeg.frostedheart.content.town.observation.TownNutritionHistory;
 import com.teammoeg.frostedheart.content.town.observation.TownOperationalHistory;
@@ -40,11 +43,9 @@ import java.util.function.ToDoubleFunction;
 
 /** Three player-facing history views. Missing optional samples produce line gaps. */
 public class TownStatisticsPanel extends UIElement {
-    private static final int WIDTH = TownManagerScreen.CONTENT_WIDTH;
-    private static final int HEIGHT = TownManagerScreen.CONTENT_HEIGHT;
-    private static final int HEADER_HEIGHT = 28;
+    private static final int HEADER_HEIGHT = 30;
     private static final int CHART_LABEL_HEIGHT = 11;
-    private static final int MAX_CHART_PLOT_HEIGHT = 40;
+    private static final int MAX_CHART_PLOT_HEIGHT = 72;
     private static final int MIN_CHART_PLOT_HEIGHT = 20;
     private static final int CHART_SPACING = 6;
     private static final int PLOT_MARGIN = 4;
@@ -53,24 +54,45 @@ public class TownStatisticsPanel extends UIElement {
     private View view = View.RESIDENTS;
 
     public TownStatisticsPanel(UIElement parent, int x, int y, Supplier<TeamTownData> townDataSource) {
+        this(parent, x, y, TownManagerScreen.CONTENT_WIDTH, TownManagerScreen.CONTENT_HEIGHT, townDataSource);
+    }
+
+    /** A statistics sheet on the notice board: each chart on squared paper, inked rather than glowing. */
+    public TownStatisticsPanel(UIElement parent, int x, int y, int width, int height, Supplier<TeamTownData> townDataSource) {
         super(parent);
         this.townDataSource = townDataSource;
         setPos(x, y);
-        setSize(WIDTH, HEIGHT);
+        setSize(width, height);
+    }
+
+    /** The chart colours, which were chosen for a dark panel, as inks that read on paper. */
+    private static int ink(int color) {
+        return switch (color) {
+            case 0xFF55FFFF -> NoticeBoardTheme.BLUE;
+            case 0xFFFFAA00, 0xFFFFAA55 -> 0xFFBA7517;
+            case 0xFFFF5555 -> NoticeBoardTheme.RED;
+            case 0xFF55FF55, 0xFF66DD88 -> NoticeBoardTheme.GREEN_FILL;
+            case 0xFF55AA55, 0xFF229955 -> NoticeBoardTheme.GREEN;
+            case 0xFFFFDD55 -> 0xFF8A6D00;
+            case 0xFFCC9922 -> 0xFF6B5200;
+            case 0xFFCC6633 -> 0xFF8A3D12;
+            case 0xFFFF88CC -> 0xFFB0407F;
+            case 0xFFBB4488 -> 0xFF7A2557;
+            default -> NoticeBoardTheme.INK;
+        };
     }
 
     @Override
     public void render(GuiGraphics graphics, int x, int y, int width, int height, RenderingHint hint) {
         Font font = Minecraft.getInstance().font;
-        drawPanel(graphics, x, y, width, height);
         TeamTownData data = townDataSource.get();
         List<TownHistoryEntry> history = data == null ? List.of() : data.getHistory();
 
-        graphics.drawString(font, Component.translatable("gui.frostedheart.town_manager.statistics"),
-                x + 5, y + 4, 0xFFFFAA00, true);
+        com.teammoeg.frostedheart.content.town.client.board.BoardDraw.textOnWood(graphics, Component.translatable("gui.frostedheart.town_manager.statistics").copy()
+                .withStyle(net.minecraft.ChatFormatting.BOLD), x + 4, y + 2, NoticeBoardTheme.ON_WOOD);
         if (!history.isEmpty()) {
             Component days = Component.translatable("gui.frostedheart.town_manager.last_n_days", history.size());
-            graphics.drawString(font, days, x + width - 5 - font.width(days), y + 4, 0xFFAAAAAA, true);
+            com.teammoeg.frostedheart.content.town.client.board.BoardDraw.textOnWood(graphics, days, x + width - 5 - font.width(days), y + 2, NoticeBoardTheme.ON_WOOD);
         }
         int buttonsWidth = width - 8;
         int buttonWidth = buttonsWidth / View.values().length;
@@ -82,10 +104,11 @@ public class TownStatisticsPanel extends UIElement {
         }
 
         if (history.size() < 2) {
+            NoticeBoardIcons.GRID.draw(graphics, x + width / 6, y + 60, width * 2 / 3, 44);
             drawCentered(graphics, font, Component.translatable("gui.frostedheart.town_manager.collecting"),
-                    x + width / 2, y + 96, 0xFFAAAAAA);
+                    x + width / 2, y + 72, NoticeBoardTheme.INK);
             drawCentered(graphics, font, Component.translatable("gui.frostedheart.town_manager.collecting_hint"),
-                    x + width / 2, y + 108, 0xFF777777);
+                    x + width / 2, y + 86, NoticeBoardTheme.MUTED);
             return;
         }
 
@@ -99,16 +122,16 @@ public class TownStatisticsPanel extends UIElement {
         for (Chart chart : charts) {
             drawChart(graphics, font, x + PLOT_MARGIN, chartY,
                     width - PLOT_MARGIN * 2, plotHeight, history, chart);
-            chartY += CHART_LABEL_HEIGHT + plotHeight + CHART_SPACING;
+            chartY += CHART_LABEL_HEIGHT + plotHeight + CHART_SPACING + 6;
         }
     }
 
     private void drawViewButton(GuiGraphics graphics, Font font, int x, int y, int width, View candidate) {
         boolean selected = view == candidate;
-        graphics.fill(x, y, x + width, y + 11, selected ? 0xFF35566F : 0xFF222222);
+        (selected ? NoticeBoardIcons.TAG_HOVER : NoticeBoardIcons.TAG).draw(graphics, x + 1, y, width - 2, 12);
         Component label = Component.translatable(candidate.translationKey);
         graphics.drawString(font, label, x + (width - font.width(label)) / 2, y + 2,
-                selected ? 0xFFFFFFFF : 0xFF888888, false);
+                selected ? NoticeBoardTheme.NOTE_INK : NoticeBoardTheme.MUTED, false);
     }
 
     @Override
@@ -117,7 +140,7 @@ public class TownStatisticsPanel extends UIElement {
             return false;
         }
         double relativeX = getMouseX() - 4;
-        int buttonsWidth = WIDTH - 8;
+        int buttonsWidth = getWidth() - 8;
         if (relativeX < 0 || relativeX >= buttonsWidth) return false;
         int index = Math.min(View.values().length - 1,
                 (int) Math.floor(relativeX * View.values().length / buttonsWidth));
@@ -136,7 +159,10 @@ public class TownStatisticsPanel extends UIElement {
             Chart chart
     ) {
         Component title = Component.translatable(chart.titleKey());
-        graphics.drawString(font, title, x, y, 0xFFFFFFFF, true);
+        // Each chart is a sheet of squared paper pinned to the board.
+        NoticeBoardIcons.GRID.draw(graphics, x - 3, y - 3, width + 6, CHART_LABEL_HEIGHT + plotHeight + 7);
+        BoardDraw.pin(graphics, NoticeBoardIcons.PIN_BLUE, x + width / 2, y - 2);
+        graphics.drawString(font, title, x + 2, y, NoticeBoardTheme.INK, false);
         int legendX = x + font.width(title) + 4;
         TownHistoryEntry latest = history.get(history.size() - 1);
         for (Series series : chart.series()) {
@@ -144,26 +170,24 @@ public class TownStatisticsPanel extends UIElement {
             String value = point.available() ? format(point.value()) : "-";
             Component text = Component.literal(value);
             if (legendX + font.width(text) >= x + width) break;
-            graphics.drawString(font, text, legendX, y, series.color(), false);
+            graphics.drawString(font, text, legendX, y, ink(series.color()), false);
             legendX += font.width(text) + 4;
         }
 
         int plotY = y + CHART_LABEL_HEIGHT;
-        graphics.fill(x, plotY, x + width, plotY + plotHeight, 0xFF181818);
-        graphics.fill(x, plotY, x + width, plotY + 1, 0xFF373737);
-        graphics.fill(x, plotY + plotHeight - 1, x + width, plotY + plotHeight, 0xFF8B8B8B);
+        graphics.fill(x + 2, plotY + plotHeight - 1, x + width - 2, plotY + plotHeight, NoticeBoardTheme.FAINT);
 
         Scale scale = scale(history, chart);
         for (Reference reference : chart.references()) {
             if (reference.value() < scale.minimum() || reference.value() > scale.maximum()) continue;
             int referenceY = valueY(reference.value(), scale, plotY, plotHeight);
             for (int dash = x + 2; dash < x + width - 2; dash += 4) {
-                graphics.fill(dash, referenceY, dash + 2, referenceY + 1, reference.color());
+                graphics.fill(dash, referenceY, dash + 2, referenceY + 1, ink(reference.color()));
             }
             String label = format(reference.value());
             graphics.drawString(font, label, x + width - font.width(label) - 3,
                     Math.max(plotY + 1, Math.min(plotY + plotHeight - 9, referenceY - 4)),
-                    reference.color(), false);
+                    ink(reference.color()), false);
         }
 
         int innerX = x + 2;
@@ -180,14 +204,14 @@ public class TownStatisticsPanel extends UIElement {
                     continue;
                 }
                 int pointY = valueY(point.value(), scale, plotY, plotHeight);
-                if (hasPrevious) drawLine(graphics, previousX, previousY, pointX, pointY, series.color());
+                if (hasPrevious) drawLine(graphics, previousX, previousY, pointX, pointY, ink(series.color()));
                 previousX = pointX;
                 previousY = pointY;
                 hasPrevious = true;
             }
             MetricPoint last = series.metric().apply(latest);
             if (last.available() && hasPrevious) {
-                graphics.fill(previousX - 1, previousY - 1, previousX + 2, previousY + 2, series.color());
+                graphics.fill(previousX - 1, previousY - 1, previousX + 2, previousY + 2, ink(series.color()));
             }
         }
     }
@@ -299,7 +323,7 @@ public class TownStatisticsPanel extends UIElement {
         if (chartCount <= 0) return MAX_CHART_PLOT_HEIGHT;
         int available = height - HEADER_HEIGHT
                 - chartCount * CHART_LABEL_HEIGHT
-                - Math.max(0, chartCount - 1) * CHART_SPACING;
+                - Math.max(0, chartCount - 1) * (CHART_SPACING + 6) - 8;
         return Math.max(MIN_CHART_PLOT_HEIGHT,
                 Math.min(MAX_CHART_PLOT_HEIGHT, available / chartCount));
     }
@@ -323,19 +347,16 @@ public class TownStatisticsPanel extends UIElement {
 
     private static void drawCentered(GuiGraphics graphics, Font font, Component text,
                                      int centerX, int y, int color) {
-        graphics.drawString(font, text, centerX - font.width(text) / 2, y, color, true);
+        graphics.drawString(font, text, centerX - font.width(text) / 2, y, color, false);
     }
 
     private static String format(double value) {
         if (value == Math.floor(value) && Math.abs(value) < 1e9) return String.valueOf((long) value);
+        // The player view shows whole numbers; the detailed mode keeps one decimal for checking.
+        if (!com.teammoeg.frostedheart.content.town.client.TownUiModeClient.detailed()) return String.valueOf(Math.round(value));
         return String.format(Locale.ROOT, "%.1f", value);
     }
 
-    private static void drawPanel(GuiGraphics graphics, int x, int y, int width, int height) {
-        graphics.fill(x, y, x + width, y + height, 0xE0101010);
-        graphics.fill(x, y, x + width, y + 1, 0xFF373737);
-        graphics.fill(x, y + height - 1, x + width, y + height, 0xFF8B8B8B);
-    }
 
     private enum View {
         RESIDENTS("gui.frostedheart.town_manager.statistics_residents"),

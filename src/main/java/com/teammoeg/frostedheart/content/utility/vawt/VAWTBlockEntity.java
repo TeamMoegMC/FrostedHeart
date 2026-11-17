@@ -30,7 +30,6 @@ import com.teammoeg.frostedheart.compat.create.IHaveOutlines;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClimate;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import lombok.Getter;
-import lombok.Setter;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -67,8 +66,7 @@ public class VAWTBlockEntity extends GeneratingKineticBlockEntity implements IHa
     @Getter
     private String reason = "";
     @Getter
-    @Setter
-    private int damage = 0; // ms
+    private long damage = 0; // ms
 
     public VAWTBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
@@ -95,16 +93,31 @@ public class VAWTBlockEntity extends GeneratingKineticBlockEntity implements IHa
             return;
         }
 
+        damaged = getDurability() <= 0;
         updateModifier();
-        this.updateGeneratedRotation();
+        speedEffect = calcEffect(ModifierType.SPEED);
+        damageEffect = calcEffect(ModifierType.DAMAGE);
         if (!damaged && generatable) {
             damage();
         }
+        // Publish only the final state, including exhaustion during this interval.
+        this.updateGeneratedRotation();
     }
+
+    public void setDamage(long damage) {
+        this.damage = Math.max(0L, damage);
+        this.damaged = getDurability() <= 0;
+        if (damaged) {
+            generatable = false;
+            reason = "damaged";
+        }
+        setChanged();
+    }
+
     public long getDurability() {
     	
     	if (getBlockState().getBlock() instanceof VAWTBlock vawt) {
-    		return vawt.type.getDurability()-damage;
+            return Math.max(0L, vawt.type.getDurability()-damage);
     	}
     	return 0;
     }
@@ -284,7 +297,7 @@ public class VAWTBlockEntity extends GeneratingKineticBlockEntity implements IHa
 
     @Override
     public float getGeneratedSpeed() {
-        if (damaged || !generatable) return 0;
+        if (damaged || !generatable || getDurability() <= 0) return 0;
         return Math.round(16 * speedEffect);
     }
 
@@ -305,7 +318,8 @@ public class VAWTBlockEntity extends GeneratingKineticBlockEntity implements IHa
     @Override
     protected void read(CompoundTag compound, boolean clientPacket) {
         super.read(compound, clientPacket);
-        this.damage = compound.getInt("damage");
+        this.damage = Math.max(0L, compound.getLong("damage"));
+        this.damaged = getDurability() <= 0;
         this.reason = compound.getString("reason");
         this.speedEffect = compound.getFloat("speed_effect");
         this.damageEffect = compound.getFloat("damage_effect");
@@ -315,7 +329,7 @@ public class VAWTBlockEntity extends GeneratingKineticBlockEntity implements IHa
     @Override
     protected void write(CompoundTag compound, boolean clientPacket) {
         super.write(compound, clientPacket);
-        compound.putInt("damage", damage);
+        compound.putLong("damage", damage);
         compound.putString("reason", reason);
         compound.putFloat("speed_effect", speedEffect);
         compound.putFloat("damage_effect", damageEffect);

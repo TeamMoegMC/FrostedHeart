@@ -135,6 +135,14 @@ public final class TopologyUpdatePlanner {
         return planner;
     }
 
+    /** The fixed numerical field obtains source mixing at publication, not during transport compilation. */
+    public TopologyUpdatePlanner forFixedInput(LongSet sections) {
+        var planner = new TopologyUpdatePlanner(pages, arena, materialStates, solver, phases, signatures, materials,
+                compiler, parameters, limits, airRoutes);
+        planner.view.captureSections(sections);
+        return planner;
+    }
+
     /** Separately admitted immutable inputs; callers transfer ownership to the numerical candidate. */
     public FrozenAirGeometry freezeAirGeometry(
             com.teammoeg.frostedheart.content.climate.thermal.source.minecraft.WorkerPhysicalSourceBindings.FrozenSources sources,
@@ -150,6 +158,9 @@ public final class TopologyUpdatePlanner {
         return airRoutes.lastVisitCount();
     }
 
+    /** Source coefficients can reuse committed routes once geometry discovery is complete. */
+    public boolean hasPendingRoutes() { return airRoutes.hasPendingWork(); }
+
     /** Includes set/queue growth and route traversal scratch before any closure is allocated. */
     public long continuationBoundaryBytes(ThermalInputBatch batch) {
         boolean pending = airRoutes.hasPendingWork();
@@ -158,12 +169,12 @@ public final class TopologyUpdatePlanner {
                 + batch.geometry().size() + batch.geometry().materialChanges().size()
                 + batch.phaseAcks().length + batch.phaseIntents().length + batch.environmentUpdates().length;
         for (var halo : batch.geometry().halos()) seeds += 1L + halo.halo().sectionCountBound();
-        // This read-only walk borrows existing route components. Its allocations
-        // are component references and Section sets/queues, never route positions.
+        // The conservative closure walks Section indexes directly. Each route
+        // dependency belongs to a face-connected path covered by that same walk.
         long sections = 27L * seeds + pages.capturedSectionCountBound() + airRoutes.dependencySectionCount();
         if (pending) sections += draftsBySection.size() + airRoutes.pendingSectionCountBound();
         // Includes old/new hash tables during growth and the primitive queue.
-        return 2048L + 64L * airRoutes.componentCountBound() + 128L * sections;
+        return 2048L + 128L * sections;
     }
 
     /** Seed union is exact for inputs at the same physical boundary; no payload is copied. */
@@ -187,6 +198,10 @@ public final class TopologyUpdatePlanner {
     }
 
     public RegionalContinuationBoundary continuationBoundary(LongSet seeds, boolean structuralInput) {
+        return continuationBoundary(seeds, structuralInput, it.unimi.dsi.fastutil.longs.LongSets.EMPTY_SET);
+    }
+
+    public RegionalContinuationBoundary continuationBoundary(LongSet seeds, boolean structuralInput, LongSet announcedSections) {
         boolean pending = airRoutes.hasPendingWork();
         boolean unresolved = airRoutes.discoveryIncomplete();
         if (!structuralInput && !pending) return RegionalContinuationBoundary.UNCHANGED;
@@ -198,7 +213,6 @@ public final class TopologyUpdatePlanner {
                 if (affected.add(section)) queue.add(section);
             }
         if (pending) airRoutes.includePendingSections(affected, queue);
-        airRoutes.expandAffectedSections(affected, queue);
         {
             // A passage search only moves to a face-adjacent captured position.
             // Treat every captured section as fully connected: this deliberately
@@ -207,6 +221,9 @@ public final class TopologyUpdatePlanner {
             // reached by the very input whose boundary is being selected.
             // Include old/candidate/input geometry and actual halos so neither a
             // new Page nor an old dependency can create an unaccounted shortcut.
+            // Route discovery records every visited position and its six face
+            // neighbors in bySection. Its dependencies are face-connected, so
+            // this walk also covers the old per-component dependency closure.
             for (int index = 0; index < queue.size(); index++) {
                 long key = queue.getLong(index);
                 for (int face = 0; face < 6; face++) {
@@ -214,7 +231,7 @@ public final class TopologyUpdatePlanner {
                             SectionPos.y(key) + TopologyView.DY[face], SectionPos.z(key) + TopologyView.DZ[face]);
                     // Query the existing indexes instead of copying the whole dimension for this walk.
                     if (!affected.contains(next) && (pages.hasCapturedSection(next)
-                            || draftsBySection.containsKey(next) || seeds.contains(next)
+                            || draftsBySection.containsKey(next) || seeds.contains(next) || announcedSections.contains(next)
                             || airRoutes.hasDependencySection(next))) {
                         affected.add(next);
                         queue.add(next);
@@ -355,12 +372,12 @@ public final class TopologyUpdatePlanner {
         try {
             switch (preparePhase) {
                 case 0 -> {
-                    airRoutes.invalidate(batch);
                     collectRetirements(batch);
                     collectAdmissions(batch);
                     collectResidency(batch.residencyUpdates());
                     collectGeometry(batch.geometry());
                     collectEnvironment(batch.environmentUpdates());
+                    airRoutes.invalidate(batch, view);
                     preparePhase++;
                 }
                 case 1 -> {
@@ -577,17 +594,19 @@ public final class TopologyUpdatePlanner {
                 continue;
             }
             PageDraft draft = acquireDraft(page);
-            if (draft.retirement || update.geometryRevision() < draft.geometryRevision) {
+            boolean growth = pages.hasFixedField() && pages.onlyAddsResidentBricks(update);
+            if (draft.retirement || !growth && update.geometryRevision() < draft.geometryRevision) {
                 continue;
             }
             long added = update.residentBrickMask() & ~draft.nextResidentBrickMask;
             long removed = draft.nextResidentBrickMask & ~update.residentBrickMask();
+            var captured = growth ? update.signatures().withBricksFrom(draft.nextSignatures, draft.nextResidentBrickMask) : update.signatures();
             draft.nextResidentBrickMask = update.residentBrickMask();
             draft.nextSourceSeedMask = update.sourceSeedMask();
-            compareFullSignatures(draft, update.signatures());
-            draft.nextSignatures = update.signatures();
+            compareFullSignatures(draft, captured);
+            draft.nextSignatures = captured;
             draft.dormantMaterials = update.dormantMaterials();
-            draft.geometryRevision = update.geometryRevision();
+            draft.geometryRevision = Math.max(draft.geometryRevision, update.geometryRevision());
             draft.topologyDirtyMask |= added | removed;
             while (removed != 0L) {
                 int brick = Long.numberOfTrailingZeros(removed);
@@ -691,8 +710,8 @@ public final class TopologyUpdatePlanner {
             for (int index = 0; index < update.skyColumns().length; index++) {
                 int column = Short.toUnsignedInt(update.skyColumns()[index]);
                 draft.setSkyColumn(column, update.firstExposedLocalY()[index]);
-                int brick = (column & 15) >>> 2 | (column >>> 4) >>> 2 << 2 | 3 << 4;
-                draft.fragmentDirtyMask |= 1L << brick;
+                int brick = (column & 15) >>> 2 | (column >>> 4) >>> 2 << 2;
+                draft.fragmentDirtyMask |= (0x0001_0001_0001_0001L << brick) & draft.nextResidentBrickMask;
             }
         }
     }
@@ -848,7 +867,7 @@ public final class TopologyUpdatePlanner {
                 continue;
             }
             BrickTopologyCompiler.CompiledFragment compiled =
-                    compiler.compileFragment(page, brick, view);
+                    pages.hasFixedField() ? compiler.compileTransport(page, brick, view) : compiler.compileFragment(page, brick, view);
             fragments[index] = compiled.fragment();
             compiledFragmentBytes += compiled.fragment().ownedBackingBytes();
             WorkerBrickTopology base = view.brick(page, brick);

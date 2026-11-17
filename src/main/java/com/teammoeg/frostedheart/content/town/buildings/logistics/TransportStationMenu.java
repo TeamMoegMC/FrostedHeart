@@ -40,7 +40,6 @@ public class TransportStationMenu extends CBlockEntityMenu<TransportStationBlock
             TransportStationBlockEntity blockEntity
     ) {
         super(FHMenuTypes.TRANSPORT_STATION.get(), blockEntity, id, inventory.player, 0);
-        addPlayerInventory(inventory, 8, 140, 197);
     }
 
     public Optional<TransportStationBuilding> getBuilding() {

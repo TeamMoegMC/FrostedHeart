@@ -3,5 +3,29 @@
   "results": [
     "knowledge_example:charcoal_design",
     "knowledge_example:metallurgy_finding"
+  ],
+  "requirements": [
+    {
+      "id": "firing_log",
+      "type": "calculation",
+      "title": "knowledge.knowledge_example.projects.kiln.firing_log",
+      "count": 0,
+      "labor": {
+        "required": true,
+        "workers": 2,
+        "days": 2,
+        "education": 2,
+        "items": [
+          {
+            "item": "minecraft:paper",
+            "count": 2
+          },
+          {
+            "item": "minecraft:charcoal",
+            "count": 1
+          }
+        ]
+      }
+    }
   ]
 }

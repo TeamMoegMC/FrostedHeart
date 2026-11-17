@@ -1,0 +1,874 @@
+{
+  "status": "passed_for_stated_equipment_and_player_regression_scope",
+  "verifiedAt": "2026-11-08T03:20:42.624443+08:00",
+  "scope": "Current-source production Forge player/body and real item capabilities; fixed-input body replay, actual player tick, finite food and actual campfire rooms. No original user save or rendered client validation.",
+  "requestedBehavior": "Ordinary warming equipment helps cold parts recover toward 37 C; actual environmental heat still causes overheating.",
+  "storagePrecision": {
+    "format": "NBT float, version 1, unchanged",
+    "sourceUnchanged": true,
+    "runtimeFloatTagAssertionsPassed": true,
+    "temporaryDoubleChange": "Reverted at user instruction; the r2 JVM was stopped and its run is not final qualification."
+  },
+  "build": {
+    "java": 17,
+    "forge": "1.20.1 / 47.3.0",
+    "tasks": [
+      "assemble",
+      "runGameTestServer"
+    ],
+    "log": "build/equipment-heating-20261107/run-r3.log",
+    "successful": true,
+    "productionJar": "build/equipment-heating-20261107/compiled/libs/frostedheart-1.20.1-0.7.9.jar",
+    "jarBytes": 14611807,
+    "testClassesInProductionJar": 0,
+    "tooltipTranslations": {
+      "en_us": true,
+      "zh_cn": true
+    },
+    "testCompilationExclusion": "Only the pre-existing com/teammoeg/frostedheart/content/world/features/deposit/** GameTest compilation failures were excluded by an ignored validation init; no production or deposit source was changed for this."
+  },
+  "regression": {
+    "requiredPassed": 30,
+    "expectedRequired": 30,
+    "thermalRuntimeErrors": 0,
+    "finalRootBytes": 0,
+    "namespaces": [
+      "frostedheart_equipment_heating",
+      "frostedheart_player_release",
+      "frostedheart_hot_spring",
+      "frostedheart_gameplay_balance",
+      "frostedheart_survival_balance"
+    ]
+  },
+  "equipmentCurves": {
+    "cases": 72,
+    "secondsPerCase": 1200,
+    "conditions": "normal difficulty; initial 37 C; stationary, dry, zero wind and radiation; -50/0/20 C air; naked or polar-bear clothing; food/water available; active devices refilled, reservoirs charged once to 60 C",
+    "maximumPartTemperatureC": 37.17931365966797,
+    "results": [
+      {
+        "device": "none",
+        "air": -50.0,
+        "clothed": false,
+        "seconds": 1200.0,
+        "maxPartC": 37.0,
+        "coreC": 35.30937,
+        "torsoC": 35.30937
+      },
+      {
+        "device": "main_stove",
+        "air": -50.0,
+        "clothed": false,
+        "seconds": 1200.0,
+        "maxPartC": 37.0,
+        "coreC": 35.557114,
+        "torsoC": 35.70875
+      },
+      {
+        "device": "off_stove",
+        "air": -50.0,
+        "clothed": false,
+        "seconds": 1200.0,
+        "maxPartC": 37.0,
+        "coreC": 36.29699,
+        "torsoC": 36.998768
+      },
+      {
+        "device": "pad",
+        "air": -50.0,
+        "clothed": false,
+        "seconds": 1200.0,
+        "maxPartC": 37.0,
+        "coreC": 36.29699,
+        "torsoC": 36.998768
+      },
+      {
+        "device": "steam",
+        "air": -50.0,
+        "clothed": false,
+        "seconds": 1200.0,
+        "maxPartC": 37.0,
+        "coreC": 36.29699,
+        "torsoC": 36.998768
+      },
+      {
+        "device": "candle",
+        "air": -50.0,
+        "clothed": false,
+        "seconds": 1200.0,
+        "maxPartC": 37.0,
+        "coreC": 35.995983,
+        "torsoC": 36.50422
+      },
+      {
+        "device": "mushroom",
+        "air": -50.0,
+        "clothed": false,
+        "seconds": 1200.0,
+        "maxPartC": 37.0,
+        "coreC": 35.345932,
+        "torsoC": 35.36335
+      },
+      {
+        "device": "vest",
+        "air": -50.0,
+        "clothed": false,
+        "seconds": 1200.0,
+        "maxPartC": 37.0,
+        "coreC": 36.14463,
+        "torsoC": 36.754288
+      },
+      {
+        "device": "stacked",
+        "air": -50.0,
+        "clothed": false,
+        "seconds": 1200.0,
+        "maxPartC": 37.0,
+        "coreC": 36.29699,
+        "torsoC": 36.998768
+      },
+      {
+        "device": "warm_stone",
+        "air": -50.0,
+        "clothed": false,
+        "seconds": 1200.0,
+        "maxPartC": 37.0,
+        "coreC": 36.281967,
+        "torsoC": 36.281967
+      },
+      {
+        "device": "hot_water_bag",
+        "air": -50.0,
+        "clothed": false,
+        "seconds": 1200.0,
+        "maxPartC": 37.0,
+        "coreC": 37.0,
+        "torsoC": 37.0
+      },
+      {
+        "device": "stacked_reservoir",
+        "air": -50.0,
+        "clothed": false,
+        "seconds": 1200.0,
+        "maxPartC": 37.0,
+        "coreC": 37.0,
+        "torsoC": 37.0
+      },
+      {
+        "device": "none",
+        "air": 0.0,
+        "clothed": false,
+        "seconds": 1200.0,
+        "maxPartC": 37.0,
+        "coreC": 36.89979,
+        "torsoC": 36.89979
+      },
+      {
+        "device": "main_stove",
+        "air": 0.0,
+        "clothed": false,
+        "seconds": 1200.0,
+        "maxPartC": 37.0,
+        "coreC": 36.90024,
+        "torsoC": 36.913757
+      },
+      {
+        "device": "off_stove",
+        "air": 0.0,
+        "clothed": false,
+        "seconds": 1200.0,
+        "maxPartC": 37.00011444091797,
+        "coreC": 36.899887,
+        "torsoC": 36.999844
+      },
+      {
+        "device": "pad",
+        "air": 0.0,
+        "clothed": false,
+        "seconds": 1200.0,
+        "maxPartC": 37.00011444091797,
+        "coreC": 36.899887,
+        "torsoC": 36.999844
+      },
+      {
+        "device": "steam",
+        "air": 0.0,
+        "clothed": false,
+        "seconds": 1200.0,
+        "maxPartC": 37.00011444091797,
+        "coreC": 36.899887,
+        "torsoC": 36.999844
+      },
+      {
+        "device": "candle",
+        "air": 0.0,
+        "clothed": false,
+        "seconds": 1200.0,
+        "maxPartC": 37.00011444091797,
+        "coreC": 36.899887,
+        "torsoC": 36.999844
+      },
+      {
+        "device": "mushroom",
+        "air": 0.0,
+        "clothed": false,
+        "seconds": 1200.0,
+        "maxPartC": 37.0,
+        "coreC": 36.900154,
+        "torsoC": 36.95471
+      },
+      {
+        "device": "vest",
+        "air": 0.0,
+        "clothed": false,
+        "seconds": 1200.0,
+        "maxPartC": 37.0,
+        "coreC": 36.899723,
+        "torsoC": 36.998474
+      },
+      {
+        "device": "stacked",
+        "air": 0.0,
+        "clothed": false,
+        "seconds": 1200.0,
+        "maxPartC": 37.00011444091797,
+        "coreC": 36.899887,
+        "torsoC": 36.999844
+      },
+      {
+        "device": "warm_stone",
+        "air": 0.0,
+        "clothed": false,
+        "seconds": 1200.0,
+        "maxPartC": 37.0,
+        "coreC": 37.0,
+        "torsoC": 37.0
+      },
+      {
+        "device": "hot_water_bag",
+        "air": 0.0,
+        "clothed": false,
+        "seconds": 1200.0,
+        "maxPartC": 37.0,
+        "coreC": 37.0,
+        "torsoC": 37.0
+      },
+      {
+        "device": "stacked_reservoir",
+        "air": 0.0,
+        "clothed": false,
+        "seconds": 1200.0,
+        "maxPartC": 37.0,
+        "coreC": 37.0,
+        "torsoC": 37.0
+      },
+      {
+        "device": "none",
+        "air": 20.0,
+        "clothed": false,
+        "seconds": 1200.0,
+        "maxPartC": 37.10036849975586,
+        "coreC": 37.10008,
+        "torsoC": 37.10008
+      },
+      {
+        "device": "main_stove",
+        "air": 20.0,
+        "clothed": false,
+        "seconds": 1200.0,
+        "maxPartC": 37.10036849975586,
+        "coreC": 37.10008,
+        "torsoC": 37.10008
+      },
+      {
+        "device": "off_stove",
+        "air": 20.0,
+        "clothed": false,
+        "seconds": 1200.0,
+        "maxPartC": 37.10036849975586,
+        "coreC": 37.10008,
+        "torsoC": 37.10008
+      },
+      {
+        "device": "pad",
+        "air": 20.0,
+        "clothed": false,
+        "seconds": 1200.0,
+        "maxPartC": 37.10036849975586,
+        "coreC": 37.10008,
+        "torsoC": 37.10008
+      },
+      {
+        "device": "steam",
+        "air": 20.0,
+        "clothed": false,
+        "seconds": 1200.0,
+        "maxPartC": 37.10036849975586,
+        "coreC": 37.10008,
+        "torsoC": 37.10008
+      },
+      {
+        "device": "candle",
+        "air": 20.0,
+        "clothed": false,
+        "seconds": 1200.0,
+        "maxPartC": 37.10036849975586,
+        "coreC": 37.10008,
+        "torsoC": 37.10008
+      },
+      {
+        "device": "mushroom",
+        "air": 20.0,
+        "clothed": false,
+        "seconds": 1200.0,
+        "maxPartC": 37.10036849975586,
+        "coreC": 37.10008,
+        "torsoC": 37.10008
+      },
+      {
+        "device": "vest",
+        "air": 20.0,
+        "clothed": false,
+        "seconds": 1200.0,
+        "maxPartC": 37.10036849975586,
+        "coreC": 37.10008,
+        "torsoC": 37.10008
+      },
+      {
+        "device": "stacked",
+        "air": 20.0,
+        "clothed": false,
+        "seconds": 1200.0,
+        "maxPartC": 37.10036849975586,
+        "coreC": 37.10008,
+        "torsoC": 37.10008
+      },
+      {
+        "device": "warm_stone",
+        "air": 20.0,
+        "clothed": false,
+        "seconds": 1200.0,
+        "maxPartC": 37.10036849975586,
+        "coreC": 37.10008,
+        "torsoC": 37.10008
+      },
+      {
+        "device": "hot_water_bag",
+        "air": 20.0,
+        "clothed": false,
+        "seconds": 1200.0,
+        "maxPartC": 37.10036849975586,
+        "coreC": 37.10008,
+        "torsoC": 37.10008
+      },
+      {
+        "device": "stacked_reservoir",
+        "air": 20.0,
+        "clothed": false,
+        "seconds": 1200.0,
+        "maxPartC": 37.10036849975586,
+        "coreC": 37.10008,
+        "torsoC": 37.10008
+      },
+      {
+        "device": "none",
+        "air": -50.0,
+        "clothed": true,
+        "seconds": 1200.0,
+        "maxPartC": 37.17931365966797,
+        "coreC": 37.10001,
+        "torsoC": 37.101997
+      },
+      {
+        "device": "main_stove",
+        "air": -50.0,
+        "clothed": true,
+        "seconds": 1200.0,
+        "maxPartC": 37.17931365966797,
+        "coreC": 37.10001,
+        "torsoC": 37.101997
+      },
+      {
+        "device": "off_stove",
+        "air": -50.0,
+        "clothed": true,
+        "seconds": 1200.0,
+        "maxPartC": 37.17931365966797,
+        "coreC": 37.10001,
+        "torsoC": 37.101997
+      },
+      {
+        "device": "pad",
+        "air": -50.0,
+        "clothed": true,
+        "seconds": 1200.0,
+        "maxPartC": 37.17931365966797,
+        "coreC": 37.10001,
+        "torsoC": 37.101997
+      },
+      {
+        "device": "steam",
+        "air": -50.0,
+        "clothed": true,
+        "seconds": 1200.0,
+        "maxPartC": 37.17931365966797,
+        "coreC": 37.10001,
+        "torsoC": 37.101997
+      },
+      {
+        "device": "candle",
+        "air": -50.0,
+        "clothed": true,
+        "seconds": 1200.0,
+        "maxPartC": 37.17931365966797,
+        "coreC": 37.10001,
+        "torsoC": 37.101997
+      },
+      {
+        "device": "mushroom",
+        "air": -50.0,
+        "clothed": true,
+        "seconds": 1200.0,
+        "maxPartC": 37.17931365966797,
+        "coreC": 37.10001,
+        "torsoC": 37.101997
+      },
+      {
+        "device": "vest",
+        "air": -50.0,
+        "clothed": true,
+        "seconds": 1200.0,
+        "maxPartC": 37.17931365966797,
+        "coreC": 37.10001,
+        "torsoC": 37.101997
+      },
+      {
+        "device": "stacked",
+        "air": -50.0,
+        "clothed": true,
+        "seconds": 1200.0,
+        "maxPartC": 37.17931365966797,
+        "coreC": 37.10001,
+        "torsoC": 37.101997
+      },
+      {
+        "device": "warm_stone",
+        "air": -50.0,
+        "clothed": true,
+        "seconds": 1200.0,
+        "maxPartC": 37.17931365966797,
+        "coreC": 37.10001,
+        "torsoC": 37.101997
+      },
+      {
+        "device": "hot_water_bag",
+        "air": -50.0,
+        "clothed": true,
+        "seconds": 1200.0,
+        "maxPartC": 37.17931365966797,
+        "coreC": 37.10001,
+        "torsoC": 37.101997
+      },
+      {
+        "device": "stacked_reservoir",
+        "air": -50.0,
+        "clothed": true,
+        "seconds": 1200.0,
+        "maxPartC": 37.17931365966797,
+        "coreC": 37.10001,
+        "torsoC": 37.101997
+      },
+      {
+        "device": "none",
+        "air": 0.0,
+        "clothed": true,
+        "seconds": 1200.0,
+        "maxPartC": 37.131500244140625,
+        "coreC": 37.099834,
+        "torsoC": 37.10061
+      },
+      {
+        "device": "main_stove",
+        "air": 0.0,
+        "clothed": true,
+        "seconds": 1200.0,
+        "maxPartC": 37.131500244140625,
+        "coreC": 37.099834,
+        "torsoC": 37.10061
+      },
+      {
+        "device": "off_stove",
+        "air": 0.0,
+        "clothed": true,
+        "seconds": 1200.0,
+        "maxPartC": 37.131500244140625,
+        "coreC": 37.099834,
+        "torsoC": 37.10061
+      },
+      {
+        "device": "pad",
+        "air": 0.0,
+        "clothed": true,
+        "seconds": 1200.0,
+        "maxPartC": 37.131500244140625,
+        "coreC": 37.099834,
+        "torsoC": 37.10061
+      },
+      {
+        "device": "steam",
+        "air": 0.0,
+        "clothed": true,
+        "seconds": 1200.0,
+        "maxPartC": 37.131500244140625,
+        "coreC": 37.099834,
+        "torsoC": 37.10061
+      },
+      {
+        "device": "candle",
+        "air": 0.0,
+        "clothed": true,
+        "seconds": 1200.0,
+        "maxPartC": 37.131500244140625,
+        "coreC": 37.099834,
+        "torsoC": 37.10061
+      },
+      {
+        "device": "mushroom",
+        "air": 0.0,
+        "clothed": true,
+        "seconds": 1200.0,
+        "maxPartC": 37.131500244140625,
+        "coreC": 37.099834,
+        "torsoC": 37.10061
+      },
+      {
+        "device": "vest",
+        "air": 0.0,
+        "clothed": true,
+        "seconds": 1200.0,
+        "maxPartC": 37.131500244140625,
+        "coreC": 37.099834,
+        "torsoC": 37.10061
+      },
+      {
+        "device": "stacked",
+        "air": 0.0,
+        "clothed": true,
+        "seconds": 1200.0,
+        "maxPartC": 37.131500244140625,
+        "coreC": 37.099834,
+        "torsoC": 37.10061
+      },
+      {
+        "device": "warm_stone",
+        "air": 0.0,
+        "clothed": true,
+        "seconds": 1200.0,
+        "maxPartC": 37.131500244140625,
+        "coreC": 37.099834,
+        "torsoC": 37.10061
+      },
+      {
+        "device": "hot_water_bag",
+        "air": 0.0,
+        "clothed": true,
+        "seconds": 1200.0,
+        "maxPartC": 37.131500244140625,
+        "coreC": 37.099834,
+        "torsoC": 37.10061
+      },
+      {
+        "device": "stacked_reservoir",
+        "air": 0.0,
+        "clothed": true,
+        "seconds": 1200.0,
+        "maxPartC": 37.131500244140625,
+        "coreC": 37.099834,
+        "torsoC": 37.10061
+      },
+      {
+        "device": "none",
+        "air": 20.0,
+        "clothed": true,
+        "seconds": 1200.0,
+        "maxPartC": 37.1138916015625,
+        "coreC": 37.10012,
+        "torsoC": 37.10045
+      },
+      {
+        "device": "main_stove",
+        "air": 20.0,
+        "clothed": true,
+        "seconds": 1200.0,
+        "maxPartC": 37.1138916015625,
+        "coreC": 37.10012,
+        "torsoC": 37.10045
+      },
+      {
+        "device": "off_stove",
+        "air": 20.0,
+        "clothed": true,
+        "seconds": 1200.0,
+        "maxPartC": 37.1138916015625,
+        "coreC": 37.10012,
+        "torsoC": 37.10045
+      },
+      {
+        "device": "pad",
+        "air": 20.0,
+        "clothed": true,
+        "seconds": 1200.0,
+        "maxPartC": 37.1138916015625,
+        "coreC": 37.10012,
+        "torsoC": 37.10045
+      },
+      {
+        "device": "steam",
+        "air": 20.0,
+        "clothed": true,
+        "seconds": 1200.0,
+        "maxPartC": 37.1138916015625,
+        "coreC": 37.10012,
+        "torsoC": 37.10045
+      },
+      {
+        "device": "candle",
+        "air": 20.0,
+        "clothed": true,
+        "seconds": 1200.0,
+        "maxPartC": 37.1138916015625,
+        "coreC": 37.10012,
+        "torsoC": 37.10045
+      },
+      {
+        "device": "mushroom",
+        "air": 20.0,
+        "clothed": true,
+        "seconds": 1200.0,
+        "maxPartC": 37.1138916015625,
+        "coreC": 37.10012,
+        "torsoC": 37.10045
+      },
+      {
+        "device": "vest",
+        "air": 20.0,
+        "clothed": true,
+        "seconds": 1200.0,
+        "maxPartC": 37.1138916015625,
+        "coreC": 37.10012,
+        "torsoC": 37.10045
+      },
+      {
+        "device": "stacked",
+        "air": 20.0,
+        "clothed": true,
+        "seconds": 1200.0,
+        "maxPartC": 37.1138916015625,
+        "coreC": 37.10012,
+        "torsoC": 37.10045
+      },
+      {
+        "device": "warm_stone",
+        "air": 20.0,
+        "clothed": true,
+        "seconds": 1200.0,
+        "maxPartC": 37.1138916015625,
+        "coreC": 37.10012,
+        "torsoC": 37.10045
+      },
+      {
+        "device": "hot_water_bag",
+        "air": 20.0,
+        "clothed": true,
+        "seconds": 1200.0,
+        "maxPartC": 37.1138916015625,
+        "coreC": 37.10012,
+        "torsoC": 37.10045
+      },
+      {
+        "device": "stacked_reservoir",
+        "air": 20.0,
+        "clothed": true,
+        "seconds": 1200.0,
+        "maxPartC": 37.1138916015625,
+        "coreC": 37.10012,
+        "torsoC": 37.10045
+      }
+    ]
+  },
+  "additionalEquipmentChecks": [
+    "cold benefit for every active implementation and both reservoirs",
+    "main/offhand target selection",
+    "0.25/1/5/60-second intervals",
+    "fixed-device expiry, partial-second persistence and elapsed-time independence",
+    "vest subtracts active devices, metabolism, wet cooling and fire",
+    "Curios vest preceding vanilla hands does not duplicate purchased heat",
+    "hot environment still overheats; already-hot body cools normally",
+    "cold-part distribution and double-kernel conservation; per-write float-ULP storage bounds",
+    "old float recipe format, item save/load and retained float tags",
+    "real player update, hidden reservoir render toggle, creative and spectator resource pause"
+  ],
+  "coldRegression": {
+    "bodyCases": 29,
+    "finiteFoodCases": 8,
+    "baseline": "build/thermal-calibration-run-20261106-r2/thermal-balance/body-results.json",
+    "maxFinalCoreOrTorsoDifferenceC": 0.0,
+    "maxShiveringExhaustionDifference": 0.0,
+    "finiteFoodResults": [
+      {
+        "case": "legacy_air-50.0_clothing0",
+        "airC": -50.0,
+        "clothing": 0,
+        "legacyReference": true,
+        "foodZeroSeconds": 760,
+        "torso34Seconds": 1320,
+        "firstHurtSeconds": 763,
+        "firstDamage": "starve",
+        "deathSeconds": 1335,
+        "deathDamage": "hypothermia",
+        "coreC": 33.947132,
+        "health": 0.0,
+        "food": 0,
+        "saturation": 0.0
+      },
+      {
+        "case": "current_air-50.0_clothing0",
+        "airC": -50.0,
+        "clothing": 0,
+        "legacyReference": false,
+        "foodZeroSeconds": 793,
+        "torso34Seconds": 1377,
+        "firstHurtSeconds": 797,
+        "firstDamage": "starve",
+        "deathSeconds": 1392,
+        "deathDamage": "hypothermia",
+        "coreC": 33.95454,
+        "health": 0.0,
+        "food": 0,
+        "saturation": 0.0
+      },
+      {
+        "case": "legacy_air-50.0_clothing1",
+        "airC": -50.0,
+        "clothing": 1,
+        "legacyReference": true,
+        "foodZeroSeconds": -1,
+        "torso34Seconds": -1,
+        "firstHurtSeconds": -1,
+        "firstDamage": "",
+        "deathSeconds": -1,
+        "deathDamage": "",
+        "coreC": 36.901684,
+        "health": 20.0,
+        "food": 10,
+        "saturation": 0.0
+      },
+      {
+        "case": "current_air-50.0_clothing1",
+        "airC": -50.0,
+        "clothing": 1,
+        "legacyReference": false,
+        "foodZeroSeconds": -1,
+        "torso34Seconds": -1,
+        "firstHurtSeconds": -1,
+        "firstDamage": "",
+        "deathSeconds": -1,
+        "deathDamage": "",
+        "coreC": 36.89998,
+        "health": 20.0,
+        "food": 7,
+        "saturation": 0.0
+      },
+      {
+        "case": "legacy_air-80.0_clothing0",
+        "airC": -80.0,
+        "clothing": 0,
+        "legacyReference": true,
+        "foodZeroSeconds": 665,
+        "torso34Seconds": 836,
+        "firstHurtSeconds": 668,
+        "firstDamage": "starve",
+        "deathSeconds": 852,
+        "deathDamage": "hypothermia",
+        "coreC": 33.913685,
+        "health": 0.0,
+        "food": 0,
+        "saturation": 0.0
+      },
+      {
+        "case": "current_air-80.0_clothing0",
+        "airC": -80.0,
+        "clothing": 0,
+        "legacyReference": false,
+        "foodZeroSeconds": 699,
+        "torso34Seconds": 901,
+        "firstHurtSeconds": 703,
+        "firstDamage": "starve",
+        "deathSeconds": 918,
+        "deathDamage": "hypothermia",
+        "coreC": 33.919136,
+        "health": 0.0,
+        "food": 0,
+        "saturation": 0.0
+      },
+      {
+        "case": "legacy_air-80.0_clothing1",
+        "airC": -80.0,
+        "clothing": 1,
+        "legacyReference": true,
+        "foodZeroSeconds": 1694,
+        "torso34Seconds": -1,
+        "firstHurtSeconds": 1697,
+        "firstDamage": "starve",
+        "deathSeconds": -1,
+        "deathDamage": "",
+        "coreC": 35.361282,
+        "health": 1.0,
+        "food": 0,
+        "saturation": 0.0
+      },
+      {
+        "case": "current_air-80.0_clothing1",
+        "airC": -80.0,
+        "clothing": 1,
+        "legacyReference": false,
+        "foodZeroSeconds": 1609,
+        "torso34Seconds": -1,
+        "firstHurtSeconds": 1613,
+        "firstDamage": "starve",
+        "deathSeconds": -1,
+        "deathDamage": "",
+        "coreC": 35.40111,
+        "health": 1.0,
+        "food": 0,
+        "saturation": 0.0
+      }
+    ]
+  },
+  "realRooms": {
+    "rows": 1744,
+    "healthColumns": [
+      "health"
+    ],
+    "minimumHealth": 20.0
+  },
+  "earlierAttempts": [
+    {
+      "name": "compile-r1",
+      "outcome": "Production assemble passed; four unrelated deposit GameTest compiler errors prevented full test compilation."
+    },
+    {
+      "name": "run-r1",
+      "outcome": "21/22 passed; all 72 equipment curves passed; the reservoir accumulated-error assertion incorrectly ignored pre-existing float-NBT quantization (about 3.18 J measured versus a fixed 0.05 J tolerance)."
+    },
+    {
+      "name": "run-r2",
+      "outcome": "Stopped after the user rejected the temporary storage-precision change; not final qualification."
+    }
+  ],
+  "companionRepository": {
+    "path": "D:/TheWinterRescue",
+    "changes": [],
+    "inspection": "No AGENTS.md found by root and recursive search. Checked stove/vest identifiers, warm-stone slot, 60 C hot-water-bag recipe and associated tooltips; existing float data is supported."
+  }
+}

@@ -23,6 +23,7 @@ package com.teammoeg.frostedresearch.knowledge.state;
 import com.mojang.serialization.Codec;
 import com.teammoeg.chorda.dataholders.SpecialData;
 import com.teammoeg.frostedresearch.FRMain;
+import com.teammoeg.frostedresearch.knowledge.labor.LaborReport;
 import com.teammoeg.frostedresearch.knowledge.model.KnowledgeKey;
 import net.minecraft.nbt.*;
 import net.minecraft.resources.ResourceLocation;
@@ -40,6 +41,7 @@ public class KnowledgeState implements SpecialData {
      */
     public static final int SCHEMA_VERSION = 2;
     public static final Codec<KnowledgeState> CODEC = CompoundTag.CODEC.xmap(KnowledgeState::read, KnowledgeState::write);
+    private static final String LABOR_REPORT = "labor_report";
     private final KnowledgeArchive archive = new KnowledgeArchive();
     private final KnowledgeInbox inbox = new KnowledgeInbox();
     private final Map<ResourceLocation, LinkDiscovery> links = new LinkedHashMap<>();
@@ -53,6 +55,8 @@ public class KnowledgeState implements SpecialData {
      * unchanged, so a later version that can read them again finds them in place.
      */
     private CompoundTag unreadable = new CompoundTag();
+    /** Latest day of town research labor, or null before any. */
+    private LaborReport laborReport;
     private boolean initialized;
     private long revision;
 
@@ -86,6 +90,19 @@ public class KnowledgeState implements SpecialData {
 
     public boolean initialized() {
         return initialized;
+    }
+
+    public Optional<LaborReport> laborReport() {
+        return Optional.ofNullable(laborReport);
+    }
+
+    /**
+     * Replaces the research institutes' daily report; a report that could not be read before is superseded.
+     */
+    public void laborReport(LaborReport report) {
+        laborReport = report;
+        unreadable.remove(LABOR_REPORT);
+        revision++;
     }
 
     public void initialize() {
@@ -204,6 +221,7 @@ public class KnowledgeState implements SpecialData {
         acquisitions.clear();
         acquisitions.addAll(replacement.acquisitions);
         unreadable = replacement.unreadable.copy();
+        laborReport = replacement.laborReport;
         initialized = replacement.initialized;
         revision++;
     }
@@ -229,6 +247,8 @@ public class KnowledgeState implements SpecialData {
         for (KnowledgeEntry entry : source.acquisitions) if (!acquisitions.contains(entry)) acquisitions.add(entry);
         // Unreadable entries move with the team as well; identical ones are kept once.
         for (String section : source.unreadable.getAllKeys()) {
+            // A report is one value, not a collection of entries; the team keeps its own.
+            if (section.equals(LABOR_REPORT)) continue;
             Tag own = unreadable.get(section);
             if (source.unreadable.get(section) instanceof ListTag raw) {
                 ListTag list = own instanceof ListTag existing ? existing : new ListTag();
@@ -241,6 +261,8 @@ public class KnowledgeState implements SpecialData {
                 unreadable.put(section, map);
             }
         }
+        if (source.laborReport != null && (laborReport == null || source.laborReport.day() > laborReport.day()))
+            laborReport = source.laborReport;
         initialized |= source.initialized;
         revision++;
     }
@@ -264,8 +286,11 @@ public class KnowledgeState implements SpecialData {
         CompoundTag t = new CompoundTag();
         dreamTopics.forEach((k, v) -> t.put(k.toString(), encode(KnowledgeKey.CODEC, v)));
         tag.put("dream_topics", t);
+        if (laborReport != null) tag.put(LABOR_REPORT, encode(LaborReport.CODEC, laborReport));
+        else if (unreadable.get(LABOR_REPORT) instanceof CompoundTag raw) tag.put(LABOR_REPORT, raw.copy());
         // Unreadable entries go back into their own sections unchanged; a live entry keeps its key.
         for (String section : unreadable.getAllKeys()) {
+            if (section.equals(LABOR_REPORT)) continue;
             if (unreadable.get(section) instanceof ListTag raw && tag.get(section) instanceof ListTag list) {
                 // An NBT list holds one tag type; only hand-edited entries that are not compounds can be refused.
                 for (Tag entry : raw) list.addTag(list.size(), entry.copy());
@@ -293,6 +318,7 @@ public class KnowledgeState implements SpecialData {
         reader.keyed("dream_topics", (k, v) -> state.dreamTopics.put(UUID.fromString(k), decode(KnowledgeKey.CODEC, v)));
         CompoundTag daily = data.getCompound("daily");
         daily.getAllKeys().forEach(k -> state.daily.put(k, daily.getLong(k)));
+        reader.single(LABOR_REPORT, LaborReport.CODEC, report -> state.laborReport = report);
         state.initialized = data.getBoolean("initialized");
         state.revision = data.getLong("revision");
         reader.log();
@@ -347,6 +373,17 @@ public class KnowledgeState implements SpecialData {
                 }
             }
             if (!kept.isEmpty()) unreadable.put(section, kept);
+        }
+
+        /** One compound value; when it cannot be read the raw tag is kept until a new value replaces it. */
+        <T> void single(String section, Codec<T> codec, Consumer<T> sink) {
+            if (!(data.get(section) instanceof CompoundTag stored)) return;
+            try {
+                sink.accept(decode(codec, stored));
+            } catch (RuntimeException e) {
+                keep(section, e);
+                unreadable.put(section, stored.copy());
+            }
         }
 
         void keyed(String section, BiConsumer<String, Tag> sink) {

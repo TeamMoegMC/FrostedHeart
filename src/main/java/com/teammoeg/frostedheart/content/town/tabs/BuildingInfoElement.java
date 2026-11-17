@@ -55,19 +55,31 @@ public class BuildingInfoElement extends UIElement {
         this.setSize(width, height);
     }
 
+    private boolean paper;
+
+    /**
+     * 画在方格纸上，墨色文字、不带阴影；布告板的调试页用它。
+     * Drawn on graph paper with ink text and no shadows; the notice board's debug pages use it.
+     */
+    public BuildingInfoElement paper() {
+        paper = true;
+        return this;
+    }
+
     @Override
     public void render(GuiGraphics guiGraphics, int x, int y, int w, int h, RenderingHint hint) {
         Minecraft mc = Minecraft.getInstance();
         List<FormattedCharSequence> lines = wrappedLines(mc.font, w);
         if (lines == null || lines.isEmpty()) return;
 
-        guiGraphics.fill(x, y, x + w, y + h, 0xC0101010);
-
-
-        guiGraphics.fill(x, y, x + w, y + 1, 0xFF373737);
-        guiGraphics.fill(x, y, x + 1, y + h, 0xFF373737);
-        guiGraphics.fill(x, y + h - 1, x + w, y + h, 0xFF8B8B8B);
-        guiGraphics.fill(x + w - 1, y, x + w, y + h, 0xFF8B8B8B);
+        if (paper) com.teammoeg.frostedheart.content.town.client.board.NoticeBoardIcons.GRID.draw(guiGraphics, x, y, w, h);
+        else {
+            guiGraphics.fill(x, y, x + w, y + h, 0xC0101010);
+            guiGraphics.fill(x, y, x + w, y + 1, 0xFF373737);
+            guiGraphics.fill(x, y, x + 1, y + h, 0xFF373737);
+            guiGraphics.fill(x, y + h - 1, x + w, y + h, 0xFF8B8B8B);
+            guiGraphics.fill(x + w - 1, y, x + w, y + h, 0xFF8B8B8B);
+        }
 
 
         int visibleLines = getVisibleLineCount();
@@ -79,7 +91,10 @@ public class BuildingInfoElement extends UIElement {
             int lineIndex = startLine + row;
             if (lineIndex >= lines.size()) break;
             int textY = y + PADDING_Y + row * LINE_HEIGHT;
-            guiGraphics.drawString(mc.font, lines.get(lineIndex),
+            if (paper) {
+                int ink = TownInfoPanel.paperInk(0xFFFFFFFF);
+                guiGraphics.drawString(mc.font, TownInfoPanel.inked(lines.get(lineIndex), ink), x + PADDING_X, textY, ink, false);
+            } else guiGraphics.drawString(mc.font, lines.get(lineIndex),
                     x + PADDING_X, textY, 0xFFFFFFFF, true);
         }
         guiGraphics.disableScissor();
@@ -150,13 +165,13 @@ public class BuildingInfoElement extends UIElement {
         int trackHeight = height - 4;
         int thumbHeight = getThumbHeight(totalLines, visibleLines, trackHeight);
         int thumbY = trackY + (int) (scrollOffset * (trackHeight - thumbHeight));
-        graphics.fill(trackX, trackY, trackX + SCROLLBAR_WIDTH, trackY + trackHeight, 0xFF202020);
+        graphics.fill(trackX, trackY, trackX + SCROLLBAR_WIDTH, trackY + trackHeight, paper ? 0xFFD9D5C8 : 0xFF202020);
         graphics.fill(
                 trackX + 1,
                 thumbY,
                 trackX + SCROLLBAR_WIDTH - 1,
                 thumbY + thumbHeight,
-                isScrolling ? 0xFFD0D0D0 : 0xFF909090);
+                paper ? (isScrolling ? 0xFF6B5A40 : 0xFF8A7A60) : isScrolling ? 0xFFD0D0D0 : 0xFF909090);
     }
 
     private void updateScrollFromMouse() {

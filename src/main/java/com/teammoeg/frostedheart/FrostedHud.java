@@ -617,7 +617,7 @@ public class FrostedHud {
 	        }
 	        boolean f = FHConfig.CLIENT.useFahrenheit.get();
 	        
-	        float tlvl = PlayerTemperatureData.getCapability(player).map(PlayerTemperatureData::getEnvTemp).orElse(0F);
+	        float tlvl = ClientClimateData.climateTemperatureC;
 	        tlvl = Math.max(-273, tlvl);
 	        TexturedUV unit;
 	        if (f) {
@@ -935,7 +935,8 @@ public class FrostedHud {
                                    boolean celsius) {
     	TexturedUV unitUV = celsius ? HUDElements.hud_celsius : HUDElements.hud_farenhit;
     	TexturedUV signUV = temp >= 0 ? HUDElements.hud_positive : HUDElements.hud_negative;
-        double abs = Math.abs(temp);
+        // The orb has three integer digits. Round once before splitting integer/decimal digits.
+        double abs = Math.min(999.0D, Math.round(Math.abs(temp) * 10.0D) / 10.0D);
         ResourceLocation orb;
         // draw orb
         if (orbLevel > 80) {
@@ -968,7 +969,7 @@ public class FrostedHud {
 	        //unitUV.blit(stack, offsetX, offsetY, BasePos.unit);
 	
 	        // digits
-	        ArrayList<TexturedUV> uv4is = getIntegerDigitUVs((int) Math.round(abs));
+	        ArrayList<TexturedUV> uv4is = getIntegerDigitUVs((int) abs);
 	        int size=uv4is.size();
 	        if(size < 3)
 	        	uv4is.add(HUDElements.hud_decimal_digits[(int) (Math.round(abs*10)%10)]);
@@ -987,13 +988,13 @@ public class FrostedHud {
         boolean f = FHConfig.CLIENT.useFahrenheit.get();
         PlayerTemperatureData temperatureData = PlayerTemperatureData
                 .getCapability(player).orElse(null);
-        float airC = temperatureData == null
-                ? -20.0F : temperatureData.getEnvTemp();
-        airC = Math.max(-273.0F, airC);
+        float displayC = temperatureData == null
+                ? -20.0F : temperatureData.getDisplayTemperatureC();
+        displayC = Math.max(-273.0F, displayC);
         float temperature = f
-                ? airC * 9.0F / 5.0F + 32.0F
-                : airC;
-        renderTemp(stack, mc, temperature, (int) airC,
+                ? displayC * 9.0F / 5.0F + 32.0F
+                : displayC;
+        renderTemp(stack, mc, temperature, (int) displayC,
                 x + BarPos.temp_orb.getX(), y + BarPos.temp_orb.getY() + 3,
                 !f);
 

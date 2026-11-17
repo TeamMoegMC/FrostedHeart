@@ -1,0 +1,886 @@
+{
+  "date": "2026-11-09",
+  "status": "confirmed_retention_fixed_memory_save_handoff_verified_extreme_load_realtime_lag_remains",
+  "baseline_commit": "fdacc2bc7",
+  "retained_changes": [
+    "Minimum numerical scratch is owned and released by each job instead of keeping an idle regional allowance.",
+    "Preflight fine graph preparation and recovery with the existing shared budget.",
+    "Limit new structural completion overlap to one task per dimension while over target.",
+    "Permit the existing quality owner to coarsen small fine jobs when measured work exceeds allowance and advancement lags.",
+    "Execute checkpoint-only commands on main under exclusive mailbox ownership while the coordinator is queued; never run numerical work on main.",
+    "Prioritize checkpoint controls ahead of boundary refresh; SAVE copies Accepted and pending input, with existing material mutation projection.",
+    "Create long-lived pending-retention listeners on the outer runtime so live regions cannot retain completed RebuildPreparation instances.",
+    "Refresh incoming geometry holds before numerical work serviced by an unload-checkpoint cleanup round."
+  ],
+  "removed_intermediate_attempts": [
+    "Maintenance-save timeout/defer state and additional capture/release queue.",
+    "Timed mailbox wait overload and repeated slow-handoff logging.",
+    "Global IOWorker interception, pending-write gate and associated fixture.",
+    "Source checkpoint destination fallback introduced after misreading the post-encode cache.",
+    "Cache preflight that mainly suppressed admission-refusal accounting.",
+    "Unused detached packaging worktree."
+  ],
+  "current_source_tests": {
+    "stalled_pool_disk_save": {
+      "heap": "4GiB",
+      "paused_workers": 4,
+      "stalled_ticks": 60,
+      "actual_vanilla_save_and_flush": true,
+      "disk_nbt_pending_heat_J": 20160.0,
+      "block_mutation_persisted": true,
+      "stale_material_identity_rejected": true,
+      "save_and_flush_ns": 21002500,
+      "result": "passed 1/1",
+      "log": "build/thermal-persistence-disk-verified-20261109.log"
+    },
+    "chunk_churn": {
+      "heap": "4GiB",
+      "observation_ticks": 12000,
+      "ticket_paths": 3,
+      "fixed_sites": 6,
+      "actual_reload_count": 54,
+      "checked_unload_count": 57,
+      "weak_chunk_references": 60,
+      "retained_chunk_references_after_close_and_gc": 0,
+      "thermal_root_bytes_after_close": 0,
+      "collected_heap_samples_bytes": [
+        783740192,
+        789361936,
+        807059152,
+        807805216
+      ],
+      "native_checkpoint_requests": 0,
+      "result": "passed 1/1",
+      "log": "build/thermal-churn-final-20261109.log",
+      "limits": [
+        "Uses forced chunk tickets, not three connected network clients.",
+        "Reuses six sites, not sustained new terrain generation.",
+        "No reproduction with the original server world and full modpack.",
+        "Does not exercise native checkpoint queue pressure; observed requests remained zero."
+      ]
+    },
+    "preparation_lifetime": {
+      "log": "build/thermal-preparation-retention-live-20261109.log",
+      "namespace": "frostedheart_preparation_retention",
+      "passed": true,
+      "finishedPreparations": 20,
+      "retainedPreparationsAfterGc": 0,
+      "runtimeStillLive": true,
+      "controlRoomStillHeated": true
+    }
+  },
+  "earlier_version_tests": {
+    "thermal_geometry_capacity": "1024 real campfires, 1600 ticks, three vanilla saves and close-to-zero accounting; passed before the final persistence changes and cache-preflight removal. Its refusal counts are not a final-source throughput benchmark.",
+    "regional_recovery_and_replay": "Two tests passed before final persistence changes; not claimed as a complete final-source regression matrix."
+  },
+  "incident_evidence": {
+    "original_oom_time": "2026-11-08T22:24:52+08:00",
+    "exception": "java.lang.OutOfMemoryError: Java heap space",
+    "failed_allocation": "FastBufferedInputStream on IO-Worker-785",
+    "thermal_accounting_peak_bytes": 506738254,
+    "root_heap_dominators": "not available",
+    "later_4GiB_gc_log": "Observed segment approximately 23:41–23:50; after-collection occupancy approximately 1.2–1.3GiB, no Full GC or OOM in that segment. This is a separate observation period.",
+    "java_thread_sampling": {
+      "log": "Original log says spark background profiler started, async-profiler unsupported on windowsserver2022/amd64 and Java engine selected.",
+      "relationship": "Consistent with frequent ThreadDump safepoints in the later GC log; no retained-owner evidence attributing OOM to spark.",
+      "local_repro_difference": "Exported development server classpath does not include spark."
+    }
+  },
+  "known_limits": [
+    "128MiB remains a soft admission target, not an absolute heap ceiling.",
+    "No original-incident heap dump or retained-object attribution is available.",
+    "No claim of complete original-OOM resolution or zero regressions.",
+    "Necessary incremental compilation and regression tests are explicitly authorized; no release JAR is packaged.",
+    "At offered tick24060,428 installed source-fed regions were at13740..13780. The memory/ownership regression passes; this is not a realtime throughput pass.",
+    "No original remote incident heap exists; the confirmed callback retention defect is not proven to be its only cause."
+  ],
+  "production_source_sha256": {
+    "src/main/java/com/teammoeg/frostedheart/content/climate/thermal/runtime/ThermalMemoryBudget.java": "6c9ad3be5a267e63b4879cd762ec3edda888d1fe08e9ec4b6268f15e8a4ccb76",
+    "src/main/java/com/teammoeg/frostedheart/content/climate/thermal/runtime/async/ThermalDimensionMailbox.java": "2b41bfee8bf2eb7dd0d6f6163321e02527cee19085a067a146c584284cf94aa7",
+    "src/main/java/com/teammoeg/frostedheart/content/climate/thermal/runtime/minecraft/MinecraftThermalInput.java": "f3f6753b27917a7c08aa4bae6de765747a8aed08b4f4673652966270bbaf5a49",
+    "src/main/java/com/teammoeg/frostedheart/content/climate/thermal/runtime/minecraft/engine/ThermalDimensionEngine.java": "2bfb1f0f02ab9bb25f00ac07038cd741f96a38570b0d1c7c792f41055d880421",
+    "src/main/java/com/teammoeg/frostedheart/content/climate/thermal/solver/ContinuousAirSolver.java": "c98ec24b0ea05c9b6b1bcb1d49322ccb6c7d540629870c56c8508e24bcb5689a",
+    "src/main/java/com/teammoeg/frostedheart/content/climate/thermal/solver/RegionJob.java": "9ee2c1a1f9ce17af6d2039e7e6c74089502a87568590bd67f69179f80f2ad61e",
+    "src/main/java/com/teammoeg/frostedheart/content/climate/thermal/solver/RegionalAirRuntime.java": "aa11e470d609666c5a625921d772aa3a718cfee8ddebf1fbc9fcd95ebdc086ac",
+    "src/main/java/com/teammoeg/frostedheart/content/climate/thermal/solver/RegionalQualityControl.java": "06fff330f19666534bca3b3fafb1dfecfa85c9d4cc7e8c51e46ba2604aa7aad6",
+    "src/main/java/com/teammoeg/frostedheart/content/climate/thermal/solver/RegionalWorkQueue.java": "5ed472f90e2e7554370617d1d788dbee30eaa9b866744cb677dd9e5c00a5650a",
+    "src/main/java/com/teammoeg/frostedheart/content/climate/thermal/solver/ThermalRegion.java": "fda194ed458f0084af1a44578f5ca5ac43e0e7a28cf16e2aacefde254668bbc5",
+    "src/main/java/com/teammoeg/frostedheart/content/climate/thermal/source/SpatialHeatStore.java": "93c9fb45c852638fd573cb19f7686696ce3037cf0d0c92c588e7d680ef99d3b4",
+    "src/main/java/com/teammoeg/frostedheart/content/climate/thermal/runtime/minecraft/message/TopologyInbox.java": "ee6e5b9d403099a5a6b3c73f14ba181d6331ba38316e4c48c79d9f03bbe6cabd",
+    "src/main/java/com/teammoeg/frostedheart/content/climate/thermal/topology/TopologyUpdatePlanner.java": "1c19eb4a681c6dd0f8581f4a9d2c28e58752dbeb73a1b5dd51e3686c7b951e02"
+  },
+  "completed_open_geometry_control": {
+    "runtime": "build/thermal-native-roaming-20261109/old-cpu250",
+    "scope": "Existing old artifact, normal terrain, three server-side FakePlayer objects, no connected network clients",
+    "heap": "4GiB",
+    "nativeCheckpoint": true,
+    "sourcesPerBase": 256,
+    "targetGameTicks": 24000,
+    "status": "completed_no_oom_no_admission_pressure",
+    "midrunReachableHeapBytes": 1122361168,
+    "midrunReport": "build/thermal-native-roaming-20261109/old-cpu250/midrun-all_thermal_owners.zip",
+    "configurationCorrection": "Original incident log says native_ready. Earlier on_demand runs are not native-unload validation.",
+    "earlierHeatedControl": "Interrupted at 10200 ticks without an exit receipt or heap dump; not a completed 20-minute test.",
+    "routeLimit": "Initial exploration followed by repeated fixed headings. The continuous overload comparison keeps player two always exploring; player one repeats the base route.",
+    "gameTicks": 24000,
+    "vanillaSaves": 4,
+    "nativeRequests": 467,
+    "nativePrepared": 467,
+    "nativePeakPending": 26,
+    "thermalPeakBytes": 129583920,
+    "uniqueTrackedChunkPositions": 33176,
+    "chunksOnDiskBeforeStop": 30752,
+    "liveHeapDump": "build/thermal-native-roaming-20261109/old-cpu250/live.hprof"
+  },
+  "invalid_overload_roaming_attempt": {
+    "runtime": "build/thermal-native-overload-roaming-20261109/old-cpu250",
+    "failedTick": 4801,
+    "error": "Route heading calculation produced NaN coordinates; external scenario failure, not thermal failure.",
+    "observedThermalPeakBytesBeforeFailure": 461992340,
+    "originalOomReproduced": false,
+    "completed": false,
+    "watchdogCause": "The NaN fake-player coordinates caused vanilla wolf line-of-sight ray tracing to wait for a chunk; not a reproduced thermal or checkpoint hang.",
+    "diagnosticsCaptured": [
+      "stall-threads.txt",
+      "stall-all.hprof"
+    ]
+  },
+  "interrupted_continuous_overload_attempt": {
+    "status": "interrupted_without_exit_receipt",
+    "runtime": "build/thermal-native-overload-continuous-20261109/old-cpu250",
+    "geometry": "real stone pockets",
+    "sourcesPerBase": 1024,
+    "residentPlayers": 1,
+    "exploringPlayers": 2,
+    "continuousExplorers": 1,
+    "returningExplorers": 1,
+    "targetGameTicks": 24000,
+    "buildRequired": false,
+    "scenarioSha256": "75bfd4370239b5771a00c810ef7c1b248ceb874aa1a6c5101883443ccf0dd7c5",
+    "effectiveActiveProcessorCount": 4,
+    "lastScenarioTelemetryTick": 23200,
+    "lastRunnerSampleTick": 23000,
+    "interruptionCause": "User confirmed the computer was shut down; this is not a reproduced server OOM or native-checkpoint crash.",
+    "thermalPeakBytes": 703109876,
+    "admissionRefusals": 32874,
+    "nativeRequestsAt23200": 331,
+    "nativePreparedAt23200": 320,
+    "pendingNativeAt23200": 0,
+    "vanillaSaves": 3,
+    "continuousChunkPositionsAt23200": 44700,
+    "originalOomReproduced": false,
+    "completed": false
+  },
+  "paired_overload_comparison": {
+    "old": {
+      "status": "completed_no_oom",
+      "runtime": "build/thermal-native-paired-20261109/old-cpu250",
+      "targetGameTicks": 24000,
+      "midpointSnapshotGameTick": 6000,
+      "midpointForcesGC": false,
+      "refuelLoadedCampfiresAtTick": 12000,
+      "controllerDetachedFromToolJob": true,
+      "activeProcessorCount": 4,
+      "cpuBudgetMsPerSecond": 250,
+      "userAuthorizedRerun": true,
+      "result": {
+        "outcome": {
+          "exitCode": 0,
+          "ended": 1794212105.1480575,
+          "outcome": "workload_completed",
+          "lastObservedTick": 24000.0,
+          "heapCaptureAttempted": true
+        },
+        "lastSample": {
+          "ticks": 24000.0,
+          "phase": "exploring-new-terrain",
+          "players": 3.0,
+          "levelPlayers": 3.0,
+          "loadedChunks": 10799.0,
+          "uniqueTrackedChunks": 45642.0,
+          "updatingChunks": 10269.0,
+          "pendingUnloads": 0.0,
+          "unloadQueue": 0.0,
+          "ioWrites": 0.0,
+          "ioMailbox": 0.0,
+          "sourcesPlanted": 3072.0,
+          "saves": 4.0,
+          "thermal": {
+            "active": true,
+            "usedBytes": 535231550.0,
+            "peakBytes": 634244898.0,
+            "refusals": 9005.0,
+            "nativeCheckpoint": true,
+            "knownSources": 1024.0,
+            "enabledSources": 1024.0,
+            "nativeRequests": 319.0,
+            "nativePrepared": 305.0,
+            "nativePending": 0.0,
+            "nativePeakPending": 14.0,
+            "nativePreparationQueue": 0.0,
+            "sourceChunksWaiting": 104.0,
+            "coldRestores": 16.0,
+            "saveWaitCalls": 4569.0,
+            "saveWaitNs": 125829429821.0,
+            "unloadWaitCalls": 0.0,
+            "unloadWaitNs": 0.0
+          },
+          "positions": [
+            [
+              795.5,
+              87.0,
+              -804.5
+            ],
+            [
+              2395.5,
+              159.0,
+              -2404.5
+            ],
+            [
+              9828.460000000174,
+              81.0,
+              1828.460000001072
+            ]
+          ],
+          "time": 1794212091.7649472,
+          "afterGcBytes": 1643118592,
+          "rssBytes": 4885213184,
+          "privateBytes": 4954316800,
+          "actualThreadCount": 47,
+          "chunksOnDisk": 39952
+        },
+        "heapFiles": {
+          "midrun-all.hprof": 4090852208,
+          "live.hprof": 2309756919
+        },
+        "fullGcSummary": [
+          "[2026-11-09T15:58:43.954+0800][302.389s][info][gc             ] GC(198) Pause Full (G1 Compaction Pause) 4094M->1487M(4096M) 533.736ms",
+          "[2026-11-09T16:00:46.578+0800][425.013s][info][gc             ] GC(385) Pause Full (G1 Compaction Pause) 4090M->1496M(4096M) 479.267ms",
+          "[2026-11-09T16:02:45.714+0800][544.149s][info][gc             ] GC(546) Pause Full (G1 Compaction Pause) 4091M->1528M(4096M) 466.612ms",
+          "[2026-11-09T16:04:48.408+0800][666.843s][info][gc             ] GC(727) Pause Full (G1 Compaction Pause) 4088M->1537M(4096M) 557.633ms",
+          "[2026-11-09T16:06:49.559+0800][787.995s][info][gc             ] GC(886) Pause Full (G1 Compaction Pause) 4091M->1604M(4096M) 475.161ms",
+          "[2026-11-09T16:08:48.262+0800][906.697s][info][gc             ] GC(1036) Pause Full (G1 Compaction Pause) 4090M->1586M(4096M) 481.686ms",
+          "[2026-11-09T16:12:48.548+0800][1146.984s][info][gc             ] GC(1359) Pause Full (G1 Compaction Pause) 4092M->1591M(4096M) 484.570ms",
+          "[2026-11-09T16:14:50.407+0800][1268.842s][info][gc             ] GC(1515) Pause Full (G1 Compaction Pause) 4088M->1556M(4096M) 447.773ms",
+          "[2026-11-09T16:14:53.793+0800][1272.229s][info][gc             ] GC(1518) Pause Full (Heap Dump Initiated GC) 3170M->1587M(4096M) 427.113ms",
+          "[2026-11-09T16:14:58.037+0800][1276.472s][info][gc             ] GC(1532) Pause Full (G1 Compaction Pause) 4086M->1691M(4096M) 577.789ms"
+        ],
+        "originalOomReproduced": false
+      },
+      "metadata": {
+        "variant": "old",
+        "artifact": "D:\\Frosted-Heart\\build\\libs\\frostedheart-1.20.1-0.7.10-deobf.jar",
+        "artifactSha256": "7a70241be31182153520f0f95525cee19a1660491093b857bd49cc52e9075390",
+        "java": "C:\\Program Files\\Java\\jdk-21\\bin\\java.exe",
+        "heap": "4GiB",
+        "cpuBudgetMsPerSecond": 250,
+        "thermalTargetMiB": 128,
+        "seed": "71108222452",
+        "viewDistance": 10,
+        "minutes": 20,
+        "sourcesPerBase": 1024,
+        "gameTestClassesExcluded": true,
+        "nativeCheckpoint": true,
+        "sourceGeometry": "pockets",
+        "residentPlayer": true,
+        "warmupTicks": 2400,
+        "scenarioSha256": "6b8b3a551ab1a56f2692b71330c47a7c4b73a7c02c763b2eaaa133803e81ebda",
+        "configSha256": "7e3dc6e19d4104da711ffc3190721b09b4dcb9af3222771df28bbcdfe176a9f5",
+        "activeProcessorCount": 4,
+        "midpointAllObjectSnapshotTick": 6000,
+        "scope": "Three server player objects with vanilla chunk tracking; no real network clients and no original server world."
+      }
+    },
+    "current": {
+      "status": "completed_no_oom",
+      "runtime": "build/thermal-native-paired-20261109/current-cpu250",
+      "targetGameTicks": 24000,
+      "midpointSnapshotGameTick": 6000,
+      "midpointForcesGC": false,
+      "refuelLoadedCampfiresAtTick": 12000,
+      "controllerDetachedFromToolJob": true,
+      "activeProcessorCount": 4,
+      "cpuBudgetMsPerSecond": 250,
+      "result": {
+        "outcome": {
+          "exitCode": 0,
+          "ended": 1794213393.1944234,
+          "outcome": "workload_completed",
+          "lastObservedTick": 24000.0,
+          "heapCaptureAttempted": true
+        },
+        "lastSample": {
+          "ticks": 24000.0,
+          "phase": "exploring-new-terrain",
+          "players": 3.0,
+          "levelPlayers": 3.0,
+          "loadedChunks": 10651.0,
+          "uniqueTrackedChunks": 45819.0,
+          "updatingChunks": 10083.0,
+          "pendingUnloads": 0.0,
+          "unloadQueue": 0.0,
+          "ioWrites": 0.0,
+          "ioMailbox": 0.0,
+          "sourcesPlanted": 3072.0,
+          "saves": 4.0,
+          "thermal": {
+            "active": true,
+            "usedBytes": 477627500.0,
+            "peakBytes": 480659052.0,
+            "refusals": 7217.0,
+            "nativeCheckpoint": true,
+            "knownSources": 1024.0,
+            "enabledSources": 1024.0,
+            "nativeRequests": 305.0,
+            "nativePrepared": 304.0,
+            "nativePending": 0.0,
+            "nativePeakPending": 9.0,
+            "nativePreparationQueue": 0.0,
+            "sourceChunksWaiting": 62.0,
+            "coldRestores": 16.0,
+            "saveWaitCalls": 4576.0,
+            "saveWaitNs": 175145256417.0,
+            "unloadWaitCalls": 0.0,
+            "unloadWaitNs": 0.0
+          },
+          "positions": [
+            [
+              795.5,
+              87.0,
+              -804.5
+            ],
+            [
+              2395.5,
+              159.0,
+              -2404.5
+            ],
+            [
+              9828.460000000174,
+              81.0,
+              1828.460000001072
+            ]
+          ],
+          "time": 1794213379.6039698,
+          "afterGcBytes": 4139778048,
+          "rssBytes": 4855734272,
+          "privateBytes": 4931428352,
+          "actualThreadCount": 47,
+          "chunksOnDisk": 40212
+        },
+        "heapFiles": {
+          "midrun-all.hprof": 5371191184,
+          "live.hprof": 2294232018
+        },
+        "fullGcSummary": [
+          "[2026-11-09T16:20:11.245+0800][301.881s][info][gc             ] GC(206) Pause Full (G1 Compaction Pause) 4088M->1502M(4096M) 743.155ms",
+          "[2026-11-09T16:22:12.620+0800][423.256s][info][gc             ] GC(389) Pause Full (G1 Compaction Pause) 4090M->1514M(4096M) 499.526ms",
+          "[2026-11-09T16:24:12.490+0800][543.125s][info][gc             ] GC(544) Pause Full (G1 Compaction Pause) 4087M->1476M(4096M) 463.881ms",
+          "[2026-11-09T16:26:14.456+0800][665.091s][info][gc             ] GC(699) Pause Full (G1 Compaction Pause) 4091M->1516M(4096M) 495.822ms",
+          "[2026-11-09T16:30:15.583+0800][906.218s][info][gc             ] GC(1007) Pause Full (G1 Compaction Pause) 4091M->1484M(4096M) 438.385ms",
+          "[2026-11-09T16:32:17.043+0800][1027.678s][info][gc             ] GC(1159) Pause Full (G1 Compaction Pause) 4090M->1551M(4096M) 466.306ms",
+          "[2026-11-09T16:34:15.116+0800][1145.752s][info][gc             ] GC(1305) Pause Full (G1 Compaction Pause) 4092M->1535M(4096M) 488.824ms",
+          "[2026-11-09T16:36:20.227+0800][1270.862s][info][gc             ] GC(1474) Pause Full (G1 Compaction Pause) 4086M->1569M(4096M) 503.973ms",
+          "[2026-11-09T16:36:21.808+0800][1272.443s][info][gc             ] GC(1475) Pause Full (Heap Dump Initiated GC) 2128M->1568M(4096M) 413.301ms",
+          "[2026-11-09T16:36:26.249+0800][1276.884s][info][gc             ] GC(1487) Pause Full (G1 Compaction Pause) 4088M->1660M(4096M) 576.064ms"
+        ],
+        "originalOomReproduced": false
+      },
+      "metadata": {
+        "variant": "current",
+        "artifact": "D:\\Frosted-Heart\\build\\thermal-overload-20261108\\libs\\frostedheart-1.20.1-0.7.12-deobf.jar",
+        "artifactSha256": "c321fadff1963ae10c64c819861109cc9f1822e649574166141b8089690ee218",
+        "java": "C:\\Program Files\\Java\\jdk-21\\bin\\java.exe",
+        "heap": "4GiB",
+        "cpuBudgetMsPerSecond": 250,
+        "thermalTargetMiB": 128,
+        "seed": "71108222452",
+        "viewDistance": 10,
+        "minutes": 20,
+        "sourcesPerBase": 1024,
+        "gameTestClassesExcluded": true,
+        "nativeCheckpoint": true,
+        "sourceGeometry": "pockets",
+        "residentPlayer": true,
+        "warmupTicks": 2400,
+        "scenarioSha256": "6b8b3a551ab1a56f2692b71330c47a7c4b73a7c02c763b2eaaa133803e81ebda",
+        "configSha256": "7e3dc6e19d4104da711ffc3190721b09b4dcb9af3222771df28bbcdfe176a9f5",
+        "activeProcessorCount": 4,
+        "midpointAllObjectSnapshotTick": 6000,
+        "scope": "Three server player objects with vanilla chunk tracking; no real network clients and no original server world."
+      }
+    },
+    "comparisonLimits": [
+      "Local 250ms/s budget differs from newly supplied real-server default 1000ms/s.",
+      "Both requested snapshots use -all, pausing the VM without forcing GC; snapshot pauses were about 2.7s old and 3.6s current. The thermal work budget includes safepoints and preemption, so this is not a clean throughput benchmark.",
+      "Single sequential synthetic trial, no real network clients or full original modpack; no original OOM reproduced.",
+      "Recorded checkpoint cumulative time increased from about 126s to 175s in this run; lower accounting alone does not establish higher runtime performance."
+    ]
+  },
+  "new_server_log_2026_11_09": {
+    "path": "C:/Users/da's'b/.codex/attachments/6ad738ce-fd25-4eff-920a-672e796e1a47/Pasted text.txt",
+    "version": "0.7.13",
+    "neoForge": "47.1.106",
+    "cpuBudgetDefaultCorrectedToMsPerSecond": 1000,
+    "nativeCheckpoint": true,
+    "peakThermalBytes": 527974730,
+    "maximumMinuteRefusalsObserved": 20573,
+    "oomInProvidedLog": false,
+    "lastLogTime": "16:27:11",
+    "memoryOwnerEvidence": "not supplied in this log",
+    "thermalClassComparison": {
+      "oldArtifact": "build\\thermal-overload-20261108\\libs\\frostedheart-1.20.1-0.7.12-deobf.jar",
+      "newArtifact": "build\\libs\\frostedheart-1.20.1-0.7.13-deobf.jar",
+      "newArtifactSha256": "262536dd91bf6b7afeb54ff1ff243b4900b0458ecfe5abb48eec3ff245ec45e8",
+      "thermalClassesCompared": 437,
+      "changedThermalClasses": []
+    },
+    "sledWarnings": {
+      "movedTooQuickly": 242,
+      "movedWrongly": 60
+    },
+    "serverLagWarnings": 11,
+    "limits": "Current paired comparison uses local 250ms/s, unlike the newly confirmed server value 1000ms/s. The same 437 compared thermal class files are present in both local 0.7.12 and 0.7.13 jars.",
+    "serverStatus": "User confirmed the real server has already stopped; no live incident collection possible now."
+  },
+  "real_config_local_reproduction": {
+    "status": "failed_thermal_runtime_not_a_pass",
+    "artifact": "build/libs/frostedheart-1.20.1-0.7.13-deobf.jar",
+    "cpuBudgetMsPerSecond": 1000,
+    "activeProcessorCount": 8,
+    "maximumThermalWorkerThreads": 4,
+    "runtime": "build/thermal-server-config-1000-20261109/current-cpu1000",
+    "heap": "4GiB",
+    "memoryTargetMiB": 128,
+    "nativeCheckpoint": true,
+    "scope": "Same external synthetic source and chunk workload; does not include original modpack, world or connected network clients.",
+    "workerFailures": 239,
+    "firstFailure": "region=1442,sample=580,boundary=560",
+    "lastFailure": "region=1,sample=24140,boundary=24122",
+    "originalOomReproduced": false,
+    "warning": "Lower final heap reflects repeated engine failure/restart, not a successful memory fix. Process exit0 and scenario completion are not functional success."
+  },
+  "confirmed_retention_defect": {
+    "file": "src/main/java/com/teammoeg/frostedheart/content/climate/thermal/solver/RegionalAirRuntime.java",
+    "path": "live region -> RegionPending.retentionChanged -> lambda capture of completed RebuildPreparation -> old regions, frozen geometry, intermediate state",
+    "bytecodeProof": "0.7.13 invokedynamic LongConsumer captures RebuildPreparation and ThermalRegion; lambda$prepareScope$0 is an instance method of RebuildPreparation.",
+    "sourceFix": "Move creation of the long-lived callback into outer runtime trackPendingRetention(region).",
+    "isolatedGcProof": "build/thermal-callback-retention-proof-20261109.log",
+    "fullModFixVerified": true,
+    "compiledCallbackCapture": "(RegionalAirRuntime,ThermalRegion)->LongConsumer; no RebuildPreparation receiver",
+    "fullModRegression": {
+      "log": "build/thermal-preparation-retention-live-20261109.log",
+      "namespace": "frostedheart_preparation_retention",
+      "passed": true,
+      "finishedPreparations": 20,
+      "retainedPreparationsAfterGc": 0,
+      "runtimeStillLive": true,
+      "controlRoomStillHeated": true
+    }
+  },
+  "buildAuthorization": "User explicitly allowed necessary incremental compilation and regression tests after the new source fix; no release packaging.",
+  "retention_fix_first_default_trial": {
+    "runtime": "build/thermal-retention-fixed-1000-20261109/current-cpu1000",
+    "status": "failed_thermal_runtime_not_a_pass",
+    "lastObservedTick": 8400,
+    "firstFailure": "region=3115,sample=7280,boundary=6160,held=6160,executionLimit=6160,qualityOnly=false",
+    "originalOomReproduced": false,
+    "note": "Stop-on-production-error detected failure despite exit0. A completed lifetime GameTest does not cover this handoff scheduling defect."
+  },
+  "handoff_cleanup_boundary_regression": {
+    "runtime": "build/thermal-boundary-order-1000-20261109/current-cpu1000",
+    "status": "running",
+    "heapGiB": 4,
+    "cpuBudgetMsPerSecond": 1000,
+    "thermalWorkers": 4,
+    "sources": 3072,
+    "targetTicks": 24000,
+    "releasePackaging": false,
+    "sourceOrderingFinding": "The prioritized unload checkpoint branch can invoke regional.runWorkRound before the ordinary boundarySequence check. Refresh new holds within that numerical branch; ordinary SAVE capture remains independent of numerical catch-up."
+  },
+  "unified_final_source_regression": {
+    "passed": true,
+    "completedPreparationsCollected": 21,
+    "retainedAfterGcWhileRuntimeLive": 0,
+    "stalledWorkers": 4,
+    "realDiskSaveNs": 21436300,
+    "savedPendingJ": 20480.0,
+    "concurrentSaveClaimJ": 6400.0,
+    "concurrentSaveSettledOnce": true,
+    "uninstalledConnectingPagesTestPassed": true,
+    "log": "build/thermal-memory-prospective-unified-20261109.log",
+    "testsPassed": 7,
+    "releasePackaging": false
+  },
+  "causal_geometry_input_order": {
+    "negativeLog": "build/thermal-geometry-input-order-control-20261109.log",
+    "negativeResult": "failed: later adjacent admission published before earlier geometry while no region existed",
+    "positiveLog": "build/thermal-memory-unified-final-20261109.log",
+    "positiveResult": "passed: visit later Page first, publish earlier Page first",
+    "fix": "Check earlier incoming and queued geometry throughout the candidate closure before starting structural work."
+  },
+  "checkpoint_boundary_only_trial": {
+    "runtime": "build/thermal-boundary-order-1000-20261109/current-cpu1000",
+    "status": "failed_thermal_runtime_not_a_pass",
+    "lastObservedTick": 8200,
+    "failure": "region3195 sample7240 boundary6174",
+    "meaning": "Refreshing holds during unload cleanup was insufficient; the later geometry input order fix was not yet present."
+  },
+  "final_default_configuration_regression": {
+    "runtime": "build/thermal-memory-verified-1000-20261109/current-cpu1000",
+    "status": "failed_thermal_runtime_not_a_pass",
+    "targetGameTicks": 24000,
+    "heapGiB": 4,
+    "cpuBudgetMsPerSecond": 1000,
+    "thermalWorkers": 4,
+    "sources": 3072,
+    "nativeCheckpoint": true,
+    "scenarioRecordsActualPublishedFields": true,
+    "scope": "Three server-side FakePlayers with vanilla chunk tracking and continuous new-terrain traversal. No real network clients, original world, or original full modpack.",
+    "lastObservedTick": 16800,
+    "workerFailures": 1,
+    "firstFailure": "region4816 sample16860 boundary16840 with a newly merging scope",
+    "savedCycles": 2,
+    "originalOomReproduced": false,
+    "shutdownFailure": "ConcurrentModificationException from mailbox.workPending traversing coordinator-owned quality state; state-order fix now in source."
+  },
+  "invalid_telemetry_trial": {
+    "runtime": "build/thermal-memory-final-1000-20261109/current-cpu1000",
+    "status": "stopped_due_to_diagnostic_mapping_error_not_a_valid_regression",
+    "reason": "Added getGameTime diagnostic unavailable through KubeJS; removed, and optional field diagnostics now preserve core counters on error."
+  },
+  "heap_lifetime_before_and_partial_after": [
+    {
+      "label": "before_retention_fix_cpu250",
+      "heap": "live.hprof",
+      "preparations": 38,
+      "closedPreparations": 38,
+      "installedRegions": 1748,
+      "engineRows": [
+        [
+          "com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.engine.ThermalDimensionEngine [id=0x72b6957e0] All objects SELECT ... e All objects e All objects",
+          "417,924,648",
+          "false",
+          "24,140"
+        ]
+      ],
+      "sampleRange": [
+        180,
+        625
+      ]
+    },
+    {
+      "label": "final_source_cpu1000",
+      "heap": "midrun-all.hprof",
+      "preparations": 0,
+      "closedPreparations": 0,
+      "installedRegions": 1585,
+      "engineRows": [
+        [
+          "com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.engine.ThermalDimensionEngine [id=0x71a0f9008] All objects SELECT ... e All objects e All objects",
+          "1,860,664",
+          "false",
+          "6,080"
+        ]
+      ],
+      "sampleRange": [
+        2080,
+        4665
+      ]
+    },
+    {
+      "label": "final_source_cpu1000",
+      "heap": "runtime-failure-all.hprof",
+      "preparations": 0,
+      "closedPreparations": 0,
+      "installedRegions": 0,
+      "engineRows": [
+        [
+          "com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.engine.ThermalDimensionEngine [id=0x7d65f23b8] All objects SELECT ... e All objects e All objects",
+          "17,372,776",
+          "false",
+          "16,960"
+        ]
+      ]
+    }
+  ],
+  "prospective_geometry_revision": {
+    "status": "memory_save_handoff_long_regression_passed_extreme_load_realtime_lag_remains",
+    "log": "build/thermal-memory-prospective-unified-20261109.log",
+    "fixes": [
+      "Include all received but not yet installed Page footprints in route closure, so later connecting Pages cannot grow old influence after advancing.",
+      "Invalidate cached boundaries when the announced input sequence changes; register candidates only against that captured sequence.",
+      "Read mailbox running/queued/closing state before coordinator-owned collections."
+    ],
+    "releasePackaging": false,
+    "passedTests": 7,
+    "runtime": "build/thermal-memory-prospective-1000-20261109/current-cpu1000",
+    "results": {
+      "passed": 7,
+      "completedPreparationsCollected": 21,
+      "retainedAfterGcWhileRuntimeLive": 0,
+      "stalledWorkers": 4,
+      "realDiskSaveNs": 21436300,
+      "savedPendingJ": 20480.0,
+      "concurrentSaveClaimJ": 6400.0,
+      "concurrentSaveSettledOnce": true,
+      "uninstalledConnectingPagesTestPassed": true
+    }
+  },
+  "earlier_four_case_regression": {
+    "log": "build/thermal-memory-unified-final-20261109.log",
+    "passed": true,
+    "testsPassed": 4,
+    "gameTestNamespaces": [
+      "frostedheart_preparation_retention",
+      "frostedheart_geometry_input_order",
+      "frostedheart_persistence_overload",
+      "frostedheart_checkpoint_boundary"
+    ],
+    "completedPreparations": 20,
+    "retainedPreparationsWhileRuntimeLive": 0,
+    "thermalWorkersPaused": 4,
+    "actualVanillaSaveAndFlush": true,
+    "saveNs": 33642600,
+    "savedPendingJ": 24960.0,
+    "materialReplacementOnDisk": true,
+    "temporaryLateBoundaryTracingRemoved": true,
+    "releasePackaging": false
+  },
+  "final_source_results": {
+    "runtime": "build/thermal-memory-prospective-1000-20261109/current-cpu1000",
+    "outcome": {
+      "exitCode": 0,
+      "ended": 1794224625.6862612,
+      "outcome": "workload_completed",
+      "lastObservedTick": 24000.0,
+      "heapCaptureAttempted": true
+    },
+    "scenario": {
+      "ticks": 24000.0,
+      "saves": 4.0,
+      "uniqueTrackedChunks": 44582.0
+    },
+    "metadata": {
+      "variant": "current",
+      "artifact": "D:\\Frosted-Heart\\build\\libs\\frostedheart-1.20.1-0.7.13-deobf.jar",
+      "artifactSha256": "262536dd91bf6b7afeb54ff1ff243b4900b0458ecfe5abb48eec3ff245ec45e8",
+      "java": "C:\\Program Files\\Java\\jdk-21\\bin\\java.exe",
+      "heap": "4GiB",
+      "cpuBudgetMsPerSecond": 1000,
+      "thermalTargetMiB": 128,
+      "seed": "71108222452",
+      "viewDistance": 10,
+      "minutes": 20,
+      "sourcesPerBase": 1024,
+      "gameTestClassesExcluded": true,
+      "nativeCheckpoint": true,
+      "sourceGeometry": "pockets",
+      "residentPlayer": true,
+      "warmupTicks": 2400,
+      "scenarioSha256": "aa2cc2d25855ebe7619b4da81961a4e82ee390664172e38207e09a9665ceebf8",
+      "configSha256": "9f0e024bb3869e543b7f5c3155d07d491b518c988a0dc7120ff4e27acfb8f2fe",
+      "activeProcessorCount": 8,
+      "midpointAllObjectSnapshotTick": 6000,
+      "compiledClassesDirectory": "D:\\Frosted-Heart\\build\\thermal-overload-20261108\\classes\\java\\main",
+      "compiledClassesSha256": "175e66d4105e37fe442def8acd107ff0eb7f7f233fa87846ef3684a9e31bb753",
+      "scope": "Three server player objects with vanilla chunk tracking; no real network clients and no original server world."
+    },
+    "workerFailures": 0,
+    "chunkSaveFailures": 0,
+    "outOfMemoryErrors": 0,
+    "thermalRuntimeStarts": 1,
+    "diagnosticErrors": 0,
+    "liveReachableHeapBytes": 1159881656,
+    "lastTelemetry": {
+      "ticks": 24000.0,
+      "phase": "exploring-new-terrain",
+      "players": 3.0,
+      "levelPlayers": 3.0,
+      "loadedChunks": 10683.0,
+      "uniqueTrackedChunks": 44582.0,
+      "updatingChunks": 10155.0,
+      "pendingUnloads": 0.0,
+      "unloadQueue": 0.0,
+      "ioWrites": 0.0,
+      "ioMailbox": 0.0,
+      "sourcesPlanted": 3072.0,
+      "saves": 4.0,
+      "thermal": {
+        "active": true,
+        "usedBytes": 223492070.0,
+        "peakBytes": 413831174.0,
+        "refusals": 241572.0,
+        "nativeCheckpoint": true,
+        "knownSources": 1024.0,
+        "enabledSources": 1024.0,
+        "nativeRequests": 327.0,
+        "nativePrepared": 318.0,
+        "nativePending": 0.0,
+        "nativePeakPending": 18.0,
+        "nativePreparationQueue": 0.0,
+        "sourceChunksWaiting": 77.0,
+        "coldRestores": 16.0,
+        "saveWaitCalls": 6444.0,
+        "saveWaitNs": 193326121600.0,
+        "unloadWaitCalls": 0.0,
+        "unloadWaitNs": 0.0,
+        "publishedFields": [
+          {
+            "placed": true,
+            "loaded": true,
+            "available": false,
+            "sampleTick": -1.0,
+            "minimumQuality": false,
+            "temperatureC": null
+          },
+          {
+            "placed": true,
+            "loaded": true,
+            "available": false,
+            "sampleTick": -1.0,
+            "minimumQuality": false,
+            "temperatureC": null
+          },
+          {
+            "placed": true,
+            "loaded": false,
+            "available": false,
+            "sampleTick": -1.0,
+            "minimumQuality": false,
+            "temperatureC": null
+          }
+        ]
+      },
+      "positions": [
+        [
+          795.5,
+          87.0,
+          -804.5
+        ],
+        [
+          2395.5,
+          159.0,
+          -2404.5
+        ],
+        [
+          9828.460000000174,
+          81.0,
+          1828.460000001072
+        ]
+      ],
+      "time": 1794224610.4630322,
+      "afterGcBytes": 3822059520,
+      "rssBytes": 4757856256,
+      "privateBytes": 4985946112,
+      "actualThreadCount": 57,
+      "chunksOnDisk": 38673
+    },
+    "peakIoMailbox": 921.0,
+    "endIoMailbox": 0.0,
+    "regularFullGcAfterMiB": [
+      1187,
+      1147,
+      1229,
+      1173,
+      1132,
+      1141,
+      1219
+    ],
+    "heapLifetime": [
+      {
+        "label": "before_retention_fix_cpu250",
+        "heap": "live.hprof",
+        "matExit": 0,
+        "preparations": 38,
+        "closedPreparations": 38,
+        "engineCount": 1,
+        "engineFailureRecovery": [
+          false
+        ],
+        "offeredTick": [
+          24140
+        ],
+        "installedRegions": {
+          "count": 1748,
+          "minimumSampleTick": 180,
+          "maximumSampleTick": 625
+        },
+        "sourceFedRegions": {
+          "count": 618,
+          "minimumSampleTick": 180,
+          "maximumSampleTick": 625
+        }
+      },
+      {
+        "label": "final_source_cpu1000",
+        "heap": "midrun-all.hprof",
+        "matExit": 0,
+        "preparations": 0,
+        "closedPreparations": 0,
+        "engineCount": 1,
+        "engineFailureRecovery": [
+          false
+        ],
+        "offeredTick": [
+          6100
+        ],
+        "installedRegions": {
+          "count": 1559,
+          "minimumSampleTick": 1840,
+          "maximumSampleTick": 4636
+        },
+        "sourceFedRegions": {
+          "count": 917,
+          "minimumSampleTick": 1840,
+          "maximumSampleTick": 4636
+        }
+      },
+      {
+        "label": "final_source_cpu1000",
+        "heap": "live.hprof",
+        "matExit": 0,
+        "preparations": 0,
+        "closedPreparations": 0,
+        "engineCount": 1,
+        "engineFailureRecovery": [
+          false
+        ],
+        "offeredTick": [
+          24060
+        ],
+        "installedRegions": {
+          "count": 934,
+          "minimumSampleTick": 13740,
+          "maximumSampleTick": 20433
+        },
+        "sourceFedRegions": {
+          "count": 428,
+          "minimumSampleTick": 13740,
+          "maximumSampleTick": 13780
+        }
+      }
+    ],
+    "memorySaveHandoffChecksPassed": true,
+    "realtimeOverloadChecksPassed": false,
+    "knownOverloadLimit": "At offered tick24060,428 installed source-fed regions were at13740..13780. The memory/ownership regression passes; this is not a realtime throughput pass.",
+    "originalRemoteOomSoleCauseProven": false,
+    "releaseJarRebuilt": false,
+    "artifactAudit": {
+      "packagedByThisTask": false,
+      "workspaceJarSha256AtFinalAudit": "9d08dd6536ba266d76ac88108592f11455058cf3ea630111a2f360d99ab9e497",
+      "workspaceJarChangedSinceTestSetup": true,
+      "comparedThermalClassesMatchTestedSnapshot": {
+        "solver/RegionalAirRuntime.class": true,
+        "solver/RegionalAirRuntime$RebuildPreparation.class": true,
+        "solver/ThermalDiagnostics.class": true,
+        "runtime/minecraft/engine/ThermalDimensionEngine.class": true,
+        "runtime/minecraft/engine/ThermalDimensionEngine$BoundaryCandidate.class": true,
+        "runtime/async/ThermalDimensionMailbox.class": true,
+        "runtime/minecraft/message/TopologyInbox.class": true,
+        "topology/TopologyUpdatePlanner.class": true
+      },
+      "testedSnapshotDirectory": "D:\\Frosted-Heart\\build\\thermal-memory-prospective-1000-20261109\\current-cpu1000\\existing-mod"
+    }
+  },
+  "thermalSourceFilesUnchangedSinceValidatedCompile": true
+}
