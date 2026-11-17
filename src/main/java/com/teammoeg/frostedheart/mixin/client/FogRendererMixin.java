@@ -46,7 +46,7 @@ public abstract class FogRendererMixin {
     private static float fogBlue;
 
     @Inject(method = "setupColor", at = @At(value = "INVOKE",
-            target = "Lnet/minecraft/client/renderer/FogRenderer;getPriorityFogFunction(Lnet/minecraft/world/entity/Entity;F)Lnet/minecraft/client/renderer/FogRenderer$MobEffectFogFunction;"))
+            target = "Lnet/minecraft/client/renderer/FogRenderer;getPriorityFogFunction(Lnet/minecraft/world/entity/Entity;F)Lnet/minecraft/client/renderer/FogRenderer$MobEffectFogFunction;"), require = 0)
     private static void frostedheart$useCalculatedSkyFogColor(Camera camera, float partialTick, ClientLevel level,
             int renderDistanceChunks, float bossColorModifier, CallbackInfo callbackInfo) {
         if (camera.getFluidInCamera() != FogType.NONE) {

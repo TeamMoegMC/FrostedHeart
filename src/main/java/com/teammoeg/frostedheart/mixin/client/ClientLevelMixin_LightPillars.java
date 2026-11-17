@@ -36,7 +36,7 @@ public abstract class ClientLevelMixin_LightPillars {
     /**
      * Level.markAndNotifyBlock calls this for every block state change, from server packets and the player's own.
      */
-    @Inject(method = "setBlocksDirty", at = @At("HEAD"))
+    @Inject(method = "setBlocksDirty", at = @At("HEAD"), require = 0)
     private void frostedheart$noteBlockChange(BlockPos pos, BlockState oldState, BlockState newState,
             CallbackInfo callbackInfo) {
         LightPillarWorldChanges.onBlockChanged((ClientLevel) (Object) this, pos, oldState, newState);

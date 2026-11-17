@@ -44,7 +44,7 @@ public abstract class ClientChunkCacheMixin_LightPillars {
      * The light engine calls this for each section its last run changed, after the new values became readable.
      * Light copied from server packets does not come through here.
      */
-    @Inject(method = "onLightUpdate", at = @At("HEAD"))
+    @Inject(method = "onLightUpdate", at = @At("HEAD"), require = 0)
     private void frostedheart$noteLightUpdate(LightLayer layer, SectionPos section, CallbackInfo callbackInfo) {
         LightPillarWorldChanges.onLightUpdated(level, layer, section);
     }

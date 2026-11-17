@@ -46,7 +46,7 @@ public abstract class ClientPacketListenerMixin_LightPillars {
      * It runs from ClientLevel.pollLightUpdates, and the light engine run right after it in the same frame makes the
      * new values readable.
      */
-    @Inject(method = "readSectionList", at = @At("HEAD"))
+    @Inject(method = "readSectionList", at = @At("HEAD"), require = 0)
     private void frostedheart$noteLightData(int chunkX, int chunkZ, LevelLightEngine lightEngine, LightLayer layer,
             BitSet dataMask, BitSet emptyMask, Iterator<byte[]> data, CallbackInfo callbackInfo) {
         LightPillarWorldChanges.onLightReceived(level, chunkX, chunkZ, layer, dataMask, emptyMask,
