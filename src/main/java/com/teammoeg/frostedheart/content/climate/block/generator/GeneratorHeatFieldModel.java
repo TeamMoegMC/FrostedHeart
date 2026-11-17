@@ -21,6 +21,9 @@ package com.teammoeg.frostedheart.content.climate.block.generator;
 
 /** Shared level-to-spherical-heat-field formulas for generators. */
 public final class GeneratorHeatFieldModel {
+    /** Extra center temperature in Celsius; the boost tapers to zero at the field boundary. */
+    public static final double CENTER_BOOST_CELSIUS = 5.0D;
+
     private GeneratorHeatFieldModel() {
     }
 

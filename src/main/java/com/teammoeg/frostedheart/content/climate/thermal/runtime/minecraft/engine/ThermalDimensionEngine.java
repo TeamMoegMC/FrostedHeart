@@ -161,13 +161,14 @@ public final class ThermalDimensionEngine implements AutoCloseable, MaterialStat
                 64,
                 16);
         sources = new ThermalSourceLedger(
-                initialTick, 64, 3, limits.maximumSources());
+                initialTick, 64, SpatialSourceTimeline.MAX_PORTS_PER_SOURCE, limits.maximumSources());
         offeredThrough = initialTick;
         airLoads = new AirLoadTable();
         sourceBindings = new WorkerPhysicalSourceBindings(
                 pages, catalog, Objects.requireNonNull(campfireProfile, "campfireProfile"), airLoads);
         fixedHeat = new SpatialHeatBuffer(airBudget,
-                Math.min(32, 3 * limits.maximumSources()), 3 * limits.maximumSources(), initialTick);
+                Math.min(32, SpatialSourceTimeline.MAX_PORTS_PER_SOURCE * limits.maximumSources()),
+                SpatialSourceTimeline.MAX_PORTS_PER_SOURCE * limits.maximumSources(), initialTick);
         {
             fixedInputCredit = airBudget.reserveCompletion(32768);
             fixedSignatures = new int[4096]; fixedMixing = new AirMixingRegion();

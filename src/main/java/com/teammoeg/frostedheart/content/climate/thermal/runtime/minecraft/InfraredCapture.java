@@ -661,7 +661,7 @@ final class InfraredCapture implements AutoCloseable {
                 fieldSample.clear();
                 for (int i = 0; i < brickFields.size(); i++) {
                     var field = brickFields.get(i);
-                    if (field.contains(px + .5, py + .5, pz + .5)) fieldSample.include(field);
+                    fieldSample.include(field, px + .5, py + .5, pz + .5);
                 }
                 double temperature = rawBlocks[block];
                 if (fieldSample.present()) {

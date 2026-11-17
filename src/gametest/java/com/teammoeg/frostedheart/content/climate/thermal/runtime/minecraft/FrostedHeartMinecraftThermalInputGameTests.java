@@ -392,7 +392,9 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
         helper.onEachTick(() -> {
             elapsed[0]++;
             MinecraftThermalInput.onGeneratorTick(
-                    level, source, targetAir, 1_000.0D, true);
+                    level, source, targetAir.west(2).below(2),
+                    com.teammoeg.frostedheart.content.climate.thermal.source.minecraft.MinecraftPhysicalSourceProfile.GENERATOR,
+                    1_000.0D, true);
             if (elapsed[0] % 21 == 1) {
                 level.setBlockAndUpdate(
                         changingTopology,

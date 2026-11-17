@@ -155,7 +155,7 @@ public class GeneratorData implements SpecialData {
         MinecraftGameplayFields.upsertSphere(level, gameplayFieldKey, 0,
                 ThermalAnalyticField.CombineMode.FLOOR_FROM_NATURAL,
                 actualPos.getX() + 0.5D, actualPos.getY() - masterYPosInMB + 0.5D,
-                actualPos.getZ() + 0.5D, radius, delta);
+                actualPos.getZ() + 0.5D, radius, delta, GeneratorHeatFieldModel.CENTER_BOOST_CELSIUS);
     }
 
     public void removeGameplayHeat(MinecraftServer server) {

@@ -14,7 +14,10 @@ import java.util.concurrent.atomic.AtomicLongArray;
 
 /** Main-thread source capture. It integrates declared input, never the temperature field. */
 public final class SpatialSourceTimeline implements AutoCloseable {
-    private static final int EXACT_RECORDS = 64, CHANNELS = 4, WINDOW_RECORDS = EXACT_RECORDS + 2 * CHANNELS;
+    /** Capacity for the generator's four AIR_FACE records and one RADIATION_LOSS record. */
+    public static final int MAX_PORTS_PER_SOURCE = 5;
+    private static final int EXACT_RECORDS = 64, CHANNELS = MAX_PORTS_PER_SOURCE + 1,
+            WINDOW_RECORDS = EXACT_RECORDS + 2 * CHANNELS;
     private static final long ENTRY_BYTES = 1536L + 3 * AirBackingMeter.arrayPayloadBytes(WINDOW_RECORDS, 8)
             + 3L * WINDOW_RECORDS * 72 + 2L * CHANNELS * 48
             + 2 * AirBackingMeter.arrayPayloadBytes(WINDOW_RECORDS, Double.BYTES) + 1024

@@ -57,7 +57,8 @@ import java.util.Iterator;
 public final class PhysicalSourceSpatialIndex
         implements AutoCloseable, RadiationService.SourceIndex {
     private static final int NO_SLOT = -1;
-    private static final int MAX_PORTS = 3;
+    /** Maximum distinct AIR_FACE target Bricks retained by one source. */
+    private static final int MAX_TARGET_BRICKS = 4;
     private static final byte PRESENT = 1;
     private static final byte REGISTERED = 1 << 1;
     private static final byte REGISTRATION_STALE = 1 << 2;
@@ -70,6 +71,8 @@ public final class PhysicalSourceSpatialIndex
             (byte) MinecraftPhysicalSourceProfile.CAMPFIRE.profileId();
     private static final byte GENERATOR_PROFILE_ID =
             (byte) MinecraftPhysicalSourceProfile.GENERATOR.profileId();
+    private static final byte GENERATOR_T2_PROFILE_ID =
+            (byte) MinecraftPhysicalSourceProfile.GENERATOR_T2.profileId();
 
     private DimensionInputAccumulator accumulator;
     private final ServerLevel level;
@@ -416,7 +419,8 @@ public final class PhysicalSourceSpatialIndex
                         if (!isLive(slot) || !flag(slot, PRESENT)
                                 || !flag(slot, DESIRED_ENABLED)
                                 || desiredPowerW[slot] <= 0.0D
-                                || profileIds[slot] != GENERATOR_PROFILE_ID) {
+                                || profileIds[slot] != GENERATOR_PROFILE_ID
+                                        && profileIds[slot] != GENERATOR_T2_PROFILE_ID) {
                             continue;
                         }
                         double dx = BlockPos.getX(sourceIds[slot]) - position.getX();
@@ -608,16 +612,16 @@ public final class PhysicalSourceSpatialIndex
                     | (SectionPos.sectionRelative(targetY) >>> 2) << 4;
             boolean duplicate = false;
             for (int existing = 0; existing < write; existing++) {
-                duplicate |= targetSections[slot * MAX_PORTS + existing]
+                duplicate |= targetSections[slot * MAX_TARGET_BRICKS + existing]
                         == sectionKey
                         && Byte.toUnsignedInt(
-                                targetBricks[slot * MAX_PORTS + existing])
+                                targetBricks[slot * MAX_TARGET_BRICKS + existing])
                         == brick;
             }
             if (duplicate) {
                 continue;
             }
-            int targetIndex = slot * MAX_PORTS + write++;
+            int targetIndex = slot * MAX_TARGET_BRICKS + write++;
             targetSections[targetIndex] = sectionKey;
             targetBricks[targetIndex] = (byte) brick;
             pages.updateSourceBrick(sectionKey, brick, true);
@@ -628,7 +632,7 @@ public final class PhysicalSourceSpatialIndex
     }
 
     private void releaseTargets(int slot) {
-        int first = slot * MAX_PORTS;
+        int first = slot * MAX_TARGET_BRICKS;
         for (int index = 0;
              index < Byte.toUnsignedInt(targetCount[slot]);
              index++) {
@@ -761,8 +765,8 @@ public final class PhysicalSourceSpatialIndex
         sourceFlags = new byte[capacity];
         nextFree = new int[capacity];
         targetCount = new byte[capacity];
-        targetSections = new long[capacity * MAX_PORTS];
-        targetBricks = new byte[capacity * MAX_PORTS];
+        targetSections = new long[capacity * MAX_TARGET_BRICKS];
+        targetBricks = new byte[capacity * MAX_TARGET_BRICKS];
         registrations = new SpatialSourceTimeline.Registration[capacity];
         Arrays.fill(nextFree, NO_SLOT);
     }
@@ -791,9 +795,9 @@ public final class PhysicalSourceSpatialIndex
         Arrays.fill(nextFree, old, capacity, NO_SLOT);
         targetCount = Arrays.copyOf(targetCount, capacity);
         targetSections = Arrays.copyOf(
-                targetSections, capacity * MAX_PORTS);
+                targetSections, capacity * MAX_TARGET_BRICKS);
         targetBricks = Arrays.copyOf(
-                targetBricks, capacity * MAX_PORTS);
+                targetBricks, capacity * MAX_TARGET_BRICKS);
         registrations = Arrays.copyOf(registrations, capacity);
     }
 

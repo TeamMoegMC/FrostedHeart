@@ -234,7 +234,7 @@ public final class ThermalGameplayFieldGameTests {
             helper.assertTrue(level.getChunkSource().getChunkNow(chunkX, chunkZ) == null, "tower chunk must actually unload");
         }).thenExecute(() -> {
             try {
-                near(helper, -10, MinecraftThermalInput.gameplayPassiveEnvironment(level, master, -40),
+                near(helper, -5, MinecraftThermalInput.gameplayPassiveEnvironment(level, master.below(), -40),
                         "unloaded authoritative team floor");
                 helper.assertTrue(level.getChunkSource().getChunkNow(chunkX, chunkZ) == null,
                         "field query must not reload its source chunk");
@@ -343,21 +343,26 @@ public final class ThermalGameplayFieldGameTests {
         long thread = Thread.currentThread().getId();
         try {
             for (int count : new int[]{1, 16, 128}) {
-                for (int i = 0; i < count; i++) {
-                    MinecraftGameplayFields.upsertSphere(level, new ThermalFieldKey(TEST_PROVIDER, 1, i, 0), 0,
-                            CombineMode.FLOOR_FROM_NATURAL, position.getX() + 0.5, position.getY() + 0.5,
-                            position.getZ() + 0.5, 4 + i, 30);
+                for (double centerBoost : new double[]{0, 5}) {
+                    for (int i = 0; i < count; i++) {
+                        MinecraftGameplayFields.upsertSphere(level, new ThermalFieldKey(TEST_PROVIDER, 1, i, 0), 0,
+                                CombineMode.FLOOR_FROM_NATURAL, position.getX() + 0.5, position.getY() + 0.5,
+                                position.getZ() + 0.5, 4 + i, 30, centerBoost);
+                    }
+                    BlockPos query = position.east(2);
+                    double expected = MinecraftGameplayFields.existing(level).compose(
+                            query.getX() + .5, query.getY() + .5, query.getZ() + .5, -40, -40);
+                    for (int i = 0; i < 20_000; i++) MinecraftThermalInput.gameplayPassiveEnvironment(level, query, -40);
+                    long bytes = allocation.getThreadAllocatedBytes(thread);
+                    long begin = System.nanoTime();
+                    double sum = 0;
+                    for (int i = 0; i < 20_000; i++) sum += MinecraftThermalInput.gameplayPassiveEnvironment(level, query, -40);
+                    long elapsed = System.nanoTime() - begin;
+                    long allocated = allocation.getThreadAllocatedBytes(thread) - bytes;
+                    near(helper, expected * 20_000, sum, "production floor query result");
+                    FHMain.LOGGER.info("Analytic production query sample: fields={}, centerBoostC={}, queries=20000, ns/query={}, allocatedBytes={}",
+                            count, centerBoost, elapsed / 20_000.0, allocated);
                 }
-                for (int i = 0; i < 20_000; i++) MinecraftThermalInput.gameplayPassiveEnvironment(level, position, -40);
-                long bytes = allocation.getThreadAllocatedBytes(thread);
-                long begin = System.nanoTime();
-                double sum = 0;
-                for (int i = 0; i < 20_000; i++) sum += MinecraftThermalInput.gameplayPassiveEnvironment(level, position, -40);
-                long elapsed = System.nanoTime() - begin;
-                long allocated = allocation.getThreadAllocatedBytes(thread) - bytes;
-                near(helper, -200_000, sum, "production floor query result");
-                FHMain.LOGGER.info("Analytic production query sample: fields={}, queries=20000, ns/query={}, allocatedBytes={}",
-                        count, elapsed / 20_000.0, allocated);
             }
             helper.assertTrue(owner(level, position) == null, "analytic queries must leave physical runtime absent");
             helper.succeed();
@@ -371,9 +376,8 @@ public final class ThermalGameplayFieldGameTests {
         ServerLevel level = helper.getLevel();
         MinecraftThermalInput.closeActiveLevel(level);
         BlockPos anchor = helper.absolutePos(new BlockPos(1, 2, 1));
-        int height = FHMultiblocks.Registration.GENERATOR_T1.size(level).getY();
-        // Exercise the real tower and its exhaust in the same Brick.
-        BlockPos origin = new BlockPos(anchor.getX(), ((anchor.getY() + height + 3) & ~3) + 1 - height, anchor.getZ());
+        // Keep the tower center and the enclosed east outlet in the same Brick.
+        BlockPos origin = new BlockPos((anchor.getX() & ~3) + 3, (anchor.getY() & ~3) + 1, anchor.getZ());
         BlockPos enclosed = form(helper, FHMultiblocks.GENERATOR_T1, origin);
         BlockPos outdoorColumn = origin.east(40);
         int surfaceY = level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.WORLD_SURFACE,
@@ -394,9 +398,8 @@ public final class ThermalGameplayFieldGameTests {
         enclosedTeam.getData(FHSpecialDataTypes.GENERATOR_DATA).isActive = true;
         openTeam.getData(FHSpecialDataTypes.GENERATOR_DATA).isActive = true;
         var multiblock = CMultiblockHelper.getBEHelper(level, enclosed).getMultiblock();
-        int exhaustOffset = multiblock.size(level).getY() - multiblock.masterPosInMB().getY();
-        BlockPos enclosedAir = enclosed.above(exhaustOffset);
-        BlockPos openAir = open.above(exhaustOffset);
+        BlockPos enclosedAir = enclosed.below(multiblock.masterPosInMB().getY()).above(2).east(2);
+        BlockPos openAir = open.below(multiblock.masterPosInMB().getY()).above(2).east(2);
         helper.assertTrue(level.getBlockState(enclosedAir).isAir(), "actual exhaust target must be Air");
         helper.assertTrue(level.getBlockState(openAir).isAir() && level.canSeeSky(openAir),
                 "outdoor exhaust must actually be Air exposed to the sky");
@@ -411,7 +414,10 @@ public final class ThermalGameplayFieldGameTests {
         helper.startSequence().thenWaitUntil(() -> {
             double natural = WorldTemperature.naturalBlock(level, enclosedAir);
             double raw = rawAir(input, enclosedAir);
-            helper.assertTrue(Double.isFinite(raw) && raw > natural + 30.25,
+            var fields = MinecraftThermalInput.gameplayAnalyticFieldsAt(level, enclosedAir);
+            helper.assertTrue(!fields.isEmpty(), "tower must publish its gameplay floor");
+            double delta = fields.get(0).temperatureCAt(enclosedAir.getX() + .5, enclosedAir.getY() + .5, enclosedAir.getZ() + .5);
+            helper.assertTrue(Double.isFinite(raw) && raw > natural + delta + .25,
                     "normal generator exhaust must heat enclosed Air above its floor: raw=" + raw + ", natural=" + natural);
             helper.assertTrue(Double.isFinite(rawAir(input, openAir)),
                     "outdoor physical target unavailable: source=" + sourceSlots.containsKey(openSource.asLong())
@@ -431,15 +437,20 @@ public final class ThermalGameplayFieldGameTests {
                 ThermalEnvironmentSample itemSample = new ThermalEnvironmentSample();
                 double itemNatural = WorldTemperature.naturalAir(level, enclosedAir);
                 MinecraftThermalInput.gameplayItemEnvironment(dropped, itemNatural, itemSample);
-                near(helper, Math.max(raw, itemNatural + enclosedTeam.getData(FHSpecialDataTypes.GENERATOR_DATA).getTempMod()),
+                var enclosedField = MinecraftThermalInput.gameplayAnalyticFieldsAt(level, enclosedAir).get(0);
+                double enclosedDelta = enclosedField.temperatureCAt(dropped.getX(),
+                        dropped.getY() + dropped.getBbHeight() * .5, dropped.getZ());
+                near(helper, Math.max(raw, itemNatural + enclosedDelta),
                         itemSample.airTemperatureC(), "dropped reservoir must not add the tower floor to physical heat");
                 dropped.discard();
                 double outdoorNatural = WorldTemperature.naturalBlock(level, openAir);
                 double outdoorRaw = rawAir(input, openAir);
                 double outdoor = WorldTemperature.block(level, openAir);
-                helper.assertTrue(outdoor >= outdoorNatural + 30 - 0.001, "outdoor floor must hold despite dissipation");
+                var openField = MinecraftThermalInput.gameplayAnalyticFieldsAt(level, openAir).get(0);
+                double outdoorDelta = openField.temperatureCAt(openAir.getX() + .5, openAir.getY() + .5, openAir.getZ() + .5);
+                helper.assertTrue(outdoor >= outdoorNatural + outdoorDelta - 0.001, "outdoor floor must hold despite dissipation");
                 FHMain.LOGGER.info("Generator production enclosure: natural={}, floor={}, raw={}, composed={}; outdoor natural={}, raw={}, composed={}",
-                        natural, natural + 30, raw, WorldTemperature.block(level, enclosedAir), outdoorNatural, outdoorRaw, outdoor);
+                        natural, natural + enclosedDelta, raw, WorldTemperature.block(level, enclosedAir), outdoorNatural, outdoorRaw, outdoor);
             } finally {
                 level.destroyBlock(enclosed, false);
                 level.destroyBlock(open, false);
@@ -480,7 +491,7 @@ public final class ThermalGameplayFieldGameTests {
         }
     }
 
-    private static double rawAir(MinecraftThermalInput input, BlockPos position) {
+    static double rawAir(MinecraftThermalInput input, BlockPos position) {
         try {
             Method method = MinecraftThermalInput.class.getDeclaredMethod("sampleAir",
                     double.class, double.class, double.class, long.class, int.class, ThermalEnvironmentSample.class);

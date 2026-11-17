@@ -609,8 +609,11 @@ public final class ThermalLoadedWorldGameTests {
 
     private static void generator(GameTestHelper helper, TemplateMultiblock structure) {
         ServerLevel level = helper.getLevel();
+        double expectedOutletPowerW = structure == FHMultiblocks.GENERATOR_T2 ? 8_000 : 6_000;
         MinecraftThermalInput.closeActiveLevel(level);
-        BlockPos origin = helper.absolutePos(new BlockPos(1, 2, 1));
+        BlockPos anchor = helper.absolutePos(new BlockPos(1, 2, 1));
+        // The bottom center lies at a Chunk corner so east/south outlets cross it.
+        BlockPos origin = new BlockPos((anchor.getX() & ~15) + 14, anchor.getY(), (anchor.getZ() & ~15) + 14);
         BlockPos master = form(helper, structure, origin);
         GeneratorState state = (GeneratorState) CMultiblockHelper.getBEHelper(level, master).getState();
         var player = FakePlayerFactory.getMinecraft(level);
@@ -628,12 +631,17 @@ public final class ThermalLoadedWorldGameTests {
         data.process = 10_000;
         data.townProcessedTicks = 1_000;
         BlockPos source = master.below(structure.getMasterFromOriginOffset().getY());
+        for (Direction direction : Direction.Plane.HORIZONTAL) {
+            BlockPos outlet = source.above(2).relative(direction, 2);
+            level.setBlockAndUpdate(outlet, Blocks.AIR.defaultBlockState());
+        }
         helper.runAfterDelay(10, () -> {
             helper.assertTrue(data.townProcessedTicks < 1_000 && state.getTempLevel() == 10,
                     "formed machine must tick through the town-processed branch");
             BlockPos query = source.east(5);
             double natural = WorldTemperature.naturalBlock(level, query);
-            double floor = natural + data.getTempMod();
+            var field = MinecraftThermalInput.gameplayAnalyticFieldsAt(level, query).get(0);
+            double floor = natural + field.temperatureCAt(query.getX() + .5, query.getY() + .5, query.getZ() + .5);
             helper.assertTrue(owner(level, source) != null,
                     "active generator production must start runtime without a player query");
             helper.assertTrue(Math.abs(WorldTemperature.block(level, query) - floor) < 0.001,
@@ -642,14 +650,24 @@ public final class ThermalLoadedWorldGameTests {
             projection.include(query);
             helper.assertTrue(Math.abs(MinecraftThermalInput.gameplayTownEnvironment(level, projection, natural)
                     - floor) < 0.001, "town queries must receive the same regional floor");
-            var field = MinecraftThermalInput.gameplayAnalyticFieldsAt(level, query).get(0);
             int fuel = data.process;
             MinecraftThermalInput input = owner(level, source).input();
             helper.assertTrue(data.process == fuel, "bootstrap must not consume generator fuel");
             helper.runAfterDelay(50, () -> {
                 helper.assertTrue(present(input, source), "normal generator tick must restore source");
+                assertGeneratorExhaustPower(helper, input, source, expectedOutletPowerW);
+                for (Direction direction : Direction.Plane.HORIZONTAL) {
+                    BlockPos outlet = source.above(2).relative(direction, 2);
+                    double naturalAir = WorldTemperature.naturalAir(level, outlet);
+                    double physicalAir = ThermalGameplayFieldGameTests.rawAir(input, outlet);
+                    helper.assertTrue(Double.isFinite(physicalAir) && physicalAir > naturalAir + .05,
+                            "real generator must heat every horizontal outlet, including across Chunk boundaries: "
+                                    + direction + ", physical=" + physicalAir + ", natural=" + naturalAir);
+                }
                 helper.assertTrue(MinecraftThermalInput.gameplayAnalyticFieldsAt(level, query).contains(field),
                         "unchanged reports must retain the same field definition");
+                BlockPos blockedOutlet = source.above(2).east(2);
+                level.setBlockAndUpdate(blockedOutlet, Blocks.STONE.defaultBlockState());
                 MinecraftThermalInput.invalidateGameplayProfilesForRecipeReload();
                 helper.assertTrue(MinecraftThermalInput.gameplayAnalyticFieldsAt(level, query).contains(field),
                         "profile reload must preserve the world-owned field");
@@ -658,6 +676,15 @@ public final class ThermalLoadedWorldGameTests {
                     MinecraftThermalInput next = owner(level, source).input();
                     helper.assertTrue(present(next, source) && data.process == fuel,
                             "unchanged production must recover without duplicate fuel consumption");
+                    helper.assertTrue(!Double.isFinite(ThermalGameplayFieldGameTests.rawAir(next, blockedOutlet)),
+                            "a blocked outlet must not receive Air heat through the solid block");
+                    for (Direction direction : Direction.Plane.HORIZONTAL) {
+                        if (direction == Direction.EAST) continue;
+                        BlockPos outlet = source.above(2).relative(direction, 2);
+                        helper.assertTrue(Double.isFinite(ThermalGameplayFieldGameTests.rawAir(next, outlet)),
+                                "blocking one outlet must leave the other three available: " + direction);
+                    }
+                    level.setBlockAndUpdate(blockedOutlet, Blocks.AIR.defaultBlockState());
                     data.isActive = false;
                     helper.runAfterDelay(40, () -> {
                         helper.assertTrue(!present(next, source), "inactive generator must release its source");
@@ -666,19 +693,64 @@ public final class ThermalLoadedWorldGameTests {
                         data.isActive = true;
                         helper.runAfterDelay(40, () -> {
                             helper.assertTrue(present(next, source), "generator must register after restart");
-                            level.destroyBlock(master, false);
-                            helper.assertTrue(MinecraftThermalInput.gameplayAnalyticFieldsAt(level, query).isEmpty(),
-                                    "authoritative disassembly must immediately remove the floor");
-                            helper.runAfterDelay(40, () -> {
-                                helper.assertTrue(!present(next, source), "disassembly must remove the source ID");
-                                MinecraftThermalInput.closeActiveLevel(level);
-                                helper.succeed();
+                            for (Direction direction : Direction.Plane.HORIZONTAL) {
+                                BlockPos outlet = source.above(2).relative(direction, 2);
+                                double physicalAir = ThermalGameplayFieldGameTests.rawAir(next, outlet);
+                                helper.assertTrue(Double.isFinite(physicalAir)
+                                                && physicalAir > WorldTemperature.naturalAir(level, outlet) + .05,
+                                        "every outlet must heat again after reopening and restart: " + direction);
+                            }
+                            data.TLevel = 1;
+                            helper.runAfterDelay(10, () -> {
+                                helper.assertTrue(state.getTempLevel() == 1,
+                                        "the actual machine must observe the lower temperature level");
+                                assertGeneratorExhaustPower(helper, next, source, expectedOutletPowerW);
+                                level.destroyBlock(master, false);
+                                helper.assertTrue(MinecraftThermalInput.gameplayAnalyticFieldsAt(level, query).isEmpty(),
+                                        "authoritative disassembly must immediately remove the floor");
+                                helper.runAfterDelay(40, () -> {
+                                    helper.assertTrue(!present(next, source), "disassembly must remove the source ID");
+                                    MinecraftThermalInput.closeActiveLevel(level);
+                                    helper.succeed();
+                                });
                             });
                         });
                     });
                 });
             });
         });
+    }
+
+    private static void assertGeneratorExhaustPower(GameTestHelper helper, MinecraftThermalInput input,
+            BlockPos source, double expectedOutletPowerW) {
+        com.teammoeg.frostedheart.content.climate.thermal.source.minecraft.PhysicalSourceSpatialIndex index =
+                read(input, "physicalSources");
+        it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap slots = read(index, "slotsById");
+        int slot = slots.get(source.asLong());
+        helper.assertTrue(slot >= 0, "the actual generator source must be registered");
+        double[] offered = read(index, "offeredPowerW");
+        double expectedTotalW = 4 * expectedOutletPowerW + 2_000;
+        helper.assertTrue(Math.abs(offered[slot] - expectedTotalW) < .001,
+                "generator total power must remain fixed at every positive temperature level: expected="
+                        + expectedTotalW + ", actual=" + offered[slot]);
+        byte[] profiles = read(index, "profileIds");
+        var profile = com.teammoeg.frostedheart.content.climate.thermal.source.minecraft.MinecraftPhysicalSourceProfile
+                .byId(Byte.toUnsignedInt(profiles[slot]));
+        helper.assertTrue(Math.abs(profile.radiativePowerW(offered[slot]) - 2_000) < .001,
+                "both generator tiers must retain exactly 2,000 W of radiation");
+        helper.assertTrue(source.equals(index.nearestEnabledGenerator(source, 0)),
+                "both generator tier profiles must be discoverable by the existing generator query");
+        int airPorts = 0;
+        for (int port = 0; port < profile.portCount(); port++) {
+            var definition = profile.port(port);
+            if (definition.kind() != com.teammoeg.frostedheart.content.climate.thermal.source.minecraft.MinecraftPhysicalSourceProfile.PortKind.AIR_FACE)
+                continue;
+            airPorts++;
+            helper.assertTrue(Math.abs(offered[slot] * definition.powerShare() - expectedOutletPowerW) < .001,
+                    "every generator outlet must receive its tier's fixed power: port=" + definition.portId()
+                            + ", expected=" + expectedOutletPowerW);
+        }
+        helper.assertTrue(airPorts == 4, "the generator must retain four physical Air outlets");
     }
 
     @GameTest(template = TEMPLATE, batch = "thermal_machine_radiator", timeoutTicks = 200)

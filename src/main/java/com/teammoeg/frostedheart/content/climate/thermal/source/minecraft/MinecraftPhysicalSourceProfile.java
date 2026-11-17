@@ -58,18 +58,41 @@ public final class MinecraftPhysicalSourceProfile {
                     0.5D, 0.75D, 0.5D, 1.0D);
     }
 
-    public static final MinecraftPhysicalSourceProfile GENERATOR =
-            new MinecraftPhysicalSourceProfile(
-                    2,
-                    10_000.0D,
+    /** T1 output at multiplier one: four 6,000 W Air targets and 2,000 W radiation. */
+    public static final MinecraftPhysicalSourceProfile GENERATOR = generator(2, 6_000.0D);
+
+    /** T2 output at multiplier one: four 8,000 W Air targets and 2,000 W radiation. */
+    public static final MinecraftPhysicalSourceProfile GENERATOR_T2 = generator(5, 8_000.0D);
+
+    /** Builds the shared four-direction geometry once, with independently fixed radiation power. */
+    private static MinecraftPhysicalSourceProfile generator(int profileId, double airPowerPerOutletW) {
+        double radiationPowerW = 2_000.0D;
+        double totalPowerW = 4 * airPowerPerOutletW + radiationPowerW;
+        double airShare = airPowerPerOutletW / totalPowerW;
+        return new MinecraftPhysicalSourceProfile(
+                    profileId,
+                    totalPowerW,
                     new Port[]{
                             Port.airFace(
-                                    0, 0.8D,
-                                    0, 0, 0,
-                                    BlockFace.NEGATIVE_Y),
-                            Port.radiationLoss(1, 0.2D)
+                                    0, airShare,
+                                    2, 2, 0,
+                                    BlockFace.NEGATIVE_X),
+                            Port.airFace(
+                                    1, airShare,
+                                    -2, 2, 0,
+                                    BlockFace.POSITIVE_X),
+                            Port.airFace(
+                                    2, airShare,
+                                    0, 2, -2,
+                                    BlockFace.POSITIVE_Z),
+                            Port.airFace(
+                                    3, airShare,
+                                    0, 2, 2,
+                                    BlockFace.NEGATIVE_Z),
+                            Port.radiationLoss(4, radiationPowerW / totalPowerW)
                     },
                     0.5D, 0.5D, 0.5D, 1.0D);
+    }
 
     public static final MinecraftPhysicalSourceProfile FOUNTAIN =
             new MinecraftPhysicalSourceProfile(
@@ -103,6 +126,7 @@ public final class MinecraftPhysicalSourceProfile {
             case 2 -> GENERATOR;
             case 3 -> FOUNTAIN;
             case 4 -> RADIATOR;
+            case 5 -> GENERATOR_T2;
             default -> throw new IllegalArgumentException(
                     "unknown Minecraft physical source profile: " + profileId);
         };

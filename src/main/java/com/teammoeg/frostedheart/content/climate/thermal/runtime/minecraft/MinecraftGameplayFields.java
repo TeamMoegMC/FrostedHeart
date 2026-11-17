@@ -63,8 +63,15 @@ public final class MinecraftGameplayFields {
 
     public static void upsertSphere(ServerLevel level, ThermalFieldKey key, int priority,
             ThermalAnalyticField.CombineMode mode, double x, double y, double z, double radius, double value) {
+        upsertSphere(level, key, priority, mode, x, y, z, radius, value, 0);
+    }
+
+    /** Publishes a sphere with a center boost that smoothly reaches zero at its boundary. */
+    public static void upsertSphere(ServerLevel level, ThermalFieldKey key, int priority,
+            ThermalAnalyticField.CombineMode mode, double x, double y, double z,
+            double radius, double value, double centerBoostC) {
         if (level.getServer().isSameThread()) {
-            indexFor(level).upsertSphere(key, priority, mode, x, y, z, radius, value);
+            indexFor(level).upsertSphere(key, priority, mode, x, y, z, radius, value, centerBoostC);
         }
     }
 

@@ -100,6 +100,13 @@ public final class ThermalAnalyticFieldIndex {
             double z,
             double radius,
             double value) {
+        upsertSphere(key, priority, mode, x, y, z, radius, value, 0);
+    }
+
+    /** Publishes a sphere while reusing unchanged definitions, including its center boost. */
+    public void upsertSphere(
+            ThermalFieldKey key, int priority, ThermalAnalyticField.CombineMode mode,
+            double x, double y, double z, double radius, double value, double centerBoostC) {
         Entry entry = byKey.get(key);
         if (entry != null
                 && entry.field.matches(
@@ -112,11 +119,12 @@ public final class ThermalAnalyticFieldIndex {
                         radius,
                         radius,
                         radius,
-                        value)) {
+                        value,
+                        centerBoostC)) {
             entry.seen = true;
             return;
         }
-        upsert(new ThermalAnalyticField(key, priority, mode, x, y, z, radius, value));
+        upsert(new ThermalAnalyticField(key, priority, mode, x, y, z, radius, value, centerBoostC));
     }
 
     public boolean remove(ThermalFieldKey key) {
@@ -150,14 +158,15 @@ public final class ThermalAnalyticFieldIndex {
         double result = base;
         for (int i = 0; i < fields.size(); i++) {
             ThermalAnalyticField field = fields.get(i).field;
-            if (!field.contains(x, y, z)) continue;
+            double value = field.temperatureCAt(x, y, z);
+            if (Double.isNaN(value)) continue;
             result =
                     switch (field.combineMode()) {
-                        case FLOOR_FROM_NATURAL -> Math.max(result, natural + field.temperatureC());
-                        case OVERRIDE -> field.temperatureC();
-                        case MAX_HEAT -> Math.max(result, field.temperatureC());
-                        case MIN_COOL -> Math.min(result, field.temperatureC());
-                        case ADD_DELTA -> result + field.temperatureC();
+                        case FLOOR_FROM_NATURAL -> Math.max(result, natural + value);
+                        case OVERRIDE -> value;
+                        case MAX_HEAT -> Math.max(result, value);
+                        case MIN_COOL -> Math.min(result, value);
+                        case ADD_DELTA -> result + value;
                     };
         }
         return result;
@@ -167,8 +176,7 @@ public final class ThermalAnalyticFieldIndex {
         out.clear();
         for (int i = 0; i < fields.size(); i++) {
             ThermalAnalyticField field = fields.get(i).field;
-            if (!field.contains(x, y, z)) continue;
-            out.include(field);
+            out.include(field, x, y, z);
         }
     }
 
@@ -221,10 +229,11 @@ public final class ThermalAnalyticFieldIndex {
             return !hasOverride;
         }
 
-        /** Fields must be included in the index's canonical order. */
-        public void include(ThermalAnalyticField field) {
+        /** Includes a field when it contains the query position, in the index's canonical order. */
+        public void include(ThermalAnalyticField field, double x, double y, double z) {
+            double value = field.temperatureCAt(x, y, z);
+            if (Double.isNaN(value)) return;
             present = true;
-            double value = field.temperatureC();
             switch (field.combineMode()) {
                 case FLOOR_FROM_NATURAL -> relativeFloor = Math.max(relativeFloor, value);
                 case OVERRIDE -> {

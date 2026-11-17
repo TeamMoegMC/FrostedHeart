@@ -238,7 +238,11 @@ public final class ThermalInfraredGameTests {
             InfraredSnapshot first = sample(player, null, true, EMPTY);
             helper.assertTrue(first.full() && !first.readable() && first.fieldPages().length == 12,
                     "generator field-only display must commit without physical publication");
-            expectTemperature(helper, first, center, WorldTemperature.naturalAir(level, center)+generator.getTempMod());
+            expectTemperature(helper, first, center, WorldTemperature.naturalAir(level, center)+generator.getTempMod()+5);
+            BlockPos halfway = center.east(generator.getRadius()/2);
+            BlockPos edge = center.east(generator.getRadius());
+            expectTemperature(helper, first, halfway, WorldTemperature.naturalAir(level, halfway)+generator.getTempMod()+2.8125);
+            expectTemperature(helper, first, edge, WorldTemperature.naturalAir(level, edge)+generator.getTempMod());
             expectMissing(helper, first, center.east(generator.getRadius()+1), false);
             measureSurfaceRequests(player, first);
             generator.RLevel = 1; generator.TLevel = 2;
@@ -247,7 +251,9 @@ public final class ThermalInfraredGameTests {
             InfraredSnapshot changed = sample(player, first, false, first.presence());
             helper.assertTrue(changed != null && !changed.full() && changed.infraredEpoch() == first.infraredEpoch(),
                     "field changes must update display without material epoch or repeated full");
-            expectTemperature(helper, changed, center, WorldTemperature.naturalAir(level, center)+generator.getTempMod());
+            expectTemperature(helper, changed, center, WorldTemperature.naturalAir(level, center)+generator.getTempMod()+5);
+            BlockPos newHalfway = center.east(generator.getRadius()/2);
+            expectTemperature(helper, changed, newHalfway, WorldTemperature.naturalAir(level, newHalfway)+generator.getTempMod()+2.8125);
             expectMissing(helper, changed, removed, true);
             wire(helper, changed);
             generator.removeGameplayHeat(level.getServer());

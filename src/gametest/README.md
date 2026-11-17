@@ -22,6 +22,15 @@ Their gameplay contract and validation scope belong to
 
 For the shared thermal comparison baseline, run [`scripts/run-thermal-baseline.ps1`](../../scripts/run-thermal-baseline.ps1). The [baseline reference](../../docs/climate/thermal-validation-baseline.md) owns its scene list, recorded configuration, clocks and result interpretation.
 
+The focused generator heating checks use `-PgameTestNamespaces=frostedheart_generator_heat`.
+They cover the smooth center boost, unchanged boundary, overlap, player/crop/town/phase queries,
+infrared updates, item caches, real T1/T2 production, four horizontal outlets across Chunk boundaries,
+blocked/reopened outlets, physical enclosure heating, phase acknowledgements and tower lifecycle.
+The real T1/T2 cases also check per-target power at temperature levels `10` and `1`,
+fixed `2,000 W` radiation and discovery of both generator profile IDs.
+The [temperature composition reference](../../docs/climate/world-climate-and-temperature.md#7-analytic-control-fields)
+owns the formula and units.
+
 For infrared transport and actual GL display, run [`Scripts/run-infrared-network-e2e.py`](../../Scripts/run-infrared-network-e2e.py) with Java 17. It starts an isolated dedicated server, two rendering clients and an ordered TCP delay/rate proxy; the [infrared reference](../../docs/climate/infrared-view.md) owns its scenarios, invocation and verification limits.
 
 The memory-lifecycle regressions use namespaces `frostedheart_preparation_retention`,

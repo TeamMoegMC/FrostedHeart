@@ -1,7 +1,7 @@
 # 世界气候与环境温度
 
 - Status: `Current`
-- Last verified: `2026-11-15`（第4–6节：连续海拔、覆盖层气候滞后、逐格热场背景；`2026-11-08`红外接收驱动分片、渐进GPU显示、真实双客户端限速与单慢观察者；`2026-11-07`核对编码去重与窗口重叠；`2026-11-06`核对区域退出；`2026-11-05`核对预报栏和同步接线）
+- Last verified: `2026-11-17`（第7节：能量塔中心额外5°C、到边缘归零的平滑增温及消费者接线）；`2026-11-15`（第4–6节：连续海拔、覆盖层气候滞后、逐格热场背景；`2026-11-08`红外接收驱动分片、渐进GPU显示、真实双客户端限速与单慢观察者；`2026-11-07`核对编码去重与窗口重叠；`2026-11-06`核对区域退出；`2026-11-05`核对预报栏和同步接线）
 - Scope: 逻辑气候时钟、长期事件、局部白幕、覆盖层气候滞后、自然/mesh/analytic 温度合成、红外视野、方块状态消费者
 - Primary code anchors: `WorldClockSource`, `WorldClimate`, `CoveredClimateHistory`, `ClimateCover`, `ClimateCoverColumns`, `LevelChunkMixin_ClimateCover`, `NaturalProfile`, `MinecraftEnvironmentCapture.naturalProfile`, `ClimateEventModel`, `ClimateEventTrack`, `InterpolationClimateEvent`, `WhiteCurtainDescriptor`, `WhiteCurtainFieldModel`, `WhiteCurtainInfo`, `WorldTemperature`, `BlockTemperatureModel`, `ThermalAnalyticField`, `ThermalAnalyticFieldIndex`, `MinecraftThermalInput.gameplayPassiveEnvironment`, `MinecraftThermalInput.gameplayCropEnvironment`, `MinecraftThermalInput.gameplayInfraredSnapshot`, `BlockScanner.RoomData.calculateTemperature`, `TownThermalProjection`, `MinecraftThermalInput.gameplayTownEnvironment`, `InfraredViewRenderer`
 
@@ -251,7 +251,8 @@ NaturalProfile.at(block) = max(absoluteZero, brickBase[b] + A(y) + climate[min(c
 `ThermalAnalyticFieldIndex`；`MinecraftThermalInput` 缓存同一索引引用。命令和 Curiosity
 直接使用 `MinecraftGameplayFields.upsert/remove`，能量塔仍使用原 `upsertSphere/remove`。
 field 可为
-`CUBE`、`PILLAR` 或 `SPHERE`，范围内为常值，无衰减或遮挡；不会复制到覆盖区块、挂 capability、
+`CUBE`、`PILLAR` 或 `SPHERE`，默认范围内为常值；球形场可显式指定 `centerBoostC`，在原值上叠加平滑中心增温。
+能量塔使用中心增温，命令和 Curiosity 仍使用原有常值。场没有遮挡，不会复制到覆盖区块、挂 capability、
 创建 Page，也不参与 `H/C/P/G` 守恒账本。键为 `ThermalFieldKey(provider, ownerHigh, ownerLow, channel)`：
 generator 使用团队数据完整 UUID，Curiosity 使用实体完整 UUID，命令使用独立命名空间内的位置。
 更新 map 与有序列表引用同一 Entry；重复球形报告不创建定义，不排序；仅新增、删除、mode/priority
@@ -264,16 +265,26 @@ FLOOR_FROM_NATURAL -> OVERRIDE -> MAX_HEAT -> MIN_COOL -> ADD_DELTA
 ```
 
 同一 mode 内按 priority 和完整 key 排序。Generator 使用 `FLOOR_FROM_NATURAL`：令 N 为当前消费者
-在查询点的自然温度，P 为原有 live/dormant/natural 选择，D 为命中保底场的最大温差，先求
+在查询点的自然温度，P 为原有 live/dormant/natural 选择，D 为命中保底场在该点的最大有效温差，先求
 `max(P, N + D)`；没有保底场时保留 P。N/P 是摄氏温度，D 是摄氏温差。Curiosity 的负值
 `ADD_DELTA` 在后续扣减；`/heat_adjust` 创建 `OVERRIDE`，删除时只删除命令自己的场。
 保底适用于区域玩法，包括人物、作物和城镇，并不向物理网格注入能量。
 
 Generator 的半径/温差来自 `GeneratorData.getRadius/getTempMod` 和 `GeneratorHeatFieldModel`：
 默认半径为 `floor(16 * Lr)`（`0 < Lr <= 1`）或 `floor(16 + 8 * (Lr - 1))`（`Lr > 1`）个方块，
-默认温差为 `floor(10 * Lt)`。配置属于 `FHConfig.SERVER.TOWN.GENERATOR_T1` 的
+默认基础温差为 `floor(10 * Lt)`。配置属于 `FHConfig.SERVER.TOWN.GENERATOR_T1` 的
 `baseRadiusBlocks`、`additionalRadiusPerLevelBlocks`、`temperaturePerLevelCelsius`。
-例如 N=-40、D=30 时保底是 -10；室内物理温度只有超过 -10 后才进一步提高合成温度。
+令 `R` 为该塔半径、`d` 为查询点到球心的三维欧氏距离，单位均为方块，`D0 = getTempMod()` 为基础温差，
+范围内的有效温差为 `D(d) = D0 + B * (1 - d²/R²)²`（`0 <= d <= R`）。
+`B = GeneratorHeatFieldModel.CENTER_BOOST_CELSIUS = 5°C` 是源码固定增益，不是运行时配置；球心沿用
+`(actualPos.x + 0.5, actualPos.y - masterYPosInMB + 0.5, actualPos.z + 0.5)`。
+T1、T2 共用 `GeneratorData.publishGameplayHeat`，均使用这一规则。
+中心额外5°C，半径一半处额外2.8125°C，边缘额外0°C；增益在中心和边缘的斜率均为零。
+`ThermalAnalyticField.temperatureCAt` 合并范围判断与增温取值，复用一次距离平方计算；半径平方的倒数
+在定义创建时预计算，查询无需除法或开平方，未变化的塔报告继续复用原定义。
+原半径和边缘基础温差保留，范围外不应用保底。多个塔按各自在查询点的 `D(d)` 取最大值，不相加。
+例如 N=-40、D0=30 时，中心保底是-5°C，半径一半处为-7.1875°C，边缘仍为-10°C；
+室内物理温度超过当地保底后可继续提高合成温度。
 这不是旧 `BlockTemperatureModel.applyHeat` 的 `min(N + 2H, H)` 曲线；该旧曲线不用于通用场。
 
 解析场不会触发物理 runtime 启动，物理关闭/配方重载不清场。实际世界卸载和服务器停止清理索引；
@@ -329,7 +340,7 @@ Generator 的半径/温差来自 `GeneratorData.getRadius/getTempMod` 和 `Gener
 旧的全窗口自然背景估计、729值背景包和第二张背景纹理已删除；`2026-11-15`起改为上面的客户端逐块计算。
 
 命中场的块中心使用`ThermalAnalyticFieldIndex.Sample`合成。能量塔仍是
-`max(base, naturalAir + getTempMod())`保底；有冷材料也执行，较热材料不被降低。
+`max(base, naturalAir + maximumMatchingDeltaAtPosition)`保底，包含上述中心增温；有冷材料也执行，较热材料不被降低。
 没有材料而公式需要base时，仅在场范围内用`WorldTemperature.naturalAir`作原公式基准；
 OVERRIDE不需要这项读取。场合成后统一量化0.25°C，保留原priority/key排序及其他场模式。
 自然读取只在命中且需要时发生，复用精确同biome Brick按Y层计算；未加载的必要邻区不会
@@ -412,6 +423,9 @@ D24/D32F快照通常按4P bytes计，总预算6P bytes（P为屏幕像素数）�
 关闭并完成缩圈后释放屏幕附件；资源重载重建program，卸载时删除自有资源，不删除借用附件。
 本轮范围是固定Embeddium整合包且不启用光影；特殊BE和实体的独立热状态留待以后。
 Campfire、Generator 和蒸汽喷泉仍由 `PhysicalSourceSpatialIndex` 注册为显式功率 source。
+T1/T2 Generator 从底座中心偏移 `(±2, 2, 0)`、`(0, 2, ±2)` 的四个水平出口排热，
+T1每口固定6,000W、T2每口固定8,000W，两种塔的辐射功率均固定2,000W；
+具体功率分配、绑定与堵口行为见[热源说明](heat-production-and-network.md#generator-horizontal-exhaust)。
 Generator 另外提供上述解析保底；其物理功率和传播范围不受解析场半径裁剪。
 `ChunkHeatData`、`IHeatArea`、chunk capability、周期 revalidation 和旧失效包均已删除。
 
@@ -433,7 +447,7 @@ publication，未命中时使用已加载 chunk 的 dormant 温度，再回退 `
 方块形态的 `gameplayPlacedReservoirEnvironment` 复用同一查询和预算，在方块相对坐标
 `(0.5, 0.3125, 0.5)`（模型上方）采样；两种形态使用相同的暴露换热速率。
 随后在接收点按当前 `MinecraftGameplayFields` 合成解析场：能量塔取
-`max(physicalOrFallback, naturalAir + maximumMatchingDelta)`，再执行命令和 Boss 控制。
+`max(physicalOrFallback, naturalAir + maximumMatchingDeltaAtPosition)`，包含上述中心增温，再执行命令和 Boss 控制。
 即使物理 runtime 不存在或刚关闭，世界拥有的解析场仍然生效；查询不会启动 runtime 或加载区块。
 有 runtime 时，同 tick 最多缓存 64 个四分之一方块位置的原始空气/直接辐射结果；解析场不缓存，
 每次按精确位置重新合成，保留同 tick 场更新、移除与边界变化。连续空气后端命中该缓存时仍按实际 xyz 重新读取空气场，避免四分之一方块位置合并丢失空间细节。缓存满后仍采样空气并合成解析场，

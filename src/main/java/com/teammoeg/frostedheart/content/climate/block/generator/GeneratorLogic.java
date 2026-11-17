@@ -24,7 +24,9 @@ import java.util.Optional;
 
 import com.teammoeg.chorda.multiblock.CMultiblockHelper;
 import com.teammoeg.chorda.util.CUtils;
+import com.teammoeg.frostedheart.bootstrap.common.FHMultiblocks;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput;
+import com.teammoeg.frostedheart.content.climate.thermal.source.minecraft.MinecraftPhysicalSourceProfile;
 
 import blusunrize.immersiveengineering.api.multiblocks.TemplateMultiblock;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.env.IMultiblockContext;
@@ -156,12 +158,14 @@ public abstract class GeneratorLogic<T extends GeneratorLogic<T, ?>, R extends G
 		if (sourceLevel instanceof ServerLevel serverLevel) {
 			int masterY = CMultiblockHelper.getMultiblock(ctx).masterPosInMB().getY();
 			BlockPos sourcePosition = CMultiblockHelper.getAbsoluteMaster(ctx).below(masterY);
-			BlockPos exhaustTarget = sourcePosition.above(CMultiblockHelper.getSize(ctx).getY());
 			MinecraftThermalInput.onGeneratorTick(
 					serverLevel,
 					sourcePosition,
-					exhaustTarget,
-					state.getTempLevel(),
+					sourcePosition,
+					getMultiblock() == FHMultiblocks.GENERATOR_T2
+							? MinecraftPhysicalSourceProfile.GENERATOR_T2 : MinecraftPhysicalSourceProfile.GENERATOR,
+					// Positive temperature levels enable the tier's fixed physical power.
+					state.getTempLevel() > 0.0D ? 1.0D : 0.0D,
 					isActive);
 		}
 

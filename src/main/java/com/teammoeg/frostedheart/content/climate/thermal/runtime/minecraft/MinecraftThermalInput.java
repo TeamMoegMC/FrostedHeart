@@ -1586,17 +1586,28 @@ public final class MinecraftThermalInput implements AutoCloseable {
         }
     }
 
+    /**
+     * Reports one generator's physical output; its profile supplies four horizontal outlets.
+     *
+     * @param level owning server world
+     * @param source stable source identity at the tower's bottom center
+     * @param target bottom-center anchor for the profile's relative outlet coordinates
+     * @param profile immutable T1 or T2 physical output definition
+     * @param thermalLevel multiplier of the generator's rated total power
+     * @param active whether the tower is emitting physical heat
+     */
     public static void onGeneratorTick(
             ServerLevel level,
             BlockPos source,
             BlockPos target,
+            MinecraftPhysicalSourceProfile profile,
             double thermalLevel,
             boolean active) {
         observeMachine(
                 level,
                 source,
                 target,
-                MinecraftPhysicalSourceProfile.GENERATOR,
+                profile,
                 thermalLevel,
                 active);
     }

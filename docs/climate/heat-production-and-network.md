@@ -1,7 +1,7 @@
 # Heat Production And Network
 
 - Status: `Transitional; current source and material ownership described below, earlier measurements retain their build scope`
-- Last verified: `2026-11-06` for material-frontier admission and energy-complete phase submission; `2026-10-25` for source ownership and internal subsystem retirement; `2026-10-12` for campfire fuel countdown. Other sections retain their existing provenance.
+- Last verified: `2026-11-17` for fixed T1/T2 exhaust power, 2,000 W radiation, four horizontal targets and smooth 5°C center boost; `2026-11-06` for material-frontier admission and energy-complete phase submission; `2026-10-25` for source ownership and internal subsystem retirement; `2026-10-12` for campfire fuel countdown. Other sections retain their existing provenance.
 - Scope: physical Minecraft sources, worker energy integration, material/phase sinks, and the separate heat-network model
 - Primary code anchors: `MinecraftPhysicalSourceProfile`, `PhysicalSourceSpatialIndex`, `WorkerPhysicalSourceBindings`, `AirMixingRegion`, `SpatialSourceTimeline`, `SpatialSourceIngress`, `SpatialHeatStore`, `ThermalSourceBatch`, `ThermalSourceLedger`, `LocalMaterialBoundary`, `MaterialThermalLaw.initialBranch`, `RegionalQuerySnapshot.materialPerturbationAtSlotC`, `WorkerPageStore.collectMaterialFrontier`, `HeatEndpoint`, `HeatNetwork`
 
@@ -32,9 +32,78 @@ players and other queries do not hold Pages open.
 | Profile | Rated power | Thermal port | Other ports |
 |---|---:|---:|---|
 | Campfire | `8,000 W` default | `80%` convection into the Air block above | `20%` direct radiation |
-| Generator | `10,000 W * level` | `80%` exhaust convection | `20%` radiation loss |
+| T1 generator | `26,000 W` while emitting | Four horizontal exhaust targets, `6,000 W` each (`24,000 W` combined) | `2,000 W` radiation |
+| T2 generator | `34,000 W` while emitting | Four horizontal exhaust targets, `8,000 W` each (`32,000 W` combined) | `2,000 W` radiation |
 | Fountain | `2,000 W * level` | `90%` convection | `10%` radiation loss |
 | Radiator | `4,000 W * level` | `90%` convection | `10%` radiation loss |
+
+### Generator Horizontal Exhaust
+
+T1 and T2 share `GeneratorLogic.tickFuel`. T1 uses
+`MinecraftPhysicalSourceProfile.GENERATOR` (profile ID `2`); T2 uses
+`MinecraftPhysicalSourceProfile.GENERATOR_T2` (profile ID `5`). Both immutable profiles
+use the same four-direction geometry, constructed once by `generator`.
+`MinecraftThermalInput.onGeneratorTick` receives the tower's bottom-center block as
+both the stable source identity and the profile anchor. The profile defines four
+Air targets outside the 3-by-3 tower, two blocks above its bottom layer:
+
+| Direction | Offset from bottom center `(x, y, z)`, blocks | Target face | Port ID | T1 power | T2 power |
+|---|---|---|---:|---:|---:|
+| East | `(2, 2, 0)` | `NEGATIVE_X` | 0 | 6,000 W | 8,000 W |
+| West | `(-2, 2, 0)` | `POSITIVE_X` | 1 | 6,000 W | 8,000 W |
+| North | `(0, 2, -2)` | `POSITIVE_Z` | 2 | 6,000 W | 8,000 W |
+| South | `(0, 2, 2)` | `NEGATIVE_Z` | 3 | 6,000 W | 8,000 W |
+
+The target face is the Air block's face toward the tower. Both tiers retain a
+fixed `2,000 W` radiation allocation in the `RADIATION_LOSS` record, ID4.
+The profile factory computes each Air fraction as `outletPowerW / totalPowerW`
+and the radiation fraction as `2000 / totalPowerW`, where
+`totalPowerW = 4 * outletPowerW + 2000`. This gives `26,000 W` for T1 and `34,000 W`
+for T2; radiation is not a fixed percentage of the new totals.
+`GeneratorLogic.tickFuel` supplies a power multiplier of `1` for positive temperature
+levels and `0` otherwise; the active flag still controls emission. Thus the physical
+powers above are fixed while the tower is emitting, including at temperature
+levels `1` and `10`. Gameplay temperature levels continue to determine the analytic floor.
+Power is distributed by the existing port mechanism from one registered source.
+Rotation and mirroring preserve the same four world directions.
+
+Each outlet binds, seeds its target Brick and responds to block changes through
+the existing source lifecycle. A blocked outlet's own share becomes declared
+loss; the other outlets keep their shares. Reopening the outlet restores its
+normal binding. Unavailable topology retains the existing degraded-loss path.
+`PhysicalSourceSpatialIndex.MAX_TARGET_BRICKS` reserves four deduplicated target
+slots per source; unchanged machine reports do not reconstruct the static port table.
+`SpatialSourceTimeline.MAX_PORTS_PER_SOURCE = 5` is the shared implementation
+capacity for four `PortKind.AIR_FACE` records and one `PortKind.RADIATION_LOSS`
+record. `ThermalDimensionEngine` uses
+that same value for the ledger and heat-buffer bounds; the producer retains one
+additional common channel and computes its reserved backing from the resulting size.
+These are code capacities, not server configuration settings.
+Here `Port` and `EmissionPort` count entries in the source's power-share array,
+not just physical openings. `WorkerPhysicalSourceBindings.initialPorts` converts
+every profile entry into an `EmissionPort`: `AIR_FACE` has a world offset and face,
+whereas `RADIATION_LOSS` has neither and uses `SourceBinding.declaredLoss`.
+The latter therefore occupies an array slot under the current representation.
+The radiation query itself uses the separately summed `radiativePowerShare`;
+it does not require an Air target or an additional physical outlet.
+The separate 5°C analytic center boost is described under
+[Generator Gameplay Floor](#generator-gameplay-floor).
+
+`RADIATION_LOSS` is an energy-accounting destination, not an additional opening
+on the multiblock. The earlier generator profile used a 20% radiation fraction;
+the current tier profiles fix radiation at `2,000 W` and derive its fraction from
+the tier's total power. The Air/material ledger records it as declared loss, while
+`PhysicalSourceSpatialIndex.visitSection` exposes the active machine's
+`profile.radiativePowerW(totalPowerW)` to `RadiationService`. Actual received flux
+also depends on distance, occlusion and query budgets.
+This dynamic machine-source path is separate from `MinecraftThermalProfiles` /
+`BlockRadiationIndex` static block radiation: the shipped
+`thermal/static_fire_radiators` tag contains fire and soul fire, not generator
+multiblocks. Absence from that static table does not remove the machine-source path.
+Infrared display reads material temperatures and analytic fields independently
+of this declared radiation share.
+
+### Campfire Fuel Lifecycle
 
 `CampfireTileEntityMixin_TimeLimit` still consumes one `lifeTime` unit on every
 actual lit cooking tick. The final decrement to0 leaves that tick lit; the next
@@ -51,6 +120,8 @@ and after this change. The same900tick fuel lifecycle and exact saved/loaded
 lifetime were retained;23 matched Air observations differed by at most0.000119C.
 See the [fuel comparison](../../build/checkpoint-hotspots-fuel-comparison-20261012.json)
 and [save hotspot execution plan](../../plans/2026-10-12_checkpoint-save-hotspots-next.md).
+
+### Port Binding And Mixing
 
 Blocked AIR_FACE ports become declared loss; topology-unavailable ports become
 degraded loss until their exact source Brick is compiled. Neither creates a
@@ -196,8 +267,12 @@ or material-specific fallback conversion.
 ## Generator Gameplay Floor
 
 Generator also publishes a regional analytic floor from authoritative team data,
-independent of its normal physical source. Its sphere takes the maximum matching
-natural-relative temperature increase; physical powers still add normally.
+independent of its normal physical source. Its sphere adds a smooth 5°C center
+boost to the existing natural-relative temperature increase, tapering the extra
+boost to zero at the original boundary. At distance `d` within radius `R`, the
+extra boost is `5 * (1 - d²/R²)²` Celsius. Overlapping towers take the maximum
+local temperature increase, including each tower's boost; physical powers still add normally.
+T1 and T2 share `GeneratorData.publishGameplayHeat`, so both tiers use this profile.
 The sphere does not write worker enthalpy, alter FarField, seed Bricks, or clip
 physical propagation. Positive generator levels can retain gameplay afterheat
 after active power stops and while the source chunk is unloaded. Indoor heating

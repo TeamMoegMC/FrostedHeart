@@ -33,9 +33,11 @@ public final class ThermalAnalyticField {
     private final double centerZ;
     private final double radius;
     private final double radiusSquared;
+    private final double inverseRadiusSquared;
     private final double upperExtent;
     private final double lowerExtent;
     private final double temperatureC;
+    private final double centerBoostC;
 
     public ThermalAnalyticField(
             ThermalFieldKey key,
@@ -51,6 +53,30 @@ public final class ThermalAnalyticField {
                 x, y, z, radius, radius, radius, temperatureC);
     }
 
+    /**
+     * Creates a sphere with an additional temperature offset at its center.
+     * The offset tapers as {@code (1 - distanceSquared / radiusSquared)^2},
+     * reaching zero with zero slope at the boundary.
+     *
+     * @param key provider-scoped field identity
+     * @param priority ordering within the combine mode
+     * @param combineMode how the field modifies the queried temperature
+     * @param x center X coordinate, in blocks
+     * @param y center Y coordinate, in blocks
+     * @param z center Z coordinate, in blocks
+     * @param radius sphere radius, in blocks
+     * @param temperatureC field value at the boundary, in degrees Celsius
+     * @param centerBoostC additional center value, in degrees Celsius
+     */
+    public ThermalAnalyticField(
+            ThermalFieldKey key, int priority, CombineMode combineMode,
+            double x, double y, double z, double radius,
+            double temperatureC, double centerBoostC
+    ) {
+        this(key, priority, combineMode, Shape.SPHERE,
+                x, y, z, radius, radius, radius, temperatureC, centerBoostC);
+    }
+
     public ThermalAnalyticField(
             ThermalFieldKey key,
             int priority,
@@ -64,6 +90,15 @@ public final class ThermalAnalyticField {
             double lowerExtent,
             double temperatureC
     ) {
+        this(key, priority, combineMode, shape, centerX, centerY, centerZ,
+                radius, upperExtent, lowerExtent, temperatureC, 0);
+    }
+
+    private ThermalAnalyticField(
+            ThermalFieldKey key, int priority, CombineMode combineMode, Shape shape,
+            double centerX, double centerY, double centerZ, double radius,
+            double upperExtent, double lowerExtent, double temperatureC, double centerBoostC
+    ) {
         this.combineMode = Objects.requireNonNull(
                 combineMode, "combineMode");
         this.shape = Objects.requireNonNull(shape, "shape");
@@ -71,6 +106,7 @@ public final class ThermalAnalyticField {
         requireFinite(centerY);
         requireFinite(centerZ);
         requireFinite(temperatureC);
+        requireFinite(centerBoostC);
         if (!Double.isFinite(radius) || radius <= 0.0D
                 || !Double.isFinite(upperExtent) || upperExtent < 0.0D
                 || !Double.isFinite(lowerExtent) || lowerExtent < 0.0D) {
@@ -84,9 +120,11 @@ public final class ThermalAnalyticField {
         this.centerZ = centerZ;
         this.radius = radius;
         this.radiusSquared = radius * radius;
+        this.inverseRadiusSquared = 1 / radiusSquared;
         this.upperExtent = upperExtent;
         this.lowerExtent = lowerExtent;
         this.temperatureC = temperatureC;
+        this.centerBoostC = centerBoostC;
     }
 
     public ThermalFieldKey key() { return key; }
@@ -97,7 +135,30 @@ public final class ThermalAnalyticField {
     public double centerY() { return centerY; }
     public double centerZ() { return centerZ; }
     public double radius() { return radius; }
+    /** Returns the base field value before any center boost, in degrees Celsius. */
     public double temperatureC() { return temperatureC; }
+
+    /**
+     * Evaluates the field value at an absolute world position, including its
+     * containment test. Boosted spheres reuse that squared distance and the
+     * precomputed inverse squared radius; queries do not divide or take a square root.
+     *
+     * @param x world X coordinate, in blocks
+     * @param y world Y coordinate, in blocks
+     * @param z world Z coordinate, in blocks
+     * @return absolute temperature or delta according to the combine mode, in Celsius;
+     *         {@link Double#NaN} outside the field
+     */
+    public double temperatureCAt(double x, double y, double z) {
+        if (centerBoostC == 0) return contains(x, y, z) ? temperatureC : Double.NaN;
+        double dx = x - centerX;
+        double dy = y - centerY;
+        double dz = z - centerZ;
+        double distanceSquared = dx * dx + dy * dy + dz * dz;
+        if (!(distanceSquared <= radiusSquared)) return Double.NaN;
+        double weight = 1 - distanceSquared * inverseRadiusSquared;
+        return temperatureC + centerBoostC * weight * weight;
+    }
 
     public boolean contains(double x, double y, double z) {
         double dx = x - centerX;
@@ -144,11 +205,11 @@ public final class ThermalAnalyticField {
 
     boolean matches(int priority, CombineMode mode, Shape shape,
             double x, double y, double z, double radius,
-            double upperExtent, double lowerExtent, double temperatureC) {
+            double upperExtent, double lowerExtent, double temperatureC, double centerBoostC) {
         return this.priority == priority && combineMode == mode && this.shape == shape
                 && centerX == x && centerY == y && centerZ == z && this.radius == radius
                 && this.upperExtent == upperExtent && this.lowerExtent == lowerExtent
-                && this.temperatureC == temperatureC;
+                && this.temperatureC == temperatureC && this.centerBoostC == centerBoostC;
     }
 
     public enum CombineMode {
