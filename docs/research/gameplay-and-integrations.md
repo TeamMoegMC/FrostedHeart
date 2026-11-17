@@ -114,7 +114,7 @@ Open the drawing desk's journal, choose **Debug: matching puzzle difficulties** 
 
 Run the `frostedresearch_matching` GameTests for seeded generation, legal completion, save restoration, forced fallback, difficulty ordering and the shipped debug definitions.
 
-The journal also embeds this matching game when linking an idea. `KnowledgeLinkSessions` owns that per-player transient board, and operations `4..6` act only on it. Its number count is the missing optional-knowledge count, capped at the supported seven numbers. It has no timer, paper/pen cost or research-calculation credit. The [knowledge workbench](../knowledge/workbench.md#桌面上的联络) owns its candidate selection, cancellation and settlement rules.
+Idea links and knowledge calculations both open the original drawing-desk surface and its shared `MainGamePanel`, including the grid, statistics, order widgets, help and reset. The top-left corner shows the active idea while linking; Esc (after closing help) or the journal button cancels and returns to the previous journal view. Completion also returns there. `KnowledgeLinkSessions` owns that per-player transient board, and operations `4..6` act only on it. Its number count is the missing optional-knowledge count, capped at the supported seven numbers. It has no timer, paper/pen cost or research-calculation credit. The [knowledge workbench](../knowledge/workbench.md#桌面上的联络) owns its candidate selection, cancellation and settlement rules.
 
 ## Examine-Slot Submission
 

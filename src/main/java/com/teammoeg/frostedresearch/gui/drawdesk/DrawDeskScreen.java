@@ -58,6 +58,10 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
     private boolean knowledgeOpen;
     private boolean initialSurfaceOpened;
     private AirflowDeskPanel airflow;
+    private com.teammoeg.frostedresearch.gui.drawdesk.game.ResearchGame linkGame;
+    private Component linkTitle = Component.empty();
+    private int linkNumbers, linkMissing;
+    private boolean cancellingLink;
 	private final Map<AbstractWidget, WidgetState> hiddenExternalWidgets = new IdentityHashMap<>();
 
 	public DrawDeskScreen(DrawDeskContainer cx) {
@@ -135,6 +139,10 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
 	}
 
     public void showKnowledge() {
+        if (isLinkGameOpen()) {
+            cancelLinkGame();
+            return;
+        }
         if (airflow != null) {
             closeAirflow();
             return;
@@ -156,6 +164,48 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
     }
 
     public AirflowDeskPanel getAirflowPanel() { return airflow; }
+
+    public boolean isLinkGameOpen() { return linkGame != null; }
+    public Component linkTitle() { return linkTitle; }
+    public int linkNumbers() { return linkNumbers; }
+    public int linkMissing() { return linkMissing; }
+    public com.teammoeg.frostedresearch.gui.drawdesk.game.ResearchGame matchingGame() {
+        return linkGame != null ? linkGame : getTile().getGame();
+    }
+
+    private void cancelLinkGame() {
+        if (cancellingLink) return;
+        cancellingLink = true;
+        com.teammoeg.frostedresearch.FRNetwork.INSTANCE.sendToServer(
+            new com.teammoeg.frostedresearch.knowledge.network.KnowledgeWorkbenchActionPacket(getTile().getBlockPos(),
+                com.teammoeg.frostedresearch.knowledge.network.KnowledgeWorkbenchActionPacket.Action.CANCEL_LINK,
+                java.util.List.of(), "", "", ""));
+    }
+
+    public boolean receiveLinkReply(CompoundTag payload) {
+        if (!payload.contains("link_state")) return false;
+        boolean wasOpen = isLinkGameOpen();
+        String state = payload.getString("link_state");
+        if (state.equals("running") && payload.contains("link_game")) {
+            linkTitle = com.teammoeg.frostedresearch.knowledge.client.KnowledgePresentation.text(payload.getString("link_title"));
+            linkNumbers = payload.getInt("link_numbers"); linkMissing = payload.getInt("link_missing");
+            linkGame = new com.teammoeg.frostedresearch.gui.drawdesk.game.ResearchGame();
+            linkGame.load(payload.getCompound("link_game"));
+            knowledgeOpen = false;
+            workspaceState.setSurface(ResearchWorkspaceState.Surface.DRAWING_DESK);
+            if (!wasOpen) { getLayerHolder().focusOn(null); p.closeHelp(); }
+        } else if (!state.equals("running") && wasOpen) {
+            linkGame = null;
+            cancellingLink = false;
+            knowledgeOpen = true;
+        }
+        if (knowledge != null) {
+            knowledge.refreshSnapshot();
+            knowledge.receiveReply(payload);
+        }
+        if (wasOpen || isLinkGameOpen()) { p.refresh(); applyWorkspaceSurface(); }
+        return true;
+    }
 
     public void openAirflow(String run, String task, Component projectTitle) {
         getLayerHolder().focusOn(null);
@@ -226,7 +276,7 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
 		p.setEnabled(!showArchive);
 		menu.setSlotVisible(!showArchive);
 
-        if (airflow != null) for (int index = 0; index < 3; index++)
+        if (airflow != null || isLinkGameOpen()) for (int index = 0; index < 3; index++)
             if (menu.slots.get(index) instanceof com.teammoeg.chorda.client.cui.menu.DeactivatableSlot slot) slot.setActived(false);
 		if (showArchive) {
 			resizeArchiveToWindow();
@@ -313,6 +363,10 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
 
 	@Override
 	public void back() {
+        if (isLinkGameOpen()) {
+            cancelLinkGame();
+            return;
+        }
         if (airflow != null) {
             closeAirflow();
             return;
@@ -363,7 +417,7 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
 
 	@Override
 	public void onResearchProgressChanged(String researchId) {
-        if (airflow != null && knowledge != null) knowledge.refreshSnapshot();
+		if ((airflow != null || isLinkGameOpen()) && knowledge != null) knowledge.refreshSnapshot();
 		if (archive != null) {
 			archive.onResearchProgressChanged(researchId);
 		}

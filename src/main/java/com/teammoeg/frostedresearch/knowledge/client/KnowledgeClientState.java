@@ -61,7 +61,7 @@ public final class KnowledgeClientState {
         var minecraft = Minecraft.getInstance();
         if (minecraft.screen instanceof com.teammoeg.chorda.client.cui.screenadapter.CUIScreen cui
             && cui.getPrimaryLayer() instanceof com.teammoeg.frostedresearch.gui.drawdesk.DrawDeskScreen desk
-            && desk.receiveAirflowReply(value)) return;
+            && (desk.receiveAirflowReply(value) || desk.receiveLinkReply(value))) return;
         if (KnowledgeScreen.current() != null) KnowledgeScreen.current().receiveReply(value);
     }
 }

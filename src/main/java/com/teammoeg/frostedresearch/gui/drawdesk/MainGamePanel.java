@@ -80,7 +80,7 @@ class MainGamePanel extends UILayer {
 
 	@Override
 	public void addUIElements() {
-		rg.attach();
+		rg.bind(ot.dd.matchingGame(), ot.dd.isLinkGameOpen());
 		for (int i = 0; i < 9; i++)
 			for (int j = 0; j < 9; j++) {
 				add(cbs[i][j]);
@@ -186,6 +186,11 @@ class MainGamePanel extends UILayer {
 	public void render(GuiGraphics matrixStack, int x, int y, int w, int h, RenderingHint hint) {
 		
 		super.render(matrixStack, x, y, w, h, hint);
+		if (ot.dd.isLinkGameOpen()) {
+			lstatus = 0;
+			status.setText(Components.immutableEmpty());
+			return;
+		}
 		if (lstatus != 0) {
 			DrawDeskIcons.DIALOG_FRAME.draw(matrixStack, x + 7, y + 53, 137, 52);
 			status.render(matrixStack, x + status.getX(), y + status.getY(), status.getWidth(), status.getHeight(), hint);

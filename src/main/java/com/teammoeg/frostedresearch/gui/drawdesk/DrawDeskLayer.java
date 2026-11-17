@@ -90,6 +90,7 @@ public class DrawDeskLayer extends UILayer {
 
 		};
 		techTree.setPosAndSize(16, 68, 36, 19);
+		techTree.setEnabled(!dd.isLinkGameOpen());
 
 		add(techTree);
         Button knowledge = new com.teammoeg.chorda.client.cui.widgets.TextButton(this, net.minecraft.network.chat.Component.translatable("gui.frostedresearch.journal.title"), com.teammoeg.chorda.client.icon.CIcons.nop()) {
@@ -111,6 +112,7 @@ public class DrawDeskLayer extends UILayer {
 			}
 		};
 		techStop.setPosAndSize(55, 68, 19, 19);
+		techStop.setEnabled(!dd.isLinkGameOpen());
 		add(techStop);
 		Button itemSubmit = new Button(this) {
 
@@ -139,6 +141,7 @@ public class DrawDeskLayer extends UILayer {
 
 		};
 		itemSubmit.setPosAndSize(113, 109, 18, 18);
+		itemSubmit.setEnabled(!dd.isLinkGameOpen());
 		add(itemSubmit);
 		int sw = 387;
 		int sh = 203;

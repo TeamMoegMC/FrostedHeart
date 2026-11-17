@@ -24,6 +24,7 @@ import net.minecraft.core.*;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.*;
 import net.minecraft.world.item.*;
@@ -54,6 +55,7 @@ public final class LinkClientValidation {
     private static DrawDeskScreen desk;
     private static KnowledgeLayer layer;
     private static List<Pair<CardPos,CardPos>> moves;
+    private static CompoundTag originalLegacy;
     private static Object read(Object value,String field) throws Exception { var f=value.getClass().getDeclaredField(field);f.setAccessible(true);return f.get(value); }
     private static void require(boolean yes,String message) { if(!yes)throw new IllegalStateException(message); }
     private static ServerPlayer player() { return Minecraft.getInstance().getSingleplayerServer().getPlayerList().getPlayers().get(0); }
@@ -80,8 +82,13 @@ public final class LinkClientValidation {
             .filter(b->b.getTitle().getString().equals(label)).findFirst().orElseThrow(()->new IllegalStateException("missing button "+label));
         require(button.isEnabled(),"button enabled: "+label);press(button);
     }
-    private static LinkGamePanel panel() { return layer.getElements().stream().filter(LinkGamePanel.class::isInstance).map(LinkGamePanel.class::cast).findFirst().orElse(null); }
-    private static ResearchGame board() throws Exception { return (ResearchGame)read(layer,"linkGame"); }
+    private static UILayer panel() {
+        if (!desk.isLinkGameOpen()) return null;
+        var surface = desk.getElements().stream().filter(DrawDeskLayer.class::isInstance).map(DrawDeskLayer.class::cast).findFirst().orElseThrow();
+        return surface.getElements().stream().filter(element -> element.getClass().getSimpleName().equals("MainGamePanel"))
+            .map(UILayer.class::cast).findFirst().orElseThrow();
+    }
+    private static ResearchGame board() { return desk.matchingGame(); }
     private static int count(ResearchGame board) { int count=0;for(int x=0;x<9;x++)for(int y=0;y<9;y++)if(board.get(x,y).isShow())count++;return count; }
     private static List<Pair<CardPos,CardPos>> solve(ResearchGame board,Set<String> visited) {
         if(board.isFinished())return new ArrayList<>();
@@ -96,7 +103,7 @@ public final class LinkClientValidation {
         return null;
     }
     private static void card(CardPos pos) throws Exception {
-        var client=(ClientResearchGame)read(panel(),"client");
+        var client=(ClientResearchGame)read(panel(),"rg");
         for(var child:panel().getElements())if(child instanceof CardButton){
             var field=CardButton.class.getDeclaredField("card");field.setAccessible(true);
             if(pos.equals(field.get(child))){require(client.isTouchable(pos),"ordinary card is exposed");press(child);return;}
@@ -117,7 +124,11 @@ public final class LinkClientValidation {
         require(!p.hasPermissions(2),"normal completion must not use the operator shortcut");
         p.setItemInHand(InteractionHand.MAIN_HAND,new ItemStack(FRContents.Blocks.DRAWING_DESK.get()));
         require(p.getMainHandItem().useOn(new UseOnContext(p,InteractionHand.MAIN_HAND,new BlockHitResult(Vec3.atCenterOf(DESK.below()),Direction.UP,DESK.below(),false))).consumesAction(),"fixture desk placed");
-        p.setItemInHand(InteractionHand.MAIN_HAND,ItemStack.EMPTY);TeamResearchService.send(p,CTeamDataManager.get(p));
+        p.setItemInHand(InteractionHand.MAIN_HAND,ItemStack.EMPTY);
+        var tile=(DrawingDeskTileEntity)level.getBlockEntity(DESK);
+        tile.getGame().init(GenerateInfo.T1,new Random(7));tile.getGame().setLvl(0);
+        originalLegacy=tile.getGame().serialize();((net.minecraft.world.level.block.entity.BlockEntity)tile).setChanged();tile.syncData();
+        TeamResearchService.send(p,CTeamDataManager.get(p));
     }
     @SubscribeEvent public static void tick(TickEvent.ClientTickEvent event) {
         if(event.phase!=TickEvent.Phase.END||finished)return;
@@ -137,14 +148,17 @@ public final class LinkClientValidation {
                 case 5 -> {if(ticks<5)return;var list=layer.getElements().stream().filter(JournalList.class::isInstance).findFirst().orElseThrow();pressAt(list,40,14);next();}
                 case 6 -> {if(ticks<5)return;click("tray.add");click("link.try");next();}
                 case 7 -> {if(ticks<10)return;shot("01-candidate-two-numbers");click("link.accept");next();}
-                case 8 -> {if(ticks<10||panel()==null)return;require((Integer)read(layer,"linkNumbers")==2,"two missing auxiliaries select difficulty two");shot("02-two-number-board");mc.screen.keyPressed(GLFW.GLFW_KEY_ESCAPE,1,0);next();}
+                case 8 -> {if(ticks<10||panel()==null)return;require(desk.linkNumbers()==2,"two missing auxiliaries select difficulty two");
+                    require(desk.getWidth()==387 && desk.getHeight()==203,"uses the original fixed drawing desk surface");
+                    require(desk.getKnowledgeLayer()==null && panel().getElements().stream().filter(CardButton.class::isInstance).count()==81,"same MainGamePanel and CardButton grid, no separate journal puzzle");
+                    checks.put("shared_desk_surface",true);shot("02-two-number-board");mc.screen.keyPressed(GLFW.GLFW_KEY_ESCAPE,1,0);next();}
                 case 9 -> {if(ticks<10||panel()!=null)return;checks.put("escape_cancelled",true);server(()->require(KnowledgeLinkSessions.session(player().getUUID()).isEmpty()&&!service().query(IDEA).inArchive(),"Esc cancels with no idea"));click("link.try");next();}
                 case 10 -> {if(ticks<10)return;click("link.accept");next();}
                 case 11 -> {if(ticks<10||panel()==null)return;server(()->{var source=new AcquisitionSource("client_fixture",Optional.of(player().getUUID()),player().level().getGameTime());for(var item:List.of(Items.CLAY_BALL,Items.SAND))service().learn(ItemRetrieval.observe(player(),new ItemStack(item)),source,KnowledgeService.Grant.NORMAL);TeamResearchService.send(player(),CTeamDataManager.get(player()));});next();}
-                case 12 -> {if(ticks<10||panel()==null)return;require((Integer)read(layer,"linkNumbers")==2,"active board difficulty remains fixed");click("link.restart");next();}
-                case 13 -> {if(ticks<10||panel()==null||(Integer)read(layer,"linkNumbers")!=0)return;require(count(board())==9,"zero-number board has nine tiles");shot("03-zero-number-after-reset");moves=solve(new ResearchGame(board()),new HashSet<>());require(moves!=null&&moves.size()==4,"independent client search found four symbol pairs");checks.put("reset_recomputed_to_zero",true);moveIndex=0;next();}
+                case 12 -> {if(ticks<10||panel()==null)return;require(desk.linkNumbers()==2,"active board difficulty remains fixed");press((UIElement)read(panel(),"reset"));next();}
+                case 13 -> {if(ticks<10||panel()==null||desk.linkNumbers()!=0)return;require(count(board())==9,"zero-number board has nine tiles");shot("03-zero-number-after-reset");moves=solve(new ResearchGame(board()),new HashSet<>());require(moves!=null&&moves.size()==4,"independent client search found four symbol pairs");checks.put("reset_recomputed_to_zero",true);moveIndex=0;next();}
                 case 14 -> {if(ticks<4||panel()==null)return;if(remaining>=0){if(count(board())!=remaining)return;remaining=-1;moveIndex++;}if(moveIndex<moves.size()){var pair=moves.get(moveIndex);remaining=count(board())-2;card(pair.getFirst());card(pair.getSecond());ticks=0;return;}require(count(board())==1,"all pairs cleared by Screen events and C2S");card(ResearchGame.FINAL_CARD);next();}
-                case 15 -> {if(ticks<15||panel()!=null)return;shot("04-idea-acquired");server(()->{require(service().isActive(IDEA),"normal final click grants the idea");require(KnowledgeLinkSessions.session(player().getUUID()).isEmpty(),"finished session removed");var tile=(DrawingDeskTileEntity)player().level().getBlockEntity(DESK);require(tile.getGame().isEmpty(),"legacy desk game untouched");for(int n=0;n<3;n++)require(tile.getInventory().getStackInSlot(n).isEmpty(),"no paper or ink consumed");});next();}
+                case 15 -> {if(ticks<15||panel()!=null)return;require(desk.getKnowledgeLayer()==layer,"returns to the same journal after a win");shot("04-idea-acquired");server(()->{require(service().isActive(IDEA),"normal final click grants the idea");require(KnowledgeLinkSessions.session(player().getUUID()).isEmpty(),"finished session removed");var tile=(DrawingDeskTileEntity)player().level().getBlockEntity(DESK);require(tile.getGame().serialize().equals(originalLegacy),"persisted legacy board remains byte-for-byte equivalent");for(int n=0;n<3;n++)require(tile.getInventory().getStackInSlot(n).isEmpty(),"no paper or ink consumed");});next();}
                 case 16 -> {if(ticks<10)return;checks.put("ordinary_C2S_win",true);finish(null);}
             }
         }catch(Throwable error){finish(error);}

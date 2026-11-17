@@ -69,7 +69,8 @@ public class DeskProgressPanel extends UILayer {
 
     private int signature() {
         DrawingDeskTileEntity tile = dd.getTile();
-        return Objects.hash(tile.calculationRun(), tile.calculationRequirement(), KnowledgeClientState.serial());
+        return Objects.hash(tile.calculationRun(), tile.calculationRequirement(), KnowledgeClientState.serial(),
+                dd.isLinkGameOpen(), dd.linkTitle(), dd.linkNumbers());
     }
 
     /**
@@ -77,7 +78,7 @@ public class DeskProgressPanel extends UILayer {
      */
     private Target find() {
         DrawingDeskTileEntity tile = dd.getTile();
-        if (!tile.hasCalculation()) return null;
+        if (dd.isLinkGameOpen() || !tile.hasCalculation()) return null;
         String run = tile.calculationRun().toString();
         for (var open : new KnowledgeJournalData(KnowledgeClientState.snapshot()).runs)
             if (open.id().equals(run))
@@ -91,7 +92,7 @@ public class DeskProgressPanel extends UILayer {
 
     @Override
     public void addUIElements() {
-        if (target == null) {
+        if (target == null && !dd.isLinkGameOpen()) {
             ResearchProgressPanel legacy = new ResearchProgressPanel(this);
             legacy.setPosAndSize(0, 0, getWidth(), getHeight());
             add(legacy);
@@ -99,7 +100,7 @@ public class DeskProgressPanel extends UILayer {
         }
         TextField title = new TextField(this);
         title.setMaxWidth(71).setMaxLines(2).setPos(40, 15);
-        title.setText(target.project());
+        title.setText(dd.isLinkGameOpen() ? dd.linkTitle() : target.project());
         add(title);
     }
 
@@ -121,20 +122,31 @@ public class DeskProgressPanel extends UILayer {
     @Override
     public void render(GuiGraphics g, int x, int y, int w, int h, RenderingHint hint) {
         super.render(g, x, y, w, h, hint);
-        if (target == null) return;
+        boolean linking = dd.isLinkGameOpen();
+        if (target == null && !linking) return;
         int ink = UIColors.UI_TEXT.getColorARGB(this, x, y, hint);
-        g.drawString(getFont(), Lang.translateGui("draw_desk.calculation_for"), x + 3, y, ink, false);
+        g.drawString(getFont(), Lang.translateGui(linking ? "draw_desk.idea_for" : "draw_desk.calculation_for"), x + 3, y, ink, false);
         TechIcons.SHADOW.draw(g, x + 1, y + 38, 36, 9);
         PAPER.draw(g, x + 3, y + 12, 32, 32);
         CGuiHelper.resetGuiDrawing();
-        DrawDeskTheme.INSTANCE.drawProgressBar(g, x + 40, y + 32, 70, 8, target.done() / (float) target.count());
-        g.drawString(getFont(), Lang.translateGui("draw_desk.calculation_progress", target.done(), target.count(), GenerateInfo.numberCount(target.level())),
-                x + 40, y + 40, ink, false);
+        if (linking) {
+            g.drawString(getFont(), Lang.translateGui("draw_desk.idea_difficulty", dd.linkNumbers()), x + 40, y + 40, ink, false);
+        } else {
+            DrawDeskTheme.INSTANCE.drawProgressBar(g, x + 40, y + 32, 70, 8, target.done() / (float) target.count());
+            g.drawString(getFont(), Lang.translateGui("draw_desk.calculation_progress", target.done(), target.count(), GenerateInfo.numberCount(target.level())),
+                    x + 40, y + 40, ink, false);
+        }
         TechIcons.HLINE_LR.draw(g, x + 1, y + BODY, w - 1, 3);
     }
 
     @Override
     public void getTooltip(TooltipBuilder list) {
+        if (dd.isLinkGameOpen() && isMouseOver() && getMouseY() < BODY) {
+            list.accept(dd.linkTitle());
+            list.accept(Component.translatable("gui.frostedresearch.journal.link.difficulty", dd.linkMissing(), dd.linkNumbers()));
+            list.accept(Component.translatable("gui.frostedresearch.journal.link.game_help"));
+            return;
+        }
         if (target == null || !isMouseOver() || getMouseY() >= BODY) {
             super.getTooltip(list);
             return;
