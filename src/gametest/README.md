@@ -72,3 +72,5 @@ capacity eviction, invalidation, failure and rollback. Two real-level cases exer
 作物肥料验证使用命名空间 `frostedheart_fertilizer`：
 `./gradlew --offline runGameTestServer -PgameTestNamespaces=frostedheart_fertilizer -PgameTestDirectory=build/fertilizer-gametest`。
 覆盖生长增产记账、成熟后施肥、预览、NBT 恢复、重置清理、多层根部及 Create 公共破坏掉落路径。行为与验证边界见[作物肥料](../../docs/climate/crop-fertilization.md)。
+
+独立栽培橡树原型验证使用 `frostedheart_cultivated_oak` 命名空间；配置、试用方式和验证范围见[栽培橡树](../../docs/climate/cultivated-oak.md)。

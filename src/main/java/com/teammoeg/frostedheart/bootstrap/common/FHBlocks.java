@@ -1367,6 +1367,21 @@ public class FHBlocks {
             })
             .register();
 
+    public static final BlockEntry<com.teammoeg.frostedheart.content.agriculture.tree.CultivatedOakBlock> CULTIVATED_OAK = REGISTRATE
+            .block("cultivated_oak_sapling", com.teammoeg.frostedheart.content.agriculture.tree.CultivatedOakBlock::new)
+            .initialProperties(() -> OAK_SAPLING)
+            .properties(p -> p.randomTicks().noOcclusion())
+            .addLayer(() -> net.minecraft.client.renderer.RenderType::cutout)
+            .blockstate((c, p) -> p.getVariantBuilder(c.get()).forAllStates(state ->
+                    net.minecraftforge.client.model.generators.ConfiguredModel.builder()
+                            .modelFile(p.models().getExistingFile(p.modLoc("block/cultivated_oak_sapling_"
+                                    + state.getValue(com.teammoeg.frostedheart.content.agriculture.tree.CultivatedOakBlock.AGE))))
+                            .build()))
+            .lang("Cultivated Oak Sapling")
+            .loot(RegistrateBlockLootTables::dropSelf)
+            .item().model((c, p) -> p.withExistingParent(c.getName(), p.modLoc("block/cultivated_oak_sapling_4")))
+            .build().register();
+
     public static final FUtils.BushWoodSet JACK_PINE = FUtils.registerBushSet(
             "jack_pine",
             DefaultTreeGrower.supply(FHFeatures.FHConfiguredFeatures.JACK_PINE_CFG)

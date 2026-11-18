@@ -1,0 +1,10 @@
+{
+  "block.frostedheart.cultivated_oak_sapling": "栽培橡树苗",
+  "message.frostedheart.cultivated_oak.status": "阶段 %s/4，进度 %s，目标木头 %s，高度 %s；%s",
+  "message.frostedheart.cultivated_oak.growing": "生长中",
+  "message.frostedheart.cultivated_oak.profile": "等待有效的栽培配置",
+  "message.frostedheart.cultivated_oak.light": "等待光照",
+  "message.frostedheart.cultivated_oak.temperature": "等待适宜温度",
+  "message.frostedheart.cultivated_oak.space": "等待生长空间",
+  "message.frostedheart.cultivated_oak.chunks": "等待周围区块加载"
+}

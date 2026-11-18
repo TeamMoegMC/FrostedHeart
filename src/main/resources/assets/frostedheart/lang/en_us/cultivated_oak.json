@@ -1,0 +1,10 @@
+{
+  "block.frostedheart.cultivated_oak_sapling": "Cultivated Oak Sapling",
+  "message.frostedheart.cultivated_oak.status": "Stage %s/4, progress %s, target logs %s, height %s; %s",
+  "message.frostedheart.cultivated_oak.growing": "Growing",
+  "message.frostedheart.cultivated_oak.profile": "Waiting for cultivation profile",
+  "message.frostedheart.cultivated_oak.light": "Waiting for light",
+  "message.frostedheart.cultivated_oak.temperature": "Waiting for suitable temperature",
+  "message.frostedheart.cultivated_oak.space": "Waiting for space",
+  "message.frostedheart.cultivated_oak.chunks": "Waiting for loaded chunks"
+}
