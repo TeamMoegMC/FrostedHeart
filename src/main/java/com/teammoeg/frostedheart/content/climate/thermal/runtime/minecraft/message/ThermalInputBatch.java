@@ -164,6 +164,12 @@ public final class ThermalInputBatch {
         return phaseAcks;
     }
 
+    /** Whether this batch carries an update owned by a Page, including a phase acknowledgement. */
+    public boolean hasPageUpdates() {
+        return admissions.length != 0 || retirements.length != 0 || residencyUpdates.length != 0
+                || !geometry.isEmpty() || environmentUpdates.length != 0 || phaseAcks.length != 0 || phaseIntents.length != 0;
+    }
+
     public boolean hasFarFieldConductanceScale() {
         return !Double.isNaN(farFieldConductanceScale);
     }

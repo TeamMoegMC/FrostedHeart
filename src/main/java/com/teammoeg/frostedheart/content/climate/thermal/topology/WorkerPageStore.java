@@ -66,14 +66,13 @@ public final class WorkerPageStore implements AutoCloseable, AirGeometryView {
 
     /** Reuse the original residency owner with the fixed field's sole Accepted values. */
     public void setFixedField(TiledThermalField field) {
+        if (fixedField != null) fixedField.onResidencyChanged(null);
         fixedField = field;
+        if (field != null) field.onResidencyChanged(this::markMaintenanceDirty);
     }
 
     public boolean hasFixedField() { return fixedField != null; }
 
-    public void markAcceptedMaintenance() {
-        for (long section : activeBySection.keySet()) markMaintenanceDirty(section);
-    }
     private Long2LongMap airSupportRequests;
 
     private final it.unimi.dsi.fastutil.longs.LongLinkedOpenHashSet maintenanceReady = new it.unimi.dsi.fastutil.longs.LongLinkedOpenHashSet();
@@ -91,7 +90,8 @@ public final class WorkerPageStore implements AutoCloseable, AirGeometryView {
         final long[] outputs = new long[7];
         long revision, processed, runningRevision, hot, nextHot;
         PagePublication publication;
-        int brick, face, phase;
+        long remainingBricks;
+        int face, phase;
         double maximumResidualC, residualTemperatureC;
         int residualX, residualY, residualZ;
         long residualTick;
@@ -125,7 +125,7 @@ public final class WorkerPageStore implements AutoCloseable, AirGeometryView {
     public long maintenanceCapacityWait() { return maintenanceCapacityWait; }
 
     /** One Brick/face at a time, preserving the Page's prior completed outputs until all are ready. */
-    public void advanceMaintenance(ThermalCellArena arena, double referenceC, long deadline, long capacityRevision,
+    public void advanceMaintenance(ThermalCellArena arena, long deadline, long capacityRevision,
             java.util.function.Consumer<ThermalCompletion.BrickResidency> output) {
         if (fixedField == null) return;
         if (maintenanceCursor == null && !maintenanceReady.isEmpty()) {
@@ -141,7 +141,8 @@ public final class WorkerPageStore implements AutoCloseable, AirGeometryView {
                 maintenanceTargets.add(section);
             } else if (fixedField == null || !fixedField.frozen(section)) {
                 maintenanceCursor = state; maintenancePage = page; state.publication = page.publication;
-                state.runningRevision = state.revision; state.nextHot = 0; state.brick = state.face = state.phase = 0;
+                state.runningRevision = state.revision; state.nextHot = 0; state.face = state.phase = 0;
+                state.remainingBricks = page.residentBrickMask;
                 state.maximumResidualC = 0;
                 desiredScratch.clear();
             }
@@ -158,45 +159,48 @@ public final class WorkerPageStore implements AutoCloseable, AirGeometryView {
             do {
                 maintenanceBlocked = false;
                 if (state.phase == 0) {
-                    int brick = state.brick;
-                    long bit = 1L << brick;
-                    if ((page.residentBrickMask & bit) != 0) {
+                    if (state.remainingBricks != 0) {
+                        int brick = Long.numberOfTrailingZeros(state.remainingBricks);
                         var topology = page.brick(brick);
+                        long bit = 1L << brick;
                         double threshold = (state.hot & bit) == 0 ? ThermalRetentionPolicy.ENTER_C : ThermalRetentionPolicy.EXIT_C;
                         boolean hot = fixedField != null && fixedField.activeBrick(page.handle.sectionKey(), brick, threshold);
                         for (int slot = topology.span.firstSlot(); slot < topology.span.endSlotExclusive(); slot++) {
                             if (arena.hasMaterialTransition(slot)) phaseDirty.accept(slot);
                         }
                         if (hot) state.nextHot |= bit;
+                        state.remainingBricks &= state.remainingBricks - 1;
                     }
-                    if (!maintenanceBlocked && ++state.brick == 64) { state.phase = 1; state.brick = state.face = 0; }
+                    if (state.remainingBricks == 0) {
+                        state.remainingBricks = page.sourceSeedMask | state.nextHot;
+                        orDesired(page.handle.sectionKey(), state.remainingBricks);
+                        state.phase = state.remainingBricks == 0 ? 2 : 1;
+                    }
                 } else if (state.phase == 1) {
-                    long active = page.sourceSeedMask | state.nextHot;
-                    if (state.brick == 0 && state.face == 0) orDesired(page.handle.sectionKey(), active);
-                    long bit = 1L << state.brick;
-                    if ((active & bit) != 0) {
-                        if (state.face == 6) collectMaterialFrontier(page, bit);
-                        else {
-                            BlockFace face = BlockFace.fromOrdinal(state.face);
-                            long target = neighborSection(page.handle.sectionKey(), face);
-                            int offset = switch (face) {
-                                case NEGATIVE_X -> -1; case POSITIVE_X -> 1;
-                                case NEGATIVE_Y -> -16; case POSITIVE_Y -> 16;
-                                case NEGATIVE_Z -> -4; case POSITIVE_Z -> 4;
-                            };
-                            long boundary = switch (face) {
-                                case NEGATIVE_X -> X_MIN; case POSITIVE_X -> X_MAX;
-                                case NEGATIVE_Y -> Y_MIN; case POSITIVE_Y -> Y_MAX;
-                                case NEGATIVE_Z -> Z_MIN; case POSITIVE_Z -> Z_MAX;
-                            };
-                            requestFace(page, state.brick, face, (boundary & bit) == 0 ? page.handle.sectionKey() : target,
-                                    (boundary & bit) == 0 ? state.brick + offset : boundaryTargetBrick(state.brick, face), arena, referenceC,
-                                    ThermalRetentionPolicy.ENTER_C, ThermalRetentionPolicy.EXIT_C);
-                        }
+                    int brick = Long.numberOfTrailingZeros(state.remainingBricks);
+                    long bit = 1L << brick;
+                    if (state.face == 6) collectMaterialFrontier(page, bit);
+                    else {
+                        BlockFace face = BlockFace.fromOrdinal(state.face);
+                        int offset = switch (face) {
+                            case NEGATIVE_X -> -1; case POSITIVE_X -> 1;
+                            case NEGATIVE_Y -> -16; case POSITIVE_Y -> 16;
+                            case NEGATIVE_Z -> -4; case POSITIVE_Z -> 4;
+                        };
+                        long boundary = switch (face) {
+                            case NEGATIVE_X -> X_MIN; case POSITIVE_X -> X_MAX;
+                            case NEGATIVE_Y -> Y_MIN; case POSITIVE_Y -> Y_MAX;
+                            case NEGATIVE_Z -> Z_MIN; case POSITIVE_Z -> Z_MAX;
+                        };
+                        boolean crossesSection = (boundary & bit) != 0;
+                        long target = crossesSection ? neighborSection(page.handle.sectionKey(), face) : page.handle.sectionKey();
+                        requestFace(page, brick, face, target,
+                                crossesSection ? boundaryTargetBrick(brick, face) : brick + offset);
                     }
                     if (!maintenanceBlocked && ++state.face == 7) {
                         state.face = 0;
-                        if (++state.brick == 64) state.phase = 2;
+                        state.remainingBricks &= state.remainingBricks - 1;
+                        if (state.remainingBricks == 0) state.phase = 2;
                     }
                 } else {
                     long section = page.handle.sectionKey();
@@ -246,6 +250,16 @@ public final class WorkerPageStore implements AutoCloseable, AirGeometryView {
                 if (pageAt(neighbor) != null) markMaintenanceDirty(neighbor);
             }
         }
+    }
+
+    /** Whether this committed Page has at least one resolved resident Brick receiving physical inputs. */
+    public boolean hasResolvedResidentBrick(long sectionKey) {
+        PageState page = find(sectionKey);
+        if (page == null) return false;
+        for (long mask = page.residentBrickMask; mask != 0; mask &= mask - 1) {
+            if (page.brick(Long.numberOfTrailingZeros(mask)).cellsResolved) return true;
+        }
+        return false;
     }
 
     public long capturedBrickMask(long sectionKey) {
@@ -675,85 +689,22 @@ public final class WorkerPageStore implements AutoCloseable, AirGeometryView {
         }
     }
 
-    private void requestFace(
-            PageState page,
-            int ownerBrick,
-            BlockFace face,
-            long targetSection,
-            int targetBrick,
-            ThermalCellArena arena,
-            double referenceTemperatureC,
-            double refineHighC,
-            double releaseLowC) {
+    /** Request the neighbour once when an eligible face patch reaches its hysteresis threshold. */
+    private void requestFace(PageState page, int brick, BlockFace face, long targetSection, int targetBrick) {
         long targetBit = 1L << targetBrick;
-        double threshold =
-                (desiredBySection.get(targetSection) & targetBit) != 0L ? releaseLowC : refineHighC;
-        if (faceResidualC(page, ownerBrick, face, arena, referenceTemperatureC) >= threshold) {
-            orDesired(targetSection, targetBit);
-        }
-    }
-
-    private double faceResidualC(
-            PageState page,
-            int brick,
-            BlockFace face,
-            ThermalCellArena arena,
-            double referenceTemperatureC) {
-        WorkerBrickTopology topology = page.brick(brick);
-        if (!topology.resolved || topology.coverageSlot < 0) {
-            return 0.0D;
-        }
-        if (fixedField != null) {
-            double residual = 0;
-            long origin = AirRouteCompiler.brickPosition(page, brick);
-            int axis = face.ordinal() / 2, side = (face.ordinal() & 1) == 0 ? 0 : 3;
+        if ((desiredScratch.get(targetSection) & targetBit) != 0) return;
+        var topology = page.brick(brick);
+        if (!topology.resolved || topology.coverageSlot < 0) return;
+        int eligible = 0xffff;
+        if (face == BlockFace.POSITIVE_Y) {
             for (int patch = 0; patch < 16; patch++) {
-                if (face == BlockFace.POSITIVE_Y && topPortDirectSky(page, brick, patch)) continue;
-                long position = AirRouteCompiler.blockPosition(origin, BlockBrickLayout.faceBlock(axis, side, patch));
-                if (fixedField.read(position, false, fixedSample))
-                    residual = Math.max(residual, Math.abs(fixedSample.temperatureC() - fixedSample.naturalC()));
-            }
-            return residual;
-        }
-        if (topology.blockLayout == null) {
-            if (face == BlockFace.POSITIVE_Y && allTopColumnsDirectSky(page, brick)) {
-                return 0.0D;
-            }
-            return Math.abs(
-                    arena.temperatureC(topology.coverageSlot, referenceTemperatureC)
-                            - page.naturalTemperatureC);
-        }
-        double residual = 0.0D;
-        long seen = 0;
-        int axis = face.ordinal() / 2, side = (face.ordinal() & 1) == 0 ? 0 : 3;
-        for (int i = 0; i < 16; i++) {
-            if (face == BlockFace.POSITIVE_Y && topPortDirectSky(page, brick, i)) continue;
-            int node = topology.blockLayout.airNodeAt(BlockBrickLayout.faceBlock(axis, side, i));
-            if (node < 0 || (seen & 1L << node) != 0) continue;
-            seen |= 1L << node;
-            int slot = topology.coverageSlot + node;
-            residual =
-                    Math.max(
-                            residual,
-                            Math.abs(
-                                    arena.temperatureC(slot, referenceTemperatureC)
-                                            - page.naturalTemperatureC));
-        }
-        return residual;
-    }
-
-    private static boolean allTopColumnsDirectSky(PageState page, int brick) {
-        int topY = (brick >>> 4 & 3) * 4 + 3;
-        int firstX = (brick & 3) << 2;
-        int firstZ = (brick >>> 2 & 3) << 2;
-        for (int z = firstZ; z < firstZ + 4; z++) {
-            for (int x = firstX; x < firstX + 4; x++) {
-                if (Byte.toUnsignedInt(page.firstExposedLocalY[x | z << 4]) > topY) {
-                    return false;
-                }
+                if (topPortDirectSky(page, brick, patch)) eligible &= ~(1 << patch);
             }
         }
-        return true;
+        double threshold = (desiredBySection.get(targetSection) & targetBit) == 0
+                ? ThermalRetentionPolicy.ENTER_C : ThermalRetentionPolicy.EXIT_C;
+        if (eligible != 0 && fixedField.airFaceAtThreshold(page.handle.sectionKey(), brick, face, eligible, threshold))
+            orDesired(targetSection, targetBit);
     }
 
     private static boolean topPortDirectSky(PageState page, int brick, int blockInBrick) {
@@ -1083,7 +1034,7 @@ public final class WorkerPageStore implements AutoCloseable, AirGeometryView {
     @Override
     public void close() {
         synchronized (captureGate) {
-            fixedField = null;
+            setFixedField(null);
             maintenance.clear(); maintenanceReady.clear(); maintenanceTargets.clear();
             routeSupport.clear(); maintenanceCursor = null; maintenancePage = null;
             if (closed) {

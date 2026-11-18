@@ -21,6 +21,7 @@
 package com.teammoeg.frostedheart.content.climate.thermal.topology;
 
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.PageSignatures;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.GeometryHalo;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.AirBackingMeter;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.BlockFace;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalCellArena;
@@ -114,16 +115,16 @@ final class TopologyView implements AirGeometryView {
         for (var entry : haloWrites.entrySet()) {
             var previous = previousHalos.get(entry.getKey());
             var next = entry.getValue();
-            boolean changedMembership = previous == null || next == null
-                    || !java.util.Arrays.equals(previous.positions(), next.positions());
-            if (changedMembership && previous != null)
-                for (long position : previous.positions()) {
-                    readHaloSection(position); haloReferenceDelta.addTo(position, -1);
-                }
-            if (next == null) continue;
+            long[] before = previous == null ? GeometryHalo.EMPTY.positions() : previous.positions();
+            if (next == null) next = GeometryHalo.EMPTY;
+            // Captured arrays are sorted. Shared positions cancel in place, before entering the delta map.
+            // A differently ordered input still contributes every unmatched occurrence exactly once.
+            int old = 0;
             for (int index = 0; index < next.size(); index++) {
                 long position = next.positions()[index];
-                if (changedMembership) haloReferenceDelta.addTo(position, 1);
+                while (old < before.length && before[old] < position) removeHaloReference(before[old++]);
+                if (old < before.length && before[old] == position) old++;
+                else haloReferenceDelta.addTo(position, 1);
                 readHaloSection(position);
                 int signature = next.signatures()[index];
                 // A later overlapping writer can restore the committed value.
@@ -131,10 +132,16 @@ final class TopologyView implements AirGeometryView {
                 if (signature == pages.haloSignature(position)) haloValues.remove(position);
                 else haloValues.put(position, signature);
             }
+            while (old < before.length) removeHaloReference(before[old++]);
         }
         var references = haloReferenceDelta.long2IntEntrySet().fastIterator();
         while (references.hasNext()) if (references.next().getIntValue() == 0) references.remove();
         haloDirty = false;
+    }
+
+    private void removeHaloReference(long position) {
+        readHaloSection(position);
+        haloReferenceDelta.addTo(position, -1);
     }
 
     private void readHaloSection(long position) {

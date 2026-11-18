@@ -1,7 +1,7 @@
 # Heat Production And Network
 
 - Status: `Transitional; current source and material ownership described below, earlier measurements retain their build scope`
-- Last verified: `2026-11-17` for fixed T1/T2 exhaust power, 2,000 W radiation, four horizontal targets and smooth 5°C center boost; `2026-11-06` for material-frontier admission and energy-complete phase submission; `2026-10-25` for source ownership and internal subsystem retirement; `2026-10-12` for campfire fuel countdown. Other sections retain their existing provenance.
+- Last verified: `2026-11-19` for fixed-field outlet mixing and source-triggered coverage updates, `2026-11-17` for fixed T1/T2 exhaust power, 2,000 W radiation, four horizontal targets and smooth 5°C center boost; `2026-11-06` for material-frontier admission and energy-complete phase submission; `2026-10-25` for source ownership and internal subsystem retirement; `2026-10-12` for campfire fuel countdown. Other sections retain their existing provenance.
 - Scope: physical Minecraft sources, worker energy integration, material/phase sinks, and the separate heat-network model
 - Primary code anchors: `MinecraftPhysicalSourceProfile`, `PhysicalSourceSpatialIndex`, `WorkerPhysicalSourceBindings`, `AirMixingRegion`, `SpatialSourceTimeline`, `SpatialSourceIngress`, `SpatialHeatStore`, `ThermalSourceBatch`, `ThermalSourceLedger`, `LocalMaterialBoundary`, `MaterialThermalLaw.initialBranch`, `RegionalQuerySnapshot.materialPerturbationAtSlotC`, `WorkerPageStore.collectMaterialFrontier`, `HeatEndpoint`, `HeatNetwork`
 
@@ -130,15 +130,18 @@ coalesced by position, and a lit/unlit change with identical thermal signature
 updates the source state and the nearby Air coefficients, without replacing
 temperature nodes merely because the source switched on or off.
 
-For enabled positive-power sources, direct Air faces within 4 blocks of a
-positive-share `AIR_FACE` outlet center use 4 times their original mixing
-conductance. This is a local mixing coefficient, not additional source power or
-a maximum heat-propagation distance. Overlap does not multiply the factor again.
-Outside the region, and for material exchange and indirect ventilation routes,
-the original coefficients apply. The source Section index supplies these positions
-only when fragments are rebuilt; there is no per-tick distance-field update.
-The implementation and activity thresholds are described in
-[thermal runtime](thermal-runtime-architecture-and-optimization.md).
+Each air cell whose center lies within 4 blocks of a positive-share `AIR_FACE`
+outlet on an emitting source gets a mixing factor of 4. The factor is 1 outside
+the union of these spheres. At a direct horizontal air-to-air face the solver
+averages the two cells’ factors, so a face crossing the radius uses 2.5 times
+its base conductance. Vertical exchange also applies each cell’s buoyancy factor.
+The radius defines the local mixing boost. Heat continues to propagate across its boundary.
+
+`AirMixingRegion.cellMask` computes the union. `TiledThermalField.replaceMixing`
+stores one bit per cell in a 64-bit word per allocated Brick. The fixed-field
+engine initializes newly captured Bricks and updates existing coverage when an
+outlet starts or stops emitting. The source and geometry clocks are described
+in the [thermal runtime contract](thermal-runtime-control.md).
 
 Campfire total power and radiation share are configured by
 `FHConfig.COMMON.THERMAL_RUNTIME.campfirePowerW` and

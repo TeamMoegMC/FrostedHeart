@@ -56,12 +56,6 @@ public final class ClimateBlockUpdates {
         boolean updateTempBlock = (now + chunkpos.x + chunkpos.z)
                 % tempBlockstateUpdateIntervalTicks == 0;
 
-        boolean isRaining = level.isRaining();
-        if (wc != null)
-        {
-            isRaining = wc.getClimate(chunkpos).isSnowyOrBlizzard();
-        }
-
         int i = chunkpos.getMinBlockX();
         int j = chunkpos.getMinBlockZ();
 
@@ -77,6 +71,7 @@ public final class ClimateBlockUpdates {
                     ? blockpos1.below()
                     : blockpos1;
 
+            boolean isRaining = wc == null ? level.isRaining() : wc.getClimate(chunkpos).isSnowyOrBlizzard();
             BlockState surface = pChunk.getBlockState(blockpos2);
             com.teammoeg.frostedheart.content.climate.block.EaveIcicleBlock.randomRoofTick(
                     level, blockpos2, isRaining, pRandomTickSpeed, tempBlockstateUpdateIntervalTicks, level.random);
@@ -252,13 +247,14 @@ public final class ClimateBlockUpdates {
             float climateBase
     )
     {
+        int heatCapacity = selfData.heatCapacity();
+        if (!selfData.willDie() || heatCapacity <= 0) return false;
         float t = (float) MinecraftThermalInput.gameplayCropEnvironment(
                 level,
                 pos,
                 WorldTemperature.naturalBlock(level, pos, climateBase));
         var selfStatus = WorldTemperature.checkPlantStatus(level, pos, selfData, t);
-        int heatCapacity = selfData.heatCapacity();
-        if (selfStatus.willDie() && heatCapacity > 0 && level.getRandom().nextInt(heatCapacity) == 0)
+        if (selfStatus.willDie() && level.getRandom().nextInt(heatCapacity) == 0)
         {
             var dead = selfData.dead();
             BlockPos belowPos = pos.below();

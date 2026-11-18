@@ -86,7 +86,7 @@ public final class TiledThermalVentilationGameTests {
                 var receiver = new SpatialEnergyBanks.Address(destination.target().position(), -1, destination.target().face());
                 helper.assertTrue(powers.tryRegister(source.asLong(), 1, new SpatialEnergyBanks.Address[] {receiver, null},
                                 new double[] {profile.port(0).powerShare(), profile.port(1).powerShare()}, profile.ratedPowerW(), true, 0)
-                                && field.updateMixing(source.above().asLong(), 1), "Use the resolved outlet and original mixing origin");
+                                && new TestOutletMixing().set(field, source.above(), true), "Use the resolved outlet and original mixing origin");
                 double initialJ = field.totalEnthalpyJ() + field.externalEnergyJ();
                 double maximumRatio = 0, maximumError = 0;
                 int comparisons = 0;

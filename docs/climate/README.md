@@ -4,7 +4,7 @@
 
 | Document | Scope | Status |
 |---|---|---|
-| [thermal-iteration-summary.md](thermal-iteration-summary.md) | 当前结论，以及合并历史、验证数据和后续计划的入口 | Current fixed-only production runtime and v7 contract linked; retirement validated by 157 distinct checks (full 156/157 plus source-focused 8/8); optimization paused, original qualification incomplete |
+| [thermal-iteration-summary.md](thermal-iteration-summary.md) | 当前结论，以及合并历史、验证数据和后续计划的入口 | Current fixed-only production runtime and v7 contract linked; retirement validated by 157 distinct checks (full 156/157 plus source-focused 8/8); packed coverage and local mixing cut ordering measured on the local 100-player server, long-run qualification open |
 | [thermal-gameplay-representation-exploration.md](thermal-gameplay-representation-exploration.md) | 默认单格焓引擎、完整推进/查询/数组成本、Q1对照与玩法误差 | Current for default fixed entry; hundred-player qualification incomplete |
 | [thermal-runtime-control.md](thermal-runtime-control.md) | 固定温场、输入所有权、物理时间、查询、v7保存与恢复合同 | Current; validation scope and deferred work recorded in the linked document |
 | [thermal-server-memory-evidence.md](thermal-server-memory-evidence.md) | 回调引用泄漏的因果对照、源码修复、分配/调度/计账缺陷及验证边界 | Current for reproduced retention and fix; extreme-load timing unqualified |

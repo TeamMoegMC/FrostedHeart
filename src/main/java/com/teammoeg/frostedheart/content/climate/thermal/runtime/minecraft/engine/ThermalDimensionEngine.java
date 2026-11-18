@@ -304,7 +304,7 @@ public final class ThermalDimensionEngine implements AutoCloseable, MaterialStat
     }
 
     private long sourceBindingLimit(SpatialSourceTimeline.Descriptor descriptor) {
-        return sourceBindings.bindingLimit(descriptor, this::geometryBoundary, ignored -> Long.MAX_VALUE);
+        return sourceBindings.bindingLimit(descriptor, this::geometryBoundary);
     }
 
     private long materialPosition(int slot) {
@@ -418,8 +418,7 @@ public final class ThermalDimensionEngine implements AutoCloseable, MaterialStat
     private long fixedNumericalThrough(LongSet sections, long from) {
         long through = Math.min(transportThrough, from + ThermalInputBatch.CUT_INTERVAL_TICKS);
         for (long section : sections) through = Math.min(through, fixedPhysicalCuts.getOrDefault(section, Long.MAX_VALUE));
-        through = Math.min(through, sourceIngress.firstPendingTick(sections, section -> pages.capturedBrickMask(section) != 0));
-        return Math.max(from, through);
+        return sourceIngress.limitNumericalThrough(sections, pages::hasResolvedResidentBrick, from, through);
     }
 
     private void processFixedRound() {
@@ -446,7 +445,7 @@ public final class ThermalDimensionEngine implements AutoCloseable, MaterialStat
             return;
         }
         if (fixedField.idle() && fixedGeometry == null && pages.maintenanceReady(airBudget.capacityRevision())) {
-            pages.advanceMaintenance(arena, parameters.referenceTemperatureC(), deadline, airBudget.capacityRevision(),
+            pages.advanceMaintenance(arena, deadline, airBudget.capacityRevision(),
                     update -> residencyEffects.put(update.sectionKey(), update));
             if (System.nanoTime() >= deadline) return;
         }
@@ -777,8 +776,8 @@ public final class ThermalDimensionEngine implements AutoCloseable, MaterialStat
             int x = BlockPos.getX(position), y = BlockPos.getY(position), z = BlockPos.getZ(position);
             int brick = (x & 15) >>> 2 | ((z & 15) >>> 2) << 2 | ((y & 15) >>> 2) << 4;
             if ((active & 1L << brick) == 0) continue;
-            fixedMixing.reset(x, y, z); sourceBindings.collectMixingSources(fixedMixing, tick);
-            fixedField.replaceMixing(section, brick, fixedMixing); updated++;
+            refreshMixingBrick(section, brick, tick);
+            updated++;
         }
         sourceBindings.mixingCommitted(revision, selected.mixing());
         topologyInputs.complete(inputs);
@@ -850,7 +849,6 @@ public final class ThermalDimensionEngine implements AutoCloseable, MaterialStat
                 fixedDiscardedJ + rejected - fixedRejectedJ);
         fixedPendingJ = pending; fixedRejectedJ = rejected; fixedIncomingJ = fixedDiscardedJ = 0;
         minimumRegionTick = fixedField.acceptedTick();
-        pages.markAcceptedMaintenance();
         publishedPendingJ = fixedInputs.pendingEnergyJ() + pending;
         fixedScope = LongSets.EMPTY_SET;
         sourceIngress.dependenciesChanged();
@@ -988,10 +986,25 @@ public final class ThermalDimensionEngine implements AutoCloseable, MaterialStat
                 observe("PUBLISHED", false);
             }
             if (stage == 3) {
-                for (var write : prepared.pageWrites) if (!write.retirement) {
-                    if (!copyTransport(write.page.handle.sectionKey(), fixedField, fieldStorage))
+                for (int index = 0; index < prepared.pageWrites.length; index++) {
+                    var write = prepared.pageWrites[index];
+                    if (write.retirement) continue;
+                    long section = write.page.handle.sectionKey();
+                    if (!copyTransport(section, fixedField, fieldStorage))
                         throw new IllegalStateException("Prepaid fixed transport lost its Section");
-                    refreshFixedMixing(write.page.handle.sectionKey());
+                    // Resize retains old membership. Only newly captured Bricks need initial coefficients.
+                    for (long fresh = restoringBricks[index]; fresh != 0; fresh &= fresh - 1) {
+                        int brick = Long.numberOfTrailingZeros(fresh);
+                        long position = mixingBrickOrigin(section, brick);
+                        if (!mixing.contains(position)) refreshMixingBrick(section, brick, fixedField.sectionSampleTick(section));
+                    }
+                }
+                // The batch already carries the affected Brick origins for all source membership changes.
+                for (long position : mixing) {
+                    if (!pages.hasResidentBrick(position)) continue;
+                    long section = sectionAt(position);
+                    int brick = (BlockPos.getX(position) & 15) >>> 2 | (BlockPos.getZ(position) & 12) | (BlockPos.getY(position) & 12) << 2;
+                    refreshMixingBrick(section, brick, fixedField.sectionSampleTick(section));
                 }
                 sourceBindings.markCommittedSections(prepared.sourceDirtySections);
                 sourceBindings.mixingCommitted(sourceBindings.mixingRevision(), mixing);
@@ -1172,15 +1185,17 @@ public final class ThermalDimensionEngine implements AutoCloseable, MaterialStat
         }
     }
 
-    private void refreshFixedMixing(long section) {
-        long bricks = fixedField.activeBricks(section);
-        while (bricks != 0) {
-            int brick = Long.numberOfTrailingZeros(bricks); bricks &= bricks - 1;
-            fixedMixing.reset((SectionPos.x(section) << 4) + (brick & 3) * 4,
-                    (SectionPos.y(section) << 4) + (brick >>> 4) * 4, (SectionPos.z(section) << 4) + (brick >>> 2 & 3) * 4);
-            sourceBindings.collectMixingSources(fixedMixing, fixedField.sectionSampleTick(section));
-            fixedField.replaceMixing(section, brick, fixedMixing);
-        }
+    private static long mixingBrickOrigin(long section, int brick) {
+        return BlockPos.asLong((SectionPos.x(section) << 4) + (brick & 3) * 4,
+                (SectionPos.y(section) << 4) + (brick >>> 4) * 4, (SectionPos.z(section) << 4) + (brick >>> 2 & 3) * 4);
+    }
+
+    /** Recompute the source union at the recipient's physical cut for a single changed or newly captured Brick. */
+    private void refreshMixingBrick(long section, int brick, long tick) {
+        long position = mixingBrickOrigin(section, brick);
+        fixedMixing.reset(BlockPos.getX(position), BlockPos.getY(position), BlockPos.getZ(position));
+        sourceBindings.collectMixingSources(fixedMixing, tick);
+        fixedField.replaceMixing(section, brick, fixedMixing);
     }
 
     private void closeFixedState() {
@@ -1683,8 +1698,7 @@ public final class ThermalDimensionEngine implements AutoCloseable, MaterialStat
 
     @Override public boolean sourceControlReady(SpatialSourceTimeline.Descriptor source, long tick) {
 
-        long through = sourceBindings.bindingLimit(source, this::fixedControlTime,
-                position -> fixedControlTime(sectionAt(position)));
+        long through = sourceBindings.bindingLimit(source, this::fixedControlTime);
         var footprint = new LongOpenHashSet();
         sourceBindings.collectMixingFootprint(source, footprint);
         for (long position : footprint) through = Math.min(through, fixedControlTime(sectionAt(position)));

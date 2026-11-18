@@ -24,6 +24,7 @@ import java.util.function.Supplier;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
+import com.teammoeg.frostedheart.content.climate.thermal.solver.ThermalDiagnostics;
 
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.util.Mth;
@@ -57,10 +58,13 @@ public final class FHBodyDataSyncPacket implements CMessage {
 
     @Override
     public void encode(FriendlyByteBuf buffer) {
+        int start = buffer.writerIndex();
         buffer.writeByte(VERSION);
         buffer.writeShort(environmentDeciC);
         buffer.writeShort(coreCentiC);
         buffer.writeShort(displayDeciC);
+        var observer = ThermalDiagnostics.observer;
+        if (observer != null) observer.bodyTemperaturePacketEncoded(buffer.writerIndex() - start);
     }
 
     @Override

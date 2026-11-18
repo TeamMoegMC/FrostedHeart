@@ -12,6 +12,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.function.Predicate;
 import java.util.function.ToLongFunction;
 
@@ -58,13 +59,18 @@ public final class SpatialSourceIngress implements AutoCloseable, ThermalSourceL
         SpatialSourceTimeline.Descriptor producer;
         SpatialSourceTimeline.ControlTail controlTail;
         final it.unimi.dsi.fastutil.longs.LongOpenHashSet indexedSections = new it.unimi.dsi.fastutil.longs.LongOpenHashSet();
+        long firstPendingTick() {
+            long first = accepted.isEmpty() ? Long.MAX_VALUE : accepted.peekFirst().through();
+            if (!offered.isEmpty()) first = Math.min(first, offered.peekFirst().window.fromTick);
+            return controlTail == null ? first : Math.min(first, controlTail.firstTick());
+        }
         Source(long id, ThermalMemoryBudget.Reservation metadata) { this.id = id; this.metadata = metadata; }
     }
 
     private final Object transport = new Object();
     private final Long2ObjectLinkedOpenHashMap<Source> sources = new Long2ObjectLinkedOpenHashMap<>();
     private final ArrayDeque<Source> scheduled = new ArrayDeque<>();
-    private final it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap<java.util.Set<Source>> bySection =
+    private final it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap<ArrayList<Source>> bySection =
             new it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap<>();
     private final ThermalSourceLedger ledger;
     private final SpatialHeatStore store;
@@ -138,7 +144,7 @@ public final class SpatialSourceIngress implements AutoCloseable, ThermalSourceL
     }
     private void index(Source source, long section) {
         if (source.indexedSections.add(section)) bySection.computeIfAbsent(section,
-                ignored -> new java.util.LinkedHashSet<>()).add(source);
+                ignored -> new ArrayList<>()).add(source);
     }
     private void retire(Source source) {
         sources.remove(source.id); source.metadata.close();
@@ -326,9 +332,7 @@ public final class SpatialSourceIngress implements AutoCloseable, ThermalSourceL
         synchronized (transport) {
             long first = Long.MAX_VALUE;
             for (var source : sources.values()) {
-                long pending = source.accepted.isEmpty() ? Long.MAX_VALUE : source.accepted.peekFirst().through();
-                if (!source.offered.isEmpty()) pending = Math.min(pending, source.offered.peekFirst().window.fromTick);
-                if (source.controlTail != null) pending = Math.min(pending, source.controlTail.firstTick());
+                long pending = source.firstPendingTick();
                 if (pending >= first) continue;
                 if (source.producer != null && blockedBySnapshot(source, source.producer)) continue;
                 for (long section : source.indexedSections) if (capturedSection.test(section)) { first = pending; break; }
@@ -336,25 +340,35 @@ public final class SpatialSourceIngress implements AutoCloseable, ThermalSourceL
             return first;
         }
     }
-    /** Visit only sources indexed by this numerical domain, once per identity. */
-    public long firstPendingTick(LongSet sections, java.util.function.LongPredicate capturedSection) {
+    /** Returns the original interval end limited by unfrozen source inputs touching captured recipient sections. */
+    public long limitNumericalThrough(LongSet sections, java.util.function.LongPredicate capturedSection,
+            long from, long through) {
+        if (through <= from) return from;
         synchronized (transport) {
-            long first = Long.MAX_VALUE, visit = ++boundaryVisit;
-            for (long section : sections) {
-                if (!capturedSection.test(section)) continue;
-                var indexed = bySection.get(section); if (indexed == null) continue;
-                for (var source : indexed) {
+            long visit = ++boundaryVisit;
+            var keys = sections.iterator();
+            while (keys.hasNext()) {
+                long section = keys.nextLong();
+                var indexed = bySection.get(section);
+                if (indexed == null || !capturedSection.test(section)) continue;
+                for (int i = 0; i < indexed.size(); i++) {
+                    var source = indexed.get(i);
                     if (source.boundaryVisit == visit) continue;
                     source.boundaryVisit = visit;
+                    long pending = source.firstPendingTick();
+                    if (pending >= through) continue;
                     if (source.producer != null && blockedBySnapshot(source, source.producer)) continue;
-                    long pending = source.accepted.isEmpty() ? Long.MAX_VALUE : source.accepted.peekFirst().through();
-                    if (!source.offered.isEmpty()) pending = Math.min(pending, source.offered.peekFirst().window.fromTick);
-                    if (source.controlTail != null) pending = Math.min(pending, source.controlTail.firstTick());
-                    first = Math.min(first, pending);
+                    if (pending <= from) return from;
+                    through = pending;
                 }
             }
-            return first;
+            return through;
         }
+    }
+
+    /** Earliest pending time across the given domain, without a caller-supplied interval. */
+    public long firstPendingTick(LongSet sections, java.util.function.LongPredicate capturedSection) {
+        return limitNumericalThrough(sections, capturedSection, Long.MIN_VALUE, Long.MAX_VALUE);
     }
     /** New identities can feed an existing region before their first binding creates its source index. */
     public long pendingFor(LongSet sections, java.util.function.LongPredicate knownSource,

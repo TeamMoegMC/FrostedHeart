@@ -395,23 +395,22 @@ public final class WorkerPhysicalSourceBindings implements ThermalSourceLedger.B
         }
     }
 
-    /** Both the original face and the current routed destination constrain recording. */
+    /** Anchor, declared ports and routed destinations all use the Section clock. Reuse a coincident cutoff. */
     public long bindingLimit(com.teammoeg.frostedheart.content.climate.thermal.source.SpatialSourceTimeline.Descriptor descriptor,
-            java.util.function.LongUnaryOperator boundary, java.util.function.LongUnaryOperator ownerBoundary) {
-        long through = boundary.applyAsLong(descriptor.section());
+            java.util.function.LongUnaryOperator boundary) {
+        long anchor = descriptor.section();
+        long through = boundary.applyAsLong(anchor);
         var profile = profile(descriptor.profile());
         var current = sources.get(descriptor.sourceId());
         for (int index = 0; index < profile.portCount(); index++) {
             var port = profile.port(index);
-            through = Math.min(through, boundary.applyAsLong(sectionKey(descriptor.x() + port.offsetX(),
-                    descriptor.y() + port.offsetY(), descriptor.z() + port.offsetZ())));
-            through = Math.min(through, ownerBoundary.applyAsLong(BlockPos.asLong(descriptor.x() + port.offsetX(),
-                    descriptor.y() + port.offsetY(), descriptor.z() + port.offsetZ())));
+            long origin = sectionKey(descriptor.x() + port.offsetX(), descriptor.y() + port.offsetY(), descriptor.z() + port.offsetZ());
+            if (origin != anchor) through = Math.min(through, boundary.applyAsLong(origin));
             var binding = current == null ? null : current.bindings[index];
             if (binding != null && binding.kind() == SourceBinding.Kind.AIR_STENCIL) {
                 long block = airLoads.get((int) binding.targetId(), binding.lifecycleGeneration()).block();
-                through = Math.min(through, boundary.applyAsLong(sectionKey(BlockPos.getX(block), BlockPos.getY(block), BlockPos.getZ(block))));
-                through = Math.min(through, ownerBoundary.applyAsLong(block));
+                long destination = sectionKey(BlockPos.getX(block), BlockPos.getY(block), BlockPos.getZ(block));
+                if (destination != origin && destination != anchor) through = Math.min(through, boundary.applyAsLong(destination));
             }
         }
         return through;

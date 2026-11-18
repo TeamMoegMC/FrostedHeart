@@ -42,6 +42,7 @@ public final class TiledThermalScaleGameTests {
         var profiles = MinecraftThermalProfiles.prepare();
         var budget = new ThermalMemoryBudget(128L << 20);
         var fires = new ArrayList<BlockPos>();
+        var mixing = new TestOutletMixing();
         var origins = new ArrayList<BlockPos>();
         var chunks = new LinkedHashSet<ChunkPos>();
         MinecraftThermalInput.closeActiveLevel(level);
@@ -86,7 +87,7 @@ public final class TiledThermalScaleGameTests {
                     var air = new SpatialEnergyBanks.Address(position.above().asLong(), -1, profile.port(0).targetFace().ordinal());
                     helper.assertTrue(powers.tryRegister(position.asLong(), 1, new SpatialEnergyBanks.Address[] {air, null},
                                     new double[] {profile.port(0).powerShare(), profile.port(1).powerShare()}, profile.ratedPowerW(), true, 0)
-                                    && field.updateMixing(position.above().asLong(), 1),
+                                    && mixing.set(field, position.above(), true),
                             "Accept each source, declared radiation loss and mixing footprint before producing J");
                 }
             }
@@ -113,7 +114,7 @@ public final class TiledThermalScaleGameTests {
                     for (int index = 0; index < fires.size(); index += 97) {
                         var position = fires.get(index);
                         helper.assertTrue(powers.update(position.asLong(), 1, profile.ratedPowerW(), enabled, tick - 20)
-                                        && field.updateMixing(position.above().asLong(), enabled ? 1 : -1), "Repeatedly switch source membership without retaining history");
+                                        && mixing.set(field, position.above(), enabled), "Repeatedly switch source membership without retaining history");
                     }
                 }
                 helper.assertTrue(field.begin(powers.seal(tick)), "Begin the next bounded numerical epoch");
