@@ -35,7 +35,7 @@ Read in this order:
 5. [gameplay-and-integrations.md](gameplay-and-integrations.md) — drawing desk, experiment sources, unlock enforcement, APIs, events, commands, and optional mods.
 6. [research-ui.md](research-ui.md) — archive UI, graph layout, navigation, and client refresh behavior.
 7. [known-risks.md](known-risks.md) — confirmed defects, explicit boundaries, and validation gaps.
-8. [legacy-content-disposition.md](legacy-content-disposition.md) — the 81 retained definitions, two replacements, and old-progress handoff.
+8. [legacy-content-disposition.md](legacy-content-disposition.md) — retained, replaced and retired definitions, and old-progress handoff.
 
 For observations, ideas, knowledge results, inbox learning, notes, links, and hints, start
 at [Knowledge](../knowledge/README.md). Intended changes belong in `plans/` and open design choices in `discussion/`;

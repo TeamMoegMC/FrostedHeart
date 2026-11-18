@@ -1,7 +1,7 @@
 # 普通耐火砖与控温炉正式路线
 
 - Status: Verified：FH实现、正式数据、29项服务端测试、独立进程保存/恢复及完整客户端入口/实验通过；材料使用夹具，完整生存采集未实玩。
-- Last verified: `2026-11-17`（联络连连看；其它流程见既有验证记录）
+- Last verified: `2026-11-18`（石磨公开配方，源码与整合包数据；其它流程见既有验证记录）
 - Scope: refractory_firing 想法、refractory_brick 项目、controlled_refractory_production 单 Design；只增加自有炉批量工艺。
 - Anchors: [M5 采用决定](../../plans/2026-11-12_16-00-00_research-m5-controlled-furnace-decisions.md)、[正式项目](../../../TheWinterRescue/kubejs/data/the_winter_rescue/frostedresearch/knowledge/projects/refractory_brick.json)、[批量配方](../../../TheWinterRescue/kubejs/data/the_winter_rescue/recipes/research/refractory_brick_batch.json)。
 
@@ -21,7 +21,7 @@
 
 数量只按当前 TWR 生效替代定义计算：营火由 shaped/new.js 的2稻草+2原木制作；冻高岭土/冻铝土矿在 melt_kaolin/melt_bauxite 营火解冻配方中每块200tick得4原料。树桩 hammer_dig 将铝土矿破为 crushed_raw_bauxite，磨盘每份至少2铝土矿粉；高岭土可直接磨至少1粉。因此单次手混的保证基础用量是4高岭土、2铝土矿（破碎后研磨）和1黏土球，不把随机额外粉计入最低需求。工具路线已有树桩（2原木+2石）、磨盘（3石类+1原版石+1木棍）、石锤（2石类+木杆+线），不含耐火砖/铁。实际生成、采集、营火点火和材料供应仍待正式包生存验证。
 
-**磨盘仍受旧研究约束，并非公开工具。** [millstone定义](../../../TheWinterRescue/config/fhresearches/millstone.json)启动需2石头、1木炭和默认1级灵感；再提交3石头与1煤，两项线索分别提供75%和25%进度，可以完成而不做纸笔小游戏。探索首次到达的新区域可获得旧灵感（`InsightHandler`、`TeamResearchData.onAreaVisited`；区域尺度由 `insightAreaRange` 配置，默认128）。这条旧前置不依赖耐火砖成品；新系统的想法与旧灵感等级是不同机制。
+石磨（`stone_age:millstone`）可直接在工作台制作，旧「固体研磨」研究已退役。石磨任务 `7887EB905BAA7BEF` 在工作台任务后开放，玩家可在制作绘图台之前加工耐火原料。[石器时代任务书](../../../TheWinterRescue/config/ftbquests/quests/chapters/t1.snbt)
 
 现有 Create 搅拌同样9份原料得3 fire_clay_ball，保留其效率优势。陶窑 the_winter_rescue:pottery_recipes/fire_brick、IE高炉索引2、工业窑首项及4单砖+砂浆→2砖块的旧工艺原样保留。依赖 JAR Charcoal Pit 7748097 的原生 pottery 数据也已读取；本路线的数量以 TWR 当前替代配方为准，不从被替换的原生配方推算。新成果不解锁高耐火砖、工业窑砖或IE高炉；旧 blast_furnace 两效果、三线索、mixer父项及 generator_T2/simple_machines下游无改动。
 

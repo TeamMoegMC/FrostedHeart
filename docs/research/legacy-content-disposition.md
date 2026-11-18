@@ -1,13 +1,15 @@
 # 旧研究目录与新项目衔接
 
 - Status: `Verified`：目录与两项映射已核对；不把保留定义等同逐项人工通关。
-- Last verified: `2026-11-12`
-- Scope: TWR 81项旧研究的当前处置、旧存档承接与验证边界。
+- Last verified: `2026-11-18`（石磨公开配方及目录处置）
+- Scope: TWR 旧研究的当前处置、旧存档承接与验证边界。
 - Code anchors: [LegacyResearchBridge](../../src/main/java/com/teammoeg/frostedresearch/knowledge/LegacyResearchBridge.java)、[TeamResearchData](../../src/main/java/com/teammoeg/frostedresearch/data/TeamResearchData.java)、[KnowledgeService](../../src/main/java/com/teammoeg/frostedresearch/knowledge/KnowledgeService.java)。
 
 ## 当前规则
 
-正式旧目录仍保留81份JSON。本轮没有修改其内容、旧ID或effect nonce。新数据包有效时，alloy_kiln与iron的旧推进入口由新项目接替；其余79项沿用。其中banner和improve_energy仍按原定义隐藏且不可完成：前者保留对四个多方块的既有封锁，后者没有effects字段。不把这两项算成可玩的研究，也不擅自开放。
+正式旧目录现有80份JSON。新数据包有效时，`alloy_kiln` 与 `iron` 的旧推进入口由新项目接替，其余78份沿用。`banner` 和 `improve_energy` 仍隐藏且不可完成。`banner` 继续封锁四个多方块，`improve_energy` 定义没有 `effects` 字段。
+
+`millstone` 已退役，所有队伍都可在工作台合成石磨。已有队伍研究记录由 `TeamResearchData` 保留，已领取的木炭粉仍是普通物品。石磨任务改在工作台后开放。
 
 | 旧ID | 新项目 | 旧效果到新成果 |
 |---|---|---|
@@ -77,7 +79,7 @@
 | `mechanics_measurement` | 沿用原研究 | [原定义](../../../TheWinterRescue/config/fhresearches/mechanics_measurement.json) |
 | `mechanics_tools` | 沿用原研究 | [原定义](../../../TheWinterRescue/config/fhresearches/mechanics_tools.json) |
 | `metal_press` | 沿用原研究 | [原定义](../../../TheWinterRescue/config/fhresearches/metal_press.json) |
-| `millstone` | 沿用原研究 | [原定义](../../../TheWinterRescue/config/fhresearches/millstone.json) |
+| `millstone` | 退役，石磨配方公开 | [工作台配方](../../../TheWinterRescue/kubejs/server_scripts/src/recipes/shaped/new.js) |
 | `mixer` | 沿用原研究 | [原定义](../../../TheWinterRescue/config/fhresearches/mixer.json) |
 | `multiblock_structure` | 沿用原研究 | [原定义](../../../TheWinterRescue/config/fhresearches/multiblock_structure.json) |
 | `precision_mechanism` | 沿用原研究 | [原定义](../../../TheWinterRescue/config/fhresearches/precision_mechanism.json) |
@@ -108,7 +110,7 @@
 
 ## 验证范围
 
-- 本表生成时逐项读取81份JSON，并用Git比较本轮开始时TWR基线2d0fefd349f65f3118828c9712f68a8c0782ab75：config/fhresearches内已跟踪定义无差异。此项证明79项保持原定义，不替代逐项游玩。
+- 2026-11-12 建表时逐项读取81份JSON，并与基线 `2d0fefd349f65f3118828c9712f68a8c0782ab75` 比对。2026-11-18 移除 `millstone` 后，目录保留80份定义。
 - M3/M4的旧完成、单效果、部分投入、重复初始化、缺定义恢复、权限并集与父项投影有真实服务端测试；M3/M4正式包客户端已检查替换入口及正常完成权限。详见[M3桥接](../../diary/2026-11-12_15-29-57_research-m3b-legacy-bridge-handoff.md)、[M4服务端](../../diary/2026-11-12_17-27-52_research-m4-full-stage-tuyere-handoff.md)和[M4客户端](../../diary/2026-11-12_17-35-19_research-m4-client-fixed-pack-handoff.md)。
 - M4与M5的独立进程保存/恢复已验证；两个真实客户端的同队实验、放置者离线后继续和重连同步也已通过，见[M7记录](../../diary/2026-11-12_19-04-00_research-m7-two-client-validation.md)。这些证据不等于崩溃恢复、完整生存材料获取或所有旧世界均已人工通关。
 - 显式知识merge保留同项目多份记录，研究页与设备统一按创建时间、UUID排序并可选择记录。完成一份且成果仍有效时，其余进度保留为备用，暂停任务和临时权限；遗忘成果后恢复。普通加入队伍不会自动merge，世界设备和未交样品也不会随知识合并改绑。见[当前状态规则](../knowledge/state-and-api.md#m6-合并记录排序与备用进度)。相关32项测试及最后快照/多人交错修正的16项定向测试通过；[最终客户端](../../diary/2026-11-12_20-12-00_research-m5-m6-client-validation.md)另验证两份构造记录的序号/切换、炉目标、实际出样与备用显示，不冒称客户端真实中途合队。
