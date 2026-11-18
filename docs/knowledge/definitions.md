@@ -1,7 +1,7 @@
 # 知识定义、观察快照与联络规则
 
 - Status: `Current`
-- Last verified: `2026-11-17`（联络辅助札记容错；连连看兼容编号与0–3数字版本）
+- Last verified: `2026-11-18`（实验需求的固定产物与原物返还）
 - Scope: 知识身份、不可变观察、独立想法/成果定义、项目关系与研究需求、物品检索规则、服务端联络匹配及观察用途判定。
 - Code anchors: [
   `KnowledgeElement`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/model/KnowledgeElement.java)、[
@@ -205,15 +205,29 @@ research topic 内。类型效果结构见 [成果与权限](../research/results
 |---------------|-------------------------------------------------------|---------------------------------------------------------------------------------------------|
 | `evidence`    | `title`（必填）、`inputs`、`conditions`、`distinct`          | 提交一组观察，一份记录占一个槽位。`inputs` 为 1–8 个观察槽位，写法同联络规则；`conditions` 最多 10 条跨条件；不使用 `level`/`count` |
 | `calculation` | `title`（可选）、`level`（0–7，默认 0）、`count`（1–16，默认 1） | 在绘图台赢下 `count` 局难度不低于 `level` 的连连看；不读取观察                                                   |
-| `experiment`  | `title`（必填）、`count`（1–16，默认 1）、`duration`、`materials`、`space` | 在实验台完成 `count` 次实验，每次连续运行 `duration` tick（20–72000）；不读取观察，不使用 `level`                             |
+| `experiment`  | `title`（必填）、`count`（1–16，默认 1）、`duration`、`materials`、`result`、`space` | 在实验台完成 `count` 次实验，每次连续运行 `duration` tick（20–72000）；不读取观察，不使用 `level`                             |
 
 连连看 `level` 是兼容编号：0/1/2/3 对应4/5/6/7个顺序数字，新增4/5/6/7对应0/1/2/3个数字。是否足够难按实际数字数判断，不直接比较编号；纸笔等级与[完整难度表、调试研究](../research/gameplay-and-integrations.md#theory-card-game)一致。默认 level 0 仍是旧初级，避免改变既有项目和胜局。
 
 `distinct` 中每组的 `field` 必须是已知观察字段，`slots` 至少列出两个不同的已有槽位，表示这些槽位在该字段上两两不同；校验时展开为两两
 `ne` 比较，因此未知或不适用的值同样不满足。证据需求的条件不进入客户端快照，玩家看到的是作者撰写的 `title`，所以证据需求必须提供它。
 
-`duration`、`materials`、`space` 只属于实验需求。`materials` 至多 3 项，在实验开始时一次投入：每项写 `item` 或 `tag`
-（两者都写时都要满足）和 `count`（1–64，默认 1）。`space` 省略时不要求房间；写出时各字段为：
+`duration`、`materials`、`result`、`space` 只属于实验需求。`materials` 至多 3 项，在实验开始时一次投入：每项写 `item` 或 `tag`
+（两者都写时都要满足）和 `count`（1–64，默认 1）。材料可加 `"return_on_complete": true`，每次成功计数后归还实际扣下的那几件，保留名称、耐久和 NBT。默认消耗。
+实验还可加一个 `result`，用已注册的具体物品 ID 和数量指定每次成功的固定产物。数量默认 1，最多一组。两种返还可以同时使用，例如：
+
+```json
+{
+  "id": "cut_sample", "type": "experiment", "title": "剪切试验", "duration": 200,
+  "materials": [
+    {"item": "minecraft:shears", "return_on_complete": true},
+    {"item": "minecraft:paper"}
+  ],
+  "result": {"item": "minecraft:string", "count": 2}
+}
+```
+
+`space` 省略时不要求房间；写出时各字段为：
 
 | 字段                                    | 默认           | 含义                                                         |
 |---------------------------------------|--------------|------------------------------------------------------------|

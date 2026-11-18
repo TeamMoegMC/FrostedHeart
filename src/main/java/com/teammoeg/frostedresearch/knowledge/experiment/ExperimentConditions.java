@@ -28,6 +28,7 @@ import com.teammoeg.frostedresearch.knowledge.experiment.ExperimentReport.Arg;
 import com.teammoeg.frostedresearch.knowledge.experiment.ExperimentReport.Line;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.items.IItemHandler;
@@ -89,49 +90,44 @@ public final class ExperimentConditions {
         return Optional.of(new Line("space.temperature", List.of(Arg.text(Float.isFinite(measured) ? format(measured) : "?"), Arg.text(range)), ok));
     }
 
-    /**
-     * What the material slots can supply. Each stack serves one material at a time, in the order they are listed,
-     * which is also the order {@link #consume} takes them in.
-     */
-    public static List<Line> materials(IItemHandler inventory, List<ProjectRequirement.Material> materials) {
-        int[] taken = allot(inventory, materials);
-        List<Line> lines = new ArrayList<>();
-        for (int i = 0; i < materials.size(); i++) {
-            var material = materials.get(i);
-            lines.add(new Line("material", List.of(name(material), Arg.text(taken[i]), Arg.text(material.count())), taken[i] >= material.count()));
+    /** Allocate each input once, in definition and slot order, keeping exact stacks for completion. */
+    public record Materials(List<Line> checks, int[] spent, List<ItemStack> returns) {
+        public void consume(IItemHandler inventory) {
+            for (int slot = 0; slot < spent.length; slot++)
+                if (spent[slot] > 0) inventory.extractItem(slot, spent[slot], false);
         }
-        return lines;
     }
 
-    /**
-     * Takes every material out of the slots, or nothing when one falls short.
-     */
-    public static boolean consume(IItemHandler inventory, List<ProjectRequirement.Material> materials) {
-        int[] taken = allot(inventory, materials);
-        for (int i = 0; i < materials.size(); i++) if (taken[i] < materials.get(i).count()) return false;
+    public static Materials allocate(IItemHandler inventory, List<ProjectRequirement.Material> materials) {
+        int[] spent = new int[inventory.getSlots()];
+        List<ItemStack> returns = new ArrayList<>();
+        List<Line> checks = new ArrayList<>();
         for (var material : materials) {
             int need = material.count();
-            for (int slot = 0; slot < inventory.getSlots() && need > 0; slot++)
-                if (material.matches(inventory.getStackInSlot(slot)))
-                    need -= inventory.extractItem(slot, need, false).getCount();
+            for (int slot = 0; slot < spent.length && need > 0; slot++) {
+                ItemStack stack = inventory.getStackInSlot(slot);
+                if (!material.matches(stack)) continue;
+                int take = Math.min(need, stack.getCount() - spent[slot]);
+                if (take == 0) continue;
+                spent[slot] += take;
+                need -= take;
+                if (material.returnOnComplete()) returns.add(stack.copyWithCount(take));
+            }
+            checks.add(new Line(material.returnOnComplete() ? "material.returned" : "material",
+                    List.of(name(material), Arg.text(material.count() - need), Arg.text(material.count())), need == 0));
         }
-        return true;
+        return new Materials(checks, spent, returns);
     }
 
-    private static int[] allot(IItemHandler inventory, List<ProjectRequirement.Material> materials) {
-        int[] left = new int[inventory.getSlots()];
-        for (int slot = 0; slot < left.length; slot++) left[slot] = inventory.getStackInSlot(slot).getCount();
-        int[] taken = new int[materials.size()];
-        for (int i = 0; i < materials.size(); i++) {
-            var material = materials.get(i);
-            for (int slot = 0; slot < left.length && taken[i] < material.count(); slot++)
-                if (left[slot] > 0 && material.matches(inventory.getStackInSlot(slot))) {
-                    int take = Math.min(left[slot], material.count() - taken[i]);
-                    left[slot] -= take;
-                    taken[i] += take;
-                }
-        }
-        return taken;
+    public static List<Line> materials(IItemHandler inventory, List<ProjectRequirement.Material> materials) {
+        return allocate(inventory, materials).checks();
+    }
+
+    public static boolean consume(IItemHandler inventory, List<ProjectRequirement.Material> materials) {
+        Materials allocation = allocate(inventory, materials);
+        if (!allocation.checks().stream().allMatch(Line::ok)) return false;
+        allocation.consume(inventory);
+        return true;
     }
 
     private static Arg name(ProjectRequirement.BlockCount block) {

@@ -208,11 +208,17 @@ public final class ExperimentTableScreen extends MenuPrimaryLayer<ExperimentTabl
         g.fill(x + 111, y + 92, x + 133, y + 194, COLUMN);
         g.fill(x + 111, y + 92, x + 112, y + 194, COLUMN_EDGE);
         g.drawString(getFont(), t("materials"), x + 21, y + 20, KnowledgeUiTheme.MUTED, false);
-        for (int[] slot : ExperimentTableMenu.MATERIAL_POSITIONS) {
+        g.drawString(getFont(), t("outputs"), x + 21, y + 55, KnowledgeUiTheme.MUTED, false);
+        drawSlotRow(g, x, y, ExperimentTableMenu.MATERIAL_POSITIONS);
+        drawSlotRow(g, x, y, ExperimentTableMenu.OUTPUT_POSITIONS);
+        g.drawString(getFont(), Component.translatable("block.frostedresearch.experiment_table"), x + RIGHT, y + 14, KnowledgeUiTheme.INK, false);
+        KnowledgeUiTheme.rule(g, x + RIGHT, y + 25, w - RIGHT - 14);
+    }
+
+    private static void drawSlotRow(GuiGraphics g, int x, int y, int[][] row) {
+        for (int[] slot : row) {
             g.fill(x + slot[0] - 1, y + slot[1] - 1, x + slot[0] + 17, y + slot[1] + 17, CELL_EDGE);
             g.fill(x + slot[0], y + slot[1], x + slot[0] + 16, y + slot[1] + 16, CELL);
         }
-        g.drawString(getFont(), Component.translatable("block.frostedresearch.experiment_table"), x + RIGHT, y + 14, KnowledgeUiTheme.INK, false);
-        KnowledgeUiTheme.rule(g, x + RIGHT, y + 25, w - RIGHT - 14);
     }
 }

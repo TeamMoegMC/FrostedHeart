@@ -102,6 +102,66 @@ public final class MergedRunDeviceGameTests {
         }catch(RuntimeException|Error e){scope.close();throw e;}
     }
 
+    @GameTest(batch="experiment_returns",template="trial_kiln_empty",timeoutTicks=100)
+    public static void experimentReturnsSurviveSaveAndOnlyPayOnce(GameTestHelper h) {
+        var scope = new ControlledFurnaceGameTests.Scope();
+        try {
+            install();
+            var actor = scope.actor(h);
+            mergePair(actor.service());
+            var tool = new ItemStack(Items.SHEARS);
+            tool.setDamageValue(17);
+            tool.setHoverName(net.minecraft.network.chat.Component.literal("Lab shears"));
+            var tables = new ArrayList<ExperimentTableBlockEntity>();
+            for (var pos : List.of(new BlockPos(1, 1, 1), new BlockPos(3, 1, 1))) {
+                h.setBlock(pos, FRContents.Blocks.EXPERIMENT_TABLE.get());
+                var table = (ExperimentTableBlockEntity) h.getBlockEntity(pos);
+                tables.add(table);
+                com.teammoeg.frostedresearch.mixinutil.IOwnerTile.trySetOwner(table, actor.team.getId());
+                h.assertTrue(table.select(actor.player, EARLY, "return_test"), "target is available");
+                table.getInventory().setStackInSlot(0, tool.copy());
+                table.getInventory().setStackInSlot(1, new ItemStack(Items.CLAY_BALL));
+                for (int i = 0; i < table.getOutputs().getSlots(); i++)
+                    table.getOutputs().setStackInSlot(i, new ItemStack(Items.STONE, 64));
+                h.assertTrue(!table.start(actor.player) && ItemStack.matches(tool, table.getInventory().getStackInSlot(0))
+                        && table.getInventory().getStackInSlot(1).getCount() == 1, "full outputs preserve both inputs");
+                for (int i = 0; i < table.getOutputs().getSlots(); i++) table.getOutputs().extractItem(i, 64, false);
+                table.getOutputs().setStackInSlot(0, new ItemStack(Items.GLASS_BOTTLE, 8));
+                h.assertTrue(table.start(actor.player), "can reserve room alongside earlier products");
+                var menu = new ExperimentTableMenu(1, actor.player.getInventory(), table);
+                int outputIndex = ExperimentTableBlockEntity.MATERIAL_SLOTS;
+                h.assertTrue(!menu.getSlot(outputIndex).mayPlace(new ItemStack(Items.GLASS_BOTTLE)),
+                        "players cannot fill reserved output slots");
+                h.assertTrue(menu.quickMoveStack(actor.player, outputIndex).getCount() == 8
+                        && table.getOutputs().getStackInSlot(0).isEmpty(), "previous output remains collectible during a run");
+                var saved = table.saveWithFullMetadata();
+                table.stop();
+                table.load(saved);
+            }
+            h.runAfterDelay(45, () -> ControlledFurnaceGameTests.guard(scope, () -> {
+                try {
+                    int bottles = 0, tools = 0, completed = 0;
+                    for (var table : tables) {
+                        completed += table.completed();
+                        for (int i = 0; i < table.getOutputs().getSlots(); i++) {
+                            var stack = table.getOutputs().getStackInSlot(i);
+                            if (stack.is(Items.GLASS_BOTTLE)) bottles += stack.getCount();
+                            else if (ItemStack.matches(tool, stack)) tools++;
+                            else h.assertTrue(stack.isEmpty(), "only the exact original and the defined result are returned");
+                        }
+                    }
+                    h.assertTrue(completed == 1 && tools == 1 && bottles == 2, "one credited run delivers both products exactly once");
+                    h.succeed();
+                } finally {
+                    scope.close();
+                }
+            }));
+        } catch (RuntimeException | Error e) {
+            scope.close();
+            throw e;
+        }
+    }
+
     private static ExperimentTableActionPacket wire(ExperimentTableActionPacket packet){
         var buffer=new net.minecraft.network.FriendlyByteBuf(io.netty.buffer.Unpooled.buffer());
         try{packet.encode(buffer);return new ExperimentTableActionPacket(buffer);}finally{buffer.release();}

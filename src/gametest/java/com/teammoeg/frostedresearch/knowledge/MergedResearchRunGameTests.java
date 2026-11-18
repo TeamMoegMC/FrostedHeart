@@ -27,6 +27,9 @@ public final class MergedResearchRunGameTests {
           {"id":"early","title":"Prepare","completion_recipes":["minecraft:crafting_table"],"tasks":[
             {"requirement":{"id":"first","type":"calculation","level":1}},
             {"optional":true,"requirement":{"id":"early_experiment","title":"Early experiment","type":"experiment","duration":200,"materials":[{"item":"minecraft:clay_ball","count":1}]}},
+            {"optional":true,"requirement":{"id":"return_test","title":"Returns","type":"experiment","duration":20,
+              "materials":[{"item":"minecraft:shears","return_on_complete":true},{"item":"minecraft:clay_ball"}],
+              "result":{"item":"minecraft:glass_bottle","count":2}}},
             {"optional":true,"requirement":{"id":"early_sample","title":"Early sample","type":"sample","sample":{"experiment":"frostedresearch:trial_kiln","item":"frostedresearch:fired_trial_kiln"}}},
             {"optional":true,"requirement":{"id":"early_brick","title":"Early brick","type":"observation","observation":{"experiment":"frostedresearch:refractory_trial","team_current_run":true,"condition":{"kind":"observation","observation_type":"item"}}}},
             {"optional":true,"requirement":{"id":"early_tuyere","title":"Early tuyere","type":"observation","observation":{"experiment":"frostedresearch:tuyere_trial","team_current_run":true,"condition":{"kind":"observation","observation_type":"block"}}}}

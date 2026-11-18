@@ -32,6 +32,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.items.ItemHandlerHelper;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -62,6 +64,20 @@ public class ExperimentTableBlockEntity extends CBlockEntity implements CTickabl
             setChanged();
         }
     };
+    public static final int OUTPUT_SLOTS = MATERIAL_SLOTS + 1;
+    private final ItemStackHandler outputs = new ItemStackHandler(OUTPUT_SLOTS) {
+        @Override
+        protected void onContentsChanged(int slot) {
+            setChanged();
+        }
+    };
+    // Only the additional items for each reserved output slot, independent of earlier items players may take.
+    private ItemStackHandler pending = new ItemStackHandler(OUTPUT_SLOTS);
+
+    public ItemStackHandler getOutputs() {
+        return outputs;
+    }
+
     private UUID run;
     private String requirement = "";
     private Status status = Status.IDLE;
@@ -133,6 +149,7 @@ public class ExperimentTableBlockEntity extends CBlockEntity implements CTickabl
             message = "unavailable";
             return false;
         }
+        pending = new ItemStackHandler(OUTPUT_SLOTS);
         this.run = run;
         this.requirement = requirement;
         status = Status.IDLE;
@@ -165,11 +182,18 @@ public class ExperimentTableBlockEntity extends CBlockEntity implements CTickabl
             return false;
         }
         if (status != Status.IDLE) return false;
-        refresh(definition.get(), true);
-        if (!report.ok() || !ExperimentConditions.consume(inventory, definition.get().materials())) {
+        var allocation = refresh(definition.get(), true);
+        if (!report.ok()) {
             message = "not_ready";
             return false;
         }
+        var reserved = reserveOutputs(definition.get(), allocation);
+        if (reserved == null) {
+            message = "output_full";
+            return false;
+        }
+        pending = reserved;
+        allocation.consume(inventory);
         status = Status.RUNNING;
         progress = 0;
         duration = definition.get().duration();
@@ -186,10 +210,12 @@ public class ExperimentTableBlockEntity extends CBlockEntity implements CTickabl
         if (status == Status.IDLE) return;
         status = Status.IDLE;
         progress = 0;
+        pending = new ItemStackHandler(OUTPUT_SLOTS);
         message = "stopped";
     }
 
     private void clearTarget(String reason) {
+        pending = new ItemStackHandler(OUTPUT_SLOTS);
         run = null;
         requirement = "";
         status = Status.IDLE;
@@ -204,13 +230,38 @@ public class ExperimentTableBlockEntity extends CBlockEntity implements CTickabl
      * Rebuilds the report. Before a run starts it lists the materials the slots can supply; while running the
      * materials are already in the experiment. The room is scanned only when {@code scan} asks for it.
      */
-    private void refresh(ProjectRequirement definition, boolean scan) {
+    private ExperimentConditions.Materials refresh(ProjectRequirement definition, boolean scan) {
         if (scan || spaceLines.isEmpty() && definition.space().enclosed())
             spaceLines = ExperimentConditions.space(level, worldPosition, definition.space());
         List<ExperimentReport.Line> lines = new ArrayList<>(spaceLines);
         ExperimentConditions.temperature(level, worldPosition, definition.space()).ifPresent(lines::add);
-        if (status == Status.IDLE) lines.addAll(ExperimentConditions.materials(inventory, definition.materials()));
+        ExperimentConditions.Materials allocation = null;
+        if (status == Status.IDLE) {
+            allocation = ExperimentConditions.allocate(inventory, definition.materials());
+            lines.addAll(allocation.checks());
+            definition.result().ifPresent(result -> lines.add(new ExperimentReport.Line("result",
+                    List.of(ExperimentReport.Arg.key(result.stack().getDescriptionId()), ExperimentReport.Arg.text(result.count())), true)));
+        }
         report = new ExperimentReport(lines);
+        return allocation;
+    }
+
+    private ItemStackHandler reserveOutputs(ProjectRequirement definition, ExperimentConditions.Materials allocation) {
+        ItemStackHandler simulated = new ItemStackHandler(OUTPUT_SLOTS);
+        for (int slot = 0; slot < OUTPUT_SLOTS; slot++)
+            simulated.setStackInSlot(slot, outputs.getStackInSlot(slot).copy());
+        List<ItemStack> products = new ArrayList<>(allocation.returns());
+        definition.result().ifPresent(result -> products.add(result.stack()));
+        for (ItemStack product : products)
+            if (!ItemHandlerHelper.insertItemStacked(simulated, product, false).isEmpty()) return null;
+
+        ItemStackHandler reserved = new ItemStackHandler(OUTPUT_SLOTS);
+        for (int slot = 0; slot < OUTPUT_SLOTS; slot++) {
+            ItemStack after = simulated.getStackInSlot(slot);
+            int added = after.getCount() - outputs.getStackInSlot(slot).getCount();
+            if (added > 0) reserved.setStackInSlot(slot, after.copyWithCount(added));
+        }
+        return reserved;
     }
 
     @Override
@@ -246,13 +297,18 @@ public class ExperimentTableBlockEntity extends CBlockEntity implements CTickabl
         status = report.ok() ? Status.RUNNING : Status.PAUSED;
         if (status == Status.RUNNING) progress += CHECK_INTERVAL;
         if (progress >= duration) {
-            service.get().recordExperiment(run, requirement);
-            completed++;
+            boolean counted = service.get().recordExperiment(run, requirement).succeeded();
+            if (counted) {
+                for (int slot = 0; slot < OUTPUT_SLOTS; slot++)
+                    outputs.insertItem(slot, pending.getStackInSlot(slot), false);
+                completed++;
+            }
+            pending = new ItemStackHandler(OUTPUT_SLOTS);
             status = Status.IDLE;
             progress = 0;
-            message = "completed";
+            message = counted ? "completed" : "unavailable";
             // The next experiment for the same requirement starts from a fresh check; a satisfied one clears the target.
-            if (service.get().experimentRequirement(run, requirement).isEmpty()) clearTarget("completed");
+            if (service.get().experimentRequirement(run, requirement).isEmpty()) clearTarget(message);
             else refresh(definition.get(), true);
         }
         setChanged();
@@ -262,6 +318,10 @@ public class ExperimentTableBlockEntity extends CBlockEntity implements CTickabl
     @Override
     public void readCustomNBT(CompoundTag nbt, boolean descPacket) {
         if (!descPacket && nbt.contains("inventory")) inventory.deserializeNBT(nbt.getCompound("inventory"));
+        if (!descPacket) {
+            outputs.deserializeNBT(nbt.getCompound("outputs"));
+            pending.deserializeNBT(nbt.getCompound("pending"));
+        }
         run = nbt.hasUUID("run") ? nbt.getUUID("run") : null;
         requirement = nbt.getString("requirement");
         try {
@@ -279,7 +339,11 @@ public class ExperimentTableBlockEntity extends CBlockEntity implements CTickabl
 
     @Override
     public void writeCustomNBT(CompoundTag nbt, boolean descPacket) {
-        if (!descPacket) nbt.put("inventory", inventory.serializeNBT());
+        if (!descPacket) {
+            nbt.put("inventory", inventory.serializeNBT());
+            nbt.put("outputs", outputs.serializeNBT());
+            nbt.put("pending", pending.serializeNBT());
+        }
         if (run != null) nbt.putUUID("run", run);
         nbt.putString("requirement", requirement);
         nbt.putString("status", status.name());

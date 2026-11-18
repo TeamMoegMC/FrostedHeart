@@ -73,10 +73,12 @@ public class ExperimentTableBlock extends CBlock implements CEntityBlock<Experim
     @Override
     public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
         if (level.getBlockEntity(pos) instanceof ExperimentTableBlockEntity table && state.getBlock() != newState.getBlock()) {
-            for (int i = 0; i < table.getInventory().getSlots(); i++) {
-                ItemStack stack = table.getInventory().getStackInSlot(i);
-                table.getInventory().setStackInSlot(i, ItemStack.EMPTY);
-                if (!stack.isEmpty()) popResource(level, pos, stack);
+            for (var inventory : java.util.List.of(table.getInventory(), table.getOutputs())) {
+                for (int i = 0; i < inventory.getSlots(); i++) {
+                    ItemStack stack = inventory.getStackInSlot(i);
+                    inventory.setStackInSlot(i, ItemStack.EMPTY);
+                    if (!stack.isEmpty()) popResource(level, pos, stack);
+                }
             }
         }
         super.onRemove(state, level, pos, newState, isMoving);

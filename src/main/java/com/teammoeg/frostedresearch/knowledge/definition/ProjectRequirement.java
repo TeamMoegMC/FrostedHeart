@@ -46,7 +46,7 @@ import java.util.*;
  */
 public record ProjectRequirement(String id, Type type, String title, int level, int count,
                                  List<LinkRule.Slot> inputs, List<LinkRule.CrossCondition> conditions,
-                                 List<Distinct> distinct, int duration, List<Material> materials, Space space, Optional<Sample> sample, Optional<ResourceLocation> game, Optional<ObservationTask> observation) {
+                                 List<Distinct> distinct, int duration, List<Material> materials, Space space, Optional<Sample> sample, Optional<ResourceLocation> game, Optional<ObservationTask> observation, Optional<Result> result) {
     public enum Type {EVIDENCE, CALCULATION, EXPERIMENT, SAMPLE, MINIGAME, OBSERVATION}
 
     public static final int MAX_EVIDENCE_SLOTS = 8;
@@ -75,7 +75,8 @@ public record ProjectRequirement(String id, Type type, String title, int level, 
             field(Space.CODEC, "space", Space.NONE).forGetter(ProjectRequirement::space),
             KnowledgeKey.strictOptionalField(Sample.CODEC, "sample").forGetter(ProjectRequirement::sample),
             KnowledgeKey.strictOptionalField(ResourceLocation.CODEC,"game").forGetter(ProjectRequirement::game),
-            KnowledgeKey.strictOptionalField(ObservationTask.CODEC,"observation").forGetter(ProjectRequirement::observation)
+            KnowledgeKey.strictOptionalField(ObservationTask.CODEC,"observation").forGetter(ProjectRequirement::observation),
+            KnowledgeKey.strictOptionalField(Result.CODEC, "result").forGetter(ProjectRequirement::result)
     ).apply(i, ProjectRequirement::new));
 
     /**
@@ -95,11 +96,16 @@ public record ProjectRequirement(String id, Type type, String title, int level, 
     /**
      * 实验开始时一次投入的材料：物品或物品标签（两者都写时都要满足）。 / Material consumed when an experiment starts.
      */
-    public record Material(Optional<ResourceLocation> item, Optional<ResourceLocation> tag, int count) {
+    public record Material(Optional<ResourceLocation> item, Optional<ResourceLocation> tag, int count, boolean returnOnComplete) {
+        public Material(Optional<ResourceLocation> item, Optional<ResourceLocation> tag, int count) {
+            this(item, tag, count, false);
+        }
+
         public static final Codec<Material> CODEC = RecordCodecBuilder.create(i -> i.group(
                 ResourceLocation.CODEC.optionalFieldOf("item").forGetter(Material::item),
                 ResourceLocation.CODEC.optionalFieldOf("tag").forGetter(Material::tag),
-                field(Codec.INT, "count", 1).forGetter(Material::count)
+                field(Codec.INT, "count", 1).forGetter(Material::count),
+                field(Codec.BOOL, "return_on_complete", false).forGetter(Material::returnOnComplete)
         ).apply(i, Material::new));
 
         public boolean matches(ItemStack stack) {
@@ -158,6 +164,23 @@ public record ProjectRequirement(String id, Type type, String title, int level, 
             List<LinkRule.CrossCondition> conditions,List<Distinct> distinct,int duration,List<Material> materials,Space space,Optional<Sample> sample) {
         this(id,type,title,level,count,inputs,conditions,distinct,duration,materials,space,sample,Optional.empty(),Optional.empty());
     }
+    public record Result(ResourceLocation item, int count) {
+        public static final Codec<Result> CODEC = RecordCodecBuilder.create(i -> i.group(
+                ResourceLocation.CODEC.fieldOf("item").forGetter(Result::item),
+                field(Codec.INT, "count", 1).forGetter(Result::count)
+        ).apply(i, Result::new));
+
+        public ItemStack stack() {
+            return new ItemStack(ForgeRegistries.ITEMS.getValue(item), count);
+        }
+    }
+
+    public ProjectRequirement(String id, Type type, String title, int level, int count, List<LinkRule.Slot> inputs,
+            List<LinkRule.CrossCondition> conditions, List<Distinct> distinct, int duration, List<Material> materials,
+            Space space, Optional<Sample> sample, Optional<ResourceLocation> game, Optional<ObservationTask> observation) {
+        this(id, type, title, level, count, inputs, conditions, distinct, duration, materials, space, sample, game, observation, Optional.empty());
+    }
+
     public record Sample(ResourceLocation experiment, ResourceLocation item) {
         public static final Codec<Sample> CODEC = RecordCodecBuilder.create(i -> i.group(
             ResourceLocation.CODEC.fieldOf("experiment").forGetter(Sample::experiment),
@@ -216,6 +239,7 @@ public record ProjectRequirement(String id, Type type, String title, int level, 
         if (id.isBlank()) errors.add("Requirement id must not be blank");
         if (type != Type.EXPERIMENT && (duration != 0 || !materials.isEmpty() || !space.equals(Space.NONE)))
             errors.add(id + ": only experiments take duration, materials or space");
+        if (type != Type.EXPERIMENT && result.isPresent()) errors.add(id + ": result only applies to experiments");
         if (type != Type.SAMPLE && sample.isPresent()) errors.add(id + ": sample only applies to sample tasks");
         if (type != Type.MINIGAME && game.isPresent()) errors.add(id+": game only applies to minigame");
         if (type != Type.OBSERVATION && observation.isPresent()) errors.add(id+": observation only applies to observation tasks");
@@ -275,6 +299,11 @@ public record ProjectRequirement(String id, Type type, String title, int level, 
                             .ifPresent(item -> errors.add(id + ": unknown material item " + item));
                     if (material.count() < 1 || material.count() > 64) errors.add(id + ": material count must be 1 to 64");
                 }
+                result.ifPresent(output -> {
+                    if (!ForgeRegistries.ITEMS.containsKey(output.item()) || output.stack().isEmpty()
+                            || output.count() > output.stack().getMaxStackSize())
+                        errors.add(id + ": result must be a registered item in a positive, single-stack quantity");
+                });
                 validate(space, errors);
             }
         }
