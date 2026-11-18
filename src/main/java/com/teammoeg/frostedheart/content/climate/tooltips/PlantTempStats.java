@@ -204,6 +204,7 @@ public class PlantTempStats implements TooltipModifier {
         PlantTempData data = PlantTempData.getPlantData(block);
         // boolean bonemealable = block instanceof BonemealableBlock;
         boolean inWorld = player != null && cropPos != null;
+        boolean expanded = inWorld && CInputHelper.isShiftKeyDown();
 
         if (data != null) {
             boolean tempCanSurvive = true;
@@ -264,26 +265,26 @@ public class PlantTempStats implements TooltipModifier {
                 list.add(Component.empty());
             }
 
-            if(data.shouldShowSurvive()) {
-                if (!inWorld || !tempCanSurvive) {
+            if(expanded || data.shouldShowSurvive()) {
+                if (expanded || !inWorld || !tempCanSurvive) {
                     Lang.translate("tooltip", "temp.plant.survive").style(tempCanSurvive ? ChatFormatting.GRAY : ChatFormatting.RED).addTo(list);
                     getTempProgressBar(data.minSurvive(), data.maxSurvive()).addTo(list);
                 }
             }
 
-            if (!inWorld || !canGrowth) {
+            if (expanded || !inWorld || !canGrowth) {
                 Lang.translate("tooltip", "temp.plant.grow").style(canGrowth ? ChatFormatting.GRAY : ChatFormatting.RED).addTo(list);
                 getTempProgressBar(data.minGrow(), data.maxGrow()).addTo(list);
             }
 
-            if (data.shouldShowFertilize()) {
-                if (!inWorld || !fertilize) {
+            if (expanded || data.shouldShowFertilize()) {
+                if (expanded || !inWorld || !fertilize) {
                     Lang.translate("tooltip", "temp.plant.fertilize").style(fertilize ? ChatFormatting.GRAY : ChatFormatting.RED).addTo(list);
                     getTempProgressBar(data.minFertilize(), data.maxFertilize()).addTo(list);
                 }
             }
 
-            if (!inWorld || !lightCanSurvive) {
+            if (expanded || !inWorld || !lightCanSurvive) {
                 Lang.translate("tooltip", "temp.plant.light").style(lightCanSurvive ? ChatFormatting.GRAY : ChatFormatting.RED).addTo(list);
                 getLightProgressBar(data.minSkylight(), data.maxSkylight()).addTo(list);
             }
@@ -300,7 +301,7 @@ public class PlantTempStats implements TooltipModifier {
                         .style(ChatFormatting.RED)
                         .addTo(list);
             } else {
-                if (!inWorld) {
+                if (expanded || !inWorld) {
                     Lang.translate("tooltip", "temp.plant.snow_resistant")
                             .style(ChatFormatting.GREEN)
                             .addTo(list);
@@ -313,7 +314,7 @@ public class PlantTempStats implements TooltipModifier {
                         .style(ChatFormatting.RED)
                         .addTo(list);
             } else {
-                if (!inWorld) {
+                if (expanded || !inWorld) {
                     Lang.translate("tooltip", "temp.plant.blizzard_resistant")
                             .style(ChatFormatting.GREEN)
                             .addTo(list);
