@@ -17,3 +17,5 @@
 专用验证入口：`./gradlew --offline runGameTestServer -PgameTestNamespaces=frostedheart_fertilizer -PgameTestDirectory=build/fertilizer-gametest`。测试代码位于 `src/gametest/java/com/teammoeg/frostedheart/content/agriculture/CropFertilizationGameTests.java`。
 
 连续收割验证：`createConsecutiveHarvests` 调用 Create `HarvesterMovementBehaviour.visitNewPosition` 的收割、种子预留和补种逻辑，仅替换掉落接收端以计数。三轮依次为施肥、不施肥、重新施肥；小麦产量验证为 2、1、2，每轮补种为年龄 0 且旧增产记录为 0。生长阶段由测试推进并调用结算事件，不代表自然随机生长全周期或客户端运动装置验收。
+
+客户端 `PlantTempStats.getStats` 按多层作物根部读取肥料；保温肥料按 `5 * grade.preserve` 降低最低存活、生长和适宜温度，状态与展开范围使用同一调整结果，最高温度不变。物品提示仍显示基础范围。

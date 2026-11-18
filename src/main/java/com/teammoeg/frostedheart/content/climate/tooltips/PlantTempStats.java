@@ -211,6 +211,15 @@ public class PlantTempStats implements TooltipModifier {
             boolean canGrowth = true;
             boolean fertilize = true;
             if (inWorld) {
+                farmland = player.level().getBlockState(com.teammoeg.frostedheart.content.agriculture.CropFertilization.soil(player.level(), cropPos));
+                if (com.teammoeg.frostedheart.content.agriculture.CropFertilization.fertilized(farmland)
+                        && farmland.getValue(FertilizedDirt.FERTILIZER) == com.teammoeg.frostedheart.content.agriculture.Fertilizer.FertilizerType.PRESERVED) {
+                    int reduction = 5 * farmland.getValue(FertilizedDirt.GRADE).preserve;
+                    data = new PlantTempData(block, data.growTimeDays(), data.minFertilize() - reduction,
+                            data.minGrow() - reduction, data.minSurvive() - reduction, data.maxFertilize(),
+                            data.maxGrow(), data.maxSurvive(), data.snowVulnerable(), data.blizzardVulnerable(),
+                            data.dead(), data.willDie(), data.heatCapacity(), data.minSkylight(), data.maxSkylight());
+                }
                 tempCanSurvive = soilTemp >= data.minSurvive() && soilTemp <= data.maxSurvive();
                 int light = player.level().getBrightness(LightLayer.SKY, cropPos);
                 if (light == 0 && player.level().getBlockState(cropPos.above()).getBlock() == Blocks.AIR) {
@@ -227,7 +236,7 @@ public class PlantTempStats implements TooltipModifier {
 
                 if (!CInputHelper.isShiftKeyDown()) {
                     if (!tempCanSurvive || !canGrowth) {
-                        boolean tooLow = soilTemp < data.minGrow() || soilTemp < data.minSkylight();
+                        boolean tooLow = soilTemp < data.minGrow() || soilTemp < data.minSurvive();
                         Lang.builder()
                                 .add(FHTextIcon.SOIL_THERMOMETER.getIcon())
                                 .add(Lang.text(" "))
