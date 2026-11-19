@@ -25,14 +25,13 @@ import java.util.List;
 import com.teammoeg.chorda.client.CInputHelper;
 import com.teammoeg.chorda.text.Components;
 import com.teammoeg.chorda.text.LangBuilder;
-import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
+import com.teammoeg.frostedheart.content.agriculture.CropFertilization;
 import com.teammoeg.frostedheart.content.agriculture.FertilizedDirt;
 import com.teammoeg.frostedheart.content.agriculture.Fertilizer.FertilizerGrade;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.level.LightLayer;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
@@ -40,6 +39,7 @@ import org.lwjgl.glfw.GLFW;
 import com.simibubi.create.foundation.item.TooltipModifier;
 import com.teammoeg.chorda.util.TextProgressBarHelper;
 import com.teammoeg.frostedheart.content.climate.TemperatureDisplayHelper;
+import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.data.PlantTempData;
 import com.teammoeg.frostedheart.util.Lang;
 import com.teammoeg.frostedheart.util.client.FHTextIcon;
@@ -51,7 +51,6 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 
@@ -75,7 +74,7 @@ public class PlantTempStats implements TooltipModifier {
 
     @Override
     public void modify(ItemTooltipEvent context) {
-        List<Component> stats = getStats(block, context.getItemStack(), context.getEntity(), null, null, 0);
+        List<Component> stats = getStats(block, null, null, 0, false);
         
         if (!stats.isEmpty()) {
         	KeyControlledDesc desc = new KeyControlledDesc(()->stats, 
@@ -199,11 +198,14 @@ public class PlantTempStats implements TooltipModifier {
                 : Lang.builder().add(desc);
     }
 
-    public static List<Component> getStats(Block block, @Nullable ItemStack stack, @Nullable Player player, @Nullable BlockState farmland, @Nullable BlockPos cropPos, float soilTemp) {
+    /** Uses the server's crop reading and shows the recipe bands for the current fertilizer. */
+    public static List<Component> getStats(Block block, @Nullable Player player, @Nullable BlockPos cropPos,
+                                           float growthTemperature, boolean exposedToBadWeather) {
         List<Component> list = new ArrayList<>();
         PlantTempData data = PlantTempData.getPlantData(block);
-        // boolean bonemealable = block instanceof BonemealableBlock;
+        BlockState farmland = null;
         boolean inWorld = player != null && cropPos != null;
+        boolean expanded = inWorld && CInputHelper.isShiftKeyDown();
 
         if (data != null) {
             boolean tempCanSurvive = true;
@@ -211,27 +213,33 @@ public class PlantTempStats implements TooltipModifier {
             boolean canGrowth = true;
             boolean fertilize = true;
             if (inWorld) {
-                tempCanSurvive = soilTemp >= data.minSurvive() && soilTemp <= data.maxSurvive();
+                farmland = player.level().getBlockState(CropFertilization.soil(player.level(), cropPos));
+                data = CropFertilization.temperatureData(data, farmland);
+                var status = WorldTemperature.plantTemperatureStatus(data, growthTemperature);
+                tempCanSurvive = status.canSurvive();
+                canGrowth = status.canGrow();
+                fertilize = status.canFertilize();
                 int light = player.level().getBrightness(LightLayer.SKY, cropPos);
-                if (light == 0 && player.level().getBlockState(cropPos.above()).getBlock() == Blocks.AIR) {
-                    light = player.level().getBrightness(LightLayer.SKY, cropPos.above());
-                }
                 lightCanSurvive = light >= data.minSkylight() && light <= data.maxSkylight();
-                canGrowth = soilTemp >= data.minGrow() && soilTemp <= data.maxGrow();
-                fertilize = soilTemp >= data.minFertilize() && soilTemp <= data.maxFertilize();
 
                 Lang.translate("tooltip", "temp.plant.survivability.state")
                         .style(ChatFormatting.GRAY)
-                        .add(getSurvivability(tempCanSurvive, lightCanSurvive, canGrowth, fertilize, false))
+                        .add(getSurvivability(tempCanSurvive && (!exposedToBadWeather || !data.willDie()),
+                                lightCanSurvive, canGrowth && !exposedToBadWeather, fertilize, false))
                         .addTo(list);
+                Lang.tooltip("temp.plant.growth_temperature", TemperatureDisplayHelper.toTemperatureFloatString(growthTemperature))
+                        .withStyle(ChatFormatting.GRAY).addTo(list);
+                if (exposedToBadWeather) {
+                    Lang.tooltip("temp.plant.weather_exposure").withStyle(ChatFormatting.RED).addTo(list);
+                }
 
                 if (!CInputHelper.isShiftKeyDown()) {
                     if (!tempCanSurvive || !canGrowth) {
-                        boolean tooLow = soilTemp < data.minGrow() || soilTemp < data.minSkylight();
+                        boolean tooLow = growthTemperature < data.minGrow() || growthTemperature < data.minSurvive();
                         Lang.builder()
                                 .add(FHTextIcon.SOIL_THERMOMETER.getIcon())
                                 .add(Lang.text(" "))
-                                .add(Lang.tooltip("temp.plant.survivability.temp" + (tooLow ? ".low" : ".high"), TemperatureDisplayHelper.toTemperatureFloatString(soilTemp)).withStyle(tooLow ? ChatFormatting.AQUA : ChatFormatting.GOLD))
+                                .add(Lang.tooltip("temp.plant.survivability.temp" + (tooLow ? ".low" : ".high")).withStyle(tooLow ? ChatFormatting.AQUA : ChatFormatting.GOLD))
                                 .addTo(list);
                     }
                     if (!lightCanSurvive) {
@@ -242,7 +250,7 @@ public class PlantTempStats implements TooltipModifier {
                                 .add(Lang.tooltip("temp.plant.survivability.light" + (tooLow ? ".low" : ".high"), Math.round(6.667F * light)).withStyle(tooLow ? ChatFormatting.AQUA : ChatFormatting.GOLD))
                                 .addTo(list);
                     }
-                    if (farmland != null && (farmland.is(FHBlocks.FERTILIZED_FARMLAND.get()) || farmland.is(FHBlocks.FERTILIZED_DIRT.get()))) {
+                    if (farmland != null && CropFertilization.fertilized(farmland)) {
                         list.add(Component.empty());
                         getFertilizerStorageBar(farmland).addTo(list);
                     }
@@ -255,31 +263,31 @@ public class PlantTempStats implements TooltipModifier {
                 list.add(Component.empty());
             }
 
-            if(data.shouldShowSurvive()) {
-                if (!inWorld || !tempCanSurvive) {
+            if(expanded || data.shouldShowSurvive()) {
+                if (expanded || !inWorld || !tempCanSurvive) {
                     Lang.translate("tooltip", "temp.plant.survive").style(tempCanSurvive ? ChatFormatting.GRAY : ChatFormatting.RED).addTo(list);
                     getTempProgressBar(data.minSurvive(), data.maxSurvive()).addTo(list);
                 }
             }
 
-            if (!inWorld || !canGrowth) {
+            if (expanded || !inWorld || !canGrowth) {
                 Lang.translate("tooltip", "temp.plant.grow").style(canGrowth ? ChatFormatting.GRAY : ChatFormatting.RED).addTo(list);
                 getTempProgressBar(data.minGrow(), data.maxGrow()).addTo(list);
             }
 
-            if (data.shouldShowFertilize()) {
-                if (!inWorld || !fertilize) {
+            if (expanded || data.shouldShowFertilize()) {
+                if (expanded || !inWorld || !fertilize) {
                     Lang.translate("tooltip", "temp.plant.fertilize").style(fertilize ? ChatFormatting.GRAY : ChatFormatting.RED).addTo(list);
                     getTempProgressBar(data.minFertilize(), data.maxFertilize()).addTo(list);
                 }
             }
 
-            if (!inWorld || !lightCanSurvive) {
+            if (expanded || !inWorld || !lightCanSurvive) {
                 Lang.translate("tooltip", "temp.plant.light").style(lightCanSurvive ? ChatFormatting.GRAY : ChatFormatting.RED).addTo(list);
                 getLightProgressBar(data.minSkylight(), data.maxSkylight()).addTo(list);
             }
 
-            if (farmland != null && (farmland.is(FHBlocks.FERTILIZED_FARMLAND.get()) || farmland.is(FHBlocks.FERTILIZED_DIRT.get()))) {
+            if (farmland != null && CropFertilization.fertilized(farmland)) {
                 Lang.translate("tooltip", "temp.plant.fertilizer").style(ChatFormatting.GRAY).addTo(list);
                 getFertilizerStorageBar(farmland).addTo(list);
             }
@@ -291,7 +299,7 @@ public class PlantTempStats implements TooltipModifier {
                         .style(ChatFormatting.RED)
                         .addTo(list);
             } else {
-                if (!inWorld) {
+                if (expanded || !inWorld) {
                     Lang.translate("tooltip", "temp.plant.snow_resistant")
                             .style(ChatFormatting.GREEN)
                             .addTo(list);
@@ -304,7 +312,7 @@ public class PlantTempStats implements TooltipModifier {
                         .style(ChatFormatting.RED)
                         .addTo(list);
             } else {
-                if (!inWorld) {
+                if (expanded || !inWorld) {
                     Lang.translate("tooltip", "temp.plant.blizzard_resistant")
                             .style(ChatFormatting.GREEN)
                             .addTo(list);

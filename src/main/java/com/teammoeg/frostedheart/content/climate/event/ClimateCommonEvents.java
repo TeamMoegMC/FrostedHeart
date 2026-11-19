@@ -209,21 +209,7 @@ public class ClimateCommonEvents {
             }
             BlockPos fertilizerPos = CropFertilization.soil(level, pos);
             BlockState farmlandBlockState = level.getBlockState(fertilizerPos);
-            WorldTemperature.PlantStatus status;
-            if (CropFertilization.fertilized(farmlandBlockState)) {
-                if (farmlandBlockState.getValue(FertilizedDirt.FERTILIZER) == Fertilizer.FertilizerType.PRESERVED) {
-                    int p = 1;
-                    if (farmlandBlockState.hasProperty(FertilizedDirt.GRADE)) {
-                        p = farmlandBlockState.getValue(FertilizedDirt.GRADE).preserve;
-                    }
-                    data = new PlantTempData(crop, data.growTimeDays(), data.minFertilize() - 5 * p, data.minGrow() - 5 * p, data.minSurvive() - 5 * p, data.maxFertilize(), data.maxGrow(), data.maxSurvive(), data.snowVulnerable(), data.blizzardVulnerable(), data.dead(), data.willDie(), data.heatCapacity(), data.minSkylight(), data.maxSkylight());
-                    status = WorldTemperature.checkPlantStatus(level, pos, data, true);
-                } else {
-                    status = WorldTemperature.checkPlantStatus(level, pos, data);
-                }
-            } else {
-                status = WorldTemperature.checkPlantStatus(level, pos, data);
-            }
+            var status = WorldTemperature.checkPlantStatus(level, pos, data, farmlandBlockState);
 
             float growTimeGameDays = PlantTemperature.DEFAULT_GROW_TIME_GAME_DAYS;
 
@@ -385,11 +371,6 @@ public class ClimateCommonEvents {
     @SubscribeEvent
     public static void onPerformBonemeal(PerformBonemealEvent event) {
         if (event.getLevel() instanceof ServerLevel level && (!(event.getLevel() instanceof WrappedServerWorld))) {//We don't do checks in create virtual world
-//            WorldTemperature.PlantStatus status = WorldTemperature.checkPlantStatus(level, event.getPos(),
-//                    event.getState().getBlock());
-//            if (!status.canFertilize()) {
-//                event.setCanceled(true);
-//            }
             // In fact we just disable any kind of Vanilla bone mealing. We have our own system.
             event.setCanceled(true);
         }
@@ -482,21 +463,8 @@ public class ClimateCommonEvents {
             }
 
             BlockState farmlandBlockState = level.getBlockState(pos.below());
-            WorldTemperature.PlantStatus status;
-            if (farmlandBlockState.is(FHBlocks.FERTILIZED_DIRT.get())) {
-                if (farmlandBlockState.getValue(FertilizedDirt.FERTILIZER) == Fertilizer.FertilizerType.PRESERVED) {
-                    int p = 1;
-                    if (farmlandBlockState.hasProperty(FertilizedDirt.GRADE)) {
-                        p = farmlandBlockState.getValue(FertilizedDirt.GRADE).preserve;
-                    }
-                    data = new PlantTempData(crop, data.growTimeDays(), data.minFertilize() - 5 * p, data.minGrow() - 5 * p, data.minSurvive() - 5 * p, data.maxFertilize(), data.maxGrow(), data.maxSurvive(), data.snowVulnerable(), data.blizzardVulnerable(), data.dead(), data.willDie(), data.heatCapacity(), data.minSkylight(), data.maxSkylight());
-                    status = WorldTemperature.checkPlantStatus(level, pos, data, true);
-                } else {
-                    status = WorldTemperature.checkPlantStatus(level, pos, data);
-                }
-            } else {
-                status = WorldTemperature.checkPlantStatus(level, pos, data);
-            }
+            var status = WorldTemperature.checkPlantStatus(level, pos, data, farmlandBlockState);
+
             float growTimeGameDays = PlantTemperature.DEFAULT_GROW_TIME_GAME_DAYS;
 
             growTimeGameDays = data.growTimeDays();

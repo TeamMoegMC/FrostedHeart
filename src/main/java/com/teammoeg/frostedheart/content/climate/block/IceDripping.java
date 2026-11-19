@@ -1,12 +1,14 @@
 /* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedheart.content.climate.block;
 
+import static com.teammoeg.frostedheart.content.climate.WorldTemperature.BlockTemperatureUse.PHASE_CHANGE;
+
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
+import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.data.ArmorTempData;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
-import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.input.MinecraftPhaseController;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -45,7 +47,7 @@ public final class IceDripping {
         BlockPos.MutableBlockPos cursor = outlet.mutable();
         // A cold terminal may drain a warm upper segment. No nonlocal energy transfer.
         do {
-            if (warmEnough(MinecraftPhaseController.temperature(level, cursor))) return true;
+            if (warmEnough(WorldTemperature.getTempAtBlock(level, cursor, PHASE_CHANGE))) return true;
             if (!IcicleBlock.isIcicle(state)) return false;
             cursor.move(Direction.UP);
             if (level.isOutsideBuildHeight(cursor)) return false;

@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.compat.curios;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 import java.util.stream.IntStream;
 
@@ -70,6 +71,22 @@ public class CuriosCompat {
 
         return () -> CuriosApi.getCuriosInventory(el).resolve().map(o->o.getCurios().entrySet().stream().flatMap(t->IntStream.range(0, t.getValue().getSlots()).mapToObj(i->Pair.of(CuriosApi.getSlot(t.getKey(),el.level()).get(),t.getValue().getStacks().getStackInSlot(i)))).iterator()).orElseGet(EmptyIterator::new);
     }
+    /** Visits occupied gameplay slots in handler order, including slots hidden by the client. */
+    public static void forEachEquippedCurio(LivingEntity entity, BiConsumer<ISlotType, ItemStack> visitor) {
+        var inventory = CuriosApi.getCuriosInventory(entity).orElse(null);
+        if (inventory == null) return;
+        for (var entry : inventory.getCurios().entrySet()) {
+            var handler = entry.getValue();
+            ISlotType slot = null;
+            for (int i = 0; i < handler.getSlots(); i++) {
+                ItemStack stack = handler.getStacks().getStackInSlot(i);
+                if (stack.isEmpty()) continue;
+                if (slot == null) slot = CuriosApi.getSlot(entry.getKey(), entity.level()).orElseThrow();
+                visitor.accept(slot, stack);
+            }
+        }
+    }
+
     public static ItemStack getCuriosIfVisible(LivingEntity living, ISlotType slot, Predicate<ItemStack> predicate) {
         LazyOptional<ICuriosItemHandler> optional = CuriosApi.getCuriosInventory(living);
         return optional.resolve()

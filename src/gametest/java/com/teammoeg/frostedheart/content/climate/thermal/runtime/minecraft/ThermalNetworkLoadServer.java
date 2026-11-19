@@ -52,6 +52,10 @@ public final class ThermalNetworkLoadServer {
     private static final int BASES = Integer.getInteger("frostedheart.thermalLoad.bases", 25);
     private static final int SOURCE_SIDE = Integer.getInteger("frostedheart.thermalLoad.sourceSide", 8);
     private static final int SECONDS = Integer.getInteger("frostedheart.thermalLoad.seconds", 1200);
+    // Rows are buffered during measurement and written after recovery, outside both timed windows.
+    private static final int SAMPLE_TICKS = SECONDS * 20;
+    private static final long[][] tickSamples = new long[5][ENABLED ? SAMPLE_TICKS : 0];
+    private static long previousCpuNanos;
     private static final int RECOVERY_SECONDS = Integer.getInteger("frostedheart.thermalLoad.recoverySeconds", 0);
     private static final boolean RECOVERY_RETURN_HOME = Boolean.getBoolean("frostedheart.thermalLoad.recoveryReturnHome");
     /** Scout trips cycle through the first this-many trip sites; 0 sends every trip to new terrain. */
@@ -71,6 +75,8 @@ public final class ThermalNetworkLoadServer {
     private static final LongAdder coefficientOnlyGeometryCommits = new LongAdder();
     private static final LongAdder mixingUpdatePages = new LongAdder(), mixingUpdateBricks = new LongAdder();
     private static final LongAdder coordinatorRounds = new LongAdder();
+    private static final LongAdder valueCommits = new LongAdder(), publishedTiles = new LongAdder(), allocatedTilesAtCommit = new LongAdder();
+    private static final LongAdder bodyTemperaturePackets = new LongAdder(), bodyTemperatureBytes = new LongAdder();
     private static long geometryLastSequence = Long.MIN_VALUE, geometryLastTick = Long.MIN_VALUE;
     private static final Distribution ticks = new Distribution(100_000), fixture = new Distribution(10_000), thermal = new Distribution(10_000);
     private static final Distribution legacyThermal = new Distribution(10_000);
@@ -82,6 +88,7 @@ public final class ThermalNetworkLoadServer {
     private static final long[] arrived = new long[BASES];
     private static final int[] residents = new int[BASES];
     private static final long[] availableByBase = new long[BASES], unavailableByBase = new long[BASES], oldByBase = new long[BASES], oldestByBase = new long[BASES];
+    private static final long[] unavailableByPlayer = new long[PLAYERS];
     private static final long[] oldFrozenByBase = new long[BASES], oldGeometryHeldByBase = new long[BASES],
             oldGlobalClockByBase = new long[BASES], oldSectionClockByBase = new long[BASES], oldReadRacedByBase = new long[BASES];
     private static final long[] gameplayProbeTick = new long[PLAYERS], gameplayCapturedByBase = new long[BASES], gameplayDormantByBase = new long[BASES], gameplayMissingByBase = new long[BASES];
@@ -120,16 +127,15 @@ public final class ThermalNetworkLoadServer {
     private static final Distribution recoveryMain = new Distribution(10_000), recoveryTailMain = new Distribution(10_000);
     private static long recoveryTailFrames, recoveryTailMinimumPlayers = Long.MAX_VALUE;
     /*
-     * Recovery stall dump: the main thread names the bases whose residents read old or missing air, and the worker
-     * copies their scheduling state at its next round end, where it owns that state. Recovery only, at most
-     * STALL_DUMP_LIMIT dumps, so the measured phase is unaffected.
+     * The worker copies stall state at a round end. Spread measured snapshots over the timed run
+     * and reserve half of the captures for recovery.
      */
     private static final int STALL_DUMP_LIMIT = 12;
     private static volatile int[] stallWatchBases;
     private static volatile Object stallPublication;
     private static volatile Map<String, Object> stallDump;
     private static Map<String, Object> stallMain;
-    private static int stallDumps;
+    private static int stallDumps, lastMeasuredStallBucket = -1;
     private static long stallRequestTicks = Long.MIN_VALUE;
     private enum Phase { BUILDING, WAITING_FOR_PLAYERS, WARMUP, MEASURING, RECOVERY, DIAGNOSTIC_HOLD, FINISHING }
 
@@ -226,8 +232,8 @@ public final class ThermalNetworkLoadServer {
                     thermalNanos += elapsed;
                     if (phase == Phase.MEASURING) {
                         long value = Math.max(0, elapsed - (queryObservationNanos - rootObservationStarted));
-                        var total = mainStageTotals.computeIfAbsent(rootStage, ignored -> new long[3]);
-                        total[0]++; total[1] += value; total[2] = Math.max(total[2], value);
+                        var total = mainStageTotals.computeIfAbsent(rootStage, ignored -> new long[4 + SAMPLE_TICKS]);
+                        total[0]++; total[1] += value; total[2] = Math.max(total[2], value); total[3] += value;
                     }
                 }
                 boolean legacy = switch (name) {
@@ -256,6 +262,14 @@ public final class ThermalNetworkLoadServer {
             }
             @Override public void nativeUnload(ServerLevel level, net.minecraft.world.level.chunk.ChunkAccess chunk) {
                 if (LIFECYCLE_TRACE && level == server.overworld()) traceChunk("native_request", chunk);
+            }
+            @Override public void valueSectionsPublished(int published, int allocated) {
+                if (phase != Phase.MEASURING) return;
+                valueCommits.increment(); publishedTiles.add(published); allocatedTilesAtCommit.add(allocated);
+            }
+            @Override public void bodyTemperaturePacketEncoded(int bytes) {
+                if (phase != Phase.MEASURING) return;
+                bodyTemperaturePackets.increment(); bodyTemperatureBytes.add(bytes);
             }
             @Override public void mixingUpdated(com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ThermalInputBatch input, int bricks) {
                 if (phase == Phase.MEASURING) { mixingUpdatePages.increment(); mixingUpdateBricks.add(bricks); }
@@ -360,7 +374,21 @@ public final class ThermalNetworkLoadServer {
             }
             fixtureNanos += System.nanoTime() - actionStarted;
             if (previousMeasured) {
-                ticks.add(System.nanoTime() - tickStarted); fixture.add(fixtureNanos); thermal.add(Math.max(0, thermalNanos - queryObservationNanos));
+                long span = System.nanoTime() - tickStarted;
+                long thermalElapsed = Math.max(0, thermalNanos - queryObservationNanos);
+                ticks.add(span); fixture.add(fixtureNanos); thermal.add(thermalElapsed);
+                int row = (int) measuredTicks - 1;
+                tickSamples[0][row] = server.overworld().getGameTime();
+                tickSamples[1][row] = span;
+                tickSamples[2][row] = fixtureNanos;
+                tickSamples[3][row] = thermalElapsed;
+                long cpu = THREADS.getCurrentThreadCpuTime();
+                tickSamples[4][row] = cpu - previousCpuNanos;
+                previousCpuNanos = cpu;
+                for (var stage : mainStageTotals.values()) {
+                    stage[4 + row] = stage[3];
+                    stage[3] = 0;
+                }
                 legacyThermal.add(Math.max(0, legacyThermalNanos - legacyObservationNanos));
                 if (measuredTicks >= SECONDS * 20L) {
                     phase = Phase.DIAGNOSTIC_HOLD;
@@ -455,7 +483,7 @@ public final class ThermalNetworkLoadServer {
             constructionTicketsReleased = true;
             mainStageTotals.clear();
             phase = Phase.MEASURING; phaseTicks = 0; startedNanos = System.nanoTime();
-            mainCpuStart = THREADS.getThreadCpuTime(mainThread); processCpuStart = OS.getProcessCpuTime();
+            previousCpuNanos = mainCpuStart = THREADS.getThreadCpuTime(mainThread); processCpuStart = OS.getProcessCpuTime();
             coordinatorRoundsStart = coordinatorRounds.sum();
             loadsStart = chunkLoads.sum(); unloadsStart = chunkUnloads.sum(); savesStart = chunkSaves.sum();
             sampleWorkers();
@@ -486,7 +514,7 @@ public final class ThermalNetworkLoadServer {
         } else if (phase == Phase.RECOVERY) {
             if (phaseTicks % 20 == 0) sampleRecovery();
         } else if (phase == Phase.DIAGNOSTIC_HOLD && Files.exists(ROOT.resolve("finish.json"))) {
-            write("complete.json", measurement); phase = Phase.FINISHING; phaseTicks = 0;
+            writeTickSamples(); write("complete.json", measurement); phase = Phase.FINISHING; phaseTicks = 0;
         } else if (phase == Phase.FINISHING && phaseTicks >= 60) server.halt(false);
     }
 
@@ -544,20 +572,27 @@ public final class ThermalNetworkLoadServer {
     private static void sample() throws java.io.IOException {
         var level = server.overworld(); updateResidents();
         var publication = MinecraftThermalInput.queryPublicationForObservation(level);
-        int[] staleByBase = new int[BASES];
-        var stalePlayers = new ArrayList<Map<String, Object>>();
+        int bucket = (int) ((long) (measuredTicks - 1) * (STALL_DUMP_LIMIT / 2) / SAMPLE_TICKS);
+        boolean capture = bucket != lastMeasuredStallBucket && canRequestStallDump(level, publication);
+        var missingNow = capture ? new int[BASES] : null;
+        var staleNow = capture ? new int[BASES] : null;
+        var stalePlayers = capture ? new ArrayList<Map<String, Object>>() : null;
         for (var player : server.getPlayerList().getPlayers()) {
             int index = index(player); if (index < 0 || level.getGameTime() - arrived[base(index)] <= 100) continue;
             BlockPos origin = origin(base(index));
             if (Math.abs(player.getX() - origin.getX() - WIDTH / 2.0) > WIDTH || Math.abs(player.getZ() - origin.getZ() - WIDTH / 2.0) > WIDTH) continue;
             int base = base(index);
-            if (publication == null || !publication.tryReadAir(player.getX(), player.getEyeY(), player.getZ(), probe)) { unavailable++; unavailableByBase[base]++; continue; }
+            if (publication == null || !publication.tryReadAir(player.getX(), player.getEyeY(), player.getZ(), probe)) {
+                unavailable++; unavailableByBase[base]++; unavailableByPlayer[index]++;
+                if (capture) { missingNow[base]++; stalePlayers.add(stalledPlayer(player, index, publication, "missing", -1)); }
+                continue;
+            }
             availableByBase[base]++;
             long age = Math.max(0, level.getGameTime() - probe.sampleTick()); ages.add(age);
             oldestByBase[base] = Math.max(oldestByBase[base], age);
             if (age > 40) {
-                ageViolations++; oldByBase[base]++; staleByBase[base]++;
-                stalePlayers.add(stalledPlayer(player, index, publication, "old", age));
+                ageViolations++; oldByBase[base]++;
+                if (capture) { staleNow[base]++; stalePlayers.add(stalledPlayer(player, index, publication, "old", age)); }
                 var field = publication.fixedState();
                 if (field == null) oldSectionClockByBase[base]++;
                 else synchronized (field) {
@@ -570,8 +605,10 @@ public final class ThermalNetworkLoadServer {
                 }
             }
         }
-        // Measured stale samples get at most half the dumps; recovery keeps the rest.
-        if (stallDumps < STALL_DUMP_LIMIT / 2) requestStallDump(level, publication, new int[BASES], staleByBase, stalePlayers);
+        if (capture && !stalePlayers.isEmpty()) {
+            requestStallDump(level, publication, missingNow, staleNow, stalePlayers);
+            lastMeasuredStallBucket = bucket;
+        }
         peakHeap = Math.max(peakHeap, ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().getUsed());
         peakAccounted = Math.max(peakAccounted, MinecraftThermalInput.thermalBudgetUsedBytes()); sampleWorkers();
         sampleComparisonPoints();
@@ -610,7 +647,8 @@ public final class ThermalNetworkLoadServer {
         long available = 0, missing = 0, old = 0, maximumAge = 0;
         boolean tail = phaseTicks > Math.max(0, RECOVERY_SECONDS - 10) * 20L;
         int[] missingByBase = new int[BASES], oldByBaseNow = new int[BASES];
-        var stalledPlayers = new ArrayList<Map<String, Object>>();
+        boolean capture = canRequestStallDump(level, publication);
+        var stalledPlayers = capture ? new ArrayList<Map<String, Object>>() : null;
         for (var player : server.getPlayerList().getPlayers()) {
             int index = index(player); if (index < 0 || level.getGameTime() - arrived[base(index)] <= 100) continue;
             var home = origin(base(index));
@@ -618,15 +656,18 @@ public final class ThermalNetworkLoadServer {
                     || Math.abs(player.getZ() - home.getZ() - WIDTH / 2.0) > WIDTH) continue;
             if (publication == null || !publication.tryReadAir(player.getX(), player.getEyeY(), player.getZ(), probe)) {
                 missing++; missingByBase[base(index)]++;
-                stalledPlayers.add(stalledPlayer(player, index, publication, "missing", -1));
+                if (capture) stalledPlayers.add(stalledPlayer(player, index, publication, "missing", -1));
                 continue;
             }
             long age = Math.max(0, level.getGameTime() - probe.sampleTick());
             available++; maximumAge = Math.max(maximumAge, age);
-            if (age > 40) { old++; oldByBaseNow[base(index)]++; stalledPlayers.add(stalledPlayer(player, index, publication, "old", age)); }
+            if (age > 40) {
+                old++; oldByBaseNow[base(index)]++;
+                if (capture) stalledPlayers.add(stalledPlayer(player, index, publication, "old", age));
+            }
             recoveryAges.add(age); if (tail) recoveryTailAges.add(age);
         }
-        requestStallDump(level, publication, missingByBase, oldByBaseNow, stalledPlayers);
+        if (capture && !stalledPlayers.isEmpty()) requestStallDump(level, publication, missingByBase, oldByBaseNow, stalledPlayers);
         recoverySamples += available; recoveryMissing += missing; recoveryOld += old;
         if (tail) {
             recoveryTailSamples += available; recoveryTailMissing += missing; recoveryTailOld += old;
@@ -664,11 +705,15 @@ public final class ThermalNetworkLoadServer {
         return row;
     }
 
+    /** Only assemble per-player diagnostic records when the worker can receive this snapshot. */
+    private static boolean canRequestStallDump(ServerLevel level, QueryPublication publication) {
+        return publication != null && stallDumps < STALL_DUMP_LIMIT && stallWatchBases == null && stallMain == null
+                && (stallRequestTicks == Long.MIN_VALUE || level.getGameTime() - stallRequestTicks >= 60);
+    }
+
     /** Main thread: ask the worker for one copy of the stalled bases' scheduling state, rate-limited. */
     private static void requestStallDump(ServerLevel level, QueryPublication publication, int[] missingByBase, int[] oldByBase,
             List<Map<String, Object>> stalledPlayers) {
-        if (publication == null || stallDumps >= STALL_DUMP_LIMIT || stallWatchBases != null || stallMain != null
-                || stallRequestTicks != Long.MIN_VALUE && level.getGameTime() - stallRequestTicks < 60) return;
         var bases = new it.unimi.dsi.fastutil.ints.IntArrayList();
         for (int base = 0; base < BASES; base++) if (missingByBase[base] > 0 || oldByBase[base] > 0) bases.add(base);
         if (bases.isEmpty()) return;
@@ -848,7 +893,7 @@ public final class ThermalNetworkLoadServer {
                 var m = new LinkedHashMap<String, Object>();
                 m.put("section", sectionString(section)); m.put("targetTick", batch.targetTick()); m.put("sequence", batch.sequence());
                 Object application = invokeWorker(engine, "fixedApplicationTick", new Class<?>[] { inputType }, input);
-                m.put("applicationTick", application);
+                m.put("applicationTick", application); m.put("aggregated", input.aggregated());
                 m.put("growthOnly", invokeWorker(engine, "fixedGrowthOnly", new Class<?>[] { inputType }, input));
                 m.put("ready", invokeWorker(engine, "fixedGeometryReady", new Class<?>[] { inputType }, input));
                 m.put("obsolete", invokeWorker(engine, "fixedInputObsolete", new Class<?>[] { inputType }, input));
@@ -1003,6 +1048,7 @@ public final class ThermalNetworkLoadServer {
         result.put("loadedWorkloadItems", workloadItems.stream().filter(id -> server.overworld().getEntity(id) instanceof ItemEntity).count());
         result.put("coalAccepted", fuelItems); result.put("constructionTicketsReleased", constructionTicketsReleased);
         result.put("residentPlayers", java.util.Arrays.stream(residents).sum()); result.put("residentSamples", ages.count);
+        result.put("unavailableByPlayer", unavailableByPlayer.clone());
         result.put("availableByBase", availableByBase.clone()); result.put("unavailableByBase", unavailableByBase.clone());
         result.put("oldByBase", oldByBase.clone()); result.put("oldestByBase", oldestByBase.clone());
         result.put("oldFrozenByBase", oldFrozenByBase.clone()); result.put("oldGeometryHeldByBase", oldGeometryHeldByBase.clone());
@@ -1032,6 +1078,9 @@ public final class ThermalNetworkLoadServer {
                 "minimumQuality", gameplayMinimum));
         result.put("gameplayCapturedByBase", gameplayCapturedByBase.clone());
         result.put("gameplayDormantByBase", gameplayDormantByBase.clone()); result.put("gameplayMissingByBase", gameplayMissingByBase.clone());
+        result.put("valuePublications", valueCommits.sum()); result.put("publishedTiles", publishedTiles.sum());
+        result.put("allocatedTilesAcrossPublications", allocatedTilesAtCommit.sum());
+        result.put("bodyTemperaturePacketsEncoded", bodyTemperaturePackets.sum()); result.put("bodyTemperaturePayloadBytes", bodyTemperatureBytes.sum());
         result.put("workerCpuMs", workersCpuTotal / 1e6); result.put("workerAllocatedBytes", workersAllocatedTotal);
         result.put("workerCoordinatorRounds", coordinatorRounds.sum() - coordinatorRoundsStart);
         if (Boolean.getBoolean("frostedheart.thermalLoad.workerTiming")) {
@@ -1055,6 +1104,20 @@ public final class ThermalNetworkLoadServer {
         write("state.json", metrics());
         FHMain.LOGGER.info("THERMAL_NETWORK_PROGRESS,ticks={},players={},accounted={},heap={},unavailable={},oldSamples={}", measuredTicks,
                 server.getPlayerList().getPlayerCount(), MinecraftThermalInput.thermalBudgetUsedBytes(), peakHeap, unavailable, ageViolations);
+    }
+    /** One row per measured tick. Stage columns use the same exclusive wall-time scope as measurement.json. */
+    private static void writeTickSamples() throws java.io.IOException {
+        try (var writer = Files.newBufferedWriter(ROOT.resolve("tick-timings.csv"))) {
+            writer.write("gameTick,tickSpanNs,fixtureNs,thermalNs,serverThreadCpuNs");
+            for (String stage : mainStageTotals.keySet()) writer.write("," + stage);
+            writer.newLine();
+            for (int tick = 0; tick < measuredTicks; tick++) {
+                writer.write(Long.toString(tickSamples[0][tick]));
+                for (int column = 1; column < tickSamples.length; column++) writer.write("," + tickSamples[column][tick]);
+                for (var stage : mainStageTotals.values()) writer.write("," + stage[4 + tick]);
+                writer.newLine();
+            }
+        }
     }
     private static void write(String name, Object value) throws java.io.IOException { Files.writeString(ROOT.resolve(name), JSON.toJson(value)); }
     @SubscribeEvent public static void stopped(ServerStoppedEvent event) throws java.io.IOException {

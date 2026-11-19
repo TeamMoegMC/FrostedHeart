@@ -20,11 +20,16 @@
 /* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft;
 
+import static com.teammoeg.frostedheart.content.climate.WorldTemperature.BlockTemperatureUse.PHASE_CHANGE;
+import static com.teammoeg.frostedheart.content.climate.WorldTemperature.BlockTemperatureUse.SURROUNDINGS;
+
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
+import com.teammoeg.frostedheart.content.climate.thermal.field.ThermalAnalyticField;
+import com.teammoeg.frostedheart.content.climate.thermal.field.ThermalFieldKey;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialSample;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialThermalLaw;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalCellArena;
@@ -53,6 +58,7 @@ import net.minecraft.core.SectionPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -63,6 +69,54 @@ import net.minecraftforge.gametest.PrefixGameTestTemplate;
 @GameTestHolder("frostedheart_material_runtime")
 @PrefixGameTestTemplate(false)
 public final class ThermalMaterialBehaviorGameTests {
+    @GameTest(template = "phase0a_empty", batch = "block_temperature_query", timeoutTicks = 100)
+    public static void blockTemperatureReadsMaterialOrLocalEnvironment(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        MinecraftThermalInput.closeActiveLevel(level);
+        BlockPos body = origin(helper).offset(1, 1, 1);
+        BlockPos air = body.above();
+        var chunk = level.getChunkAt(body);
+        var previous = MinecraftThermalInput.dormantState(chunk);
+        var key = new ThermalFieldKey(new ResourceLocation("frostedheart", "block_temperature_query"),
+                0, body.asLong(), 0);
+        try {
+            level.setBlockAndUpdate(body, Blocks.STONE.defaultBlockState());
+            level.setBlockAndUpdate(air, Blocks.AIR.defaultBlockState());
+            MinecraftThermalInput.setDormantState(chunk, null);
+            near(helper, WorldTemperature.naturalAir(level, air), WorldTemperature.getTempAtBlock(level, air),
+                    "air with no local thermal state uses the natural background");
+
+            MinecraftGameplayFields.upsertSphere(level, key, Integer.MAX_VALUE, ThermalAnalyticField.CombineMode.OVERRIDE,
+                    body.getX() + .5, body.getY() + .5, body.getZ() + .5, 4, 30);
+            near(helper, 30, WorldTemperature.getTempAtBlock(level, air), "air reads the local field");
+            near(helper, 30, WorldTemperature.getTempAtBlock(level, body), "unrecorded material uses the environment");
+
+            var measurement = new MaterialSample();
+            near(helper, 30, WorldTemperature.getTempAtBlock(level, body, measurement), "instrument reads the ambient fallback");
+            helper.assertTrue(measurement.source() == MaterialSample.Source.UNAVAILABLE,
+                    "the ambient fallback leaves the material sample empty");
+
+            var stored = new DormantChunkThermalState(chunk.getMinSection(), chunk.getSectionsCount());
+            stored.replaceMaterials(body.getY() >> 4, storedBrick(helper, body, -12));
+            MinecraftThermalInput.setDormantState(chunk, stored);
+            near(helper, -12, WorldTemperature.getTempAtBlock(level, body), "stored material takes precedence over a warm field");
+            near(helper, 30, WorldTemperature.getTempAtBlock(level, body, SURROUNDINGS), "ambient rules still read the warm field");
+            near(helper, -12, WorldTemperature.getTempAtBlock(level, body, PHASE_CHANGE), "phase rules read the stored body");
+            near(helper, -12, WorldTemperature.getTempAtBlock(level, body, measurement), "material instrument reads the stored body");
+            helper.assertTrue(measurement.source() == MaterialSample.Source.STORED, "instrument labels stored temperature");
+
+            level.setBlockAndUpdate(body, Blocks.AIR.defaultBlockState());
+            near(helper, 30, WorldTemperature.getTempAtBlock(level, body), "removing the material exposes the air again");
+            near(helper, 30, WorldTemperature.getTempAtBlock(level, body, measurement), "instrument reads air after removal");
+            helper.assertTrue(measurement.source() == MaterialSample.Source.UNAVAILABLE,
+                    "reusing an instrument reading clears the removed material");
+            helper.succeed();
+        } finally {
+            MinecraftGameplayFields.remove(level, key);
+            MinecraftThermalInput.setDormantState(chunk, previous);
+        }
+    }
+
     @GameTest(template = "phase0a_empty", batch = "thermal_body_phase_energy", timeoutTicks = 160)
     public static void coldIceUsesOneEnergyThroughPlateauAckAndWaterHeating(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
@@ -395,7 +449,7 @@ public final class ThermalMaterialBehaviorGameTests {
             com.teammoeg.frostedheart.FHMain.LOGGER.info("Material setBlockState: records=4096, calls=1024, ns/call p50={}, p95={}, heap bytes/call={}",
                     times[16]/32.0,times[30]/32.0,allocated/1024.0);
             near(helper,17,original.temperatureC(original.find(pageBlock(position))),"earlier snapshot must remain immutable");
-            near(helper,WorldTemperature.naturalAir(level,position),WorldTemperature.material(level,position),"replacement must initialize the new body");
+            near(helper,WorldTemperature.naturalAir(level,position),MinecraftThermalInput.materialTemperature(level,position),"replacement must initialize the new body");
             helper.succeed();
         } finally { attachment.frostedheart$setDormantThermalState(previous); }
     }

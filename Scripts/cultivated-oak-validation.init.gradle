@@ -1,0 +1,16 @@
+// Focused cultivated-oak checks, independent of unrelated thermal GameTest sources.
+// From workspace parent: bash FrostedHeart/gradlew -p FrostedHeart --offline runGameTestServer
+//   -I Scripts/cultivated-oak-validation.init.gradle -PgameTestNamespaces=frostedheart_cultivated_oak
+allprojects { project ->
+    project.afterEvaluate {
+        project.sourceSets.gameTest.java.setIncludes([
+                'com/teammoeg/frostedheart/content/agriculture/tree/**'])
+        def output = project.layout.buildDirectory.dir('cultivated-oak-test-classes')
+        project.sourceSets.gameTest.java.destinationDirectory.set(output)
+        project.tasks.named('compileGameTestJava').configure { destinationDirectory.set(output) }
+        project.sourceSets.gameTest.output.classesDirs.setFrom(output)
+        project.minecraft.runs.gameTestServer.args.removeAll {
+            it == '-mixin.config=frostedheart.native-ticket-return.mixins.json'
+        }
+    }
+}

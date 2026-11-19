@@ -2,6 +2,8 @@
 package com.teammoeg.frostedheart.content.climate.thermal.solver;
 
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.AirRouteValidity;
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalPageHandle;
 import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureTable;
 import com.teammoeg.frostedheart.content.climate.thermal.profile.minecraft.MinecraftThermalProfiles;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.ThermalMemoryBudget;
@@ -20,6 +22,39 @@ import net.minecraftforge.gametest.PrefixGameTestTemplate;
 @GameTestHolder("frostedheart_tiled_queries")
 @PrefixGameTestTemplate(false)
 public final class TiledThermalQueryGameTests {
+    /** Sky coefficients never connect two Sections. A live routed pair can change state on another owner's write. */
+    @GameTest(template = "phase0a_empty", timeoutTicks = 100)
+    public static void domainMembershipFollowsRouteOwnersAcrossGrowthFreezeAndRetirement(GameTestHelper helper) {
+        var profiles = MinecraftThermalProfiles.prepare(); var budget = new ThermalMemoryBudget(4L << 20);
+        var origin = new BlockPos(272640, 192, 274432); var target = origin.east(64);
+        long first = SectionPos.asLong(origin), second = SectionPos.asLong(target);
+        int[] air = new int[4096]; Arrays.fill(air, profiles.states().signatureId(Blocks.AIR.defaultBlockState()));
+        var empty = new ThermalFragment[]{ThermalFragment.EMPTY};
+        var sky = new ThermalFragment[]{new ThermalFragment(ThermalFragment.AirPairs.EMPTY, ThermalFragment.MaterialContacts.EMPTY,
+                ThermalFragment.RoutedContacts.EMPTY, new ThermalFragment.FarBoundaries(new int[0], -1, new int[]{0}, new long[]{target.asLong()}, new double[]{2}))};
+        var validity = new AirRouteValidity(new ThermalPageHandle[0], new long[0]); validity.commit();
+        var a = new ThermalFragment.AirFaceTrace(new long[]{origin.asLong()}, new byte[]{0}, 0, 1);
+        var b = new ThermalFragment.AirFaceTrace(new long[]{target.asLong()}, new byte[]{0}, 0, 1);
+        var pairs = new ThermalFragment.RoutedContacts(new int[]{0}, new int[]{1}, new double[]{4}, new AirRouteValidity[]{validity},
+                new ThermalFragment.AirFaceTrace[]{a}, new ThermalFragment.AirFaceTrace[]{b});
+        var routed = new ThermalFragment[]{new ThermalFragment(ThermalFragment.AirPairs.EMPTY, ThermalFragment.MaterialContacts.EMPTY, pairs, ThermalFragment.FarBoundaries.EMPTY)};
+        try (var field = field(budget, profiles, 2)) {
+            helper.assertTrue(field.admit(first, air, 1, 0) && field.admit(second, air, 1, 0) && field.domains().size() == 2, "Two separate air volumes");
+            helper.assertTrue(field.replaceTransport(first, empty, null) && field.replaceTransport(second, sky, null)
+                    && !field.domainsDirty() && field.environmentBoundaryCount() == 1, "Publish the sky coefficient while reusing membership");
+            helper.assertTrue(field.replaceTransport(first, routed, null) && field.domains().size() == 1, "A live route joins the volumes");
+            helper.assertTrue(field.grow(first, air, 2) && field.domains().size() == 1, "Growth transfers ownership of the same pair");
+            validity.retire();
+            helper.assertTrue(field.replaceTransport(second, sky, null) && field.domainsDirty() && field.domains().size() == 2,
+                    "Retiring the witness changes the partition even when another owner only installs sky");
+            helper.assertTrue(field.freeze(first) && field.domains().size() == 1 && field.replaceTransport(second, empty, null)
+                    && field.domainsDirty(), "Frozen owners still retain their installed route storage");
+            helper.assertTrue(field.retire(first) && field.domains().size() == 1 && field.replaceTransport(second, empty, null)
+                    && !field.domainsDirty(), "Retiring the last routed owner restores the empty fast path");
+        }
+        helper.assertTrue(budget.usedBytes() == 0, "All transport and field storage released"); helper.succeed();
+    }
+
     @GameTest(template = "phase0a_empty", timeoutTicks = 300)
     public static void oneTransactionForTheSameIntervalMatchesIndependentDomainCommits(GameTestHelper helper) {
         var profiles = MinecraftThermalProfiles.prepare(); var budget = new ThermalMemoryBudget(16L << 20);

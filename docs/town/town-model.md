@@ -219,7 +219,7 @@ T_{building,b,h}=\frac{1}{|V_b|}\sum_{v\in V_b}T_{block,v,h}
 
 这里的 \(|V_b|\) 就是扫描器记录的内部体积。它是离散空气方块数量，不是连续几何球体积。
 
-当前建筑读取由 `BlockScanner` / `LoadedTownWorld` 完成。结构复核保留不可变的 `OccupiedZoneInfo`，住宅与狩猎基地的环境刷新在这份几何上遍历可达内部位置；对每个位置计算当前自然背景，再调用 `MinecraftThermalInput.gameplayPassiveEnvironment` 读取已有环境。温度单位为 °C，结果是本次有效采样的算术平均。生物群系查询使用非加载数据源；遇到缺区块、零采样或非有限结果时保留最后已知温度，供热 modifier 仍按真实端点状态更新。
+当前建筑读取由 `BlockScanner` / `LoadedTownWorld` 完成。结构复核保留不可变的 `OccupiedZoneInfo`，住宅与狩猎基地的环境刷新在这份几何上遍历可达内部位置，每个位置通过 `WorldTemperature.getTempAtBlock(serverLevel, position, loadedWorld)` 读取环境温度。温度单位为 °C，结果是本次有效采样的算术平均。生物群系查询使用非加载数据源；遇到缺区块、零采样或非有限结果时保留最后已知温度，供热 modifier 仍按真实端点状态更新。
 
 这条实现路径没有使用旧 `TownThermalProjection` 分组描述；该类在热力 API 中是否另有用途应由热系统文档说明。建筑周期目标、任务预算和更新等待见 [building-data.md](building-data.md)。
 
@@ -1351,7 +1351,7 @@ Java 模拟不生成 HTML，也不依赖 Python、Pandas、SciPy 或绘图库。
 实际实现没有另写一套近似气候/热场公式，而是先把运行时代码拆成共享纯函数：
 
 - `ClimateEventModel`：普通长期冷/暖事件的整数选择、冷峰权重、持续时间、前置时间、平静期、Gaussian 扰动和零端点导数 Hermite 插值。`InterpolationClimateEvent` 直接调用它。
-- `BlockTemperatureModel`：`alpha(y)`、自然方块温度和当前 `min(nature + k_heat H, H)` 热场上限；默认 `k_heat=2.0`。`WorldTemperature.block` 及其快速路径直接调用它。
+- `TownStageFourModel.analyzeLayout` 对建筑体素逐个调用 `SphericalHeatFieldModel.temperatureAt`，与在线能量塔使用相同的中心增益和边界。
 - `SphericalHeatFieldModel`：位于 `content.climate.thermal.field` 的纯整数格点球体工具，供城镇模型计算边界包含与精确体素数；它不注册世界热场。
 - `GeneratorHeatFieldModel`：阶段 0 已抽取的等级到半径/温升公式继续同时服务运行时和模拟器。
 - `HuntingDailyModel.calculateCapacity`：狩猎基地扫描时的有效面积到岗位容量公式由游戏与模拟共享。
@@ -1361,7 +1361,7 @@ Java 模拟不生成 HTML，也不依赖 Python、Pandas、SciPy 或绘图库。
 阶段 4 场景新增：
 
 - `simulation.climateBurnInDays` 与 `simulation.morningHour`；默认分别为 `365 day` 和 `1 game-hour`。
-- `location.dimensionTemperatureCelsius`、`biomeTemperatureCelsius` 与 `ignoreAltitudeTemperature`。首版强制城镇体素全部位于 `y>63` 且忽略高度温度，所以使用 `alpha=0.5`；`alpha(y)` 的完整分段函数仍已实现。
+- `location.dimensionTemperatureCelsius`、`biomeTemperatureCelsius` 与 `ignoreAltitudeTemperature`。场景按指定维度、群系和完整气候项计算背景，沿用原场景的高度假设。
 - `thermalLayout.towerCenter=[x,y,z]`：唯一 T1 球心。
 - `thermalLayout.buildings[]`：每座聚合建筑的 `id`、`role`、`floorAreaBlocks` 与一个或多个整数内部体素盒 `min/size`。三维坐标自身已经包含高度，没有额外建筑高度参数。
 
@@ -1379,26 +1379,7 @@ V_sphere = sum[dx²+dy²+dz² <= 16²] 1 = 17,077 voxel
 
 若只问几何上限，在球心附近放置连续三层内部空间，同时要求三层的每一个体素都在球内，可用地面投影上限为 `793 floor block`，即 `2,379 interior voxel`。以当前 `4 floor-block/resident` 容量公式、足够床位和接近 1 的空间评分计算，几何住宅上限约为 `198 resident`。这只是纯几何上界：没有扣除塔本体、墙、道路、出入口、床和工作建筑，绝不能解释为实际可建 198 人城镇。
 
-真正更紧的约束是温度。在默认主世界 `D=-10°C`、TWR 雪原 `B=0°C`、`y>63`、忽略高度温度时：
-
-```text
-N = D + B + 0.5 climate = -10 + 0.5 climate
-T_covered = min(N + 2H, H), H = 10°C
-T_building = f_cover T_covered + (1-f_cover) N
-```
-
-模型边界说明（2026-09-08）：`TownStageFourModel.evaluateHour` 保留旧 heat-chunk 曲线，
-供既有离线基准对照。它没有模拟当前 runtime 的 `max(P, N + H)` 解析保底、物理 Air 或 Boss 控制，
-不能作为实际游戏温度的替代实现。当前合成规则见 [世界温度](../climate/world-climate-and-temperature.md#7-analytic-control-fields)。
-在该旧模型未触及 H 上限的寒冷区间，建筑达到住宅/狩猎 `0°C` 阈值所需气候温度为：
-
-```text
-climate_min(f_cover) = 20 - 40 f_cover
-```
-
-旧模型中全覆盖可抵抗到 `climate=-20°C`，参考住宅/狩猎分别约为 `-15.38°C` / `-13.26°C`。
-当前 runtime 仅凭同档解析保底达到阈值，则需要全覆盖 `climate>=0°C`，参考住宅/狩猎分别约为
-`2.31°C` / `3.37°C`；实际还取决于物理源连通和供热。源配置未随解析场接入调高，不能沿用旧曲线的温度结论。
+2026-11-19 核对。默认主世界 `D=-10°C`、参考雪原 `B=0°C` 且场景忽略高度时，每小时 `N=max(absoluteZero, D+B+climate)`。开启供暖时，设塔的基础升温为 `H`（K）、半径为 `R`（方块）、体素距球心为 `d`（方块）。建筑均温为 `N + mean(delta)`，球外 `delta=0`，球内 `delta=H+5×(1−d²/R²)²`。`TownStageFourModel.BuildingGeometry.meanTemperatureRiseCelsius` 在布局分析时求得。离线推演覆盖解析保底，实际服务器另有物理出热口的空气换热。
 
 #### 首轮 8/24/48 人耦合基准
 

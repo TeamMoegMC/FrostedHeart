@@ -136,7 +136,6 @@ public class FHClientEventsMod {
                     .andThen(new FoodTempStats(item))
 				.andThen(TooltipModifier.mapNull(FoodNutritionStats.create(item)))
 				.andThen(TooltipModifier.mapNull(PlantTempStats.create(item)))
-				.andThen(TooltipModifier.mapNull(BlockTempStats.create(item)))
 				.andThen(TooltipModifier.mapNull(EquipmentTempStats.create(item)))
 				.andThen(TooltipModifier.mapNull(KineticStats.create(item)));
 		});

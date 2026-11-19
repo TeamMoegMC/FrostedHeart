@@ -60,6 +60,10 @@ public final class ThermalDiagnostics {
 
         default void geometry(Object task, ThermalInputBatch input, RegionalContinuationBoundary boundary, String stage, boolean completed) { }
         default void mixingUpdated(ThermalInputBatch input, int bricks) { }
+        /** Counts the Accepted frames published by this step and all allocated Tiles at that instant. */
+        default void valueSectionsPublished(int published, int allocated) { }
+        /** Payload bytes written by a server-to-client body temperature encoder. */
+        default void bodyTemperaturePacketEncoded(int bytes) { }
         default void mainTick(net.minecraft.server.level.ServerLevel level) { }
         default void mainIdle(boolean idle) { }
         default void nativeUnload(net.minecraft.server.level.ServerLevel level, net.minecraft.world.level.chunk.ChunkAccess chunk) { }

@@ -22,6 +22,15 @@ Their gameplay contract and validation scope belong to
 
 For the shared thermal comparison baseline, run [`scripts/run-thermal-baseline.ps1`](../../scripts/run-thermal-baseline.ps1). The [baseline reference](../../docs/climate/thermal-validation-baseline.md) owns its scene list, recorded configuration, clocks and result interpretation.
 
+The focused generator heating checks use `-PgameTestNamespaces=frostedheart_generator_heat`.
+They cover the smooth center boost, unchanged boundary, overlap, player/crop/town/phase queries,
+infrared updates, item caches, real T1/T2 production, four horizontal outlets across Chunk boundaries,
+blocked/reopened outlets, physical enclosure heating, phase acknowledgements and tower lifecycle.
+The real T1/T2 cases also check per-target power at temperature levels `10` and `1`,
+fixed `2,000 W` radiation and discovery of both generator profile IDs.
+The [temperature composition reference](../../docs/climate/world-climate-and-temperature.md#7-analytic-control-fields)
+owns the formula and units.
+
 For infrared transport and actual GL display, run [`Scripts/run-infrared-network-e2e.py`](../../Scripts/run-infrared-network-e2e.py) with Java 17. It starts an isolated dedicated server, two rendering clients and an ordered TCP delay/rate proxy; the [infrared reference](../../docs/climate/infrared-view.md) owns its scenarios, invocation and verification limits.
 
 The memory-lifecycle regressions use namespaces `frostedheart_preparation_retention`,
@@ -63,3 +72,5 @@ capacity eviction, invalidation, failure and rollback. Two real-level cases exer
 作物肥料验证使用命名空间 `frostedheart_fertilizer`：
 `./gradlew --offline runGameTestServer -PgameTestNamespaces=frostedheart_fertilizer -PgameTestDirectory=build/fertilizer-gametest`。
 覆盖生长增产记账、成熟后施肥、预览、NBT 恢复、重置清理、多层根部及 Create 公共破坏掉落路径。行为与验证边界见[作物肥料](../../docs/climate/crop-fertilization.md)。
+
+独立栽培橡树原型验证使用 `frostedheart_cultivated_oak` 命名空间；配置、试用方式和验证范围见[栽培橡树](../../docs/climate/cultivated-oak.md)。

@@ -44,6 +44,52 @@ public final class ThermalMixingUpdateGameTests {
         helper.succeed();
     }
 
+    /** A real campfire exhausting through the only open face must move the projected cut when that face changes. */
+    @GameTest(template = "phase0a_empty", batch = "fixed_mixing_cross_section_outlet", timeoutTicks = 500)
+    public static void geometryCutFollowsActualOutletAcrossRebindingAndUnload(GameTestHelper helper) {
+        var level = helper.getLevel(); var base = new BlockPos(364556, 192, 354316);
+        var fire = base.offset(3, 0, 3); var port = fire.above(); var east = port.east(); var south = port.south();
+        var stone = Blocks.STONE.defaultBlockState(); var air = Blocks.AIR.defaultBlockState();
+        for (int x = 0; x < 8; x++) for (int y = 0; y < 4; y++) for (int z = 0; z < 8; z++)
+            level.setBlockAndUpdate(base.offset(x, y, z), stone);
+        level.setBlockAndUpdate(fire, Blocks.CAMPFIRE.defaultBlockState().setValue(CampfireBlock.LIT, false));
+        level.setBlockAndUpdate(port, Blocks.STONE_SLAB.defaultBlockState()); level.setBlockAndUpdate(east, air);
+        MinecraftThermalInput.closeActiveLevel(level);
+        try (var simulation = new ThermalMaterialBehaviorGameTests.Simulation(helper, base, 8, 4, 8, 0, false);
+                var producer = new SpatialSourceTimeline(simulation.budget.createCategory(), 8)) {
+            var profile = simulation.profiles.tuning().campfire();
+            WorkerPhysicalSourceBindings bindings = ThermalLoadedWorldGameTests.read(simulation.engine, "sourceBindings");
+            var originSection = net.minecraft.core.SectionPos.asLong(port); var eastSection = net.minecraft.core.SectionPos.asLong(east);
+            var southSection = net.minecraft.core.SectionPos.asLong(south);
+            var raw = RegionalContinuationBoundary.UNCHANGED.including(it.unimi.dsi.fastutil.longs.LongSets.singleton(originSection));
+            var fromEast = RegionalContinuationBoundary.UNCHANGED.including(it.unimi.dsi.fastutil.longs.LongSets.singleton(eastSection));
+            helper.assertTrue(originSection != eastSection && originSection != southSection && eastSection != southSection
+                    && bindings.includeBoundOutlets(raw) == raw, "Three Section corner with no bound source");
+            helper.assertTrue(producer.register(new SpatialSourceTimeline.Descriptor(fire.asLong(), 1, ThermalSourceMode.POWER_SOURCE,
+                    fire.getX(), fire.getY(), fire.getZ(), profile.profileId(), WorkerPhysicalSourceBindings.initialPorts(fire.asLong(), profile)),
+                    profile.ratedPowerW(), true, 0), "Register the campfire");
+            for (int step = 0; step < 4; step++) {
+                long tick = 20L * step;
+                var change = switch (step) {
+                    case 1 -> simulation.change(east, stone, ResolvedGeometryBatch.MaterialChanges.REPLACE);
+                    case 2 -> simulation.change(south, air, ResolvedGeometryBatch.MaterialChanges.REPLACE);
+                    default -> ResolvedGeometryBatch.EMPTY;
+                };
+                if (step == 3) producer.unload(fire.asLong(), 1, tick);
+                var input = new ThermalInputBatch(1, ++simulation.sequence, tick, ThermalInputBatch.NO_ADMISSIONS,
+                        ThermalInputBatch.NO_RETIREMENTS, ThermalInputBatch.NO_RESIDENCY_UPDATES, change,
+                        ThermalInputBatch.NO_ENVIRONMENT_UPDATES, ThermalInputBatch.NO_PHASE_ACKS, Double.NaN);
+                long before = bindings.outletRevision();
+                RegionalEngineTestDriver.submit(helper, simulation.engine, new ThermalInputEnvelope(input, producer.seal(tick)));
+                var projected = bindings.includeBoundOutlets(raw);
+                helper.assertTrue(projected.affects(eastSection) == (step == 0) && projected.affects(southSection) == (step == 2)
+                        && bindings.includeBoundOutlets(fromEast).affects(originSection) == (step == 0)
+                        && bindings.outletRevision() > before, "The actual binding updates both ends of the cut at step " + step);
+            }
+        } finally { MinecraftThermalInput.closeActiveLevel(level); }
+        helper.succeed();
+    }
+
     private static void compare(GameTestHelper helper, boolean passage, boolean future) {
         var base = new BlockPos(future ? 362496 : passage ? 361472 : 360448, 192, 352256);
         Result reference = run(helper, base, passage, future, true);

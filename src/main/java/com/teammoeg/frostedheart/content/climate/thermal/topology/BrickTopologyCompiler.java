@@ -399,7 +399,6 @@ public final class BrickTopologyCompiler {
         view.airRoutes()
                 .appendEdges(origin, view, parameters.effectiveMixingWPerBlockK(), routedContacts);
         BlockBrickLayout routedLayout = view.airRoutes().publishRoutes(origin, owner.blockLayout);
-        long airContactBlocks = 0;
         if (routedLayout != null)
             for (int block = 0; block < 64; block++) {
                 int slot = owner.slotAt(block);
@@ -409,10 +408,9 @@ public final class BrickTopologyCompiler {
                         bz = net.minecraft.core.BlockPos.getZ(position);
                 if (slot < 0 || arena.materialLaw(slot) == null) continue;
                 boolean directAir = view.hasDirectAir(bx, by, bz, signatures);
-                boolean routedAir = view.airRoutes().hasRegion(position);
-                if (directAir || routedAir) airContactBlocks |= 1L << block;
+                boolean routedAir = (routedLayout.routedAirMask() & (1L << block)) != 0;
                 if (!routedAir || directAir) continue;
-                int air = view.airSlotAt(view.airRoutes().region(position));
+                int air = view.airSlotAt(routedLayout.routedAirBlock(block));
                 if (air < 0) continue;
                 double surfaceG =
                         materials
@@ -426,8 +424,6 @@ public final class BrickTopologyCompiler {
                 routedContacts.add(slot, air, conductance, view.airRoutes().validity(position),
                         null, view.airRoutes().outletTrace(position));
             }
-        if (routedLayout != null)
-            routedLayout = routedLayout.withAirContactBlocks(airContactBlocks);
         return new CompiledFragment(
                 new ThermalFragment(
                         localFaces ? freezeAirPairs() : ThermalFragment.AirPairs.EMPTY,
@@ -455,17 +451,8 @@ public final class BrickTopologyCompiler {
         boolean firstBody = arena.materialLaw(firstSlot) != null;
         boolean secondBody = arena.materialLaw(secondSlot) != null;
         if (firstBody && secondBody) {
-            int firstFace = axis * 2 + 1, secondFace = axis * 2;
-            if ((signatures.fullContactFaces(firstSignature) & 1 << firstFace) == 0
-                    || (signatures.fullContactFaces(secondSignature) & 1 << secondFace) == 0
-                    || !view.materialContactAllowed(
-                            arena.minimum(firstSlot, 0),
-                            arena.minimum(firstSlot, 1),
-                            arena.minimum(firstSlot, 2),
-                            arena.minimum(secondSlot, 0),
-                            arena.minimum(secondSlot, 1),
-                            arena.minimum(secondSlot, 2),
-                            signatures)) return;
+            double area = signatures.contactFraction(firstSignature, secondSignature, axis * 2 + 1);
+            if (area == 0) return;
             double firstG =
                     materials
                             .profileOrNull(arena.materialProfileId(firstSlot))
@@ -477,7 +464,7 @@ public final class BrickTopologyCompiler {
             materialPairs.add(
                     Math.min(firstSlot, secondSlot),
                     Math.max(firstSlot, secondSlot),
-                    2 * firstG * secondG / (firstG + secondG));
+                    area * 2 * firstG * secondG / (firstG + secondG));
             return;
         }
         if (firstBody || secondBody) {

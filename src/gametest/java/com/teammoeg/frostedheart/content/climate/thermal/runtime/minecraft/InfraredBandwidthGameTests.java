@@ -277,8 +277,8 @@ public final class InfraredBandwidthGameTests {
         traffic.packet(request, true);
         long allocated=traffic.allocated();
         long start = System.nanoTime();
-        var result = cached ? MinecraftThermalInput.gameplayInfraredSnapshot(view.player, request)
-                : MinecraftThermalInput.gameplayInfraredSnapshot(view.player,request.forceFull(),request.knownGeneration(),
+        var result = cached ? MinecraftThermalInput.captureInfraredSnapshot(view.player, request)
+                : MinecraftThermalInput.captureInfraredSnapshot(view.player,request.forceFull(),request.knownGeneration(),
                         request.knownCenter(),request.lastEpoch(),request.knownPresence(),request.knownReadable(),
                         request.knownFieldPages(),request.knownStoredEpoch(),request.knownStoredSampleTick());
         traffic.nanos[traffic.polls++] = System.nanoTime() - start;

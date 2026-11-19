@@ -147,7 +147,7 @@ public final class ThermalUnresolvedInputGameTests {
             helper.assertTrue(finalReadable && sample.temperatureC() > 0 && sample.sampleTick() == 40, "The ready base has a real heated tick-40 result after delivery");
             helper.assertTrue(Math.abs(sample.temperatureC() - beforeControlC) < 1e-12,
                     "Delivery of the unavailable source control cannot alter the already committed unrelated result");
-            double expected = (resolvedReceiver ? 3 : 2) * profile.ratedPowerW() * profile.port(0).powerShare();
+            double expected = (resolvedReceiver ? 3 : 2) * profile.nonRadiativePowerW(profile.ratedPowerW());
             helper.assertTrue(Math.abs(liveEnergy - expected) < 1e-7 * expected, "The known base actually receives both elapsed intervals before the unrelated control arrives");
             double accounted = balance.deliveredJ() + balance.declaredLossJ() + balance.degradedLossJ() + balance.unacceptedJ() + balance.exportedJ() + pending;
             helper.assertTrue((balance.degradedLossJ() > 0) != resolvedReceiver && Math.abs(accounted - balance.outputJ()) < 1e-7 * balance.outputJ(),

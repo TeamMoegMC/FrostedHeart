@@ -20,26 +20,53 @@
 package com.teammoeg.frostedheart.content.climate.network;
 
 import com.teammoeg.chorda.network.CMessage;
+import com.teammoeg.frostedheart.content.agriculture.tree.CultivatedOakBlockEntity;
+import com.teammoeg.frostedheart.content.climate.WorldTemperature;
+import com.teammoeg.frostedheart.content.climate.data.PlantTempData;
 import com.teammoeg.frostedheart.content.climate.render.TemperatureGoogleRenderer;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraftforge.network.NetworkEvent;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Supplier;
 
-public record SoilThermometerUpdatePacket(float temperature) implements CMessage {
+/** Server-authoritative growth readout for a crop or cultivated sapling. */
+public record SoilThermometerUpdatePacket(BlockPos pos, float temperature, boolean exposedToBadWeather,
+        @Nullable Component plantInfo) implements CMessage {
+
+    /** Samples the growth temperature and the information displayed for the plant at {@code pos}. */
+    public static SoilThermometerUpdatePacket sample(ServerLevel level, BlockPos pos) {
+        if (!level.isLoaded(pos)) return new SoilThermometerUpdatePacket(pos, Float.NaN, false, null);
+        if (level.getBlockEntity(pos) instanceof CultivatedOakBlockEntity sapling) {
+            return new SoilThermometerUpdatePacket(pos, WorldTemperature.getTempAtBlock(level, pos), false,
+                    sapling.status());
+        }
+        PlantTempData data = PlantTempData.getPlantData(level.getBlockState(pos).getBlock());
+        if (data == null) return new SoilThermometerUpdatePacket(pos, Float.NaN, false, null);
+        return new SoilThermometerUpdatePacket(pos, WorldTemperature.getTempAtBlock(level, pos),
+                WorldTemperature.plantWeatherBlocksGrowth(level, pos, data), null);
+    }
 
     public SoilThermometerUpdatePacket(FriendlyByteBuf buffer) {
-        this(buffer.readFloat());
+        this(buffer.readBlockPos(), buffer.readFloat(), buffer.readBoolean(),
+                buffer.readNullable(FriendlyByteBuf::readComponent));
     }
 
     @Override
     public void encode(FriendlyByteBuf buffer) {
+        buffer.writeBlockPos(pos);
         buffer.writeFloat(temperature);
+        buffer.writeBoolean(exposedToBadWeather);
+        buffer.writeNullable(plantInfo, FriendlyByteBuf::writeComponent);
     }
 
     @Override
     public void handle(Supplier<NetworkEvent.Context> context) {
-        context.get().enqueueWork(() -> TemperatureGoogleRenderer.cachedTemperature = temperature);
+        context.get().enqueueWork(() -> TemperatureGoogleRenderer.receivePlantReadout(
+                pos, temperature, exposedToBadWeather, plantInfo));
         context.get().setPacketHandled(true);
     }
 }

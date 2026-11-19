@@ -1,6 +1,8 @@
 /* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft;
 
+import static com.teammoeg.frostedheart.content.climate.WorldTemperature.BlockTemperatureUse.SURROUNDINGS;
+
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.data.StateTransitionData;
 import com.teammoeg.frostedheart.content.climate.thermal.radiation.minecraft.BlockRadiationIndex;
@@ -198,7 +200,7 @@ public final class ThermalIntegrationGameTests {
                 helper.assertTrue(level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, position).equals(position),
                         "the actual sampled column must point at the surface snow, expected=" + position
                                 + ",actual=" + level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, position));
-                helper.assertTrue(Math.abs(WorldTemperature.block(level, position) - temperature) < .001,
+                helper.assertTrue(Math.abs((float) WorldTemperature.getTempAtBlock(level, position, SURROUNDINGS) - temperature) < .001,
                         "fixture must expose the requested side of the real snow threshold");
                 helper.assertTrue(level.getBrightness(LightLayer.BLOCK, position) < 10,
                         "fixture must satisfy snow's actual block-light bound");
@@ -249,7 +251,7 @@ public final class ThermalIntegrationGameTests {
                 MinecraftGameplayFields.upsertSphere(level, FIELD, 10_000, ThermalAnalyticField.CombineMode.OVERRIDE,
                         position.getX() + .5, position.getY() + .5, position.getZ() + .5, 4, temperature);
                 level.setBlockAndUpdate(position, Blocks.AIR.defaultBlockState());
-                helper.assertTrue(Math.abs(WorldTemperature.block(level, position) - temperature) < .001,
+                helper.assertTrue(Math.abs(WorldTemperature.getTempAtBlock(level, position) - temperature) < .001,
                         "the actual temperature query must expose the branch fixture");
                 // playerDestroy is called after removal in the normal mining path.
                 Blocks.ICE.playerDestroy(level, player, position, Blocks.ICE.defaultBlockState(), null,

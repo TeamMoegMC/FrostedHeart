@@ -173,7 +173,7 @@ final class InfraredCapture implements AutoCloseable {
                     // Only a readable client baseline can be mistaken for deleted. A client without one loses
                     // nothing, so a field that has published nothing yet is captured as no field: the window,
                     // stored bodies, analytic fields and the natural climate still reach it.
-                    if (attempt == 0 || knownReadable) continue;
+                    if (!read.isClosed() && (attempt == 0 || knownReadable)) continue;
                     read = null;
                 }
                 boolean readable =
@@ -653,15 +653,12 @@ final class InfraredCapture implements AutoCloseable {
             else blocks[block] = material ? nodes[node] : InfraredBrickCodec.quantize(saved);
         }
         if (compose) {
-            int naturalMode = 0, naturalLayers = 0;
-            // Material values have been expanded; rawNodes can now hold four exact natural Y
-            // layers.
             for (int block = 0; block < 64; block++) {
                 int px = x + (block & 3), py = y + (block >>> 4), pz = z + (block >>> 2 & 3);
                 fieldSample.clear();
                 for (int i = 0; i < brickFields.size(); i++) {
                     var field = brickFields.get(i);
-                    if (field.contains(px + .5, py + .5, pz + .5)) fieldSample.include(field);
+                    fieldSample.include(field, px + .5, py + .5, pz + .5);
                 }
                 double temperature = rawBlocks[block];
                 if (fieldSample.present()) {
@@ -669,24 +666,8 @@ final class InfraredCapture implements AutoCloseable {
                             fieldSample.requiresNatural()
                                     || !Double.isFinite(temperature) && fieldSample.requiresBase();
                     if (needsNatural && !neighborsReady) prepareNeighbors(x >> 4, z >> 4);
-                    if (!needsNatural || hasBiomeNeighbors(px, pz)) {
-                        double natural = 0;
-                        if (needsNatural) {
-                            if (naturalMode == 0) naturalMode = uniformBiomeBrick(x, y, z) ? 1 : -1;
-                            int layer = block >>> 4;
-                            if (naturalMode > 0) {
-                                if ((naturalLayers & 1 << layer) == 0) {
-                                    rawNodes[layer] =
-                                            WorldTemperature.naturalAir(
-                                                    level, position.set(px, py, pz));
-                                    naturalLayers |= 1 << layer;
-                                }
-                                natural = rawNodes[layer];
-                            } else
-                                natural =
-                                        WorldTemperature.naturalAir(
-                                                level, position.set(px, py, pz));
-                        }
+                    if (!needsNatural || hasBiomeNeighbors((px & ~3) + 2, (pz & ~3) + 2)) {
+                        double natural = needsNatural ? WorldTemperature.naturalAir(level, position.set(px, py, pz)) : 0;
                         temperature =
                                 fieldSample.compose(
                                         natural,
@@ -714,23 +695,6 @@ final class InfraredCapture implements AutoCloseable {
         return loadedNeighbors[4 + dx]
                 && loadedNeighbors[4 + dz * 3]
                 && loadedNeighbors[4 + dz * 3 + dx];
-    }
-
-    private boolean uniformBiomeBrick(int x, int y, int z) {
-        int minX = (x & 15) == 0 ? -1 : 0, maxX = (x & 15) == 12 ? 1 : 0;
-        int minZ = (z & 15) == 0 ? -1 : 0, maxZ = (z & 15) == 12 ? 1 : 0;
-        for (int dz = minZ; dz <= maxZ; dz++)
-            for (int dx = minX; dx <= maxX; dx++)
-                if (!loadedNeighbors[(dz + 1) * 3 + dx + 1]) return false;
-        int qx = x >> 2, qy = y >> 2, qz = z >> 2;
-        var biome = level.getNoiseBiome(qx, qy, qz);
-        for (int dy = -1; dy <= 1; dy++)
-            for (int dz = -1; dz <= 1; dz++)
-                for (int dx = -1; dx <= 1; dx++)
-                    if ((dx != 0 || dy != 0 || dz != 0)
-                            && level.getNoiseBiome(qx + dx, qy + dy, qz + dz) != biome)
-                        return false;
-        return true;
     }
 
     @Override

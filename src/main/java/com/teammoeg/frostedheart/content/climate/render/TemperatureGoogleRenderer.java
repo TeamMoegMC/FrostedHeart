@@ -52,18 +52,15 @@ import com.simibubi.create.foundation.utility.Lang;
 import com.simibubi.create.infrastructure.config.AllConfigs;
 import com.simibubi.create.infrastructure.config.CClient;
 import com.teammoeg.frostedheart.FHNetwork;
-import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.bootstrap.common.FHItems;
-import com.teammoeg.frostedheart.content.climate.data.BlockTempData;
+import com.teammoeg.frostedheart.content.agriculture.tree.CultivatedOakBlock;
 import com.teammoeg.frostedheart.content.climate.data.PlantTempData;
 import com.teammoeg.frostedheart.content.climate.network.SoilThermometerRequestPacket;
-import com.teammoeg.frostedheart.content.climate.tooltips.BlockTempStats;
 import com.teammoeg.frostedheart.content.climate.tooltips.PlantTempStats;
 import com.teammoeg.frostedheart.content.steamenergy.ClientHeatNetworkData;
 import com.teammoeg.frostedheart.content.steamenergy.HeatNetworkProvider;
 import com.teammoeg.frostedheart.content.steamenergy.HeatNetworkRequestC2SPacket;
 import com.teammoeg.frostedheart.content.utility.SoilThermometer;
-import com.teammoeg.frostedheart.content.utility.TemperatureProbe;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -81,7 +78,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraftforge.client.gui.overlay.ForgeGui;
@@ -102,9 +98,23 @@ public class TemperatureGoogleRenderer {
     private static final Map<Object, Outliner.OutlineEntry> outlines = CreateClient.OUTLINER.getOutlines();
 
     public static int hoverTicks = 0;
-    public static BlockPos lastHovered = null;
+    private static BlockPos cropTarget;
+    private static java.lang.ref.WeakReference<ClientLevel> cropLevel = new java.lang.ref.WeakReference<>(null);
+    private static long lastCropRequest;
+
+    /** Updates the growth readout for the currently inspected plant. */
+    public static void receivePlantReadout(BlockPos position, float temperature, boolean exposedToBadWeather,
+            @org.jetbrains.annotations.Nullable Component plantInfo) {
+        if (position.equals(cropTarget) && Minecraft.getInstance().level == cropLevel.get()) {
+            cachedTemperature = temperature;
+            cropExposedToBadWeather = exposedToBadWeather;
+            cachedPlantInfo = plantInfo;
+        }
+    }
     public static BlockPos lastHeatNetworkPos = null;
-    public static float cachedTemperature = 0;
+    private static float cachedTemperature = Float.NaN;
+    private static boolean cropExposedToBadWeather;
+    private static Component cachedPlantInfo;
     private static ClientHeatNetworkData lastHeatNetworkData = null;
 
     public static boolean hasHeatNetworkData() {
@@ -128,7 +138,7 @@ public class TemperatureGoogleRenderer {
         // Get the block the player is looking at
         HitResult objectMouseOver = mc.hitResult;
         if (!(objectMouseOver instanceof BlockHitResult)) {
-            lastHovered = null;
+            cropTarget = null;
             hoverTicks = 0;
             return;
         }
@@ -147,13 +157,6 @@ public class TemperatureGoogleRenderer {
 
         int prevHoverTicks = hoverTicks;
         hoverTicks++;
-        if (lastHovered == null || !lastHovered.equals(pos)) {
-            if (SoilThermometer.isWearingSoilThermometer(mc.player)) {
-                FHNetwork.INSTANCE.sendToServer(new SoilThermometerRequestPacket(pos));
-            }
-        }
-        lastHovered = pos;
-
         pos = proxiedOverlayPosition(world, pos);
 
         BlockEntity be = world.getBlockEntity(pos);
@@ -161,16 +164,13 @@ public class TemperatureGoogleRenderer {
         boolean wearingGoggles = GogglesItem.isWearingGoggles(mc.player);
 
         BlockState state = world.getBlockState(pos);
-        BlockState belowState = world.getBlockState(pos.below());
-        Block block = world.getBlockState(pos).getBlock();
-        BlockTempData blockData = BlockTempData.getData(block);
+        Block block = state.getBlock();
         PlantTempData plantData = PlantTempData.cacheList.get(block);
-        boolean hasBlockTempInfo = blockData != null;
-        boolean hasPlantTempInfo = plantData != null;
+        boolean cultivatedSapling = block instanceof CultivatedOakBlock;
+        boolean hasPlantTempInfo = plantData != null || cultivatedSapling;
 
         // Check if the player is wearing goggles
         boolean wearingSoilThermometer = SoilThermometer.isWearingSoilThermometer(mc.player);
-        boolean wearingTemperatureProbe = TemperatureProbe.isWearingTemperatureProbe(mc.player);
 
         boolean hasGoggleInformation = be instanceof IHaveGoggleInformation;
         boolean hasHoveringInformation = be instanceof IHaveHoveringInformation;
@@ -211,7 +211,6 @@ public class TemperatureGoogleRenderer {
         // Icon to render
         ItemStack item = AllItems.GOGGLES.asStack();
         ItemStack soilThermometerStack = FHItems.soil_thermometer.asStack();
-        ItemStack temperatureProbeStack = FHItems.temperatureProbe.asStack();
 
         List<Component> tooltip = new ArrayList<>();
 
@@ -243,28 +242,29 @@ public class TemperatureGoogleRenderer {
                 tooltip.remove(tooltip.size() - 1);
         }
 
-        boolean addedBlockTempInfo = false;
-        // block temperature
-        if (wearingTemperatureProbe && hasBlockTempInfo) {
-            boolean isNotLit = state.hasProperty(BlockStateProperties.LIT) && !state.getValue(BlockStateProperties.LIT);
-            boolean requiresLit = blockData.isLit();
-            List<Component> stats = BlockTempStats.getStats(block, null, mc.player);
-            if (!stats.isEmpty() && !(requiresLit && isNotLit)) {
-                addedBlockTempInfo = true;
-                if (!tooltip.isEmpty())
-                    tooltip.add(Components.immutableEmpty());
-                tooltip.addAll(stats);
-            }
-        }
-
         boolean addedPlantTempInfo = false;
         // plant temperature
-        if (wearingSoilThermometer && hasPlantTempInfo) {
-            List<Component> stats;
-            if (belowState.is(FHBlocks.FERTILIZED_FARMLAND.get()) || belowState.is(FHBlocks.FERTILIZED_DIRT.get())) {
-                stats = PlantTempStats.getStats(block, null, mc.player, belowState, pos, cachedTemperature);
-            } else {
-                stats = PlantTempStats.getStats(block, null, mc.player, null, pos, cachedTemperature);
+        if (!wearingSoilThermometer || !hasPlantTempInfo) cropTarget = null;
+        else {
+            long tick = world.getGameTime();
+            boolean changed = world != cropLevel.get() || !pos.equals(cropTarget);
+            if (changed || tick < lastCropRequest || tick - lastCropRequest >= 20) {
+                if (changed) {
+                    cachedTemperature = Float.NaN;
+                    cachedPlantInfo = null;
+                }
+                cropTarget = pos.immutable();
+                if (world != cropLevel.get()) cropLevel = new java.lang.ref.WeakReference<>(world);
+                lastCropRequest = tick;
+                FHNetwork.INSTANCE.sendToServer(new SoilThermometerRequestPacket(cropTarget));
+            }
+        }
+        if (cropTarget != null) {
+            List<Component> stats = List.of();
+            if (cultivatedSapling && cachedPlantInfo != null) {
+                stats = List.of(cachedPlantInfo);
+            } else if (!cultivatedSapling && cachedPlantInfo == null && Float.isFinite(cachedTemperature)) {
+                stats = PlantTempStats.getStats(block, mc.player, pos, cachedTemperature, cropExposedToBadWeather);
             }
             if (!stats.isEmpty()) {
                 addedPlantTempInfo = true;
@@ -291,7 +291,7 @@ public class TemperatureGoogleRenderer {
 
         // break early if goggle or hover returned false when present
         if ((hasGoggleInformation && !goggleAddedInformation) && (hasHoveringInformation && !hoverAddedInformation) &&
-            (hasBlockTempInfo && !addedBlockTempInfo) && (hasPlantTempInfo && !addedPlantTempInfo)) {
+            (hasPlantTempInfo && !addedPlantTempInfo)) {
             hoverTicks = 0;
             return;
         }

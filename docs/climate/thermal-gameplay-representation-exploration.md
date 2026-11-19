@@ -124,7 +124,7 @@
 
 ## 测量方法
 
-`PlayerTemperatureComputation`通过`MinecraftThermalInput.gameplayPlayerEnvironment`按真实x/eyeY/z取温；城镇、作物等通常取块中心，掉落储热物品取实体中心。测试使用实际营火/石材/铁块的BlockState、碰撞形状和`ServerLevel.noCollision`，记录站立、蹲下、爬行、跳跃、掉落物与1格高开口爬行位置。它们是合法接收位置，不是完整的移动、玩家生理或网络负载模拟。热室部分爬行/掉落物Air样本为0，不能把0/0解释为通过。
+`PlayerTemperatureComputation`通过`WorldTemperature.samplePlayerAirTemperature`按真实x/eyeY/z取温；城镇、作物等通常取块中心，掉落储热物品取实体中心。测试使用实际营火/石材/铁块的BlockState、碰撞形状和`ServerLevel.noCollision`，记录站立、蹲下、爬行、跳跃、掉落物与1格高开口爬行位置。它们是合法接收位置，不是完整的移动、玩家生理或网络负载模拟。热室部分爬行/掉落物Air样本为0，不能把0/0解释为通过。
 
 第一组实验从同一参考Q1读取格心，分别比较常量、连通邻格三线性、面梯度、monotonized-central限制梯度和三维共同缩放的有界梯度。这样隔离重建误差；格心误差为0是构造结果，不证明替代求解器。
 

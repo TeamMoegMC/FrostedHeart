@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "age=0": {
+      "model": "frostedheart:block/cultivated_acacia_sapling_0"
+    },
+    "age=1": {
+      "model": "frostedheart:block/cultivated_acacia_sapling_1"
+    },
+    "age=2": {
+      "model": "frostedheart:block/cultivated_acacia_sapling_2"
+    },
+    "age=3": {
+      "model": "frostedheart:block/cultivated_acacia_sapling_3"
+    },
+    "age=4": {
+      "model": "frostedheart:block/cultivated_acacia_sapling_4"
+    }
+  }
+}

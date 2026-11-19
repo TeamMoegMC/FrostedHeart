@@ -21,13 +21,13 @@
 package com.teammoeg.frostedheart.content.climate.thermal.topology;
 
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.PageSignatures;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.GeometryHalo;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.AirBackingMeter;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.BlockFace;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalCellArena;
 import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureTable;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.longs.Long2ByteOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 
 import net.minecraft.core.BlockPos;
@@ -39,8 +39,6 @@ final class TopologyView implements AirGeometryView {
     static final int[] DY = {0, 0, -1, 1, 0, 0};
     static final int[] DZ = {0, 0, 0, 0, -1, 1};
     private final WorkerPageStore pages;
-    private final Long2ByteOpenHashMap materialSurfaceCache = new Long2ByteOpenHashMap();
-    private final Long2ByteOpenHashMap materialOwnerCache = new Long2ByteOpenHashMap();
     private final Long2ObjectOpenHashMap<TopologyUpdatePlanner.PageDraft> draftsBySection;
     private final Int2ObjectOpenHashMap<TopologyUpdatePlanner.PageDraft> draftsBySlot;
     private AirRouteCompiler airRoutes;
@@ -58,8 +56,6 @@ final class TopologyView implements AirGeometryView {
     private it.unimi.dsi.fastutil.longs.LongSet captureSections;
 
     void recordBacking(AirBackingMeter meter) {
-        meter.container(materialSurfaceCache, materialSurfaceCache.size(), 12);
-        meter.container(materialOwnerCache, materialOwnerCache.size(), 12);
         meter.container(pageReads, pageReads.size(), 16); meter.bytes(32L * pageReads.size());
         meter.container(haloReadVersions, haloReadVersions.size(), 16); meter.container(haloWrites, haloWrites.size(), 16);
         meter.container(previousHalos, previousHalos.size(), 16);
@@ -67,9 +63,7 @@ final class TopologyView implements AirGeometryView {
     }
 
     long preparationBackingBytes() {
-        return AirBackingMeter.containerBackingBytes(materialSurfaceCache, materialSurfaceCache.size(), 12)
-                + AirBackingMeter.containerBackingBytes(materialOwnerCache, materialOwnerCache.size(), 12)
-                + AirBackingMeter.containerBackingBytes(pageReads, pageReads.size(), 16) + 32L * pageReads.size()
+        return AirBackingMeter.containerBackingBytes(pageReads, pageReads.size(), 16) + 32L * pageReads.size()
                 + AirBackingMeter.containerBackingBytes(haloReadVersions, haloReadVersions.size(), 16)
                 + AirBackingMeter.containerBackingBytes(haloWrites, haloWrites.size(), 16)
                 + AirBackingMeter.containerBackingBytes(previousHalos, previousHalos.size(), 16)
@@ -114,16 +108,16 @@ final class TopologyView implements AirGeometryView {
         for (var entry : haloWrites.entrySet()) {
             var previous = previousHalos.get(entry.getKey());
             var next = entry.getValue();
-            boolean changedMembership = previous == null || next == null
-                    || !java.util.Arrays.equals(previous.positions(), next.positions());
-            if (changedMembership && previous != null)
-                for (long position : previous.positions()) {
-                    readHaloSection(position); haloReferenceDelta.addTo(position, -1);
-                }
-            if (next == null) continue;
+            long[] before = previous == null ? GeometryHalo.EMPTY.positions() : previous.positions();
+            if (next == null) next = GeometryHalo.EMPTY;
+            // Captured arrays are sorted. Shared positions cancel in place, before entering the delta map.
+            // A differently ordered input still contributes every unmatched occurrence exactly once.
+            int old = 0;
             for (int index = 0; index < next.size(); index++) {
                 long position = next.positions()[index];
-                if (changedMembership) haloReferenceDelta.addTo(position, 1);
+                while (old < before.length && before[old] < position) removeHaloReference(before[old++]);
+                if (old < before.length && before[old] == position) old++;
+                else haloReferenceDelta.addTo(position, 1);
                 readHaloSection(position);
                 int signature = next.signatures()[index];
                 // A later overlapping writer can restore the committed value.
@@ -131,10 +125,16 @@ final class TopologyView implements AirGeometryView {
                 if (signature == pages.haloSignature(position)) haloValues.remove(position);
                 else haloValues.put(position, signature);
             }
+            while (old < before.length) removeHaloReference(before[old++]);
         }
         var references = haloReferenceDelta.long2IntEntrySet().fastIterator();
         while (references.hasNext()) if (references.next().getIntValue() == 0) references.remove();
         haloDirty = false;
+    }
+
+    private void removeHaloReference(long position) {
+        readHaloSection(position);
+        haloReferenceDelta.addTo(position, -1);
     }
 
     private void readHaloSection(long position) {
@@ -216,7 +216,7 @@ final class TopologyView implements AirGeometryView {
     }
 
     void resetPreparation() {
-        resetMaterialContacts(); pageReads.clear(); haloReadVersions.clear(); haloWrites.clear(); previousHalos.clear();
+        pageReads.clear(); haloReadVersions.clear(); haloWrites.clear(); previousHalos.clear();
         haloReferenceDelta.clear(); haloValues.clear(); haloDirty = false;
     }
 
@@ -373,10 +373,6 @@ final class TopologyView implements AirGeometryView {
         return resident(page, brick) ? signatures(page).get(local) : haloSignature(BlockPos.asLong(x, y, z));
     }
 
-    void resetMaterialContacts() {
-        materialSurfaceCache.clear();
-        materialOwnerCache.clear();
-    }
 
     int airSlotAt(long position) {
         int x = BlockPos.getX(position), y = BlockPos.getY(position), z = BlockPos.getZ(position);
@@ -425,58 +421,4 @@ final class TopologyView implements AirGeometryView {
         return false;
     }
 
-    boolean materialSurfaceAt(int x, int y, int z, ThermalSignatureTable signatures) {
-        long position = BlockPos.asLong(x, y, z);
-        byte cached = materialSurfaceCache.get(position);
-        if (cached != 0) return cached == 2;
-        boolean surface =
-                hasDirectAir(x, y, z, signatures)
-                        || airRoutes != null && airRoutes.hasRegion(position);
-        materialSurfaceCache.put(position, (byte) (surface ? 2 : 1));
-        return surface;
-    }
-
-    boolean materialContactAllowed(
-            int ax, int ay, int az, int bx, int by, int bz, ThermalSignatureTable signatures) {
-        boolean firstSurface = materialSurfaceAt(ax, ay, az, signatures);
-        boolean secondSurface = materialSurfaceAt(bx, by, bz, signatures);
-        if (firstSurface && secondSurface) return true;
-        if (firstSurface) return ownsInnerLayer(ax, ay, az, bx, by, bz, signatures);
-        if (secondSurface) return ownsInnerLayer(bx, by, bz, ax, ay, az, signatures);
-        return false;
-    }
-
-    private boolean ownsInnerLayer(
-            int surfaceX,
-            int surfaceY,
-            int surfaceZ,
-            int x,
-            int y,
-            int z,
-            ThermalSignatureTable signatures) {
-        long position = BlockPos.asLong(x, y, z);
-        byte owner = materialOwnerCache.get(position);
-        if (owner == 0) {
-            owner = 1; // Known to have no eligible surface owner.
-            long selectedPosition = Long.MAX_VALUE;
-            int contacts = signatures.fullContactFaces(signatureAtWorld(x, y, z));
-            for (int face = 0; face < 6; face++) {
-                if ((contacts & 1 << face) == 0) continue;
-                int nx = x + DX[face], ny = y + DY[face], nz = z + DZ[face];
-                int neighborSignature = signatureAtWorld(nx, ny, nz);
-                if (signatures.materialProfileId(neighborSignature) == 0
-                        || (signatures.fullContactFaces(neighborSignature) & 1 << (face ^ 1)) == 0
-                        || !materialSurfaceAt(nx, ny, nz, signatures)) continue;
-                long candidate = BlockPos.asLong(nx, ny, nz);
-                if (candidate < selectedPosition) {
-                    selectedPosition = candidate;
-                    owner = (byte) (face + 2);
-                }
-            }
-            materialOwnerCache.put(position, owner);
-        }
-        if (owner == 1) return false;
-        int face = owner - 2;
-        return surfaceX == x + DX[face] && surfaceY == y + DY[face] && surfaceZ == z + DZ[face];
-    }
 }

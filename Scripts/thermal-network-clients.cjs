@@ -35,6 +35,9 @@ fs.mkdirSync(output, { recursive: true })
 const events = fs.createWriteStream(path.join(output, 'events.jsonl'))
 const started = Date.now()
 const entries = []
+const runDir = options['server-result'] && path.dirname(path.resolve(options['server-result']))
+const inboundTypes = Object.create(null)
+let sampleStart = 0, sampleEnd = 0, countInbound = false
 let joined = 0, active = 0, maximumActive = 0, allJoinedAt = 0, stopping = false
 
 function event (type, detail = {}) {
@@ -178,8 +181,11 @@ function connect (index) {
       client.end(error.message)
     }
   })
+  // With 100 players this samples one client in each base. Count in process without logging individual packets.
+  const sampleTypes = index % 4 === 0
   client.on('packet', (_packet, meta) => {
     entry.packets++
+    if (sampleTypes && countInbound) inboundTypes[meta.name] = (inboundTypes[meta.name] || 0) + 1
     if (meta.name === 'map_chunk') entry.chunkPackets++
     if (meta.name === 'custom_payload') entry.customPackets++
   })
@@ -257,6 +263,8 @@ function finish (reason) {
     qualified: ['duration-complete', 'server-complete'].includes(reason) && activeBeforeStop === options.clients &&
       entries.every(entry => entry.joined && !entry.endedDuringHold && entry.errors.length === 0),
     scope: 'Real headless network clients; no rendering or client-mod logic; no endurance or thermal qualification implied.',
+    measuredInboundTypes: { sampledClients: entries.filter((_, i) => i % 4 === 0).length,
+      startedAtMs: sampleStart, endedAtMs: sampleEnd, counts: inboundTypes },
     clients: entries.map(({ client, ...values }) => values)
   }
   fs.writeFileSync(path.join(output, 'summary.json'), JSON.stringify(summary, null, 2))
@@ -266,9 +274,18 @@ function finish (reason) {
   setTimeout(() => process.exit(summary.qualified ? 0 : 1), 1500)
 }
 
-let lastReport = started
+let lastReport = started, nextPhaseCheck = started
 const ticker = setInterval(() => {
   const now = Date.now()
+  if (runDir && !sampleEnd && now >= nextPhaseCheck) {
+    nextPhaseCheck = now + 250
+    if (!sampleStart && fs.existsSync(path.join(runDir, 'measuring.json'))) {
+      countInbound = true; sampleStart = now
+    }
+    if (countInbound && fs.existsSync(path.join(runDir, 'measurement.json'))) {
+      countInbound = false; sampleEnd = now
+    }
+  }
   if (options['server-result'] && fs.existsSync(options['server-result'])) return finish('server-complete')
   if (allJoinedAt && now - allJoinedAt >= options.seconds * 1000) return finish(options['server-result'] ? 'server-result-timeout' : 'duration-complete')
   if (!allJoinedAt && now - started >= options['join-timeout'] * 1000) return finish('join-timeout')

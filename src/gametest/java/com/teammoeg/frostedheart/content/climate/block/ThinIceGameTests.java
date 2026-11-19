@@ -1,5 +1,7 @@
 package com.teammoeg.frostedheart.content.climate.block;
 
+import static com.teammoeg.frostedheart.content.climate.WorldTemperature.BlockTemperatureUse.SURROUNDINGS;
+
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
@@ -123,10 +125,13 @@ public class ThinIceGameTests {
     @GameTest(template = "phase0a_empty", batch = "thin_ice_phase", timeoutTicks = 100)
     public static void savedPhaseBudgetDrivesWarmCapAndWaterAssistedRepair(GameTestHelper helper) {
         var level = helper.getLevel();
+        MinecraftThermalInput.closeActiveLevel(level);
         var pos = helper.absolutePos(new BlockPos(1, 3, 1));
         var ice = FHBlocks.THIN_ICE_BLOCK.get();
-        var key = new com.teammoeg.frostedheart.content.climate.thermal.field.ThermalFieldKey(
-                new net.minecraft.resources.ResourceLocation("frostedheart", "thin_ice_test"), 0, pos.asLong(), 0);
+        var chunk = level.getChunkAt(pos);
+        var attachment = (MinecraftThermalChunkAttachment) (Object) chunk;
+        var previous = attachment.frostedheart$getDormantThermalState();
+        boolean forced = level.setChunkForced(chunk.getPos().x, chunk.getPos().z, true);
         helper.assertTrue(ThinIcePhaseData.warmLimit(0, 4) == 0
                 && ThinIcePhaseData.warmLimit(2.99, 4) == 1
                 && ThinIcePhaseData.warmLimit(3, 4) == 2
@@ -134,28 +139,31 @@ public class ThinIceGameTests {
                 && ThinIcePhaseData.warmLimit(9, 4) == 0, "thermal bands include the correct boundaries");
         helper.assertTrue(Math.abs(ThinIcePhaseData.heatingBudgetJ() - 95000) < 0.01, "heat work is a quarter of the compiled melt budget");
         helper.assertTrue(Math.abs(ThinIcePhaseData.coolingBudgetJ() - 90800) < 0.01, "repair work is a quarter of the compiled freezing budget");
-        level.setBlockAndUpdate(pos, ice.defaultBlockState());
-        com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftGameplayFields.upsertSphere(
-                level, key, 100, com.teammoeg.frostedheart.content.climate.thermal.field.ThermalAnalyticField.CombineMode.OVERRIDE,
-                pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, 0.25, 2);
-        seedPhase(level, pos, ThinIcePhaseData.heatingBudgetJ() - 1);
-        ThinIcePhaseData.observe(level, pos, level.getBlockState(pos));
-        helper.runAfterDelay(25, () -> {
-            helper.assertTrue(level.getBlockState(pos).getValue(ThinIceBlock.CRACK) == 1, "saved near-complete heat work advances exactly one stage at 2C");
-            ice.impact(level, pos, 2);
-            helper.assertTrue(level.getBlockState(pos).getValue(ThinIceBlock.CRACK) == 2, "mechanical damage can exceed the warm cap");
-            com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftGameplayFields.upsertSphere(
-                    level, key, 100, com.teammoeg.frostedheart.content.climate.thermal.field.ThermalAnalyticField.CombineMode.OVERRIDE,
-                    pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, 0.25, -6);
-            level.setBlockAndUpdate(pos.below(), Blocks.WATER.defaultBlockState());
-            seedPhase(level, pos, -ThinIcePhaseData.coolingBudgetJ() + 1);
-            ThinIcePhaseData.observe(level, pos, level.getBlockState(pos));
-        });
-        helper.runAfterDelay(50, () -> {
-            helper.assertTrue(level.getBlockState(pos).getValue(ThinIceBlock.CRACK) == 1, "cold adjacent water repairs one stage after its work budget completes");
-            com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftGameplayFields.remove(level, key);
-            helper.succeed();
-        });
+        helper.startSequence().thenWaitUntil(() -> helper.assertTrue(level.isPositionEntityTicking(pos),
+                "the thin ice fixture needs an entity-ticking chunk"))
+                .thenExecute(() -> {
+                    level.setBlockAndUpdate(pos, ice.defaultBlockState());
+                    seedBody(helper, pos, attachment, 2);
+                    seedPhase(level, pos, ThinIcePhaseData.heatingBudgetJ() - 1);
+                    ThinIcePhaseData.observe(level, pos, level.getBlockState(pos));
+                }).thenWaitUntil(() -> helper.assertTrue(level.getBlockState(pos).getValue(ThinIceBlock.CRACK) == 1,
+                        "saved near-complete heat work advances one stage, temperature=" + ThinIcePhaseData.temperature(level, pos)
+                                + ", ticking=" + level.isPositionEntityTicking(pos)))
+                .thenExecute(() -> {
+                    ice.impact(level, pos, 2);
+                    helper.assertTrue(level.getBlockState(pos).getValue(ThinIceBlock.CRACK) == 2,
+                            "mechanical damage can exceed the warm cap");
+                    level.setBlockAndUpdate(pos.below(), Blocks.WATER.defaultBlockState());
+                    seedBody(helper, pos, attachment, -6);
+                    seedPhase(level, pos, -ThinIcePhaseData.coolingBudgetJ() + 1);
+                    ThinIcePhaseData.observe(level, pos, level.getBlockState(pos));
+                }).thenWaitUntil(() -> helper.assertTrue(level.getBlockState(pos).getValue(ThinIceBlock.CRACK) == 1,
+                        "cold adjacent water repairs one stage, temperature=" + ThinIcePhaseData.temperature(level, pos)
+                                + ", ticking=" + level.isPositionEntityTicking(pos)))
+                .thenExecute(() -> {
+                    attachment.frostedheart$setDormantThermalState(previous);
+                    if (forced) level.setChunkForced(chunk.getPos().x, chunk.getPos().z, false);
+                }).thenSucceed();
     }
 
 
@@ -205,7 +213,8 @@ public class ThinIceGameTests {
                 pos.getX() + .5, pos.getY() + .5, pos.getZ() + .5, 2, -10);
         var stale = ThermalMaterialBehaviorGameTests.storedBrick(helper, pos, 2);
         level.setBlockAndUpdate(pos, ice.defaultBlockState().setValue(ThinIceBlock.CRACK, 1));
-        var staleContainer = new DormantChunkThermalState(pos.getY() >> 4, 1);
+        var chunk = level.getChunkAt(pos);
+        var staleContainer = new DormantChunkThermalState(chunk.getMinSection(), chunk.getSectionsCount());
         staleContainer.replaceMaterials(pos.getY() >> 4, stale);
         attachment.frostedheart$setDormantThermalState(staleContainer);
         helper.assertTrue(Double.isNaN(ThinIcePhaseData.temperature(level, pos))
@@ -214,9 +223,9 @@ public class ThinIceGameTests {
                 "both phase paths wait on a mismatched material checkpoint instead of substituting the environment");
         level.setBlockAndUpdate(pos, ice.defaultBlockState());
         seedBody(helper, pos, attachment, 2);
-        helper.assertTrue(Math.abs(ThinIcePhaseData.temperature(level, pos) - WorldTemperature.material(level, pos)) < .001,
+        helper.assertTrue(Math.abs(ThinIcePhaseData.temperature(level, pos) - MinecraftThermalInput.materialTemperature(level, pos)) < .001,
                 "thin ice uses the actual material thermometer");
-        helper.assertTrue(ThinIcePhaseData.temperature(level, pos) > 1 && WorldTemperature.block(level, pos) < -9,
+        helper.assertTrue(ThinIcePhaseData.temperature(level, pos) > 1 && (float) WorldTemperature.getTempAtBlock(level, pos, SURROUNDINGS) < -9,
                 "fixture separates warm material from cold environment");
         seedPhase(level, pos, ThinIcePhaseData.heatingBudgetJ() - 1);
         ThinIcePhaseData.observe(level, pos, level.getBlockState(pos));
@@ -338,7 +347,8 @@ public class ThinIceGameTests {
 
     private static void seedBody(GameTestHelper helper, BlockPos pos, MinecraftThermalChunkAttachment attachment, double temperature) {
         var state = ThermalMaterialBehaviorGameTests.storedBrick(helper, pos, temperature);
-        var stored = new DormantChunkThermalState(pos.getY() >> 4, 1);
+        var chunk = helper.getLevel().getChunkAt(pos);
+        var stored = new DormantChunkThermalState(chunk.getMinSection(), chunk.getSectionsCount());
         stored.replaceMaterials(pos.getY() >> 4, state);
         attachment.frostedheart$setDormantThermalState(stored);
     }

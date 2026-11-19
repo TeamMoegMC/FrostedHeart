@@ -70,12 +70,12 @@ public final class ContinuousAirPhaseProductionGameTests {
             level.setBlockAndUpdate(material, Blocks.POWDER_SNOW.defaultBlockState());
             started[0] = level.getGameTime();
         }).thenWaitUntil(() -> {
-            helper.assertTrue(MinecraftThermalInput.sampleMaterial(level, material, sample)
+            helper.assertTrue(MinecraftThermalInput.sampleMaterialTemperature(level, material, sample)
                     && sample.source() == MaterialSample.Source.LIVE,
                     "Placed powder snow enters the actual material publication");
             initialH[0] = sample.enthalpyJ();
         }).thenWaitUntil(() -> {
-            helper.assertTrue(MinecraftThermalInput.sampleMaterial(level, material, sample)
+            helper.assertTrue(MinecraftThermalInput.sampleMaterialTemperature(level, material, sample)
                     && sample.source() == MaterialSample.Source.LIVE
                     && sample.enthalpyJ() > initialH[0] + 10,
                     "Actual heat exchange must increase stored material H before conversion");

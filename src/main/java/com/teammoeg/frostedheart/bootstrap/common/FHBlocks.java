@@ -1367,6 +1367,118 @@ public class FHBlocks {
             })
             .register();
 
+    public static final BlockEntry<com.teammoeg.frostedheart.content.agriculture.tree.CultivatedOakBlock> CULTIVATED_OAK = REGISTRATE
+            .block("cultivated_oak_sapling", com.teammoeg.frostedheart.content.agriculture.tree.CultivatedOakBlock::new)
+            .initialProperties(() -> OAK_SAPLING)
+            .properties(p -> p.randomTicks().noOcclusion())
+            .addLayer(() -> net.minecraft.client.renderer.RenderType::cutout)
+            .blockstate((c, p) -> p.getVariantBuilder(c.get()).forAllStates(state ->
+                    net.minecraftforge.client.model.generators.ConfiguredModel.builder()
+                            .modelFile(p.models().getExistingFile(p.modLoc("block/cultivated_oak_sapling_"
+                                    + state.getValue(com.teammoeg.frostedheart.content.agriculture.tree.CultivatedOakBlock.AGE))))
+                            .build()))
+            .lang("Cultivated Oak Sapling")
+            .loot((p, b) -> p.dropOther(b, OAK_SAPLING))
+            .register();
+
+    public static final BlockEntry<com.teammoeg.frostedheart.content.agriculture.tree.CultivatedOakBlock> CULTIVATED_SPRUCE = REGISTRATE
+            .block("cultivated_spruce_sapling", p -> new com.teammoeg.frostedheart.content.agriculture.tree.CultivatedOakBlock(p, "spruce"))
+            .initialProperties(() -> SPRUCE_SAPLING)
+            .properties(p -> p.randomTicks().noOcclusion())
+            .addLayer(() -> net.minecraft.client.renderer.RenderType::cutout)
+            .blockstate((c, p) -> p.getVariantBuilder(c.get()).forAllStates(state ->
+                    net.minecraftforge.client.model.generators.ConfiguredModel.builder()
+                            .modelFile(p.models().getExistingFile(p.modLoc("block/cultivated_spruce_sapling_"
+                                    + state.getValue(com.teammoeg.frostedheart.content.agriculture.tree.CultivatedOakBlock.AGE))))
+                            .build()))
+            .lang("Cultivated Spruce Sapling")
+            .loot((p, b) -> p.dropOther(b, SPRUCE_SAPLING))
+            .register();
+
+    public static final BlockEntry<com.teammoeg.frostedheart.content.agriculture.tree.CultivatedOakBlock> CULTIVATED_BIRCH = REGISTRATE
+            .block("cultivated_birch_sapling", p -> new com.teammoeg.frostedheart.content.agriculture.tree.CultivatedOakBlock(p, "birch"))
+            .initialProperties(() -> BIRCH_SAPLING)
+            .properties(p -> p.randomTicks().noOcclusion())
+            .addLayer(() -> net.minecraft.client.renderer.RenderType::cutout)
+            .blockstate((c, p) -> p.getVariantBuilder(c.get()).forAllStates(state ->
+                    net.minecraftforge.client.model.generators.ConfiguredModel.builder()
+                            .modelFile(p.models().getExistingFile(p.modLoc("block/cultivated_birch_sapling_"
+                                    + state.getValue(com.teammoeg.frostedheart.content.agriculture.tree.CultivatedOakBlock.AGE))))
+                            .build()))
+            .lang("Cultivated Birch Sapling")
+            .loot((p, b) -> p.dropOther(b, BIRCH_SAPLING))
+            .register();
+
+    public static final BlockEntry<com.teammoeg.frostedheart.content.agriculture.tree.CultivatedOakBlock> CULTIVATED_JUNGLE = REGISTRATE
+            .block("cultivated_jungle_sapling", p -> new com.teammoeg.frostedheart.content.agriculture.tree.CultivatedOakBlock(p, "jungle"))
+            .initialProperties(() -> JUNGLE_SAPLING)
+            .properties(p -> p.randomTicks().noOcclusion())
+            .addLayer(() -> net.minecraft.client.renderer.RenderType::cutout)
+            .blockstate((c, p) -> p.getVariantBuilder(c.get()).forAllStates(state ->
+                    net.minecraftforge.client.model.generators.ConfiguredModel.builder()
+                            .modelFile(p.models().getExistingFile(p.modLoc("block/cultivated_jungle_sapling_"
+                                    + state.getValue(com.teammoeg.frostedheart.content.agriculture.tree.CultivatedOakBlock.AGE))))
+                            .build()))
+            .lang("Cultivated Jungle Sapling")
+            .loot((p, b) -> p.dropOther(b, JUNGLE_SAPLING))
+            .register();
+
+    public static final BlockEntry<com.teammoeg.frostedheart.content.agriculture.tree.CultivatedOakBlock> CULTIVATED_ACACIA = REGISTRATE
+            .block("cultivated_acacia_sapling", p -> new com.teammoeg.frostedheart.content.agriculture.tree.CultivatedOakBlock(p, "acacia"))
+            .initialProperties(() -> ACACIA_SAPLING)
+            .properties(p -> p.randomTicks().noOcclusion())
+            .addLayer(() -> net.minecraft.client.renderer.RenderType::cutout)
+            .blockstate((c, p) -> p.getVariantBuilder(c.get()).forAllStates(state ->
+                    net.minecraftforge.client.model.generators.ConfiguredModel.builder()
+                            .modelFile(p.models().getExistingFile(p.modLoc("block/cultivated_acacia_sapling_"
+                                    + state.getValue(com.teammoeg.frostedheart.content.agriculture.tree.CultivatedOakBlock.AGE))))
+                            .build()))
+            .lang("Cultivated Acacia Sapling")
+            .loot((p, b) -> p.dropOther(b, ACACIA_SAPLING))
+            .register();
+
+    public static final BlockEntry<com.teammoeg.frostedheart.content.agriculture.tree.CultivatedOakBlock> CULTIVATED_DARK_OAK = REGISTRATE
+            .block("cultivated_dark_oak_sapling", p -> new com.teammoeg.frostedheart.content.agriculture.tree.CultivatedOakBlock(p, "dark_oak"))
+            .initialProperties(() -> DARK_OAK_SAPLING)
+            .properties(p -> p.randomTicks().noOcclusion())
+            .addLayer(() -> net.minecraft.client.renderer.RenderType::cutout)
+            .blockstate((c, p) -> p.getVariantBuilder(c.get()).forAllStates(state ->
+                    net.minecraftforge.client.model.generators.ConfiguredModel.builder()
+                            .modelFile(p.models().getExistingFile(p.modLoc("block/cultivated_dark_oak_sapling_"
+                                    + state.getValue(com.teammoeg.frostedheart.content.agriculture.tree.CultivatedOakBlock.AGE))))
+                            .build()))
+            .lang("Cultivated Dark Oak Sapling")
+            .loot((p, b) -> p.dropOther(b, DARK_OAK_SAPLING))
+            .register();
+
+    public static final BlockEntry<com.teammoeg.frostedheart.content.agriculture.tree.CultivatedOakBlock> CULTIVATED_MANGROVE = REGISTRATE
+            .block("cultivated_mangrove_sapling", p -> new com.teammoeg.frostedheart.content.agriculture.tree.CultivatedOakBlock(p, "mangrove"))
+            .initialProperties(() -> MANGROVE_PROPAGULE)
+            .properties(p -> p.randomTicks().noOcclusion())
+            .addLayer(() -> net.minecraft.client.renderer.RenderType::cutout)
+            .blockstate((c, p) -> p.getVariantBuilder(c.get()).forAllStates(state ->
+                    net.minecraftforge.client.model.generators.ConfiguredModel.builder()
+                            .modelFile(p.models().getExistingFile(p.modLoc("block/cultivated_mangrove_sapling_"
+                                    + state.getValue(com.teammoeg.frostedheart.content.agriculture.tree.CultivatedOakBlock.AGE))))
+                            .build()))
+            .lang("Cultivated Mangrove Sapling")
+            .loot((p, b) -> p.dropOther(b, MANGROVE_PROPAGULE))
+            .register();
+
+    public static final BlockEntry<com.teammoeg.frostedheart.content.agriculture.tree.CultivatedOakBlock> CULTIVATED_CHERRY = REGISTRATE
+            .block("cultivated_cherry_sapling", p -> new com.teammoeg.frostedheart.content.agriculture.tree.CultivatedOakBlock(p, "cherry"))
+            .initialProperties(() -> CHERRY_SAPLING)
+            .properties(p -> p.randomTicks().noOcclusion())
+            .addLayer(() -> net.minecraft.client.renderer.RenderType::cutout)
+            .blockstate((c, p) -> p.getVariantBuilder(c.get()).forAllStates(state ->
+                    net.minecraftforge.client.model.generators.ConfiguredModel.builder()
+                            .modelFile(p.models().getExistingFile(p.modLoc("block/cultivated_cherry_sapling_"
+                                    + state.getValue(com.teammoeg.frostedheart.content.agriculture.tree.CultivatedOakBlock.AGE))))
+                            .build()))
+            .lang("Cultivated Cherry Sapling")
+            .loot((p, b) -> p.dropOther(b, CHERRY_SAPLING))
+            .register();
+
     public static final FUtils.BushWoodSet JACK_PINE = FUtils.registerBushSet(
             "jack_pine",
             DefaultTreeGrower.supply(FHFeatures.FHConfiguredFeatures.JACK_PINE_CFG)

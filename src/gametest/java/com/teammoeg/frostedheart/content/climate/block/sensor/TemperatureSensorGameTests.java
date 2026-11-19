@@ -1,6 +1,8 @@
 /* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedheart.content.climate.block.sensor;
 
+import static com.teammoeg.frostedheart.content.climate.WorldTemperature.BlockTemperatureUse.SURROUNDINGS;
+
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import net.minecraft.core.BlockPos;
@@ -27,7 +29,7 @@ public class TemperatureSensorGameTests {
         helper.assertTrue(menu.stillValid(player), "shared validator accepts nearby player");
         player.setPos(pos.getX() + 9, pos.getY() + .5, pos.getZ() + .5);
         helper.assertTrue(!menu.stillValid(player), "shared validator rejects player outside eight blocks");
-        float temperature = WorldTemperature.block(level, pos);
+        float temperature = (float) WorldTemperature.getTempAtBlock(level, pos, SURROUNDINGS);
         sensor.configure(temperature, false);
         checkPower(helper, pos, 15);
         sensor.configure(temperature, true);

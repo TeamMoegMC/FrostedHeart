@@ -187,16 +187,18 @@ public final class SpatialHeatBuffer implements AutoCloseable {
             consumer.accept(addresses[slot], acceptedPending[slot], acceptedPendingSince[slot]);
     }
 
-    /** Successful unload exports this debt once, after cancelling preparation. */
+    /** Export the chunk's committed debt once. A sealed batch can keep borrowing slots from other chunks. */
     public double exportCommittedPendingInChunk(long chunk) {
-        if (sealed != null) throw new IllegalStateException("Cancel numerical preparation before exporting committed input");
         var indexed = byChunk.get(chunk);
         if (indexed == null) return 0;
+        if (sealed != null) for (int index = 0; index < sealed.size; index++) {
+            if (indexed.contains(selectedSlots[index])) throw new IllegalStateException("Cancel the overlapping heat batch before export");
+        }
         double total = 0;
         for (int slot : indexed) {
             total += acceptedPending[slot]; acceptedPending[slot] = 0; acceptedPendingSince[slot] = Long.MAX_VALUE;
         }
-        collectRetired();
+        if (sealed == null) collectRetired(); // commit/cancel will reclaim empty slots after the borrower releases them.
         return total;
     }
 

@@ -172,7 +172,7 @@ public final class PlacedThermalReservoirGameTests {
         }
         var player = FakePlayerFactory.getMinecraft(level);
         player.setPos(source.getX() + 8.5, source.getY(), source.getZ() + 0.5);
-        MinecraftThermalInput.gameplayPlayerEnvironment(player,
+        MinecraftThermalInput.samplePlayerAirTemperature(player,
                 WorldTemperature.naturalAir(level, player.blockPosition()), new ThermalEnvironmentSample());
         helper.runAfterDelay(70, () -> {
             try {
@@ -180,11 +180,11 @@ public final class PlacedThermalReservoirGameTests {
                     ThermalEnvironmentSample placed = new ThermalEnvironmentSample();
                     ThermalEnvironmentSample dropped = new ThermalEnvironmentSample();
                     double natural = WorldTemperature.naturalAir(level, pos);
-                    MinecraftThermalInput.gameplayPlacedReservoirEnvironment(level, pos, natural, placed);
+                    MinecraftThermalInput.samplePlacedReservoirAirAndRadiation(level, pos, natural, placed);
                     ItemEntity probe = new ItemEntity(level, pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5,
                             reservoir(level, pos).copyStoredStack());
                     probe.setPos(probe.getX(), pos.getY() + 0.3125 - probe.getBbHeight() * 0.5, probe.getZ());
-                    MinecraftThermalInput.gameplayItemEnvironment(probe, natural, dropped);
+                    MinecraftThermalInput.sampleDroppedItemAirAndRadiation(probe, natural, dropped);
                     probe.discard();
                     helper.assertTrue(placed.radiantFluxWPerM2() > 0,
                             "campfire radiation must reach the placed reservoir; source="

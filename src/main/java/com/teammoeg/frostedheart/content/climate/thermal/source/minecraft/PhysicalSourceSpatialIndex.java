@@ -57,7 +57,8 @@ import java.util.Iterator;
 public final class PhysicalSourceSpatialIndex
         implements AutoCloseable, RadiationService.SourceIndex {
     private static final int NO_SLOT = -1;
-    private static final int MAX_PORTS = 3;
+    /** Maximum distinct thermal-port target Bricks retained by one source. */
+    private static final int MAX_TARGET_BRICKS = 4;
     private static final byte PRESENT = 1;
     private static final byte REGISTERED = 1 << 1;
     private static final byte REGISTRATION_STALE = 1 << 2;
@@ -70,6 +71,8 @@ public final class PhysicalSourceSpatialIndex
             (byte) MinecraftPhysicalSourceProfile.CAMPFIRE.profileId();
     private static final byte GENERATOR_PROFILE_ID =
             (byte) MinecraftPhysicalSourceProfile.GENERATOR.profileId();
+    private static final byte GENERATOR_T2_PROFILE_ID =
+            (byte) MinecraftPhysicalSourceProfile.GENERATOR_T2.profileId();
 
     private DimensionInputAccumulator accumulator;
     private final ServerLevel level;
@@ -416,7 +419,8 @@ public final class PhysicalSourceSpatialIndex
                         if (!isLive(slot) || !flag(slot, PRESENT)
                                 || !flag(slot, DESIRED_ENABLED)
                                 || desiredPowerW[slot] <= 0.0D
-                                || profileIds[slot] != GENERATOR_PROFILE_ID) {
+                                || profileIds[slot] != GENERATOR_PROFILE_ID
+                                        && profileIds[slot] != GENERATOR_T2_PROFILE_ID) {
                             continue;
                         }
                         double dx = BlockPos.getX(sourceIds[slot]) - position.getX();
@@ -590,45 +594,36 @@ public final class PhysicalSourceSpatialIndex
         int write = 0;
         for (int index = 0; index < profile.portCount(); index++) {
             Port port = profile.port(index);
-            if (port.kind() != PortKind.AIR_FACE || port.powerShare() <= 0.0D) {
+            if (port.kind() == PortKind.RADIATION_LOSS || port.powerShare() <= 0.0D) {
                 continue;
             }
             int targetX = anchorX[slot] + port.offsetX();
             int targetY = anchorY[slot] + port.offsetY();
             int targetZ = anchorZ[slot] + port.offsetZ();
-            long sectionKey = SectionPos.asLong(
-                    SectionPos.blockToSectionCoord(
-                            targetX),
-                    SectionPos.blockToSectionCoord(
-                            targetY),
-                    SectionPos.blockToSectionCoord(
-                            targetZ));
-            int brick = SectionPos.sectionRelative(targetX) >>> 2
-                    | (SectionPos.sectionRelative(targetZ) >>> 2) << 2
-                    | (SectionPos.sectionRelative(targetY) >>> 2) << 4;
-            boolean duplicate = false;
-            for (int existing = 0; existing < write; existing++) {
-                duplicate |= targetSections[slot * MAX_PORTS + existing]
-                        == sectionKey
-                        && Byte.toUnsignedInt(
-                                targetBricks[slot * MAX_PORTS + existing])
-                        == brick;
-            }
-            if (duplicate) {
-                continue;
-            }
-            int targetIndex = slot * MAX_PORTS + write++;
-            targetSections[targetIndex] = sectionKey;
-            targetBricks[targetIndex] = (byte) brick;
-            pages.updateSourceBrick(sectionKey, brick, true);
-            sourcesByTargetSection.computeIfAbsent(
-                    sectionKey, ignored -> new IntOpenHashSet()).add(slot);
+            write = retainTargetBrick(slot, write, targetX, targetY, targetZ);
+
         }
         targetCount[slot] = (byte) write;
     }
 
+    /** Retain each directly supplied Brick once across all thermal ports. */
+    private int retainTargetBrick(int slot, int count, int x, int y, int z) {
+        if (level.isOutsideBuildHeight(y)) return count;
+        long sectionKey = SectionPos.asLong(x >> 4, y >> 4, z >> 4);
+        int brick = (x & 15) >>> 2 | (z & 12) | (y & 12) << 2;
+        int first = slot * MAX_TARGET_BRICKS;
+        for (int index = first; index < first + count; index++) {
+            if (targetSections[index] == sectionKey && targetBricks[index] == brick) return count;
+        }
+        targetSections[first + count] = sectionKey;
+        targetBricks[first + count] = (byte) brick;
+        pages.updateSourceBrick(sectionKey, brick, true);
+        sourcesByTargetSection.computeIfAbsent(sectionKey, ignored -> new IntOpenHashSet()).add(slot);
+        return count + 1;
+    }
+
     private void releaseTargets(int slot) {
-        int first = slot * MAX_PORTS;
+        int first = slot * MAX_TARGET_BRICKS;
         for (int index = 0;
              index < Byte.toUnsignedInt(targetCount[slot]);
              index++) {
@@ -761,8 +756,8 @@ public final class PhysicalSourceSpatialIndex
         sourceFlags = new byte[capacity];
         nextFree = new int[capacity];
         targetCount = new byte[capacity];
-        targetSections = new long[capacity * MAX_PORTS];
-        targetBricks = new byte[capacity * MAX_PORTS];
+        targetSections = new long[capacity * MAX_TARGET_BRICKS];
+        targetBricks = new byte[capacity * MAX_TARGET_BRICKS];
         registrations = new SpatialSourceTimeline.Registration[capacity];
         Arrays.fill(nextFree, NO_SLOT);
     }
@@ -791,9 +786,9 @@ public final class PhysicalSourceSpatialIndex
         Arrays.fill(nextFree, old, capacity, NO_SLOT);
         targetCount = Arrays.copyOf(targetCount, capacity);
         targetSections = Arrays.copyOf(
-                targetSections, capacity * MAX_PORTS);
+                targetSections, capacity * MAX_TARGET_BRICKS);
         targetBricks = Arrays.copyOf(
-                targetBricks, capacity * MAX_PORTS);
+                targetBricks, capacity * MAX_TARGET_BRICKS);
         registrations = Arrays.copyOf(registrations, capacity);
     }
 

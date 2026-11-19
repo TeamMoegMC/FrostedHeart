@@ -1,6 +1,8 @@
 /* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedheart.content.climate.block.sensor;
 
+import static com.teammoeg.frostedheart.content.climate.WorldTemperature.BlockTemperatureUse.SURROUNDINGS;
+
 import com.teammoeg.chorda.block.entity.CTickableBlockEntity;
 import com.teammoeg.chorda.block.entity.CBlockEntity;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
@@ -15,6 +17,7 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 
+/** Controls redstone from the surrounding air temperature at the sensor's position. */
 public class TemperatureSensorBlockEntity extends CBlockEntity implements MenuProvider, CTickableBlockEntity {
     private float targetTemperature;
     private boolean inverted;
@@ -39,7 +42,7 @@ public class TemperatureSensorBlockEntity extends CBlockEntity implements MenuPr
     }
     private void refresh() {
         if (level == null || level.isClientSide) return;
-        temperature = WorldTemperature.block(level, worldPosition);
+        temperature = (float) WorldTemperature.getTempAtBlock(level, worldPosition, SURROUNDINGS);
         boolean powered = inverted ? temperature < targetTemperature : temperature >= targetTemperature;
         if (powered != isPowered()) {
             level.setBlock(worldPosition, getBlockState().setValue(BlockStateProperties.POWERED, powered), 3);

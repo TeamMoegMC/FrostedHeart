@@ -7,6 +7,7 @@ import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.messa
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ThermalInputBatch;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ThermalInputEnvelope;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.TopologyInbox;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.TopologyIngress;
 import com.teammoeg.frostedheart.content.climate.thermal.source.SpatialSourceTimeline;
 import java.util.Arrays;
 import net.minecraft.core.BlockPos;
@@ -21,16 +22,16 @@ import net.minecraftforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 public final class ThermalGeometryInputOrderGameTests {
     @GameTest(template = "phase0a_empty", batch = "thermal_geometry_input_order", timeoutTicks = 200)
-    public static void adjacentAdmissionsRespectEarlierInputWithoutExistingRegions(GameTestHelper helper) throws ReflectiveOperationException {
+    public static void adjacentAdmissionsRespectEarlierInputWithoutExistingRegions(GameTestHelper helper) {
         runOrder(helper, false);
     }
 
     @GameTest(template = "phase0a_empty", batch = "thermal_geometry_input_order", timeoutTicks = 200)
-    public static void uninstalledConnectingPagesKeepLaterIslandBehindEarlierGeometry(GameTestHelper helper) throws ReflectiveOperationException {
+    public static void uninstalledConnectingPagesKeepLaterIslandBehindEarlierGeometry(GameTestHelper helper) {
         runOrder(helper, true);
     }
 
-    private static void runOrder(GameTestHelper helper, boolean connectingPages) throws ReflectiveOperationException {
+    private static void runOrder(GameTestHelper helper, boolean connectingPages) {
         var level = helper.getLevel();
         MinecraftThermalInput.closeActiveLevel(level);
         var anchor = helper.absolutePos(new BlockPos(8, 8, 8));
@@ -62,12 +63,11 @@ public final class ThermalGeometryInputOrderGameTests {
                 simulation.engine.offerInput(new ThermalInputEnvelope(input, new SpatialSourceTimeline.Window[0]));
             }
             TopologyInbox inbox = ThermalLoadedWorldGameTests.read(simulation.engine, "topologyInputs");
-            var intakeLane = simulation.engine.getClass().getDeclaredField("nextWorkLane");
-            intakeLane.setAccessible(true);
-            for (int round = 0; round < positions.length + 2 && inbox.pendingSectionCount() < positions.length; round++) {
-                intakeLane.setInt(simulation.engine, 0);
-                simulation.engine.processWorkRound();
-            }
+            // Pause at the real ingress/inbox handoff before the fixed coordinator can select a Page.
+            // All fragments in this scenario are admissions with explicit handles.
+            TopologyIngress ingress = ThermalLoadedWorldGameTests.read(simulation.engine, "topologyIngress");
+            for (var fragment = ingress.poll(); fragment != null; fragment = ingress.poll())
+                inbox.receive(fragment, ignored -> null);
             helper.assertTrue(inbox.pendingSectionCount() == positions.length, "All real Page admissions must reach the coordinator before selection");
             helper.assertTrue(handles[0].currentPublication() == null && handles[1].currentPublication() == null,
                     "Neither actual Page may have published during intake");

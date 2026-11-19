@@ -50,7 +50,7 @@ public final class ThermalRetirementProductionGameTests {
                     helper.assertTrue(a != null && b != null && encoded(a, p) == InfraredBrickCodec.INVALID_TEMPERATURE
                                     && encoded(b, p) == InfraredBrickCodec.INVALID_TEMPERATURE,
                             "Both independent previous baselines receive actual INVALID records after the final deletion");
-                    helper.assertTrue(!Double.isFinite(WorldTemperature.material(level, p)), "Thermometer follows the same committed deletion");
+                    helper.assertTrue(!Double.isFinite(MinecraftThermalInput.materialTemperature(level, p)), "Thermometer follows the same committed deletion");
                     level.getServer().saveEverything(true, true, true);
                     FHMain.LOGGER.info("THERMAL_RETIREMENT_LAST,statistics={}", DormantThermalMaintenance.statistics());
                 }).thenSucceed();
@@ -130,7 +130,7 @@ public final class ThermalRetirementProductionGameTests {
         helper.startSequence().thenWaitUntil(() -> helper.assertTrue(
                 net.minecraft.world.level.block.Block.getId(level.getBlockState(p)) == edge.targetStateId(),
                 "Ordinary server maintenance must complete the actual soil freezing mutation without a source"))
-                .thenExecute(() -> helper.assertTrue(Double.isFinite(WorldTemperature.material(level, p)),
+                .thenExecute(() -> helper.assertTrue(Double.isFinite(MinecraftThermalInput.materialTemperature(level, p)),
                         "The changed body retains its actual sensible heat after the latent handoff"))
                 .thenWaitUntil(() -> helper.assertTrue(MinecraftThermalInput.dormantState(chunk) == null,
                         "The frozen body's ordinary residual must eventually cool and release the final checkpoint"))
@@ -308,7 +308,7 @@ public final class ThermalRetirementProductionGameTests {
     }
 
     private static InfraredSnapshot infrared(ServerPlayer player, InfraredSnapshot previous) {
-        return MinecraftThermalInput.gameplayInfraredSnapshot(player, previous == null,
+        return MinecraftThermalInput.captureInfraredSnapshot(player, previous == null,
                 previous == null ? 0 : previous.generation(), previous == null ? 0 : SectionPos.asLong(
                         previous.centerChunkX(), previous.centerSectionY(), previous.centerChunkZ()),
                 previous == null ? 0 : previous.infraredEpoch(), previous == null ? new long[12] : previous.presence(),

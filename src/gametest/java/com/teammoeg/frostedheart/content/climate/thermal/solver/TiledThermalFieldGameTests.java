@@ -2,6 +2,9 @@
 package com.teammoeg.frostedheart.content.climate.thermal.solver;
 
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.BlockBrickLayout;
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.BlockFace;
+import com.teammoeg.frostedheart.content.climate.thermal.source.AirMixingRegion;
 import com.teammoeg.frostedheart.content.climate.thermal.persistence.minecraft.AirFieldCheckpoint;
 import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureTable;
 import com.teammoeg.frostedheart.content.climate.thermal.profile.minecraft.MinecraftThermalProfiles;
@@ -21,6 +24,32 @@ import net.minecraftforge.gametest.PrefixGameTestTemplate;
 @GameTestHolder("frostedheart_tiled_thermal")
 @PrefixGameTestTemplate(false)
 public final class TiledThermalFieldGameTests {
+    /** Common mixing weights and continuous buoyancy weights must reproduce the generic physical pair. */
+    @GameTest(template = "phase0a_empty", timeoutTicks = 100)
+    public static void equalAirPairWeightsMatchTheGenericKernel(GameTestHelper helper) {
+        var generic = new ThermalExchangeKernel.MutablePairResult();
+        var prepared = new ThermalExchangeKernel.MutablePairResult();
+        for (double capacity : new double[] {0.125, 1199.75, 1600}) {
+            double inverse = 1 / capacity;
+            for (double seconds : new double[] {0.025, 0.475, 0.5})
+                for (double conductance : new double[] {0.01, 4, 10, 16, 9.12345, Double.MAX_VALUE, Double.POSITIVE_INFINITY}) {
+                    double weight = ThermalExchangeKernel.equalCapacityPairWeight(capacity, inverse, conductance, seconds);
+                    for (double first : new double[] {-6400.25, 0, 8125.75, Double.MAX_VALUE}) {
+                        double second = -136.5;
+                        var expected = ThermalExchangeKernel.exchangePairWithInverseInto(first, capacity, inverse,
+                                second, capacity, inverse, conductance, seconds, generic);
+                        var actual = ThermalExchangeKernel.applyPairWeight(first, second, first * inverse,
+                                second * inverse, weight, prepared);
+                        helper.assertTrue(expected == actual
+                                        && Double.doubleToLongBits(generic.enthalpyAJ()) == Double.doubleToLongBits(prepared.enthalpyAJ())
+                                        && Double.doubleToLongBits(generic.enthalpyBJ()) == Double.doubleToLongBits(prepared.enthalpyBJ()),
+                                "Equal-capacity faces must deliver identical signed joules and status");
+                    }
+                }
+        }
+        helper.succeed();
+    }
+
     @GameTest(template = "phase0a_empty", timeoutTicks = 200)
     public static void v7CellValuesRoundTripAndOldThermalVersionIsIgnored(GameTestHelper helper) {
         var capture = new AirFieldCheckpoint.Capture(10).atTick(20);
@@ -46,6 +75,31 @@ public final class TiledThermalFieldGameTests {
         full.addCellBrick(0, 0, 0, 0, 1, new double[] {0});
         helper.assertTrue(full.finish() != null, "A native accepted capture can defer residual filtering to the real environment");
         FHMain.LOGGER.info("THERMAL_V7_STORAGE,cells=2,lastCell=63,exact=true,sampleTick=20,oldVersionIgnored=true,noLegacyLayout=true");
+        helper.succeed();
+    }
+
+    /** Geometry waits for equal live clocks, including the latest lifetime start even when its Tile is frozen. */
+    @GameTest(template = "phase0a_empty", timeoutTicks = 200)
+    public static void boundaryChecksDistinguishFrozenLifetimeFromLiveClock(GameTestHelper helper) {
+        var profiles = MinecraftThermalProfiles.prepare();
+        var budget = new ThermalMemoryBudget(2L << 20);
+        long a = SectionPos.asLong(0, 8, 0), b = SectionPos.asLong(2, 8, 0);
+        var scope = new it.unimi.dsi.fastutil.longs.LongOpenHashSet(new long[]{a, b, SectionPos.asLong(4, 8, 0)});
+        int[] air = new int[4096]; Arrays.fill(air, profiles.states().signatureId(Blocks.AIR.defaultBlockState()));
+        try (var banks = new SpatialEnergyBanks(budget, 8, 8, 0); var field = field(budget, profiles, 2)) {
+            helper.assertTrue(field.alignedTick(scope) == Long.MAX_VALUE && field.applicationTick(scope, 7) == 7,
+                    "An empty boundary admits the input at its own tick");
+            helper.assertTrue(field.admit(a, air, 1L, 0) && field.admit(b, air, 1L, 0), "Install two disconnected Bricks");
+            step(field, banks, 0);
+            helper.assertTrue(field.begin(banks.seal(20), it.unimi.dsi.fastutil.longs.LongSets.singleton(a)), "Advance one owner");
+            finish(field);
+            helper.assertTrue(field.commit() && field.alignedTick(scope) == -1, "Different live sample times block geometry");
+            helper.assertTrue(field.freeze(a) && field.stageThaw(a, 0, 10, 40) && field.activate(a, null) && field.freeze(a),
+                    "Establish a newer frozen lifetime");
+            helper.assertTrue(field.alignedTick(scope) == 0 && field.applicationTick(scope, 10) == 40,
+                    "The other Tile supplies the live clock while the frozen lifetime constrains the physical event");
+            helper.assertTrue(field.freeze(b) && field.alignedTick(scope) == Long.MAX_VALUE, "A fully frozen boundary has no live clock");
+        }
         helper.succeed();
     }
 
@@ -359,6 +413,167 @@ public final class TiledThermalFieldGameTests {
             helper.assertTrue(field.admit(c, air, 1, 0), "Real retirement capacity can admit another tile");
         }
         helper.assertTrue(budget.usedBytes() == 0, "Tile directories and both state banks release");
+        helper.succeed();
+    }
+
+    @GameTest(template = "phase0a_empty", timeoutTicks = 200)
+    public static void bulkMixingCoverageMatchesCellCenters(GameTestHelper helper) {
+        int x0 = -20, y0 = 72, z0 = -4;
+        var region = new AirMixingRegion();
+        for (int y = -4; y < 8; y++) for (int z = -4; z < 8; z++) for (int x = -4; x < 8; x++) {
+            region.reset(x0, y0, z0);
+            region.include(x0 + x, y0 + y, z0 + z);
+            helper.assertTrue(region.cellMask() == referenceMixing(region, x0, y0, z0), "Every outlet offset matches the cell-center sphere");
+        }
+        // The same empty, partial and overlapping outlet sets feed both timed paths.
+        var cases = new AirMixingRegion[64];
+        for (int i = 0; i < cases.length; i++) {
+            var sample = cases[i] = new AirMixingRegion(); sample.reset(x0, y0, z0);
+            for (int port = 0; port < i % 9; port++) {
+                sample.include(x0 - 4 + (i + 7 * port) % 12, y0 - 4 + (3 * i + port) % 12, z0 - 4 + (i + 5 * port) % 12);
+            }
+            helper.assertTrue(sample.cellMask() == referenceMixing(sample, x0, y0, z0), "Overlapping and empty outlet unions match");
+        }
+        var cpu = java.lang.management.ManagementFactory.getThreadMXBean();
+        boolean timed = cpu.isCurrentThreadCpuTimeSupported() && cpu.isThreadCpuTimeEnabled();
+        long[] cpuNs = new long[2];
+        for (int pass = 0; pass < 6; pass++) {
+            long[] sums = new long[2];
+            for (int arm = 0; arm < 2; arm++) {
+                int mode = (pass + arm) & 1, count = pass < 2 ? 4096 : 65536;
+                long start = timed ? cpu.getCurrentThreadCpuTime() : 0;
+                for (int i = 0; i < count; i++) {
+                    var sample = cases[(i + pass) & 63];
+                    sums[mode] += mode == 0 ? referenceMixing(sample, x0, y0, z0) : sample.cellMask();
+                }
+                if (pass >= 2 && timed) cpuNs[mode] += cpu.getCurrentThreadCpuTime() - start;
+            }
+            helper.assertTrue(sums[0] == sums[1], "Both arms produced the same coverage for all Brick updates");
+        }
+        FHMain.LOGGER.info("THERMAL_BRICK_MIXING_CPU,bricksPerArm=262144,offsets=1728,referenceCpuNs={},bulkCpuNs={}",
+                timed ? cpuNs[0] : -1, timed ? cpuNs[1] : -1);
+        helper.succeed();
+    }
+
+    @GameTest(template = "phase0a_empty", timeoutTicks = 200)
+    public static void packedMixingSurvivesBrickReindexAndOverlappingSourceRemoval(GameTestHelper helper) throws ReflectiveOperationException {
+        var profiles = MinecraftThermalProfiles.prepare(); var budget = new ThermalMemoryBudget(2L << 20);
+        var base = aligned(helper, 4528); long section = SectionPos.asLong(base);
+        int x = base.getX() + 12, y = base.getY() + 12, z = base.getZ() + 12;
+        int[] captured = new int[4096]; Arrays.fill(captured, profiles.states().signatureId(Blocks.AIR.defaultBlockState()));
+        var both = new AirMixingRegion(); both.reset(x, y, z);
+        both.include(x + 3, y + 3, z + 4); both.include(x - 2, y + 1, z + 1);
+        var remaining = new AirMixingRegion(); remaining.reset(x, y, z); remaining.include(x - 2, y + 1, z + 1);
+        long union = referenceMixing(both, x, y, z), one = referenceMixing(remaining, x, y, z);
+        helper.assertTrue(union < 0 && (one & union) == one && one != union && one != 0, "Include the high bit and partially overlapping outlets");
+        try (var field = field(budget, profiles, 1)) {
+            helper.assertTrue(field.admit(section, captured, 1L << 63, 0) && field.replaceMixing(section, 63, both), "Admit the far Brick and apply two outlets");
+            helper.assertTrue(Arrays.equals(mixingWords(field, section), new long[] {union}), "One stored word matches 64 independent cell decisions");
+            helper.assertTrue(field.grow(section, captured, 1L), "Insert a lower Brick so the retained Brick changes array slot");
+            helper.assertTrue(Arrays.equals(mixingWords(field, section), new long[] {0, union}), "Grow preserves the retained mask in its new slot");
+            helper.assertTrue(field.replaceMixing(section, 63, remaining) && mixingWords(field, section)[1] == one,
+                    "Turning off one outlet preserves cells covered by the other");
+            remaining.reset(x, y, z);
+            helper.assertTrue(field.replaceMixing(section, 63, remaining) && mixingWords(field, section)[1] == 0,
+                    "Turning off the last outlet clears all 64 bits");
+        }
+        helper.assertTrue(budget.usedBytes() == 0, "Mask and Tile reservations release together");
+        helper.succeed();
+    }
+
+    private static long[] mixingWords(TiledThermalField field, long section) throws ReflectiveOperationException {
+        var lookup = TiledThermalField.class.getDeclaredField("bySection"); lookup.setAccessible(true);
+        var tile = ((it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap<?>) lookup.get(field)).get(section);
+        var words = tile.getClass().getDeclaredField("mixingMasks"); words.setAccessible(true);
+        return (long[]) words.get(tile);
+    }
+
+    @GameTest(template = "phase0a_empty", timeoutTicks = 200)
+    public static void residencyTracksTheAcceptedTileAndOutOfBandValueChanges(GameTestHelper helper) {
+        var profiles = MinecraftThermalProfiles.prepare(); var budget = new ThermalMemoryBudget(4L << 20);
+        var changes = new it.unimi.dsi.fastutil.longs.LongArrayList();
+        long active = SectionPos.asLong(0, 8, 0), remote = SectionPos.asLong(2, 8, 0);
+        int[] captured = new int[4096]; Arrays.fill(captured, profiles.states().signatureId(Blocks.AIR.defaultBlockState()));
+        try (var banks = new SpatialEnergyBanks(budget, 8, 8, 0); var field = field(budget, profiles, 64)) {
+            field.onResidencyChanged(changes::add);
+            for (int i = 0; i < 64; i++)
+                helper.assertTrue(field.admit(SectionPos.asLong(i * 2, 8, 0), captured, 1L, 0), "Admit an independent Brick");
+            step(field, banks, 0);
+            helper.assertTrue(changes.size() == 64, "Every newly published Tile initializes residency");
+            changes.clear();
+            var only = it.unimi.dsi.fastutil.longs.LongSets.singleton(active);
+            helper.assertTrue(field.begin(banks.seal(20), only), "Start a local trial");
+            finish(field); field.cancel();
+            helper.assertTrue(changes.isEmpty(), "Private and cancelled values do not dirty residency");
+            for (int i = 1; i <= 64; i++) {
+                helper.assertTrue(field.begin(banks.seal(20L * i), only), "Advance only the local Tile");
+                finish(field);
+                helper.assertTrue(field.commit() && changes.size() == i && changes.getLong(i - 1) == active,
+                        "Each local acceptance queues precisely its own Section");
+            }
+            changes.clear(); step(field, banks, 1280);
+            helper.assertTrue(changes.isEmpty() && field.sectionSampleTick(remote) == 0, "A zero-time step leaves untouched Tiles off the maintenance queue");
+            helper.assertTrue(field.ambient(remote, 2) && changes.size() == 1 && changes.getLong(0) == remote,
+                    "A changed natural background wakes its own Section");
+            changes.clear();
+            helper.assertTrue(field.freeze(remote) && field.stageThaw(remote, 2, 10, 1280) && changes.isEmpty()
+                    && field.activate(remote, null) && changes.size() == 1 && changes.getLong(0) == remote,
+                    "Only completed thaw wakes the frozen Section");
+            changes.clear();
+            helper.assertTrue(field.restoreValues(remote, new double[4096], new byte[4096])
+                    && changes.size() == 1 && changes.getLong(0) == remote, "Direct restore wakes its Accepted Section");
+            FHMain.LOGGER.info("THERMAL_SCOPED_RESIDENCY,tiles=64,localCommits=64,queuedByLocalCommits=64,fullScanVisits=4096,remoteClockBeforeThaw=0");
+        }
+        helper.assertTrue(budget.usedBytes() == 0, "All local publication storage releases");
+        helper.succeed();
+    }
+
+    /** Reference calculation at each block center, in Brick storage order. */
+    private static long referenceMixing(AirMixingRegion region, int x, int y, int z) {
+        long result = 0;
+        for (int i = 0; i < 64; i++) if (region.volumeScale(x + (i & 3) + .5, y + (i >> 4) + .5, z + (i >> 2 & 3) + .5) > 1)
+            result |= 1L << i;
+        return result;
+    }
+
+    @GameTest(template = "phase0a_empty", timeoutTicks = 200)
+    public static void faceRetentionMatchesIndividualAcceptedAirSamples(GameTestHelper helper) {
+        var profiles = MinecraftThermalProfiles.prepare(); var budget = new ThermalMemoryBudget(2L << 20);
+        var base = aligned(helper, 4480); long section = SectionPos.asLong(base);
+        int[] captured = new int[4096]; Arrays.fill(captured, ThermalSignatureTable.UNRESOLVED);
+        int brick = 39;
+        int air = profiles.states().signatureId(Blocks.AIR.defaultBlockState());
+        int solid = profiles.states().signatureId(Blocks.STONE.defaultBlockState());
+        try (var field = field(budget, profiles, 1)) {
+            double[] h = new double[4096];
+            for (int i = 0; i < 64; i++) {
+                int cell = BlockBrickLayout.pageBlock(brick, i);
+                if (i % 11 != 0) captured[cell] = i % 5 == 0 ? solid : air;
+                h[cell] = field.airCapacityJPerK() * ((i % 7) - 3) * .5;
+            }
+            helper.assertTrue(field.admit(section, captured, 1L << brick, 0)
+                    && field.restoreValues(section, h, new byte[4096]), "Install one sparse Brick with Air, material and unobserved cells");
+            var sample = new TiledThermalField.Sample(); int positive = 0, negative = 0;
+            for (var face : BlockFace.values()) for (double threshold : new double[] {.5, 1, 1.01}) {
+                int matches = 0;
+                for (int patch = 0; patch < 16; patch++) {
+                    int block = BlockBrickLayout.faceBlock(face.ordinal() / 2, (face.ordinal() & 1) * 3, patch);
+                    int cell = BlockBrickLayout.pageBlock(brick, block);
+                    long pos = base.offset(cell & 15, cell >>> 8, cell >>> 4 & 15).asLong();
+                    if (field.read(pos, false, sample) && Math.abs(sample.temperatureC() - sample.naturalC()) >= threshold)
+                        matches |= 1 << patch;
+                }
+                for (int eligible : new int[] {0, 0xffff, 0x5555, 0xaa00, 1, 1 << 15, matches, ~matches & 0xffff}) {
+                    boolean expected = (matches & eligible) != 0;
+                    helper.assertTrue(field.airFaceAtThreshold(section, brick, face, eligible, threshold) == expected,
+                            "Face decisions follow Accepted air samples and the supplied sky exclusions");
+                    if (expected) positive++; else negative++;
+                }
+            }
+            helper.assertTrue(positive > 0 && negative > 0 && !field.airFaceAtThreshold(section, brick - 1, BlockFace.POSITIVE_X, 0xffff, .5),
+                    "Both threshold outcomes and a missing Brick are covered");
+        }
+        helper.assertTrue(budget.usedBytes() == 0, "Face test released the field");
         helper.succeed();
     }
 

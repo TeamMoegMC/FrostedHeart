@@ -66,14 +66,15 @@ public final class ThermalDormantCoolingGameTests {
     @GameTest(template = TEMPLATE, batch = "dormant_numeric", timeoutTicks = 100)
     public static void sensibleAirAndMaterialUseTheSameClockWithoutSaveDrift(GameTestHelper helper) {
         var state = new DormantChunkThermalState(0, 1);
-        state.replace(0, new DormantChunkThermalState.SectionEntry(0, 10, 1,
-                new byte[]{0}, new long[]{160}, new long[0]));
+        var capture = new com.teammoeg.frostedheart.content.climate.thermal.persistence.minecraft.AirFieldCheckpoint.Capture(10).atTick(0);
+        capture.addCellBrick(0, 0, 0, 0, 1L, new double[]{20});
+        state.replace(0, new DormantChunkThermalState.SectionEntry(0, 10, capture.finish()));
         var law = MaterialThermalLaw.sensible(300);
         var sample = new MaterialSample();
         for (int saves = 0; saves < 20; saves++) {
             CompoundTag tag = new CompoundTag(); state.encode(tag);
             state = DormantChunkThermalState.decode(tag, 0, 1);
-            helper.assertTrue(tag.getCompound("FrostedHeartThermal").getInt("version") == 5, "only v5 is written");
+            helper.assertTrue(tag.getCompound("FrostedHeartThermal").getInt("version") == 7, "current cell format is written");
             for (long tick : new long[]{0, 36000, 72000}) {
                 sample.setStored(6000, law, (byte) 0, 0);
                 DormantThermalCooling.project(sample, tick, -20, DormantThermalCooling.rate(1800));
@@ -192,7 +193,7 @@ public final class ThermalDormantCoolingGameTests {
             helper.assertTrue(result.savedTick(current) == level.getGameTime() && result.branch(current) == 0,
                     "target body starts at the commit tick and sensible branch");
             helper.assertTrue(attempt(helper, position) != CHANGED, "same-tick retry does not replay a completed phase");
-            helper.assertTrue(MinecraftThermalInput.gameplayInfraredSnapshot(FakePlayerFactory.getMinecraft(level), true,
+            helper.assertTrue(MinecraftThermalInput.captureInfraredSnapshot(FakePlayerFactory.getMinecraft(level), true,
                     0, 0, 0, new long[12], false, new long[0], 0, 0).generation() == 0, "dormant mutation must not start a worker");
         } finally {
             MinecraftGameplayFields.remove(level, field);
@@ -258,7 +259,7 @@ public final class ThermalDormantCoolingGameTests {
                     int current;
                     while ((current = decoder.readRecord(buffer, values)) >= 0) if (current == address) {
                         int local = (position.getX() & 3) | (position.getZ() & 3) << 2 | (position.getY() & 3) << 4;
-                        helper.assertTrue(values[local] == InfraredBrickCodec.quantize(WorldTemperature.material(level, position)),
+                        helper.assertTrue(values[local] == InfraredBrickCodec.quantize(MinecraftThermalInput.materialTemperature(level, position)),
                                 "IR and thermometer share projected material temperature");
                         found = true;
                     }
@@ -391,7 +392,7 @@ public final class ThermalDormantCoolingGameTests {
                 helper.assertTrue(Block.BLOCK_STATE_REGISTRY.getId(level.getBlockState(p)) == edge.targetStateId(),
                         "random phase entry commits the completed energy edge: source=" + state + ", position=" + p
                                 + ", actual=" + level.getBlockState(p) + ", expected=" + Block.BLOCK_STATE_REGISTRY.byId(edge.targetStateId())
-                                + ", materialTemperature=" + WorldTemperature.material(level, p));
+                                + ", materialTemperature=" + MinecraftThermalInput.materialTemperature(level, p));
                 MinecraftGameplayFields.remove(level, key);
             }
             var flow = Blocks.WATER.defaultBlockState().setValue(LiquidBlock.LEVEL, 3);
@@ -429,11 +430,11 @@ public final class ThermalDormantCoolingGameTests {
                     Blocks.STONE.defaultBlockState(), Blocks.DIRT.defaultBlockState(), 100000, level.getGameTime()));
             // A callback changes the same location to a different target within the outer phase scope.
             level.setBlockAndUpdate(p, Blocks.GLASS.defaultBlockState());
-            near(helper, WorldTemperature.naturalAir(level, p), WorldTemperature.material(level, p),
+            near(helper, WorldTemperature.naturalAir(level, p), MinecraftThermalInput.materialTemperature(level, p),
                     "the unrelated nested replacement initializes its own body instead of inheriting outer H");
             // The outer setter returns after the inner mutation and reports its original target.
             MinecraftThermalInput.onMaterialStateWritten(chunk, p, Blocks.STONE.defaultBlockState(), Blocks.DIRT.defaultBlockState());
-            near(helper, WorldTemperature.naturalAir(level, p), WorldTemperature.material(level, p),
+            near(helper, WorldTemperature.naturalAir(level, p), MinecraftThermalInput.materialTemperature(level, p),
                     "a late outer callback must not overwrite the nested replacement's material identity");
             var staleSnow = Blocks.SNOW.defaultBlockState();
             var edge = MinecraftThermalProfiles.materialLaw(staleSnow).heating();
@@ -442,7 +443,7 @@ public final class ThermalDormantCoolingGameTests {
                     "a stale phase submission must not overwrite the replacement body");
             level.setBlockAndUpdate(p, Blocks.DIRT.defaultBlockState());
             MinecraftThermalInput.onMaterialStateWritten(chunk, p, Blocks.STONE.defaultBlockState(), Blocks.DIRT.defaultBlockState());
-            near(helper, WorldTemperature.naturalAir(level, p), WorldTemperature.material(level, p),
+            near(helper, WorldTemperature.naturalAir(level, p), MinecraftThermalInput.materialTemperature(level, p),
                     "returning to the outer target state must not revive the superseded phase energy");
         } finally {
             if (previousMutation == null) applying.remove(); else applying.set(previousMutation);
@@ -473,7 +474,7 @@ public final class ThermalDormantCoolingGameTests {
     }
 
     private static MinecraftThermalInput.InfraredSnapshot infrared(ServerPlayer player, MinecraftThermalInput.InfraredSnapshot old) {
-        return MinecraftThermalInput.gameplayInfraredSnapshot(player, old == null, old == null ? 0 : old.generation(),
+        return MinecraftThermalInput.captureInfraredSnapshot(player, old == null, old == null ? 0 : old.generation(),
                 old == null ? 0 : SectionPos.asLong(old.centerChunkX(), old.centerSectionY(), old.centerChunkZ()),
                 old == null ? 0 : old.infraredEpoch(), old == null ? new long[12] : old.presence(), old != null && old.readable(),
                 old == null ? new long[0] : old.fieldPages(), old == null ? 0 : old.storedEpoch(), old == null ? 0 : old.storedSampleTick());

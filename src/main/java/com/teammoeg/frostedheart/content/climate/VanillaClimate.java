@@ -72,12 +72,13 @@ public final class VanillaClimate {
     }
 
     /**
-     * Used to calculate the actual temperature at a world and position.
-     * Will be valid when used on both logical sides.
-     * MUST NOT be used by world generation, it should use {@link VanillaClimate#calculateTemperature(BlockPos, float)} instead, with the average temperature obtained through the correct chunk data source
+     * Reads the runtime temperature at a block in degrees Celsius. World generation uses
+     * {@link #calculateTemperature(BlockPos, float)} with the average from its chunk data source.
+     *
+     * @see WorldTemperature#getTempAtBlock(net.minecraft.world.level.LevelReader, BlockPos)
      */
     public static float getTemperature(LevelAccessor world, BlockPos pos) {
-        return calculateTemperature(pos.getZ(), pos.getY(), WorldTemperature.block(world, pos));
+        return WorldTemperature.getTempAtBlock(world, pos);
     }
 
     /**

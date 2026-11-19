@@ -14,10 +14,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.LongFunction;
 
-/** Position-owned structural input. A busy page retains two exact descriptions and one older summary. */
+/** A busy Page retains two recent descriptions. Older local coefficients may precede its older Page summary. */
 public final class TopologyInbox {
     public record Input(ThermalPageHandle page, ThermalInputBatch batch, LongSet mixing,
-            boolean aggregated) { }
+            boolean aggregated) {
+        /** A later Page change can reach neighbours which already advanced past a local coefficient change. */
+        private boolean keepsEarlierMixingCut(Input next) {
+            return !mixing.isEmpty() && !batch.hasPageUpdates() && next.batch.hasPageUpdates()
+                    && batch.targetTick() < next.batch.targetTick();
+        }
+    }
     private static final class PageQueue {
         Input frozen;
         final ArrayDeque<Input> recent = new ArrayDeque<>();
@@ -46,10 +52,18 @@ public final class TopologyInbox {
             ordered.sort(java.util.Comparator.comparingLong((Input value) -> value.batch.targetTick())
                     .thenComparingLong(value -> value.batch.sequence()));
             recent.clear();
+            Input localPrefix = null;
             while (ordered.size() > 2) {
                 var next = ordered.remove(0);
                 if (older == null) older = next;
-                else { var merged = new PageBuilder(older); merged.merge(next); older = merged.build(); }
+                else if (localPrefix == null && older.keepsEarlierMixingCut(next)) {
+                    localPrefix = older;
+                    older = next;
+                } else { var merged = new PageBuilder(older); merged.merge(next); older = merged.build(); }
+            }
+            if (localPrefix != null) {
+                recent.addLast(older);
+                older = localPrefix;
             }
             recent.addAll(ordered);
         }
@@ -312,7 +326,7 @@ public final class TopologyInbox {
         int retirement = -1;
         for (int index = 0; index < pending.size(); index++)
             if (pending.get(index).batch.targetTick() <= tick && retires(pending.get(index), page)) { retirement = index; break; }
-        if (retirement < 0) return false;
+        if (retirement < 0 || pending.get(0).keepsEarlierMixingCut(pending.get(retirement))) return false;
         // No private growth/admission must commit before this same owner can retire.
         var merged = new PageBuilder(pending.get(0));
         for (int index = 1; index <= retirement; index++) merged.merge(pending.get(index));

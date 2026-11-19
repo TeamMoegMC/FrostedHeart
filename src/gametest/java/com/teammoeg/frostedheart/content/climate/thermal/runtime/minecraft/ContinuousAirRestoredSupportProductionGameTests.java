@@ -121,7 +121,7 @@ public final class ContinuousAirRestoredSupportProductionGameTests {
     }
 
     private static void sample(GameTestHelper helper, BlockPos pos, ThermalEnvironmentSample out) {
-        MinecraftThermalInput.gameplayPlacedReservoirEnvironment(helper.getLevel(), pos,
+        MinecraftThermalInput.samplePlacedReservoirAirAndRadiation(helper.getLevel(), pos,
                 WorldTemperature.naturalAir(helper.getLevel(), pos), out);
     }
 

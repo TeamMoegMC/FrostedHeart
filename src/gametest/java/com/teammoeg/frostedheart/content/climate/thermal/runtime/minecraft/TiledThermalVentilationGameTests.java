@@ -84,9 +84,13 @@ public final class TiledThermalVentilationGameTests {
                 var destination = reference.engine.sourcePortDestination(descriptor, 0);
                 helper.assertTrue(destination.target() != null, "The real source outlet resolves before production");
                 var receiver = new SpatialEnergyBanks.Address(destination.target().position(), -1, destination.target().face());
-                helper.assertTrue(powers.tryRegister(source.asLong(), 1, new SpatialEnergyBanks.Address[] {receiver, null},
-                                new double[] {profile.port(0).powerShare(), profile.port(1).powerShare()}, profile.ratedPowerW(), true, 0)
-                                && field.updateMixing(source.above().asLong(), 1), "Use the resolved outlet and original mixing origin");
+                var body = new TiledThermalField.Sample();
+                helper.assertTrue(field.read(source.asLong(), true, body), "The reference campfire has a material cell");
+                var bodyReceiver = new SpatialEnergyBanks.Address(source.asLong(), body.materialGeneration());
+                double[] shares = {profile.port(0).powerShare(), profile.port(1).powerShare(), profile.port(2).powerShare()};
+                helper.assertTrue(powers.tryRegister(source.asLong(), 1, new SpatialEnergyBanks.Address[] {receiver, null, bodyReceiver},
+                                shares, profile.ratedPowerW(), true, 0)
+                                && new TestOutletMixing().set(field, source.above(), true), "Use the resolved outlet and original mixing origin");
                 double initialJ = field.totalEnthalpyJ() + field.externalEnergyJ();
                 double maximumRatio = 0, maximumError = 0;
                 int comparisons = 0;
@@ -109,8 +113,8 @@ public final class TiledThermalVentilationGameTests {
                         helper.assertTrue(destination.target() != null || destination.declaredLoss(), "Resolved blocked ports are declared sinks, with no unresolved geometry");
                         receiver = destination.target() == null ? null
                                 : new SpatialEnergyBanks.Address(destination.target().position(), -1, destination.target().face());
-                        helper.assertTrue(powers.tryRetarget(source.asLong(), 1, new SpatialEnergyBanks.Address[] {receiver, null},
-                                new double[] {profile.port(0).powerShare(), profile.port(1).powerShare()}, tick - 20), "Use the existing source resolver after every world replacement");
+                        helper.assertTrue(powers.tryRetarget(source.asLong(), 1, new SpatialEnergyBanks.Address[] {receiver, null, bodyReceiver},
+                                shares, tick - 20), "Use the existing source resolver after every world replacement");
                         step(helper, field, banks, powers, tick - 20);
                     }
                     RegionalEngineTestDriver.submit(helper, reference.engine, new ThermalInputEnvelope(input(++reference.sequence, tick, ResolvedGeometryBatch.EMPTY), sources.seal(tick)));

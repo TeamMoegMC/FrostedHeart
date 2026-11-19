@@ -5,6 +5,15 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalPageHandle;
 import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureTable;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.GeometryHalo;
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.PagePublication;
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.PageSignatures;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.InstallToken;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.engine.ThermalDimensionLimits;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ResolvedGeometryBatch;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ThermalInputBatch;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.TopologyInbox;
+import it.unimi.dsi.fastutil.longs.LongSets;
+import net.minecraft.core.SectionPos;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
@@ -18,6 +27,137 @@ import net.minecraftforge.gametest.PrefixGameTestTemplate;
 @GameTestHolder("frostedheart_geometry_preparation")
 @PrefixGameTestTemplate(false)
 public final class ThermalGeometryPreparationGameTests {
+    private static long section(int x) { return SectionPos.asLong(x, -2, 5); }
+
+    private static GeometryHalo halo(int x) {
+        return new GeometryHalo(new long[] {BlockPos.asLong(x * 16, -32, 80)}, new int[] {0});
+    }
+
+    private static TopologyInbox.Input structuralInput(int x) {
+        var page = new ThermalPageHandle(section(x), 1);
+        var batch = new ThermalInputBatch(0, 1, 20, ThermalInputBatch.NO_ADMISSIONS,
+                new ThermalInputBatch.PageRetirement[]{new ThermalInputBatch.PageRetirement(page)},
+                ThermalInputBatch.NO_RESIDENCY_UPDATES, ResolvedGeometryBatch.EMPTY,
+                ThermalInputBatch.NO_ENVIRONMENT_UPDATES, ThermalInputBatch.NO_PHASE_ACKS, Double.NaN);
+        return new TopologyInbox.Input(page, batch, LongSets.EMPTY_SET, false);
+    }
+
+    private static RegionalContinuationBoundary checkedWalk(GameTestHelper helper, PendingGeometryBoundaries cache,
+            TopologyUpdatePlanner planner, TopologyInbox.Input input) {
+        cache.refresh();
+        var actual = cache.get(input);
+        var full = planner.continuationBoundary(LongSets.singleton(input.page().sectionKey()), true);
+        helper.assertTrue(actual.sections().equals(full.sections()) && actual.includesUnresolvedRoutes() == full.includesUnresolvedRoutes(),
+                "Every Section and the route-discovery flag must match a fresh planner walk");
+        return actual;
+    }
+
+    /** Two new Sections can connect an old walk to a remote tail. Only the last halo owner breaks that bridge. */
+    @GameTest(template = "phase0a_empty", timeoutTicks = 100)
+    public static void pendingWalkTracksBothSidesOfABridgeAndLastHaloOwner(GameTestHelper helper) throws ReflectiveOperationException {
+        try (var pages = new WorkerPageStore(16)) {
+            var planner = new TopologyUpdatePlanner(pages, null, null, null, null, null, null, null, null, ThermalDimensionLimits.sharedGrid(16, 16));
+            var cache = new PendingGeometryBoundaries(planner, pages);
+            var input = structuralInput(-8);
+            var left = new ThermalPageHandle(section(-6), 1);
+            var otherOwner = new ThermalPageHandle(section(13), 1);
+            var initial = checkedWalk(helper, cache, planner, input);
+            for (int x : new int[] {-4, -3, 40}) pages.replaceHalo(new ThermalPageHandle(section(x), 1), halo(x));
+            helper.assertTrue(checkedWalk(helper, cache, planner, input) == initial, "Distant changes reuse the walk object");
+            pages.replaceHalo(new ThermalPageHandle(section(-5), 1), halo(-5));
+            pages.replaceHalo(left, halo(-6));
+            var joined = checkedWalk(helper, cache, planner, input);
+            helper.assertTrue(joined.affects(section(-3)), "A two-Section bridge added beyond the old walk reaches the remote tail");
+            pages.replaceHalo(otherOwner, halo(-6));
+            pages.removeHalo(left);
+            helper.assertTrue(checkedWalk(helper, cache, planner, input) == joined, "Another owner still captures the same position");
+            pages.removeHalo(otherOwner);
+            helper.assertTrue(!checkedWalk(helper, cache, planner, input).affects(section(-3)), "Last halo removal splits the bridge");
+            // Drive a new pending discovery outside every cached frontier through the actual planner's seed queue.
+            var routeField = TopologyUpdatePlanner.class.getDeclaredField("airRoutes"); routeField.setAccessible(true);
+            var seedsField = AirRouteCompiler.class.getDeclaredField("seeds"); seedsField.setAccessible(true);
+            var seeds = (it.unimi.dsi.fastutil.longs.LongSet) seedsField.get(routeField.get(planner));
+            seeds.add(BlockPos.asLong(640, -32, 80));
+            var pending = checkedWalk(helper, cache, planner, input);
+            helper.assertTrue(pending.affects(section(40)) && pending.includesUnresolvedRoutes(), "An unfinished distant route expands this input");
+            seeds.clear();
+            helper.assertTrue(!checkedWalk(helper, cache, planner, input).affects(section(40)), "Finishing discovery drops the distant seed");
+        }
+        helper.succeed();
+    }
+
+    /** The planner sees a staged Page key. Cancelling installation must remove the shortcut from cached walks. */
+    @GameTest(template = "phase0a_empty", timeoutTicks = 100)
+    public static void cancelledPageAdmissionRetractsTheStagedBridge(GameTestHelper helper) {
+        try (var pages = new WorkerPageStore(16)) {
+            var table = ThermalSignatureTable.builder().build();
+            var planner = new TopologyUpdatePlanner(pages, null, null, null, null, table, null, null, null, ThermalDimensionLimits.sharedGrid(16, 16));
+            var cache = new PendingGeometryBoundaries(planner, pages);
+            var input = structuralInput(0);
+            pages.replaceHalo(new ThermalPageHandle(section(3), 1), halo(3));
+            helper.assertTrue(!checkedWalk(helper, cache, planner, input).affects(section(3)), "A gap separates the tail");
+            var handle = new ThermalPageHandle(section(2), 1);
+            var draft = new TopologyUpdatePlanner.PageDraft();
+            draft.nextSignatures = PageSignatures.unresolved(table);
+            draft.page = pages.stageAdmission(new ThermalInputBatch.PageAdmission(handle, 0, 1, 0, draft.nextSignatures, 0, new byte[256], null));
+            draft.admission = true; draft.nextResidentBrickMask = 1;
+            var write = PreparedTopologyChange.PageWrite.active(draft, 0, PagePublication.EMPTY, new int[0], new WorkerBrickTopology[0], new short[0], new byte[0]);
+            var token = new InstallToken();
+            var staged = pages.stagePage(write, token);
+            helper.assertTrue(checkedWalk(helper, cache, planner, input).affects(section(3)), "The staged bridge enters the planner's capture index");
+            token.cancel(); pages.finishPage(staged, write, token); pages.releaseStagedAdmission(draft.page);
+            helper.assertTrue(!checkedWalk(helper, cache, planner, input).affects(section(3)), "Rollback restores the original influence");
+        }
+        helper.succeed();
+    }
+
+    /** A reused Section buffer receives exactly the selected Bricks, including index 63 and mixed signatures. */
+    @GameTest(template = "phase0a_empty", timeoutTicks = 100)
+    public static void sparsePageProjectionWritesOnlySelectedCells(GameTestHelper helper) {
+        var table = ThermalSignatureTable.builder().build();
+        int[] compact = new int[64], wide = new int[64];
+        for (int cell = 0; cell < 64; cell++) {
+            compact[cell] = cell;
+            wide[cell] = 70000 + cell;
+        }
+        var page = com.teammoeg.frostedheart.content.climate.thermal.mesh.PageSignatures.unresolved(table)
+                .withBricks(table, new int[]{17, 63}, new int[][]{compact, wide});
+        int[] buffer = new int[4096];
+        for (long mask : new long[]{0, 1L << 17, Long.MIN_VALUE | 1L, -1L}) {
+            java.util.Arrays.fill(buffer, Integer.MIN_VALUE);
+            page.copyBricksTo(mask, buffer);
+            for (int block = 0; block < buffer.length; block++) {
+                int x = block & 15, z = (block >>> 4) & 15, y = block >>> 8;
+                int brick = (x >>> 2) + 4 * (z >>> 2) + 16 * (y >>> 2);
+                int expected = (mask & (1L << brick)) != 0 ? page.get(block) : Integer.MIN_VALUE;
+                helper.assertTrue(buffer[block] == expected, "Selected geometry cells map to their Section-local positions");
+            }
+        }
+        helper.succeed();
+    }
+
+    /** Match the world-position seed predicate even when a resident Brick is only partly resolved. */
+    @GameTest(template = "phase0a_empty", timeoutTicks = 100)
+    public static void routeSeedsPreserveUniformPartialAndHighBitPositions(GameTestHelper helper) {
+        var builder = ThermalSignatureTable.builder();
+        int air = builder.intern(new com.teammoeg.frostedheart.content.climate.thermal.profile.ResolvedThermalSignature(100, 0));
+        int stone = builder.intern(new com.teammoeg.frostedheart.content.climate.thermal.profile.ResolvedThermalSignature(0, 1));
+        int vent = builder.intern(new com.teammoeg.frostedheart.content.climate.thermal.profile.ResolvedThermalSignature(50, 1));
+        var table = builder.build();
+        var page = com.teammoeg.frostedheart.content.climate.thermal.mesh.PageSignatures.unresolved(table);
+        int[] blocks = new int[64];
+        java.util.Arrays.fill(blocks, vent);
+        page = page.withBricks(table, new int[]{17}, new int[][]{blocks});
+        helper.assertTrue(page.ventilatedMaterialMask(0, table) == 0 && page.ventilatedMaterialMask(17, table) == -1L,
+                "Uniform unresolved and ventilated Bricks produce empty and full seed sets");
+        for (int i = 0; i < blocks.length; i++) blocks[i] = i % 3 == 0 ? stone : i % 3 == 1 ? air : ThermalSignatureTable.UNRESOLVED;
+        blocks[0] = blocks[27] = blocks[63] = vent;
+        page = page.withBricks(table, new int[]{17}, new int[][]{blocks});
+        helper.assertTrue(page.ventilatedMaterialMask(17, table) == (1L | (1L << 27) | Long.MIN_VALUE),
+                "Air, sealed materials and unknown cells do not seed routes even next to a valid passage");
+        helper.succeed();
+    }
+
     @GameTest(template = "phase0a_empty", batch = "geometry_halo_full_reference", timeoutTicks = 200)
     public static void incrementalGeometryMatchesSequentialFullReplacementAcrossOverlappingOwners(GameTestHelper helper) {
         var pages = new WorkerPageStore(16);

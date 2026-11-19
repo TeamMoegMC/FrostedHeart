@@ -1,7 +1,7 @@
 # 热模拟运行时：固定温场、输入与保存
 
 - Status: `Current for the production fixed-field implementation; retirement validated by full 156/157 plus corrected source-focused 8/8, 157 distinct functional checks; hundred-player performance qualification incomplete`
-- Last verified: `2026-11-15`（新增“自然背景”与“扩容与内存压力”两节；其余内容 `2026-11-14`）
+- Last verified: `2026-11-20`（材料不限层传热与通用边界扩张、待处理几何范围、跨区出口与温区成员）。其余最近核验于 `2026-11-19`（热混合覆盖、驻留通知、几何切点顺序与百人实测）。热源输入截止与存盘判定核验于 `2026-11-18`。自然背景与扩容压力核验于 `2026-11-15`，固定温场主体核验于 `2026-11-14`。
 - Scope: 正式生产运行链路、输入所有权、物理时间、逐格自然背景、查询、热数据v7与关闭恢复。
 - Code anchors: `MinecraftThermalInput.createWorker`、`ThermalDimensionEngine`、`TiledThermalField`、`NaturalProfile`、`NaturalProfiles`、`SpatialSourceIngress`、`SpatialHeatStore`、`SpatialHeatBuffer`、`QueryPublication`、`RegionalCheckpoint`、`AirFieldCheckpoint`、`DormantChunkThermalState`。
 
@@ -13,13 +13,57 @@
 
 源、输入和数值只有一条生产链路：`SpatialSourceTimeline` → `SpatialSourceIngress` → `SpatialHeatStore` → 一个范围内的Claim和`SpatialHeatBuffer` → 固定温场提交。Store拥有已接受输入，缓冲只保存可取消的准备副本及已提交的deferred J；取消不扣原输入，提交只确认一次归属。其他范围的余额不能随当前范围提交而清除。
 
+### Page、Brick 与 Tile
+
+一个 `Page` 对应一个 16×16×16 的 Minecraft Section。`ThermalPageHandle` 记录该处的生命周期、当前几何版本和已发布的方块布局。一个 Page 含 64 个 4×4×4 的 `Brick`。材料签名和通风布局按 Brick 更新，出热口的混合覆盖精确到其中的每一格。`TiledThermalField.Tile` 在同一 Section 内保存热量与采样时刻，两帧数值数组各为每个已分配 Brick 容纳 64 格。单个 Brick 中各格独立保存焓。
+
+`FixedGeometry.prepareField` 将新增捕获的 Brick 和本次变更且仍被捕获的 Brick 交给 `PageSignatures.copyBricksTo`，填入可复用的 Section 缓冲。新建 Tile 时填入所有已捕获的 Brick。旧覆盖中撤出的格子由 `changeCell` 写为 `UNRESOLVED`。用于等待相关区域到达同一物理时刻的邻区边界，由 `TopologyUpdatePlanner.continuationBoundary` 单独计算。
+
+### 待处理输入的影响范围
+
+`PendingGeometryBoundaries` 按待处理输入的身份保留 `TopologyUpdatePlanner.continuationBoundary` 算出的原始 Section 集合。`WorkerPageStore` 在 Page 与 halo 的联合覆盖增加或失去一个 Section 时报告它的位置。变更落在旧集合内或六面外沿时，引擎重新搜索。这能发现从旧边缘新接入的桥，也能处理拆桥与取消 Page 安装。只改变材料值、同一 halo 还有其他持有者、或改动远离这片区域时，可以沿用这次搜索。几何和系数仍在各自的物理时刻提交。有待发现的风道、现存路由依赖或待发布草稿时，使用完整搜索。
+
+`WorkerPhysicalSourceBindings.includeBoundOutlets` 在原始范围上加上实际跨 Section 出口的两端。增加、撤出或重定向这样的绑定会改变 `outletRevision`，使 `ThermalDimensionEngine.refreshFixedBoundaries` 重新投影待处理输入及重入边界。直接向端口所在 Section 出热时，出口无需扩展原始集合。`TiledThermalField.replaceTransport` 先替换路由和环境系数。维度内已有路由对或本次装入路由对时，重新判定温区成员。其余替换可沿用成员。冻结 Tile 在退休前继续计入持有路由的 Tile 数量。
+
+同一组分散布局的 32 次增删中，1,632 次完整搜索减至 88 次，逐次的 Section 集合及未解析通路标志全部一致。连通建筑仍需 1,152 次完整搜索。百人服的完整线程周期、CPU 毫秒、计费墙钟和读数时效分别记录，详见[局部拓扑生产验证](validation/thermal-validation-data-2026-11-19-to-20.json#/records/thermal-local-topology-runtime-2026-11-20)。
+
 ## 输入、几何与物理时间
 
 `transportThrough`在同批几何引用完成交接后才更新。数值截止同时考虑输入前缀、真实几何、源控制和原20tick切片。源热量可先记录到控制边界，源启停状态等实际接收方达到该边界后才生效。
 
+营火熄灭时，`PhysicalSourceSpatialIndex.flush` 把启停变化和生效 tick 交给 `SpatialSourceTimeline.enabled`。它先按原功率结算到这个 tick，再关闭供热。`SpatialSourceTimeline.seal` 交出最后一段输入后，会把已关闭的持续功率源移出发送队列。已经进入空气和材料的热量继续由温场推进。
+
+工作线程在 `ThermalDimensionEngine.fixedNumericalThrough` 先用已交接输入、当前区域的物理切点和 20 tick 上限确定本步终点。`SpatialSourceIngress.limitNumericalThrough` 只访问当前区域中已捕获且有源索引的 Section，同一热源只检查一次。仅当源的待处理时间**早于**当前终点，它才检查输入归属。恰好落在终点的输入留给该边界处理。若较早输入归当前温场，就缩短步长，最早停在本步起点。
+
+`ThermalDimensionEngine.sourceFrozen` 在当前快照已经冻结输入时，通过 `WorkerPhysicalSourceBindings.portsTouchChunk` 检查快照区块是否拥有材料端口、空气出口或当前的路由终点。篝火本体的 `SOURCE_MATERIAL` 端口归篝火所在区块。已写入温场的热量随材料焓保存，尚未交付的热量由 `checkpointTarget` 和输入快照按当前材料身份保存。出口归属沿用快照与几何版本缓存。
+
 `activeSince`是当前活动寿命的起点，不随求解推进。首次捕获或原生重入之前的控制在该起点初始化；它不代替`sampleTick`。旧Page身份不能约束或退休同坐标的新Page。
 
 真实几何在受影响旧温场到达事件切点后安装。纯扩容留在原Page队列等待容量，已有空间继续计算；混合输入中的实际修改、收缩和退休优先作用于已付费空间。冻结写回期间不安装可选扩容。普通几何不能通过直接修改采样时间冒充补算完成。
+
+`TopologyInbox.PageQueue.enqueue` 为每个 Page 保留最近两个输入。积压需要合并时，若先到的是本页混合系数、后到的是较晚的 Page 变更，旧输入最多占两项。先按原时刻处理本地系数，再按第一个 Page 变更的时刻处理可能影响邻区的几何。`foldThroughRetirement` 同样保留这个顺序。这样一来，已经越过本页系数时刻的邻区仍能在自己的几何变更时刻参与更新。
+
+`WorkerPhysicalSourceBindings.bindingLimit` 读取热源所在 Section、定义的出热口和实际路由终点的时间上限。若出热口或路由终点就在已查的热源 Section，同一上限可直接复用。跨 Section 的终点仍参加取最小值。分组测试覆盖同区出口、跨区出口和积压中的两个时刻。百人服的时效、恢复与 CPU 见[本地混合切点验证](validation/thermal-100p-validation-2026-11-18-to-19.json#/records/thermal-causal-cuts-100p-2026-11-19)。
+
+### 邻格供热与驻留判定
+
+`AirMixingRegion.cellMask` 用一个 64 位整数表示 4×4×4 个格子的混合覆盖范围。每个格子的中心在距任一出热口中心不超过 4 格时进入覆盖，同格的多个出口取并集。`TiledThermalField.replaceMixing` 每个常驻 Brick 存一个 `long`，换热时直接读取该格对应的位。已有 Brick 在扩缩容时复制掩码。几何安装用 `FixedGeometry.restoringBricks` 初始化新捕获的 Brick，已有 Brick 按源启停批次的 `mixing` 范围更新。12×12×12 种可能的出口偏移共享一张只读表，数组数据占 13,824 字节，由所有维度共用。
+
+常驻维护过程中，`WorkerPageStore.requestFace` 仅对仍需决定的相邻 Brick 检查边界。`TiledThermalField.airFaceAtThreshold` 在当前已提交的温场中比较空气温度与本格自然背景的绝对差，命中首个合格面格就结束。新增驻留采用 `ThermalRetentionPolicy.ENTER_C`（1°C），已请求的驻留采用 `EXIT_C`（0.5°C）。朝上的面沿用各列的直通天空判定，材料边界请求由 `collectMaterialFrontier` 处理。
+
+材料不再有两层深度限制或唯一表层归属。`TiledThermalField.conductance` 与参考编译器 `BrickTopologyCompiler.connectFace` 按 `ThermalSignatureTable.contactFraction` 和两侧材料导热率交换；第三层及更深材料可以继续传热。正常换热不保存或查询层数许可，也不再为它重建接触掩码或扩大角点/风道材料依赖。真实几何和路由仍沿原相邻面与风道依赖更新。
+
+`WorkerPageStore.collectMaterialFrontier` 遍历 `BlockBrickLayout.materialNodeMask`，只取每个 Brick 六个边界面上的材料；中央八格不会发起跨 Brick 请求。通过 `MATERIAL_FRONTIER_BLOCKS` 过滤后，每个候选仅检查朝外方向，直接读取最终 Accepted 温度。只要相对本格材料自然初始化背景达到既有 1°C/0.5°C 门槛，完全埋藏的材料也能请求接触的下一 Brick；不要求接触空气或是篝火。邻格必须有已捕获的几何且允许实际接触，新捕获但尚未升温的 Brick 不会因此自动请求下一圈。没有新增温度摘要或候选缓存。
+
+`PhysicalSourceSpatialIndex.refreshTargets` 仅强制保留正功率热端口的目标 Brick。篝火是本体和上方出热口，去重后最多两个；六个邻格没有额外强制驻留。其他邻格由上述通用边界规则按需纳入。较早的[两层候选测量](validation/thermal-validation-reports-2026-11-19-to-20.md#thermal-material-frontier-2026-11-20)属于已取消规则的历史记录，不能作为当前性能资格。
+
+驻留维护沿用 `WorkerPageStore` 的 Section 队列。`TiledThermalField.commit` 只在已准备的 Tile 成为已提交值时通知该 Section，首次发布同样入队。一个基地单独推进时，其他基地保有自己的采样时钟。自然背景实际变化、已提交材料控制、恢复和激活分别通知对应的 Section。几何提交和相邻驻留需求变化仍由 `WorkerPageStore.markGeometryMaintenance` 和 `advanceMaintenance` 更新邻居。
+
+`TiledThermalField.sweepNextCells` 在每个物理步中按正序和逆序各处理一次相邻面。空气对共用格热容 `C`（J/K）。设该面的导热率为 `G`（W/K），半步时长为 `dt = (toTick − fromTick) / 40` 秒。`ThermalExchangeKernel.equalCapacityPairWeight` 求出 `w = (C/2) × [−expm1(−G × (1/C + 1/C) × dt)]`（J/K）。每次实际换热仍用两格此刻相对各自自然背景的温差乘 `w`，按原顺序从一格转入另一格。对两侧混合倍率之和为 2、5、8 的三种常见情况，每个温场复用该时长的权重。浮力产生其他倍率时按该面的实值计算。正式入口 `MinecraftThermalInput.createWorker` 的隐式环境导热率为 0，因此负方向的隐式边界可直接结束。非零隐式环境导热率的温场仍检查实际邻格，已安装的通风与环境通路继续由 `advanceTransport` 独立处理。[固定输入与百人服换热实测](validation/thermal-validation-data-2026-11-19-to-20.json#/records/thermal-face-sweep-2026-11-19)。
+
+`WorkerPageStore.advanceMaintenance` 先按 `residentBrickMask` 检查常驻 Brick 的温差与材料相变，再按热源和温差形成的活动掩码检查边界。两步均从最低置位起顺序遍历，单个面完成后可以按原时间预算让出工作线程。当摄氏温差跨过 1°C 或 0.5°C 阈值，既有的驻留请求继续生效。
+
+几何准备的 `TopologyView.prepareHaloOverlay` 顺序比较同一拥有者的新旧邻接采样位置。共有坐标沿用引用数，新增和移除坐标分别登记引用增减。新值仍按各写入者的顺序处理，`readHaloSection` 记录所依赖的 Section 版本。
 
 ### 扩容与内存压力
 
@@ -58,7 +102,7 @@
   `WorkerPageStore` 的材料扩张与面残差都以每格自己的背景为准。
 - 背景变化：`NaturalProfiles` 是主线程到 worker 的旁路，带递增 revision。`begin` 先调用
   `refreshNaturalProfiles`，对 profile 身份变了的Tile执行 `shiftToNatural`：每个非冻结、非相变握手的格加上
-  `(新背景 - 旧背景) × capacity`，计入 `acceptedExternalJ`，因此背景变化同时到达每一格，不留下假扰动。
+  `(新背景 - 旧背景) × capacity` 的可交换能量。普通材料随背景平移，相变材料和显式热输入共用 `addMaterialEnergy`，逐段经过显热和潜热，在世界转换端点停住。`acceptedExternalJ` 只计实际转移的能量。
   冻结Tile只更新背景，重入时 `activate` 朝新背景做休眠冷却。没有 profile 的Tile在 `ambient`/`stageThaw`
   改变 `ambientC` 时同样整体平移。
 
@@ -75,11 +119,7 @@
   衰减，因此红外与温度计读数一致。这几处仍调用 `DormantChunkThermalState.naturalTemperature`，只为在 Section 值
   变化时推进材料 revision、让红外刷新。
 
-仍以 Section 自然值为准的是：休眠维护的老化删除（`DormantThermalMaintenance`）、重入准入时的过滤
-（`DormantChunkThermalState.admissionCut`、`MinecraftThermalInput.dormantMaterialAdmissionCut`）、检查点之后写盘之前的
-方块替换（`MinecraftPageManager` 的 `projectMaterialCheckpoint`）以及旧版 Brick 均值残差。这些位置在
-Section 内背景差较大时（地表附近、覆盖层厚度不一的 Section）会偏早或偏晚删除已有扰动，或给检查点后新放的方块
-一个 Section 中心的初值。
+区块 v7 数据的休眠维护、重入过滤、退休捕获以及检查点后的方块编辑以本格自然背景为准（`WorldTemperature.sectionBackground`）。每条记录保留原采样时间。
 
 ## 查询与读者生命周期
 
@@ -97,6 +137,8 @@ Section 内背景差较大时（地表附近、覆盖层厚度不一的 Section�
 
 普通SAVE在原值/输入事务下取得一致快照；数值私有计算不持有这个保存事务。原生UNLOAD冻结真实Accepted值，保存不要求数值追平服务器tick。取消卸载后先完成原生回执，由worker推进相关邻区到真实重入边界，再按原休眠合同接回。
 
+`ThermalDimensionEngine.checkpointInterruptsStep` 在区块卸载时检查当前事务的 Section 集合。对于输入已准备完毕且起止 tick 不同的事务，若卸载区块在集合之外，`TiledThermalField.freeze` 可以直接冻结几何已提交的 Tile，工作线程继续原事务。如果卸载区块与计算范围重叠、Claim 仍在遍历输入、正在处理零时长事务，或冻结时要先结算待提交的几何转换，引擎会取消私有准备。成功卸载只移交该区块的原始输入和已提交的延迟热量。若卸载被取消，`stageThaw` 为冻结的 Tile 登记重入时刻，邻区对齐后才恢复换热。
+
 ## 资源与故障
 
 本轮没有调整进入1°C、退出/保存0.5°C、误差`max(1°C, 5% × |参照温度−环境温度|)`及工作额度。配置`continuousAirWorkBudgetMsPerSecond`仍按任务执行经过时间计量，包含抢占和GC，不能当作纯CPU。128MiB仍是原资源计账目标，不是已证明的实际可达堆硬上限。
@@ -111,4 +153,4 @@ worker故障取消未提交状态，原Store、已提交温场和源窗口保持
 
 本轮退役范围、迁移测试、字节码依赖检查与最终结果见[生产运行链路退役回执](validation/thermal-cell-enthalpy-validation-2026-11-14.json#/records/thermal-production-runtime-retirement-2026-11-14)。此前[提交时间批次](validation/thermal-cell-enthalpy-validation-2026-11-14.json#/records/thermal-committed-domains-2026-11-14)和[第一轮小范围清理](validation/thermal-cell-enthalpy-validation-2026-11-14.json#/records/thermal-production-cleanup-2026-11-14)只证明其对应代码。
 
-性能优化按用户要求暂停。此前百人时效、主线程耗时、分配量、完整128MiB可达峰及8h/24h耐久门槛仍未完成，本轮清理与v7保存验证不能替代这些资格。
+11 月 18 日的第一组合并候选已有[历史对照](validation/thermal-100p-validation-2026-11-18-to-19.json#/records/thermal-cpu-hot-paths-100p-2026-11-18)。当前生产代码采用上述有界截止查询，同一组 52 项 Forge GameTest 通过。百人服同基线的 CPU、时效、分配和恢复实测见[当前验证记录](validation/thermal-100p-validation-2026-11-18-to-19.json#/records/thermal-bounded-source-cutoff-100p-2026-11-18)。后续局部几何改动通过 57 项测试，阶梯式改动范围与单轮百人数据见[局部几何实测](validation/thermal-100p-validation-2026-11-18-to-19.json#/records/thermal-brick-work-100p-2026-11-18)。11 月 19 日的 66 项 Forge GameTest 全部通过。同一热源历史的三组对照在 5,888 个温度样本和热量账上差异为 0。百人服的 22,453 对同采样时刻温度中，有两次读数超出该点 1°C 的容差，均来自同一位置和同一温场采样时刻。实测 CPU、时效及采样范围见[覆盖掩码验证记录](validation/thermal-100p-validation-2026-11-18-to-19.json#/records/thermal-packed-mixing-100p-2026-11-19)。完整 128 MiB 可达峰和 8h/24h 耐久资格仍待验证。

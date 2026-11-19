@@ -1,9 +1,11 @@
 # 新热模拟与旧版游玩数值对照
 
-- Status: `Current for source audit and deterministic formula examples; survival and heating balance calibration remains outstanding`
+- Status: `Historical source comparison; survival and heating balance calibration remains outstanding`
 - Last verified: `2026-11-05` for the legacy-source comparison; `2026-11-08` for the current equipment warming limit
-- Scope: 用户确认的旧玩法基准 `0c9fe6209`（2026-08-25、新热模拟正式接入前），对照当前 `61eddf706` 的玩家显示、身体计算、供暖、作物、相变和存档读取；不改变任何生产公式或配置。
+- Scope: 用户确认的旧玩法基准 `0c9fe6209`（2026-08-25、新热模拟正式接入前），对照热模拟快照 `61eddf706` 的玩家显示、身体计算、供暖、作物、相变和存档读取；不改变任何生产公式或配置。
 - Code anchors: `WorldTemperature.block/air/naturalBlock/naturalAir`, `BlockTemperatureModel.applyHeat`, `MinecraftThermalInput.gameplayPlayerEnvironment/gameplayPassiveEnvironment/gameplayCropEnvironment`, `GeneratorData.publishGameplayHeat`, `ThermalAnalyticFieldIndex.compose`, `PlayerTemperatureComputation.updatePlayer`, `PlayerThermalModel`, `PlayerThermoregulation`, `FrostedHud.renderTemperature`, `BodyPartData.load`, `MinecraftPhaseController.tryAtRandomTick`。
+
+下文的「当前实现」均指对照快照。现行取温入口见[世界温度](world-climate-and-temperature.md)和[作物温度](crop-fertilization.md)。
 
 用户于 2026-11-05 进一步明确：目标是保留旧版大致相同的生存难度、供暖收益和阶段需求，允许使用新的传热、蓄热、身体和相变机制。应检查原本危险的环境是否仍然危险、衣物和热源是否仍然必要，以及受冻、恢复和资源消耗的时间尺度；不要求恢复旧公式或所有位置显示相同数字。
 
@@ -152,7 +154,9 @@ naturalAir（无随机扰动）/live/dormant → 解析场
 
 旧 `block_temperature` 数据仍含篝火 500、燃烧熔炉 200、岩浆 1000 等参数；它们是旧局部采样参数，不代表旁边玩家直接处在该温度。当前这些数据的正式消费者是缓存/注册和提示界面，没有当前供热/辐射运行时的读取点。
 
-当前篝火使用默认 `8000 W`，其中 80% 注入空气、20% 直接辐射；能量塔/喷泉/散热器分别使用 `10000/2000/4000 W * level`。静态辐射只处理岩浆及 `frostedheart:thermal/static_fire_radiators`，默认标签列普通火和灵魂火。因此燃烧熔炉、火把、灯、第三方 `block_temp` 配方等没有凭保留配方自动接入同等供热。伴生包仍提供 `charcoal_pit:log_pile` 的 `temperature=300` 配方，也没有由该配方注册当前热源的路径。
+当前篝火在默认 `8,000 W` 中分配 `4,800 W` 给上方空气、`1,600 W` 给篝火本体、`1,600 W` 给直接辐射。[篝火供热](heat-production-and-network.md#campfire-body-and-six-face-exchange)
+
+能量塔、喷泉和散热器的功率见[物理热源](heat-production-and-network.md#physical-sources)。静态辐射只处理岩浆及 `frostedheart:thermal/static_fire_radiators`，默认标签列普通火和灵魂火。因此燃烧熔炉、火把、灯、第三方 `block_temp` 配方等没有凭保留配方自动接入同等供热。伴生包仍提供 `charcoal_pit:log_pile` 的 `temperature=300` 配方，也没有由该配方注册当前热源的路径。
 
 旧喷泉向指定柱形范围写 `(int) lastTemp * 15` 的常值热区；当前改为 `2000 W * level` 的点位物理源。喷泉原有 `lastTemp * 25` 玩家属性加值仍在；保留该加值不能还原已经替换的柱形热区及身体算法。
 

@@ -3,9 +3,9 @@
 - Status: `Transitional; material lifecycle integration is under validation`
 - Last verified: `2026-11-08` for infrared receipt-driven streaming, progressive GPU uploads and five real-client WAN scenarios; `2026-11-07` for infrared bandwidth, overlapping windows and display-cache lifecycle; `2026-11-06` for completed-enthalpy phase submission, infrared request completion and topology retirement invalidation; `2026-11-05` for body packet v2 and the orb's separate display conversion; `2026-10-29` for current runtime selection and gameplay entry call-chain review; `2026-10-22` for inactive player simulator removal; `2026-10-18` for phase-temperature and icicle receipt integration. Other sections retain their earlier verification scope.
 - Scope: recipe/configuration ownership, capabilities, server lifecycle, thermal runtime integration, and network boundaries
-- Primary code anchors: `FHRecipeCachingReloadListener`, `WorldTemperature`, `MinecraftThermalEvents`, `MinecraftThermalInput`, `MinecraftPhaseController.temperature`, `ThermalWorkerPool`, `LevelChunkSectionMixin_ThermalInput`, `FHCapabilities`, `FHNetwork`
+- Primary code anchors: `FHRecipeCachingReloadListener`, `WorldTemperature.getTempAtBlock/samplePlayerAirTemperature`, `MinecraftThermalEvents`, `MinecraftThermalInput`, `MinecraftPhaseController.tryAtRandomTick`, `ThermalWorkerPool`, `LevelChunkSectionMixin_ThermalInput`, `FHCapabilities`, `FHNetwork`
 
-源码、已加载数据包和服务端配置是最终权威；本文只记录接入顺序。当前Page、source、solver和query合同见[运行时控制](thermal-runtime-control.md)。2026-10-29只读核对确认玩家更新/同步、篝火及三类供热设备、作物通用环境、蓄热物品、材料相变和Forge保存生命周期都有实际调用者；城镇房屋/狩猎建筑通过BlockScanner.sampleTemperature调用gameplayPassiveEnvironment。本次未逐项重跑这些玩法，也不将代码接入等同于百人整包资格。
+源码、已加载数据包和服务端配置是最终权威；本文只记录接入顺序。当前Page、source、solver和query合同见[运行时控制](thermal-runtime-control.md)。2026-10-29只读核对确认玩家更新/同步、篝火及三类供热设备、作物通用环境、蓄热物品、材料相变和Forge保存生命周期都有实际调用者；城镇房屋和狩猎建筑的 `BlockScanner.sampleTemperature` 通过 `WorldTemperature.getTempAtBlock` 读取室内环境。本次未逐项重跑这些玩法，也不将代码接入等同于百人整包资格。
 
 ## Data Ownership
 
@@ -132,7 +132,7 @@ physical inputs only. Every item query composes the current world-owned
 `MinecraftGameplayFields` at its exact receiver position, including when the
 physical runtime is absent; runtime close does not discard generator floors.
 
-Player environment sampling uses `MinecraftThermalInput.gameplayPlayerEnvironment`.
+Player environment sampling uses `WorldTemperature.samplePlayerAirTemperature`.
 The historical `TemperatureThreadingPool`, `SurroundingTemperatureSimulator`,
 `CachedBlockTempInfo`, and `BlockInfoCachePolicy` remain in source separately
 from the shared-grid thermal runtime. Active player sampling does not dispatch
@@ -293,11 +293,7 @@ replacement/mass changes whose target still has material; removal does not query
 SavedData；警告时间使用 vanilla scheduled block ticks，外观/预警/材料更新标记使用
 BlockState，坠落使用 vanilla falling-block NBT。规则与验证入口见 [icicle.md](icicle.md)。
 
-`SoilThermometer`的方块测量读取`WorldTemperature.material`；没有活动或休眠材料状态时，显示该方块的
-`WorldTemperature.naturalAir`，即热场在这里的背景，与红外的自然温度底色相同。
-`SoilThermometerRequestPacket`仍读取`WorldTemperature.block`，因为这条网络路径服务于
-作物生长环境HUD；它不是材料温度计读数。红外仍使用材料基础值与既有解析场显示合成，
-本轮未修改shader、色标、0.43融合或蓝色缺值占位。
+土壤温度计右键通过 `WorldTemperature.getTempAtBlock(level, pos, materialSample)` 先读材料温度，读不到时显示「此处环境气温」。数值经 `FHTemperatureDisplayPacket` 交给客户端按玩家单位设置显示。作物悬浮提示以同一顺序读取作物位置的生长温度，换目标立即请求，持续瞄准时每 20 tick 刷新一次，按返回坐标匹配。红外以材料值合成解析场，屋檐与露天列使用本列覆盖厚度。
 
 红外也可读取同一个休眠容器中的`MaterialSectionState`；活动材料优先，保存记录只补充
 未驻留Brick。请求和响应增加`storedEpoch`，用于变化、删除和Chunk替换后的增量刷新；
@@ -310,11 +306,11 @@ BlockState，坠落使用 vanilla falling-block NBT。规则与验证入口见 [
 选一列，以MOTION_BLOCKING高度图定位，只让命中的表面水调用同一入口；冻结不要求降水。
 `StateTransitionData.hasRandomTransitions`使水不增加方块随机资格，也不在其他方块
 开启的Section中进入通用相变抽样；重载资格变化比较使用同一判断。独立水温/目标算法没有恢复。
-地表积雪/降水与岩浆原生点火继续执行。无记录相变使用编译边做环境平衡近似。
+地表积雪/降水与岩浆原生点火继续执行。无记录相变按当地环境初始化焓，把未完成的潜热进度存回已有区块附件。
 无H记录的自然冻结继续检查 `world_conditions.fluid_boundary_tag`；在线/休眠的完成相变
 按已完成H兑现，不再因这项启动几何约束等待岸边。休眠入口检查完成度，世界转换沿原
 `THERMAL_TRANSITION` 交接原H；其他明确世界限制保留，见[相变提交](thermal-residual-lifecycle.md#自然冻结启动与已完成相变提交)。
-薄冰热裂与裂纹修复通过 `MinecraftPhaseController.temperature` 读取相同的材料温度：
+薄冰热裂与裂纹修复共同使用 `WorldTemperature.getTempAtBlock(level, pos, PHASE_CHANGE)`。
 活动/休眠本体优先，确实无记录时共用原位环境回退；归属未发布或记录不匹配时等待。
 其每级 1/4 相变预算与部分进度见 [thin-ice.md](thin-ice.md)。
 `DEFERRED`只拦截旧温度转换，保留非相变随机行为；`CHANGED`才终止旧状态的后续回调。
@@ -396,7 +392,7 @@ until their last observer releases them. A cache miss, eviction or unknown token
 resends actual values. It is acceleration data, never a physical temperature
 authority or a second full mirror per player. Logout, dimension change, actual
 Level unload and server close release the corresponding entries. The production
-entry point is `MinecraftThermalInput.gameplayInfraredSnapshot(ServerPlayer,
+entry point is `MinecraftThermalInput.captureInfraredSnapshot(ServerPlayer,
 FHRequestInfraredViewDataSyncPacket)`; the raw-baseline overload does not use this cache.
 
 `InfraredWindow` remaps presence and the old field footprint by absolute Section.

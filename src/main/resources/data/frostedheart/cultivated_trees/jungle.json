@@ -1,0 +1,22 @@
+{
+  "growth": {
+    "progress_per_stage": 4,
+    "min_light": 9
+  },
+  "yield": {
+    "base_logs": 6,
+    "logs_per_height": 1,
+    "fixed_logs": 0,
+    "min_height": 5,
+    "max_height": 14
+  },
+  "temperature": {
+    "min": 5,
+    "ideal_min": 15,
+    "ideal_max": 25,
+    "max": 35,
+    "minimum_yield_factor": 0.5,
+    "preserved_degrees_per_grade": 5
+  },
+  "vanilla_tree": "minecraft:jungle_tree_no_vine"
+}

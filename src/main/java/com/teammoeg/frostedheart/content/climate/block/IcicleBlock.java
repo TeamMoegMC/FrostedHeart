@@ -1,11 +1,12 @@
 /* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedheart.content.climate.block;
 
+import static com.teammoeg.frostedheart.content.climate.WorldTemperature.BlockTemperatureUse.PHASE_CHANGE;
+import static com.teammoeg.frostedheart.content.climate.WorldTemperature.BlockTemperatureUse.SURROUNDINGS;
+
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.bootstrap.reference.FHSoundEvents;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
-import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput;
-import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.input.MinecraftPhaseController;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.particles.BlockParticleOption;
@@ -141,7 +142,7 @@ public class IcicleBlock extends Block {
             return;
         }
         if (random.nextInt(8) == 0) {
-            double environment = MinecraftThermalInput.gameplayPassiveEnvironment(level, pos, WorldTemperature.naturalAir(level, pos));
+            double environment = WorldTemperature.getTempAtBlock(level, pos, SURROUNDINGS);
             if (environment >= HEAT_THRESHOLD_C) {
                 int below = 0;
                 while (below < 5 && isIcicle(level.getBlockState(pos.below(below + 1)))) below++;
@@ -162,7 +163,7 @@ public class IcicleBlock extends Block {
                 length++;
             }
             if (length >= MAX_NATURAL_LENGTH) return;
-            double temperature = MinecraftPhaseController.temperature(level, pos);
+            double temperature = WorldTemperature.getTempAtBlock(level, pos, PHASE_CHANGE);
             if (random.nextDouble() < .5 * growthMultiplier(temperature))
                 level.setBlockAndUpdate(pos.below(), defaultBlockState());
         }
@@ -174,7 +175,7 @@ public class IcicleBlock extends Block {
         BlockPos root = substrate.below();
         if (!level.getBlockState(root).isAir() || !state.isFaceSturdy(level, substrate, Direction.DOWN)
                 || !inGrowthBiome(level, root) || hasNearbyRoot(level, root)) return;
-        if (random.nextDouble() < .5 * growthMultiplier(MinecraftPhaseController.temperature(level, substrate)))
+        if (random.nextDouble() < .5 * growthMultiplier(WorldTemperature.getTempAtBlock(level, substrate, PHASE_CHANGE)))
             level.setBlockAndUpdate(root, FHBlocks.ICICLE.get().defaultBlockState());
     }
 

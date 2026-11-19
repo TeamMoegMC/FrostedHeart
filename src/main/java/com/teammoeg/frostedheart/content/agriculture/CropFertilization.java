@@ -1,6 +1,9 @@
 package com.teammoeg.frostedheart.content.agriculture;
 
 import java.util.*;
+
+import com.teammoeg.frostedheart.content.climate.data.PlantTempData;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -39,6 +42,18 @@ public final class CropFertilization {
 
     public static boolean fertilized(BlockState state) {
         return state.hasProperty(FertilizedDirt.FERTILIZER) && state.hasProperty(FertilizedDirt.STORAGE);
+    }
+
+    /** Preserved fertilizer lowers only the three minimum temperatures, in degrees Celsius. */
+    public static PlantTempData temperatureData(PlantTempData data, BlockState soil) {
+        if (!fertilized(soil) || soil.getValue(FertilizedDirt.FERTILIZER) != Fertilizer.FertilizerType.PRESERVED)
+            return data;
+        int grade = soil.hasProperty(FertilizedDirt.GRADE) ? soil.getValue(FertilizedDirt.GRADE).preserve : 1;
+        int reduction = 5 * grade;
+        return new PlantTempData(data.block(), data.growTimeDays(), data.minFertilize() - reduction,
+                data.minGrow() - reduction, data.minSurvive() - reduction, data.maxFertilize(), data.maxGrow(),
+                data.maxSurvive(), data.snowVulnerable(), data.blizzardVulnerable(), data.dead(), data.willDie(),
+                data.heatCapacity(), data.minSkylight(), data.maxSkylight());
     }
 
     /** Snapshot before an attempt; a denied attempt never charges fertilizer. */

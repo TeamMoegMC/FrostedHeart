@@ -36,6 +36,13 @@ import java.util.Objects;
 @Mod.EventBusSubscriber(value = Dist.CLIENT, modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class FHShaders {
 
+    private static ShaderInstance curtainExtinction;
+
+    /** Loaded by the normal shader resource lifecycle. */
+    public static ShaderInstance getCurtainExtinction() {
+        return curtainExtinction;
+    }
+
     @Nullable
     private static ShaderInstance roundRect;
 
@@ -60,6 +67,8 @@ public class FHShaders {
     @SubscribeEvent
     public static void onRegisterShaders(RegisterShadersEvent event) throws IOException {
         ResourceProvider provider = event.getResourceProvider();
+        event.registerShader(new ShaderInstance(provider, FHMain.rl("curtain_extinction"), DefaultVertexFormat.POSITION),
+                shader -> curtainExtinction = shader);
         event.registerShader(
                 new ShaderInstance(
                         provider,

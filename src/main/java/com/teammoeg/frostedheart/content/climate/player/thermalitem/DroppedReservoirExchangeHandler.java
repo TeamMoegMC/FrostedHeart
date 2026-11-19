@@ -22,7 +22,6 @@ package com.teammoeg.frostedheart.content.climate.player.thermalitem;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.thermal.query.ThermalEnvironmentSample;
 import com.teammoeg.frostedheart.content.climate.thermal.radiation.RadiantEquivalentTemperature;
-import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
@@ -75,18 +74,11 @@ public final class DroppedReservoirExchangeHandler {
         if (!isCadenceTick(entity.getUUID(), entity.tickCount)) {
             return Status.NOT_CADENCE;
         }
-        if (!(entity.level() instanceof ServerLevel serverLevel)) {
+        if (!(entity.level() instanceof ServerLevel)) {
             return Status.INVALID_CONTEXT;
         }
 
-        double naturalTemperatureC = WorldTemperature.naturalAir(
-                serverLevel, entity.blockPosition());
-        MinecraftThermalInput.gameplayItemEnvironment(
-                entity,
-                naturalTemperatureC,
-                environment);
-        double airTemperatureC = environment.airAvailable()
-                ? environment.airTemperatureC() : naturalTemperatureC;
+        double airTemperatureC = WorldTemperature.sampleDroppedItemAirTemperature(entity, environment);
         return exchangeInto(
                 stack,
                 stack.getItem() instanceof WearableThermalReservoir reservoir

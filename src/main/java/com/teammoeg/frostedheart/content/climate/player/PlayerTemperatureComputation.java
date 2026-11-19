@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.content.climate.player;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.bootstrap.common.FHFluids;
 import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
+import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
 import com.teammoeg.frostedheart.content.climate.thermal.query.ThermalEnvironmentSample;
 import com.teammoeg.frostedheart.content.water.capability.WaterLevelCapability;
@@ -74,7 +75,7 @@ public final class PlayerTemperatureComputation {
 
         // 1. Sample physical Air and entity-local environmental inputs once.
         BlockPos samplePosition = BlockPos.containing(player.getX(), player.getEyeY(), player.getZ());
-        double sampledAirTemperatureC = PlayerThermalEnvironment.sampleAirTemperatureC(
+        double sampledAirTemperatureC = WorldTemperature.samplePlayerAirTemperature(
                 player, samplePosition, sample);
         double airTemperatureC = PlayerThermalEnvironment.localAirTemperatureC(
                 player, sampledAirTemperatureC);

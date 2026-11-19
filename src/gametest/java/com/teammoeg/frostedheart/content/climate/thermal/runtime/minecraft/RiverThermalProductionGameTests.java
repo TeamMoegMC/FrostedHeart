@@ -107,7 +107,7 @@ public final class RiverThermalProductionGameTests {
                             "The real tower must consume actual coal throughout the observation");
                     var near = new ThermalEnvironmentSample();
                     BlockPos inside = rivers.get(0).origin.offset(5, 2, 5);
-                    MinecraftThermalInput.gameplayPlacedReservoirEnvironment(level, inside,
+                    MinecraftThermalInput.samplePlacedReservoirAirAndRadiation(level, inside,
                             WorldTemperature.naturalAir(level, inside), near);
                     helper.assertTrue(near.airTemperatureC() >= WorldTemperature.naturalAir(level, inside) + 9.5,
                             "Normal local tower heating must still hold");
@@ -115,7 +115,7 @@ public final class RiverThermalProductionGameTests {
                         var player = FakePlayerFactory.getMinecraft(level);
                         BlockPos far = river.water(128);
                         player.setPos(far.getX() + .5, far.getY() + 2, far.getZ() + .5);
-                        var snapshot = MinecraftThermalInput.gameplayInfraredSnapshot(player,
+                        var snapshot = MinecraftThermalInput.captureInfraredSnapshot(player,
                                 true, 0, 0, 0, new long[12], false, new long[0], 0, 0);
                         helper.assertTrue(snapshot != null, "The actual infrared capture must finish a consistent cut");
                         FHMain.LOGGER.info("RIVER_THERMAL_INFRARED,scene={},distance=128,waterQ={},bankQ={},sampleTick={}",
@@ -144,12 +144,12 @@ public final class RiverThermalProductionGameTests {
             for (int distance : DISTANCES) {
                 for (int which = 0; which < 2; which++) {
                     var point = which == 0 ? river.water(distance) : river.bank(distance);
-                    boolean readable = MinecraftThermalInput.sampleMaterial(level, point, material);
+                    boolean readable = MinecraftThermalInput.sampleMaterialTemperature(level, point, material);
                     double natural = natural(level, point);
                     double temperature = readable ? material.temperatureC() : Double.NaN;
                     if (distance >= 96 && !river.name.equals("untouched") && readable)
                         maximumFarRise[0] = Math.max(maximumFarRise[0], temperature - natural);
-                    MinecraftThermalInput.gameplayPlacedReservoirEnvironment(level, point.above(),
+                    MinecraftThermalInput.samplePlacedReservoirAirAndRadiation(level, point.above(),
                             WorldTemperature.naturalAir(level, point.above()), air);
                     if (elapsed % 400 == 0 || readable && distance >= 96)
                         FHMain.LOGGER.info("RIVER_THERMAL_SAMPLE,scene={},elapsed={},distance={},material={},state={},source={},naturalC={},temperatureC={},enthalpyJ={},branch={},sampleTick={},airC={},airTick={},capturedMask={}",

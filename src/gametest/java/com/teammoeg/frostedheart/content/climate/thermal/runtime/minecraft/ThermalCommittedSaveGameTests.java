@@ -2,12 +2,14 @@
 package com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft;
 
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalPageHandle;
 import com.teammoeg.frostedheart.content.climate.thermal.persistence.minecraft.PendingHeatCheckpoint;
 import com.teammoeg.frostedheart.content.climate.thermal.persistence.minecraft.RegionalCheckpoint;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.async.ThermalWorkerPool;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ResolvedGeometryBatch;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ThermalInputBatch;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ThermalInputEnvelope;
+import com.teammoeg.frostedheart.content.climate.thermal.source.SpatialHeatInput;
 import com.teammoeg.frostedheart.content.climate.thermal.source.SpatialSourceTimeline;
 import com.teammoeg.frostedheart.content.climate.thermal.source.ThermalSourceMode;
 import com.teammoeg.frostedheart.content.climate.thermal.source.minecraft.WorkerPhysicalSourceBindings;
@@ -16,6 +18,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.SectionPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.level.ChunkPos;
@@ -28,6 +31,86 @@ import net.minecraftforge.gametest.PrefixGameTestTemplate;
 @GameTestHolder("frostedheart_committed_save")
 @PrefixGameTestTemplate(false)
 public final class ThermalCommittedSaveGameTests {
+    @GameTest(template = "phase0a_empty", batch = "committed_save_resident_scope", timeoutTicks = 400)
+    public static void residentUnloadPreservesExactlyTheIndependentWork(GameTestHelper helper) {
+        for (boolean overlap : new boolean[] {false, true}) {
+            for (boolean unload : new boolean[] {false, true}) residentUnload(helper, overlap, unload);
+        }
+        helper.succeed();
+    }
+
+    /** Stagger two live bases by one step so only the first has a sealed 0..20 transaction. */
+    private static void residentUnload(GameTestHelper helper, boolean overlap, boolean unload) {
+        var a = new BlockPos(304128, 192, 299008);
+        var b = a.east(64);
+        long sa = SectionPos.asLong(a), sb = SectionPos.asLong(b);
+        for (var origin : new BlockPos[] {a, b})
+            for (var cell : BlockPos.betweenClosed(origin, origin.offset(3, 3, 3)))
+                helper.getLevel().setBlockAndUpdate(cell, Blocks.AIR.defaultBlockState());
+        MinecraftThermalInput.closeActiveLevel(helper.getLevel());
+        try (var sim = new ThermalMaterialBehaviorGameTests.Simulation(helper, a, 4, 4, 4, 0);
+                var producer = new SpatialSourceTimeline(sim.budget.createCategory(), 16)) {
+            var page = new ThermalPageHandle(sb, 1);
+            var sky = new byte[256]; java.util.Arrays.fill(sky, (byte) 16);
+            sim.process(new ThermalInputBatch.PageAdmission[] {new ThermalInputBatch.PageAdmission(page, 0, 1, 1,
+                    sim.capture.captureBricks(sb, null, sim.capture.unresolvedPage(), 1), 0, sky, null, null)},
+                    ResolvedGeometryBatch.EMPTY, ThermalInputBatch.NO_PHASE_ACKS);
+            var field = sim.fixed; var engine = sim.engine;
+            helper.assertTrue(field.freeze(sb) && field.thaw(sb, 0, Double.POSITIVE_INFINITY, 20, null), "Set B's actual re-entry at tick 20");
+            engine.receiveSpatialHeat(receiver(a.offset(1, 1, 1)), 0, 20, 900);
+            engine.receiveSpatialHeat(receiver(b.offset(1, 1, 1)), 20, 40, 700);
+            engine.receiveSpatialHeat(receiver(b.offset(2, 1, 1)), 20, 40, -225);
+            engine.offerInput(new ThermalInputEnvelope(new ThermalInputBatch(1, ++sim.sequence, 20,
+                    ThermalInputBatch.NO_ADMISSIONS, ThermalInputBatch.NO_RETIREMENTS, ThermalInputBatch.NO_RESIDENCY_UPDATES,
+                    ResolvedGeometryBatch.EMPTY, ThermalInputBatch.NO_ENVIRONMENT_UPDATES, ThermalInputBatch.NO_PHASE_ACKS, Double.NaN), producer.seal(20)));
+            for (int n = 0; n < 256 && field.idle(); n++) engine.processWorkRound();
+            var claim = ThermalLoadedWorldGameTests.read(engine, "fixedClaim");
+            helper.assertTrue(claim != null && !field.idle() && !field.advance(Long.MIN_VALUE), "A has already started private numerical work");
+            long section = overlap ? sa : sb, chunk = new ChunkPos(overlap ? a : b).toLong();
+            PendingHeatCheckpoint archive;
+            try (var source = producer.capture(20)) {
+                var ready = engine.requestCheckpoint(chunk, source, PendingHeatCheckpoint.EMPTY, Double.POSITIVE_INFINITY, RegionalCheckpoint.Purpose.UNLOAD);
+                while (!ready.isDone()) engine.processCheckpointCommandOnMain();
+                var snapshot = ready.join();
+                helper.assertTrue(snapshot.sections().size() == 1 && snapshot.sections().get(0).sectionKey() == section
+                        && snapshot.sections().get(0).sampleTick() == (overlap ? 0 : 20), "Save the actual committed section and clock");
+                double positive = 0, negative = 0;
+                for (int i = 0; i < snapshot.pending().size(); i++) {
+                    double joules = snapshot.pending().energyJ(i);
+                    if (joules > 0) positive += joules; else negative += joules;
+                }
+                near(helper, overlap ? 900 : 700, positive, "Owned positive J at capture");
+                near(helper, overlap ? 0 : -225, negative, "Owned negative J at capture");
+                archive = PendingHeatCheckpoint.capture(snapshot.pending(), ignored -> -1, 20);
+                var finished = snapshot.finish(unload);
+                while (!finished.isDone()) engine.processCheckpointCommandOnMain();
+                finished.join();
+            }
+            helper.assertTrue(field.frozen(section) && field.idle() == overlap
+                    && (claim == ThermalLoadedWorldGameTests.read(engine, "fixedClaim")) == !overlap,
+                    "Capture and finish cancel exactly the overlapping step");
+            near(helper, unload ? (overlap ? 475 : 900) : 1375, engine.inputStore().pendingEnergyJ(), "The finish receipt transfers each input once");
+            if (!overlap) {
+                for (int n = 0; n < 256 && field.sectionSampleTick(sa) != 20; n++) engine.processWorkRound();
+                helper.assertTrue(field.sectionSampleTick(sa) == 20 && (Boolean) ThermalLoadedWorldGameTests.read(claim, "accepted"), "A commits the original claim");
+                near(helper, 900, field.totalEnthalpyJ() + field.externalEnergyJ(), "A delivers exactly 900 J");
+            }
+            if (unload) {
+                helper.assertTrue(field.thaw(section, 0, Double.POSITIVE_INFINITY, 20, null), "Simulate the saved base returning");
+                helper.assertTrue(engine.offerRestoredHeat(chunk, archive, 20, Double.POSITIVE_INFINITY, 1), "Re-import the actual saved pending input");
+            }
+            sim.tick = 60;
+            sim.publish(ResolvedGeometryBatch.EMPTY, ThermalInputBatch.NO_PHASE_ACKS);
+            helper.assertTrue(field.sectionSampleTick(sa) == 60 && field.sectionSampleTick(sb) == 60, "Both bases reach tick 60");
+            near(helper, 0, engine.inputStore().pendingEnergyJ(), "All restored or retained input is delivered");
+            near(helper, 1375, field.totalEnthalpyJ() + field.externalEnergyJ(), "Both signs survive capture and re-entry exactly once");
+        } finally { MinecraftThermalInput.closeActiveLevel(helper.getLevel()); }
+    }
+
+    private static SpatialHeatInput.Target receiver(BlockPos position) {
+        return new SpatialHeatInput.Target(position.asLong(), (byte) 2, -1, 0, 0, 0, 0, 0);
+    }
+
     @GameTest(template = "phase0a_empty", batch = "committed_save_unrepresented_unload", timeoutTicks = 400)
     public static void unloadWithoutResidentCellsKeepsTheUnrelatedNumericalClaim(GameTestHelper helper) {
         for (boolean unloading : new boolean[] {false, true}) {
@@ -285,14 +368,7 @@ public final class ThermalCommittedSaveGameTests {
     }
 
     private static double thermalJ(ThermalMaterialBehaviorGameTests.Simulation simulation) {
-        double result = 0;
-        var profile = simulation.profiles.tuning().campfire();
-        for (int index = 0; index < profile.portCount(); index++) {
-            var port = profile.port(index);
-            if (port.kind() == com.teammoeg.frostedheart.content.climate.thermal.source.minecraft.MinecraftPhysicalSourceProfile.PortKind.AIR_FACE)
-                result += 1000 * port.powerShare();
-        }
-        return result;
+        return simulation.profiles.tuning().campfire().nonRadiativePowerW(1000);
     }
     private static SpatialSourceTimeline producer(GameTestHelper helper, ThermalMaterialBehaviorGameTests.Simulation simulation, BlockPos origin) {
         var producer = new SpatialSourceTimeline(simulation.budget.createCategory(), 128);

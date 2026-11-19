@@ -162,7 +162,7 @@ final class ContinuousAirProductionTiming {
                     for (int index = 0; index < probes.length; index++) {
                         BlockPos probe = probes[index];
                         float naturalC = WorldTemperature.naturalAir(level, probe);
-                        MinecraftThermalInput.gameplayPlacedReservoirEnvironment(level, probe.above(), naturalC, air);
+                        MinecraftThermalInput.samplePlacedReservoirAirAndRadiation(level, probe.above(), naturalC, air);
                         FHMain.LOGGER.info("THERMAL_TEMPERATURE_TRACE,scene={},elapsedTicks={},probe={},gameTick={},sampleTick={},airC={},naturalC={},basisTerms={}",
                                 scene, elapsed, index, level.getGameTime(), air.airSampleTick(), air.airTemperatureC(),
                                 naturalC, air.airBasisTerms());
@@ -171,7 +171,7 @@ final class ContinuousAirProductionTiming {
                 if (firstResponse[0]) return;
                 boolean allReadable = true, allCurrent = true;
                 for (BlockPos probe : probes) {
-                    MinecraftThermalInput.gameplayPlacedReservoirEnvironment(level, probe.above(),
+                    MinecraftThermalInput.samplePlacedReservoirAirAndRadiation(level, probe.above(),
                             WorldTemperature.naturalAir(level, probe), air);
                     if (!sourceField(air) || level.getGameTime() - air.airSampleTick() > 40) {
                         allReadable = false;

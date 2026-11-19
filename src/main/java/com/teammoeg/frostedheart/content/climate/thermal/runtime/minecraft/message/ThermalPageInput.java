@@ -22,9 +22,7 @@ public record ThermalPageInput(long section, ThermalInputBatch payload) {
         return null;
     }
     public boolean structural() {
-        return payload.admissions().length != 0 || payload.retirements().length != 0 || payload.residencyUpdates().length != 0
-                || !payload.geometry().isEmpty() || payload.environmentUpdates().length != 0
-                || payload.phaseAcks().length != 0 || payload.phaseIntents().length != 0;
+        return payload.hasPageUpdates();
     }
     public static ThermalPageInput[] split(ThermalInputBatch input) {
         var builders = new Long2ObjectLinkedOpenHashMap<Builder>();

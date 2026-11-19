@@ -307,7 +307,6 @@ def plot_thermal_limit(
     summary: dict, rows: list[dict[str, str]], output: Path
 ) -> Path:
     parameters = summary["parameters"]
-    climate = parameters["climate"]
     generator = parameters["generatorT1"]
     location = summary["baseScenario"]["location"]
     dimension_plus_biome = (
@@ -315,18 +314,16 @@ def plot_thermal_limit(
         + float(location["biomeTemperatureCelsius"])
     )
     heat = float(generator["temperaturePerLevelCelsius"])
-    heat_multiplier = float(climate["blockHeatApplicationMultiplier"])
-    alpha = float(climate["blockMaximumClimateAffection"])
     coverage = [0.0 + index / 400.0 for index in range(401)]
     climate_limit = [
-        (0.0 - dimension_plus_biome - heat_multiplier * heat * value) / alpha
+        0.0 - dimension_plus_biome - heat * value
         for value in coverage
     ]
 
     figure, axis = plt.subplots(figsize=(8.1, 5.8))
     axis.plot(
         coverage, climate_limit, color=BLUE,
-        label="Active normal T1 theory at 0 °C threshold",
+        label="Sphere-edge base rise at 0 °C threshold",
     )
     axis.scatter(
         values(rows, "house_coverage_fraction"),

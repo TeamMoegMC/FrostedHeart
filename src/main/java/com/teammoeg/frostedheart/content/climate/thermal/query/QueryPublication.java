@@ -399,6 +399,9 @@ public final class QueryPublication implements AutoCloseable {
       }
    }
 
+   /** A closed publisher cannot recover a temporarily unavailable frame. */
+   public synchronized boolean isClosed() { return !acceptingPublications; }
+
    public synchronized void close() {
       this.acceptingPublications = false;
       this.clearEnvelope();

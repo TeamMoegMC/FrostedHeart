@@ -22,7 +22,6 @@ package com.teammoeg.frostedheart.content.town.model;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.teammoeg.frostedheart.content.climate.BlockTemperatureModel;
 import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorHeatFieldModel;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.ClimateEventModel;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClockSource;
@@ -91,16 +90,24 @@ public final class TownStageFourModel {
                 overdrive ? 2.0 : 1.0,
                 generator.temperaturePerLevelCelsius());
         TownStageFourScenario.Position center = scenario.towerCenter();
+        double radiusSquared = (double) radius * radius;
+        double inverseRadiusSquared = 1 / radiusSquared;
         List<BuildingGeometry> buildings = new ArrayList<>();
         long coveredBuildingVoxels = 0L;
         for (TownStageFourScenario.ThermalBuilding building : scenario.thermalBuildings()) {
             long covered = 0L;
+            double totalRiseC = 0;
             for (TownStageFourScenario.VoxelBox box : building.boxes()) {
                 for (int x = box.minimumX(); x < box.minimumX() + box.sizeX(); x++) {
                     for (int y = box.minimumY(); y < box.minimumY() + box.sizeY(); y++) {
                         for (int z = box.minimumZ(); z < box.minimumZ() + box.sizeZ(); z++) {
-                            if (SphericalHeatFieldModel.contains(
-                                    center.x(), center.y(), center.z(), radius, x, y, z)) covered++;
+                            double dx = (double) x - center.x(), dy = (double) y - center.y(), dz = (double) z - center.z();
+                            double rise = SphericalHeatFieldModel.temperatureAt(dx * dx + dy * dy + dz * dz,
+                                    radiusSquared, inverseRadiusSquared, heat, GeneratorHeatFieldModel.CENTER_BOOST_CELSIUS);
+                            if (radius > 0 && heat > 0 && Double.isFinite(rise)) {
+                                covered++;
+                                totalRiseC += rise;
+                            }
                         }
                     }
                 }
@@ -109,7 +116,8 @@ public final class TownStageFourModel {
             buildings.add(new BuildingGeometry(
                     building.id(), building.role(), building.floorAreaBlocks(),
                     building.voxelCount(), covered,
-                    building.voxelCount() > 0L ? (double) covered / building.voxelCount() : 0.0));
+                    building.voxelCount() > 0L ? (double) covered / building.voxelCount() : 0.0,
+                    building.voxelCount() > 0L ? totalRiseC / building.voxelCount() : 0.0));
         }
         long sphereVoxels = SphericalHeatFieldModel.latticeVolume(radius);
         long threeHighFloor = SphericalHeatFieldModel.centeredFootprintUpperBound(radius, 3);
@@ -123,7 +131,7 @@ public final class TownStageFourModel {
                 buildings);
     }
 
-    /** Legacy heat-chunk balance reference; does not model the live analytic floor or physical Air. */
+    /** Hourly building mean for the T1 analytic field, evaluated against the scenario climate. */
     public static HourThermalResult evaluateHour(
             float climateTemperatureCelsius,
             boolean heatFieldActive,
@@ -131,22 +139,11 @@ public final class TownStageFourModel {
             TownModelParameters parameters,
             ThermalLayout layout
     ) {
-        TownModelParameters.ClimateParameters climate = parameters.climate();
-        float natural = BlockTemperatureModel.naturalTemperature(
-                (float) scenario.location().dimensionTemperatureCelsius(),
-                (float) scenario.location().biomeTemperatureCelsius(),
-                0.0F,
-                climateTemperatureCelsius,
-                climate.blockMaximumClimateAffection());
+        float natural = (float) Math.max(parameters.climate().absoluteZeroCelsius(),
+                scenario.location().dimensionTemperatureCelsius() + scenario.location().biomeTemperatureCelsius() + climateTemperatureCelsius);
         List<BuildingTemperature> temperatures = new ArrayList<>();
         for (BuildingGeometry geometry : layout.buildings()) {
-            float coveredTemperature = heatFieldActive
-                    ? BlockTemperatureModel.applyHeat(
-                    natural, layout.heatTemperatureCelsius(),
-                    climate.blockHeatApplicationMultiplier(), climate.absoluteZeroCelsius())
-                    : natural;
-            double average = geometry.coverageFraction() * coveredTemperature
-                    + (1.0 - geometry.coverageFraction()) * natural;
+            double average = natural + (heatFieldActive ? geometry.meanTemperatureRiseCelsius() : 0);
             temperatures.add(new BuildingTemperature(
                     geometry.id(), geometry.role(), average,
                     geometry.coverageFraction(), heatFieldActive));
@@ -290,7 +287,8 @@ public final class TownStageFourModel {
             int floorAreaBlocks,
             long voxelCount,
             long coveredVoxelCount,
-            double coverageFraction
+            double coverageFraction,
+            double meanTemperatureRiseCelsius
     ) {
     }
 

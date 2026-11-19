@@ -20,12 +20,15 @@
 package com.teammoeg.frostedheart.content.climate.render;
 
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
+import com.teammoeg.frostedheart.content.climate.ClientClimateData;
+import com.teammoeg.frostedheart.content.climate.gamedata.climate.ClimateType;
 import com.teammoeg.frostedheart.content.climate.render.weather.ClientWeatherFrame;
-
+import com.teammoeg.frostedheart.content.climate.render.weather.ClientWeatherState;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import net.minecraft.Util;
 import net.minecraft.client.Camera;
 import net.minecraft.core.BlockPos;
+import net.minecraft.util.FastColor;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
@@ -59,20 +62,20 @@ public class FogModification {
         Entity var4 = camera.getEntity();
         if (var4 instanceof Player player) {
             if (camera.getFluidInCamera() == FogType.NONE && prevFogDensity > 0.0F) {
-                float angle = player.level().getSunAngle((float) partialTick);
-                float height = Mth.cos(angle);
-                float delta = Mth.clamp((height + 0.4F) / 0.8F, 0.0F, 1.0F);
-                int colorDay = FHConfig.CLIENT.fogColorDay.get();
-                int colorNight = FHConfig.CLIENT.fogColorNight.get();
-                float red = (float)(colorDay >> 16 & 255) * delta + (float)(colorNight >> 16 & 255) * (1.0F - delta);
-                float green = (float)(colorDay >> 8 & 255) * delta + (float)(colorNight >> 8 & 255) * (1.0F - delta);
-                float blue = (float)(colorDay & 255) * delta + (float)(colorNight & 255) * (1.0F - delta);
-                event.setRed(red / 255.0F);
-                event.setGreen(green / 255.0F);
-                event.setBlue(blue / 255.0F);
+                int color = snowColor(player.level(), (float)partialTick);
+                event.setRed(FastColor.ARGB32.red(color) / 255.0F);
+                event.setGreen(FastColor.ARGB32.green(color) / 255.0F);
+                event.setBlue(FastColor.ARGB32.blue(color) / 255.0F);
             }
         }
 
+    }
+
+    /** Blends the configured day and night snow colours for terrain fog and spatial extinction. */
+    public static int snowColor(Level level, float partialTick) {
+        float height = Mth.cos(level.getSunAngle(partialTick));
+        float day = Mth.clamp((height + 0.4F) / 0.8F, 0.0F, 1.0F);
+        return FastColor.ARGB32.lerp(day, FHConfig.CLIENT.fogColorNight.get(), FHConfig.CLIENT.fogColorDay.get());
     }
 
     @SubscribeEvent
@@ -82,9 +85,17 @@ public class FogModification {
         if (var3 instanceof Player player) {
             float expectedFogDensity = 0.0F;
             ClientWeatherFrame weatherFrame = ClientWeatherFrame.INSTANCE;
-            if (weatherFrame.valid() && weatherFrame.ownership() == ClientWeatherFrame.Ownership.CUSTOM) {
-                expectedFogDensity = Math.max(weatherFrame.cameraSample().whiteoutIntensity,
-                        weatherFrame.cameraSample().snowIntensity * 0.2F);
+            if (weatherFrame.ownsPrecipitation()) {
+                if (weatherFrame.usesDepthExtinction()) {
+                    // Only global weather belongs in camera fog. The snow band already attenuates each scene ray.
+                    ClimateType global = ClientClimateData.globalClimate;
+                    if (global != null && global.isSnowyOrBlizzard()) {
+                        expectedFogDensity = (global.isBlizzard() ? 0.65F : 0.15F) * ClientWeatherState.INSTANCE.cameraExposure();
+                    }
+                } else {
+                    expectedFogDensity = Math.max(weatherFrame.cameraSample().whiteoutIntensity,
+                            weatherFrame.cameraSample().snowIntensity * 0.2F);
+                }
                 prevFogDensity = expectedFogDensity;
                 prevFogTick = -1L;
             } else {
@@ -121,8 +132,7 @@ public class FogModification {
                 float nearPlaneScale = (float) Mth.lerp(scaledDelta, 1.0F, 0.3F * fogDensity);
                 event.scaleNearPlaneDistance(nearPlaneScale);
                 event.scaleFarPlaneDistance(farPlaneScale);
-                if (weatherFrame.valid()
-                        && weatherFrame.ownership() == ClientWeatherFrame.Ownership.CUSTOM) {
+                if (!weatherFrame.usesDepthExtinction() && weatherFrame.ownsPrecipitation()) {
                     float visibility = weatherFrame.cameraSample().visibilityBlocks;
                     if (Float.isFinite(visibility) && visibility > 0.0F) {
                         float farPlane = Math.min(event.getFarPlaneDistance(), visibility);

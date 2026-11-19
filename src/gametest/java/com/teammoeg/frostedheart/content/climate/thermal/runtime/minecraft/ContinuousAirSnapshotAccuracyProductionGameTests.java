@@ -41,7 +41,7 @@ public final class ContinuousAirSnapshotAccuracyProductionGameTests {
                 }
                 if ((stage[0] == 0 && elapsed >= 240 || stage[0] == 2 && elapsed >= 620)
                         && MinecraftThermalInput.observedWorkerPending(level)) {
-                    MinecraftThermalInput.gameplayPlacedReservoirEnvironment(level, probe, WorldTemperature.naturalAir(level, probe), air);
+                    MinecraftThermalInput.samplePlacedReservoirAirAndRadiation(level, probe, WorldTemperature.naturalAir(level, probe), air);
                     if (!air.airAvailable() || air.airSampleTick() >= level.getGameTime() / 20 * 20) return;
                     var chunk = level.getChunkAt(probe);
                     var before = MinecraftThermalInput.observedCheckpointStatistics(level);

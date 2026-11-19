@@ -85,7 +85,7 @@ public final class TownStageFourSimulator {
                 List.of(
                         "Ordinary long-term climate uses current event probabilities, durations, Gaussian perturbations, Hermite interpolation and three-track max-positive plus min-negative combination.",
                         "The opening story blizzard is excluded and climate is burned in before the sampled interval.",
-                        "All reference interior voxels are above sea level, so climate block affection is alpha=0.5; scenario altitude contribution is disabled.",
+                        "The scenario uses its specified baseline and full climate, with the analytic T1 floor sampled at each interior voxel.",
                         "T1 heat uses the current integer sphere, maximum heat value and block-temperature ceiling formula.",
                         "Heat inertia and random T1 level ramp are excluded: served hours use the configured steady T1 level and unserved hours immediately lose heat.",
                         "A partial daily tower service fraction is placed at the start of the following 24-hour interval; exact intra-day outage timing is not represented by stage-3 fuel settlement.",
@@ -331,32 +331,27 @@ public final class TownStageFourSimulator {
         double dimensionPlusBiome = scenario.location().dimensionTemperatureCelsius()
                 + scenario.location().biomeTemperatureCelsius();
         double heat = layout.heatTemperatureCelsius();
-        double heatMultiplier = parameters.climate().blockHeatApplicationMultiplier();
         double minimumThreshold = parameters.housing().minimumTemperatureCelsius();
-        double alpha = parameters.climate().blockMaximumClimateAffection();
         double fullyCoveredClimateLimit =
-                (minimumThreshold - dimensionPlusBiome - heatMultiplier * heat) / alpha;
+                minimumThreshold - dimensionPlusBiome - heat;
         List<BuildingThermalLimit> buildingLimits = layout.buildings().stream()
                 .map(building -> {
                     double threshold = "house".equals(building.role())
                             ? parameters.housing().minimumTemperatureCelsius()
                             : parameters.hunting().minimumWorkingTemperatureCelsius();
-                    double minimumClimate = (threshold - dimensionPlusBiome
-                            - heatMultiplier * heat * building.coverageFraction()) / alpha;
+                    double minimumClimate = threshold - dimensionPlusBiome - building.meanTemperatureRiseCelsius();
                     return new BuildingThermalLimit(
                             building.id(), building.role(), building.coverageFraction(),
                             threshold, minimumClimate);
                 }).toList();
         return new CapacityTheory(
-                alpha,
                 dimensionPlusBiome,
                 heat,
-                heatMultiplier,
                 fullyCoveredClimateLimit,
                 layout.centeredThreeHighFloorUpperBoundBlocks(),
                 layout.centeredThreeHighHousingUpperBoundResidents(),
                 buildingLimits,
-                "The climate limit solves dimension + biome + alpha*climate + heatMultiplier*heat*coverage = threshold before the heat ceiling.");
+                "Building limits use mean radial temperature rise. The fully covered bound uses the base rise at the sphere edge.");
     }
 
     static AggregateSummary aggregate(List<RunRow> rows) {
@@ -890,10 +885,8 @@ public final class TownStageFourSimulator {
     }
 
     public record CapacityTheory(
-            double climateBlockAffectionAboveSeaLevel,
             double dimensionPlusBiomeCelsius,
             double activeHeatFieldCelsius,
-            double heatApplicationMultiplier,
             double fullyCoveredMinimumClimateCelsius,
             long centeredThreeHighFloorUpperBoundBlocks,
             long centeredThreeHighHousingUpperBoundResidents,

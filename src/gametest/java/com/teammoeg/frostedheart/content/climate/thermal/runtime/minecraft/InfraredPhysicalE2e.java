@@ -84,7 +84,7 @@ final class InfraredPhysicalE2e {
         if(tick%20!=0)return;
         ContinuousAirProductionGameTests.sampleAt(level,-3.5,67.5,-.5,NEAR);
         ContinuousAirProductionGameTests.sampleAt(level,-6.5,67.5,-3.5,FAR);
-        boolean material=MinecraftThermalInput.sampleMaterial(level,WALL,MATERIAL);
+        boolean material=MinecraftThermalInput.sampleMaterialTemperature(level,WALL,MATERIAL);
         double temperature=material?MATERIAL.temperatureC():Double.NaN;
         if(phase>=1&&material)peakMaterial=Math.max(peakMaterial,temperature);
         if(phase>=2&&!material) { if(missingSince<0)missingSince=tick; }
@@ -127,7 +127,7 @@ final class InfraredPhysicalE2e {
         state.put("naturalColdQ",InfraredBrickCodec.quantize(WorldTemperature.naturalAir(level,COLD)));
         if(coolingOnly&&!probed&&missingSince>=0&&tick-missingSince>=100) {
             var observer=server.getPlayerList().getPlayerByName("IRFast");
-            var full=MinecraftThermalInput.gameplayInfraredSnapshot(observer,true,0,0,0,new long[12],false,new long[0],0,0);
+            var full=MinecraftThermalInput.captureInfraredSnapshot(observer,true,0,0,0,new long[12],false,new long[0],0,0);
             if(full!=null) {
                 write("natural-final-full.json",Map.of("tick",tick,"warmQ",point(full),"summary",
                         com.teammoeg.frostedheart.content.climate.network.InfraredDiagnostics.summarize(full)));

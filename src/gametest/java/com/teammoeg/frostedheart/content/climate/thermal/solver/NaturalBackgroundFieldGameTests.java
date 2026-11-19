@@ -83,6 +83,61 @@ public final class NaturalBackgroundFieldGameTests {
         helper.succeed();
     }
 
+    @GameTest(template = "phase0a_empty", batch = "climate_cover_field", timeoutTicks = 200)
+    public static void climateCrossingFreezesWaterThroughItsLatentInterval(GameTestHelper helper) {
+        var profiles = MinecraftThermalProfiles.prepare();
+        var budget = new ThermalMemoryBudget(4L << 20);
+        var backgrounds = new NaturalProfiles();
+        var position = BlockPos.ZERO;
+        long section = SectionPos.asLong(position);
+        int[] geometry = new int[4096];
+        Arrays.fill(geometry, com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureTable.UNRESOLVED);
+        geometry[0] = profiles.states().signatureId(Blocks.WATER.defaultBlockState());
+        var mild = new NaturalProfile(new float[64], new byte[4096], new float[]{-2}, 0, true, -273);
+        backgrounds.put(section, mild);
+        var sample = new TiledThermalField.Sample();
+        var law = MinecraftThermalProfiles.materialLaw(Blocks.WATER.defaultBlockState());
+        try (var banks = new SpatialEnergyBanks(budget, 4, 32, 0); var field = field(budget, profiles, backgrounds)) {
+            helper.assertTrue(field.admit(section, geometry, 1, -2), "admit liquid water before the cold spell");
+            step(field, banks, 20);
+            double ledger = field.totalEnthalpyJ() + field.externalEnergyJ();
+            backgrounds.put(section, mild.withClimate(new float[]{-8}));
+            step(field, banks, 40);
+            helper.assertTrue(field.read(position.asLong(), true, sample), "read cooled water");
+            near(helper, -5, sample.temperatureC(), 1e-7, "cooling reaches the freezing plateau");
+            near(helper, law.enthalpyAtTemperature(-8), sample.enthalpyJ(), 1e-6, "the remaining energy advances freezing");
+            helper.assertTrue(law.cooling().progress(sample.enthalpyJ()) > 0 && !law.cooling().complete(sample.enthalpyJ()), "partial freezing");
+            backgrounds.put(section, mild);
+            step(field, banks, 60);
+            field.read(position.asLong(), true, sample);
+            near(helper, -2, sample.temperatureC(), 1e-7, "a warming reversal recovers the liquid");
+            backgrounds.put(section, mild.withClimate(new float[]{-200}));
+            step(field, banks, 80);
+            field.read(position.asLong(), true, sample);
+            near(helper, law.cooling().targetEnthalpyJ(), sample.enthalpyJ(), 1e-6, "completion stops at the world handoff");
+            near(helper, ledger, field.totalEnthalpyJ() + field.externalEnergyJ(), 1e-5, "only exchanged background energy is booked");
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "phase0a_empty", batch = "climate_cover_field", timeoutTicks = 100)
+    public static void slabMassAndContactFollowTheOccupiedHalf(GameTestHelper helper) {
+        var profiles = MinecraftThermalProfiles.prepare();
+        var bottom = Blocks.OAK_SLAB.defaultBlockState();
+        var top = bottom.setValue(net.minecraft.world.level.block.SlabBlock.TYPE, net.minecraft.world.level.block.state.properties.SlabType.TOP);
+        var full = Blocks.OAK_PLANKS.defaultBlockState();
+        int lower = profiles.states().signatureId(bottom), upper = profiles.states().signatureId(top);
+        int solid = profiles.states().signatureId(full);
+        near(helper, MinecraftThermalProfiles.materialLaw(full).capacityJPerK() / 2,
+                MinecraftThermalProfiles.materialLaw(bottom).capacityJPerK(), 1e-6, "single slab has half the timber");
+        near(helper, .5, profiles.signatures().contactFraction(lower, lower, 1), 0, "horizontal half-face");
+        near(helper, 0, profiles.signatures().contactFraction(lower, upper, 1), 0, "offset halves do not touch");
+        near(helper, 1, profiles.signatures().contactFraction(lower, solid, 2), 0, "slab rests on a full base");
+        near(helper, .75, MinecraftThermalProfiles.materialLaw(Blocks.OAK_STAIRS.defaultBlockState()).capacityJPerK()
+                / MinecraftThermalProfiles.materialLaw(full).capacityJPerK(), 1e-6, "straight stair occupies six octants");
+        helper.succeed();
+    }
+
     /** Uniform Brick base, open-air climate {@code climate}; with {@code coverGradient}, deeper cover is warmer. */
     private static NaturalProfile profile(int minimumY, float climate, boolean coverGradient) {
         float[] brickBase = new float[64];

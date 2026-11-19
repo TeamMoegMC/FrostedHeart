@@ -19,14 +19,12 @@
 
 package com.teammoeg.frostedheart.content.climate.player;
 
-import com.mojang.datafixers.util.Pair;
 import com.teammoeg.chorda.CompatModule;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.compat.curios.CuriosCompat;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ItemStack;
-import top.theillusivec4.curios.api.type.ISlotType;
 
 /** Discovers equipped heating capabilities and lets each item add watts. */
 public final class PlayerEquipmentHeating {
@@ -40,10 +38,8 @@ public final class PlayerEquipmentHeating {
 
     private static void collect(ServerPlayer player, HeatingDeviceContext context, boolean controlled) {
         if (CompatModule.isCuriosLoaded()) {
-            for (Pair<ISlotType, ItemStack> entry
-                    : CuriosCompat.getAllCuriosAndSlotsIfVisible(player)) {
-                apply(context.curiosSlot(entry.getFirst()), entry.getSecond(), context, controlled);
-            }
+            CuriosCompat.forEachEquippedCurio(player, (type, stack) ->
+                    apply(context.curiosSlot(type), stack, context, controlled));
         }
         for (EquipmentSlot slot : HeatingDeviceSlot.EQUIPMENT_SLOTS) {
             apply(HeatingDeviceSlot.vanilla(slot), player.getItemBySlot(slot), context, controlled);
@@ -52,6 +48,7 @@ public final class PlayerEquipmentHeating {
 
     private static void apply(HeatingDeviceSlot slot, ItemStack stack, HeatingDeviceContext context,
                               boolean controlled) {
+        if (stack.isEmpty()) return;
         BodyHeatingCapability heating = FHCapabilities.EQUIPMENT_HEATING
                 .getCapability(stack).orElse(null);
         if (heating != null && heating.isControlled() == controlled) {

@@ -10,6 +10,9 @@ import com.teammoeg.frostedheart.content.climate.thermal.solver.ThermalDiagnosti
 import com.teammoeg.frostedheart.content.climate.thermal.solver.TiledThermalField;
 import com.teammoeg.frostedheart.content.climate.thermal.source.SpatialSourceTimeline;
 import com.teammoeg.frostedheart.content.climate.thermal.topology.RegionalContinuationBoundary;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ThermalPageInput;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.TopologyInbox;
+import it.unimi.dsi.fastutil.longs.LongSets;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 import net.minecraft.gametest.framework.GameTest;
@@ -22,6 +25,41 @@ import net.minecraftforge.gametest.PrefixGameTestTemplate;
 @GameTestHolder("frostedheart_geometry_cut")
 @PrefixGameTestTemplate(false)
 public final class ThermalGeometryCutGameTests {
+    /** A neighbour can already be at the later retirement while an earlier local source control is queued. */
+    @GameTest(template = "phase0a_empty", batch = "fixed_geometry_local_cut", timeoutTicks = 100)
+    public static void queuedMixingDoesNotBackdateANeighbouringRetirement(GameTestHelper helper) {
+        long position = BlockPos.asLong(8200, 66, 4120);
+        long section = SectionPos.asLong(BlockPos.of(position));
+        var page = new ThermalPageHandle(section, 1);
+        var inbox = new TopologyInbox();
+        inbox.receiveMixing(1, 344, 16724, LongSets.singleton(position), key -> page, 1);
+        var retirement = new ThermalInputBatch(1, 345, 16740, ThermalInputBatch.NO_ADMISSIONS,
+                new ThermalInputBatch.PageRetirement[]{new ThermalInputBatch.PageRetirement(page)}, ThermalInputBatch.NO_RESIDENCY_UPDATES,
+                ResolvedGeometryBatch.EMPTY, ThermalInputBatch.NO_ENVIRONMENT_UPDATES, ThermalInputBatch.NO_PHASE_ACKS, 1);
+        inbox.receive(new ThermalPageInput(section, retirement), key -> page);
+        // Exercise both retirement folding and pressure from newer descriptions waiting for the same slot.
+        inbox.collapseUninstalledRetirements(key -> false, 16740);
+        for (int index = 1; index <= 100; index++) {
+            var geometry = new ResolvedGeometryBatch.Builder();
+            geometry.addResolvedCenter(page, index, 0, 0);
+            var later = new ThermalInputBatch(1, 345 + index, 16740 + 20L * index, ThermalInputBatch.NO_ADMISSIONS,
+                    ThermalInputBatch.NO_RETIREMENTS, ThermalInputBatch.NO_RESIDENCY_UPDATES, geometry.buildAndReset(),
+                    ThermalInputBatch.NO_ENVIRONMENT_UPDATES, ThermalInputBatch.NO_PHASE_ACKS, 1);
+            inbox.receive(new ThermalPageInput(section, later), key -> page);
+        }
+        var pending = new java.util.ArrayList<TopologyInbox.Input>();
+        inbox.forEachPendingInput(pending::add);
+        helper.assertTrue(pending.size() == 4, "Two recent descriptions, one older Page summary and its earlier local coefficient cut");
+        var local = inbox.peek(section);
+        helper.assertTrue(local.batch().targetTick() == 16724 && !local.batch().hasPageUpdates() && local.mixing().contains(position),
+                "The local cut can commit without asking a neighbour at 16740 to return to 16724");
+        inbox.complete(inbox.freeze(LongSets.singleton(section), 16724, local.batch().sequence()));
+        var physical = inbox.peek(section);
+        helper.assertTrue(physical.batch().targetTick() == 16740 && physical.batch().retirements().length == 1,
+                "The first wide event still meets the neighbour at its real tick");
+        helper.succeed();
+    }
+
     @GameTest(template = "phase0a_empty", batch = "fixed_geometry_empty_visibility", timeoutTicks = 100)
     public static void emptyBrickVisibilityDoesNotPublishAnyArenaWord(GameTestHelper helper) {
         var arena = new com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalCellArena(64);

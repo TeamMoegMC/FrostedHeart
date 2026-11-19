@@ -50,6 +50,6 @@ public abstract class IceBlockMixin_Melt {
             cancellable = true)
     private void frostedheart$keepColdIce(Level level, Player player, BlockPos position,
             BlockState state, BlockEntity entity, ItemStack tool, CallbackInfo callback) {
-        if (!(WorldTemperature.block(level, position) > WorldTemperature.WATER_ICE_MELTS)) callback.cancel();
+        if (!(WorldTemperature.getTempAtBlock(level, position) > WorldTemperature.WATER_ICE_MELTS)) callback.cancel();
     }
 }

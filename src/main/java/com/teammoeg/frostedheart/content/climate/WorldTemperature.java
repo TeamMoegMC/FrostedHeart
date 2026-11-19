@@ -26,21 +26,26 @@ import java.util.WeakHashMap;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import com.teammoeg.frostedheart.content.agriculture.CropFertilization;
 import com.teammoeg.frostedheart.content.climate.data.BiomeTempData;
 import com.teammoeg.frostedheart.content.climate.data.PlantTemperature;
 import com.teammoeg.frostedheart.content.climate.data.PlantTemperature.TemperatureType;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClimate;
 import com.teammoeg.frostedheart.content.climate.data.PlantTempData;
 import com.teammoeg.frostedheart.content.climate.data.WorldTempData;
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialSample;
+import com.teammoeg.frostedheart.content.climate.thermal.query.ThermalEnvironmentSample;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 
 import it.unimi.dsi.fastutil.objects.Object2FloatOpenHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.level.*;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Block;
@@ -51,48 +56,8 @@ import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.levelgen.FlatLevelSource;
 import net.minecraft.world.level.levelgen.Heightmap;
 
-/**
- * World Temperature API on the server side.
- *
- * <p>This class provides a set of methods to get realistic temperature in the world.
- *
- * Natural inputs and gameplay-composed queries have different costs and meanings.
- * Use material() for a recorded body's temperature, not block().
- *
- * <p>There are 3 natural inputs plus composed local thermal state:
- *
- * <p>1. Dimension temperature: The temperature of the world defined by datapack. This is fixed on registry.
- *
- * <p>2. Biome temperature: The temperature of the biome defined by datapack. This is fixed on registry.
- *
- * <p>3. Climate temperature: The temperature of the climate. This is dynamic, see {@link WorldClimate}.
- *
- * <p>You can access these temperature by calling the methods in this class.
- *
- * <p>
- *     Methods:
- *     <ul>
- *         <li>{@link #dimension(LevelReader)}: Get Dimension temperature.</li>
- *         <li>{@link #biome(LevelReader, BlockPos)}: Get Biome temperature.</li>
- *         <li>{@link #climate(LevelReader)}: Get Climate temperature.</li>
- *         <li>{@link #base(LevelReader, BlockPos)}: Get the natural world base.</li>
- *         <li>{@link #block(LevelReader, BlockPos)}: Get composed block-local temperature.</li>
- *         <li>{@link #air(LevelReader, BlockPos)}: Get composed air temperature.</li>
- *         <li>{@link #isBlizzard(LevelReader)}: Check if it is blizzard.</li>
- *         <li>{@link #wind(LevelReader)}: Get wind speed.</li>
- *         <li>{@link #clear()}: Clear cache.</li>
- *     </ul>
- * </p>
- */
+/** World climate and temperature calculations in degrees Celsius. */
 public class WorldTemperature {
-    /** Actual body temperature; NaN means no live or stored material state. */
-    public static float material(LevelReader world, BlockPos position) {
-        return world instanceof ServerLevel server
-                ? (float) MinecraftThermalInput.materialTemperature(server, position) : Float.NaN;
-    }
-
-
-
     public static boolean isBlizzardHarming(LevelAccessor iWorld, BlockPos p) {
         return WorldClimate.isBlizzard(iWorld) && openToAir(iWorld,p);
     }
@@ -121,7 +86,7 @@ public class WorldTemperature {
 
     @Deprecated
     public static boolean canBigTreeGenerate(LevelAccessor worldIn, BlockPos p, RandomSource r) {
-    	float temp = block(worldIn, p);
+        float temp = getTempAtBlock(worldIn, p);
     	 BlockState bs=worldIn.getBlockState(p);
     	 float minTemp=getMinGrowTemp(bs.getBlock());
         if (temp < minTemp || WorldClimate.isBlizzard(worldIn))
@@ -136,7 +101,7 @@ public class WorldTemperature {
 
     @Deprecated
     public static boolean canTreeGrow(LevelAccessor worldIn, BlockPos p, RandomSource rand) {
-        float temp = block(worldIn, p);
+        float temp = getTempAtBlock(worldIn, p);
         BlockState bs=worldIn.getBlockState(p);
         float minTemp=getMinGrowTemp(bs.getBlock());
         if (temp < minTemp || WorldClimate.isBlizzard(worldIn))
@@ -316,20 +281,10 @@ public class WorldTemperature {
         return cover == 0 ? climate(w, pos) : coveredClimate(w, pos, cover);
     }
 
-    /** {@link #coveredClimate(LevelReader, BlockPos)} reusing a caller-cached open-air climate. */
-    public static float coveredClimate(LevelReader w, BlockPos pos, float openClimate) {
-        int cover = ClimateCover.coverAbove(w, pos);
-        return cover == 0 ? openClimate : coveredClimate(w, pos, cover);
-    }
-
     private static float coveredClimate(LevelReader w, BlockPos pos, int cover) {
         return w instanceof Level level ? WorldClimate.getCoveredTemp(level, pos, cover) : 0;
     }
 
-    /** Fraction of the climate that reaches block temperature, at every height and cover. */
-    public static float blockClimateFactor() {
-        return FHConfig.SERVER.CLIMATE.blockMaximumClimateAffection.get().floatValue();
-    }
 
     /**
      * 超平坦维度没有地下：参考高度以下一律按参考高度算，没有地热。按维度的生成器判断，所以超平坦存档里的下界和末地
@@ -368,97 +323,142 @@ public class WorldTemperature {
 
 
     /**
-     * Get World temperature for a specific world, in absolute value.
+     * Default temperature query for gameplay and measurements at a block position.
+     * On the server thread, a readable live or stored material temperature takes precedence.
+     * The air temperature uses available
+     * air data or the natural background, with local analytic fields composed at the block center.
+     * Other callers receive the natural background.
      *
-     * Result = Dimension + Biome + Altitude + Climate.
-     *
-     * This value is dynamic in game.
-     *
-     * @param w the world<br>
-     * @return world temperature<br>
+     * @param world world containing the position
+     * @param pos block position to sample
+     * @return the temperature at {@code pos} in degrees Celsius
      */
-    public static float base(LevelReader w, BlockPos pos) {
-        return dimension(w) + biome(w, pos) + altitude(w, pos) + climate(w,pos);
+    public static float getTempAtBlock(LevelReader world, BlockPos pos) {
+        return getTempAtBlock(world, pos, (MaterialSample) null);
     }
 
-    public static float gaussian(LevelReader world, float mean, float std) {
-        if (world instanceof Level level) {
-            return (float) (level.getRandom().nextGaussian() * std + mean);
-        } else
-            return 0;
+    /** Selects the temperature required by a rule with a defined sampling purpose. */
+    public enum BlockTemperatureUse {
+        /** Local air for rules that respond to the environment, such as snowfall and room controls. */
+        SURROUNDINGS,
+        /** Body temperature with a pause while a known material record is unavailable. */
+        PHASE_CHANGE
     }
 
     /**
-     * This is the most common method to get temperature for blocks like crops and machines.
+     * Samples a block position for a rule with an explicit air or phase-change requirement.
+     * Use {@link #getTempAtBlock(LevelReader, BlockPos)} for ordinary block temperature readings.
+     * Phase readings use the environmental estimate only for loaded bodies without a thermal record.
      *
-     * Result = Dimension + Biome + Altitude + Climate + HeatAdjusts.
-     * A factor would be applied to climate value to lower the climate affect on block, simulates lower heat transfer rate between block and air
-     * Called to get temperature when a world context is available.
-     * Composes the block's natural background with available Air state and gameplay fields.
-     * This is the environment used by crops and machines, not the material body's temperature.
-     * This method directly get temperature at any positions.
-     * This value is dynamic in game.
+     * @param world world containing the position
+     * @param pos block position to sample
+     * @param use temperature required by the rule
+     * @return the temperature in degrees Celsius, or NaN when a phase reading is unavailable
      */
-    public static float block(LevelReader world, BlockPos pos) {
-        float natural = naturalBlock(world, pos);
-        return (float) MinecraftThermalInput.gameplayPassiveEnvironment(
-                world, pos, natural);
-    }
-
-    /** Natural block background without local fields or sparse-mesh state. */
-    public static float naturalBlock(LevelReader world, BlockPos pos) {
-        return naturalBlockFromClimate(world, pos, coveredClimate(world, pos));
-    }
-
-    /** Natural block background reusing a caller-cached open-air climate value. */
-    public static float naturalBlock(
-            LevelReader world,
-            BlockPos pos,
-            float openClimate
-    ) {
-        return naturalBlockFromClimate(world, pos, coveredClimate(world, pos, openClimate));
-    }
-
-    private static float naturalBlockFromClimate(LevelReader world, BlockPos pos, float climateHere) {
-        float natural = BlockTemperatureModel.naturalTemperature(
-                dimension(world), biome(world, pos), altitude(world, pos), climateHere, blockClimateFactor());
-        return Math.max(FHConfig.SERVER.CLIMATE.absoluteZeroCelsius.get().floatValue(), natural);
+    public static double getTempAtBlock(LevelReader world, BlockPos pos, BlockTemperatureUse use) {
+        return switch (use) {
+            case SURROUNDINGS -> MinecraftThermalInput.sampleAirTemperature(world, pos, naturalAir(world, pos));
+            case PHASE_CHANGE -> world instanceof ServerLevel server && server.getServer().isSameThread()
+                    ? MinecraftThermalInput.sampleMaterialTemperatureWithEstimate(server, pos) : Double.NaN;
+        };
     }
 
     /**
-     * This is the most common method to get air temperature which may affect player.
+     * Reads the position with the same material-first policy as {@link #getTempAtBlock(LevelReader, BlockPos)}.
+     * When ambient temperature supplies the value, the material sample is cleared.
      *
-     * Result = Dimension + Biome + Altitude + Climate + HeatAdjusts.
-     *
-     * Called to get temperature when a world context is available.
-     * Composes the natural Air background (including sampling noise) with available
-     * local Air state and gameplay fields. It does not create a material body.
-     * This method directly get temperature at any positions.
-     * This value is dynamic in game.
+     * @param world world containing the position
+     * @param pos block position to sample
+     * @param material optional caller-owned output for the live or stored material record
+     * @return the temperature in degrees Celsius
      */
-    public static float air(LevelReader world, BlockPos pos) {
-        float natural = Math.max(
-                FHConfig.SERVER.CLIMATE.absoluteZeroCelsius.get().floatValue(),
-                naturalAirUnclamped(world, pos) + gaussian(world, 0, 0.3F));
-        double composed = MinecraftThermalInput.gameplayPassiveEnvironment(
-                world, pos, natural);
-        return (float) Math.max(
-                FHConfig.SERVER.CLIMATE.absoluteZeroCelsius.get().floatValue(),
-                composed);
+    public static float getTempAtBlock(LevelReader world, BlockPos pos, @Nullable MaterialSample material) {
+        if (world instanceof ServerLevel server && server.getServer().isSameThread()) {
+            double temperature = MinecraftThermalInput.materialTemperature(server, pos, material);
+            if (Double.isFinite(temperature)) return (float) temperature;
+        }
+        if (material != null) material.clear();
+        return (float) getTempAtBlock(world, pos, BlockTemperatureUse.SURROUNDINGS);
     }
 
     /**
-     * Returns the natural air background without local heat fields or random
-     * sampling noise. The thermal runtime uses this as its external boundary.
+     * Samples room surroundings using an alternate biome reader for the natural background. The server
+     * level supplies the dimension, altitude, cover and published temperature at the sampled position.
+     *
+     * @param world server level containing the position
+     * @param pos block position to sample
+     * @param biomeView biome reader provided by the room scan, typically restricted to loaded terrain
+     * @return the air temperature in degrees Celsius
      */
+    public static double getTempAtBlock(ServerLevel world, BlockPos pos, LevelReader biomeView) {
+        return MinecraftThermalInput.sampleAirTemperature(world, pos, naturalBackground(world, biomeView, pos));
+    }
+
+    /**
+     * Samples the environment at the player's eyes for body thermoregulation.
+     *
+     * @param player player being sampled
+     * @param eyeBlock block containing the eyes, used for the natural background and reusable by the caller
+     * @param sample caller-owned output for the thermal field and radiation readings
+     * @return the air temperature in degrees Celsius
+     */
+    public static double samplePlayerAirTemperature(ServerPlayer player, BlockPos eyeBlock, ThermalEnvironmentSample sample) {
+        return MinecraftThermalInput.samplePlayerAirTemperature(player, naturalAir(player.level(), eyeBlock), sample);
+    }
+
+    /**
+     * Samples the environment at the center of a dropped item.
+     *
+     * @param item dropped item being sampled
+     * @param sample caller-owned output for the thermal field and radiation readings
+     * @return the air temperature in degrees Celsius, with the natural background as fallback
+     */
+    public static double sampleDroppedItemAirTemperature(ItemEntity item, ThermalEnvironmentSample sample) {
+        double natural = naturalAir(item.level(), item.blockPosition());
+        MinecraftThermalInput.sampleDroppedItemAirAndRadiation(item, natural, sample);
+        return sample.airAvailable() ? sample.airTemperatureC() : natural;
+    }
+
+    /**
+     * Samples the environment just above a placed thermal reservoir.
+     *
+     * @param world server level containing the reservoir
+     * @param pos block containing the reservoir
+     * @param sample caller-owned output for the thermal field and radiation readings
+     * @return the air temperature in degrees Celsius, with the natural background as fallback
+     */
+    public static double samplePlacedReservoirAirTemperature(ServerLevel world, BlockPos pos, ThermalEnvironmentSample sample) {
+        double natural = naturalAir(world, pos);
+        MinecraftThermalInput.samplePlacedReservoirAirAndRadiation(world, pos, natural, sample);
+        return sample.airAvailable() ? sample.airTemperatureC() : natural;
+    }
+
+    /** Common undisturbed background for air and matter, including the climate lag under cover. */
     public static float naturalAir(LevelReader world, BlockPos pos) {
-        return Math.max(
-                FHConfig.SERVER.CLIMATE.absoluteZeroCelsius.get().floatValue(),
-                naturalAirUnclamped(world, pos));
+        return naturalBackground(world, world, pos);
     }
 
-    private static float naturalAirUnclamped(LevelReader world, BlockPos pos) {
-        return dimension(world) + biome(world, pos) + altitude(world, pos) + coveredClimate(world, pos);
+    /** Per-block background for main-thread checkpoint readers. The supplied position belongs to the caller. */
+    public static java.util.function.IntToDoubleFunction sectionBackground(LevelReader level, long section,
+            BlockPos.MutableBlockPos scratch) {
+        int x = net.minecraft.core.SectionPos.x(section) << 4;
+        int y = net.minecraft.core.SectionPos.y(section) << 4;
+        int z = net.minecraft.core.SectionPos.z(section) << 4;
+        return local -> naturalAir(level, scratch.set(x + (local & 15), y + (local >>> 8), z + (local >>> 4 & 15)));
+    }
+
+    private static final ThreadLocal<BlockPos.MutableBlockPos> NATURAL_BIOME_POS =
+            ThreadLocal.withInitial(BlockPos.MutableBlockPos::new);
+
+    /** The field, thermometer and infrared all use the biome at the center of this 4-block Brick. */
+    public static float naturalBiome(LevelReader world, BlockPos pos) {
+        return biome(world, NATURAL_BIOME_POS.get().set((pos.getX() & ~3) + 2,
+                (pos.getY() & ~3) + 2, (pos.getZ() & ~3) + 2));
+    }
+
+    private static float naturalBackground(LevelReader world, LevelReader biomeView, BlockPos pos) {
+        float natural = dimension(world) + naturalBiome(biomeView, pos) + altitude(world, pos) + coveredClimate(world, pos);
+        return Math.max(FHConfig.SERVER.CLIMATE.absoluteZeroCelsius.get().floatValue(), natural);
     }
 
     /**
@@ -559,104 +559,33 @@ public class WorldTemperature {
         }
     }
 
-    /**
-     * Use this when you need a comprehensive check on plant status
-     */
-    public static PlantStatus checkPlantStatus(LevelAccessor level, BlockPos pos, Block block) {
-        PlantTempData data = PlantTempData.getPlantData(block);
-        return checkPlantStatus(level,pos,data);
+    /** Evaluates a planted crop with the fertilizer at its root. */
+    public static PlantStatus checkPlantStatus(LevelAccessor level, BlockPos pos, @Nullable PlantTempData data) {
+        if (data == null) return PlantStatus.NOT_PLANT;
+        return checkPlantStatus(level, pos, data, level.getBlockState(CropFertilization.soil(level, pos)));
     }
 
-    public static PlantStatus checkPlantStatus(LevelAccessor level, BlockPos pos,@Nullable PlantTempData data) {
-        if (data == null) {
-            return PlantStatus.NOT_PLANT;
+    /** The soil state supplies fertilizer while the crop position supplies the temperature. */
+    public static PlantStatus checkPlantStatus(LevelAccessor level, BlockPos pos, PlantTempData data, BlockState soil) {
+        if (plantWeatherBlocksGrowth(level, pos, data)) {
+            return data.willDie() ? PlantStatus.WILL_DIE : PlantStatus.CAN_SURVIVE;
         }
-
-        if(openToAir(level,pos)) {
-        	 ChunkPos cpos=new ChunkPos(pos);
-            if (WorldTemperature.isBlizzard(level,cpos)&&data.blizzardVulnerable()) {
-                return data.willDie() ? PlantStatus.WILL_DIE : PlantStatus.CAN_SURVIVE;
-            }
-            if (WorldClimate.isSnowing(level,cpos)&&data.snowVulnerable()) {
-                return data.willDie() ? PlantStatus.WILL_DIE : PlantStatus.CAN_SURVIVE;
-            }
-        }
-        float blockTemp = naturalBlock(level, pos);
-        blockTemp = (float) MinecraftThermalInput.gameplayCropEnvironment(
-                level, pos, blockTemp);
-        if (data.isValidTemperature(TemperatureType.BONEMEAL, blockTemp)) {
-            return PlantStatus.CAN_FERTILIZE;
-        }
-        if (data.isValidTemperature(TemperatureType.GROW, blockTemp)) {
-            return PlantStatus.CAN_GROW;
-        }
-        if (data.isValidTemperature(TemperatureType.SURVIVE, blockTemp)) {
-            return PlantStatus.CAN_SURVIVE;
-        }
-        return data.willDie() ? PlantStatus.WILL_DIE : PlantStatus.CAN_SURVIVE;
+        return plantTemperatureStatus(CropFertilization.temperatureData(data, soil), getTempAtBlock(level, pos));
     }
 
-    /**
-     * A cheaper call, using existing temperature fetch from earlier
-     * @param level
-     * @param pos
-     * @param data
-     * @param blockTemp
-     * @return
-     */
-    public static PlantStatus checkPlantStatus(LevelAccessor level, BlockPos pos,@Nullable PlantTempData data, float blockTemp) {
-        if (data == null) {
-            return PlantStatus.NOT_PLANT;
-        }
-        if(openToAir(level,pos)) {
-        	 ChunkPos cpos=new ChunkPos(pos);
-            if (WorldTemperature.isBlizzard(level,cpos)&&data.blizzardVulnerable()) {
-                return data.willDie() ? PlantStatus.WILL_DIE : PlantStatus.CAN_SURVIVE;
-            }
-            if (WorldClimate.isSnowing(level,cpos)&&data.snowVulnerable()) {
-                return data.willDie() ? PlantStatus.WILL_DIE : PlantStatus.CAN_SURVIVE;
-            }
-        }
-        if (data.isValidTemperature(TemperatureType.BONEMEAL, blockTemp)) {
-            return PlantStatus.CAN_FERTILIZE;
-        }
-        if (data.isValidTemperature(TemperatureType.GROW, blockTemp)) {
-            return PlantStatus.CAN_GROW;
-        }
-        if (data.isValidTemperature(TemperatureType.SURVIVE, blockTemp)) {
-            return PlantStatus.CAN_SURVIVE;
-        }
-        return data.willDie() ? PlantStatus.WILL_DIE : PlantStatus.CAN_SURVIVE;
+    /** Exposed plants can be harmed by their recipe's weather hazards even in a warm area. */
+    public static boolean plantWeatherBlocksGrowth(LevelAccessor level, BlockPos pos, PlantTempData data) {
+        if ((!data.blizzardVulnerable() && !data.snowVulnerable()) || !openToAir(level, pos)) return false;
+        ChunkPos chunk = new ChunkPos(pos);
+        return (data.blizzardVulnerable() && WorldClimate.isBlizzard(level, chunk))
+                || (data.snowVulnerable() && WorldClimate.isSnowing(level, chunk));
     }
 
-    public static PlantStatus checkPlantStatus(LevelAccessor level, BlockPos pos,@Nullable PlantTempData data,boolean withTempPreserve) {
-        if(!withTempPreserve){
-            return checkPlantStatus(level,pos,data);
-        }
-        else{
-            if (data == null) {
-                return PlantStatus.NOT_PLANT;
-            }
-            
-            if(openToAir(level,pos)) {
-            	ChunkPos cpos=new ChunkPos(pos);
-                if (WorldTemperature.isBlizzard(level,cpos)&&data.blizzardVulnerable()) {
-                    return data.willDie() ? PlantStatus.WILL_DIE : PlantStatus.CAN_SURVIVE;
-                }
-                if (WorldClimate.isSnowing(level,cpos)&&data.snowVulnerable()) {
-                    return data.willDie() ? PlantStatus.WILL_DIE : PlantStatus.CAN_SURVIVE;
-                }
-            }
-            float blockTemp = naturalBlock(level, pos);
-            blockTemp = (float) MinecraftThermalInput.gameplayCropEnvironment(
-                    level, pos, blockTemp);
-            if (data.isValidTemperature(TemperatureType.BONEMEAL, blockTemp)) {
-                return PlantStatus.CAN_FERTILIZE;
-            }
-            if (data.isValidTemperature(TemperatureType.GROW, blockTemp)) {
-                return PlantStatus.CAN_GROW;
-            }
-            return PlantStatus.CAN_SURVIVE;
-        }
+    /** Classifies the temperature alone using the effective recipe, after applying any fertilizer. */
+    public static PlantStatus plantTemperatureStatus(PlantTempData data, float temperature) {
+        if (data.isValidTemperature(TemperatureType.BONEMEAL, temperature)) return PlantStatus.CAN_FERTILIZE;
+        if (data.isValidTemperature(TemperatureType.GROW, temperature)) return PlantStatus.CAN_GROW;
+        if (data.isValidTemperature(TemperatureType.SURVIVE, temperature) || !data.willDie()) return PlantStatus.CAN_SURVIVE;
+        return PlantStatus.WILL_DIE;
     }
 }

@@ -42,14 +42,17 @@ public final class TiledThermalScaleGameTests {
         var profiles = MinecraftThermalProfiles.prepare();
         var budget = new ThermalMemoryBudget(128L << 20);
         var fires = new ArrayList<BlockPos>();
+        var mixing = new TestOutletMixing();
         var origins = new ArrayList<BlockPos>();
         var chunks = new LinkedHashSet<ChunkPos>();
         MinecraftThermalInput.closeActiveLevel(level);
-        try (var banks = new SpatialEnergyBanks(budget, 2048, 2048, 0);
+        try (var banks = new SpatialEnergyBanks(budget, 4096, 4096, 0);
                 var powers = new SpatialPowerTimeline(budget, banks, 2048, 1, 0);
                 var field = new TiledThermalField(budget, profiles.signatures(), profiles.materials(),
                         profiles.tuning().airHeatCapacityJPerBlockK(), profiles.tuning().airMixingWPerBlockK(), 0, 256, 0)) {
             var profile = profiles.tuning().campfire();
+            var material = new TiledThermalField.Sample();
+            double[] shares = {profile.port(0).powerShare(), profile.port(1).powerShare(), profile.port(2).powerShare()};
             for (int base = 0; base < bases; base++) {
                 var origin = new BlockPos(worldOrigin + base % 10 * 48, 192, worldOrigin + base / 10 * 48);
                 origins.add(origin);
@@ -84,9 +87,11 @@ public final class TiledThermalScaleGameTests {
                     helper.assertTrue(field.admit(entry.getKey(), entry.getValue(), masks.get(entry.getKey()), 0), "Admit every base within the common 128MiB budget");
                 for (var position : localFires) {
                     var air = new SpatialEnergyBanks.Address(position.above().asLong(), -1, profile.port(0).targetFace().ordinal());
-                    helper.assertTrue(powers.tryRegister(position.asLong(), 1, new SpatialEnergyBanks.Address[] {air, null},
-                                    new double[] {profile.port(0).powerShare(), profile.port(1).powerShare()}, profile.ratedPowerW(), true, 0)
-                                    && field.updateMixing(position.above().asLong(), 1),
+                    helper.assertTrue(field.read(position.asLong(), true, material), "The campfire body is captured");
+                    var body = new SpatialEnergyBanks.Address(position.asLong(), material.materialGeneration());
+                    helper.assertTrue(powers.tryRegister(position.asLong(), 1, new SpatialEnergyBanks.Address[] {air, null, body},
+                                    shares, profile.ratedPowerW(), true, 0)
+                                    && mixing.set(field, position.above(), true),
                             "Accept each source, declared radiation loss and mixing footprint before producing J");
                 }
             }
@@ -113,7 +118,7 @@ public final class TiledThermalScaleGameTests {
                     for (int index = 0; index < fires.size(); index += 97) {
                         var position = fires.get(index);
                         helper.assertTrue(powers.update(position.asLong(), 1, profile.ratedPowerW(), enabled, tick - 20)
-                                        && field.updateMixing(position.above().asLong(), enabled ? 1 : -1), "Repeatedly switch source membership without retaining history");
+                                        && mixing.set(field, position.above(), enabled), "Repeatedly switch source membership without retaining history");
                     }
                 }
                 helper.assertTrue(field.begin(powers.seal(tick)), "Begin the next bounded numerical epoch");

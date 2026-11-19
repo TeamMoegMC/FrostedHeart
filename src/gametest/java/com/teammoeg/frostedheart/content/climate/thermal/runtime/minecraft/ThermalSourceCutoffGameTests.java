@@ -32,11 +32,21 @@ public final class ThermalSourceCutoffGameTests {
         try (var simulation = new ThermalMaterialBehaviorGameTests.Simulation(helper, origin, 4, 4, 4, 0, false);
                 var producer = new SpatialSourceTimeline(simulation.budget.createCategory(), 16)) {
             var profile = simulation.profiles.tuning().campfire();
-            helper.assertTrue(producer.register(new SpatialSourceTimeline.Descriptor(fire.asLong(), 1, ThermalSourceMode.POWER_SOURCE,
-                            fire.getX(), fire.getY(), fire.getZ(), profile.profileId(), WorkerPhysicalSourceBindings.initialPorts(fire.asLong(), profile)),
-                            20, true, 0), "Register a real source with the ordinary physical outlet resolver");
+            var descriptor = new SpatialSourceTimeline.Descriptor(fire.asLong(), 1, ThermalSourceMode.POWER_SOURCE,
+                    fire.getX(), fire.getY(), fire.getZ(), profile.profileId(), WorkerPhysicalSourceBindings.initialPorts(fire.asLong(), profile));
+            helper.assertTrue(producer.register(descriptor, 20, true, 0), "Register a real source with the ordinary physical outlet resolver");
             submit(helper, simulation, 0, producer.seal(0));
             submit(helper, simulation, 20, producer.seal(20));
+            WorkerPhysicalSourceBindings bindings = ThermalLoadedWorldGameTests.read(simulation.engine, "sourceBindings");
+            int[] clockReads = {0};
+            long limit = bindings.bindingLimit(descriptor, key -> { clockReads[0]++; return 20; });
+            helper.assertTrue(limit == 20 && clockReads[0] == 1, "An anchor and outlets in the same Section require one cutoff lookup");
+            // An unregistered source at a Section edge still has its declared port cutoff.
+            var edge = new BlockPos(fire.getX(), (fire.getY() | 15), fire.getZ());
+            var atEdge = new SpatialSourceTimeline.Descriptor(edge.asLong(), 1, ThermalSourceMode.POWER_SOURCE,
+                    edge.getX(), edge.getY(), edge.getZ(), profile.profileId(), WorkerPhysicalSourceBindings.initialPorts(edge.asLong(), profile));
+            helper.assertTrue(bindings.bindingLimit(atEdge, key -> key == atEdge.section() ? 40 : 20) == 20,
+                    "A port in the next Section retains its earlier limit");
             SpatialSourceIngress ingress = ThermalLoadedWorldGameTests.read(simulation.engine, "sourceIngress");
             helper.assertTrue(ingress.firstPendingTick(section -> true) == Long.MAX_VALUE, "The producer prefix is fully handed off");
             int[] sectionChecks = {0};
@@ -49,6 +59,11 @@ public final class ThermalSourceCutoffGameTests {
             producer.enabled(fire.asLong(), false, 80);
             helper.assertTrue(first.length == 1 && second.length == 1 && producer.seal(80).length == 0,
                     "Hold both actual transport windows so a third control remains unsealed");
+            var domain = it.unimi.dsi.fastutil.longs.LongSets.singleton(net.minecraft.core.SectionPos.asLong(fire));
+            helper.assertTrue(ingress.limitNumericalThrough(domain, section -> true, 20, 60) == 40
+                            && ingress.limitNumericalThrough(domain, section -> true, 45, 60) == 45
+                            && ingress.limitNumericalThrough(domain, section -> false, 20, 60) == 60,
+                    "A domain cuts at the pending event, clamps late input, and ignores uncaptured sections");
             helper.assertTrue(ingress.firstPendingTick(section -> true) == 40,
                     "A sealed but not yet enqueued window already exposes its physical control boundary");
             helper.assertTrue(ingress.firstPendingTick(section -> false) == Long.MAX_VALUE,
@@ -63,6 +78,7 @@ public final class ThermalSourceCutoffGameTests {
             submit(helper, simulation, 80, last);
             helper.assertTrue(ingress.firstPendingTick(section -> true) == Long.MAX_VALUE && simulation.fixed.acceptedTick() == 80,
                     "The fixed engine reaches the original clock after each control is delivered once");
+            compareFrozenSourceCutoff(helper, simulation, origin);
             FHMain.LOGGER.info("THERMAL_SOURCE_CUTOFF,settledQueries=20000,sectionChecks={},sealedCutoffs=40:60,unsealedCutoff=80,finalTick={}",
                     sectionChecks[0], simulation.fixed.acceptedTick());
             helper.assertTrue(sectionChecks[0] == 0, "Settled source cutoffs must not repeatedly resolve captured geometry");
@@ -72,6 +88,55 @@ public final class ThermalSourceCutoffGameTests {
             level.setChunkForced(origin.getX() >> 4, origin.getZ() >> 4, false);
         }
         helper.succeed();
+    }
+
+    /** Same real windows and physical port resolver for the unrestricted and interval-bounded queries. */
+    private static void compareFrozenSourceCutoff(GameTestHelper helper,
+            ThermalMaterialBehaviorGameTests.Simulation simulation, BlockPos origin) {
+        var profile = simulation.profiles.tuning().campfire();
+        WorkerPhysicalSourceBindings bindings = ThermalLoadedWorldGameTests.read(simulation.engine, "sourceBindings");
+        long chunk = net.minecraft.world.level.ChunkPos.asLong(origin.getX() >> 4, origin.getZ() >> 4);
+        var domain = it.unimi.dsi.fastutil.longs.LongSets.singleton(net.minecraft.core.SectionPos.asLong(origin));
+        int[] checks = {0};
+        long[] snapshotRevision = {0};
+        try (var producer = new SpatialSourceTimeline(simulation.budget.createCategory(), 64);
+                var ingress = new SpatialSourceIngress(ThermalLoadedWorldGameTests.read(simulation.engine, "sources"),
+                        bindings, simulation.engine, simulation.arena, ThermalLoadedWorldGameTests.read(simulation.engine, "airLoads"),
+                        d -> Long.MAX_VALUE, d -> { checks[0]++; return bindings.portsTouchChunk(d, chunk); },
+                        () -> snapshotRevision[0], (window, positions) -> {})) {
+            for (int n = 0; n < 64; n++) {
+                var pos = origin.offset(n % 8, 0, n / 8);
+                var desc = new SpatialSourceTimeline.Descriptor(pos.asLong(), 1, ThermalSourceMode.POWER_SOURCE,
+                        pos.getX(), pos.getY(), pos.getZ(), profile.profileId(), WorkerPhysicalSourceBindings.initialPorts(pos.asLong(), profile));
+                helper.assertTrue(producer.register(desc, 20, true, 40), "Register the source at the interval endpoint");
+            }
+            var windows = producer.seal(40);
+            helper.assertTrue(windows.length == 64, "Each pending source has a real prepaid window");
+            for (int n = 0; n < windows.length; n++) ingress.enqueue(windows[n], 1, n);
+            // An earlier frozen input still belongs to its checkpoint and must not restrict a later endpoint.
+            helper.assertTrue(ingress.limitNumericalThrough(domain, section -> true, 20, 60) == 60 && checks[0] == 64,
+                    "All in-range frozen sources are checked and excluded");
+            var cpu = java.lang.management.ManagementFactory.getThreadMXBean();
+            boolean timed = cpu.isCurrentThreadCpuTimeSupported() && cpu.isThreadCpuTimeEnabled();
+            long[] ns = new long[2]; int[] attempts = new int[2];
+            // Alternate order inside one server test and one JVM. Each round changes the actual snapshot revision.
+            for (int pass = 0; pass < 6; pass++) for (int arm = 0; arm < 2; arm++) {
+                boolean bounded = ((pass + arm) & 1) != 0;
+                int count = pass < 2 ? 2048 : 32768, sum = 0; checks[0] = 0;
+                long start = timed ? cpu.getCurrentThreadCpuTime() : 0;
+                for (int q = 0; q < count; q++) {
+                    snapshotRevision[0]++;
+                    sum += bounded ? ingress.limitNumericalThrough(domain, section -> true, 20, 40)
+                            : Math.min(40, ingress.firstPendingTick(domain, section -> true));
+                }
+                long elapsed = timed ? cpu.getCurrentThreadCpuTime() - start : -1;
+                helper.assertTrue(sum == 40 * count && checks[0] == (bounded ? 0 : count * 64),
+                        "Both paths preserve the cutoff; only an earlier input requires a physical freeze lookup");
+                if (pass >= 2) { ns[bounded ? 1 : 0] += elapsed; attempts[bounded ? 1 : 0] += checks[0]; }
+            }
+            FHMain.LOGGER.info("THERMAL_SCOPED_SOURCE_CPU,queriesPerArm=131072,sources=64,unboundedLookups={},boundedLookups={},unboundedCpuNs={},boundedCpuNs={}",
+                    attempts[0], attempts[1], timed ? ns[0] : -1, timed ? ns[1] : -1);
+        }
     }
 
     private static void submit(GameTestHelper helper, ThermalMaterialBehaviorGameTests.Simulation simulation, long tick,

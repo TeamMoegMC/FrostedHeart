@@ -147,7 +147,8 @@ public final class TiledThermalEngineGameTests {
             }
             helper.assertTrue(simulation.fixed.acceptedTick() == 40 && !simulation.fixed.hasSection(section) && !simulation.engine.hasWork(),
                     "UNLOAD must not leave the geometry owner advancing an already cancelled numerical step: " + simulation.engine.regionalProgressDescription());
-            double power = simulation.profiles.tuning().campfire().ratedPowerW() * simulation.profiles.tuning().campfire().port(0).powerShare();
+            var profile = simulation.profiles.tuning().campfire();
+            double power = profile.nonRadiativePowerW(profile.ratedPowerW());
             near(helper, 2 * power, simulation.fixed.totalEnthalpyJ() + simulation.fixed.externalEnergyJ(), "The independent source continues once after geometry cancellation");
             FHMain.LOGGER.info("THERMAL_FIXED_GEOMETRY_UNLOAD,privateBeforeCapture=true,savedSections=0,resumedTick=40,retired=true,energyJ={}",
                     simulation.fixed.totalEnthalpyJ() + simulation.fixed.externalEnergyJ());
@@ -365,7 +366,8 @@ public final class TiledThermalEngineGameTests {
                     simulation.engine.processCheckpointCommandOnMain();
                 }
                 var checkpoint = ready.join();
-                double power = simulation.profiles.tuning().campfire().ratedPowerW() * simulation.profiles.tuning().campfire().port(0).powerShare();
+                var profile = simulation.profiles.tuning().campfire();
+                double power = profile.nonRadiativePowerW(profile.ratedPowerW());
                 helper.assertTrue(checkpoint.sections().size() == 1 && checkpoint.sections().get(0).sampleTick() == 20,
                         "Recovery saves the actual prior Accepted field");
                 near(helper, power, sum(checkpoint.pending()), "The cancelled claim is saved exactly once");
@@ -405,7 +407,8 @@ public final class TiledThermalEngineGameTests {
                 helper.assertTrue(System.nanoTime() < deadline, "Bind the two real producer windows before numerical preparation");
                 ingress.advance(System.nanoTime() + 2_000_000L);
             }
-            double power = simulation.profiles.tuning().campfire().ratedPowerW() * simulation.profiles.tuning().campfire().port(0).powerShare();
+            var profile = simulation.profiles.tuning().campfire();
+            double power = profile.nonRadiativePowerW(profile.ratedPowerW());
             double expectedJ = 2 * power;
             near(helper, expectedJ, simulation.engine.inputStore().pendingEnergyJ(), "Both real windows retain their recorded J");
             var prepare = simulation.engine.getClass().getDeclaredMethod("prepareFixedHeat", it.unimi.dsi.fastutil.longs.LongSet.class,
@@ -414,11 +417,14 @@ public final class TiledThermalEngineGameTests {
             var cancel = simulation.engine.getClass().getDeclaredMethod("cancelFixedStep"); cancel.setAccessible(true);
             helper.assertTrue(!(boolean) prepare.invoke(simulation.engine, scope, 0L, 20L, Long.MIN_VALUE), "An expired preparation slice yields after its first target");
             com.teammoeg.frostedheart.content.climate.thermal.source.SpatialHeatStore.Claim claim = ThermalLoadedWorldGameTests.read(simulation.engine, "fixedClaim");
-            near(helper, power, claim.energyJ(), "Only the first source prefix was prepared");
+            double firstPortJ = claim.energyJ();
+            helper.assertTrue(Math.abs(firstPortJ - profile.ratedPowerW() * profile.port(0).powerShare()) < 1e-7
+                            || Math.abs(firstPortJ - profile.ratedPowerW() * profile.port(2).powerShare()) < 1e-7,
+                    "Only one thermal port's prefix was prepared");
             com.teammoeg.frostedheart.content.climate.thermal.source.SpatialHeatBuffer banks = ThermalLoadedWorldGameTests.read(simulation.engine, "fixedHeat");
             long chunk = new net.minecraft.world.level.ChunkPos(origin).toLong();
             double[] staged = {0}; banks.pendingInChunk(chunk, (target, joules, since) -> staged[0] += joules);
-            near(helper, power, staged[0], "The first target has a private bank copy before the numerical step starts");
+            near(helper, firstPortJ, staged[0], "The first target has a private bank copy before the numerical step starts");
             try (var capture = producer.capture(20)) {
                 var ready = simulation.engine.requestCheckpoint(chunk, capture, PendingHeatCheckpoint.EMPTY, Double.POSITIVE_INFINITY, RegionalCheckpoint.Purpose.SAVE);
                 while (!ready.isDone()) {
@@ -456,7 +462,7 @@ public final class TiledThermalEngineGameTests {
             near(helper, expectedJ, simulation.fixed.totalEnthalpyJ() + simulation.fixed.externalEnergyJ(), "The same input commits once after capacity returns");
             near(helper, 0, simulation.engine.inputStore().pendingEnergyJ(), "The committed prefix leaves no duplicate source input");
             FHMain.LOGGER.info("THERMAL_FIXED_STREAMED_INPUT,partialJ={},savedJ={},capacityRollback=true,finalTick={},conservedJ={}",
-                    power, expectedJ, simulation.fixed.acceptedTick(), simulation.fixed.totalEnthalpyJ() + simulation.fixed.externalEnergyJ());
+                    firstPortJ, expectedJ, simulation.fixed.acceptedTick(), simulation.fixed.totalEnthalpyJ() + simulation.fixed.externalEnergyJ());
         } finally {
             for (var fire : fires) level.setBlockAndUpdate(fire, Blocks.AIR.defaultBlockState());
             MinecraftThermalInput.closeActiveLevel(level);
@@ -478,6 +484,9 @@ public final class TiledThermalEngineGameTests {
                 var producer = new SpatialSourceTimeline(simulation.budget.createCategory(), 16)) {
             budget[0] = simulation.budget;
             register(helper, simulation, producer, fire);
+            // Keep the first second of Air heating above the checkpoint retention threshold.
+            double totalPowerW = 16_000;
+            producer.power(fire.asLong(), totalPowerW, 0);
             submit(helper, simulation, producer, 0); submit(helper, simulation, producer, 20);
             var sample = new MaterialSample(); simulation.material.readMaterial(simulation.slot(wall), sample);
             simulation.material.applyMaterialControl(simulation.slot(wall), sample.law().enthalpyAtTemperature(32), sample.law().initialBranch(32));
@@ -503,9 +512,22 @@ public final class TiledThermalEngineGameTests {
                 var checkpoint = ready.join();
                 helper.assertTrue(!simulation.fixed.idle() && simulation.fixed.acceptedTick() == 20,
                         "Saving leaves the actual unfinished trial in place and does no numerical catch-up");
-                double power = simulation.profiles.tuning().campfire().ratedPowerW() * simulation.profiles.tuning().campfire().port(0).powerShare();
+                var profile = simulation.profiles.tuning().campfire();
+                double power = profile.nonRadiativePowerW(totalPowerW);
                 near(helper, power, sum(checkpoint.pending()), "The store claim and copied bank must appear exactly once in native pending input");
+                double pendingBodyJ = 0;
+                var pending = checkpoint.pending();
+                for (int index = 0; index < pending.size(); index++) {
+                    if (!pending.isAir(index) && pending.position(index) == fire.asLong()) {
+                        helper.assertTrue(pending.materialStateId(index) == Block.getId(level.getBlockState(fire)),
+                                "Pending heat records the campfire body state for restoration");
+                        pendingBodyJ += pending.energyJ(index);
+                    }
+                }
+                near(helper, totalPowerW * profile.port(2).powerShare(), pendingBodyJ,
+                        "The checkpoint owns the pending campfire body share once");
                 var section = checkpoint.sections().get(0); var air = section.captureAir(0);
+                helper.assertTrue(air != null, "The warm Air fixture is retained in the checkpoint");
                 near(helper, acceptedC, air.sampleC(point.getX() + .875, point.getY() + .5, point.getZ() + .5, 0, 20, 0, 20), "The checkpoint contains canonical Accepted energy, not a derived query vertex");
                 helper.assertTrue(simulation.query.tryReadAir(point.getX() + .875, point.getY() + .5, point.getZ() + .5, before), "The unfinished trial leaves the query available");
                 near(helper, acceptedQueryC, before.temperatureC(), "Saving leaves the previously published fractional query unchanged");
@@ -567,7 +589,8 @@ public final class TiledThermalEngineGameTests {
                 while (simulation.fixed.frozen(net.minecraft.core.SectionPos.asLong(a)) && simulation.engine.hasReadyWork()) simulation.engine.processWorkRound();
                 helper.assertTrue(!simulation.fixed.frozen(net.minecraft.core.SectionPos.asLong(a)), "An invalidated native capture rejoins the same chunk");
                 submit(helper, simulation, producer, 60);
-                double power = simulation.profiles.tuning().campfire().ratedPowerW() * simulation.profiles.tuning().campfire().port(0).powerShare();
+                var profile = simulation.profiles.tuning().campfire();
+                double power = profile.nonRadiativePowerW(profile.ratedPowerW());
                 near(helper, 6 * power, simulation.fixed.totalEnthalpyJ() + simulation.fixed.externalEnergyJ(), "Cancellation preserves both sources and all queued heat exactly once");
                 FHMain.LOGGER.info("THERMAL_FIXED_NATIVE_UNLOAD_CANCEL,frozenTick=20,otherChunkTick=40,resumedTick={},conservedJ={},originalQueue=true", simulation.fixed.acceptedTick(), simulation.fixed.totalEnthalpyJ() + simulation.fixed.externalEnergyJ());
             }
@@ -582,7 +605,8 @@ public final class TiledThermalEngineGameTests {
                 var ready = simulation.engine.requestCheckpoint(chunk, capture, PendingHeatCheckpoint.EMPTY, Double.POSITIVE_INFINITY, RegionalCheckpoint.Purpose.UNLOAD);
                 while (!ready.isDone()) simulation.engine.processCheckpointCommandOnMain();
                 var checkpoint = ready.join(); double pendingJ = sum(checkpoint.pending());
-                double power = simulation.profiles.tuning().campfire().ratedPowerW() * simulation.profiles.tuning().campfire().port(0).powerShare();
+                var profile = simulation.profiles.tuning().campfire();
+                double power = profile.nonRadiativePowerW(profile.ratedPowerW());
                 near(helper, power, pendingJ, "The unloading chunk owns exactly its one source interval");
                 while (simulation.fixed.acceptedTick() < 80) {
                     helper.assertTrue(System.nanoTime() < deadline, "A second chunk still progresses while the first remains sealed");
@@ -653,7 +677,7 @@ public final class TiledThermalEngineGameTests {
                             && ThermalLoadedWorldGameTests.read(simulation.engine, "fixedClaim") != null,
                     "Pause between ordinary coordinator rounds after the bank copied the still-unaccepted store claim");
             RegionalEngineTestDriver.submit(helper, simulation.engine, envelope(simulation, 20, ResolvedGeometryBatch.EMPTY, late.seal(20)));
-            double expected = 2 * profile.ratedPowerW() * profile.port(0).powerShare();
+            double expected = 2 * profile.nonRadiativePowerW(profile.ratedPowerW());
             double actual = simulation.fixed.totalEnthalpyJ() + simulation.fixed.externalEnergyJ() - initialJ;
             near(helper, expected, actual, "Cancelling a copied source claim and retrying consumes each producer prefix exactly once");
             helper.assertTrue(simulation.fixed.acceptedTick() == 20 && simulation.engine.inputStore().pendingEnergyJ() == 0,

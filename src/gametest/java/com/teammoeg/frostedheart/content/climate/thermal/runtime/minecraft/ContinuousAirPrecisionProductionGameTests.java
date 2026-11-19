@@ -59,9 +59,9 @@ public final class ContinuousAirPrecisionProductionGameTests {
                 ContinuousAirProductionGameTests.sampleAt(level, fire.getX() + .5, fire.getY() + 1.5, fire.getZ() + .5, nearSample);
                 ContinuousAirProductionGameTests.sampleAt(level, fire.getX() + 3.5, fire.getY() + 1.5, fire.getZ() + .5, farSample);
                 double nearC = nearSample.airAvailable() ? nearSample.airTemperatureC()
-                        : MinecraftThermalInput.gameplayPassiveEnvironment(level, near, WorldTemperature.naturalAir(level, near));
+                        : MinecraftThermalInput.sampleAirTemperature(level, near, WorldTemperature.naturalAir(level, near));
                 double farC = farSample.airAvailable() ? farSample.airTemperatureC()
-                        : MinecraftThermalInput.gameplayPassiveEnvironment(level, near.east(3), WorldTemperature.naturalAir(level, near.east(3)));
+                        : MinecraftThermalInput.sampleAirTemperature(level, near.east(3), WorldTemperature.naturalAir(level, near.east(3)));
                 double rise = nearC - farC;
                 if (elapsed > 600 && elapsed <= 1200) peakRise[0] = Math.max(peakRise[0], rise);
                 if (elapsed == 1280) retainedRise[0] = rise;
@@ -73,7 +73,7 @@ public final class ContinuousAirPrecisionProductionGameTests {
                 previousRise[0] = rise;
                 FHMain.LOGGER.info("THERMAL_PRECISION_TRACE,toleranceC={},elapsedTicks={},worldTick={},sampleTick={},farSampleTick={},nearC={},farC={},riseC={},floorC={},naturalC={},wind={},climateSec={},basisTerms={},geometry={}",
                         1e-3, elapsed, level.getGameTime(), nearSample.airSampleTick(), farSample.airSampleTick(),
-                        nearC, farC, rise, WorldTemperature.material(level, fire.below()),
+                        nearC, farC, rise, MinecraftThermalInput.materialTemperature(level, fire.below()),
                         WorldTemperature.naturalAir(level, near), WorldClimate.getWind(level), WorldClimate.getSec(level),
                         nearSample.airBasisTerms(), MinecraftThermalInput.describeAirRead(level, near).split(",", 2)[0]);
                 helper.assertTrue(Double.isFinite(nearC) && Double.isFinite(farC), "Public queries remain finite through ordinary retirement");

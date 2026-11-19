@@ -27,7 +27,7 @@ public final class ContinuousAirGeometryInputProductionGameTests {
         var sample = new ThermalEnvironmentSample();
         helper.startSequence().thenIdle(160).thenWaitUntil(() -> {
             helper.assertTrue(GeometryInputProductionObservation.failure() == null, GeometryInputProductionObservation.summary());
-            MinecraftThermalInput.gameplayPlacedReservoirEnvironment(level, fire.above(),
+            MinecraftThermalInput.samplePlacedReservoirAirAndRadiation(level, fire.above(),
                     WorldTemperature.naturalAir(level, fire.above()), sample);
             helper.assertTrue(GeometryInputProductionObservation.borrowed() && ContinuousAirProductionTiming.sourceField(sample),
                     "An actual build input and its detailed field must exist before construction");
@@ -38,14 +38,14 @@ public final class ContinuousAirGeometryInputProductionGameTests {
                     "Actual construction must replace the borrowed geometry and retire its node span");
             helper.assertTrue(GeometryInputProductionObservation.retirementPassed(),
                     "Old nodes must stay read-only until the actual reader releases them: " + GeometryInputProductionObservation.summary());
-            MinecraftThermalInput.gameplayPlacedReservoirEnvironment(level, fire.above(),
+            MinecraftThermalInput.samplePlacedReservoirAirAndRadiation(level, fire.above(),
                     WorldTemperature.naturalAir(level, fire.above()), sample);
             helper.assertTrue(ContinuousAirProductionTiming.sourceField(sample)
                             && MinecraftThermalInput.describeAirRead(level, fire.above()).startsWith("geometry_current"),
                     "The real source publishes current geometry while the obsolete input is released");
         }).thenExecute(() -> level.setBlockAndUpdate(pillar, Blocks.AIR.defaultBlockState()))
         .thenIdle(60).thenWaitUntil(() -> {
-            MinecraftThermalInput.gameplayPlacedReservoirEnvironment(level, fire.above(),
+            MinecraftThermalInput.samplePlacedReservoirAirAndRadiation(level, fire.above(),
                     WorldTemperature.naturalAir(level, fire.above()), sample);
             helper.assertTrue(ContinuousAirProductionTiming.sourceField(sample)
                             && MinecraftThermalInput.describeAirRead(level, fire.above()).startsWith("geometry_current"),
