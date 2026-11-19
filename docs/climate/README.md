@@ -27,7 +27,9 @@
 | [continuous-air-regional-preparation.md](continuous-air-regional-preparation.md) | 持久区域、单一推进循环、普通/构建期间输入服务、局部构建与一次供能确认 | Current for recorded regional trials; CPU/full U1 and default gates pending |
 | [continuous-air-entry-recovery.md](continuous-air-entry-recovery.md) | 新热源空间准备、空发现队列过滤、实际客户端进入恢复、温差与计时 | Current for selected implementation and real-client entry acceptance; general multiplayer/default acceptance partial |
 | [continuous-air-persistence.md](continuous-air-persistence.md) | 普通保存配置、区块温度NBT、原版卸载队列、真实读盘/CT2与保存边界 | Current for implementation and recorded normal-config validation; broader capacity partial |
-| [cultivated-oak.md](cultivated-oak.md) | 独立栽培橡树、多阶段生长与数据包产量高度换算 | 原型；验证范围见日志 |
+| [cultivated-oak.md](cultivated-oak.md) | 原版树苗放置接管、橡树多阶段生长与产量换算 | 原型；验证范围见日志 |
+| [cultivated-spruce.md](cultivated-spruce.md) | 栽培云杉、原版单干与 2×2 巨型树完整示例 | 生产与测试源码编译通过；栽培树木专项27/27通过 |
+| [cultivated-species.md](cultivated-species.md) | 主世界八木种栽培、原生树形预算及深色橡木2×2专属生长 | 源码和资源已验证；栽培树木专项27/27通过 |
 | [crop-fertilization.md](crop-fertilization.md) | 作物肥料、多层根部定位与生长增产记账 | 实现完成，验证范围见日志 |
 | [thin-ice.md](thin-ice.md) | 薄冰踩踏、冲击、相变温度、热裂与回冻修复 | Partial |
 | [icicle.md](icicle.md) | 冰洞冰锥、生长、相变缩短、断裂坠落与振动 | Partial |

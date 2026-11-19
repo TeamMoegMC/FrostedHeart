@@ -61,7 +61,8 @@
   },
   "temperature": {
     "min": 5,
-    "ideal": 20,
+    "ideal_min": 15,
+    "ideal_max": 25,
     "max": 35,
     "minimum_yield_factor": 0.5,
     "preserved_degrees_per_grade": 5

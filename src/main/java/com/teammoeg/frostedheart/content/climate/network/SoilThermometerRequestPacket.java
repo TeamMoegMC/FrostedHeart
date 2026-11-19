@@ -44,7 +44,7 @@ public record SoilThermometerRequestPacket(BlockPos pos) implements CMessage {
     public void handle(Supplier<NetworkEvent.Context> context) {
         ServerPlayer player = context.get().getSender();
         context.get().enqueueWork(() ->
-            FHNetwork.INSTANCE.sendPlayer(player, new SoilThermometerUpdatePacket(WorldTemperature.block(player.level(), pos)))
+            FHNetwork.INSTANCE.sendPlayer(player, SoilThermometerUpdatePacket.sample(player.serverLevel(), pos))
         );
         context.get().setPacketHandled(true);
     }

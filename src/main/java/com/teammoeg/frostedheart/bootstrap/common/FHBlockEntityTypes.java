@@ -84,7 +84,9 @@ public class FHBlockEntityTypes {
             ForgeRegistries.BLOCK_ENTITY_TYPES, FHMain.MODID);
     public static final RegistryObject<BlockEntityType<com.teammoeg.frostedheart.content.agriculture.tree.CultivatedOakBlockEntity>> CULTIVATED_OAK = REGISTER.register(
             "cultivated_oak_sapling", makeType(com.teammoeg.frostedheart.content.agriculture.tree.CultivatedOakBlockEntity::new,
-                    FHBlocks.CULTIVATED_OAK::get));
+                    FHBlocks.CULTIVATED_OAK::get, FHBlocks.CULTIVATED_SPRUCE::get, FHBlocks.CULTIVATED_BIRCH::get,
+                    FHBlocks.CULTIVATED_JUNGLE::get, FHBlocks.CULTIVATED_ACACIA::get, FHBlocks.CULTIVATED_DARK_OAK::get,
+                    FHBlocks.CULTIVATED_MANGROVE::get, FHBlocks.CULTIVATED_CHERRY::get));
     public static final RegistryObject<BlockEntityType<ThermalReservoirBlockEntity>> THERMAL_RESERVOIR = REGISTER.register(
             "thermal_reservoir", makeType(ThermalReservoirBlockEntity::new,
                     FHBlocks.WARM_STONE::get, FHBlocks.HOT_WATER_BAG::get)

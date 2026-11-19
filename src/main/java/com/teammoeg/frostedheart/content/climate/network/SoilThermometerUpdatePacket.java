@@ -26,20 +26,36 @@ import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
-public record SoilThermometerUpdatePacket(float temperature) implements CMessage {
+public record SoilThermometerUpdatePacket(float temperature, net.minecraft.core.BlockPos pos,
+        @org.jetbrains.annotations.Nullable net.minecraft.network.chat.Component plantInfo) implements CMessage {
 
     public SoilThermometerUpdatePacket(FriendlyByteBuf buffer) {
-        this(buffer.readFloat());
+        this(buffer.readFloat(), buffer.readBlockPos(), buffer.readNullable(FriendlyByteBuf::readComponent));
+    }
+
+    /** Server-authoritative snapshot for the thermometer overlay, without tree height or seed. */
+    public static SoilThermometerUpdatePacket sample(net.minecraft.server.level.ServerLevel level,
+            net.minecraft.core.BlockPos pos) {
+        var info = level.getBlockEntity(pos) instanceof com.teammoeg.frostedheart.content.agriculture.tree.CultivatedOakBlockEntity oak
+                ? oak.status() : null;
+        return new SoilThermometerUpdatePacket(
+                com.teammoeg.frostedheart.content.climate.WorldTemperature.block(level, pos), pos, info);
     }
 
     @Override
     public void encode(FriendlyByteBuf buffer) {
         buffer.writeFloat(temperature);
+        buffer.writeBlockPos(pos);
+        buffer.writeNullable(plantInfo, FriendlyByteBuf::writeComponent);
     }
 
     @Override
     public void handle(Supplier<NetworkEvent.Context> context) {
-        context.get().enqueueWork(() -> TemperatureGoogleRenderer.cachedTemperature = temperature);
+        context.get().enqueueWork(() -> {
+            TemperatureGoogleRenderer.cachedTemperature = temperature;
+            TemperatureGoogleRenderer.cachedPlantInfoPos = pos;
+            TemperatureGoogleRenderer.cachedPlantInfo = plantInfo;
+        });
         context.get().setPacketHandled(true);
     }
 }

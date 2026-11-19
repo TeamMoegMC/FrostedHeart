@@ -105,6 +105,8 @@ public class TemperatureGoogleRenderer {
     public static BlockPos lastHovered = null;
     public static BlockPos lastHeatNetworkPos = null;
     public static float cachedTemperature = 0;
+    public static BlockPos cachedPlantInfoPos;
+    public static Component cachedPlantInfo;
     private static ClientHeatNetworkData lastHeatNetworkData = null;
 
     public static boolean hasHeatNetworkData() {
@@ -147,7 +149,9 @@ public class TemperatureGoogleRenderer {
 
         int prevHoverTicks = hoverTicks;
         hoverTicks++;
-        if (lastHovered == null || !lastHovered.equals(pos)) {
+        if (lastHovered == null || !lastHovered.equals(pos)
+                || (world.getBlockState(pos).getBlock() instanceof com.teammoeg.frostedheart.content.agriculture.tree.CultivatedOakBlock
+                    && (hoverTicks % 20 == 0 || !pos.equals(cachedPlantInfoPos) || cachedPlantInfo == null))) {
             if (SoilThermometer.isWearingSoilThermometer(mc.player)) {
                 FHNetwork.INSTANCE.sendToServer(new SoilThermometerRequestPacket(pos));
             }
@@ -166,7 +170,8 @@ public class TemperatureGoogleRenderer {
         BlockTempData blockData = BlockTempData.getData(block);
         PlantTempData plantData = PlantTempData.cacheList.get(block);
         boolean hasBlockTempInfo = blockData != null;
-        boolean hasPlantTempInfo = plantData != null;
+        boolean cultivatedOak = state.getBlock() instanceof com.teammoeg.frostedheart.content.agriculture.tree.CultivatedOakBlock;
+        boolean hasPlantTempInfo = plantData != null || cultivatedOak;
 
         // Check if the player is wearing goggles
         boolean wearingSoilThermometer = SoilThermometer.isWearingSoilThermometer(mc.player);
@@ -261,7 +266,10 @@ public class TemperatureGoogleRenderer {
         // plant temperature
         if (wearingSoilThermometer && hasPlantTempInfo) {
             List<Component> stats;
-            if (belowState.is(FHBlocks.FERTILIZED_FARMLAND.get()) || belowState.is(FHBlocks.FERTILIZED_DIRT.get())) {
+            if (cultivatedOak) {
+                stats = pos.equals(cachedPlantInfoPos) && cachedPlantInfo != null
+                        ? java.util.List.of(cachedPlantInfo) : java.util.List.of();
+            } else if (belowState.is(FHBlocks.FERTILIZED_FARMLAND.get()) || belowState.is(FHBlocks.FERTILIZED_DIRT.get())) {
                 stats = PlantTempStats.getStats(block, null, mc.player, belowState, pos, cachedTemperature);
             } else {
                 stats = PlantTempStats.getStats(block, null, mc.player, null, pos, cachedTemperature);
