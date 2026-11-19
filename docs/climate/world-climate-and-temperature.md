@@ -168,7 +168,7 @@ float位），不进入网络包；`addInitTempEvent` 清空历史。没有历�
 
 ## 5. 方块位置与材料测量
 
-`WorldTemperature.getTempAtBlock(level, pos)` 是只凭方块位置取温的统一入口，返回 °C。服务端主线程优先返回可读的活动或休眠材料温度，由材料的焓和相变分支求得。环境路径通过 `MinecraftThermalInput.sampleAirTemperature` 读取可用的空气温度（含区块的休眠余温），以 `WorldTemperature.naturalAir` 兜底，再在方块中心合成解析热场。客户端和非服务端主线程返回自然背景。
+`WorldTemperature.getTempAtBlock(level, pos)` 是只凭方块位置取温的统一入口，返回 °C。服务端主线程优先返回可读的活动或休眠材料温度，由材料的焓和相变分支求得，再在方块中心合成解析热场。`materialTemperature` 和 `sampleMaterialTemperatureWithEstimate` 的数值返回遵循此规则；环境估算已合成场，不重复叠加。`sampleMaterialTemperature` 保留原始材料记录，红外批量路径自行合成一次，不回写材料焓。环境路径通过 `MinecraftThermalInput.sampleAirTemperature` 读取可用的空气温度（含区块的休眠余温），以 `WorldTemperature.naturalAir` 兜底，再在方块中心合成解析热场。客户端和非服务端主线程返回自然背景。
 
 土壤温度计、作物生长和悬浮提示、栽培橡树随机刻及蘑菇扩散温度判定都使用此顺序。旧版 `VanillaClimate.getTemperature` 也直接返回该位置读数。
 

@@ -1220,15 +1220,17 @@ public final class MinecraftThermalInput implements AutoCloseable {
      * @param level server level containing the position
      * @param position block position to sample
      * @param material reusable output, or null to use internal scratch storage
-     * @return recorded temperature in degrees Celsius, or NaN when no record can be read
+     * @return recorded temperature composed with gameplay fields, or NaN when no record can be read
      */
     public static double materialTemperature(ServerLevel level, BlockPos position, @javax.annotation.Nullable MaterialSample material) {
         MaterialSample sample = material == null ? MATERIAL_SAMPLE.get() : material;
-        return sampleMaterialTemperature(level, position, sample) ? sample.temperatureC() : Double.NaN;
+        return sampleMaterialTemperature(level, position, sample)
+                ? composeMaterialTemperature(level, position, sample.temperatureC()) : Double.NaN;
     }
 
     /**
-     * Reads the temperature and source of an existing live or stored material record.
+     * Reads the raw temperature and source of an existing live or stored material record.
+     * Analytic fields are excluded so bulk consumers such as infrared can compose them once.
      *
      * @param level server level containing the material
      * @param position position of the material
@@ -1261,7 +1263,17 @@ public final class MinecraftThermalInput implements AutoCloseable {
      */
     public static double sampleMaterialTemperatureWithEstimate(ServerLevel level, BlockPos position, MaterialSample out) {
         readMaterial(level, position, out, true);
-        return out.temperatureC();
+        return out.source() == MaterialSample.Source.ESTIMATED
+                ? out.temperatureC() : composeMaterialTemperature(level, position, out.temperatureC());
+    }
+
+    /** Compose gameplay fields without changing the authoritative material record. */
+    private static double composeMaterialTemperature(ServerLevel level, BlockPos position, double base) {
+        if (!Double.isFinite(base)) return base;
+        ThermalAnalyticFieldIndex fields = MinecraftGameplayFields.existing(level);
+        if (fields == null || fields.isEmpty()) return base;
+        return fields.compose(position.getX() + .5D, position.getY() + .5D,
+                position.getZ() + .5D, WorldTemperature.naturalAir(level, position), base);
     }
 
     private static boolean readMaterial(ServerLevel level, BlockPos position, MaterialSample out, boolean estimate) {
