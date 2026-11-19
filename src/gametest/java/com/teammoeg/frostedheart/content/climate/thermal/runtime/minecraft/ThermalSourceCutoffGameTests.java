@@ -102,7 +102,7 @@ public final class ThermalSourceCutoffGameTests {
         try (var producer = new SpatialSourceTimeline(simulation.budget.createCategory(), 64);
                 var ingress = new SpatialSourceIngress(ThermalLoadedWorldGameTests.read(simulation.engine, "sources"),
                         bindings, simulation.engine, simulation.arena, ThermalLoadedWorldGameTests.read(simulation.engine, "airLoads"),
-                        d -> Long.MAX_VALUE, d -> { checks[0]++; return bindings.airPortsTouchChunk(d, chunk); },
+                        d -> Long.MAX_VALUE, d -> { checks[0]++; return bindings.portsTouchChunk(d, chunk); },
                         () -> snapshotRevision[0], (window, positions) -> {})) {
             for (int n = 0; n < 64; n++) {
                 var pos = origin.offset(n % 8, 0, n / 8);

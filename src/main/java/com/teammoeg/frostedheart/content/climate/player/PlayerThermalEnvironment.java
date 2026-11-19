@@ -23,9 +23,6 @@ import com.teammoeg.frostedheart.bootstrap.common.FHAttributes;
 import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClimate;
-import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput;
-import com.teammoeg.frostedheart.content.climate.thermal.query.ThermalEnvironmentSample;
-import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
@@ -35,11 +32,6 @@ import net.minecraft.world.level.material.Fluid;
 /** Reads and normalizes physical and entity-local temperature inputs. */
 public final class PlayerThermalEnvironment {
     private PlayerThermalEnvironment() {
-    }
-
-    static double sampleAirTemperatureC(ServerPlayer player, BlockPos samplePosition, ThermalEnvironmentSample sample) {
-        return MinecraftThermalInput.gameplayPlayerEnvironment(
-                player, WorldTemperature.naturalAir(player.level(), samplePosition), sample);
     }
 
     static double localAirTemperatureC(ServerPlayer player, double sampledAirTemperatureC) {

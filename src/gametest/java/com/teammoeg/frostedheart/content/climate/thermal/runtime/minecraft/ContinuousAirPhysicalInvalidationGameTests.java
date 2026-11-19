@@ -82,7 +82,7 @@ public final class ContinuousAirPhysicalInvalidationGameTests {
             helper.assertTrue(ContinuousAirProductionTiming.sourceField(air) && route.airAvailable() && route.sharedAirRegion(),
                     "Warm actual room and slab route before checking invalidation");
             helper.assertTrue(page(helper, material).currentPublication() != null
-                            && MinecraftThermalInput.sampleMaterial(level, material, matter)
+                            && MinecraftThermalInput.sampleMaterialTemperature(level, material, matter)
                             && matter.source() == MaterialSample.Source.LIVE,
                     "Actual log must have a complete live material publication");
         }).thenExecute(() -> {
@@ -113,7 +113,7 @@ public final class ContinuousAirPhysicalInvalidationGameTests {
         }).thenWaitUntil(() -> {
             var current = page(helper, material).currentPublication();
             helper.assertTrue(current != null && current.geometryRevision() >= changedRevision[0]
-                            && MinecraftThermalInput.sampleMaterial(level, material, matter)
+                            && MinecraftThermalInput.sampleMaterialTemperature(level, material, matter)
                             && matter.source() == MaterialSample.Source.LIVE,
                     "State metadata still reaches a full material publication");
         }).thenExecute(() -> {
@@ -124,7 +124,7 @@ public final class ContinuousAirPhysicalInvalidationGameTests {
         }).thenWaitUntil(() -> helper.assertTrue(written[0].observed, "Observe the actual native save payload"))
                 .thenExecute(() -> {
                     helper.assertTrue(written[0].thermalPresent, "Real native save contains thermal data");
-                    helper.assertTrue(MinecraftThermalInput.sampleMaterial(level, material, matter), "Read the actual submitted body after the save handoff");
+                    helper.assertTrue(MinecraftThermalInput.sampleMaterialTemperature(level, material, matter), "Read the actual submitted body after the save handoff");
                     var center = new BlockPos((material.getX() & ~15) + 8, (material.getY() & ~15) + 8, (material.getZ() & ~15) + 8);
                     double natural = WorldTemperature.naturalAir(level, center);
                     FHMain.LOGGER.info("THERMAL_MATERIAL_SAVE_DIAGNOSTIC,read={},liveC={},naturalC={},residualC={},branch={},liveJ={}",

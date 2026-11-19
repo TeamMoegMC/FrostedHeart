@@ -88,6 +88,7 @@ public final class ThermalNetworkLoadServer {
     private static final long[] arrived = new long[BASES];
     private static final int[] residents = new int[BASES];
     private static final long[] availableByBase = new long[BASES], unavailableByBase = new long[BASES], oldByBase = new long[BASES], oldestByBase = new long[BASES];
+    private static final long[] unavailableByPlayer = new long[PLAYERS];
     private static final long[] oldFrozenByBase = new long[BASES], oldGeometryHeldByBase = new long[BASES],
             oldGlobalClockByBase = new long[BASES], oldSectionClockByBase = new long[BASES], oldReadRacedByBase = new long[BASES];
     private static final long[] gameplayProbeTick = new long[PLAYERS], gameplayCapturedByBase = new long[BASES], gameplayDormantByBase = new long[BASES], gameplayMissingByBase = new long[BASES];
@@ -582,7 +583,7 @@ public final class ThermalNetworkLoadServer {
             if (Math.abs(player.getX() - origin.getX() - WIDTH / 2.0) > WIDTH || Math.abs(player.getZ() - origin.getZ() - WIDTH / 2.0) > WIDTH) continue;
             int base = base(index);
             if (publication == null || !publication.tryReadAir(player.getX(), player.getEyeY(), player.getZ(), probe)) {
-                unavailable++; unavailableByBase[base]++;
+                unavailable++; unavailableByBase[base]++; unavailableByPlayer[index]++;
                 if (capture) { missingNow[base]++; stalePlayers.add(stalledPlayer(player, index, publication, "missing", -1)); }
                 continue;
             }
@@ -1047,6 +1048,7 @@ public final class ThermalNetworkLoadServer {
         result.put("loadedWorkloadItems", workloadItems.stream().filter(id -> server.overworld().getEntity(id) instanceof ItemEntity).count());
         result.put("coalAccepted", fuelItems); result.put("constructionTicketsReleased", constructionTicketsReleased);
         result.put("residentPlayers", java.util.Arrays.stream(residents).sum()); result.put("residentSamples", ages.count);
+        result.put("unavailableByPlayer", unavailableByPlayer.clone());
         result.put("availableByBase", availableByBase.clone()); result.put("unavailableByBase", unavailableByBase.clone());
         result.put("oldByBase", oldByBase.clone()); result.put("oldestByBase", oldestByBase.clone());
         result.put("oldFrozenByBase", oldFrozenByBase.clone()); result.put("oldGeometryHeldByBase", oldGeometryHeldByBase.clone());

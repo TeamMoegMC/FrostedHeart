@@ -29,6 +29,8 @@
 |---|---|
 | 同机 100 连接、8,000 tick 的 CPU、耗时、分配与时效对照 | [11 月 18 日至 19 日验证数据](validation/thermal-100p-validation-2026-11-18-to-19.json)，按 `records` 中的原文件名查找 B1、C2、D1、E1、F1 和 G1 |
 | 11 月 18 日至 19 日的改动、测试结论和取舍 | [百人验证与迭代记录](../../diary/2026-11-19_01-37-47_thermal-100p-iteration-history.md) |
+| 11 月 19 日傍晚至 20 日的热模拟调度、几何刷新与材料边界 | [运行时开发记录](../../diary/2026-11-20_03-02-02_thermal-runtime-and-material-history.md) · [验证报告](validation/thermal-validation-reports-2026-11-19-to-20.md) · [验证数据](validation/thermal-validation-data-2026-11-19-to-20.json) |
+| 同期的温度读取、作物暖棚、篝火与白幕 | [玩法与渲染开发记录](../../diary/2026-11-20_03-02-02_temperature-gameplay-and-weather-history.md) |
 | 当前架构、热量/物理时间/查询/保存合同 | [运行说明](thermal-runtime-control.md) |
 | 全部迭代的有效决策、撤回项、失败及最终口径 | [合并开发历史](../../diary/2026-11-14_23-52-57_thermal-cell-enthalpy-history.md) |
 | 逐版本的原始指标、日志位置与限制 | [统一验证JSON](validation/thermal-cell-enthalpy-validation-2026-11-14.json)，按`records`中的原文件stem查找，共41条 |

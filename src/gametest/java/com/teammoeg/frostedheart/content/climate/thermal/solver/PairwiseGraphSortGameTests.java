@@ -37,7 +37,7 @@ public final class PairwiseGraphSortGameTests {
         var grid = new SharedAirGridCompiler().prepare(new AirFieldLayout(components, bricks, 64));
         while (!grid.run(0)) { }
         var layout = grid.layout();
-        var sources = new WorkerPhysicalSourceBindings(null, ThermalSignatureTable.builder().build(),
+        var sources = new WorkerPhysicalSourceBindings(null, null, ThermalSignatureTable.builder().build(),
                 MinecraftPhysicalSourceProfile.CAMPFIRE, new AirLoadTable()).freeze();
         var units = new AirOperatorFragment.UnitGridPreparation(layout, 128, 1, sources);
         while (!units.run(0)) { }

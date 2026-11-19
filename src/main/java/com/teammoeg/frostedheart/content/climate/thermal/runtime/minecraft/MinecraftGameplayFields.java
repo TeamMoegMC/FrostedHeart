@@ -51,7 +51,7 @@ public final class MinecraftGameplayFields {
         if (fields == null) return Double.NEGATIVE_INFINITY;
         fields.sample(position.getX() + .5, position.getY() + .5, position.getZ() + .5, FLOOR_SAMPLE);
         if (!FLOOR_SAMPLE.present()) return Double.NEGATIVE_INFINITY;
-        double natural = FLOOR_SAMPLE.requiresNatural() ? WorldTemperature.naturalBlock(level, position) : 0;
+        double natural = FLOOR_SAMPLE.requiresNatural() ? WorldTemperature.naturalAir(level, position) : 0;
         return FLOOR_SAMPLE.guaranteedFloor(natural);
     }
 

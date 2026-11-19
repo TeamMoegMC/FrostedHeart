@@ -28,6 +28,7 @@ import java.util.Set;
 /** Frozen physical defaults used by the Minecraft thermal runtime. */
 public final class MinecraftPhysicalSourceProfile {
     private static final double SHARE_TOLERANCE = 1.0e-12D;
+    private static final double CAMPFIRE_BODY_SHARE_OF_THERMAL_POWER = 0.25D;
 
     private final int profileId;
     private final double ratedPowerW;
@@ -41,19 +42,23 @@ public final class MinecraftPhysicalSourceProfile {
     public static final MinecraftPhysicalSourceProfile CAMPFIRE =
             campfire(8_000.0D, 0.2D);
 
+    /** Keeps an upward plume and sends part of the same heat budget to the campfire body. */
     public static MinecraftPhysicalSourceProfile campfire(
             double ratedPowerW,
             double radiationShare
     ) {
+        double thermalShare = 1.0D - radiationShare;
+        double bodyShare = thermalShare * CAMPFIRE_BODY_SHARE_OF_THERMAL_POWER;
         return new MinecraftPhysicalSourceProfile(
                     1,
                     ratedPowerW,
                     new Port[]{
                             Port.airFace(
-                                    0, 1.0D - radiationShare,
+                                    0, thermalShare - bodyShare,
                                     0, 1, 0,
                                     BlockFace.NEGATIVE_Y),
-                            Port.radiationLoss(1, radiationShare)
+                            Port.radiationLoss(1, radiationShare),
+                            Port.sourceMaterial(2, bodyShare)
                     },
                     0.5D, 0.75D, 0.5D, 1.0D);
     }
@@ -225,9 +230,15 @@ public final class MinecraftPhysicalSourceProfile {
         return totalPowerW * radiativePowerShare;
     }
 
+    /** Power allocated to thermal cells before resolving their availability. */
+    public double nonRadiativePowerW(double totalPowerW) {
+        return totalPowerW - radiativePowerW(totalPowerW);
+    }
+
     public enum PortKind {
         AIR_FACE,
-        RADIATION_LOSS
+        RADIATION_LOSS,
+        SOURCE_MATERIAL
     }
 
     public record Port(
@@ -252,7 +263,7 @@ public final class MinecraftPhysicalSourceProfile {
             }
             if (kind != PortKind.AIR_FACE
                     && (offsetX != 0 || offsetY != 0 || offsetZ != 0)) {
-                throw new IllegalArgumentException("sink ports cannot carry a world offset");
+                throw new IllegalArgumentException("only AIR_FACE ports carry a world offset");
             }
         }
 
@@ -267,6 +278,11 @@ public final class MinecraftPhysicalSourceProfile {
             return new Port(
                     portId, powerShare, PortKind.AIR_FACE,
                     offsetX, offsetY, offsetZ, targetFace);
+        }
+
+        /** Delivers heat to the material at the source's own block. */
+        public static Port sourceMaterial(int portId, double powerShare) {
+            return new Port(portId, powerShare, PortKind.SOURCE_MATERIAL, 0, 0, 0, null);
         }
 
         public static Port radiationLoss(

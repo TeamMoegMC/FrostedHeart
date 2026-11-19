@@ -1,9 +1,9 @@
 # 余温退出、保存与红外清理
 
 - Status: `Current for the implemented lifecycle and listed validation; full modpack/client capacity remains outside this qualification`
-- Last verified: `2026-11-06`
+- Last verified: `2026-11-20` for material conduction without a depth cutoff and fixed-field residency thresholds; remaining lifecycle sections retain their `2026-11-06` provenance
 - Scope: 普通空气/材料余温保留、Page/Brick 退出、已加载休眠维护、v6 恢复、红外删除及自然冻结启动/已完成相变提交
-- Code anchors: `ThermalRetentionPolicy`, `WorkerPageStore.advanceMaintenance/requestFace/collectMaterialFrontier`, `RegionalQuerySnapshot.materialPerturbationAtSlotC`, `MaterialThermalLaw.initialBranch`, `MinecraftPhaseController.tryAtRandomTick/applyDormantTransition/apply/canTransition`, `AirFieldCheckpoint.retain`, `MaterialSectionState.Retirement`, `DormantChunkThermalState.commitRetirement`, `DormantThermalMaintenance`, `MinecraftPageManager.retire/processShrinks`, `MinecraftThermalInput.captureDormantPage/dormantMaintenanceMask`, `InfraredCapture`
+- Code anchors: `ThermalRetentionPolicy`, `WorkerPageStore.advanceMaintenance/requestFace/collectMaterialFrontier`, `TiledThermalField.read/conductance`, `ThermalSignatureTable.contactFraction`, `MaterialThermalLaw.initialBranch`, `MinecraftPhaseController.tryAtRandomTick/applyDormantTransition/apply/canTransition`, `AirFieldCheckpoint.retain`, `MaterialSectionState.Retirement`, `DormantChunkThermalState.commitRetirement`, `DormantThermalMaintenance`, `MinecraftPageManager.retire/processShrinks`, `MinecraftThermalInput.captureDormantPage/dormantMaintenanceMask`, `InfraredCapture`
 
 ## 阈值的含义
 
@@ -11,7 +11,7 @@
 
 一个尚未计算的区域不会自己检测到升温。`WorkerPageStore.requestFace` 读取已有活动区域的边界扰动：尚未请求的相邻 Brick 达到 1°C 时申请纳入；已请求的相邻 Brick 使用 0.5°C 保持。真实 source seed 和路由/邻接需要也会保留所需区域。点火不必先积累到 1°C。
 
-材料接触扩张另外由 `WorkerPageStore.collectMaterialFrontier` 逐个检查已有表面材料的已提交温度，而不是由整个 Brick 的活跃标记无条件请求邻接材料。`RegionalQuerySnapshot.materialPerturbationAtSlotC` 使用：
+材料接触扩张由 `WorkerPageStore.collectMaterialFrontier` 逐个检查已有 Brick 边界上材料的已提交温度，包括完全埋藏的内部材料；整个 Brick 的活跃标记不会无条件请求邻接材料。它通过 `TiledThermalField.read` 使用：
 
 ```text
 H0 = law.enthalpyAtTemperature(N)
@@ -20,7 +20,9 @@ T0 = law.temperatureC(H0, b0)
 material expansion residual = abs(Tmaterial - T0)
 ```
 
-`N` 是当前 Page 捕获的自然空气温度，`T0` 是同种材料按该自然值首次初始化后实际求解得到的温度，`Tmaterial` 来自已有区域发布；温度单位 °C、差值单位 K，`H0` 单位 J，`b0` 为显热/升温/降温分支。材料接触也使用进入 1K、保持 0.5K 的既有滞回，针对目标 Brick 的请求状态选择门槛。没有额外材料温度副本或全维度扫描。
+`N` 是当前格的自然背景温度，`T0` 是同种材料按该自然值首次初始化后实际求解得到的温度，`Tmaterial` 来自 Accepted；温度单位 °C、差值单位 K，`H0` 单位 J，`b0` 为显热/升温/降温分支。材料接触也使用进入 1K、保持 0.5K 的既有滞回，针对目标 Brick 的请求状态选择门槛。没有额外材料温度副本或全维度扫描。
+
+材料没有固定传播层数或唯一表层归属。`BlockBrickLayout.materialNodeMask` 和 `WorkerPageStore.MATERIAL_FRONTIER_BLOCKS` 选出 Brick 六个面上的材料，按实际接触与上述温差请求直接邻格。第三层及更深材料升温后也可以接力；新区域仅被纳入、尚未产生足够扰动时不会继续扩张。未知邻格等待几何捕获，不会由 worker 强制加载世界区块。篝火只强制保留正功率端口的目标 Brick，去重后最多两个；其余六面邻格通过通用边界条件进入温场。
 
 这项区分对自然相变尤其重要。源码数据下，`N=-23.7°C` 的新水体进入冻结分支后可读为 -5°C，新泥土可读为 -10°C；即使尚未收到热源输入，也可能存在这些平台。它们仍保留自己的 H、分支与潜热责任；平台本身不再授权直接接力纳入下一批自然材料。空气的实际扰动和发生温度偏移的材料仍通过各自边界规则扩张。材料每个方块各有一个 H，捕获单元为 4×4×4 的 Brick，因此同一 Brick 中数格水可同时进入模拟和显色。
 

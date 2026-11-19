@@ -62,7 +62,7 @@ public final class ThermalIndependentProgressGameTests {
                 RegionalEngineTestDriver.submit(helper, simulation.engine, envelope(simulation, 60, ThermalInputBatch.NO_ADMISSIONS, held));
             }
             helper.assertTrue(!simulation.engine.hasWork() && simulation.fixed.tileCount() == 2, "No obsolete admission restarts when the actual source resumes");
-            near(helper, profile.ratedPowerW() * profile.port(0).powerShare(), simulation.fixed.totalEnthalpyJ() + simulation.fixed.externalEnergyJ(),
+            near(helper, profile.nonRadiativePowerW(profile.ratedPowerW()), simulation.fixed.totalEnthalpyJ() + simulation.fixed.externalEnergyJ(),
                     "Metadata retirement does not consume the unrelated source's production twice");
             FHMain.LOGGER.info("THERMAL_UNINSTALLED_RETIREMENT_PREFIX,blockedSampleTick=20,retirementTick=60,metadataReleasedBeforeSourceArrival=true,finalPages=2");
         } finally { MinecraftThermalInput.closeActiveLevel(helper.getLevel()); }
@@ -177,7 +177,7 @@ public final class ThermalIndependentProgressGameTests {
                     "First capture and existing source initialization do not invent an earlier numerical interval");
             RegionalEngineTestDriver.submit(helper, simulation.engine, envelope(simulation, 80, ThermalInputBatch.NO_ADMISSIONS, producer.seal(80)));
             var values = new double[127]; sampleCells(helper, simulation, base, values, 0, 80);
-            double expected = 3 * profile.ratedPowerW() * profile.port(0).powerShare();
+            double expected = 3 * profile.nonRadiativePowerW(profile.ratedPowerW());
             double energy = simulation.fixed.totalEnthalpyJ() + simulation.fixed.externalEnergyJ();
             near(helper, expected, energy, "The entire produced interval is conserved through the real first admission");
             return new Result(true, values, energy);
@@ -221,7 +221,7 @@ public final class ThermalIndependentProgressGameTests {
                 helper.assertTrue(!simulation.fixed.frozen(a) && simulation.fixed.sectionSampleTick(a) == 80
                         && simulation.fixed.sectionSampleTick(b) == 80 && !simulation.engine.hasWork(),
                         "The old control reaches the active receiver, then both actual frames meet the reentry cut");
-                double expected = 5.75 * profile.ratedPowerW() * profile.port(0).powerShare();
+                double expected = 5.75 * profile.nonRadiativePowerW(profile.ratedPowerW());
                 near(helper, expected, simulation.fixed.totalEnthalpyJ() + simulation.fixed.externalEnergyJ(),
                         "Freeze, old control, cancellation and reentry consume every produced J once");
                 FHMain.LOGGER.info("THERMAL_NATIVE_REENTRY_CONTROL,frozenTick=20,controlTick=35,reentryTick=80,conservedJ={},nativeReceiptCompletedBeforeCatchup=true", expected);
@@ -373,7 +373,7 @@ public final class ThermalIndependentProgressGameTests {
                         && sample.sampleTick() == 40, "Both final physical samples must be genuine tick-40 values");
                 values[at++] = sample.temperatureC();
             }
-            double expected = 3 * profile.ratedPowerW() * profile.port(0).powerShare();
+            double expected = 3 * profile.nonRadiativePowerW(profile.ratedPowerW());
             double energy = simulation.fixed.totalEnthalpyJ() + simulation.fixed.externalEnergyJ();
             near(helper, expected, energy, "Each declared source interval is consumed once");
             return new Result(progressed, values, energy);

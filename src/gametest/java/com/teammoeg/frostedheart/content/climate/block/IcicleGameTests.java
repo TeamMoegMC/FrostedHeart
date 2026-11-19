@@ -1,7 +1,10 @@
 /* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedheart.content.climate.block;
 
+import static com.teammoeg.frostedheart.content.climate.WorldTemperature.BlockTemperatureUse.PHASE_CHANGE;
+
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
+import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialSample;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialThermalLaw;
 import com.teammoeg.frostedheart.content.climate.thermal.persistence.minecraft.DormantChunkThermalState;
@@ -93,15 +96,17 @@ public final class IcicleGameTests {
         helper.assertTrue(restored.getAll().filter(t -> t.pos().equals(root)).findFirst().orElseThrow().triggerTick() - now - 10_000 == 640,
                 "unload pauses remaining time without an ice block entity");
         level.removeBlock(root.above(), false);
-        helper.runAfterDelay(2, () -> {
-            helper.assertTrue(level.getBlockState(root).isAir(), "support loss supersedes the long countdown");
+        helper.assertTrue(ticks.getAll().anyMatch(t -> t.pos().equals(root) && t.type() == ice
+                        && t.triggerTick() == level.getGameTime() + 1),
+                "support loss replaces the long countdown with a next-tick check");
+        helper.startSequence().thenWaitUntil(() -> helper.assertTrue(level.getBlockState(root).isAir(),
+                "the scheduled support check detaches the ice chain")).thenExecute(() -> {
             chain(level, root, 1);
             helper.assertTrue(!level.getBlockTicks().hasScheduledTick(root, ice), "replacement cannot inherit a stale countdown");
             ice.warn(level, root, YES);
             helper.assertTrue(((LevelChunkTicks<Block>) level.getChunkAt(root).getBlockTicks()).getAll().filter(t -> t.pos().equals(root)).findFirst().orElseThrow().triggerTick()
                     - level.getGameTime() == 640, "replacement gets a fresh full warning");
-            helper.succeed();
-        });
+        }).thenSucceed();
     }
 
     @GameTest(template = "phase0a_empty", batch = "icicle_vibrationwarnsfirstandrespectssphericalrange", timeoutTicks = 40)
@@ -144,7 +149,7 @@ public final class IcicleGameTests {
             ice.randomTick(level.getBlockState(root), level, root, YES);
             helper.assertTrue(level.getBlockState(root.below()).isAir(), "warm material cannot grow even in a cold biome");
             seed(helper, root, 0, MaterialThermalLaw.SENSIBLE);
-            near(helper, 0, MinecraftPhaseController.temperature(level, root), "growth fixture must read cold material");
+            near(helper, 0, WorldTemperature.getTempAtBlock(level, root, PHASE_CHANGE), "growth fixture must read cold material");
             ice.randomTick(level.getBlockState(root), level, root, YES);
             helper.assertTrue(IcicleBlock.isIcicle(level.getBlockState(root.below())), "cold material grows without water");
             ice.warn(level, root, YES);

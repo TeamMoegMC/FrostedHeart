@@ -151,7 +151,7 @@ public abstract class BaseData implements Writeable {
 					if (!hasHome) {
 						actualRecover /= TradeConstants.NO_HOME_RECOVER_PUNISHEMENT_DIVISOR;
 					} else {
-						float t = WorldTemperature.block(v.level(), v.blockPosition());
+						float t = WorldTemperature.getTempAtBlock(v.level(), v.blockPosition());
 						if (t < TradeConstants.TOO_COLD_RECOVER_TEMP) {
 							actualRecover /= TradeConstants.TEMPERATURE_RECOVER_DIVISOR;
 						}

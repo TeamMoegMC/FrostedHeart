@@ -67,7 +67,7 @@ public final class DirectAirProjectionGameTests {
         var grid = new SharedAirGridCompiler().prepare(new AirFieldLayout(new AirFieldLayout.Component[]{captured}, bricks, 8));
         while (!grid.run(Long.MAX_VALUE)) { }
         var layout = grid.layout();
-        var bindings = new WorkerPhysicalSourceBindings(null, ThermalSignatureTable.builder().build(),
+        var bindings = new WorkerPhysicalSourceBindings(null, null, ThermalSignatureTable.builder().build(),
                 MinecraftPhysicalSourceProfile.CAMPFIRE, new AirLoadTable()).freeze();
         var volumes = new AirOperatorFragment.UnitGridPreparation(layout, 128, 1, bindings);
         while (!volumes.run(Long.MAX_VALUE)) { }

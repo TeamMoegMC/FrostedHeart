@@ -20,6 +20,8 @@
 /* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft;
 
+import static com.teammoeg.frostedheart.content.climate.WorldTemperature.BlockTemperatureUse.SURROUNDINGS;
+
 import static com.teammoeg.frostedheart.content.climate.thermal.solver.ThermalDiagnostics.TRACE;
 
 import com.teammoeg.frostedheart.FHMain;
@@ -29,6 +31,7 @@ import com.teammoeg.frostedheart.content.climate.thermal.consumer.TownThermalPro
 import com.teammoeg.frostedheart.content.climate.thermal.field.ThermalAnalyticField;
 import com.teammoeg.frostedheart.content.climate.thermal.field.ThermalAnalyticFieldIndex;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialSample;
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialThermalLaw;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.PagePublication;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalCellArena;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalPageHandle;
@@ -819,7 +822,16 @@ public final class MinecraftThermalInput implements AutoCloseable {
         out.setRadiation(radiationSample.radiantFluxWPerM2());
     }
 
-    public static double gameplayPlayerEnvironment(
+    /**
+     * Samples air temperature and radiant flux at the player's eyes. Starts the
+     * thermal runtime around the player when it needs to be initialized.
+     *
+     * @param player server-side receiver
+     * @param naturalTemperatureC natural background and fallback in degrees Celsius
+     * @param out reusable sample cleared before each query
+     * @return air temperature in degrees Celsius, including local analytic fields
+     */
+    public static double samplePlayerAirTemperature(
             ServerPlayer player, double naturalTemperatureC, ThermalEnvironmentSample out) {
         var stageObserver = com.teammoeg.frostedheart.content.climate.thermal.solver.ThermalDiagnostics.observer;
         if (stageObserver != null) stageObserver.stage("thermal_player_query", true);
@@ -869,7 +881,17 @@ public final class MinecraftThermalInput implements AutoCloseable {
         } finally { if (stageObserver != null) stageObserver.stage("thermal_player_query", false); }
     }
 
-    public static double gameplayPassiveEnvironment(
+    /**
+     * Samples air temperature at the block center using existing thermal state.
+     * The server thread composes local analytic fields with available air data or the
+     * natural background. Other callers receive the supplied natural background.
+     *
+     * @param level level containing the position
+     * @param position block whose center is sampled
+     * @param naturalTemperatureC natural background and fallback in degrees Celsius
+     * @return air temperature in degrees Celsius
+     */
+    public static double sampleAirTemperature(
             LevelReader level, BlockPos position, double naturalTemperatureC) {
         var stageObserver = com.teammoeg.frostedheart.content.climate.thermal.solver.ThermalDiagnostics.observer;
         if (stageObserver != null) stageObserver.stage("thermal_passive_query", true);
@@ -916,18 +938,22 @@ public final class MinecraftThermalInput implements AutoCloseable {
     }
 
     /**
-     * Samples a dropped reservoir without starting a physical runtime or admitting
-     * Pages. Cache only physical inputs; world fields are composed at the exact
-     * receiver position on every query, including same-tick field updates.
+     * Samples air temperature and radiant flux at the center of a dropped item.
+     * Physical inputs can be reused within the tick. Analytic fields are composed at
+     * the exact receiver position on every query.
+     *
+     * @param entity dropped item being sampled
+     * @param naturalTemperatureC natural background and fallback in degrees Celsius
+     * @param out reusable sample cleared before each query
      */
-    public static void gameplayItemEnvironment(
+    public static void sampleDroppedItemAirAndRadiation(
             ItemEntity entity, double naturalTemperatureC, ThermalEnvironmentSample out) {
         Objects.requireNonNull(entity, "entity");
         if (!(entity.level() instanceof ServerLevel server)) {
             out.clear();
             return;
         }
-        gameplayExposedReservoirEnvironment(
+        sampleReservoirAirAndRadiation(
                 server,
                 receiverKey(entity),
                 entity.getId() & Integer.MAX_VALUE,
@@ -938,13 +964,20 @@ public final class MinecraftThermalInput implements AutoCloseable {
                 out);
     }
 
-    /** Samples just above a placed reservoir using the same budget and boundary as dropped items. */
-    public static void gameplayPlacedReservoirEnvironment(
+    /**
+     * Samples air temperature and radiant flux at the receiver point of a placed reservoir.
+     *
+     * @param server level containing the reservoir
+     * @param position reservoir block position
+     * @param naturalTemperatureC natural background and fallback in degrees Celsius
+     * @param out reusable sample cleared before each query
+     */
+    public static void samplePlacedReservoirAirAndRadiation(
             ServerLevel server,
             BlockPos position,
             double naturalTemperatureC,
             ThermalEnvironmentSample out) {
-        gameplayExposedReservoirEnvironment(
+        sampleReservoirAirAndRadiation(
                 server,
                 position.asLong(),
                 0,
@@ -955,7 +988,7 @@ public final class MinecraftThermalInput implements AutoCloseable {
                 out);
     }
 
-    private static void gameplayExposedReservoirEnvironment(
+    private static void sampleReservoirAirAndRadiation(
             ServerLevel server,
             long receiverIdentity,
             int receiverGeneration,
@@ -1012,12 +1045,15 @@ public final class MinecraftThermalInput implements AutoCloseable {
         } finally { if (stageObserver != null) stageObserver.stage("thermal_item_query", false); }
     }
 
-    public static double gameplayCropEnvironment(
-            LevelAccessor level, BlockPos position, double naturalTemperatureC) {
-        return gameplayPassiveEnvironment(level, position, naturalTemperatureC);
-    }
-
-    public static double gameplayTownEnvironment(
+    /**
+     * Computes the weighted mean air temperature at the projection's representative points.
+     *
+     * @param level level containing the projected positions
+     * @param projection sample positions and their voxel weights
+     * @param naturalTemperatureC fallback in degrees Celsius for an empty or unavailable projection
+     * @return weighted air temperature in degrees Celsius
+     */
+    public static double sampleWeightedAirTemperature(
             LevelAccessor level, TownThermalProjection projection, double naturalTemperatureC) {
         var stageObserver = com.teammoeg.frostedheart.content.climate.thermal.solver.ThermalDiagnostics.observer;
         if (stageObserver != null) stageObserver.stage("thermal_town_query", true);
@@ -1058,7 +1094,7 @@ public final class MinecraftThermalInput implements AutoCloseable {
                         base = out.airTemperatureC();
                     } else {
                         input.townPosition.set(x, y, z);
-                        base = natural = WorldTemperature.naturalBlock(server, input.townPosition);
+                        base = natural = WorldTemperature.naturalAir(server, input.townPosition);
                     }
                 } else {
                     double dormant =
@@ -1073,13 +1109,13 @@ public final class MinecraftThermalInput implements AutoCloseable {
                             Double.isFinite(dormant)
                                     ? dormant
                                     : (natural =
-                                            WorldTemperature.naturalBlock(
+                                            WorldTemperature.naturalAir(
                                                     server, DORMANT_QUERY_POSITION.get().set(x, y, z)));
                 }
                 if (fieldSample != null) {
                     if (fieldSample.requiresNatural() && !Double.isFinite(natural)) {
                         natural =
-                                WorldTemperature.naturalBlock(
+                                WorldTemperature.naturalAir(
                                         server, DORMANT_QUERY_POSITION.get().set(x, y, z));
                     }
                     base = fieldSample.compose(natural, base);
@@ -1091,7 +1127,8 @@ public final class MinecraftThermalInput implements AutoCloseable {
         } finally { if (stageObserver != null) stageObserver.stage("thermal_town_query", false); }
     }
 
-    public static List<ThermalAnalyticField> gameplayAnalyticFieldsAt(
+    /** Returns the analytic heat fields covering the block center on the server thread. */
+    public static List<ThermalAnalyticField> analyticFieldsAt(
             ServerLevel level, BlockPos position) {
         if (!level.getServer().isSameThread()) return List.of();
         ThermalAnalyticFieldIndex fields = MinecraftGameplayFields.existing(level);
@@ -1101,7 +1138,8 @@ public final class MinecraftThermalInput implements AutoCloseable {
                         position.getX() + 0.5D, position.getY() + 0.5D, position.getZ() + 0.5D);
     }
 
-    public static boolean hasGameplayAnalyticFieldAt(ServerLevel level, BlockPos position) {
+    /** Reports whether an analytic heat field covers the block center on the server thread. */
+    public static boolean hasAnalyticFieldAt(ServerLevel level, BlockPos position) {
         if (!level.getServer().isSameThread()) return false;
         ThermalAnalyticFieldIndex fields = MinecraftGameplayFields.existing(level);
         return fields != null
@@ -1109,7 +1147,8 @@ public final class MinecraftThermalInput implements AutoCloseable {
                         position.getX() + 0.5D, position.getY() + 0.5D, position.getZ() + 0.5D);
     }
 
-    public static InfraredSnapshot gameplayInfraredSnapshot(ServerPlayer player,
+    /** Captures infrared data using the client's known revisions and requested coverage. */
+    public static InfraredSnapshot captureInfraredSnapshot(ServerPlayer player,
             com.teammoeg.frostedheart.content.climate.network.FHRequestInfraredViewDataSyncPacket request) {
         return captureInfraredSnapshot(player, request.forceFull(), request.knownGeneration(), request.knownCenter(),
                 request.lastEpoch(), request.knownPresence(), request.knownReadable(), request.knownFieldPages(),
@@ -1117,7 +1156,8 @@ public final class MinecraftThermalInput implements AutoCloseable {
                 request.knownNaturalRevision());
     }
 
-    public static InfraredSnapshot gameplayInfraredSnapshot(
+    /** Captures infrared data using the supplied physical and field revisions. */
+    public static InfraredSnapshot captureInfraredSnapshot(
             ServerPlayer player,
             boolean forceFull,
             long knownGeneration,
@@ -1169,13 +1209,62 @@ public final class MinecraftThermalInput implements AutoCloseable {
         if(input!=null)input.queryPublication.noteInfraredRequest(level.getGameTime(),80);
     }
 
+    /** Reads the material record using reusable scratch storage. */
     public static double materialTemperature(ServerLevel level, BlockPos position) {
-        var sample = MATERIAL_SAMPLE.get();
-        return sampleMaterial(level, position, sample) ? sample.temperatureC() : Double.NaN;
+        return materialTemperature(level, position, null);
     }
 
-    /** Reads a body without creating physical residency or substituting environmental temperature. */
-    public static boolean sampleMaterial(ServerLevel level, BlockPos position, MaterialSample out) {
+    /**
+     * Reads the temperature of an existing material record with optional caller-owned output.
+     *
+     * @param level server level containing the position
+     * @param position block position to sample
+     * @param material reusable output, or null to use internal scratch storage
+     * @return recorded temperature in degrees Celsius, or NaN when no record can be read
+     */
+    public static double materialTemperature(ServerLevel level, BlockPos position, @javax.annotation.Nullable MaterialSample material) {
+        MaterialSample sample = material == null ? MATERIAL_SAMPLE.get() : material;
+        return sampleMaterialTemperature(level, position, sample) ? sample.temperatureC() : Double.NaN;
+    }
+
+    /**
+     * Reads the temperature and source of an existing live or stored material record.
+     *
+     * @param level server level containing the material
+     * @param position position of the material
+     * @param out reusable material sample cleared before each query
+     * @return whether the material record supplied a reading
+     */
+    public static boolean sampleMaterialTemperature(ServerLevel level, BlockPos position, MaterialSample out) {
+        return readMaterial(level, position, out, false);
+    }
+
+    /**
+     * Reads the material temperature in degrees Celsius using an internal scratch sample.
+     * A loaded body with no thermal record is eligible for an estimate from air temperature.
+     *
+     * @see #sampleMaterialTemperatureWithEstimate(ServerLevel, BlockPos, MaterialSample)
+     */
+    public static double sampleMaterialTemperatureWithEstimate(ServerLevel level, BlockPos position) {
+        return sampleMaterialTemperatureWithEstimate(level, position, MATERIAL_SAMPLE.get());
+    }
+
+    /**
+     * Reads a material temperature for a phase-change rule. Estimates from
+     * the air temperature for a loaded body with no thermal record. An unavailable reading
+     * has source {@link MaterialSample.Source#UNAVAILABLE}.
+     *
+     * @param level server level containing the material
+     * @param position position of the material
+     * @param out reusable output containing the temperature and its source
+     * @return material temperature in degrees Celsius, or NaN when unavailable
+     */
+    public static double sampleMaterialTemperatureWithEstimate(ServerLevel level, BlockPos position, MaterialSample out) {
+        readMaterial(level, position, out, true);
+        return out.temperatureC();
+    }
+
+    private static boolean readMaterial(ServerLevel level, BlockPos position, MaterialSample out, boolean estimate) {
         var stageObserver = com.teammoeg.frostedheart.content.climate.thermal.solver.ThermalDiagnostics.observer;
         if (stageObserver != null) stageObserver.stage("thermal_material_query", true);
         try {
@@ -1195,23 +1284,32 @@ public final class MinecraftThermalInput implements AutoCloseable {
                         return true;
                     if (readPublishedMaterial(input, handle, handle.previousPublication(), section,
                             position, out, true)) return true;
+                    // A worker can replace the publication after the read fills the sample.
+                    if (out.source() == MaterialSample.Source.LIVE) out.clear();
                 }
             }
             LevelChunk chunk =
                     level.getChunkSource().getChunkNow(SectionPos.x(section), SectionPos.z(section));
-            DormantChunkThermalState stored = chunk == null ? null : dormantState(chunk);
-            if (stored == null || !stored.hasMaterials(SectionPos.y(section))) return false;
+            if (chunk == null || level.isOutsideBuildHeight(position)) return false;
+            int block = (x & 15) | (z & 15) << 4 | (y & 15) << 8;
+            var owner = ((MinecraftThermalSectionAttachment) (Object) chunk.getSection(chunk.getSectionIndex(y)))
+                    .frostedheart$getThermalInputOwner();
+            if (owner != null && owner.ownsMaterialPosition(block)) return false;
+            DormantChunkThermalState stored = dormantState(chunk);
+            if (!estimate && (stored == null || !stored.hasMaterials(SectionPos.y(section)))) return false;
             BlockState state = chunk.getBlockState(position);
             var law = MinecraftThermalProfiles.materialLaw(state);
             if (law == null) return false;
-            if (stored.readMaterial(
-                            SectionPos.y(section),
-                            (x & 15) | (z & 15) << 4 | (y & 15) << 8,
-                            Block.BLOCK_STATE_REGISTRY.getId(state),
-                            out)
-                    != DormantChunkThermalState.MaterialRead.MATCH) return false;
-            stored.projectMaterial(level, position, law, out, DORMANT_QUERY_POSITION.get());
-            return true;
+            var read = stored == null ? DormantChunkThermalState.MaterialRead.MISSING
+                    : stored.readMaterial(SectionPos.y(section), block, Block.getId(state), out);
+            if (read == DormantChunkThermalState.MaterialRead.MATCH) {
+                stored.projectMaterial(level, position, law, out, DORMANT_QUERY_POSITION.get());
+                return true;
+            }
+            if (estimate && read == DormantChunkThermalState.MaterialRead.MISSING) {
+                out.estimate((float) WorldTemperature.getTempAtBlock(level, position, SURROUNDINGS));
+            }
+            return false;
         } finally { if (stageObserver != null) stageObserver.stage("thermal_material_query", false); }
     }
 
@@ -1244,6 +1342,23 @@ public final class MinecraftThermalInput implements AutoCloseable {
         }
         return input.queryPublication.tryReadMaterial(publication, block, stateId, out)
                 && handle.lastPublication() == publication;
+    }
+
+    /** Keep partially funded natural phase changes in the same chunk checkpoint as other sleeping materials. */
+    public static void startDormantPhase(LevelChunk chunk, BlockPos position, BlockState blockState,
+            MaterialThermalLaw law, double energyJ, byte branch, long tick) {
+        int section = position.getY() >> 4;
+        int block = (position.getX() & 15) | (position.getZ() & 15) << 4 | (position.getY() & 15) << 8;
+        var stored = dormantState(chunk);
+        if (stored == null) {
+            stored = new DormantChunkThermalState(chunk.getMinSection(), chunk.getSections().length);
+            setDormantState(chunk, stored);
+        }
+        if (stored.hasMaterial(section, block)) return;
+        stored.replaceMaterials(section, MaterialSectionState.startPhase(stored.materials(section), block,
+                Block.getId(blockState), law, energyJ, branch, tick));
+        chunk.setUnsaved(true);
+        DormantThermalMaintenance.track(chunk);
     }
 
     /** Existing random updates select the location. This method never creates residency. */
@@ -1717,7 +1832,7 @@ public final class MinecraftThermalInput implements AutoCloseable {
                         SectionPos.y(sectionKey),
                         gameTick,
                         profiles.tuning().dormantTemperatureHalfLifeSeconds(),
-                        naturalTemperatureC);
+                        naturalTemperatureC, WorldTemperature.sectionBackground(level, sectionKey, dormantPosition));
     }
 
     public boolean captureDormantPage(ThermalPageHandle page) {
@@ -1751,7 +1866,8 @@ public final class MinecraftThermalInput implements AutoCloseable {
                         SectionPos.z(sectionKey),
                         tick,
                         dormantPosition);
-        state = state.retain(-1L, tick, natural, DormantThermalCooling.rate(dormantHalfLifeSeconds()));
+        state = state.retain(-1L, tick, WorldTemperature.sectionBackground(level, sectionKey, dormantPosition),
+                DormantThermalCooling.rate(dormantHalfLifeSeconds()));
         if (state == null) return null;
         return new ThermalInputBatch.DormantMaterialCut(
                 state, tick, natural, DormantThermalCooling.rate(dormantHalfLifeSeconds()));
@@ -1921,7 +2037,7 @@ public final class MinecraftThermalInput implements AutoCloseable {
             capturedMaterials =
                     MaterialSectionState.capture(
                             publication, queryPublication, profiles.signatures(), materialCapture, true,
-                            checkpointCursor, retiringBricks, natural);
+                            checkpointCursor, retiringBricks, WorldTemperature.sectionBackground(level, page.sectionKey(), dormantPosition));
             if (capturedMaterials.valid() && matchesCheckpointPage(page, publication, checkpointCursor)) {
                 materialSnapshotRevision = publication.geometryRevision();
                 break;
@@ -1954,8 +2070,7 @@ public final class MinecraftThermalInput implements AutoCloseable {
                         .frostedheart$getThermalInputOwner();
         if (owner != null)
             materialState =
-                    owner.projectMaterialCheckpoint(
-                            materialState, materialSnapshotRevision, natural);
+                    owner.projectMaterialCheckpoint(materialState, materialSnapshotRevision);
         changed |= state.mergeMaterials(sectionY, materialState, capturedMaterials.sampledBricks());
         if (state.isEmpty()) {
             setDormantState(chunk, null);
@@ -1999,7 +2114,7 @@ public final class MinecraftThermalInput implements AutoCloseable {
             var owner = ((MinecraftThermalSectionAttachment) (Object) chunk.getSections()[
                     chunk.getSectionIndex(SectionPos.sectionToBlockCoord(sectionY))]).frostedheart$getThermalInputOwner();
             if (owner != null) {
-                materialState = owner.projectMaterialCheckpoint(materialState, section.geometryRevision(), natural);
+                materialState = owner.projectMaterialCheckpoint(materialState, section.geometryRevision());
                 var page = owner.page();
                 if (page != null && page.liveGeometryRevision() != section.geometryRevision()) stale++;
             }

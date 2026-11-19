@@ -43,8 +43,8 @@ public final class TiledThermalSaturationGameTests {
             register(helper, simulation, producer, oldFire, 0);
             RegionalEngineTestDriver.submit(helper, simulation.engine, envelope(simulation, 0, ThermalInputBatch.NO_ADMISSIONS, producer));
             RegionalEngineTestDriver.submit(helper, simulation.engine, envelope(simulation, 20, ThermalInputBatch.NO_ADMISSIONS, producer));
-            double power = simulation.profiles.tuning().campfire().ratedPowerW()
-                    * simulation.profiles.tuning().campfire().port(0).powerShare();
+            var profile = simulation.profiles.tuning().campfire();
+            double power = profile.nonRadiativePowerW(profile.ratedPowerW());
             long section = SectionPos.asLong(expansion);
             var page = new ThermalPageHandle(section, 1);
             byte[] sky = new byte[256]; java.util.Arrays.fill(sky, (byte) 16);
@@ -123,7 +123,8 @@ public final class TiledThermalSaturationGameTests {
             register(helper, simulation, producer, firstFire, 0); register(helper, simulation, producer, secondFire, 0);
             RegionalEngineTestDriver.submit(helper, simulation.engine, envelope(simulation, 0, new ThermalInputBatch.PageAdmission[] {admission}, producer));
             RegionalEngineTestDriver.submit(helper, simulation.engine, envelope(simulation, 20, ThermalInputBatch.NO_ADMISSIONS, producer));
-            double power = simulation.profiles.tuning().campfire().ratedPowerW() * simulation.profiles.tuning().campfire().port(0).powerShare();
+            var profile = simulation.profiles.tuning().campfire();
+            double power = profile.nonRadiativePowerW(profile.ratedPowerW());
             var before = new TiledThermalField.Sample();
             helper.assertTrue(simulation.fixed.read(secondFire.above().asLong(), false, before), "Read the real local base before its pending expansion");
             double beforeC = before.temperatureC();
@@ -249,7 +250,8 @@ public final class TiledThermalSaturationGameTests {
                     "Retirement must bypass a waiting admission and make its actual Page slot available");
             for (int flush = 0; flush < 4; flush++)
                 RegionalEngineTestDriver.submit(helper, simulation.engine, envelope(simulation, 40, ThermalInputBatch.NO_ADMISSIONS, producer));
-            double power = simulation.profiles.tuning().campfire().ratedPowerW() * simulation.profiles.tuning().campfire().port(0).powerShare();
+            var profile = simulation.profiles.tuning().campfire();
+            double power = profile.nonRadiativePowerW(profile.ratedPowerW());
             near(helper, 3 * power, simulation.fixed.totalEnthalpyJ() + simulation.fixed.externalEnergyJ(),
                     "The unretired source and the newly admitted source each keep their original elapsed J exactly once");
             helper.assertTrue(simulation.fixed.tileCount() == 2, "Reclamation does not raise the configured live Page count");
@@ -326,7 +328,8 @@ public final class TiledThermalSaturationGameTests {
                 pump(helper, simulation);
                 helper.assertTrue(!simulation.fixed.hasSection(section), "A waiting private growth must yield to the same Page's later retirement");
                 helper.assertTrue(simulation.fixed.acceptedTick() == 60 && !simulation.engine.hasWork(), "Requeued growth cannot restart forever after its owner retires");
-                double power = simulation.profiles.tuning().campfire().ratedPowerW() * simulation.profiles.tuning().campfire().port(0).powerShare();
+                var profile = simulation.profiles.tuning().campfire();
+                double power = profile.nonRadiativePowerW(profile.ratedPowerW());
                 near(helper, 3 * power, simulation.fixed.totalEnthalpyJ() + simulation.fixed.externalEnergyJ(), "Edit, cancelled preparation and retirement preserve source J once");
                 helper.assertTrue(simulation.fixed.read(fire.above().asLong(), false, sample) && sample.temperatureC() > 0,
                         "Keep the real engine and a heated base live during the cancelled-preparation collection check");

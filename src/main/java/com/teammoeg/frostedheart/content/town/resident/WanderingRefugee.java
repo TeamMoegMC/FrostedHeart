@@ -383,7 +383,7 @@ public class WanderingRefugee extends AbstractVillager implements NeutralMob, Vi
         } else {
             playerIn.displayClientMessage(Component.translatable("message.frostedheart.trade.great_relation"), false);
         }
-        float t = WorldTemperature.block(level(), blockPosition());
+        float t = WorldTemperature.getTempAtBlock(level(), blockPosition());
         if (t < 0) {
             playerIn.displayClientMessage(Component.translatable("message.frostedheart.trade.low_temp"), false);
         }

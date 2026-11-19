@@ -179,9 +179,21 @@ public final class ThermalExchangeKernel {
                         * (inverseCapacityAKPerJ + inverseCapacityBKPerJ)
                         * dtSeconds);
         double reducedCapacity = reducedCapacity(capacityAJPerK, capacityBJPerK);
-        double energyFromAToB = reducedCapacity
-                * approach
-                * (temperatureOffsetA - temperatureOffsetB);
+        return applyPairWeight(enthalpyAJ, enthalpyBJ, temperatureOffsetA, temperatureOffsetB,
+                reducedCapacity * approach, result);
+    }
+
+    /** Transfer weight in J/K for two cells of equal, finite positive heat capacity during one interval. */
+    static double equalCapacityPairWeight(double capacity, double inverseCapacity, double conductance, double duration) {
+        if (!positiveFinite(inverseCapacity) || !nonNegativeFinite(conductance) || !nonNegativeFinite(duration))
+            return Double.NaN;
+        return (capacity / 2) * approachFraction(conductance * (inverseCapacity + inverseCapacity) * duration);
+    }
+
+    /** Apply a precomputed J/K weight to the current temperature offsets, preserving the pair's energy. */
+    static Status applyPairWeight(double enthalpyAJ, double enthalpyBJ, double temperatureOffsetA,
+            double temperatureOffsetB, double weight, MutablePairResult result) {
+        double energyFromAToB = weight * (temperatureOffsetA - temperatureOffsetB);
         if (!finite(energyFromAToB)) {
             return degradedPair(enthalpyAJ, enthalpyBJ, result);
         }

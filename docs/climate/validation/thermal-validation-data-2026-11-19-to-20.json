@@ -1,0 +1,2782 @@
+{
+  "schemaVersion": 1,
+  "scope": "Thermal validation, 2026-11-19 through 2026-11-20. Individual receipts retain their original implementation scope, including historical candidates.",
+  "consolidatedLocal": "2026-11-20T03:02:02+08:00",
+  "recordCount": 5,
+  "usage": "Keys under records are the former receipt filenames without .json. JSON Pointer fragments identify individual records. Build and log paths identify original local artifacts.",
+  "records": {
+    "thermal-face-sweep-2026-11-19": {
+      "date": "2026-11-19",
+      "status": "Applied to workspace. Fixed-work and local 100-player prefix validated.",
+      "reference": "Compiled H3 before the parked outlet draft, working-tree base 5edad63b6.",
+      "candidate": "Implicit zero-conductance boundaries skip negative-neighbour lookups. Equal-capacity air contacts reuse the three common half-step weights and the source cell law. Each face uses current enthalpy, mixing, buoyancy and local natural.",
+      "method": {
+        "dedicatedServers": "Two qualified independent Forge JVMs with the same deterministic gameplay load prefix. Original H3 ran first. New candidate ran second. Both client and server processes exited 0 in each. Each run includes 1,400 measured ticks and 200 recovery ticks.",
+        "excludedSetup": "The first baseline startup lost FHLoad001 during packet encoding before the measurement phase and was discarded.",
+        "comparisonBudgetMsPerSecond": 250,
+        "mainThreadAndSolverScope": "Worker charge and face stage durations are elapsed task time. Stages are separated at changes of the actual field stage, without per-face timers. Native thread cycles and the Java CPU clock are recorded separately. Main thermal P99 is per server tick.",
+        "counterCaveat": "On this Windows machine intermittent work can be undercounted by the Java thread CPU clock. See thermal-cpu-counter-diagnosis-2026-10-28.json.",
+        "scopeOfScanCounters": "Successful field begins report directory size and selected Tile count. Claim counts eligibility tests and matches. Seal counts its high-water slots and selected inputs. Cancelled time is spent in field.advance for started positive-time trials ending by cancellation and is included in the field total.",
+        "traceBoundaries": "Stages and scan counts use the most recent 20-tick observation at task entry. Some task and transaction spans cross window edges. Both JFR recordings have zero reported DataLoss events.",
+        "fixedWork": "One JVM, alternate paired measurements with identical inputs, separately loaded saved H3 and candidate field/kernel bytecode. Cycle values include input to field commit. The two zero-duration cases are controls."
+      },
+      "matchedInputs": {
+        "measuredTicks": [
+          1400,
+          1400
+        ],
+        "sourcesIgnited": [
+          1600,
+          1600
+        ],
+        "enabledPhysicalSources": [
+          1280,
+          1280
+        ],
+        "warmupTicksAfterIgnition": [
+          200,
+          200
+        ],
+        "teleports": [
+          200,
+          200
+        ],
+        "mutations": [
+          1555,
+          1555
+        ],
+        "players": [
+          100,
+          100
+        ],
+        "playerTickEvents": [
+          140000,
+          140000
+        ],
+        "deaths": [
+          0,
+          0
+        ],
+        "disconnects": [
+          0,
+          0
+        ],
+        "measurementStartedTick": [
+          11063,
+          11063
+        ]
+      },
+      "matchedBaseBy200TickFrames": 175,
+      "functional": {
+        "forgeTestsPassed": 34,
+        "forgeTestsTotal": 34,
+        "namespaces": [
+          "frostedheart_tiled_thermal",
+          "frostedheart_tiled_ventilation",
+          "frostedheart_tiled_queries",
+          "frostedheart_tiled_publication",
+          "frostedheart_tiled_geometry"
+        ],
+        "directKernelChecks": 252,
+        "fixedInputSignedCases": 182,
+        "fixedInputComparison": {
+          "frames": 436,
+          "cells": 176640,
+          "cellBitDifferences": 0,
+          "accountBitDifferences": 0,
+          "identityDifferences": 0,
+          "overTolerance": 0,
+          "maxTemperatureDifferenceC": 0.0,
+          "maxCellEnthalpyDifferenceJ": 0.0,
+          "maxAccountDifferenceJ": 0.0
+        },
+        "nonzeroImplicitEnvironmentBothSigns": true
+      },
+      "fixedWorkCycles": [
+        {
+          "scene": "open",
+          "ticksPerStep": 0,
+          "steps": 1537,
+          "fourPairsMedianCycleChangePercent": -2.61,
+          "individualCycleChangePercent": [
+            -3.569,
+            -2.55,
+            4.874,
+            -2.669
+          ],
+          "medianH3CyclesPerStep": 17427,
+          "medianCandidateCyclesPerStep": 17335,
+          "pairedFinalStateBitExact": true,
+          "meanH3CyclesPerStep": 17467.92,
+          "meanCandidateCyclesPerStep": 17293.0,
+          "meanCycleChangePercent": -1.001
+        },
+        {
+          "scene": "sectionXYZ",
+          "ticksPerStep": 0,
+          "steps": 1025,
+          "fourPairsMedianCycleChangePercent": 2.0,
+          "individualCycleChangePercent": [
+            6.169,
+            0.102,
+            0.942,
+            3.058
+          ],
+          "medianH3CyclesPerStep": 20065,
+          "medianCandidateCyclesPerStep": 20515,
+          "pairedFinalStateBitExact": true,
+          "meanH3CyclesPerStep": 20133.11,
+          "meanCandidateCyclesPerStep": 20649.67,
+          "meanCycleChangePercent": 2.566
+        },
+        {
+          "scene": "mixed",
+          "ticksPerStep": 20,
+          "steps": 257,
+          "fourPairsMedianCycleChangePercent": -17.003,
+          "individualCycleChangePercent": [
+            -17.602,
+            -16.624,
+            -15.528,
+            -17.381
+          ],
+          "medianH3CyclesPerStep": 52598,
+          "medianCandidateCyclesPerStep": 43735,
+          "pairedFinalStateBitExact": true,
+          "meanH3CyclesPerStep": 52758.32,
+          "meanCandidateCyclesPerStep": 43894.72,
+          "meanCycleChangePercent": -16.8
+        },
+        {
+          "scene": "overlapMixed",
+          "ticksPerStep": 20,
+          "steps": 129,
+          "fourPairsMedianCycleChangePercent": -33.633,
+          "individualCycleChangePercent": [
+            -28.905,
+            -38.562,
+            -33.816,
+            -33.45
+          ],
+          "medianH3CyclesPerStep": 361029,
+          "medianCandidateCyclesPerStep": 240425,
+          "pairedFinalStateBitExact": true,
+          "meanH3CyclesPerStep": 366780.4,
+          "meanCandidateCyclesPerStep": 242821.4,
+          "meanCycleChangePercent": -33.797
+        },
+        {
+          "scene": "implicitEnvironment",
+          "ticksPerStep": 20,
+          "steps": 257,
+          "fourPairsMedianCycleChangePercent": -3.282,
+          "individualCycleChangePercent": [
+            0.239,
+            -2.207,
+            -4.358,
+            -6.23
+          ],
+          "medianH3CyclesPerStep": 58572,
+          "medianCandidateCyclesPerStep": 56189,
+          "pairedFinalStateBitExact": true,
+          "meanH3CyclesPerStep": 58376.39,
+          "meanCandidateCyclesPerStep": 56557.08,
+          "meanCycleChangePercent": -3.117
+        },
+        {
+          "scene": "airVolume",
+          "ticksPerStep": 20,
+          "steps": 129,
+          "fourPairsMedianCycleChangePercent": -47.986,
+          "individualCycleChangePercent": [
+            -48.554,
+            -47.418,
+            -50.497,
+            -38.153
+          ],
+          "medianH3CyclesPerStep": 2585847,
+          "medianCandidateCyclesPerStep": 1318974,
+          "pairedFinalStateBitExact": true,
+          "meanH3CyclesPerStep": 2602424.51,
+          "meanCandidateCyclesPerStep": 1403867.35,
+          "meanCycleChangePercent": -46.055
+        }
+      ],
+      "networkPrefix": {
+        "baseline": {
+          "timely": 2966,
+          "old": 2011,
+          "missing": 1023,
+          "attempts": 6000,
+          "waitStarts": 5447,
+          "delayIncludedPercent": 38.80247542289174,
+          "nativeBillionsOfCycles": 34.80063955,
+          "chargedMs": 15593.195976,
+          "chargedGcOverlapMs": 250.526,
+          "observedThreadCpuMs": 1593.75,
+          "valuePublications": 845,
+          "publishedTiles": 14761,
+          "geometryCommits": 439,
+          "tasks": 17785,
+          "forwardAndReverseFaceMs": 8544.2987,
+          "fieldStagesMs": {
+            "idle": 0.0,
+            "prepareFrames": 83.5762,
+            "firstInput": 170.7768,
+            "forwardFaces": 4650.7587,
+            "reverseFaces": 3893.54,
+            "secondInput": 84.3397,
+            "ready": 0.1789,
+            "forwardRoutes": 22.1603,
+            "reverseRoutes": 19.4984,
+            "buoyancy": 155.8214
+          },
+          "allWorkerStagesMs": {
+            "numerics": 9083.165,
+            "topology": 1339.816,
+            "cutoffs": 1125.783,
+            "inventory": 836.386,
+            "ready": 494.498,
+            "publication": 400.265,
+            "ingress": 369.567,
+            "engine": 364.288,
+            "fieldPrep": 290.307,
+            "geometry": 271.648,
+            "maintenance": 239.144,
+            "other": 178.04,
+            "checkpoint": 135.422,
+            "claim": 88.843,
+            "begin": 59.005,
+            "scopeSelection": 41.432,
+            "observe": 31.53,
+            "restore": 24.237,
+            "projection": 15.574,
+            "input": 9.191,
+            "seal": 6.045,
+            "phases": 1.164
+          },
+          "committedPositiveTimeTransactions": 403,
+          "cancelledPositiveTimeTransactions": 127,
+          "fieldWorkMsInCancelledTransactions": 1064.43588,
+          "scanAndSelectionCounts": {
+            "beginCalls": 974,
+            "directoryAtBegin": 181296,
+            "selectedTiles": 40698,
+            "claimVisited": 271854,
+            "claimIncluded": 215201,
+            "sealCalls": 974,
+            "bufferVisited": 1297840,
+            "bufferSelected": 213386,
+            "headersVisited": 155937,
+            "headersRetired": 127
+          },
+          "workerAllocatedBytes": 677679312,
+          "accountedPeakBytes": 121336920,
+          "mainThermalP99Ms": 5.13,
+          "mainThermalMeanMs": 1.1622997178571428,
+          "serverTickSpanP99Ms": 85.2,
+          "observedProcessCpuMs": 112562.5,
+          "observedMainCpuMs": 4859.375,
+          "achievedTps": 20.009017692392074,
+          "gameplayReads": {
+            "captured": 1044,
+            "dormant": 808,
+            "minimumQuality": 0,
+            "liveAgeMaxTicks": 40,
+            "missing": 1137,
+            "current": 3013,
+            "sampledLiveCount": 4057,
+            "liveAgeP99Ticks": 40
+          },
+          "recovery": {
+            "ticks": 200,
+            "samples": 900,
+            "missing": 0,
+            "old": 0,
+            "maximumAgeTicks": 23
+          }
+        },
+        "candidate": {
+          "timely": 5271,
+          "old": 333,
+          "missing": 396,
+          "attempts": 6000,
+          "waitStarts": 1712,
+          "delayIncludedPercent": 10.831603146388805,
+          "nativeBillionsOfCycles": 27.85124556,
+          "chargedMs": 12444.690331,
+          "chargedGcOverlapMs": 135.154299,
+          "observedThreadCpuMs": 1484.375,
+          "valuePublications": 1084,
+          "publishedTiles": 14872,
+          "geometryCommits": 546,
+          "tasks": 22331,
+          "forwardAndReverseFaceMs": 5405.3654,
+          "fieldStagesMs": {
+            "idle": 0.0,
+            "prepareFrames": 61.2642,
+            "firstInput": 123.9788,
+            "forwardFaces": 2760.9555,
+            "reverseFaces": 2644.4099,
+            "secondInput": 105.5742,
+            "ready": 0.2086,
+            "forwardRoutes": 19.5085,
+            "reverseRoutes": 17.3943,
+            "buoyancy": 115.9414
+          },
+          "allWorkerStagesMs": {
+            "numerics": 5850.373,
+            "topology": 1469.434,
+            "inventory": 986.91,
+            "cutoffs": 850.032,
+            "ready": 538.051,
+            "publication": 440.427,
+            "maintenance": 357.451,
+            "ingress": 349.034,
+            "engine": 317.044,
+            "geometry": 279.608,
+            "fieldPrep": 274.352,
+            "other": 180.452,
+            "checkpoint": 132.711,
+            "claim": 62.904,
+            "begin": 58.217,
+            "scopeSelection": 56.402,
+            "observe": 26.05,
+            "restore": 18.369,
+            "projection": 16.404,
+            "input": 13.265,
+            "seal": 4.408,
+            "phases": 1.346
+          },
+          "committedPositiveTimeTransactions": 537,
+          "cancelledPositiveTimeTransactions": 46,
+          "fieldWorkMsInCancelledTransactions": 325.123896,
+          "scanAndSelectionCounts": {
+            "beginCalls": 1130,
+            "directoryAtBegin": 209493,
+            "selectedTiles": 32720,
+            "claimVisited": 174462,
+            "claimIncluded": 148200,
+            "sealCalls": 1130,
+            "bufferVisited": 1515240,
+            "bufferSelected": 147000,
+            "headersVisited": 200401,
+            "headersRetired": 128
+          },
+          "workerAllocatedBytes": 669999824,
+          "accountedPeakBytes": 121746408,
+          "mainThermalP99Ms": 5.87,
+          "mainThermalMeanMs": 1.1757926092857143,
+          "serverTickSpanP99Ms": 94.0,
+          "observedProcessCpuMs": 115390.625,
+          "observedMainCpuMs": 7953.125,
+          "achievedTps": 20.00335844929297,
+          "gameplayReads": {
+            "liveAgeMaxTicks": 40,
+            "missing": 186,
+            "current": 4691,
+            "sampledLiveCount": 5696,
+            "liveAgeP99Ticks": 39,
+            "captured": 1005,
+            "dormant": 121,
+            "minimumQuality": 0
+          },
+          "recovery": {
+            "ticks": 200,
+            "samples": 900,
+            "missing": 0,
+            "old": 0,
+            "maximumAgeTicks": 3
+          }
+        }
+      },
+      "temperaturePairing": {
+        "allProbePairs": 6200,
+        "bothReadable": 4566,
+        "pairedSamePlaceWorkloadAndSampleTick": 1991,
+        "outOfTolerance": 0,
+        "maximumDifferenceC": 0.47056355494660274,
+        "outliers": []
+      },
+      "artifacts": {
+        "root": "build/thermal-ab-20261118/architecture-measure",
+        "armSubdirectories": [
+          "baseline-100",
+          "candidate-100"
+        ],
+        "comparison": "comparison.json",
+        "observer": "make_observer.py",
+        "analysis": [
+          "analyze_trace.py",
+          "scope_report.py",
+          "compare.py"
+        ],
+        "functionalLog": "gametest.log",
+        "fixedWorkRoot": "build/thermal-ab-20261118/source-footprint-probe",
+        "fixedInputs": [
+          "correctness.json",
+          "timing.json",
+          "REPORT.md",
+          "summary.json"
+        ],
+        "heldOutletDraft": "paused-source-footprint.patch"
+      }
+    },
+    "thermal-checkpoint-scope-2026-11-19": {
+      "status": "Applied scoped native checkpoint cancellation. Retained independent domains sharing an identical numerical interval.",
+      "verifiedLocalDate": "2026-11-19",
+      "scope": "Local Java 17 Forge dedicated server, 100 headless survival clients, 25 bases, 1600 campfires ignited, 1400 measurement ticks, 200 recovery ticks, shared elapsed-work allowance 250 ms/s. One completed server+client run per measured policy.",
+      "threshold": "A readable resident probe with actual sample age <= 40 game ticks is timely. Missing is counted separately. A second fixed-point sampling stream is used only for temperature and transaction comparisons.",
+      "forge": {
+        "requiredPassed": 33,
+        "requiredTotal": 33,
+        "command": "gradlew.bat --offline runGameTestServer -PgameTestNamespaces=frostedheart_committed_save,frostedheart_heat_buffer,frostedheart_independent_progress,frostedheart_worker_recovery,frostedheart_tiled_queries -PgameTestDirectory=build/thermal-ab-20261118/checkpoint-scope-gametest",
+        "newChecks": [
+          "ThermalCommittedSaveGameTests.residentUnloadPreservesExactlyTheIndependentWork",
+          "SpatialHeatBufferGameTests.sealedStepKeepsItsSlotsWhileAnotherChunkExportsSignedDebt"
+        ]
+      },
+      "loadArms": {
+        "shared-stable": {
+          "receipts": {
+            "playersJoined": 100,
+            "activeBeforeStop": 100,
+            "gameTick": 11063,
+            "serverPid": 20048,
+            "serverAndClientExitedZero": true
+          },
+          "attempts": 6000,
+          "timely": 5640,
+          "stale": 177,
+          "missing": 183,
+          "workerNativeCycles": 21938025604,
+          "workerThreadCpuMs": 2640.625,
+          "workerChargedElapsedMs": 9903.479018,
+          "thermalMainP99Ms": 4.21,
+          "wholeTickSpanP99Ms": 83.8,
+          "processCpuMs": 42796.875,
+          "workerAllocatedBytes": 685388392,
+          "peakAccountedBytes": 120150856,
+          "tps": 19.390157121351677,
+          "nativeWaitStarts": 665,
+          "valuePublications": 1311,
+          "tilePublications": 14716,
+          "committedFieldAdvanceElapsedMs": 4169.891,
+          "canceledFieldAdvanceElapsedMs": 304.891,
+          "checkpointCancellations": {
+            "disjoint": {
+              "transactions": 36,
+              "withAdvanceTime": 31,
+              "advanceElapsedMs": 275.674,
+              "byCaller": {
+                "advanceSnapshot": {
+                  "transactions": 20,
+                  "advanceElapsedMs": 118.016
+                },
+                "exportFixedChunkPending": {
+                  "transactions": 16,
+                  "advanceElapsedMs": 157.658
+                }
+              }
+            },
+            "overlap": {
+              "transactions": 6,
+              "withAdvanceTime": 5,
+              "advanceElapsedMs": 29.217,
+              "byCaller": {
+                "advanceSnapshot": {
+                  "transactions": 6,
+                  "advanceElapsedMs": 29.217
+                }
+              }
+            }
+          },
+          "nextQualifyingCommitForStaleFixedProbesAtFrameEnd": {
+            "selectedLater": 177
+          },
+          "enabledPhysicalSourcesAt200TickFrames": [
+            1280,
+            1600,
+            1600,
+            1280,
+            1600,
+            1600,
+            1280
+          ],
+          "recovery": {
+            "ticks": 200,
+            "samples": 900,
+            "missing": 0,
+            "old": 0,
+            "maximumAgeTicks": 3
+          },
+          "continuationBoundaryAllocation": {
+            "all": 65661440,
+            "events": 182,
+            "refresh": 54210576
+          }
+        },
+        "four-stable": {
+          "receipts": {
+            "playersJoined": 100,
+            "activeBeforeStop": 100,
+            "gameTick": 11063,
+            "serverPid": 18648,
+            "serverAndClientExitedZero": true
+          },
+          "attempts": 6000,
+          "timely": 3998,
+          "stale": 981,
+          "missing": 1021,
+          "workerNativeCycles": 37178653804,
+          "workerThreadCpuMs": 1296.875,
+          "workerChargedElapsedMs": 17207.225356,
+          "thermalMainP99Ms": 10.55,
+          "wholeTickSpanP99Ms": 110.5,
+          "processCpuMs": 25843.75,
+          "workerAllocatedBytes": 670719440,
+          "peakAccountedBytes": 121396584,
+          "tps": 18.814869891613313,
+          "nativeWaitStarts": 2681,
+          "valuePublications": 1039,
+          "tilePublications": 15302,
+          "committedFieldAdvanceElapsedMs": 7516.353,
+          "canceledFieldAdvanceElapsedMs": 422.642,
+          "checkpointCancellations": {
+            "disjoint": {
+              "transactions": 64,
+              "withAdvanceTime": 60,
+              "advanceElapsedMs": 411.013,
+              "byCaller": {
+                "advanceSnapshot": {
+                  "transactions": 45,
+                  "advanceElapsedMs": 270.647
+                },
+                "exportFixedChunkPending": {
+                  "transactions": 19,
+                  "advanceElapsedMs": 140.366
+                }
+              }
+            },
+            "overlap": {
+              "transactions": 4,
+              "withAdvanceTime": 2,
+              "advanceElapsedMs": 11.63,
+              "byCaller": {
+                "advanceSnapshot": {
+                  "transactions": 4,
+                  "advanceElapsedMs": 11.63
+                }
+              }
+            }
+          },
+          "nextQualifyingCommitForStaleFixedProbesAtFrameEnd": {
+            "selectedLater": 856,
+            "calculatingOrAwaitingPublication": 139,
+            "preparingInput": 9,
+            "notCoveredByLaterTrace": 21
+          },
+          "enabledPhysicalSourcesAt200TickFrames": [
+            1504,
+            1600,
+            1600,
+            1600,
+            1600,
+            1600,
+            1328
+          ],
+          "recovery": {
+            "ticks": 200,
+            "samples": 900,
+            "missing": 0,
+            "old": 0,
+            "maximumAgeTicks": 3
+          },
+          "continuationBoundaryAllocation": {
+            "all": 85226168,
+            "events": 310,
+            "refresh": 78754208
+          }
+        },
+        "checkpoint-scoped": {
+          "receipts": {
+            "playersJoined": 100,
+            "activeBeforeStop": 100,
+            "gameTick": 11063,
+            "serverPid": 31612,
+            "serverAndClientExitedZero": true
+          },
+          "attempts": 6000,
+          "timely": 5858,
+          "stale": 0,
+          "missing": 142,
+          "workerNativeCycles": 22064515412,
+          "workerThreadCpuMs": 2531.25,
+          "workerChargedElapsedMs": 9938.407827,
+          "thermalMainP99Ms": 4.18,
+          "wholeTickSpanP99Ms": 87.7,
+          "processCpuMs": 33234.375,
+          "workerAllocatedBytes": 646375336,
+          "peakAccountedBytes": 118692152,
+          "tps": 19.999147665182424,
+          "nativeWaitStarts": 466,
+          "valuePublications": 1252,
+          "tilePublications": 14781,
+          "committedFieldAdvanceElapsedMs": 4500.452,
+          "canceledFieldAdvanceElapsedMs": 5.78,
+          "checkpointCancellations": {
+            "disjoint": {
+              "transactions": 0,
+              "withAdvanceTime": 0,
+              "advanceElapsedMs": 0.0,
+              "byCaller": {}
+            },
+            "overlap": {
+              "transactions": 1,
+              "withAdvanceTime": 1,
+              "advanceElapsedMs": 5.78,
+              "byCaller": {
+                "advanceSnapshot": {
+                  "transactions": 1,
+                  "advanceElapsedMs": 5.78
+                }
+              }
+            }
+          },
+          "nextQualifyingCommitForStaleFixedProbesAtFrameEnd": {},
+          "enabledPhysicalSourcesAt200TickFrames": [
+            1280,
+            1600,
+            1600,
+            1280,
+            1600,
+            1600,
+            1280
+          ],
+          "recovery": {
+            "ticks": 200,
+            "samples": 900,
+            "missing": 0,
+            "old": 0,
+            "maximumAgeTicks": 3
+          },
+          "continuationBoundaryAllocation": {
+            "all": 64257432,
+            "events": 235,
+            "refresh": 60841064,
+            "walkQueueGrowthStackBytes": 42367808,
+            "setRehashStackBytes": 19007608
+          }
+        }
+      },
+      "checkpointVsBaseline": {
+        "matchedWorkloadInputs": {
+          "measuredTicks": [
+            1400,
+            1400
+          ],
+          "sourcesIgnited": [
+            1600,
+            1600
+          ],
+          "warmupTicksAfterIgnition": [
+            200,
+            200
+          ],
+          "teleports": [
+            200,
+            200
+          ],
+          "mutations": [
+            1555,
+            1555
+          ],
+          "players": [
+            100,
+            100
+          ],
+          "playerTickEvents": [
+            140000,
+            140000
+          ],
+          "deaths": [
+            0,
+            0
+          ],
+          "disconnects": [
+            0,
+            0
+          ],
+          "measurementStartedTick": [
+            11063,
+            11063
+          ]
+        },
+        "matchedBaseAndWindowAttemptCounts": 175,
+        "allSevenObservedSourceCountFramesMatch": true,
+        "pairedTemperatures": {
+          "all": 6200,
+          "bothReadable": 4591,
+          "sameSampleTick": 4231,
+          "outOfTolerance": 0,
+          "maxDifferenceC": 0.3711456322831985,
+          "largestOutliers": []
+        },
+        "classDefinitions": {
+          "sharedLoadedDefinitions": 1454,
+          "differingClassDefinitionNames": [
+            "com/teammoeg/frostedheart/content/climate/thermal/runtime/minecraft/engine/ThermalDimensionEngine",
+            "com/teammoeg/frostedheart/content/climate/thermal/solver/TiledThermalField",
+            "com/teammoeg/frostedheart/content/climate/thermal/source/SpatialHeatBuffer",
+            "com/teammoeg/frostedheart/content/steamenergy/sauna/SaunaBlock"
+          ],
+          "onlyInBaseline": [],
+          "onlyInCandidate": []
+        }
+      },
+      "fourDomainsVsBaseline": {
+        "matchedScriptedInputs": {
+          "measuredTicks": [
+            1400,
+            1400
+          ],
+          "sourcesIgnited": [
+            1600,
+            1600
+          ],
+          "warmupTicksAfterIgnition": [
+            200,
+            200
+          ],
+          "teleports": [
+            200,
+            200
+          ],
+          "mutations": [
+            1555,
+            1555
+          ],
+          "players": [
+            100,
+            100
+          ],
+          "playerTickEvents": [
+            140000,
+            140000
+          ],
+          "deaths": [
+            0,
+            0
+          ],
+          "disconnects": [
+            0,
+            0
+          ],
+          "measurementStartedTick": [
+            11063,
+            11063
+          ]
+        },
+        "matchedBaseAndWindowAttemptCounts": 175,
+        "allSevenObservedSourceCountFramesMatch": false,
+        "pairedTemperatures": {
+          "all": 6200,
+          "bothReadable": 4566,
+          "sameSampleTick": 1989,
+          "outOfTolerance": 51,
+          "maxDifferenceC": 1.9676448004352123,
+          "largestOutliers": [
+            [
+              1.9676448004352123,
+              [
+                940,
+                8,
+                0
+              ],
+              1180,
+              -7.127619040327211,
+              -5.159974239891999,
+              1
+            ],
+            [
+              1.6405300211040306,
+              [
+                1220,
+                8,
+                0
+              ],
+              1460,
+              -5.929496711231117,
+              -4.288966690127086,
+              1
+            ],
+            [
+              1.6364311478374285,
+              [
+                940,
+                7,
+                2
+              ],
+              1180,
+              -7.8596582370154024,
+              -6.223227089177974,
+              1
+            ],
+            [
+              1.6289674529385545,
+              [
+                1260,
+                8,
+                0
+              ],
+              1500,
+              -5.798205289158207,
+              -4.1692378362196525,
+              1
+            ],
+            [
+              1.6197534991000442,
+              [
+                940,
+                8,
+                1
+              ],
+              1180,
+              -7.938920319750663,
+              -6.319166820650619,
+              1
+            ],
+            [
+              1.517159919412915,
+              [
+                940,
+                7,
+                0
+              ],
+              1180,
+              -6.918449584083806,
+              -5.401289664670891,
+              1
+            ]
+          ]
+        },
+        "classDefinitions": {
+          "sharedLoadedDefinitions": 1454,
+          "differingClassDefinitionNames": [
+            "com/teammoeg/frostedheart/content/steamenergy/sauna/SaunaBlock"
+          ],
+          "onlyInBaseline": [],
+          "onlyInCandidate": [
+            "com/teammoeg/frostedheart/content/climate/thermal/runtime/minecraft/message/TopologyInbox$Material",
+            "com/teammoeg/frostedheart/content/climate/thermal/runtime/minecraft/message/TopologyInbox$MaterialAt"
+          ]
+        },
+        "implementation": "Test-only limit of four when transportThrough minus selected start reaches 40 ticks. The engine retains its original admission policy."
+      },
+      "classArtifacts": "Common compiled classes and resources across all three processes. Only the three edited thermal outer class files were substituted for checkpoint-scoped. All 1454 loaded mod class names match shared-stable in the checkpoint pair. The load-time observer also recorded a different SaunaBlock definition in both the four-domain and scoped arms vs baseline, despite identical input bytes. The test records post-transform definition fingerprints.",
+      "directCancellationMethod": "Map each selected SectionPos to (sectionX,sectionZ) and intersect with the ChunkPos captured at cancelFixedStep in advanceSnapshot or exportFixedChunkPending. Count positive-duration transactions and separately the subset with positive measured field-advance time. Totals are elapsed advance time in those transactions.",
+      "fixedCheckpoint": {
+        "pairs": 36,
+        "workloadScope": "Warm JVM, post-ingress, real Store/Buffer/Field and query publication. Interrupt A after the forward sweep while B freezes. Measured fixture executes capture/export and publication. Full engine, real disk, budget, queues and sockets run in separate checks.",
+        "counter": "QueryThreadCycleTime",
+        "cut": "FORWARD_TRANSPORT, immediately after all forward cell sweep work, before reverse",
+        "AActualCells": 8192,
+        "BActualCells": 4096,
+        "interval": [
+          20,
+          40
+        ],
+        "rawCellAndLedgerEquality": true,
+        "privateWorkNeverPublishedToCheckpoint": true,
+        "pathExamples": [
+          {
+            "policy": "keep",
+            "totalPairs": 46592,
+            "prefixPairs": 23296,
+            "postCutPairs": 23296,
+            "attempts": 1,
+            "recordsRead": 4,
+            "cancellations": 0,
+            "receipts": 1,
+            "wordDifferencesVsUninterrupted": 0,
+            "ledger": {
+              "initialFieldInputJ": 3375.0,
+              "nextAInputJ": 1066.5,
+              "BInputTailJ": -86.5,
+              "exportedBInputJ": -86.5,
+              "storedJ": 4441.499999999982,
+              "externalJ": 0.0,
+              "rejectedJ": 0.0,
+              "bufferPendingJ": 0.0,
+              "storePendingJ": 0.0,
+              "ASampleTick": 40,
+              "BSampleTick": 20,
+              "BFrozen": true
+            }
+          },
+          {
+            "policy": "cancel",
+            "totalPairs": 69888,
+            "prefixPairs": 23296,
+            "postCutPairs": 46592,
+            "attempts": 2,
+            "recordsRead": 8,
+            "cancellations": 1,
+            "receipts": 1,
+            "wordDifferencesVsUninterrupted": 0,
+            "ledger": {
+              "initialFieldInputJ": 3375.0,
+              "nextAInputJ": 1066.5,
+              "BInputTailJ": -86.5,
+              "exportedBInputJ": -86.5,
+              "storedJ": 4441.499999999982,
+              "externalJ": 0.0,
+              "rejectedJ": 0.0,
+              "bufferPendingJ": 0.0,
+              "storePendingJ": 0.0,
+              "ASampleTick": 40,
+              "BSampleTick": 20,
+              "BFrozen": true
+            }
+          }
+        ],
+        "cost": {
+          "cutToAPublication": {
+            "medianCpuCycles": {
+              "keep": 1451270.0,
+              "cancel": 2932599.0
+            },
+            "medianWallNs": {
+              "keep": 632149.0,
+              "cancel": 1319450.5
+            },
+            "pairedMedianCpuSavingPercent": 50.25126521419272,
+            "pairsWithLowerCycles": 36
+          },
+          "claimToAPublication": {
+            "medianCpuCycles": {
+              "keep": 2996516.0,
+              "cancel": 4483425.0
+            },
+            "medianWallNs": {
+              "keep": 1346250.5,
+              "cancel": 2059399.5
+            },
+            "pairedMedianCpuSavingPercent": 32.81496166594506,
+            "pairsWithLowerCycles": 36
+          }
+        },
+        "matchedCellVisitsVsUninterrupted": 884736,
+        "thermalCoupledPairUpdates": {
+          "keep": 46592,
+          "restart": 69888
+        }
+      },
+      "fixedDomainBatch": {
+        "scope": "post-ingress until QueryPublication.publishFixed returns, on the fixture thread",
+        "transactionsPerInterval": {
+          "16": 1,
+          "4": 4,
+          "1": 16
+        },
+        "endStatesBitwiseEqual": true,
+        "equalWorkAndEnergy": true,
+        "scenarios": {
+          "coldFirst": {
+            "matchedIntervals": 12,
+            "byWidth": {
+              "16": {
+                "firstFourVisibleWallNsMedian": 1450600.0,
+                "allVisibleWallNsMedian": 1450600.0,
+                "allNativeCyclesMedian": 3333235.0
+              },
+              "4": {
+                "firstFourVisibleWallNsMedian": 377050.0,
+                "allVisibleWallNsMedian": 1534199.5,
+                "allNativeCyclesMedian": 3419090.0
+              },
+              "1": {
+                "firstFourVisibleWallNsMedian": 400499.5,
+                "allVisibleWallNsMedian": 1512000.5,
+                "allNativeCyclesMedian": 3379922.0
+              }
+            }
+          },
+          "primedFirst": {
+            "matchedIntervals": 6,
+            "byWidth": {
+              "16": {
+                "firstFourVisibleWallNsMedian": 1554600.0,
+                "allVisibleWallNsMedian": 1554600.0,
+                "allNativeCyclesMedian": 3433611.0
+              },
+              "4": {
+                "firstFourVisibleWallNsMedian": 371300.0,
+                "allVisibleWallNsMedian": 1448550.0,
+                "allNativeCyclesMedian": 3343055.0
+              },
+              "1": {
+                "firstFourVisibleWallNsMedian": 402050.0,
+                "allVisibleWallNsMedian": 1507950.0,
+                "allNativeCyclesMedian": 3483772.0
+              }
+            }
+          },
+          "steady": {
+            "matchedIntervals": 282,
+            "byWidth": {
+              "16": {
+                "firstFourVisibleWallNsMedian": 1460550.0,
+                "allVisibleWallNsMedian": 1460550.0,
+                "allNativeCyclesMedian": 3365188.0
+              },
+              "4": {
+                "firstFourVisibleWallNsMedian": 372200.5,
+                "allVisibleWallNsMedian": 1486099.5,
+                "allNativeCyclesMedian": 3422107.0
+              },
+              "1": {
+                "firstFourVisibleWallNsMedian": 384849.0,
+                "allVisibleWallNsMedian": 1521149.5,
+                "allNativeCyclesMedian": 3494992.0
+              }
+            }
+          }
+        }
+      },
+      "sources": "Local receipts under build/thermal-ab-20261118/{domain-policy-trace,checkpoint-fixed-probe,domain-batch-probe}/ and checkpoint-scope-gametest.log. Native cycles measured by Windows QueryThreadCycleTime. JFR allocation bytes are sums of jdk.ObjectAllocationSample weights over the measurement interval.",
+      "limits": "Partial short workload on a shared desktop. Actual work and scheduling can vary between runs. The 4-domain arm also had different loaded source counts. The aborted urgent-four launch with incomplete live build output was excluded. Full-server cycle savings and long-run steady budget improvements have not been established."
+    },
+    "thermal-spatial-dependency-2026-11-19": {
+      "status": "Design and bounded prototypes validated, unchanged production behavior.",
+      "verifiedLocalDate": "2026-11-19",
+      "primaryDecision": "Keep the sparse cell field and committed Section clock. Reuse pending boundaries outside complete dirty footprints and their one-face frontier; refresh conservatively for unbounded route/source changes. Separate domain membership changes from numerical coefficients.",
+      "dedicatedServerObservation": {
+        "serverAndClientExit": [
+          0,
+          0
+        ],
+        "players": 100,
+        "activeBeforeStop": 100,
+        "playersPerBase": 4,
+        "bases": 25,
+        "ignitedCampfires": 1600,
+        "measuredTicks": 1400,
+        "thermalWorkAllowanceMsPerSecond": 250,
+        "measuredResident": {
+          "timely": 5887,
+          "stale": 0,
+          "missing": 113
+        },
+        "recovery": {
+          "ticks": 200,
+          "samples": 900,
+          "missing": 0,
+          "old": 0
+        },
+        "observation": {
+          "successfulBoundaryInserts": 16787,
+          "firstSeenPendingInput": 3600,
+          "samePendingInputIdenticalSectionSetAndRouteState": 13177,
+          "samePendingInputDifferent": 10,
+          "differentDespiteSameCardinality": 0,
+          "changedUnresolvedRouteFlag": 0,
+          "sectionsAcrossIdenticalRepeats": 706336,
+          "sectionsAcrossChangedRepeats": 408,
+          "prunedCurrentInputSets": 1319,
+          "actualDomainRebuilds": 797,
+          "firstSeenField": 1,
+          "identicalPartitionToPrecedingBuild": 667,
+          "changedPartition": 129,
+          "observationErrors": 0
+        },
+        "comparisonMethod": "At each production insertion after includeFixedOutlets, compare the complete Section set and unresolved route flag, by the same still-pending TopologyInbox.Input object and dimension engine. Drop entries no longer in the production pending set. Separately compare all unordered sets of member Section keys at actual domains() rebuilds; first observed state has no predecessor. No candidate short-circuits ran on this server."
+      },
+      "boundaryOracleTest": {
+        "scope": "Real TopologyUpdatePlanner.continuationBoundary, WorkerPageStore halo index. Local candidate checks dirty Section membership and 6 neighbors in each saved boundary. Whole-set and unresolved flag compared for every entry after each edit. Synthetic edit order, no pending-source outlet overlay, numerical solve or full server workload in this probe.",
+        "observedLayoutSyntheticEdits": {
+          "seedCount": 51,
+          "fullReferenceWalks": 13872,
+          "localEditBatches": 272,
+          "globalEditBatches": 0,
+          "candidateReuses": 13056,
+          "candidateRefreshes": 816,
+          "differentBoundaries": 0,
+          "initialAndFinalCapturedSections": 136
+        },
+        "singleConnectedLayoutSyntheticEdits": {
+          "seedCount": 36,
+          "fullReferenceWalks": 10368,
+          "localEditBatches": 288,
+          "globalEditBatches": 0,
+          "candidateReuses": 0,
+          "candidateRefreshes": 10368,
+          "differentBoundaries": 0
+        },
+        "bridgeAndPendingControls": {
+          "seedCount": 1,
+          "fullReferenceWalks": 4,
+          "localEditBatches": 2,
+          "globalEditBatches": 2,
+          "candidateReuses": 0,
+          "candidateRefreshes": 4,
+          "differentBoundaries": 0,
+          "newBridgeWasOutsideOldBoundary": true,
+          "remotePendingRouteAndRemovalCompared": true
+        }
+      },
+      "boundaryCost": {
+        "counter": "Windows QueryThreadCycleTime; allocated bytes from com.sun.management.ThreadMXBean. Both policies measured over the same 32 index mutations per sample. 12 alternating pairs in one warm JVM.",
+        "testScope": "Known local changes, WorkerPageStore capture index represented by a halo sample at every Section. The observed-layout fixture uses a copy of 136 Section coordinates and 51 unique input seeds from the stable short-run snapshot. Edits are synthetic. The dense fixture is 12x12 Sections with 36 input seeds. Excludes original query/cache generation, source rebinding, physics and full-server scheduling.",
+        "layouts": {
+          "observedLayout": {
+            "pairedRepeats": 12,
+            "editsPerArm": 32,
+            "cycles": {
+              "full": 20254622.0,
+              "local": 1274421.0,
+              "pairedMedianPctChange": -93.56962546355464,
+              "pairsWithLowerCost": 12
+            },
+            "allocatedBytes": {
+              "full": 2745504.0,
+              "local": 151568.0,
+              "pairedMedianPctChange": -94.47938181520252,
+              "pairsWithLowerCost": 12
+            },
+            "wallNs": {
+              "full": 8974750.0,
+              "local": 537250.0,
+              "pairedMedianPctChange": -93.78947052018037,
+              "pairsWithLowerCost": 12
+            },
+            "refreshes": {
+              "full": 1632.0,
+              "local": 88.0
+            },
+            "reuses": {
+              "full": 0.0,
+              "local": 1544.0
+            }
+          },
+          "oneConnectedLayout": {
+            "pairedRepeats": 12,
+            "editsPerArm": 32,
+            "cycles": {
+              "full": 80603990.0,
+              "local": 81051260.0,
+              "pairedMedianPctChange": -0.9588175993728854,
+              "pairsWithLowerCost": 8
+            },
+            "allocatedBytes": {
+              "full": 9931408.0,
+              "local": 9931120.0,
+              "pairedMedianPctChange": 0.0,
+              "pairsWithLowerCost": 1
+            },
+            "wallNs": {
+              "full": 35861200.0,
+              "local": 35758500.0,
+              "pairedMedianPctChange": -1.1579051338798607,
+              "pairsWithLowerCost": 7
+            },
+            "refreshes": {
+              "full": 1152.0,
+              "local": 1152.0
+            },
+            "reuses": {
+              "full": 0.0,
+              "local": 0.0
+            }
+          }
+        }
+      },
+      "domainMembership": {
+        "counter": "Windows QueryThreadCycleTime, matched reflection writes in each policy, actual per-thread allocated bytes.",
+        "fixture": {
+          "sections": 32,
+          "cells": 8192,
+          "domains": 16
+        },
+        "timings": [
+          {
+            "geometry": "empty",
+            "pairedBlocks": 10,
+            "operationsPerBlock": 1024,
+            "results": {
+              "cycles": {
+                "rebuildMedianPerUpdate": 3078.375,
+                "reuseMedianPerUpdate": 974.087890625,
+                "pairedMedianSavedPerUpdate": 2123.494140625,
+                "pairedMedianSavingPercent": 68.83913892996583,
+                "pairsFavouringReuse": 10
+              },
+              "allocatedBytes": {
+                "rebuildMedianPerUpdate": 7480.0,
+                "reuseMedianPerUpdate": 640.0,
+                "pairedMedianSavedPerUpdate": 6840.0,
+                "pairedMedianSavingPercent": 91.44385026737967,
+                "pairsFavouringReuse": 10
+              },
+              "wallNs": {
+                "rebuildMedianPerUpdate": 1351.26953125,
+                "reuseMedianPerUpdate": 419.43359375,
+                "pairedMedianSavedPerUpdate": 931.8359375,
+                "pairedMedianSavingPercent": 69.03775477006994,
+                "pairsFavouringReuse": 10
+              }
+            }
+          },
+          {
+            "geometry": "environment",
+            "pairedBlocks": 10,
+            "operationsPerBlock": 1024,
+            "results": {
+              "cycles": {
+                "rebuildMedianPerUpdate": 3548.353515625,
+                "reuseMedianPerUpdate": 1361.8427734375,
+                "pairedMedianSavedPerUpdate": 2136.4970703125,
+                "pairedMedianSavingPercent": 60.89060287382328,
+                "pairsFavouringReuse": 10
+              },
+              "allocatedBytes": {
+                "rebuildMedianPerUpdate": 7640.0,
+                "reuseMedianPerUpdate": 800.0,
+                "pairedMedianSavedPerUpdate": 6840.0,
+                "pairedMedianSavingPercent": 89.52879581151832,
+                "pairsFavouringReuse": 10
+              },
+              "wallNs": {
+                "rebuildMedianPerUpdate": 1544.775390625,
+                "reuseMedianPerUpdate": 589.0625,
+                "pairedMedianSavedPerUpdate": 925.341796875,
+                "pairedMedianSavingPercent": 60.981028240225584,
+                "pairsFavouringReuse": 10
+              }
+            }
+          }
+        ],
+        "correctness": [
+          {
+            "mode": "empty",
+            "domainCount": 16,
+            "cellsPerFrame": 8192,
+            "beforeAfterReplacementFramesBitExact": true,
+            "initialAndThreePostReplacementSolveFramesBitExact": true,
+            "membershipCheckedAfterEachOf128Replacements": true
+          },
+          {
+            "mode": "environment",
+            "domainCount": 16,
+            "cellsPerFrame": 8192,
+            "beforeAfterReplacementFramesBitExact": true,
+            "initialAndThreePostReplacementSolveFramesBitExact": true,
+            "membershipCheckedAfterEachOf128Replacements": true
+          }
+        ],
+        "routeMergeAndSplit": {
+          "beforeDomains": 16,
+          "withActiveRouteDomains": 15,
+          "afterRouteRemovalDomains": 16,
+          "withRouteForcedStaleReuseDomains": 16,
+          "changedBases": [
+            0,
+            1
+          ],
+          "routeChangesCellTemperaturesOrEnthalpyCount": 188
+        },
+        "scope": "An unchanged-membership oracle is assumed. Measured paths include matched reflection boolean writes and a complete domain membership traversal. Full scope includes actual replaceTransport with prebuilt fragments. No timing overhead is subtracted."
+      },
+      "limits": "Observed repeated equal outputs bound potential reuse. Equal old and new results alone cannot establish safe reuse ahead of recomputation. The full runtime classifier with all source/geometry/route lifecycles and whole-server CPU speedup are unqualified. The peak and resident heap costs of any additional production indexes remain to be measured.",
+      "rawLocalArtifacts": [
+        "build/thermal-ab-20261118/pareto-boundary-probe",
+        "build/thermal-ab-20261118/pareto-domain-probe",
+        "build/thermal-ab-20261118/domain-policy-trace/pareto-shadow"
+      ],
+      "clock": "Asia/Shanghai"
+    },
+    "thermal-local-topology-runtime-2026-11-20": {
+      "verifiedLocalDate": "2026-11-20",
+      "feature": "Geometry-only walk reuse, current crossing outlet projection and routed transport owner membership invalidation.",
+      "forge": {
+        "unifiedNamespaces": [
+          "geometry_preparation",
+          "tiled_queries",
+          "fixed_mixing",
+          "tiled_geometry",
+          "geometry_cut",
+          "independent_progress",
+          "committed_save",
+          "worker_recovery",
+          "tiled_persistence",
+          "heat_buffer",
+          "geometry_input_order"
+        ],
+        "requiredDistinct": 68,
+        "firstPass": 65,
+        "firstFailed": 3,
+        "recheckedRequired": 9,
+        "recheckedPassed": 9,
+        "distinctPassedAcrossRuns": 68,
+        "newPositiveControls": [
+          "Two adjacent additions beyond the old frontier, remote reuse, shared last halo owner and remote route seed",
+          "Staged Page admission and cancellation",
+          "Empty/sky/routed transport with resize, witness retirement, freeze and owner retirement",
+          "A sole routed campfire outlet at the corner of three Sections, sealing, redirection and unload in both projection directions"
+        ],
+        "updatedExistingFixtures": [
+          "TiledThermalPersistenceGameTests validates the current v7 tag and actual disk round trip",
+          "ThermalGeometryInputOrderGameTests stops at the production ingress to inbox handoff for adversarial visitation order"
+        ],
+        "fullPreparationComparison": {
+          "temperatureSamples": [
+            832,
+            832,
+            4224
+          ],
+          "maximumTemperatureDifferenceC": 0,
+          "maximumEnergyDifferenceJ": 0
+        }
+      },
+      "fixedWork": {
+        "measurement": "QueryThreadCycleTime for the thread, ThreadMXBean thread allocated bytes, warm same JVM with alternating arm order. Single production PendingGeometryBoundaries instance or a fresh TopologyUpdatePlanner walk per retained input. Setup, the oracle and source/solver work run outside the timed edits. Windows thread CPU time has coarse granularity for these short blocks.",
+        "data": {
+          "distributed": {
+            "pairedBlocks": 6,
+            "allIntermediateSectionSetsAndUnresolvedFlagsMatch": true,
+            "editEventsPerBlock": 32,
+            "resultsChecked": 1632,
+            "median": {
+              "full": {
+                "cycles": 19502692.0,
+                "walks": 1632.0,
+                "results": 1632.0,
+                "cpuNs": 0.0,
+                "allocatedBytes": 3226136.0
+              },
+              "local": {
+                "cycles": 1832253.0,
+                "walks": 88.0,
+                "results": 1632.0,
+                "cpuNs": 0.0,
+                "allocatedBytes": 177000.0
+              }
+            },
+            "medianPairedSavingPct": {
+              "cycles": 90.78,
+              "allocatedBytes": 94.51
+            },
+            "pairsWithLowerCycles": 6
+          },
+          "connected": {
+            "pairedBlocks": 6,
+            "allIntermediateSectionSetsAndUnresolvedFlagsMatch": true,
+            "editEventsPerBlock": 32,
+            "resultsChecked": 1152,
+            "median": {
+              "full": {
+                "cycles": 76791521.0,
+                "walks": 1152.0,
+                "results": 1152.0,
+                "cpuNs": 7812500.0,
+                "allocatedBytes": 10269464.0
+              },
+              "local": {
+                "cycles": 76056013.0,
+                "walks": 1152.0,
+                "results": 1152.0,
+                "cpuNs": 15625000.0,
+                "allocatedBytes": 10271272.0
+              }
+            },
+            "medianPairedSavingPct": {
+              "cycles": 0.4,
+              "allocatedBytes": -0.02
+            },
+            "pairsWithLowerCycles": 4
+          }
+        }
+      },
+      "workload": {
+        "players": 100,
+        "bases": 25,
+        "campfires": 1600,
+        "workerBudgetMsPerSecond": 250,
+        "measurementTicks": 1400,
+        "recoveryTicks": 200,
+        "maximumTimelyAgeTicks": 40,
+        "origin": "Same saved world, new dedicated server and client cohort per run, same thermal trace agent. The runner reuses existing baseline classes and resources and substitutes the six compiled candidate class families for a comparison.",
+        "preMeasurementLaunchesExcluded": 2,
+        "startup": "One of the first two clients disconnected in each excluded launch with a Netty EncoderException wrapping ConcurrentModificationException. 99 clients spawned in each. No measurement window. The three new qualified measurements used the same client fixture allowing up to two retries only before first spawn; each arm records the actual count."
+      },
+      "loadArms": {
+        "checkpoint-scoped": {
+          "mainThermalP99Ms": 4.18,
+          "tickSpanP99Ms": 87.7,
+          "mainThreadCpuMs": 13406.25,
+          "processCpuMs": 33234.375,
+          "workerAllocatedBytes": 646375336,
+          "acceptedHeatBudgetPeakBytes": 118692152,
+          "ageP99Ticks": 23,
+          "oldestLiveProbeAgeTicks": 23,
+          "tps": 19.999147665182424,
+          "actualEnabledSourcesByFrame": [
+            1280,
+            1600,
+            1600,
+            1280,
+            1600,
+            1600,
+            1280
+          ],
+          "receipts": {
+            "playersJoined": 100,
+            "activeBeforeStop": 100,
+            "gameTick": 11063,
+            "serverPid": 31612,
+            "serverAndClientExitedZero": true
+          },
+          "fixtureWorkerCpuMs": 2531.25,
+          "ignitionStartedTick": 10800,
+          "clientQualified": true,
+          "recovery": {
+            "ticks": 200,
+            "samples": 900,
+            "missing": 0,
+            "old": 0,
+            "maximumAgeTicks": 3
+          },
+          "geometryWalkAllocationSample": {
+            "all": 64257432,
+            "events": 235,
+            "refresh": 60841064
+          },
+          "preSpawnRetries": 0,
+          "worker": {
+            "timely": 5858,
+            "old": 0,
+            "missing": 142,
+            "attempts": 6000,
+            "waitStarts": 466,
+            "delayIncludedPercent": 2.3437314854647533,
+            "nativeBillionsOfCycles": 22.064515412,
+            "chargedMs": 9938.407827,
+            "chargedGcOverlapMs": 126.405702,
+            "observedThreadCpuMs": 2531.25,
+            "valuePublications": 1252,
+            "publishedTiles": 14781,
+            "geometryCommits": 627,
+            "tasks": 23418
+          },
+          "exclusiveCutoffWallMs": 718.136,
+          "exclusiveNumericWallMs": 4519.151,
+          "selectionToVisible": {
+            "all": {
+              "count": 622,
+              "groupSizes": {
+                "1": 134,
+                "2": 158,
+                "3": 213,
+                "4": 58,
+                "5": 45,
+                "6": 10,
+                "7": 2,
+                "8": 1,
+                "9": 1
+              },
+              "scopeSectionMedian": 24,
+              "pickToVisibilityMedianMs": 7.3613,
+              "pickToVisibilityP95Ms": 21.3183,
+              "fieldMs": 4500.452
+            },
+            "lagBelow40": {
+              "count": 622,
+              "groupSizes": {
+                "1": 134,
+                "2": 158,
+                "3": 213,
+                "4": 58,
+                "5": 45,
+                "6": 10,
+                "7": 2,
+                "8": 1,
+                "9": 1
+              },
+              "scopeSectionMedian": 24,
+              "pickToVisibilityMedianMs": 7.3613,
+              "pickToVisibilityP95Ms": 21.3183,
+              "fieldMs": 4500.452
+            },
+            "lagAtLeast40": {
+              "count": 0,
+              "groupSizes": {},
+              "scopeSectionMedian": null,
+              "pickToVisibilityMedianMs": null,
+              "pickToVisibilityP95Ms": null,
+              "fieldMs": 0.0
+            },
+            "multi": {
+              "count": 488,
+              "groupSizes": {
+                "2": 158,
+                "3": 213,
+                "4": 58,
+                "5": 45,
+                "6": 10,
+                "7": 2,
+                "8": 1,
+                "9": 1
+              },
+              "scopeSectionMedian": 24,
+              "pickToVisibilityMedianMs": 7.9215,
+              "pickToVisibilityP95Ms": 22.2284,
+              "fieldMs": 4219.692
+            },
+            "single": {
+              "count": 134,
+              "groupSizes": {
+                "1": 134
+              },
+              "scopeSectionMedian": 8,
+              "pickToVisibilityMedianMs": 2.701001,
+              "pickToVisibilityP95Ms": 7.4236,
+              "fieldMs": 280.76
+            }
+          },
+          "earlyWindows": {
+            "0-200": {
+              "timely": 714,
+              "old": 0,
+              "missing": 86,
+              "attempts": 800,
+              "waitStarts": 466,
+              "delayIncludedPercent": 16.395876693905493,
+              "nativeBillionsOfCycles": 3.971428034,
+              "chargedMs": 1819.228426,
+              "chargedGcOverlapMs": 33.033099,
+              "observedThreadCpuMs": 265.625,
+              "valuePublications": 181,
+              "publishedTiles": 2179,
+              "geometryCommits": 92,
+              "tasks": 3938
+            },
+            "200-600": {
+              "timely": 1787,
+              "old": 0,
+              "missing": 13,
+              "attempts": 1800,
+              "waitStarts": 0,
+              "delayIncludedPercent": 0.0,
+              "nativeBillionsOfCycles": 6.530696076,
+              "chargedMs": 2960.884509,
+              "chargedGcOverlapMs": 72.937202,
+              "observedThreadCpuMs": 781.25,
+              "valuePublications": 349,
+              "publishedTiles": 4469,
+              "geometryCommits": 183,
+              "tasks": 6918
+            }
+          },
+          "hostSample": {}
+        },
+        "local-refresh-qualified": {
+          "mainThermalP99Ms": 9.72,
+          "tickSpanP99Ms": 146.0,
+          "mainThreadCpuMs": 7562.5,
+          "processCpuMs": 32765.625,
+          "workerAllocatedBytes": 695117288,
+          "acceptedHeatBudgetPeakBytes": 123610812,
+          "ageP99Ticks": 103,
+          "oldestLiveProbeAgeTicks": 243,
+          "tps": 18.9275434843074,
+          "actualEnabledSourcesByFrame": [
+            1600,
+            1600,
+            1600,
+            1280,
+            1600,
+            1600,
+            1280
+          ],
+          "receipts": {
+            "playersJoined": 100,
+            "activeBeforeStop": 100,
+            "gameTick": 11063,
+            "serverPid": 31116,
+            "serverAndClientExitedZero": true
+          },
+          "fixtureWorkerCpuMs": 1578.125,
+          "ignitionStartedTick": 10800,
+          "clientQualified": true,
+          "recovery": {
+            "ticks": 200,
+            "samples": 900,
+            "missing": 0,
+            "old": 0,
+            "maximumAgeTicks": 3
+          },
+          "geometryWalkAllocationSample": {
+            "all": 139191984,
+            "events": 351,
+            "refresh": 134088616
+          },
+          "preSpawnRetries": 0,
+          "worker": {
+            "timely": 3224,
+            "old": 1884,
+            "missing": 892,
+            "attempts": 6000,
+            "waitStarts": 2854,
+            "delayIncludedPercent": 20.133113944169224,
+            "nativeBillionsOfCycles": 32.444604478,
+            "chargedMs": 14934.102,
+            "chargedGcOverlapMs": 187.0934,
+            "observedThreadCpuMs": 1578.125,
+            "valuePublications": 1174,
+            "publishedTiles": 14957,
+            "geometryCommits": 582,
+            "tasks": 17349
+          },
+          "exclusiveCutoffWallMs": 1672.263,
+          "exclusiveNumericWallMs": 6153.907,
+          "selectionToVisible": {
+            "all": {
+              "count": 581,
+              "groupSizes": {
+                "1": 208,
+                "2": 102,
+                "3": 72,
+                "4": 79,
+                "5": 59,
+                "6": 23,
+                "7": 13,
+                "8": 10,
+                "9": 1,
+                "10": 9,
+                "11": 1,
+                "12": 2,
+                "14": 1,
+                "19": 1
+              },
+              "scopeSectionMedian": 16,
+              "pickToVisibilityMedianMs": 15.4092,
+              "pickToVisibilityP95Ms": 136.3856,
+              "fieldMs": 6104.157
+            },
+            "lagBelow40": {
+              "count": 322,
+              "groupSizes": {
+                "1": 94,
+                "2": 55,
+                "3": 45,
+                "4": 60,
+                "5": 44,
+                "6": 12,
+                "7": 5,
+                "8": 3,
+                "10": 3,
+                "19": 1
+              },
+              "scopeSectionMedian": 24,
+              "pickToVisibilityMedianMs": 10.8786,
+              "pickToVisibilityP95Ms": 82.3486,
+              "fieldMs": 3338.38
+            },
+            "lagAtLeast40": {
+              "count": 259,
+              "groupSizes": {
+                "1": 114,
+                "2": 47,
+                "3": 27,
+                "4": 19,
+                "5": 15,
+                "6": 11,
+                "7": 8,
+                "8": 7,
+                "9": 1,
+                "10": 6,
+                "11": 1,
+                "12": 2,
+                "14": 1
+              },
+              "scopeSectionMedian": 16,
+              "pickToVisibilityMedianMs": 30.001,
+              "pickToVisibilityP95Ms": 162.7705,
+              "fieldMs": 2765.777
+            },
+            "multi": {
+              "count": 373,
+              "groupSizes": {
+                "2": 102,
+                "3": 72,
+                "4": 79,
+                "5": 59,
+                "6": 23,
+                "7": 13,
+                "8": 10,
+                "9": 1,
+                "10": 9,
+                "11": 1,
+                "12": 2,
+                "14": 1,
+                "19": 1
+              },
+              "scopeSectionMedian": 32,
+              "pickToVisibilityMedianMs": 20.5404,
+              "pickToVisibilityP95Ms": 153.6754,
+              "fieldMs": 5448.079
+            },
+            "single": {
+              "count": 208,
+              "groupSizes": {
+                "1": 208
+              },
+              "scopeSectionMedian": 8,
+              "pickToVisibilityMedianMs": 4.4381,
+              "pickToVisibilityP95Ms": 29.731,
+              "fieldMs": 656.077
+            }
+          },
+          "earlyWindows": {
+            "0-200": {
+              "timely": 273,
+              "old": 333,
+              "missing": 194,
+              "attempts": 800,
+              "waitStarts": 560,
+              "delayIncludedPercent": 29.497439948243965,
+              "nativeBillionsOfCycles": 6.071334832,
+              "chargedMs": 2738.8455,
+              "chargedGcOverlapMs": 0.0,
+              "observedThreadCpuMs": 281.25,
+              "valuePublications": 90,
+              "publishedTiles": 1857,
+              "geometryCommits": 43,
+              "tasks": 2306
+            },
+            "200-600": {
+              "timely": 60,
+              "old": 1257,
+              "missing": 483,
+              "attempts": 1800,
+              "waitStarts": 1531,
+              "delayIncludedPercent": 38.71254313994849,
+              "nativeBillionsOfCycles": 11.102021564,
+              "chargedMs": 5238.8039,
+              "chargedGcOverlapMs": 19.0243,
+              "observedThreadCpuMs": 656.25,
+              "valuePublications": 370,
+              "publishedTiles": 4354,
+              "geometryCommits": 183,
+              "tasks": 3035
+            }
+          },
+          "hostSample": {
+            "otherJavaCPUSeconds": 80.594,
+            "minAvailableRAMMiB": 356,
+            "hostCoverageSeconds": 70.98
+          }
+        },
+        "checkpoint-scoped-matched": {
+          "mainThermalP99Ms": 9.74,
+          "tickSpanP99Ms": 106.2,
+          "mainThreadCpuMs": 7125.0,
+          "processCpuMs": 26093.75,
+          "workerAllocatedBytes": 644482000,
+          "acceptedHeatBudgetPeakBytes": 119720704,
+          "ageP99Ticks": 43,
+          "oldestLiveProbeAgeTicks": 43,
+          "tps": 19.879321386762378,
+          "actualEnabledSourcesByFrame": [
+            1280,
+            1600,
+            1600,
+            1280,
+            1600,
+            1600,
+            1584
+          ],
+          "receipts": {
+            "playersJoined": 100,
+            "activeBeforeStop": 100,
+            "gameTick": 11063,
+            "serverPid": 30656,
+            "serverAndClientExitedZero": true
+          },
+          "fixtureWorkerCpuMs": 1406.25,
+          "ignitionStartedTick": 10800,
+          "clientQualified": true,
+          "recovery": {
+            "ticks": 200,
+            "samples": 900,
+            "missing": 0,
+            "old": 0,
+            "maximumAgeTicks": 23
+          },
+          "geometryWalkAllocationSample": {
+            "all": 61070472,
+            "events": 257,
+            "refresh": 50815728
+          },
+          "preSpawnRetries": 0,
+          "worker": {
+            "timely": 5155,
+            "old": 282,
+            "missing": 563,
+            "attempts": 6000,
+            "waitStarts": 786,
+            "delayIncludedPercent": 5.022676273059482,
+            "nativeBillionsOfCycles": 29.961892704,
+            "chargedMs": 13744.4685,
+            "chargedGcOverlapMs": 234.1433,
+            "observedThreadCpuMs": 1406.25,
+            "valuePublications": 988,
+            "publishedTiles": 15173,
+            "geometryCommits": 491,
+            "tasks": 22865
+          },
+          "exclusiveCutoffWallMs": 859.614,
+          "exclusiveNumericWallMs": 6516.052,
+          "selectionToVisible": {
+            "all": {
+              "count": 488,
+              "groupSizes": {
+                "1": 103,
+                "2": 75,
+                "3": 87,
+                "4": 97,
+                "5": 62,
+                "6": 23,
+                "7": 17,
+                "8": 12,
+                "9": 8,
+                "10": 3,
+                "15": 1
+              },
+              "scopeSectionMedian": 24,
+              "pickToVisibilityMedianMs": 12.8989,
+              "pickToVisibilityP95Ms": 69.5843,
+              "fieldMs": 6439.482
+            },
+            "lagBelow40": {
+              "count": 458,
+              "groupSizes": {
+                "1": 96,
+                "2": 71,
+                "3": 85,
+                "4": 92,
+                "5": 56,
+                "6": 20,
+                "7": 16,
+                "8": 10,
+                "9": 8,
+                "10": 3,
+                "15": 1
+              },
+              "scopeSectionMedian": 24,
+              "pickToVisibilityMedianMs": 12.297,
+              "pickToVisibilityP95Ms": 58.7643,
+              "fieldMs": 6062.779
+            },
+            "lagAtLeast40": {
+              "count": 30,
+              "groupSizes": {
+                "1": 7,
+                "2": 4,
+                "3": 2,
+                "4": 5,
+                "5": 6,
+                "6": 3,
+                "7": 1,
+                "8": 2
+              },
+              "scopeSectionMedian": 32,
+              "pickToVisibilityMedianMs": 60.4127,
+              "pickToVisibilityP95Ms": 161.5896,
+              "fieldMs": 376.703
+            },
+            "multi": {
+              "count": 385,
+              "groupSizes": {
+                "2": 75,
+                "3": 87,
+                "4": 97,
+                "5": 62,
+                "6": 23,
+                "7": 17,
+                "8": 12,
+                "9": 8,
+                "10": 3,
+                "15": 1
+              },
+              "scopeSectionMedian": 32,
+              "pickToVisibilityMedianMs": 16.1148,
+              "pickToVisibilityP95Ms": 75.9822,
+              "fieldMs": 6061.458
+            },
+            "single": {
+              "count": 103,
+              "groupSizes": {
+                "1": 103
+              },
+              "scopeSectionMedian": 8,
+              "pickToVisibilityMedianMs": 4.3806,
+              "pickToVisibilityP95Ms": 27.9588,
+              "fieldMs": 378.025
+            }
+          },
+          "earlyWindows": {
+            "0-200": {
+              "timely": 336,
+              "old": 261,
+              "missing": 203,
+              "attempts": 800,
+              "waitStarts": 591,
+              "delayIncludedPercent": 26.518305249027023,
+              "nativeBillionsOfCycles": 5.090357936,
+              "chargedMs": 2346.399,
+              "chargedGcOverlapMs": 21.6825,
+              "observedThreadCpuMs": 312.5,
+              "valuePublications": 140,
+              "publishedTiles": 1982,
+              "geometryCommits": 69,
+              "tasks": 2183
+            },
+            "200-600": {
+              "timely": 1624,
+              "old": 21,
+              "missing": 155,
+              "attempts": 1800,
+              "waitStarts": 195,
+              "delayIncludedPercent": 4.443678056757861,
+              "nativeBillionsOfCycles": 8.704944154,
+              "chargedMs": 3977.3886,
+              "chargedGcOverlapMs": 74.7797,
+              "observedThreadCpuMs": 437.5,
+              "valuePublications": 312,
+              "publishedTiles": 4752,
+              "geometryCommits": 165,
+              "tasks": 7157
+            }
+          },
+          "hostSample": {
+            "otherJavaCPUSeconds": 0.016,
+            "minAvailableRAMMiB": 3557,
+            "hostCoverageSeconds": 65.34
+          }
+        },
+        "local-refresh-control": {
+          "mainThermalP99Ms": 7.77,
+          "tickSpanP99Ms": 125.2,
+          "mainThreadCpuMs": 10953.125,
+          "processCpuMs": 28734.375,
+          "workerAllocatedBytes": 647597376,
+          "acceptedHeatBudgetPeakBytes": 123126672,
+          "ageP99Ticks": 23,
+          "oldestLiveProbeAgeTicks": 23,
+          "tps": 18.597430614587086,
+          "actualEnabledSourcesByFrame": [
+            1600,
+            1600,
+            1600,
+            1280,
+            1600,
+            1600,
+            1280
+          ],
+          "receipts": {
+            "playersJoined": 100,
+            "activeBeforeStop": 100,
+            "gameTick": 11123,
+            "serverPid": 34764,
+            "serverAndClientExitedZero": true
+          },
+          "fixtureWorkerCpuMs": 1750.0,
+          "ignitionStartedTick": 10860,
+          "clientQualified": true,
+          "recovery": {
+            "ticks": 200,
+            "samples": 900,
+            "missing": 0,
+            "old": 0,
+            "maximumAgeTicks": 3
+          },
+          "geometryWalkAllocationSample": {
+            "all": 52128080,
+            "events": 236,
+            "refresh": 49594760
+          },
+          "preSpawnRetries": 1,
+          "worker": {
+            "timely": 5589,
+            "old": 0,
+            "missing": 411,
+            "attempts": 6000,
+            "waitStarts": 1002,
+            "delayIncludedPercent": 5.735567259435046,
+            "nativeBillionsOfCycles": 25.534098974,
+            "chargedMs": 11646.0182,
+            "chargedGcOverlapMs": 172.792,
+            "observedThreadCpuMs": 1750.0,
+            "valuePublications": 1216,
+            "publishedTiles": 14997,
+            "geometryCommits": 601,
+            "tasks": 22264
+          },
+          "exclusiveCutoffWallMs": 667.691,
+          "exclusiveNumericWallMs": 5206.846,
+          "selectionToVisible": {
+            "all": {
+              "count": 607,
+              "groupSizes": {
+                "1": 151,
+                "2": 148,
+                "3": 169,
+                "4": 52,
+                "5": 51,
+                "6": 18,
+                "7": 4,
+                "8": 7,
+                "9": 3,
+                "10": 3,
+                "11": 1
+              },
+              "scopeSectionMedian": 23,
+              "pickToVisibilityMedianMs": 7.6858,
+              "pickToVisibilityP95Ms": 67.2336,
+              "fieldMs": 5182.212
+            },
+            "lagBelow40": {
+              "count": 605,
+              "groupSizes": {
+                "1": 149,
+                "2": 148,
+                "3": 169,
+                "4": 52,
+                "5": 51,
+                "6": 18,
+                "7": 4,
+                "8": 7,
+                "9": 3,
+                "10": 3,
+                "11": 1
+              },
+              "scopeSectionMedian": 23,
+              "pickToVisibilityMedianMs": 7.6858,
+              "pickToVisibilityP95Ms": 67.2336,
+              "fieldMs": 5176.415
+            },
+            "lagAtLeast40": {
+              "count": 2,
+              "groupSizes": {
+                "1": 2
+              },
+              "scopeSectionMedian": 8,
+              "pickToVisibilityMedianMs": 3.7067,
+              "pickToVisibilityP95Ms": 14.3573,
+              "fieldMs": 5.797
+            },
+            "multi": {
+              "count": 456,
+              "groupSizes": {
+                "2": 148,
+                "3": 169,
+                "4": 52,
+                "5": 51,
+                "6": 18,
+                "7": 4,
+                "8": 7,
+                "9": 3,
+                "10": 3,
+                "11": 1
+              },
+              "scopeSectionMedian": 24,
+              "pickToVisibilityMedianMs": 8.3236,
+              "pickToVisibilityP95Ms": 80.0041,
+              "fieldMs": 4842.185
+            },
+            "single": {
+              "count": 151,
+              "groupSizes": {
+                "1": 151
+              },
+              "scopeSectionMedian": 8,
+              "pickToVisibilityMedianMs": 2.7806,
+              "pickToVisibilityP95Ms": 12.7354,
+              "fieldMs": 340.027
+            }
+          },
+          "earlyWindows": {
+            "0-200": {
+              "timely": 602,
+              "old": 0,
+              "missing": 198,
+              "attempts": 800,
+              "waitStarts": 595,
+              "delayIncludedPercent": 26.56708365674112,
+              "nativeBillionsOfCycles": 5.220127778,
+              "chargedMs": 2414.7212,
+              "chargedGcOverlapMs": 30.0902,
+              "observedThreadCpuMs": 203.125,
+              "valuePublications": 136,
+              "publishedTiles": 2254,
+              "geometryCommits": 66,
+              "tasks": 2852
+            },
+            "200-600": {
+              "timely": 1604,
+              "old": 0,
+              "missing": 196,
+              "attempts": 1800,
+              "waitStarts": 407,
+              "delayIncludedPercent": 6.796834686261958,
+              "nativeBillionsOfCycles": 9.661045084,
+              "chargedMs": 4416.0483,
+              "chargedGcOverlapMs": 64.0124,
+              "observedThreadCpuMs": 281.25,
+              "valuePublications": 295,
+              "publishedTiles": 4616,
+              "geometryCommits": 156,
+              "tasks": 6855
+            }
+          },
+          "hostSample": {
+            "otherJavaCPUSeconds": 0.0,
+            "minAvailableRAMMiB": 3799,
+            "hostCoverageSeconds": 69.7
+          }
+        }
+      },
+      "pairComparisons": [
+        {
+          "arms": [
+            "checkpoint-scoped",
+            "local-refresh-qualified"
+          ],
+          "inputs": {
+            "measuredTicks": [
+              1400,
+              1400
+            ],
+            "sourcesIgnited": [
+              1600,
+              1600
+            ],
+            "warmupTicksAfterIgnition": [
+              200,
+              200
+            ],
+            "teleports": [
+              200,
+              200
+            ],
+            "mutations": [
+              1555,
+              1555
+            ],
+            "players": [
+              100,
+              100
+            ],
+            "playerTickEvents": [
+              140000,
+              140000
+            ],
+            "deaths": [
+              0,
+              0
+            ],
+            "disconnects": [
+              0,
+              0
+            ],
+            "measurementStartedTick": [
+              11063,
+              11063
+            ]
+          },
+          "matchedResidentAttemptBins": 175,
+          "totalResidentAttemptBins": 175,
+          "enabledAtAllSevenFramesMatches": false,
+          "temperature": {
+            "all": 6200,
+            "bothReadable": 4510,
+            "sameSampleTickSinceIgnition": 2266,
+            "outOfTolerance": 0,
+            "maxDifferenceC": 0.9288564236467067,
+            "largestOutliers": [],
+            "toleranceC": "max(1,0.05 * abs(baseline temperature minus local natural temperature))"
+          },
+          "classComparison": {
+            "sharedLoaded": 1454,
+            "changed": [
+              "com/teammoeg/frostedheart/content/climate/thermal/runtime/minecraft/engine/ThermalDimensionEngine",
+              "com/teammoeg/frostedheart/content/climate/thermal/runtime/minecraft/engine/ThermalDimensionEngine$1",
+              "com/teammoeg/frostedheart/content/climate/thermal/runtime/minecraft/engine/ThermalDimensionEngine$FixedGeometry",
+              "com/teammoeg/frostedheart/content/climate/thermal/runtime/minecraft/engine/ThermalDimensionEngine$RestoreRequest",
+              "com/teammoeg/frostedheart/content/climate/thermal/runtime/minecraft/engine/ThermalDimensionEngine$SnapshotRequest",
+              "com/teammoeg/frostedheart/content/climate/thermal/runtime/minecraft/engine/ThermalDimensionEngine$SnapshotStage",
+              "com/teammoeg/frostedheart/content/climate/thermal/solver/TiledThermalField",
+              "com/teammoeg/frostedheart/content/climate/thermal/solver/TiledThermalField$Domain",
+              "com/teammoeg/frostedheart/content/climate/thermal/source/minecraft/WorkerPhysicalSourceBindings",
+              "com/teammoeg/frostedheart/content/climate/thermal/source/minecraft/WorkerPhysicalSourceBindings$1",
+              "com/teammoeg/frostedheart/content/climate/thermal/source/minecraft/WorkerPhysicalSourceBindings$SourceDescriptor",
+              "com/teammoeg/frostedheart/content/climate/thermal/topology/TopologyUpdatePlanner",
+              "com/teammoeg/frostedheart/content/climate/thermal/topology/TopologyUpdatePlanner$FragmentChanges",
+              "com/teammoeg/frostedheart/content/climate/thermal/topology/TopologyUpdatePlanner$PageDraft",
+              "com/teammoeg/frostedheart/content/climate/thermal/topology/TopologyUpdatePlanner$WorkLimitedException",
+              "com/teammoeg/frostedheart/content/climate/thermal/topology/WorkerPageStore",
+              "com/teammoeg/frostedheart/content/climate/thermal/topology/WorkerPageStore$MutableAirTarget",
+              "com/teammoeg/frostedheart/content/climate/thermal/topology/WorkerPageStore$PageState",
+              "com/teammoeg/frostedheart/content/steamenergy/sauna/SaunaBlock"
+            ],
+            "baselineOnly": [],
+            "candidateOnly": [
+              "com/teammoeg/frostedheart/content/climate/thermal/runtime/minecraft/message/TopologyInbox$Material",
+              "com/teammoeg/frostedheart/content/climate/thermal/runtime/minecraft/message/TopologyInbox$MaterialAt",
+              "com/teammoeg/frostedheart/content/climate/thermal/topology/PendingGeometryBoundaries"
+            ]
+          }
+        },
+        {
+          "arms": [
+            "checkpoint-scoped-matched",
+            "local-refresh-qualified"
+          ],
+          "inputs": {
+            "measuredTicks": [
+              1400,
+              1400
+            ],
+            "sourcesIgnited": [
+              1600,
+              1600
+            ],
+            "warmupTicksAfterIgnition": [
+              200,
+              200
+            ],
+            "teleports": [
+              200,
+              200
+            ],
+            "mutations": [
+              1555,
+              1555
+            ],
+            "players": [
+              100,
+              100
+            ],
+            "playerTickEvents": [
+              140000,
+              140000
+            ],
+            "deaths": [
+              0,
+              0
+            ],
+            "disconnects": [
+              0,
+              0
+            ],
+            "measurementStartedTick": [
+              11063,
+              11063
+            ]
+          },
+          "matchedResidentAttemptBins": 175,
+          "totalResidentAttemptBins": 175,
+          "enabledAtAllSevenFramesMatches": false,
+          "temperature": {
+            "all": 6200,
+            "bothReadable": 4522,
+            "sameSampleTickSinceIgnition": 2065,
+            "outOfTolerance": 0,
+            "maxDifferenceC": 0.6237150476082896,
+            "largestOutliers": [],
+            "toleranceC": "max(1,0.05 * abs(baseline temperature minus local natural temperature))"
+          },
+          "classComparison": {
+            "sharedLoaded": 1454,
+            "changed": [
+              "com/teammoeg/frostedheart/content/climate/thermal/runtime/minecraft/engine/ThermalDimensionEngine",
+              "com/teammoeg/frostedheart/content/climate/thermal/runtime/minecraft/engine/ThermalDimensionEngine$1",
+              "com/teammoeg/frostedheart/content/climate/thermal/runtime/minecraft/engine/ThermalDimensionEngine$FixedGeometry",
+              "com/teammoeg/frostedheart/content/climate/thermal/runtime/minecraft/engine/ThermalDimensionEngine$RestoreRequest",
+              "com/teammoeg/frostedheart/content/climate/thermal/runtime/minecraft/engine/ThermalDimensionEngine$SnapshotRequest",
+              "com/teammoeg/frostedheart/content/climate/thermal/runtime/minecraft/engine/ThermalDimensionEngine$SnapshotStage",
+              "com/teammoeg/frostedheart/content/climate/thermal/solver/TiledThermalField",
+              "com/teammoeg/frostedheart/content/climate/thermal/solver/TiledThermalField$Domain",
+              "com/teammoeg/frostedheart/content/climate/thermal/source/minecraft/WorkerPhysicalSourceBindings",
+              "com/teammoeg/frostedheart/content/climate/thermal/source/minecraft/WorkerPhysicalSourceBindings$1",
+              "com/teammoeg/frostedheart/content/climate/thermal/source/minecraft/WorkerPhysicalSourceBindings$SourceDescriptor",
+              "com/teammoeg/frostedheart/content/climate/thermal/topology/TopologyUpdatePlanner",
+              "com/teammoeg/frostedheart/content/climate/thermal/topology/TopologyUpdatePlanner$FragmentChanges",
+              "com/teammoeg/frostedheart/content/climate/thermal/topology/TopologyUpdatePlanner$PageDraft",
+              "com/teammoeg/frostedheart/content/climate/thermal/topology/TopologyUpdatePlanner$WorkLimitedException",
+              "com/teammoeg/frostedheart/content/climate/thermal/topology/WorkerPageStore",
+              "com/teammoeg/frostedheart/content/climate/thermal/topology/WorkerPageStore$MutableAirTarget",
+              "com/teammoeg/frostedheart/content/climate/thermal/topology/WorkerPageStore$PageState",
+              "com/teammoeg/frostedheart/content/steamenergy/sauna/SaunaBlock"
+            ],
+            "baselineOnly": [],
+            "candidateOnly": [
+              "com/teammoeg/frostedheart/content/climate/thermal/runtime/minecraft/message/TopologyInbox$Material",
+              "com/teammoeg/frostedheart/content/climate/thermal/runtime/minecraft/message/TopologyInbox$MaterialAt",
+              "com/teammoeg/frostedheart/content/climate/thermal/topology/PendingGeometryBoundaries"
+            ]
+          }
+        },
+        {
+          "arms": [
+            "checkpoint-scoped-matched",
+            "local-refresh-control"
+          ],
+          "inputs": {
+            "measuredTicks": [
+              1400,
+              1400
+            ],
+            "sourcesIgnited": [
+              1600,
+              1600
+            ],
+            "warmupTicksAfterIgnition": [
+              200,
+              200
+            ],
+            "teleports": [
+              200,
+              201
+            ],
+            "mutations": [
+              1555,
+              1555
+            ],
+            "players": [
+              100,
+              100
+            ],
+            "playerTickEvents": [
+              140000,
+              140000
+            ],
+            "deaths": [
+              0,
+              0
+            ],
+            "disconnects": [
+              0,
+              0
+            ],
+            "measurementStartedTick": [
+              11063,
+              11123
+            ]
+          },
+          "matchedResidentAttemptBins": 175,
+          "totalResidentAttemptBins": 175,
+          "enabledAtAllSevenFramesMatches": false,
+          "temperature": {
+            "all": 6200,
+            "bothReadable": 4590,
+            "sameSampleTickSinceIgnition": 3452,
+            "outOfTolerance": 0,
+            "maxDifferenceC": 0.6924580283252739,
+            "largestOutliers": [],
+            "toleranceC": "max(1,0.05 * abs(baseline temperature minus local natural temperature))"
+          },
+          "classComparison": {
+            "sharedLoaded": 1454,
+            "changed": [
+              "com/teammoeg/frostedheart/content/climate/thermal/runtime/minecraft/engine/ThermalDimensionEngine",
+              "com/teammoeg/frostedheart/content/climate/thermal/runtime/minecraft/engine/ThermalDimensionEngine$1",
+              "com/teammoeg/frostedheart/content/climate/thermal/runtime/minecraft/engine/ThermalDimensionEngine$FixedGeometry",
+              "com/teammoeg/frostedheart/content/climate/thermal/runtime/minecraft/engine/ThermalDimensionEngine$RestoreRequest",
+              "com/teammoeg/frostedheart/content/climate/thermal/runtime/minecraft/engine/ThermalDimensionEngine$SnapshotRequest",
+              "com/teammoeg/frostedheart/content/climate/thermal/runtime/minecraft/engine/ThermalDimensionEngine$SnapshotStage",
+              "com/teammoeg/frostedheart/content/climate/thermal/solver/TiledThermalField",
+              "com/teammoeg/frostedheart/content/climate/thermal/solver/TiledThermalField$Domain",
+              "com/teammoeg/frostedheart/content/climate/thermal/source/minecraft/WorkerPhysicalSourceBindings",
+              "com/teammoeg/frostedheart/content/climate/thermal/source/minecraft/WorkerPhysicalSourceBindings$1",
+              "com/teammoeg/frostedheart/content/climate/thermal/source/minecraft/WorkerPhysicalSourceBindings$SourceDescriptor",
+              "com/teammoeg/frostedheart/content/climate/thermal/topology/TopologyUpdatePlanner",
+              "com/teammoeg/frostedheart/content/climate/thermal/topology/TopologyUpdatePlanner$FragmentChanges",
+              "com/teammoeg/frostedheart/content/climate/thermal/topology/TopologyUpdatePlanner$PageDraft",
+              "com/teammoeg/frostedheart/content/climate/thermal/topology/TopologyUpdatePlanner$WorkLimitedException",
+              "com/teammoeg/frostedheart/content/climate/thermal/topology/WorkerPageStore",
+              "com/teammoeg/frostedheart/content/climate/thermal/topology/WorkerPageStore$MutableAirTarget",
+              "com/teammoeg/frostedheart/content/climate/thermal/topology/WorkerPageStore$PageState",
+              "com/teammoeg/frostedheart/content/steamenergy/sauna/SaunaBlock"
+            ],
+            "baselineOnly": [],
+            "candidateOnly": [
+              "com/teammoeg/frostedheart/content/climate/thermal/runtime/minecraft/message/TopologyInbox$Material",
+              "com/teammoeg/frostedheart/content/climate/thermal/runtime/minecraft/message/TopologyInbox$MaterialAt",
+              "com/teammoeg/frostedheart/content/climate/thermal/topology/PendingGeometryBoundaries"
+            ]
+          }
+        }
+      ],
+      "measurementNotes": [
+        "Native cycles sum QueryThreadCycleTime deltas for completed service tasks in the 1400-tick window. Observed worker CPU ms are JVM thread-time deltas. Exclusive phase times, service charge and service wait measure elapsed time.",
+        "Worker allocated bytes come from ThreadMXBean. Stack-specific allocation values are JFR sampling weights in bytes. Host background data covers other Java processes present at both endpoints of each sample window.",
+        "Temperature tolerance is max(1 degree C, 5% of the absolute baseline distance from local natural temperature) for the same probe and sample tick relative to ignition. The fixed-work replay compares each intermediate geometry Section set and unresolved-routes flag exactly.",
+        "The 68 unique Forge tests come from the first combined run plus retest of two subsets of those same namespaces. No long-run endurance claim."
+      ]
+    },
+    "thermal-material-frontier-2026-11-20": {
+      "status": "Historical bounded-policy screening; the user subsequently removed the material-depth cutoff. These measurements do not qualify the current implementation.",
+      "verifiedLocal": "2026-11-20 02:40:29 +08:00",
+      "author": "OpenAI Codex",
+      "baseCommit": "5edad63b6",
+      "workspace": "Shared, uncommitted working tree; unrelated edits preserved",
+      "runtime": "Windows, Java 17, Forge GameTest",
+      "scenario": {
+        "cells": 2048,
+        "bricks": 32,
+        "campfireBodies": 16,
+        "worldSize": [
+          16,
+          8,
+          16
+        ],
+        "geometry": "Stone enclosure with unlit campfire bodies at Brick boundaries",
+        "backgroundC": 0,
+        "sourceBodyTemperaturesC": [
+          0.25,
+          0.75,
+          50
+        ],
+        "thresholdsK": [
+          1,
+          0.5
+        ],
+        "networkPlayers": 0
+      },
+      "methodology": {
+        "sameBuild": true,
+        "warmupRounds": 4,
+        "measuredRounds": 9,
+        "order": "Rotated by round",
+        "measurements": "Per-operation medians over repeated rounds; CPU cycles are native QueryThreadCycleTime, not converted into seconds",
+        "clockCaveat": "ThreadMXBean CPU-nanosecond medians returned zero at this duration and are not used for conclusions. Wall times remain wall times.",
+        "setup": "Captured production coordinator/geometry and borrowed final Accepted arrays. Reflection/setup are outside measured kernels.",
+        "frontier": "Material-only scan prototypes include activity detection and exact shared two-layer eligibility; no Air scan, world capture, queue coordination or target-request deduplication. They are not end-to-end alternatives.",
+        "contacts": "Both permission scan alternatives share address/signature lookups; packed masks replace repeated material ownership evaluation.",
+        "geometry": "Production contact-mask rebuild and test-only frontier-cache rebuild timed independently. Production geometry-commit measurement includes all existing coordinator work and is not incremental overhead versus a no-limit baseline.",
+        "caveats": [
+          "No removed-two-layer versus retained-two-layer whole-server comparison",
+          "No hundred-player qualification",
+          "Shared host had concurrent activity; no cross-run absolute speed comparison",
+          "Only one material-heavy geometry distribution; no universal optimality claim"
+        ]
+      },
+      "storage": {
+        "productionContactMaskPayloadBytesPerBrick": 24,
+        "productionContactMaskPayloadBytesInScene": 768,
+        "testOnlyFrontierCandidatesPayloadBytesPerBrick": 48,
+        "extraArrayHeadersExcluded": true,
+        "temperatureSummarySelected": false,
+        "frontierCacheSelected": false
+      },
+      "functionalRuns": [
+        {
+          "log": "build/material-frontier-validation/functional.log",
+          "passed": 7,
+          "failed": 0
+        },
+        {
+          "log": "build/material-frontier-validation/invalidation.log",
+          "passed": 3,
+          "failed": 1,
+          "issue": "Three-axis Section-corner contact invalidation; fixed before later runs"
+        },
+        {
+          "log": "build/material-frontier-validation/bench-first.log",
+          "passed": 5,
+          "failed": 0
+        },
+        {
+          "log": "build/material-frontier-validation/final.log",
+          "passed": 28,
+          "failed": 0
+        },
+        {
+          "log": "build/material-frontier-validation/final-routes.log",
+          "passed": 28,
+          "failed": 0,
+          "scope": "Final route dependency implementation and strengthened distant passage fixture"
+        }
+      ],
+      "measurements": [
+        {
+          "scene": "frontier_T0.25_threshold1.0",
+          "variant": "direct",
+          "iterations": 800,
+          "rounds": 9,
+          "cpuNsP50": 0,
+          "wallNsP50": 12976.75,
+          "wallNsP90": 15248.5,
+          "allocatedBytesP50": 0,
+          "nativeCyclesP50": 29920.175
+        },
+        {
+          "scene": "frontier_T0.25_threshold1.0",
+          "variant": "cached_faces",
+          "iterations": 800,
+          "rounds": 9,
+          "cpuNsP50": 0,
+          "wallNsP50": 13543.625,
+          "wallNsP90": 15160.125,
+          "allocatedBytesP50": 0,
+          "nativeCyclesP50": 31281.075
+        },
+        {
+          "scene": "frontier_T0.25_threshold1.0",
+          "variant": "fused_final_scan",
+          "iterations": 800,
+          "rounds": 9,
+          "cpuNsP50": 0,
+          "wallNsP50": 14102.25,
+          "wallNsP90": 20237.875,
+          "allocatedBytesP50": 0,
+          "nativeCyclesP50": 32540.875
+        },
+        {
+          "scene": "frontier_T0.25_threshold0.5",
+          "variant": "direct",
+          "iterations": 800,
+          "rounds": 9,
+          "cpuNsP50": 0,
+          "wallNsP50": 13339.125,
+          "wallNsP90": 14054.125,
+          "allocatedBytesP50": 0,
+          "nativeCyclesP50": 30794.5025
+        },
+        {
+          "scene": "frontier_T0.25_threshold0.5",
+          "variant": "cached_faces",
+          "iterations": 800,
+          "rounds": 9,
+          "cpuNsP50": 0,
+          "wallNsP50": 13979.125,
+          "wallNsP90": 16035.5,
+          "allocatedBytesP50": 0,
+          "nativeCyclesP50": 32196.05
+        },
+        {
+          "scene": "frontier_T0.25_threshold0.5",
+          "variant": "fused_final_scan",
+          "iterations": 800,
+          "rounds": 9,
+          "cpuNsP50": 0,
+          "wallNsP50": 14651.5,
+          "wallNsP90": 15844.375,
+          "allocatedBytesP50": 0,
+          "nativeCyclesP50": 33859.875
+        },
+        {
+          "scene": "frontier_T0.75_threshold1.0",
+          "variant": "direct",
+          "iterations": 800,
+          "rounds": 9,
+          "cpuNsP50": 0,
+          "wallNsP50": 12987.375,
+          "wallNsP90": 13615.625,
+          "allocatedBytesP50": 0,
+          "nativeCyclesP50": 29775.9475
+        },
+        {
+          "scene": "frontier_T0.75_threshold1.0",
+          "variant": "cached_faces",
+          "iterations": 800,
+          "rounds": 9,
+          "cpuNsP50": 0,
+          "wallNsP50": 13982.5,
+          "wallNsP90": 14542.5,
+          "allocatedBytesP50": 0,
+          "nativeCyclesP50": 31941.715
+        },
+        {
+          "scene": "frontier_T0.75_threshold1.0",
+          "variant": "fused_final_scan",
+          "iterations": 800,
+          "rounds": 9,
+          "cpuNsP50": 0,
+          "wallNsP50": 13775.75,
+          "wallNsP90": 14856.875,
+          "allocatedBytesP50": 0,
+          "nativeCyclesP50": 31753.16
+        },
+        {
+          "scene": "frontier_T0.75_threshold0.5",
+          "variant": "direct",
+          "iterations": 800,
+          "rounds": 9,
+          "cpuNsP50": 0,
+          "wallNsP50": 23709.125,
+          "wallNsP90": 25393.75,
+          "allocatedBytesP50": 0,
+          "nativeCyclesP50": 54389.045
+        },
+        {
+          "scene": "frontier_T0.75_threshold0.5",
+          "variant": "cached_faces",
+          "iterations": 800,
+          "rounds": 9,
+          "cpuNsP50": 0,
+          "wallNsP50": 16571,
+          "wallNsP90": 17808.125,
+          "allocatedBytesP50": 0,
+          "nativeCyclesP50": 38188.57
+        },
+        {
+          "scene": "frontier_T0.75_threshold0.5",
+          "variant": "fused_final_scan",
+          "iterations": 800,
+          "rounds": 9,
+          "cpuNsP50": 0,
+          "wallNsP50": 17342.375,
+          "wallNsP90": 17976,
+          "allocatedBytesP50": 0,
+          "nativeCyclesP50": 39969.4925
+        },
+        {
+          "scene": "frontier_T50.0_threshold1.0",
+          "variant": "direct",
+          "iterations": 800,
+          "rounds": 9,
+          "cpuNsP50": 0,
+          "wallNsP50": 22297.625,
+          "wallNsP90": 24036.125,
+          "allocatedBytesP50": 0,
+          "nativeCyclesP50": 51375.435
+        },
+        {
+          "scene": "frontier_T50.0_threshold1.0",
+          "variant": "cached_faces",
+          "iterations": 800,
+          "rounds": 9,
+          "cpuNsP50": 0,
+          "wallNsP50": 15950.75,
+          "wallNsP90": 17128,
+          "allocatedBytesP50": 0,
+          "nativeCyclesP50": 36808.9175
+        },
+        {
+          "scene": "frontier_T50.0_threshold1.0",
+          "variant": "fused_final_scan",
+          "iterations": 800,
+          "rounds": 9,
+          "cpuNsP50": 0,
+          "wallNsP50": 16884.25,
+          "wallNsP90": 22653.125,
+          "allocatedBytesP50": 0,
+          "nativeCyclesP50": 38797.685
+        },
+        {
+          "scene": "frontier_T50.0_threshold0.5",
+          "variant": "direct",
+          "iterations": 800,
+          "rounds": 9,
+          "cpuNsP50": 0,
+          "wallNsP50": 23807.875,
+          "wallNsP90": 28388.5,
+          "allocatedBytesP50": 0,
+          "nativeCyclesP50": 51930.4775
+        },
+        {
+          "scene": "frontier_T50.0_threshold0.5",
+          "variant": "cached_faces",
+          "iterations": 800,
+          "rounds": 9,
+          "cpuNsP50": 0,
+          "wallNsP50": 16664.125,
+          "wallNsP90": 21748.5,
+          "allocatedBytesP50": 0,
+          "nativeCyclesP50": 37655.8275
+        },
+        {
+          "scene": "frontier_T50.0_threshold0.5",
+          "variant": "fused_final_scan",
+          "iterations": 800,
+          "rounds": 9,
+          "cpuNsP50": 0,
+          "wallNsP50": 16540,
+          "wallNsP90": 17877.875,
+          "allocatedBytesP50": 0,
+          "nativeCyclesP50": 38041.335
+        },
+        {
+          "scene": "contact_permissions",
+          "variant": "direct_policy",
+          "iterations": 100,
+          "rounds": 9,
+          "cpuNsP50": 0,
+          "wallNsP50": 161788,
+          "wallNsP90": 167507,
+          "allocatedBytesP50": 0,
+          "nativeCyclesP50": 372462.34
+        },
+        {
+          "scene": "contact_permissions",
+          "variant": "packed_mask",
+          "iterations": 100,
+          "rounds": 9,
+          "cpuNsP50": 0,
+          "wallNsP50": 69765,
+          "wallNsP90": 71661,
+          "allocatedBytesP50": 0,
+          "nativeCyclesP50": 160621.94
+        },
+        {
+          "scene": "geometry_rebuild",
+          "variant": "production_contacts",
+          "iterations": 100,
+          "rounds": 9,
+          "cpuNsP50": 0,
+          "wallNsP50": 154872,
+          "wallNsP90": 164996,
+          "allocatedBytesP50": 0,
+          "nativeCyclesP50": 355802.2
+        },
+        {
+          "scene": "geometry_rebuild",
+          "variant": "frontier_candidates",
+          "iterations": 100,
+          "rounds": 9,
+          "cpuNsP50": 0,
+          "wallNsP50": 19400,
+          "wallNsP90": 20405,
+          "allocatedBytesP50": 0,
+          "nativeCyclesP50": 44799.66
+        },
+        {
+          "scene": "production_solve_and_maintenance",
+          "variant": "bounded_mask",
+          "iterations": 8,
+          "rounds": 9,
+          "cpuNsP50": 0,
+          "wallNsP50": 297475,
+          "wallNsP90": 971225,
+          "allocatedBytesP50": 8096,
+          "nativeCyclesP50": 688099.75
+        },
+        {
+          "scene": "production_geometry_commit",
+          "variant": "bounded_mask",
+          "iterations": 2,
+          "rounds": 9,
+          "cpuNsP50": 0,
+          "wallNsP50": 1817750,
+          "wallNsP90": 2301800,
+          "allocatedBytesP50": 93880,
+          "nativeCyclesP50": 4080426
+        }
+      ],
+      "decision": "Retain the requested two-layer policy and three packed contact words per Brick. Keep threshold-first direct material frontier scanning; leave cached-face and fused-scan alternatives in GameTest only. Measurements do not establish that the physical two-layer limit itself yields a net performance benefit."
+    }
+  }
+}

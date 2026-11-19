@@ -206,7 +206,12 @@ public final class MaterialSectionState {
     /** Capture-time filter, without cooling: keeps bodies that depart from their own block's natural temperature. */
     public MaterialSectionState retain(long eligibleBricks, long tick, java.util.function.IntToDoubleFunction naturalAt) {
         if ((brickMask & eligibleBricks) == 0) return this;
-        var retirement = new Retirement(eligibleBricks, tick, Double.NaN, 0, naturalAt);
+        return retain(eligibleBricks, tick, naturalAt, 0);
+    }
+
+    /** Filter sleeping bodies using the natural background at their own coordinates and their original ages. */
+    public MaterialSectionState retain(long eligibleBricks, long tick, java.util.function.IntToDoubleFunction naturalAt, double rate) {
+        var retirement = new Retirement(eligibleBricks, tick, Double.NaN, rate, naturalAt);
         retirement.advance(size());
         return retirement.finish();
     }
@@ -443,6 +448,14 @@ public final class MaterialSectionState {
         return used;
     }
 
+    /** Add the first latent state for one previously untracked block, preserving every neighbour and timestamp. */
+    public static MaterialSectionState startPhase(MaterialSectionState previous, int position, int stateId,
+            MaterialThermalLaw law, double energyJ, byte branch, long tick) {
+        var initial = new MaterialSectionState(new short[]{(short) position}, new double[]{energyJ},
+                new byte[]{branch}, new int[]{0}, new int[]{stateId}, new MaterialThermalLaw[]{law}, tick, null);
+        return merge(previous, initial, 0L);
+    }
+
     /** Replace only sampled Bricks; untouched dormant material remains owned by the chunk. */
     public static MaterialSectionState merge(
             MaterialSectionState previous, MaterialSectionState current, long sampledBricks) {
@@ -503,7 +516,13 @@ public final class MaterialSectionState {
     }
 
     private void readCheckpoint(int index, MaterialSample out) {
-        out.setStored(enthalpiesJ[index], law(index), branches[index], savedTick(index));
+        var law = law(index);
+        double energy = enthalpiesJ[index];
+        byte branch = branches[index];
+        // Old climate shifts could leave a sensible checkpoint past its transition threshold.
+        if (branch == MaterialThermalLaw.SENSIBLE && (law.heating() != null || law.cooling() != null))
+            branch = law.initialBranch(law.temperatureC(energy, branch));
+        out.setStored(energy, law, branch, savedTick(index));
     }
 
     public void read(
@@ -631,6 +650,13 @@ public final class MaterialSectionState {
     public static Capture capture(PagePublication page, QueryPublication query,
             ThermalSignatureTable signatures, CaptureScratch scratch, boolean preserveRecordTimes,
             QueryPublication.ReadCursor cursor, long brickMask, double naturalC) {
+        return capture(page, query, signatures, scratch, preserveRecordTimes, cursor, brickMask, local -> naturalC);
+    }
+
+    /** Capture departing live material against each block's natural temperature. */
+    public static Capture capture(PagePublication page, QueryPublication query,
+            ThermalSignatureTable signatures, CaptureScratch scratch, boolean preserveRecordTimes,
+            QueryPublication.ReadCursor cursor, long brickMask, java.util.function.IntToDoubleFunction naturalAt) {
         resetCapture(scratch);
         long tick = -1, sampledBricks = 0;
         boolean mixedTicks = false;
@@ -652,7 +678,7 @@ public final class MaterialSectionState {
                     return new Capture(false, 0, null);
                 }
                 if (scratch.sample.requestSequence() == 0 && !ThermalRetentionPolicy.retains(
-                        scratch.sample.law(), scratch.sample.enthalpyJ(), scratch.sample.branch(), naturalC)) continue;
+                        scratch.sample.law(), scratch.sample.enthalpyJ(), scratch.sample.branch(), naturalAt.applyAsDouble(local))) continue;
                 if (tick >= 0 && tick != scratch.sample.sampleTick()) {
                     if (!preserveRecordTimes || scratch.recordTicks == null) {
                         return new Capture(false, 0, null);

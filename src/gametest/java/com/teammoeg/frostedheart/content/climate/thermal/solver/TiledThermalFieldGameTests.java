@@ -24,6 +24,32 @@ import net.minecraftforge.gametest.PrefixGameTestTemplate;
 @GameTestHolder("frostedheart_tiled_thermal")
 @PrefixGameTestTemplate(false)
 public final class TiledThermalFieldGameTests {
+    /** Common mixing weights and continuous buoyancy weights must reproduce the generic physical pair. */
+    @GameTest(template = "phase0a_empty", timeoutTicks = 100)
+    public static void equalAirPairWeightsMatchTheGenericKernel(GameTestHelper helper) {
+        var generic = new ThermalExchangeKernel.MutablePairResult();
+        var prepared = new ThermalExchangeKernel.MutablePairResult();
+        for (double capacity : new double[] {0.125, 1199.75, 1600}) {
+            double inverse = 1 / capacity;
+            for (double seconds : new double[] {0.025, 0.475, 0.5})
+                for (double conductance : new double[] {0.01, 4, 10, 16, 9.12345, Double.MAX_VALUE, Double.POSITIVE_INFINITY}) {
+                    double weight = ThermalExchangeKernel.equalCapacityPairWeight(capacity, inverse, conductance, seconds);
+                    for (double first : new double[] {-6400.25, 0, 8125.75, Double.MAX_VALUE}) {
+                        double second = -136.5;
+                        var expected = ThermalExchangeKernel.exchangePairWithInverseInto(first, capacity, inverse,
+                                second, capacity, inverse, conductance, seconds, generic);
+                        var actual = ThermalExchangeKernel.applyPairWeight(first, second, first * inverse,
+                                second * inverse, weight, prepared);
+                        helper.assertTrue(expected == actual
+                                        && Double.doubleToLongBits(generic.enthalpyAJ()) == Double.doubleToLongBits(prepared.enthalpyAJ())
+                                        && Double.doubleToLongBits(generic.enthalpyBJ()) == Double.doubleToLongBits(prepared.enthalpyBJ()),
+                                "Equal-capacity faces must deliver identical signed joules and status");
+                    }
+                }
+        }
+        helper.succeed();
+    }
+
     @GameTest(template = "phase0a_empty", timeoutTicks = 200)
     public static void v7CellValuesRoundTripAndOldThermalVersionIsIgnored(GameTestHelper helper) {
         var capture = new AirFieldCheckpoint.Capture(10).atTick(20);
@@ -49,6 +75,31 @@ public final class TiledThermalFieldGameTests {
         full.addCellBrick(0, 0, 0, 0, 1, new double[] {0});
         helper.assertTrue(full.finish() != null, "A native accepted capture can defer residual filtering to the real environment");
         FHMain.LOGGER.info("THERMAL_V7_STORAGE,cells=2,lastCell=63,exact=true,sampleTick=20,oldVersionIgnored=true,noLegacyLayout=true");
+        helper.succeed();
+    }
+
+    /** Geometry waits for equal live clocks, including the latest lifetime start even when its Tile is frozen. */
+    @GameTest(template = "phase0a_empty", timeoutTicks = 200)
+    public static void boundaryChecksDistinguishFrozenLifetimeFromLiveClock(GameTestHelper helper) {
+        var profiles = MinecraftThermalProfiles.prepare();
+        var budget = new ThermalMemoryBudget(2L << 20);
+        long a = SectionPos.asLong(0, 8, 0), b = SectionPos.asLong(2, 8, 0);
+        var scope = new it.unimi.dsi.fastutil.longs.LongOpenHashSet(new long[]{a, b, SectionPos.asLong(4, 8, 0)});
+        int[] air = new int[4096]; Arrays.fill(air, profiles.states().signatureId(Blocks.AIR.defaultBlockState()));
+        try (var banks = new SpatialEnergyBanks(budget, 8, 8, 0); var field = field(budget, profiles, 2)) {
+            helper.assertTrue(field.alignedTick(scope) == Long.MAX_VALUE && field.applicationTick(scope, 7) == 7,
+                    "An empty boundary admits the input at its own tick");
+            helper.assertTrue(field.admit(a, air, 1L, 0) && field.admit(b, air, 1L, 0), "Install two disconnected Bricks");
+            step(field, banks, 0);
+            helper.assertTrue(field.begin(banks.seal(20), it.unimi.dsi.fastutil.longs.LongSets.singleton(a)), "Advance one owner");
+            finish(field);
+            helper.assertTrue(field.commit() && field.alignedTick(scope) == -1, "Different live sample times block geometry");
+            helper.assertTrue(field.freeze(a) && field.stageThaw(a, 0, 10, 40) && field.activate(a, null) && field.freeze(a),
+                    "Establish a newer frozen lifetime");
+            helper.assertTrue(field.alignedTick(scope) == 0 && field.applicationTick(scope, 10) == 40,
+                    "The other Tile supplies the live clock while the frozen lifetime constrains the physical event");
+            helper.assertTrue(field.freeze(b) && field.alignedTick(scope) == Long.MAX_VALUE, "A fully frozen boundary has no live clock");
+        }
         helper.succeed();
     }
 

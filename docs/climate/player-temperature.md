@@ -132,7 +132,7 @@ reported in Celsius and is not converted to the client Fahrenheit setting.
 `temperatureUpdateIntervalTicks` defaults to `20`.
 `PlayerTemperatureUpdate.shouldUpdatePlayer` assigns each UUID a stable phase so
 players are distributed across the interval. Each update performs one
-`MinecraftThermalInput.gameplayPlayerEnvironment` query using a reusable
+`WorldTemperature.samplePlayerAirTemperature` query at eye position using a reusable
 `ThermalEnvironmentSample`.
 
 The historical `player.unused` particle simulator, `TemperatureThreadingPool`,
@@ -485,8 +485,10 @@ reservoir blocks use the same exposed exchange rate and radiation boundary. Unti
 containers pause. Normal tooltip shows the capacity-weighted mean
 `(1-a)*T_core + a*T_surface`; advanced tooltip additionally shows both nodes.
 
-Inventory air comes from `MinecraftThermalInput.gameplayPassiveEnvironment`;
-dropped air comes from `gameplayItemEnvironment`. Both compose the generator
+Inventory heat exchange reads `WorldTemperature.getTempAtBlock(level, pos, SURROUNDINGS)`.
+The `fh_warm_stone_test give <item> environment` preset uses the same local air
+reading for both reservoir nodes.
+Dropped items use `WorldTemperature.sampleDroppedItemAirTemperature`. Both compose the generator
 floor against local natural air before command/Boss controls, even without a
 physical runtime. Equipped reservoirs initialize from composed player air and
 then exchange with the five-part body; they have no additional direct
@@ -518,7 +520,7 @@ does not simulate elapsed offline time. Fresh, uninitialized placements acquire
 the effective environment temperature on their first exchange. Existing
 temperatures survive placement and reload without reinitialization.
 
-`MinecraftThermalInput.gameplayPlacedReservoirEnvironment` samples just above
+`WorldTemperature.samplePlacedReservoirAirTemperature` samples just above
 the model at block-relative `(0.5, 0.3125, 0.5)` and shares the dropped-item
 air/radiation cache and budgets. `DroppedReservoirExchangeHandler.exchangeInto`
 owns both forms' core/surface update, including generator floors and bounded

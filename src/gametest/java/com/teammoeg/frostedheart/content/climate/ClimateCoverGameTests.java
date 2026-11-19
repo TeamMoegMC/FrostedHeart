@@ -50,14 +50,9 @@ public final class ClimateCoverGameTests {
         for (int y : new int[]{-64, -55, -1, 0, 1, 63, 64, 65, 240, 241, 319}) {
             BlockPos pos = new BlockPos(origin.getX(), y, origin.getZ());
             float dimension = WorldTemperature.dimension(level);
-            float biome = WorldTemperature.biome(level, pos);
+            float biome = WorldTemperature.biome(level, new BlockPos((pos.getX() & ~3) + 2,
+                    (pos.getY() & ~3) + 2, (pos.getZ() & ~3) + 2));
             float altitude = WorldTemperature.altitude(level, pos);
-            for (float climate : new float[]{-10000, -40, 0, 40}) {
-                float expected = Math.max(minimum, BlockTemperatureModel.naturalTemperature(dimension, biome, altitude,
-                        WorldTemperature.coveredClimate(level, pos, climate), WorldTemperature.blockClimateFactor()));
-                helper.assertTrue(WorldTemperature.naturalBlock(level, pos, climate) == expected,
-                        "natural block composes the covered climate at y=" + y + ", climate=" + climate);
-            }
             helper.assertTrue(WorldTemperature.naturalAir(level, pos)
                             == Math.max(minimum, dimension + biome + altitude + WorldTemperature.coveredClimate(level, pos)),
                     "natural air takes all of the climate reaching it at y=" + y);

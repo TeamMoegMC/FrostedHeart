@@ -225,7 +225,7 @@ ServerEvents.tick(function(event) {
     for (var receiver = 0; receiver < players.length; receiver++) {
       var entity = players[receiver]
       var at = new BlockPos(Math.floor(entity.x), Math.floor(entity.y), Math.floor(entity.z))
-      ThermalInput.gameplayPlayerEnvironment(entity, Temperature.naturalAir(level, at), environments[receiver])
+      ThermalInput.samplePlayerAirTemperature(entity, Temperature.naturalAir(level, at), environments[receiver])
     }
     if (ticks === 12000) {
       // Keep the resident base burning throughout a twenty-minute run. Only

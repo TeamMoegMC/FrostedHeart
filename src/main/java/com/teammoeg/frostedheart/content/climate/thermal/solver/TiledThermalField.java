@@ -205,6 +205,8 @@ public final class TiledThermalField implements AutoCloseable {
     private final ArrayList<Tile> stepTiles = new ArrayList<>();
     private final ArrayList<Domain> domains = new ArrayList<>();
     private boolean domainsDirty = true;
+    /** Includes frozen owners: a published route can gain or lose validity while another Section is updated. */
+    private int routedTransportOwners;
     private java.util.function.LongConsumer residencyChanged;
 
     /** Connects the coordinator's residency queue to accepted value changes. Passing null detaches it. */
@@ -255,6 +257,7 @@ public final class TiledThermalField implements AutoCloseable {
     private final long initialTick;
     private long targetTick;
     private double halfSeconds, acceptedExternalJ, trialExternalJ;
+    private double airWeightSeconds = Double.NaN, plainAirWeight, edgeAirWeight, mixedAirWeight;
     private double acceptedRejectedInputJ, trialRejectedInputJ;
     private int minimumSectionY = Integer.MAX_VALUE, maximumSectionY = Integer.MIN_VALUE;
     private long pairUpdates, geometryCells, activeNanos;
@@ -333,7 +336,11 @@ public final class TiledThermalField implements AutoCloseable {
             var law = law(frame.signatures[cell]);
             if (law == null || waiting(frame, cell)) continue;
             double energy = ((double) next - previous) * law.capacityJPerK();
-            frame.h[cell] += energy;
+            if (law.heating() == null && law.cooling() == null) {
+                frame.h[cell] += energy;
+            } else {
+                energy -= addMaterialEnergy(frame, cell, law, energy);
+            }
             acceptedExternalJ -= energy;
         }
         if (changed) notifyResidency(tile);
@@ -515,7 +522,9 @@ public final class TiledThermalField implements AutoCloseable {
             NaturalProfile current = naturalProfiles == null ? null : naturalProfiles.get(section);
             for (int ordinal = 0; ordinal < next.brickIds.length; ordinal++) {
                 int oldOrdinal = previous.brickSlots[next.brickIds[ordinal]];
-                if (oldOrdinal >= 0) next.mixingMasks[ordinal] = previous.mixingMasks[oldOrdinal];
+                if (oldOrdinal >= 0) {
+                    next.mixingMasks[ordinal] = previous.mixingMasks[oldOrdinal];
+                }
             }
             for (int cell = 0; cell < next.current().h.length; cell++) {
                 int pageCell = next.pageCell(cell), oldCell = previous.index(pageCell);
@@ -556,6 +565,7 @@ public final class TiledThermalField implements AutoCloseable {
     public synchronized boolean replaceTransport(long section, ThermalFragment[] fragments, ThermalCellArena arena) {
         return replaceTransport(section, fragments, arena, null);
     }
+
     public synchronized boolean replaceTransport(long section, ThermalFragment[] fragments, ThermalCellArena arena, ThermalMemoryBudget.Reservation prepaid) {
         var tile = bySection.get(section);
         if (closed || stage != IDLE || tile == null) return false;
@@ -593,7 +603,10 @@ public final class TiledThermalField implements AutoCloseable {
         }
         var previous = tile.transport;
         tile.transport = next;
-        domainsDirty = true;
+        // Without any installed pair, replacing sky/empty transport cannot alter the Section partition.
+        if (routedTransportOwners != 0 || count != 0) domainsDirty = true;
+        if (previous != null && previous.pairs.length != 0) routedTransportOwners--;
+        if (count != 0) routedTransportOwners++;
         if (previous != null) previous.close();
         return true;
     }
@@ -641,7 +654,10 @@ public final class TiledThermalField implements AutoCloseable {
             if (neighbour != null && neighbour.neighbours[face ^ 1] == tile) neighbour.neighbours[face ^ 1] = null;
         }
         Arrays.fill(tile.neighbours, null); tile.storage.close();
-        if (tile.transport != null) { tile.transport.close(); tile.transport = null; }
+        if (tile.transport != null) {
+            if (tile.transport.pairs.length != 0) routedTransportOwners--;
+            tile.transport.close(); tile.transport = null;
+        }
         return true;
     }
 
@@ -661,6 +677,12 @@ public final class TiledThermalField implements AutoCloseable {
             tile.stepSequence = batch.sequence(); stepTiles.add(tile);
         }
         input = batch; targetTick = batch.toTick(); halfSeconds = (targetTick - batch.fromTick()) / 40.0;
+        if (halfSeconds != 0 && halfSeconds != airWeightSeconds) {
+            airWeightSeconds = halfSeconds;
+            plainAirWeight = airWeight(2);
+            edgeAirWeight = airWeight(1 + AirMixingRegion.MULTIPLIER);
+            mixedAirWeight = airWeight(2 * AirMixingRegion.MULTIPLIER);
+        }
         trialExternalJ = acceptedExternalJ;
         trialRejectedInputJ = acceptedRejectedInputJ;
         tileCursor = inputCursor = cellCursor = 0;
@@ -710,27 +732,49 @@ public final class TiledThermalField implements AutoCloseable {
     }
     public synchronized long minimumTick(it.unimi.dsi.fastutil.longs.LongSet sections) {
         long tick = Long.MAX_VALUE;
-        for (long section : sections) {
-            var tile = bySection.get(section);
+        for (var iterator = sections.iterator(); iterator.hasNext();) {
+            var tile = bySection.get(iterator.nextLong());
             if (tile != null && !tile.frozen) tick = Math.min(tick, tile.sampleTick);
         }
         return tick;
     }
     public synchronized long maximumTick(it.unimi.dsi.fastutil.longs.LongSet sections) {
         long tick = Long.MIN_VALUE;
-        for (long section : sections) {
-            var tile = bySection.get(section);
+        for (var iterator = sections.iterator(); iterator.hasNext();) {
+            var tile = bySection.get(iterator.nextLong());
             if (tile != null && !tile.frozen) tick = Math.max(tick, tile.sampleTick);
         }
         return tick;
     }
-    public synchronized boolean aligned(it.unimi.dsi.fastutil.longs.LongSet sections) {
-        long minimum = minimumTick(sections), maximum = maximumTick(sections);
-        return minimum == Long.MAX_VALUE || minimum == maximum;
+    /** Common live sample tick, Long.MAX_VALUE for an empty live scope or -1 for unequal clocks. */
+    public synchronized long alignedTick(it.unimi.dsi.fastutil.longs.LongSet sections) {
+        long tick = Long.MAX_VALUE;
+        for (var iterator = sections.iterator(); iterator.hasNext();) {
+            var tile = bySection.get(iterator.nextLong());
+            if (tile == null || tile.frozen) continue;
+            if (tick != Long.MAX_VALUE && tick != tile.sampleTick) return -1;
+            tick = tile.sampleTick;
+        }
+        return tick;
     }
+
+    public boolean aligned(it.unimi.dsi.fastutil.longs.LongSet sections) {
+        return alignedTick(sections) >= 0;
+    }
+
+    /** A physical event begins at its requested tick or the latest lifetime start in its scope, including frozen Tiles. */
+    public synchronized long applicationTick(it.unimi.dsi.fastutil.longs.LongSet sections, long requestedTick) {
+        long tick = requestedTick;
+        for (var iterator = sections.iterator(); iterator.hasNext();) {
+            var tile = bySection.get(iterator.nextLong());
+            if (tile != null) tick = Math.max(tick, tile.activeSince);
+        }
+        return tick;
+    }
+
     public synchronized boolean atBoundary(it.unimi.dsi.fastutil.longs.LongSet sections, long tick) {
-        for (long section : sections) {
-            var tile = bySection.get(section);
+        for (var iterator = sections.iterator(); iterator.hasNext();) {
+            var tile = bySection.get(iterator.nextLong());
             if (tile != null && !tile.frozen && tile.sampleTick != tick) return false;
         }
         return true;
@@ -1008,16 +1052,7 @@ public final class TiledThermalField implements AutoCloseable {
                 injectAirFace(position, input.face(inputCursor), energy);
                 continue;
             }
-            double remaining = energy;
-            for (int part = 0; part < 6 && remaining != 0 && !waiting(frame, cell); part++) {
-                double direction = Math.signum(remaining);
-                byte branch = frame.branches[cell] = law.selectBranch(frame.h[cell], frame.branches[cell], direction);
-                double amount = direction * Math.min(Math.abs(remaining), law.energyLimitJ(frame.h[cell], branch, direction));
-                frame.h[cell] += amount; remaining -= amount;
-                var transition = law.transition(branch);
-                setWaiting(frame, cell, transition != null && transition.complete(frame.h[cell]));
-                if (amount == 0) break;
-            }
+            double remaining = addMaterialEnergy(frame, cell, law, energy);
             if (remaining != 0) input.defer(inputCursor, remaining);
         }
         if (inputCursor == input.size()) {
@@ -1025,6 +1060,22 @@ public final class TiledThermalField implements AutoCloseable {
             else if (halfSeconds == 0) { stage = SECOND_INPUT; inputCursor = 0; }
             else { stage = BUOYANCY; tileCursor = cellCursor = 0; }
         }
+    }
+
+    /** Applies signed joules through sensible and latent intervals. Returns the energy beyond a pending phase change. */
+    private static double addMaterialEnergy(Frame frame, int cell, MaterialThermalLaw law, double remaining) {
+        while (remaining != 0 && !waiting(frame, cell)) {
+            double direction = Math.signum(remaining);
+            byte branch = law.selectBranch(frame.h[cell], frame.branches[cell], direction);
+            frame.branches[cell] = branch;
+            double amount = direction * Math.min(Math.abs(remaining), law.energyLimitJ(frame.h[cell], branch, direction));
+            frame.h[cell] += amount;
+            remaining -= amount;
+            var transition = law.transition(branch);
+            setWaiting(frame, cell, transition != null && transition.complete(frame.h[cell]));
+            if (amount == 0) break;
+        }
+        return remaining;
     }
 
     /** The original volume probe: one factor per connected Air branch in a 4-cube, after half the source input. */
@@ -1111,10 +1162,11 @@ public final class TiledThermalField implements AutoCloseable {
             if (cellCursor == frame.h.length) { tileCursor += reverse ? -1 : 1; cellCursor = 0; continue; }
             int cell = reverse ? frame.h.length - 1 - cellCursor : cellCursor;
             int pageCell = tile.pageCell(cell);
-            if (law(frame.signatures[cell]) != null) for (int ordinal = 0; ordinal < 3; ordinal++) {
+            var firstLaw = law(frame.signatures[cell]);
+            if (firstLaw != null) for (int ordinal = 0; ordinal < 3; ordinal++) {
                 int axis = reverse ? 2 - ordinal : ordinal;
                 if (reverse) negativeBoundary(tile, frame, cell, pageCell, axis);
-                positiveFace(tile, frame, cell, pageCell, axis);
+                positiveFace(tile, frame, cell, pageCell, axis, firstLaw);
                 if (!reverse) negativeBoundary(tile, frame, cell, pageCell, axis);
             }
             processed++;
@@ -1234,7 +1286,13 @@ public final class TiledThermalField implements AutoCloseable {
         return count;
     }
 
-    private void positiveFace(Tile tile, Frame frame, int cell, int pageCell, int axis) {
+    /** Equal-capacity exchange weight for this physical half-step and the two incident faces' scale sum. */
+    private double airWeight(double scaleSum) {
+        return ThermalExchangeKernel.equalCapacityPairWeight(airLaw.capacityJPerK(), inverseAirCapacity,
+                airConductance * scaleSum / 2, halfSeconds);
+    }
+
+    private void positiveFace(Tile tile, Frame frame, int cell, int pageCell, int axis, MaterialThermalLaw firstLaw) {
         int coordinate = pageCell >>> CELL_SHIFTS[axis] & 15;
         var other = coordinate == 15 ? tile.neighbours[axis * 2 + 1] : tile;
         if (!selected(other)) other = null;
@@ -1244,20 +1302,25 @@ public final class TiledThermalField implements AutoCloseable {
         if (target == null || next < 0 || !signatures.valid(target.signatures[next])) {
             exchangeEnvironment(tile, frame, cell, ambientConductance); return;
         }
-        var firstLaw = law(frame.signatures[cell]); var secondLaw = law(target.signatures[next]);
+        var secondLaw = law(target.signatures[next]);
         if (secondLaw == null || waiting(frame, cell) || waiting(target, next)) return;
         if (firstLaw == airLaw && secondLaw == airLaw) {
             double firstScale = tile.mixingScale(cell);
             double secondScale = other.mixingScale(next);
             if (axis == 1) { firstScale *= tile.buoyancyFactors[cell]; secondScale *= other.buoyancyFactors[next]; }
-            double g = airConductance * (firstScale + secondScale) / 2;
-            if (g == 0) return;
+            double scaleSum = firstScale + secondScale;
+            if (airConductance * scaleSum / 2 == 0) return;
+            double weight;
+            if (scaleSum == 2) weight = plainAirWeight;
+            else if (scaleSum == 1 + AirMixingRegion.MULTIPLIER) weight = edgeAirWeight;
+            else if (scaleSum == 2 * AirMixingRegion.MULTIPLIER) weight = mixedAirWeight;
+            else weight = airWeight(scaleSum);
             // Exchange departures from each cell's own natural, so two cells at natural exchange nothing.
             double firstBackground = airLaw.capacityJPerK() * tile.natural[cell];
             double secondBackground = airLaw.capacityJPerK() * other.natural[next];
-            ThermalExchangeKernel.exchangePairWithInverseInto(frame.h[cell] - firstBackground, airLaw.capacityJPerK(),
-                    inverseAirCapacity, target.h[next] - secondBackground, airLaw.capacityJPerK(), inverseAirCapacity,
-                    g, halfSeconds, airPair);
+            double firstJ = frame.h[cell] - firstBackground, secondJ = target.h[next] - secondBackground;
+            ThermalExchangeKernel.applyPairWeight(firstJ, secondJ, firstJ * inverseAirCapacity,
+                    secondJ * inverseAirCapacity, weight, airPair);
             frame.h[cell] = airPair.enthalpyAJ() + firstBackground; target.h[next] = airPair.enthalpyBJ() + secondBackground;
             pairUpdates++;
             return;
@@ -1274,6 +1337,8 @@ public final class TiledThermalField implements AutoCloseable {
     }
 
     private void negativeBoundary(Tile tile, Frame frame, int cell, int pageCell, int axis) {
+        // Interior transfers already belong to positiveFace. This lookup serves only the implicit environment.
+        if (ambientConductance == 0) return;
         int coordinate = pageCell >>> CELL_SHIFTS[axis] & 15;
         var other = coordinate == 0 ? tile.neighbours[axis * 2] : tile;
         if (!selected(other)) other = null;
@@ -1291,9 +1356,10 @@ public final class TiledThermalField implements AutoCloseable {
         var second = materials.profileOrNull(signatures.materialProfileId(b));
         if (airA) return second == null ? 0 : second.faceConductanceWPerK();
         if (airB) return first == null ? 0 : first.faceConductanceWPerK();
-        if ((signatures.fullContactFaces(a) & 1 << face) == 0 || (signatures.fullContactFaces(b) & 1 << (face ^ 1)) == 0) return 0;
+        double area = signatures.contactFraction(a, b, face);
+        if (area == 0) return 0;
         double ga = first.faceConductanceWPerK(), gb = second.faceConductanceWPerK();
-        return 2 * ga * gb / (ga + gb);
+        return area * 2 * ga * gb / (ga + gb);
     }
 
     private void exchangeEnvironment(Tile tile, Frame frame, int cell, double boundaryConductance) {
@@ -1703,11 +1769,12 @@ public final class TiledThermalField implements AutoCloseable {
      * The existing numerical arrays become the bounded writeback buffer. A frozen
      * Section contains no world reference, no longer exchanges with neighbours,
      * and keeps its actual sample clock while other Sections continue stepping.
+     * A clean Tile outside the running step can freeze in place. A selected Tile or
+     * a pending geometry conversion needs the step to finish or cancel first.
      */
     public synchronized boolean freeze(long section) {
-        if (closed || stage != IDLE) return false;
         var tile = bySection.get(section);
-        if (tile == null) return false;
+        if (closed || tile == null || stage != IDLE && (selected(tile) || tile.geometryChanged)) return false;
         if (tile.geometryChanged) {
             double before = ownedEnthalpyJ(tile.current()); trialExternalJ = acceptedExternalJ;
             if (!tile.geometryPrepared) prepareTile(tile);
@@ -1730,14 +1797,14 @@ public final class TiledThermalField implements AutoCloseable {
     }
     public synchronized boolean thaw(long section, double ambientC, double halfLifeSeconds, long tick,
             it.unimi.dsi.fastutil.longs.LongSet influence) {
-        if (!stageThaw(section, ambientC, halfLifeSeconds, tick)) return false;
+        if (stage != IDLE || !stageThaw(section, ambientC, halfLifeSeconds, tick)) return false;
         activate(section, influence); return true;
     }
-    /** Native receipts only stage this event. The coordinator discovers influence before activation. */
+    /** A frozen Tile can queue its re-entry during another step. Activation still waits for the influence boundary. */
     public synchronized boolean stageThaw(long section, double ambientC, double halfLifeSeconds, long tick) {
-        if (closed || stage != IDLE || !Double.isFinite(ambientC)) return false;
+        if (closed || !Double.isFinite(ambientC)) return false;
         var tile = bySection.get(section);
-        if (tile == null) return false;
+        if (tile == null || !tile.frozen && stage != IDLE) return false;
         if (!tile.frozen) {
             tile.ambientC = ambientC;
             if (tile.profile == null) shiftToNatural(tile); else invalidateQueries();

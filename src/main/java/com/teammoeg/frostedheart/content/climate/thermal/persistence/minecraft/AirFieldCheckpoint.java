@@ -116,17 +116,25 @@ public final class AirFieldCheckpoint {
      * {@code naturalAt} of its Page block.
      */
     public AirFieldCheckpoint retain(long eligibleBricks, java.util.function.IntToDoubleFunction naturalAt) {
+        return retain(eligibleBricks, naturalAt, 0, 0, 0);
+    }
+
+    /** Discard an aged Brick only when every captured cell has cooled to its own background. */
+    public AirFieldCheckpoint retain(long eligibleBricks, java.util.function.IntToDoubleFunction naturalAt,
+            long tick, double rate, long fallbackTick) {
         Brick[] retained = null;
         for (int index = 0; index < 64; index++) {
             var value = bricks[index];
             if (value == null || (eligibleBricks & 1L << index) == 0) continue;
+            double factor = rate == 0 ? 1 : DormantThermalCooling.factor(value.sampleTick < 0 ? fallbackTick : value.sampleTick, tick, rate);
             double departure = 0;
             long blocks = value.blocks;
             for (int valueIndex = 0; blocks != 0; valueIndex++, blocks &= blocks - 1) {
                 int pageBlock = com.teammoeg.frostedheart.content.climate.thermal.mesh.BlockBrickLayout.pageBlock(
                         index, Long.numberOfTrailingZeros(blocks));
                 // NaN propagates through max, and an unreadable value is retained.
-                departure = Math.max(departure, Math.abs(value.temperaturesC[valueIndex] - naturalAt.applyAsDouble(pageBlock)));
+                departure = Math.abs(value.temperaturesC[valueIndex] - naturalAt.applyAsDouble(pageBlock)) * factor;
+                if (ThermalRetentionPolicy.retains(departure)) break;
             }
             if (ThermalRetentionPolicy.retains(departure)) continue;
             if (retained == null) retained = bricks.clone();

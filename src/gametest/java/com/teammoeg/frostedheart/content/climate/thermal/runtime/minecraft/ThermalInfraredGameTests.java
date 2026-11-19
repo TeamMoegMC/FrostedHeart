@@ -120,7 +120,7 @@ public final class ThermalInfraredGameTests {
             ServerPlayer player = observer(level, p);
             InfraredSnapshot full = sample(player, null, true, EMPTY);
             helper.assertTrue(full != null && !full.readable() && present(full, p), "stored materials need no live publication");
-            expectTemperature(helper, full, p, WorldTemperature.material(level, p));
+            expectTemperature(helper, full, p, MinecraftThermalInput.materialTemperature(level, p));
             helper.assertTrue(sample(player, full, false, full.presence()) == null, "unchanged stored records send no data");
             measureSurfaceRequests(player, full);
             MinecraftGameplayFields.upsert(level, new ThermalAnalyticField(field, 0,
@@ -130,7 +130,7 @@ public final class ThermalInfraredGameTests {
                     "stored temperature and analytic field must be quantized together once");
             MinecraftGameplayFields.remove(level, field);
             InfraredSnapshot restored = sample(player, composed, false, full.presence());
-            expectTemperature(helper, restored, p, WorldTemperature.material(level, p));
+            expectTemperature(helper, restored, p, MinecraftThermalInput.materialTemperature(level, p));
             int index = saved.find(block);
             var edit = new MaterialSectionState.Editor(saved);
             edit.update(block, saved.stateId(index), saved.law(index), saved.law(index).enthalpyAtTemperature(51.37), (byte) 0, level.getGameTime());
@@ -139,13 +139,13 @@ public final class ThermalInfraredGameTests {
             InfraredSnapshot changed = sample(player, restored, false, full.presence());
             helper.assertTrue(changed != null && !changed.full() && changed.storedEpoch() > restored.storedEpoch(),
                     "stored temperature changes use the existing incremental transaction");
-            expectTemperature(helper, changed, p, WorldTemperature.material(level, p));
+            expectTemperature(helper, changed, p, MinecraftThermalInput.materialTemperature(level, p));
             wire(helper, changed);
             level.setBlockAndUpdate(p, Blocks.AIR.defaultBlockState());
             level.setBlockAndUpdate(p, Blocks.STONE.defaultBlockState());
             InfraredSnapshot removed = sample(player, changed, false, full.presence());
             expectMissing(helper, removed, p, true);
-            helper.assertTrue(!Double.isFinite(WorldTemperature.material(level, p)), "replacement cannot inherit the saved body's temperature");
+            helper.assertTrue(!Double.isFinite(MinecraftThermalInput.materialTemperature(level, p)), "replacement cannot inherit the saved body's temperature");
             Field active = MinecraftThermalInput.class.getDeclaredField("ACTIVE"); active.setAccessible(true);
             helper.assertTrue(!((Map<?, ?>) active.get(null)).containsKey(level), "stored infrared requests cannot start physics");
         } finally {
@@ -158,12 +158,26 @@ public final class ThermalInfraredGameTests {
     @GameTest(template = TEMPLATE, batch = "surface_stored_close", timeoutTicks = 700)
     public static void warmedMaterialRemainsVisibleAfterTheRuntimeCloses(GameTestHelper helper) {
         LiveFixture f = new LiveFixture(helper);
-        helper.startSequence().thenWaitUntil(() -> helper.assertTrue(Double.isFinite(material(f.input, f.wall)),
-                "source must publish material before closing")).thenExecute(() -> {
+        helper.startSequence().thenWaitUntil(() -> {
+            // Set a known residual on the published body. The campfire flux is exercised separately in surface_live.
+            var pages = ThermalLoadedWorldGameTests.<MinecraftPageManager>read(f.input, "pages");
+            var page = pages.handle(SectionPos.asLong(f.wall));
+            QueryPublication queries = read(f.input, "queryPublication");
+            var body = new com.teammoeg.frostedheart.content.climate.thermal.solver.TiledThermalField.Sample();
+            helper.assertTrue(page != null && page.currentPublication() != null && queries.fixedState() != null
+                    && queries.fixedState().read(f.wall.asLong(), true, body), "publish the real wall body");
+            int local = (f.wall.getX() & 15) | (f.wall.getZ() & 15) << 4 | (f.wall.getY() & 15) << 8;
+            double warmC = body.naturalC() + 5;
+            helper.assertTrue(queries.publishFixedMaterialControl(page.currentPublication(), local, body.materialGeneration(),
+                    body.law().enthalpyAtTemperature(warmC), body.law().initialBranch(warmC), false, 0),
+                    "apply a finite 5 C material residual");
+            helper.assertTrue(Math.abs(WorldTemperature.getTempAtBlock(f.level, f.wall) - warmC) < .001,
+                    "the block temperature reads the published warm wall before close");
+        }).thenExecute(() -> {
             try {
                 InfraredSnapshot live = sample(f.player, null, true, EMPTY);
                 MinecraftThermalInput.closeActiveLevel(f.level);
-                double saved = WorldTemperature.material(f.level, f.wall);
+                double saved = MinecraftThermalInput.materialTemperature(f.level, f.wall);
                 helper.assertTrue(Double.isFinite(saved), "closing must checkpoint the warmed body");
                 InfraredSnapshot closed = sample(f.player, live, false, live.presence());
                 helper.assertTrue(closed.full() && !closed.readable() && present(closed, f.wall),
@@ -203,7 +217,7 @@ public final class ThermalInfraredGameTests {
                 InfraredSnapshot full = sample(f.player, null, true, EMPTY);
                 expectTemperature(helper, full, f.wall, liveMaterial(helper, f.level, f.wall));
                 expectTemperature(helper, full, remote, 45);
-                expectTemperature(helper, full, remote, WorldTemperature.material(f.level, remote));
+                expectTemperature(helper, full, remote, MinecraftThermalInput.materialTemperature(f.level, remote));
                 int block = (remote.getX() & 15) | (remote.getZ() & 15) << 4 | (remote.getY() & 15) << 8;
                 var edit = new MaterialSectionState.Editor(saved);
                 edit.remove(block);
@@ -319,7 +333,7 @@ public final class ThermalInfraredGameTests {
                     8, 8, 8, 30));
             InfraredSnapshot result = sample(f.player, baseline[0], true, baseline[0].presence());
             expectTemperature(helper, result, f.wall, Math.max(material(f.input, f.wall), WorldTemperature.naturalAir(f.level,f.wall)+30));
-            helper.assertTrue(MinecraftThermalInput.gameplayPassiveEnvironment(f.level, f.wall, -40) >= -10,
+            helper.assertTrue(MinecraftThermalInput.sampleAirTemperature(f.level, f.wall, -40) >= -10,
                     "generator-style field remains a gameplay floor");
             wire(helper, result);
             baseline[0] = result;
@@ -372,13 +386,13 @@ public final class ThermalInfraredGameTests {
         }).thenExecute(() -> {
             try {
                 InfraredSnapshot before = sample(f.player, null, true, EMPTY);
-                double sameTemperature = WorldTemperature.material(f.level, sameBrick);
-                double otherTemperature = WorldTemperature.material(f.level, otherBrick);
+                double sameTemperature = MinecraftThermalInput.materialTemperature(f.level, sameBrick);
+                double otherTemperature = MinecraftThermalInput.materialTemperature(f.level, otherBrick);
                 f.level.setBlockAndUpdate(f.wall, Blocks.AIR.defaultBlockState());
-                helper.assertTrue(!Double.isFinite(WorldTemperature.material(f.level, f.wall)),
+                helper.assertTrue(!Double.isFinite(MinecraftThermalInput.materialTemperature(f.level, f.wall)),
                         "removed body must not retain its material reading");
-                helper.assertTrue(Double.isFinite(WorldTemperature.material(f.level, sameBrick))
-                        && Double.isFinite(WorldTemperature.material(f.level, otherBrick)),
+                helper.assertTrue(Double.isFinite(MinecraftThermalInput.materialTemperature(f.level, sameBrick))
+                        && Double.isFinite(MinecraftThermalInput.materialTemperature(f.level, otherBrick)),
                         "geometry mutation must not invalidate unchanged thermometer readings");
                 InfraredSnapshot delta = sample(f.player, before, false, before.presence());
                 helper.assertTrue(delta != null && !delta.full(), "pending replacement must send a local delta");
@@ -598,7 +612,7 @@ public final class ThermalInfraredGameTests {
     }
     private static long center(InfraredSnapshot s) { return SectionPos.asLong(s.centerChunkX(),s.centerSectionY(),s.centerChunkZ()); }
     private static InfraredSnapshot sample(ServerPlayer p, InfraredSnapshot previous, boolean full, long[] presence) {
-        return MinecraftThermalInput.gameplayInfraredSnapshot(p,full,previous==null?0:previous.generation(),
+        return MinecraftThermalInput.captureInfraredSnapshot(p,full,previous==null?0:previous.generation(),
                 previous==null?0:center(previous),previous==null?0:previous.infraredEpoch(),presence,
                 previous!=null&&previous.readable(),previous==null?EMPTY:previous.fieldPages(), previous==null?0:previous.storedEpoch(),
                 previous==null?0:previous.storedSampleTick());
@@ -629,7 +643,7 @@ public final class ThermalInfraredGameTests {
     }
     private static double liveMaterial(GameTestHelper helper, ServerLevel level, BlockPos position) {
         var sample = new MaterialSample();
-        helper.assertTrue(MinecraftThermalInput.sampleMaterial(level, position, sample)
+        helper.assertTrue(MinecraftThermalInput.sampleMaterialTemperature(level, position, sample)
                         && sample.source() == MaterialSample.Source.LIVE,
                 "unchanged material must remain live while another Brick is edited: " + position);
         return sample.temperatureC();

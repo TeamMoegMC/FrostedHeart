@@ -28,7 +28,7 @@ public final class InfraredServerCommand {
 
     private static int status(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
         var player=context.getSource().getPlayerOrException();
-        var snapshot=MinecraftThermalInput.gameplayInfraredSnapshot(player,true,0,0,0,new long[12],false,new long[0],0,0);
+        var snapshot=MinecraftThermalInput.captureInfraredSnapshot(player,true,0,0,0,new long[12],false,new long[0],0,0);
         String report="IR_SERVER "+InfraredDiagnostics.summarize(snapshot);
         context.getSource().sendSuccess(() -> Component.literal(report),false);
         FHMain.LOGGER.info(report);

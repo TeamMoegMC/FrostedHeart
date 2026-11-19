@@ -1469,7 +1469,7 @@ public final class MinecraftPageManager implements AutoCloseable {
         }
 
         public MaterialSectionState projectMaterialCheckpoint(
-                MaterialSectionState snapshot, long revision, double naturalTemperatureC) {
+                MaterialSectionState snapshot, long revision) {
             if (materialResetRevision > revision) return null;
             if (snapshot == null
                     || checkpointMaterialChanges == null
@@ -1477,6 +1477,8 @@ public final class MinecraftPageManager implements AutoCloseable {
                     || checkpointMaterialRevisions.getLong(checkpointMaterialRevisions.size() - 1)
                             <= revision) return snapshot;
             var editor = new MaterialSectionState.Editor(snapshot);
+            var naturalAt = com.teammoeg.frostedheart.content.climate.WorldTemperature.sectionBackground(
+                    manager.level, sectionKey, new BlockPos.MutableBlockPos());
             for (int index = 0;
                     !editor.isEmpty() && index < checkpointMaterialRevisions.size();
                     index++) {
@@ -1485,8 +1487,11 @@ public final class MinecraftPageManager implements AutoCloseable {
                 int stateId = checkpointMaterialChanges.getInt(base + CHECKPOINT_STATE_OFFSET);
                 BlockState state = Block.BLOCK_STATE_REGISTRY.byId(stateId);
                 var law = state == null ? null : MinecraftThermalProfiles.materialLaw(state);
+                int local = checkpointMaterialChanges.getInt(base);
+                if (editor.find(local) < 0) continue;
+                double naturalTemperatureC = naturalAt.applyAsDouble(local);
                 editor.applyChange(
-                        checkpointMaterialChanges.getInt(base),
+                        local,
                         stateId,
                         law,
                         (byte) checkpointMaterialChanges.getInt(base + CHECKPOINT_CAUSE_OFFSET),

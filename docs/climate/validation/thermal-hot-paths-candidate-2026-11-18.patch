@@ -1,0 +1,582 @@
+diff --git a/src/gametest/java/com/teammoeg/frostedheart/content/climate/thermal/runtime/minecraft/ThermalPassiveQueryFastPathGameTests.java b/src/gametest/java/com/teammoeg/frostedheart/content/climate/thermal/runtime/minecraft/ThermalPassiveQueryFastPathGameTests.java
+index b383018a6..17f918816 100644
+--- a/src/gametest/java/com/teammoeg/frostedheart/content/climate/thermal/runtime/minecraft/ThermalPassiveQueryFastPathGameTests.java
++++ b/src/gametest/java/com/teammoeg/frostedheart/content/climate/thermal/runtime/minecraft/ThermalPassiveQueryFastPathGameTests.java
+@@ -194,6 +194,13 @@ public final class ThermalPassiveQueryFastPathGameTests {
+                     query(level, localQueries, WARMUP_QUERIES, mismatches);
+                     explicit[0] = medianRound(level, queries, mismatches);
+                     explicit[2] = medianRound(level, localQueries, mismatches);
++                    // Both calls use the same real random-tick order and already loaded chunks.
++                    // Measure in one block per route so the thread CPU clock can resolve the difference.
++                    queryTickingChunks(level, far, localQueries, true, 64, mismatches);
++                    long coordinateCpu = queryTickingChunks(level, far, localQueries, false, 1_024, mismatches);
++                    long chunkCpu = queryTickingChunks(level, far, localQueries, true, 1_024, mismatches);
++                    FHMain.LOGGER.info("THERMAL_RANDOM_TICK_QUERY_CPU,queriesPerRoute={},coordinateCpuNs={},tickingChunkCpuNs={}",
++                            1_024L * localQueries.length, coordinateCpu, chunkCpu);
+                     explicit[1] = mismatches[0];
+                     farOwners[2] = owners(far);
+                     long started;
+@@ -232,7 +239,7 @@ public final class ThermalPassiveQueryFastPathGameTests {
+                     LevelChunk pagedChunk = level.getChunk(pagedChunkProbe.getX() >> 4, pagedChunkProbe.getZ() >> 4);
+                     int probeSection = pagedChunk.getSectionIndex(pagedChunkProbe.getY());
+                     boolean pagedChunkOwnerBefore = owner(pagedChunk, probeSection);
+-                    MinecraftThermalInput.gameplayPassiveEnvironment(level, pagedChunkProbe, NATURAL_C);
++                    MinecraftThermalInput.gameplayPassiveEnvironment(pagedChunk, pagedChunkProbe, NATURAL_C);
+                     boolean pagedChunkOwner = owner(pagedChunk, probeSection);
+                     long sections = (long) far.size() * (maxSection - minSection);
+                     FHMain.LOGGER.info("THERMAL_PASSIVE_FAST_PATH,farChunks={},farSections={},farOwnersBeforeWindow={},"
+@@ -290,6 +297,27 @@ public final class ThermalPassiveQueryFastPathGameTests {
+         }
+     }
+ 
++    /** Compares both public paths on the same pageless positions. A negative time marks an unavailable CPU clock. */
++    private static long queryTickingChunks(ServerLevel level, List<LevelChunk> chunks, BlockPos[] positions,
++            boolean useTickingChunk, int repetitions, long[] mismatches) {
++        var clock = java.lang.management.ManagementFactory.getThreadMXBean();
++        boolean timed = clock.isCurrentThreadCpuTimeSupported() && clock.isThreadCpuTimeEnabled();
++        int perChunk = positions.length / chunks.size();
++        long start = timed ? clock.getCurrentThreadCpuTime() : 0;
++        for (int pass = 0; pass < repetitions; pass++) {
++            int i = 0;
++            for (var chunk : chunks) {
++                for (int end = i + perChunk; i < end; i++) {
++                    double value = useTickingChunk
++                            ? MinecraftThermalInput.gameplayPassiveEnvironment(chunk, positions[i], NATURAL_C)
++                            : MinecraftThermalInput.gameplayPassiveEnvironment(level, positions[i], NATURAL_C);
++                    if (value != NATURAL_C) mismatches[0]++;
++                }
++            }
++        }
++        return timed ? clock.getCurrentThreadCpuTime() - start : -1;
++    }
++
+     /** Median wall time of five rounds of MEASURED_QUERIES queries. */
+     private static long medianRound(ServerLevel level, BlockPos[] positions, long[] mismatches) {
+         long[] rounds = new long[5];
+diff --git a/src/main/java/com/teammoeg/frostedheart/compat/curios/CuriosCompat.java b/src/main/java/com/teammoeg/frostedheart/compat/curios/CuriosCompat.java
+index 75c3270fa..b343f7e6a 100644
+--- a/src/main/java/com/teammoeg/frostedheart/compat/curios/CuriosCompat.java
++++ b/src/main/java/com/teammoeg/frostedheart/compat/curios/CuriosCompat.java
+@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.compat.curios;
+ 
+ import java.util.Iterator;
+ import java.util.NoSuchElementException;
++import java.util.function.BiConsumer;
+ import java.util.function.Predicate;
+ import java.util.stream.IntStream;
+ 
+@@ -70,6 +71,22 @@ public class CuriosCompat {
+ 
+         return () -> CuriosApi.getCuriosInventory(el).resolve().map(o->o.getCurios().entrySet().stream().flatMap(t->IntStream.range(0, t.getValue().getSlots()).mapToObj(i->Pair.of(CuriosApi.getSlot(t.getKey(),el.level()).get(),t.getValue().getStacks().getStackInSlot(i)))).iterator()).orElseGet(EmptyIterator::new);
+     }
++    /** Visits occupied gameplay slots in handler order, including slots hidden by the client. */
++    public static void forEachEquippedCurio(LivingEntity entity, BiConsumer<ISlotType, ItemStack> visitor) {
++        var inventory = CuriosApi.getCuriosInventory(entity).orElse(null);
++        if (inventory == null) return;
++        for (var entry : inventory.getCurios().entrySet()) {
++            var handler = entry.getValue();
++            ISlotType slot = null;
++            for (int i = 0; i < handler.getSlots(); i++) {
++                ItemStack stack = handler.getStacks().getStackInSlot(i);
++                if (stack.isEmpty()) continue;
++                if (slot == null) slot = CuriosApi.getSlot(entry.getKey(), entity.level()).orElseThrow();
++                visitor.accept(slot, stack);
++            }
++        }
++    }
++
+     public static ItemStack getCuriosIfVisible(LivingEntity living, ISlotType slot, Predicate<ItemStack> predicate) {
+         LazyOptional<ICuriosItemHandler> optional = CuriosApi.getCuriosInventory(living);
+         return optional.resolve()
+diff --git a/src/main/java/com/teammoeg/frostedheart/content/climate/ClimateBlockUpdates.java b/src/main/java/com/teammoeg/frostedheart/content/climate/ClimateBlockUpdates.java
+index a79f48509..abba1adfc 100644
+--- a/src/main/java/com/teammoeg/frostedheart/content/climate/ClimateBlockUpdates.java
++++ b/src/main/java/com/teammoeg/frostedheart/content/climate/ClimateBlockUpdates.java
+@@ -164,7 +164,7 @@ public final class ClimateBlockUpdates {
+                             if (plantData != null)
+                             {
+                                 handled = updatePlantBasedOnTemperature(
+-                                        level, blockpos3, plantData, climateBase);
++                                        level, pChunk, blockpos3, plantData, climateBase);
+                             }
+                         }
+ 
+@@ -247,18 +247,20 @@ public final class ClimateBlockUpdates {
+     // Plants should go separately
+     private static boolean updatePlantBasedOnTemperature(
+             ServerLevel level,
++            LevelChunk chunk,
+             BlockPos pos,
+             PlantTempData selfData,
+             float climateBase
+     )
+     {
+-        float t = (float) MinecraftThermalInput.gameplayCropEnvironment(
+-                level,
++        int heatCapacity = selfData.heatCapacity();
++        if (!selfData.willDie() || heatCapacity <= 0) return false;
++        float t = (float) MinecraftThermalInput.gameplayPassiveEnvironment(
++                chunk,
+                 pos,
+                 WorldTemperature.naturalBlock(level, pos, climateBase));
+         var selfStatus = WorldTemperature.checkPlantStatus(level, pos, selfData, t);
+-        int heatCapacity = selfData.heatCapacity();
+-        if (selfStatus.willDie() && heatCapacity > 0 && level.getRandom().nextInt(heatCapacity) == 0)
++        if (selfStatus.willDie() && level.getRandom().nextInt(heatCapacity) == 0)
+         {
+             var dead = selfData.dead();
+             BlockPos belowPos = pos.below();
+diff --git a/src/main/java/com/teammoeg/frostedheart/content/climate/player/PlayerEquipmentHeating.java b/src/main/java/com/teammoeg/frostedheart/content/climate/player/PlayerEquipmentHeating.java
+index bd17379f0..be42e74da 100644
+--- a/src/main/java/com/teammoeg/frostedheart/content/climate/player/PlayerEquipmentHeating.java
++++ b/src/main/java/com/teammoeg/frostedheart/content/climate/player/PlayerEquipmentHeating.java
+@@ -19,14 +19,12 @@
+ 
+ package com.teammoeg.frostedheart.content.climate.player;
+ 
+-import com.mojang.datafixers.util.Pair;
+ import com.teammoeg.chorda.CompatModule;
+ import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
+ import com.teammoeg.frostedheart.compat.curios.CuriosCompat;
+ import net.minecraft.server.level.ServerPlayer;
+ import net.minecraft.world.entity.EquipmentSlot;
+ import net.minecraft.world.item.ItemStack;
+-import top.theillusivec4.curios.api.type.ISlotType;
+ 
+ /** Discovers equipped heating capabilities and lets each item add watts. */
+ public final class PlayerEquipmentHeating {
+@@ -40,10 +38,8 @@ public final class PlayerEquipmentHeating {
+ 
+     private static void collect(ServerPlayer player, HeatingDeviceContext context, boolean controlled) {
+         if (CompatModule.isCuriosLoaded()) {
+-            for (Pair<ISlotType, ItemStack> entry
+-                    : CuriosCompat.getAllCuriosAndSlotsIfVisible(player)) {
+-                apply(context.curiosSlot(entry.getFirst()), entry.getSecond(), context, controlled);
+-            }
++            CuriosCompat.forEachEquippedCurio(player, (type, stack) ->
++                    apply(context.curiosSlot(type), stack, context, controlled));
+         }
+         for (EquipmentSlot slot : HeatingDeviceSlot.EQUIPMENT_SLOTS) {
+             apply(HeatingDeviceSlot.vanilla(slot), player.getItemBySlot(slot), context, controlled);
+@@ -52,6 +48,7 @@ public final class PlayerEquipmentHeating {
+ 
+     private static void apply(HeatingDeviceSlot slot, ItemStack stack, HeatingDeviceContext context,
+                               boolean controlled) {
++        if (stack.isEmpty()) return;
+         BodyHeatingCapability heating = FHCapabilities.EQUIPMENT_HEATING
+                 .getCapability(stack).orElse(null);
+         if (heating != null && heating.isControlled() == controlled) {
+diff --git a/src/main/java/com/teammoeg/frostedheart/content/climate/player/PlayerTemperatureUpdate.java b/src/main/java/com/teammoeg/frostedheart/content/climate/player/PlayerTemperatureUpdate.java
+index d7ad4a3c3..c08d68cdd 100644
+--- a/src/main/java/com/teammoeg/frostedheart/content/climate/player/PlayerTemperatureUpdate.java
++++ b/src/main/java/com/teammoeg/frostedheart/content/climate/player/PlayerTemperatureUpdate.java
+@@ -56,68 +56,57 @@ public class PlayerTemperatureUpdate {
+         try {
+             if (event.side == LogicalSide.SERVER && event.phase == Phase.END && event.player instanceof ServerPlayer player) {
+ 
+-                // Fetch the player temperature data
+-                PlayerTemperatureData.getCapability(player).ifPresent((data) -> {
+-                    if (player.isCreative() || player.isSpectator() || player.isInvulnerable()) {
+-                        return;
+-                    }
+-
+-                    // ConfigValue.get() 为 spec 值表查询：同一 tick 内配置恒定，hoist 到局部变量
+-                    int temperatureUpdateIntervalTicks = FHConfig.SERVER.CLIMATE.temperatureUpdateIntervalTicks.get();
+-                    if (!shouldUpdatePlayer(
+-                            player, temperatureUpdateIntervalTicks)) {
+-                        return;
+-                    }
++                if (player.isCreative() || player.isSpectator() || player.isInvulnerable()) return;
++                int temperatureUpdateIntervalTicks = FHConfig.SERVER.CLIMATE.temperatureUpdateIntervalTicks.get();
++                if (!shouldUpdatePlayer(player, temperatureUpdateIntervalTicks)) return;
++                var data = PlayerTemperatureData.getCapability(player).orElse(null);
++                if (data == null) return;
+ 
+-                    // Rest of update logic is handled every second.
+-
+-                    // Soaked in water wetness
+-                    if (isSoaked(player)) {
+-                        // Check if an armor piece is on
+-                        boolean hasArmor = false;
+-                        for (ItemStack is : player.getArmorSlots()) {
+-                            if (!is.isEmpty()) {
+-                                hasArmor = true;
+-                                break;
+-                            }
+-                        }
+-                        // Check the current Wet Effect
+-                        MobEffectInstance current = player.getEffect(FHMobEffects.WET.get());
+-                        int wetEffectDuration = FHConfig.SERVER.CLIMATE.wetEffectDuration.get();
+-                        int wetClothesDurationMultiplier = FHConfig.SERVER.CLIMATE.wetClothesDurationMultiplier.get();
+-                        // If armor is on, player gets a longer wet effect
+-                        if (hasArmor) {
+-                            player.addEffect(new MobEffectInstance(FHMobEffects.WET.get(),
+-                                    wetEffectDuration * wetClothesDurationMultiplier,
+-                                    0, false, false));// punish for wet clothes
+-                        }
+-                        // Otherwise, if there is no wet effect now, add normal wet effect
+-                        else if (current == null || current.getDuration() < wetEffectDuration) {
+-                            player.addEffect(new MobEffectInstance(FHMobEffects.WET.get(),
+-                                    wetEffectDuration, 0, false, false));
++                // Soaked in water wetness
++                if (isSoaked(player)) {
++                    // Check if an armor piece is on
++                    boolean hasArmor = false;
++                    for (ItemStack is : player.getArmorSlots()) {
++                        if (!is.isEmpty()) {
++                            hasArmor = true;
++                            break;
+                         }
+                     }
+-
+-                    double torso = data.getBodyTempByPart(BodyPart.TORSO);
+-                    updateBodyEffect(player, FHMobEffects.HYPERTHERMIA.get(),
+-                            torso > 1.0D ? severity(torso) : -1);
+-                    updateBodyEffect(player, FHMobEffects.HYPOTHERMIA.get(),
+-                            torso < -1.0D ? severity(-torso) : -1);
+-
+-                    applyPartSymptom(player, MobEffects.CONFUSION,
+-                            Math.abs(data.getBodyTempByPart(BodyPart.HEAD)));
+-                    applyPartSymptom(player, MobEffects.MOVEMENT_SLOWDOWN,
+-                            Math.max(Math.abs(data.getBodyTempByPart(BodyPart.FEET)),
+-                                    Math.abs(data.getBodyTempByPart(BodyPart.LEGS))));
+-                    applyPartSymptom(player, MobEffects.DIG_SLOWDOWN,
+-                            Math.abs(data.getBodyTempByPart(BodyPart.HANDS)));
+-
+-                    // Severe actual medium exposure is separate from accumulated body illness.
+-                    if (!player.hasEffect(FHMobEffects.INSULATION.get())) {
+-                        PlayerThermalInjury.apply(player, data, temperatureUpdateIntervalTicks / 20.0D);
++                    // Check the current Wet Effect
++                    MobEffectInstance current = player.getEffect(FHMobEffects.WET.get());
++                    int wetEffectDuration = FHConfig.SERVER.CLIMATE.wetEffectDuration.get();
++                    int wetClothesDurationMultiplier = FHConfig.SERVER.CLIMATE.wetClothesDurationMultiplier.get();
++                    // If armor is on, player gets a longer wet effect
++                    if (hasArmor) {
++                        player.addEffect(new MobEffectInstance(FHMobEffects.WET.get(),
++                                wetEffectDuration * wetClothesDurationMultiplier,
++                                0, false, false));// punish for wet clothes
++                    }
++                    // Otherwise, if there is no wet effect now, add normal wet effect
++                    else if (current == null || current.getDuration() < wetEffectDuration) {
++                        player.addEffect(new MobEffectInstance(FHMobEffects.WET.get(),
++                                wetEffectDuration, 0, false, false));
+                     }
++                }
+ 
+-                });
++                double torso = data.getBodyTempByPart(BodyPart.TORSO);
++                updateBodyEffect(player, FHMobEffects.HYPERTHERMIA.get(),
++                        torso > 1.0D ? severity(torso) : -1);
++                updateBodyEffect(player, FHMobEffects.HYPOTHERMIA.get(),
++                        torso < -1.0D ? severity(-torso) : -1);
++
++                applyPartSymptom(player, MobEffects.CONFUSION,
++                        Math.abs(data.getBodyTempByPart(BodyPart.HEAD)));
++                applyPartSymptom(player, MobEffects.MOVEMENT_SLOWDOWN,
++                        Math.max(Math.abs(data.getBodyTempByPart(BodyPart.FEET)),
++                                Math.abs(data.getBodyTempByPart(BodyPart.LEGS))));
++                applyPartSymptom(player, MobEffects.DIG_SLOWDOWN,
++                        Math.abs(data.getBodyTempByPart(BodyPart.HANDS)));
++
++                // Severe actual medium exposure is separate from accumulated body illness.
++                if (!player.hasEffect(FHMobEffects.INSULATION.get())) {
++                    PlayerThermalInjury.apply(player, data, temperatureUpdateIntervalTicks / 20.0D);
++                }
+             }
+         } finally { if (observeStage) stageObserver.stage("player_thermal_regulation", false); }
+ 
+@@ -138,12 +127,11 @@ public class PlayerTemperatureUpdate {
+             if (event.side == LogicalSide.SERVER
+                     && event.phase == Phase.START
+                     && event.player instanceof ServerPlayer player) {
+-                PlayerTemperatureData data = PlayerTemperatureData
+-                        .getCapability(player).orElse(null);
+-                if (data == null) return;
+                 int intervalTicks = FHConfig.SERVER.CLIMATE
+                         .temperatureUpdateIntervalTicks.get();
+                 if (!shouldUpdatePlayer(player, intervalTicks)) return;
++                var data = PlayerTemperatureData.getCapability(player).orElse(null);
++                if (data == null) return;
+ 
+                 PlayerTemperatureComputation.updatePlayer(
+                         player, data, intervalTicks);
+diff --git a/src/main/java/com/teammoeg/frostedheart/content/climate/thermal/runtime/minecraft/MinecraftThermalInput.java b/src/main/java/com/teammoeg/frostedheart/content/climate/thermal/runtime/minecraft/MinecraftThermalInput.java
+index 0d0c848fd..33858890d 100644
+--- a/src/main/java/com/teammoeg/frostedheart/content/climate/thermal/runtime/minecraft/MinecraftThermalInput.java
++++ b/src/main/java/com/teammoeg/frostedheart/content/climate/thermal/runtime/minecraft/MinecraftThermalInput.java
+@@ -615,6 +615,11 @@ public final class MinecraftThermalInput implements AutoCloseable {
+ 
+     private AirSampleSource sampleAir(
+             double x, double y, double z, long sampleTick, int maximumAgeTicks, ThermalEnvironmentSample out) {
++        return sampleAir(x, y, z, sampleTick, maximumAgeTicks, out, null);
++    }
++
++    private AirSampleSource sampleAir(double x, double y, double z, long sampleTick,
++            int maximumAgeTicks, ThermalEnvironmentSample out, LevelChunk tickingChunk) {
+         // Publication reads own their coherent frame. Main-owned Page lookup
+         // and dormant sampling do not need the dimension publication monitor.
+         int blockX = floor(x), blockY = floor(y), blockZ = floor(z);
+@@ -624,7 +629,8 @@ public final class MinecraftThermalInput implements AutoCloseable {
+         // and only the dormant record can answer. Skip attaching a mutation owner here: its edits
+         // would feed no capture or sky column. Halo, source and radiation Sections attach their own.
+         if (!pages.hasPageInChunk(ChunkPos.asLong(chunkX, chunkZ)) && !queryPublication.hasFixedSection(sectionKey))
+-            return sampleDormant(chunkForThermalCapture(chunkX, chunkZ), x, y, z, sampleTick, out);
++            return sampleDormant(tickingChunk != null ? tickingChunk : chunkForThermalCapture(chunkX, chunkZ),
++                    x, y, z, sampleTick, out);
+         var owner = pages.loadedSectionOrAttach(sectionKey);
+         var page = owner == null ? null : owner.page();
+         var loadedChunk = owner == null ? null : owner.chunk();
+@@ -871,6 +877,16 @@ public final class MinecraftThermalInput implements AutoCloseable {
+ 
+     public static double gameplayPassiveEnvironment(
+             LevelReader level, BlockPos position, double naturalTemperatureC) {
++        return gameplayPassiveEnvironment(level, null, position, naturalTemperatureC);
++    }
++
++    /** Samples a random-tick position using the chunk already owned by the caller for this synchronous call. */
++    public static double gameplayPassiveEnvironment(LevelChunk tickingChunk, BlockPos position, double naturalTemperatureC) {
++        return gameplayPassiveEnvironment(tickingChunk.getLevel(), tickingChunk, position, naturalTemperatureC);
++    }
++
++    private static double gameplayPassiveEnvironment(LevelReader level, LevelChunk tickingChunk, BlockPos position,
++            double naturalTemperatureC) {
+         var stageObserver = com.teammoeg.frostedheart.content.climate.thermal.solver.ThermalDiagnostics.observer;
+         if (stageObserver != null) stageObserver.stage("thermal_passive_query", true);
+         try {
+@@ -882,14 +898,10 @@ public final class MinecraftThermalInput implements AutoCloseable {
+             MinecraftThermalInput input = active(server);
+             double base;
+             if (input == null) {
+-                double dormant =
+-                        dormantTemperature(
+-                                server,
+-                                position.getX(),
+-                                position.getY(),
+-                                position.getZ(),
+-                                server.getGameTime(),
+-                                DORMANT_QUERY_POSITION.get());
++                var chunk = tickingChunk != null ? tickingChunk
++                        : server.getChunkSource().getChunkNow(position.getX() >> 4, position.getZ() >> 4);
++                double dormant = dormantTemperature(server, chunk, position.getX(), position.getY(), position.getZ(),
++                        server.getGameTime(), DORMANT_QUERY_POSITION.get());
+                 base = Double.isFinite(dormant) ? dormant : naturalTemperatureC;
+             } else {
+                 ThermalEnvironmentSample out = input.passiveScratch;
+@@ -900,7 +912,7 @@ public final class MinecraftThermalInput implements AutoCloseable {
+                         position.getZ() + 0.5D,
+                         server.getGameTime(),
+                         MAX_PUBLICATION_AGE_TICKS,
+-                        out);
++                        out, tickingChunk);
+                 base = out.airAvailable() ? out.airTemperatureC() : naturalTemperatureC;
+             }
+             ThermalAnalyticFieldIndex fields =
+diff --git a/src/main/java/com/teammoeg/frostedheart/content/climate/thermal/runtime/minecraft/engine/ThermalDimensionEngine.java b/src/main/java/com/teammoeg/frostedheart/content/climate/thermal/runtime/minecraft/engine/ThermalDimensionEngine.java
+index 3cfd53d86..a552ae920 100644
+--- a/src/main/java/com/teammoeg/frostedheart/content/climate/thermal/runtime/minecraft/engine/ThermalDimensionEngine.java
++++ b/src/main/java/com/teammoeg/frostedheart/content/climate/thermal/runtime/minecraft/engine/ThermalDimensionEngine.java
+@@ -1029,13 +1029,17 @@ public final class ThermalDimensionEngine implements AutoCloseable, MaterialStat
+                 if (!fixedField.hasSection(section)) additions++;
+                 if (!fixedField.hasSection(section) || (write.capturedBricks() & ~fixedField.activeBricks(section)) != 0) completingExisting = false;
+                 bytes += fixedField.geometryStorageBytes(section, write.capturedBricks(), write.replacesLifecycle());
+-                var fragments = new ThermalFragment[64];
+-                for (int brick = 0; brick < 64; brick++) {
+-                    int slot = write.publication.workerPageSlot() * 64 + brick;
+-                    int changed = java.util.Arrays.binarySearch(prepared.fragmentIndexes(), slot);
+-                    fragments[brick] = changed >= 0 ? prepared.fragments()[changed] : solver.fragment(slot);
++                int start = write.publication.workerPageSlot() * 64;
++                int[] indexes = prepared.fragmentIndexes();
++                int changed = java.util.Arrays.binarySearch(indexes, start);
++                if (changed < 0) changed = -changed - 1;
++                long transport = 0;
++                for (int slot = start; slot < start + 64; slot++) {
++                    var fragment = changed < indexes.length && indexes[changed] == slot
++                            ? prepared.fragments()[changed++] : solver.fragment(slot);
++                    transport += TiledThermalField.transportPayloadBytes(fragment);
+                 }
+-                bytes += TiledThermalField.transportBytes(fragments);
++                bytes += TiledThermalField.transportReservationBytes(transport);
+             }
+             fieldStorage = fixedField.reserveGeometryStorage(bytes, additions, retirements, completingExisting);
+             if (fieldStorage == null) return false;
+diff --git a/src/main/java/com/teammoeg/frostedheart/content/climate/thermal/runtime/minecraft/input/MinecraftPhaseController.java b/src/main/java/com/teammoeg/frostedheart/content/climate/thermal/runtime/minecraft/input/MinecraftPhaseController.java
+index 5b192f4e4..bb0cdcb78 100644
+--- a/src/main/java/com/teammoeg/frostedheart/content/climate/thermal/runtime/minecraft/input/MinecraftPhaseController.java
++++ b/src/main/java/com/teammoeg/frostedheart/content/climate/thermal/runtime/minecraft/input/MinecraftPhaseController.java
+@@ -113,12 +113,12 @@ public final class MinecraftPhaseController {
+         if (stored != null && stored.readMaterial(position.getY() >> 4, block,
+                 Block.BLOCK_STATE_REGISTRY.getId(level.getBlockState(position)), MATERIAL_SAMPLE)
+                 != DormantChunkThermalState.MaterialRead.MISSING) return Double.NaN;
+-        return environmentTemperature(level, position);
++        return environmentTemperature(level, chunk, position);
+     }
+ 
+-    private static double environmentTemperature(ServerLevel level, BlockPos position) {
++    private static double environmentTemperature(ServerLevel level, LevelChunk chunk, BlockPos position) {
+         return MinecraftThermalInput.gameplayPassiveEnvironment(
+-                level, position, WorldTemperature.naturalBlock(level, position));
++                chunk, position, WorldTemperature.naturalBlock(level, position));
+     }
+ 
+     /** Main-thread random updates share the same ownership and phase rules as worker commits. */
+@@ -158,7 +158,7 @@ public final class MinecraftPhaseController {
+                         : stored.readMaterial(
+                                 sectionY, block, Block.BLOCK_STATE_REGISTRY.getId(state), sample);
+         if (read == DormantChunkThermalState.MaterialRead.MISSING) {
+-            double temperature = environmentTemperature(level, position);
++            double temperature = environmentTemperature(level, chunk, position);
+             var edge =
+                     law.heating() != null && temperature >= law.heating().transitionTemperatureC()
+                             ? law.heating()
+diff --git a/src/main/java/com/teammoeg/frostedheart/content/climate/thermal/solver/TiledThermalField.java b/src/main/java/com/teammoeg/frostedheart/content/climate/thermal/solver/TiledThermalField.java
+index 74cee99a8..b423fc8b6 100644
+--- a/src/main/java/com/teammoeg/frostedheart/content/climate/thermal/solver/TiledThermalField.java
++++ b/src/main/java/com/teammoeg/frostedheart/content/climate/thermal/solver/TiledThermalField.java
+@@ -579,16 +579,25 @@ public final class TiledThermalField implements AutoCloseable {
+     /** Include not-yet-committed routes when funding the next geometry publication. */
+     public static long transportBytes(ThermalFragment[] fragments) {
+         long bytes = 0;
+-        for (var fragment : fragments) {
+-            var contacts = fragment.routedContacts();
+-            for (int edge = 0; edge < contacts.size(); edge++) if (!contacts.routes()[edge].retired()) {
+-                int first = contacts.firstTrace(edge) == null ? 1 : contacts.firstTrace(edge).size();
+-                int second = contacts.secondTrace(edge) == null ? 1 : contacts.secondTrace(edge).size();
+-                bytes += 192L + 32L * (first + second);
+-            }
+-            bytes += 64L * fragment.farBoundaries().patchCount();
++        for (var fragment : fragments) bytes += transportPayloadBytes(fragment);
++        return transportReservationBytes(bytes);
++    }
++
++    /** Adds the single transport header when at least one live edge or boundary is present. */
++    public static long transportReservationBytes(long payloadBytes) {
++        return payloadBytes == 0 ? 0 : payloadBytes + 256;
++    }
++
++    /** Marginal payload of one brick at reservation time, excluding the shared header. */
++    public static long transportPayloadBytes(ThermalFragment fragment) {
++        var contacts = fragment.routedContacts();
++        long bytes = 64L * fragment.farBoundaries().patchCount();
++        for (int edge = 0; edge < contacts.size(); edge++) if (!contacts.routes()[edge].retired()) {
++            int first = contacts.firstTrace(edge) == null ? 1 : contacts.firstTrace(edge).size();
++            int second = contacts.secondTrace(edge) == null ? 1 : contacts.secondTrace(edge).size();
++            bytes += 192L + 32L * (first + second);
+         }
+-        return bytes == 0 ? 0 : bytes + 256;
++        return bytes;
+     }
+ 
+     /** Coefficients change locally when an emitter starts/stops; no mesh identity changes. */
+diff --git a/src/main/java/com/teammoeg/frostedheart/content/climate/thermal/source/SpatialHeatStore.java b/src/main/java/com/teammoeg/frostedheart/content/climate/thermal/source/SpatialHeatStore.java
+index 0ae97e079..8b1e6612e 100644
+--- a/src/main/java/com/teammoeg/frostedheart/content/climate/thermal/source/SpatialHeatStore.java
++++ b/src/main/java/com/teammoeg/frostedheart/content/climate/thermal/source/SpatialHeatStore.java
+@@ -25,13 +25,13 @@ public final class SpatialHeatStore {
+         long from = Long.MAX_VALUE, to = Long.MIN_VALUE;
+         double joules;
+         void add(Span value) { from = Math.min(from, value.from); to = Math.max(to, value.to); joules += value.joules; }
+-        boolean empty() { return from == Long.MAX_VALUE; }
++        static boolean present(Summary summary) { return summary != null && summary.from != Long.MAX_VALUE; }
+         Span take() { Span result = new Span(from, to, joules); from = Long.MAX_VALUE; to = Long.MIN_VALUE; joules = 0; return result; }
+     }
+     private static final class Stream {
+         SpatialHeatInput.Target target;
+         final ArrayDeque<Span> exact = new ArrayDeque<>(2);
+-        final Summary positive = new Summary(), negative = new Summary();
++        Summary positive, negative;
+         final ArrayDeque<Span> prefix = new ArrayDeque<>(2);
+         Owner owner;
+         Stream previous, next;
+@@ -46,7 +46,14 @@ public final class SpatialHeatStore {
+         void append(Span span) {
+             latestTick = Math.max(latestTick, span.to);
+             while (exact.size() >= EXACT_RECORDS || !exact.isEmpty() && exact.peekFirst().to < latestTick - 40) {
+-                Span old = exact.removeFirst(); (old.joules >= 0 ? positive : negative).add(old);
++                Span old = exact.removeFirst();
++                if (old.joules >= 0) {
++                    if (positive == null) positive = new Summary();
++                    positive.add(old);
++                } else {
++                    if (negative == null) negative = new Summary();
++                    negative.add(old);
++                }
+             }
+             insert(exact, span); pendingJ += span.joules;
+         }
+@@ -64,15 +71,15 @@ public final class SpatialHeatStore {
+             int first = Long.compare(a.from, b.from);
+             return first == 0 ? Long.compare(a.to, b.to) : first;
+         }
+-        boolean empty() { return prefix.isEmpty() && exact.isEmpty() && positive.empty() && negative.empty() && claim == null; }
++        boolean empty() { return prefix.isEmpty() && exact.isEmpty() && !Summary.present(positive) && !Summary.present(negative) && claim == null; }
+         int recordCount() { return prefix.size() + exact.size() + claimedRecords
+-                + (positive.empty() ? 0 : 1) + (negative.empty() ? 0 : 1); }
++                + (Summary.present(positive) ? 1 : 0) + (Summary.present(negative) ? 1 : 0); }
+         long firstTick() {
+             long first = Long.MAX_VALUE;
+             for (var span : prefix) first = Math.min(first, span.from);
+             for (var span : exact) first = Math.min(first, span.from);
+-            if (!positive.empty()) first = Math.min(first, positive.from);
+-            if (!negative.empty()) first = Math.min(first, negative.from);
++            if (Summary.present(positive)) first = Math.min(first, positive.from);
++            if (Summary.present(negative)) first = Math.min(first, negative.from);
+             return first;
+         }
+     }
+@@ -231,8 +238,8 @@ public final class SpatialHeatStore {
+             if (existing.claim != null && !existing.claim.closed && stream.firstTick() <= existing.claim.through)
+                 invalidatedClaim.accept(existing.owner.id);
+             int before = existing.recordCount();
+-            if (!stream.positive.empty()) existing.append(new Span(stream.positive.from, stream.positive.to, stream.positive.joules));
+-            if (!stream.negative.empty()) existing.append(new Span(stream.negative.from, stream.negative.to, stream.negative.joules));
++            if (Summary.present(stream.positive)) existing.append(new Span(stream.positive.from, stream.positive.to, stream.positive.joules));
++            if (Summary.present(stream.negative)) existing.append(new Span(stream.negative.from, stream.negative.to, stream.negative.joules));
+             for (var span : stream.prefix) existing.append(span);
+             for (var span : stream.exact) existing.append(span);
+             recordsChanged(existing, before);
+@@ -312,10 +319,10 @@ public final class SpatialHeatStore {
+                 from = Math.min(from, span.from); to = Math.max(to, span.to);
+                 if (span.joules >= 0) positive += span.joules; else negative += span.joules;
+             }
+-            if (!stream.positive.empty()) {
++            if (Summary.present(stream.positive)) {
+                 from = Math.min(from, stream.positive.from); to = Math.max(to, stream.positive.to); positive += stream.positive.joules;
+             }
+-            if (!stream.negative.empty()) {
++            if (Summary.present(stream.negative)) {
+                 from = Math.min(from, stream.negative.from); to = Math.max(to, stream.negative.to); negative += stream.negative.joules;
+             }
+             for (var span : stream.exact) {
+@@ -398,8 +405,8 @@ public final class SpatialHeatStore {
+         return false;
+     }
+     private boolean pendingThrough(Stream stream, long tick) {
+-        if (!stream.positive.empty() && (stream.positive.from < tick || stream.positive.from == tick && stream.positive.to == tick)) return true;
+-        if (!stream.negative.empty() && (stream.negative.from < tick || stream.negative.from == tick && stream.negative.to == tick)) return true;
++        if (Summary.present(stream.positive) && (stream.positive.from < tick || stream.positive.from == tick && stream.positive.to == tick)) return true;
++        if (Summary.present(stream.negative) && (stream.negative.from < tick || stream.negative.from == tick && stream.negative.to == tick)) return true;
+         return dueScan.any(stream.prefix, tick) || dueScan.any(stream.exact, tick);
+     }
+     public String describePending(SpatialHeatInput.Target target, long tick) {
+@@ -423,7 +430,7 @@ public final class SpatialHeatStore {
+             if (through < 0) { receiver.afterAttempt(key); continue; }
+             for (int sign = 0; sign < 2 && maximumRecords > 0 && stream.owner != null && stream.owner.id == 0; sign++) {
+                 var summary = sign == 0 ? stream.positive : stream.negative;
+-                if (summary.empty()) continue;
++                if (!Summary.present(summary)) continue;
+                 var span = new Span(summary.from, summary.to, summary.joules);
+                 if (!due(span, through)) continue;
+                 int before = stream.recordCount(); summary.take(); recordsChanged(stream, before);
+@@ -581,10 +588,10 @@ public final class SpatialHeatStore {
+                     int previousRecords = current.recordCount();
+                     current.claim = this; current.claimed = new ArrayList<>(2); touched.add(current);
+                     freeze(current, current.prefix);
+-                    if (!current.positive.empty()) {
++                    if (Summary.present(current.positive)) {
+                         Span span = current.positive.take(); if (!freeze(current, span)) current.prefix.addLast(span);
+                     }
+-                    if (!current.negative.empty()) {
++                    if (Summary.present(current.negative)) {
+                         Span span = current.negative.take(); if (!freeze(current, span)) current.prefix.addLast(span);
+                     }
+                     int count = current.exact.size();

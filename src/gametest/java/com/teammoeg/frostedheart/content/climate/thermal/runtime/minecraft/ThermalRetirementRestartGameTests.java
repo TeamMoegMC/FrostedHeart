@@ -53,7 +53,7 @@ public final class ThermalRetirementRestartGameTests {
             helper.assertTrue(index >= 0 && Double.doubleToRawLongBits(material.enthalpyJ(index)) == observation.energy
                             && material.savedTick(index) == observation.tick && material.branch(index) == observation.branch,
                     "Disk round trip keeps exact H, phase branch and the original cooling clock");
-            helper.assertTrue(Double.isFinite(WorldTemperature.material(level, hot)), "The restored hot body is readable");
+            helper.assertTrue(Double.isFinite(MinecraftThermalInput.materialTemperature(level, hot)), "The restored hot body is readable");
             helper.startSequence().thenWaitUntil(() -> helper.assertTrue(MinecraftThermalInput.dormantState(chunk) == null,
                     "Real server ticks retire the loaded residual without any physical runtime"))
                     .thenExecute(() -> {

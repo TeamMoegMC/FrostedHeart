@@ -32,9 +32,6 @@ import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
-import com.teammoeg.frostedheart.content.climate.BlockTemperatureModel;
-import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput;
-import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.content.town.block.OccupiedVolume;
 import com.teammoeg.frostedheart.content.town.block.OccupiedZoneInfo;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.RoomPathfinder.OccupiedCell;
@@ -189,8 +186,7 @@ public class BlockScanner {
                         || position.getY() >= world.getMaxBuildHeight()) {
                     return Float.NaN;
                 }
-                float natural = sampleNaturalTemperature(serverLevel, loadedWorld, position);
-                double temperature = MinecraftThermalInput.gameplayPassiveEnvironment(serverLevel, position, natural);
+                double temperature = WorldTemperature.getTempAtBlock(serverLevel, position, loadedWorld);
                 if (!loadedWorld.hasCompleteData() || !Double.isFinite(temperature)) {
                     return Float.NaN;
                 }
@@ -224,15 +220,6 @@ public class BlockScanner {
             }
         }
         return samples == 0 ? Double.NaN : total / samples;
-    }
-
-    private static float sampleNaturalTemperature(ServerLevel level, LoadedTownWorld loadedWorld, BlockPos pos) {
-        // Keep the real dimension and climate while reading biome data without loading terrain.
-        float natural = BlockTemperatureModel.naturalTemperature(
-                WorldTemperature.dimension(level), WorldTemperature.biome(loadedWorld, pos),
-                WorldTemperature.altitude(level, pos), WorldTemperature.coveredClimate(level, pos),
-                WorldTemperature.blockClimateFactor());
-        return Math.max(FHConfig.SERVER.CLIMATE.absoluteZeroCelsius.get().floatValue(), natural);
     }
 
     @Nullable

@@ -8,6 +8,7 @@
     }
   },
   "capacity_j_per_k": 6600.0,
+  "conductance_w_per_k": 1.5,
   "cooling": {
     "effect": "freezing",
     "target": {

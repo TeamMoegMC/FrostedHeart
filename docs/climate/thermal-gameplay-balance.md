@@ -3,7 +3,7 @@
 - Status: `Current for recorded calibration; selected normal-difficulty cold-survival and strong-wind targets met; broader gameplay parity unqualified`
 - Last verified: `2026-11-08` for equipment warming and the accompanying regression; `2026-11-06` for cold-survival constants; initial measurements dated `2026-11-05`
 - Scope: 当前生产人体公式、旧身体公式测试参照、裸体/羊毛/熊皮、有限食物与疾病伤害、真实房间点火/熄火曲线；不是历史服务器或用户原存档复现。
-- Code anchors: `ThermalGameplayBalanceGameTests.measureLegacyAndCurrentBodyCurves/measureRealRoomsAndCampfireBodyRecovery`, `ThermalSurvivalBalanceGameTests.finiteFoodColdSurvivalUsesRealFoodEffectsAndDamage`, `PlayerThermalModel`, `PlayerThermoregulation`, `PlayerTemperatureUpdate`, `WorldTemperature`, `MinecraftThermalInput.gameplayPlayerEnvironment`。
+- Code anchors: `ThermalGameplayBalanceGameTests.measureLegacyAndCurrentBodyCurves/measureRealRoomsAndCampfireBodyRecovery`, `ThermalSurvivalBalanceGameTests.finiteFoodColdSurvivalUsesRealFoodEffectsAndDamage`, `PlayerThermalModel`, `PlayerThermoregulation`, `PlayerTemperatureUpdate`, `WorldTemperature.samplePlayerAirTemperature`。
 
 2026-11-05首轮测量未达到用户要求的“保留旧版大致相同的生存难度和供暖收益”。以下首轮数据保留其历史参数和失败结论。用户随后授权实际调整，新的参数和复测结果见文末定标记录；不能把首轮未改参数的记录当作当前源码参数。
 

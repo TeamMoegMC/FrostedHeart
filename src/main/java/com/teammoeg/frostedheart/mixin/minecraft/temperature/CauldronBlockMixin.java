@@ -42,7 +42,7 @@ public class CauldronBlockMixin {
         // Only intercept lava processing
         if (pFluid == Fluids.LAVA) {
             // Add your custom check here
-            if (WorldTemperature.block(pLevel, pPos) < WorldTemperature.LAVA_FREEZES) {
+            if (WorldTemperature.getTempAtBlock(pLevel, pPos) < WorldTemperature.LAVA_FREEZES) {
                 // Cancel the original method execution if check fails
                 ci.cancel();
             }

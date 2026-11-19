@@ -400,12 +400,18 @@ public final class DormantChunkThermalState {
             long gameTick,
             double halfLifeSeconds,
             double currentNaturalTemperatureC) {
+        return admissionCut(sectionY, gameTick, halfLifeSeconds, currentNaturalTemperatureC, local -> currentNaturalTemperatureC);
+    }
+
+    /** Select restartable Air cells against the same spatial background used when restoring them. */
+    public ThermalInputBatch.DormantAirCut admissionCut(int sectionY, long gameTick, double halfLifeSeconds,
+            double currentNaturalTemperatureC, java.util.function.IntToDoubleFunction naturalAt) {
         int index = sectionY - minimumSectionY;
         if (index < 0 || index >= entries.length || entries[index] == null) {
             return null;
         }
         SectionEntry entry = entries[index];
-        entry = entry.retain(-1L, currentNaturalTemperatureC, gameTick, DormantThermalCooling.rate(halfLifeSeconds));
+        entry = entry.retain(-1L, currentNaturalTemperatureC, gameTick, DormantThermalCooling.rate(halfLifeSeconds), naturalAt);
         if (entry == null) return null;
         return new ThermalInputBatch.DormantAirCut(
                 entry,
@@ -614,10 +620,11 @@ public final class DormantChunkThermalState {
 
         public AirFieldCheckpoint spatialAir() { return spatialAir; }
 
-        public SectionEntry retain(long eligibleBricks, double naturalC, long tick, double rate) {
+        public SectionEntry retain(long eligibleBricks, double naturalC, long tick, double rate,
+                java.util.function.IntToDoubleFunction naturalAt) {
             if ((eligibleBricks & brickMask) == 0) return this;
             if (spatialAir != null) {
-                var retained = spatialAir.retain(eligibleBricks, naturalC, tick, rate, savedGameTick);
+                var retained = spatialAir.retain(eligibleBricks, naturalAt, tick, rate, savedGameTick);
                 return retained == spatialAir ? this : retained == null ? null
                         : new SectionEntry(savedGameTick, savedNaturalC, retained);
             }

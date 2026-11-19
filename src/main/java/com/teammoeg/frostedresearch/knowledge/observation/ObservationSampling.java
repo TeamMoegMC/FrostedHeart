@@ -85,7 +85,7 @@ public final class ObservationSampling {
         values.put("biome", world.getBiome(position).unwrapKey()
                 .map(key -> ObservationValue.known(key.location().toString()))
                 .orElseGet(() -> ObservationValue.unknown(ObservationValue.ValueType.STRING)));
-        float temperature = WorldTemperature.block(world, position);
+        float temperature = WorldTemperature.getTempAtBlock(world, position);
         values.put("temperature", number(temperature));
         values.put("temperature_type", Float.isFinite(temperature) ? ObservationValue.known(temperatureCategory(temperature))
                 : ObservationValue.unknown(ObservationValue.ValueType.STRING));

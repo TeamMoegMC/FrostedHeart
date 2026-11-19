@@ -41,6 +41,7 @@ public final class ClientWeatherFrame {
     private float partialTick;
     private long frameSerial;
     private boolean valid;
+    private boolean depthExtinction;
 
     private ClientWeatherFrame() {
     }
@@ -64,6 +65,7 @@ public final class ClientWeatherFrame {
         ownership = state.hasPrecipitationFootprint()
                 ? Ownership.CUSTOM
                 : state.wallCandidateCount() > 0 ? Ownership.WALL_ONLY : Ownership.FALLBACK;
+        depthExtinction = state.wallCandidateCount() > 0 && CurtainExtinction.available();
         valid = true;
     }
 
@@ -71,7 +73,18 @@ public final class ClientWeatherFrame {
         state = null;
         ownership = Ownership.FALLBACK;
         cameraSample.clear();
+        depthExtinction = false;
         valid = false;
+    }
+
+    /** True when the spatial snow band owns optical extinction for this world frame. */
+    public boolean usesDepthExtinction() {
+        return depthExtinction;
+    }
+
+    /** The stage switched to a different world target after frame setup. Keep the geometry fallback for this frame. */
+    void useGeometryExtinction() {
+        depthExtinction = false;
     }
 
     public boolean valid() {

@@ -116,7 +116,7 @@ public final class ContinuousAirTwoBaseProductionGameTests {
                         continue;
                     }
                     BlockPos probe = probes[probeIndex];
-                    MinecraftThermalInput.gameplayPlacedReservoirEnvironment(level, probe, WorldTemperature.naturalAir(level, probe), air);
+                    MinecraftThermalInput.samplePlacedReservoirAirAndRadiation(level, probe, WorldTemperature.naturalAir(level, probe), air);
                     boolean fresh = air.airAvailable() && air.airSampleTick() >= 0 && level.getGameTime() - air.airSampleTick() <= 40;
                     boolean current = MinecraftThermalInput.describeAirRead(level, probe).startsWith("geometry_current");
                     allFresh &= fresh;
@@ -136,7 +136,7 @@ public final class ContinuousAirTwoBaseProductionGameTests {
                                     MinecraftThermalInput.describeAirRead(level, probe), MinecraftThermalInput.describeGeometryInvalidations(level));
                     }
                     allCurrent &= fresh && current && (monitoringSince[0] >= 0 || ContinuousAirProductionTiming.sourceField(air));
-                    if (elapsed % 200 == 0 && MinecraftThermalInput.sampleMaterial(level, probe.below(2), material)
+                    if (elapsed % 200 == 0 && MinecraftThermalInput.sampleMaterialTemperature(level, probe.below(2), material)
                             && material.source() == MaterialSample.Source.LIVE) liveFloors++;
                 }
                 boolean warming = monitoringSince[0] < 0;
@@ -145,7 +145,7 @@ public final class ContinuousAirTwoBaseProductionGameTests {
                     // Alternate bases so all 100 environment consumers share both fields.
                     BlockPos fire = fires[(index % 2) * 128 + index / 2];
                     receivers[index].setPos(fire.getX() + .5, fire.getY(), fire.getZ() + .5);
-                    MinecraftThermalInput.gameplayPlayerEnvironment(receivers[index], WorldTemperature.naturalAir(level, fire), air);
+                    MinecraftThermalInput.samplePlayerAirTemperature(receivers[index], WorldTemperature.naturalAir(level, fire), air);
                     queries[0]++;
                     boolean fresh = air.airAvailable() && air.airSampleTick() >= 0
                             && level.getGameTime() - air.airSampleTick() <= 40;
@@ -472,7 +472,7 @@ public final class ContinuousAirTwoBaseProductionGameTests {
                 boolean current = true;
                 for (int index = 8; index < probes.length; index++) {
                     BlockPos probe = probes[index];
-                    MinecraftThermalInput.gameplayPlacedReservoirEnvironment(level, probe, WorldTemperature.naturalAir(level, probe), air);
+                    MinecraftThermalInput.samplePlacedReservoirAirAndRadiation(level, probe, WorldTemperature.naturalAir(level, probe), air);
                     current &= air.airAvailable() && air.airSampleTick() >= reloadedGameTick && level.getGameTime() - air.airSampleTick() <= 40
                             && MinecraftThermalInput.describeAirRead(level, probe).startsWith("geometry_current");
                 }

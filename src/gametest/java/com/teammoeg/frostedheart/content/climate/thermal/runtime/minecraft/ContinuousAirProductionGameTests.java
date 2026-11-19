@@ -65,15 +65,15 @@ public final class ContinuousAirProductionGameTests {
             helper.runAfterDelay(delay, () -> {
                 BlockPos near = fire.above();
                 double naturalC = WorldTemperature.naturalAir(level, near);
-                MinecraftThermalInput.gameplayPlacedReservoirEnvironment(level, near, naturalC, sample);
+                MinecraftThermalInput.samplePlacedReservoirAirAndRadiation(level, near, naturalC, sample);
                 double nearC = sample.airAvailable() ? sample.airTemperatureC() : Double.NaN;
                 int brickX = fire.getX() & ~3;
                 var farther = new BlockPos((fire.getX() & 3) < 2 ? brickX + 3 : brickX,
                         near.getY(), near.getZ());
-                MinecraftThermalInput.gameplayPlacedReservoirEnvironment(level, farther,
+                MinecraftThermalInput.samplePlacedReservoirAirAndRadiation(level, farther,
                         WorldTemperature.naturalAir(level, farther), control);
                 double farC = control.airAvailable() ? control.airTemperatureC() : Double.NaN;
-                double materialC = WorldTemperature.material(level, fire.below());
+                double materialC = MinecraftThermalInput.materialTemperature(level, fire.below());
                 // Page initialization samples its section baseline, which need not equal the
                 // point-local natural formula. Compare two published positions in the same
                 // Brick/cut; a cold far point can legitimately leave numerical residency.
@@ -164,16 +164,16 @@ public final class ContinuousAirProductionGameTests {
             helper.assertTrue(ContinuousAirProductionTiming.sourceField(sample), "Extinguished field is republished before saving");
         }).thenExecute(() -> {
             level.getServer().saveEverything(true, true, true);
-            before[0] = MinecraftThermalInput.gameplayPassiveEnvironment(level, fire.above(), WorldTemperature.naturalAir(level, fire.above()));
-            before[1] = MinecraftThermalInput.gameplayPassiveEnvironment(level, fire.above().east(2), WorldTemperature.naturalAir(level, fire.above().east(2)));
+            before[0] = MinecraftThermalInput.sampleAirTemperature(level, fire.above(), WorldTemperature.naturalAir(level, fire.above()));
+            before[1] = MinecraftThermalInput.sampleAirTemperature(level, fire.above().east(2), WorldTemperature.naturalAir(level, fire.above().east(2)));
             level.setChunkForced(chunkX, chunkZ, false);
         }).thenWaitUntil(() -> {
             helper.assertTrue(level.getChunkSource().getChunkNow(chunkX, chunkZ) == null, "The real chunk must unload");
         }).thenExecute(() -> level.setChunkForced(chunkX, chunkZ, true)).thenWaitUntil(() -> {
             helper.assertTrue(level.getChunkSource().getChunkNow(chunkX, chunkZ) != null, "The saved chunk must actually reload");
         }).thenExecute(() -> {
-            double near = MinecraftThermalInput.gameplayPassiveEnvironment(level, fire.above(), WorldTemperature.naturalAir(level, fire.above()));
-            double far = MinecraftThermalInput.gameplayPassiveEnvironment(level, fire.above().east(2), WorldTemperature.naturalAir(level, fire.above().east(2)));
+            double near = MinecraftThermalInput.sampleAirTemperature(level, fire.above(), WorldTemperature.naturalAir(level, fire.above()));
+            double far = MinecraftThermalInput.sampleAirTemperature(level, fire.above().east(2), WorldTemperature.naturalAir(level, fire.above().east(2)));
             helper.assertTrue(Math.abs(near - before[0]) < 0.25 && Math.abs(far - before[1]) < 0.25,
                     "Reload must retain spatial history: before=" + before[0] + "," + before[1] + " after=" + near + "," + far);
             helper.assertTrue(near > far + 0.01, "Reload does not collapse near and far points to a Brick mean");
@@ -268,7 +268,7 @@ public final class ContinuousAirProductionGameTests {
         Vec3 previous = player.position();
         try {
             player.setPos(x, y - player.getEyeHeight(), z);
-            MinecraftThermalInput.gameplayPlayerEnvironment(player,
+            MinecraftThermalInput.samplePlayerAirTemperature(player,
                     WorldTemperature.naturalAir(level, BlockPos.containing(x, y, z)), out);
         } finally {
             player.setPos(previous);

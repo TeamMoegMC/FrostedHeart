@@ -349,7 +349,7 @@ public final class ThermalGameplayBalanceGameTests {
                 bodyAdvanced |= Math.abs(data.getNetBodyPowerW()) > 0.01F;
                 double natural = WorldTemperature.naturalAir(level,
                         BlockPos.containing(player.getX(), player.getEyeY(), player.getZ()));
-                double air = MinecraftThermalInput.gameplayPlayerEnvironment(player, natural, sample);
+                double air = MinecraftThermalInput.samplePlayerAirTemperature(player, natural, sample);
                 radiationObserved |= sample.radiantFluxWPerM2() > 0;
                 var water = WaterLevelCapability.getCapability(player).orElseThrow(IllegalStateException::new);
                 long age = sample.airSampleTick() < 0 ? -1 : level.getGameTime() - sample.airSampleTick();

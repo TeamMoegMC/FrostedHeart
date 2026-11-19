@@ -113,41 +113,41 @@ public final class WarmStoneGameplayFieldGameTests {
         ItemEntity entity = item(level, position, new ItemStack(FHBlocks.WARM_STONE.asItem()));
         try {
             start(level, position);
-            MinecraftThermalInput.gameplayItemEnvironment(entity, 110, sample);
+            MinecraftThermalInput.sampleDroppedItemAirAndRadiation(entity, 110, sample);
             double base = sample.airTemperatureC();
             generator.publishGameplayHeat(level, identity);
-            MinecraftThermalInput.gameplayItemEnvironment(entity, 110, sample);
+            MinecraftThermalInput.sampleDroppedItemAirAndRadiation(entity, 110, sample);
             near(helper, Math.max(base, 110 + generator.getTempMod() + 5), sample.airTemperatureC(), "cached raw air plus floor");
             generator.TLevel = 6;
             generator.publishGameplayHeat(level, identity);
-            MinecraftThermalInput.gameplayItemEnvironment(entity, 110, sample);
+            MinecraftThermalInput.sampleDroppedItemAirAndRadiation(entity, 110, sample);
             near(helper, Math.max(base, 110 + generator.getTempMod() + 5), sample.airTemperatureC(), "same-tick tower update");
 
             MinecraftGameplayFields.upsertSphere(level, control, 0, ThermalAnalyticField.CombineMode.OVERRIDE,
                     entity.getX(), entity.getY() + entity.getBbHeight() * 0.5, entity.getZ(), 0.04, 42);
-            MinecraftThermalInput.gameplayItemEnvironment(entity, 110, sample);
+            MinecraftThermalInput.sampleDroppedItemAirAndRadiation(entity, 110, sample);
             near(helper, 42, sample.airTemperatureC(), "command control after generator floor");
             entity.setPos(entity.getX() + 0.1, entity.getY(), entity.getZ());
-            MinecraftThermalInput.gameplayItemEnvironment(entity, 110, sample);
-            double delta = MinecraftThermalInput.gameplayAnalyticFieldsAt(level, position).get(0).temperatureCAt(
+            MinecraftThermalInput.sampleDroppedItemAirAndRadiation(entity, 110, sample);
+            double delta = MinecraftThermalInput.analyticFieldsAt(level, position).get(0).temperatureCAt(
                     entity.getX(), entity.getY() + entity.getBbHeight() * .5, entity.getZ());
             near(helper, Math.max(base, 110 + delta), sample.airTemperatureC(),
                     "same quarter-block cache must still respect the exact field boundary");
             MinecraftGameplayFields.remove(level, control);
             generator.removeGameplayHeat(level.getServer());
-            MinecraftThermalInput.gameplayItemEnvironment(entity, 110, sample);
+            MinecraftThermalInput.sampleDroppedItemAirAndRadiation(entity, 110, sample);
             near(helper, base, sample.airTemperatureC(), "field removal must not leave composed heat in the cache");
 
             generator.publishGameplayHeat(level, identity);
             MinecraftThermalInput.closeActiveLevel(level);
-            MinecraftThermalInput.gameplayItemEnvironment(entity, 110, sample);
+            MinecraftThermalInput.sampleDroppedItemAirAndRadiation(entity, 110, sample);
             near(helper, 110 + delta, sample.airTemperatureC(), "world field survives physical runtime close");
             near(helper, 0, sample.radiantFluxWPerM2(), "no physical runtime means no direct radiation");
             helper.assertTrue(owner(level, position) == null, "dropped query must leave the closed runtime absent");
 
             var player = FakePlayerFactory.getMinecraft(level);
             player.setPos(position.getX() + 0.5, position.getY(), position.getZ() + 0.5);
-            double air = MinecraftThermalInput.gameplayPlayerEnvironment(player, 110, sample);
+            double air = MinecraftThermalInput.samplePlayerAirTemperature(player, 110, sample);
             for (Item reservoir : new Item[]{FHBlocks.WARM_STONE.asItem(), FHBlocks.HOT_WATER_BAG.asItem()}) {
                 ItemStack worn = new ItemStack(reservoir);
                 new WearableThermalExchangeHandler().exchangeInto(new PlayerTemperatureData(), worn, air, 1);

@@ -135,7 +135,7 @@ public final class ThermalPassiveQueryFastPathGameTests {
         BlockPos sourceAir = base.offset(1, 2, 1);
         ServerPlayer player = FakePlayerFactory.getMinecraft(level);
         player.setPos(sourceAir.getX() + 0.5D, sourceAir.getY() + 0.5D - player.getEyeHeight(), sourceAir.getZ() + 0.5D);
-        MinecraftThermalInput.gameplayPlayerEnvironment(
+        MinecraftThermalInput.samplePlayerAirTemperature(
                 player, WorldTemperature.naturalAir(level, sourceAir), new ThermalEnvironmentSample());
 
         ChunkPos home = new ChunkPos(sourceAir);
@@ -232,7 +232,7 @@ public final class ThermalPassiveQueryFastPathGameTests {
                     LevelChunk pagedChunk = level.getChunk(pagedChunkProbe.getX() >> 4, pagedChunkProbe.getZ() >> 4);
                     int probeSection = pagedChunk.getSectionIndex(pagedChunkProbe.getY());
                     boolean pagedChunkOwnerBefore = owner(pagedChunk, probeSection);
-                    MinecraftThermalInput.gameplayPassiveEnvironment(level, pagedChunkProbe, NATURAL_C);
+                    MinecraftThermalInput.sampleAirTemperature(level, pagedChunkProbe, NATURAL_C);
                     boolean pagedChunkOwner = owner(pagedChunk, probeSection);
                     long sections = (long) far.size() * (maxSection - minSection);
                     FHMain.LOGGER.info("THERMAL_PASSIVE_FAST_PATH,farChunks={},farSections={},farOwnersBeforeWindow={},"
@@ -285,7 +285,7 @@ public final class ThermalPassiveQueryFastPathGameTests {
 
     private static void query(ServerLevel level, BlockPos[] positions, int count, long[] mismatches) {
         for (int index = 0; index < count; index++) {
-            double value = MinecraftThermalInput.gameplayPassiveEnvironment(level, positions[index % positions.length], NATURAL_C);
+            double value = MinecraftThermalInput.sampleAirTemperature(level, positions[index % positions.length], NATURAL_C);
             if (Double.compare(value, NATURAL_C) != 0) mismatches[0]++;
         }
     }

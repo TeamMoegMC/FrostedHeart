@@ -319,12 +319,12 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
                 sourceAir.getX() + 0.5D,
                 sourceAir.getY() + 0.5D - player.getEyeHeight(),
                 sourceAir.getZ() + 0.5D);
-        MinecraftThermalInput.gameplayPlayerEnvironment(
+        MinecraftThermalInput.samplePlayerAirTemperature(
                 player, pageNatural, new ThermalEnvironmentSample());
         helper.runAfterDelay(1_200, () -> helper.succeedWhen(() -> {
-            double source = MinecraftThermalInput.gameplayPassiveEnvironment(
+            double source = MinecraftThermalInput.sampleAirTemperature(
                     level, sourceAir, pageNatural);
-            double neighbor = MinecraftThermalInput.gameplayPassiveEnvironment(
+            double neighbor = MinecraftThermalInput.sampleAirTemperature(
                     level, neighborAir, pageNatural);
             helper.assertTrue(
                     source > pageNatural + 1.0D,
@@ -378,7 +378,7 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
                 targetAir.getX() + 0.5D,
                 targetAir.getY() + 0.5D - player.getEyeHeight(),
                 targetAir.getZ() + 0.5D);
-        MinecraftThermalInput.gameplayPlayerEnvironment(
+        MinecraftThermalInput.samplePlayerAirTemperature(
                 player,
                 WorldTemperature.naturalAir(level, targetAir),
                 new ThermalEnvironmentSample());
@@ -410,7 +410,7 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
             }
             if (elapsed[0] == 360) {
                 var pending = new MaterialSample();
-                helper.assertTrue(MinecraftThermalInput.sampleMaterial(level, phaseBlock, pending)
+                helper.assertTrue(MinecraftThermalInput.sampleMaterialTemperature(level, phaseBlock, pending)
                                 && pending.requestSequence() > 0 && pending.law().heating() != null
                                 && pending.law().heating().complete(pending.enthalpyJ()),
                         "a completed energy transition must be waiting for ACK before enabling world mutation");
@@ -419,16 +419,16 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
             }
             if (elapsed[0] > 360 && elapsed[0] % 40 == 0
                     && level.getBlockState(phaseBlock).is(Blocks.PACKED_ICE)) {
-                helper.assertTrue(MinecraftThermalInput.sampleMaterial(level, phaseBlock, new MaterialSample()),
+                helper.assertTrue(MinecraftThermalInput.sampleMaterialTemperature(level, phaseBlock, new MaterialSample()),
                         "unchanged phase material became unreadable during topology churn");
             }
         });
         helper.succeedWhen(() -> {
             var phaseSample = new MaterialSample();
-            boolean phaseReadable = MinecraftThermalInput.sampleMaterial(level, phaseBlock, phaseSample);
+            boolean phaseReadable = MinecraftThermalInput.sampleMaterialTemperature(level, phaseBlock, phaseSample);
             helper.assertTrue(
                     !level.getBlockState(phaseBlock).is(Blocks.PACKED_ICE),
-                    "phase Block never completed during topology churn: temperature=" + WorldTemperature.material(level, phaseBlock)
+                    "phase Block never completed during topology churn: temperature=" + MinecraftThermalInput.materialTemperature(level, phaseBlock)
                             + ", randomTickSpeed=" + level.getGameRules().getInt(GameRules.RULE_RANDOMTICKING)
                             + ", sample=" + phaseSample.source() + ", H=" + phaseSample.enthalpyJ() + ", request=" + phaseSample.requestSequence()
                             + ", targetH=" + (phaseReadable && phaseSample.law().heating() != null ? phaseSample.law().heating().targetEnthalpyJ() : Double.NaN));
@@ -476,7 +476,7 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
                 source.getX() + 8.5D,
                 source.getY(),
                 source.getZ() + 0.5D);
-        MinecraftThermalInput.gameplayPlayerEnvironment(
+        MinecraftThermalInput.samplePlayerAirTemperature(
                 player,
                 WorldTemperature.naturalAir(level, player.blockPosition()),
                 new ThermalEnvironmentSample());
@@ -487,7 +487,7 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
                         item.getItem()).orElseThrow();
                 ThermalEnvironmentSample sample =
                         new ThermalEnvironmentSample();
-                MinecraftThermalInput.gameplayItemEnvironment(
+                MinecraftThermalInput.sampleDroppedItemAirAndRadiation(
                         item,
                         WorldTemperature.naturalAir(
                                 level, item.blockPosition()),

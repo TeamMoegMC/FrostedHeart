@@ -176,8 +176,8 @@ public final class ContinuousAirSourceInputProductionGameTests {
                     "The new real campfire accepts ordinary fuel");
         }).thenIdle(40).thenWaitUntil(() -> {
             double natural = WorldTemperature.naturalAir(level, fire.above());
-            MinecraftThermalInput.gameplayPlacedReservoirEnvironment(level, fire.above(), natural, sample);
-            double far = MinecraftThermalInput.gameplayPassiveEnvironment(level, fire.above().east(4),
+            MinecraftThermalInput.samplePlacedReservoirAirAndRadiation(level, fire.above(), natural, sample);
+            double far = MinecraftThermalInput.sampleAirTemperature(level, fire.above().east(4),
                     WorldTemperature.naturalAir(level, fire.above().east(4)));
             helper.assertTrue(ContinuousAirProductionTiming.sourceField(sample)
                             && MinecraftThermalInput.enabledPhysicalSourceCount(level) > 0
@@ -363,7 +363,7 @@ public final class ContinuousAirSourceInputProductionGameTests {
         ContinuousAirProductionGameTests.useItem(helper, fire, Items.FLINT_AND_STEEL);
         var sample = new ThermalEnvironmentSample();
         helper.startSequence().thenIdle(180).thenWaitUntil(() -> {
-            MinecraftThermalInput.gameplayPlacedReservoirEnvironment(level, fire.above(),
+            MinecraftThermalInput.samplePlacedReservoirAirAndRadiation(level, fire.above(),
                     WorldTemperature.naturalAir(level, fire.above()), sample);
             helper.assertTrue(ContinuousAirProductionTiming.sourceField(sample)
                             && SourceInputProductionObservation.freezes() > 0,
@@ -388,7 +388,7 @@ public final class ContinuousAirSourceInputProductionGameTests {
                     .insertItem(0, new ItemStack(Items.COAL, 4), false);
             ContinuousAirProductionGameTests.useItem(helper, fire, Items.FLINT_AND_STEEL);
         }).thenWaitUntil(() -> {
-            MinecraftThermalInput.gameplayPlacedReservoirEnvironment(level, fire.above(),
+            MinecraftThermalInput.samplePlacedReservoirAirAndRadiation(level, fire.above(),
                     WorldTemperature.naturalAir(level, fire.above()), sample);
             helper.assertTrue(SourceInputProductionObservation.emitting()
                             && ContinuousAirProductionTiming.sourceField(sample)

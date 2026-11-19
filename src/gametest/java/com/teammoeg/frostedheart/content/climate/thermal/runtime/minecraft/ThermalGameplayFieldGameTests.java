@@ -20,6 +20,8 @@
 /* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft;
 
+import static com.teammoeg.frostedheart.content.climate.WorldTemperature.BlockTemperatureUse.SURROUNDINGS;
+
 import static com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.ThermalLoadedWorldGameTests.*;
 
 import java.lang.management.ManagementFactory;
@@ -39,6 +41,7 @@ import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorData;
 import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorState;
+import com.teammoeg.frostedheart.content.climate.data.PlantTempData;
 import com.teammoeg.frostedheart.content.climate.data.StateTransitionData;
 import com.teammoeg.frostedheart.content.climate.thermal.consumer.TownThermalProjection;
 import com.teammoeg.frostedheart.content.climate.thermal.field.ThermalAnalyticField;
@@ -79,32 +82,32 @@ public final class ThermalGameplayFieldGameTests {
         try {
             command(level, "set", position, " 8 42 sphere");
             helper.assertTrue(owner(level, position) == null, "command publication must not start a runtime");
-            near(helper, 42, WorldTemperature.block(level, position), "real block temperature");
+            near(helper, 42, WorldTemperature.getTempAtBlock(level, position), "real block temperature");
             TownThermalProjection projection = new TownThermalProjection();
             projection.include(position);
-            near(helper, 42, MinecraftThermalInput.gameplayTownEnvironment(level, projection, -40), "town temperature");
+            near(helper, 42, MinecraftThermalInput.sampleWeightedAirTemperature(level, projection, -40), "town temperature");
             level.setBlockAndUpdate(position.above(2), Blocks.STONE.defaultBlockState());
             level.setBlockAndUpdate(position.below(), Blocks.FARMLAND.defaultBlockState());
             level.setBlockAndUpdate(position, Blocks.WHEAT.defaultBlockState());
             command(level, "set", position, " 8 20 sphere");
-            helper.assertTrue(WorldTemperature.checkPlantStatus(level, position, Blocks.WHEAT).canGrow(),
+            helper.assertTrue(WorldTemperature.checkPlantStatus(level, position, PlantTempData.getPlantData(Blocks.WHEAT)).canGrow(),
                     "real wheat growth decision must observe the warm field");
             command(level, "set", position, " 8 -40 sphere");
-            helper.assertTrue(!WorldTemperature.checkPlantStatus(level, position, Blocks.WHEAT).canGrow(),
+            helper.assertTrue(!WorldTemperature.checkPlantStatus(level, position, PlantTempData.getPlantData(Blocks.WHEAT)).canGrow(),
                     "real wheat growth decision must observe the cold field");
             command(level, "set", position, " 8 42 sphere");
             var fields = MinecraftGameplayFields.existing(level);
             var player = FakePlayerFactory.getMinecraft(level);
             player.setPos(position.getX() + 0.5, position.getY(), position.getZ() + 0.5);
-            near(helper, 42, MinecraftThermalInput.gameplayPlayerEnvironment(player, -40,
+            near(helper, 42, MinecraftThermalInput.samplePlayerAirTemperature(player, -40,
                     new ThermalEnvironmentSample()), "player temperature");
             helper.assertTrue(read(owner(level, position).input(), "analyticFields") == fields,
                     "runtime must cache the exact same index");
             MinecraftThermalInput.invalidateGameplayProfilesForRecipeReload();
             helper.assertTrue(MinecraftGameplayFields.existing(level) == fields, "profile reload must retain field authority");
-            near(helper, 42, WorldTemperature.block(level, position), "runtime-absent block temperature after reload");
+            near(helper, 42, (float) WorldTemperature.getTempAtBlock(level, position, SURROUNDINGS), "runtime-absent ambient temperature after reload");
             command(level, "remove", position, "");
-            helper.assertTrue(!MinecraftThermalInput.hasGameplayAnalyticFieldAt(level, position), "command removal");
+            helper.assertTrue(!MinecraftThermalInput.hasAnalyticFieldAt(level, position), "command removal");
             helper.succeed();
         } finally {
             command(level, "remove", position, "");
@@ -122,10 +125,10 @@ public final class ThermalGameplayFieldGameTests {
         try {
             command(overworld, "set", position, " 4 25 sphere");
             command(nether, "set", position, " 4 -25 sphere");
-            near(helper, 25, MinecraftThermalInput.gameplayPassiveEnvironment(overworld, position, 10), "overworld field");
-            near(helper, -25, MinecraftThermalInput.gameplayPassiveEnvironment(nether, position, 10), "fixed-time field");
+            near(helper, 25, MinecraftThermalInput.sampleAirTemperature(overworld, position, 10), "overworld field");
+            near(helper, -25, MinecraftThermalInput.sampleAirTemperature(nether, position, 10), "fixed-time field");
             command(overworld, "remove", position, "");
-            near(helper, -25, MinecraftThermalInput.gameplayPassiveEnvironment(nether, position, 10), "dimension isolation");
+            near(helper, -25, MinecraftThermalInput.sampleAirTemperature(nether, position, 10), "dimension isolation");
             helper.succeed();
         } finally {
             command(overworld, "remove", position, "");
@@ -149,24 +152,24 @@ public final class ThermalGameplayFieldGameTests {
         command(level, "set", center, " 8 50 sphere");
         helper.runAfterDelay(5, () -> {
             try {
-                var fields = MinecraftThermalInput.gameplayAnalyticFieldsAt(level, center);
+                var fields = MinecraftThermalInput.analyticFieldsAt(level, center);
                 helper.assertTrue(fields.size() == 2, "boss AI and command at the same center must coexist");
                 double cold = fields.stream().filter(f -> f.combineMode() == CombineMode.ADD_DELTA)
                         .findFirst().orElseThrow().temperatureC();
-                near(helper, 50 + cold, WorldTemperature.block(level, center), "boss delta after command override");
+                near(helper, 50 + cold, WorldTemperature.getTempAtBlock(level, center), "boss delta after command override");
                 MinecraftThermalInput.invalidateGameplayProfilesForRecipeReload();
-                near(helper, 50 + cold, WorldTemperature.block(level, center), "coldApplied survives worker reload");
+                near(helper, 50 + cold, WorldTemperature.getTempAtBlock(level, center), "coldApplied survives worker reload");
                 command(level, "remove", center, "");
-                helper.assertTrue(MinecraftThermalInput.gameplayAnalyticFieldsAt(level, center).size() == 1,
+                helper.assertTrue(MinecraftThermalInput.analyticFieldsAt(level, center).size() == 1,
                         "command removal must not delete the boss field");
                 boss.discard();
                 helper.runAfterDelay(3, () -> {
-                    helper.assertTrue(!MinecraftThermalInput.hasGameplayAnalyticFieldAt(level, center), "boss removal must clean up");
+                    helper.assertTrue(!MinecraftThermalInput.hasAnalyticFieldAt(level, center), "boss removal must clean up");
                     boss.revive();
                     level.addFreshEntity(boss);
                     helper.runAfterDelay(5, () -> {
                         try {
-                            helper.assertTrue(MinecraftThermalInput.hasGameplayAnalyticFieldAt(level, center),
+                            helper.assertTrue(MinecraftThermalInput.hasAnalyticFieldAt(level, center),
                                     "same-object readdition must republish through normal AI");
                             helper.succeed();
                         } finally {
@@ -196,18 +199,18 @@ public final class ThermalGameplayFieldGameTests {
         oldTower.regist(level, first, (short) 1);
         heat(firstTeam);
         helper.runAfterDelay(3, () -> {
-            helper.assertTrue(MinecraftThermalInput.hasGameplayAnalyticFieldAt(level, first), "first binding publication");
+            helper.assertTrue(MinecraftThermalInput.hasAnalyticFieldAt(level, first), "first binding publication");
             newTower.regist(level, second, (short) 1);
-            helper.assertTrue(!MinecraftThermalInput.hasGameplayAnalyticFieldAt(level, first), "rebind removes old field immediately");
+            helper.assertTrue(!MinecraftThermalInput.hasAnalyticFieldAt(level, first), "rebind removes old field immediately");
             heat(firstTeam);
             helper.runAfterDelay(3, () -> {
                 level.destroyBlock(first, false);
                 helper.assertTrue(second.equals(firstTeam.getData(FHSpecialDataTypes.GENERATOR_DATA).actualPos),
                         "old tower disassembly must not clear the new authoritative binding");
-                helper.assertTrue(MinecraftThermalInput.hasGameplayAnalyticFieldAt(level, second), "new floor survives old disassembly");
+                helper.assertTrue(MinecraftThermalInput.hasAnalyticFieldAt(level, second), "new floor survives old disassembly");
                 CTeamDataManager.INSTANCE.transfer(secondTeam.getTeam().getId(), firstTeam.getTeam());
                 helper.runAfterDelay(3, () -> {
-                    helper.assertTrue(!MinecraftThermalInput.hasGameplayAnalyticFieldAt(level, second),
+                    helper.assertTrue(!MinecraftThermalInput.hasAnalyticFieldAt(level, second),
                             "completed team enumeration must remove the deleted holder's field");
                     level.destroyBlock(second, false);
                     helper.succeed();
@@ -234,7 +237,7 @@ public final class ThermalGameplayFieldGameTests {
             helper.assertTrue(level.getChunkSource().getChunkNow(chunkX, chunkZ) == null, "tower chunk must actually unload");
         }).thenExecute(() -> {
             try {
-                near(helper, -5, MinecraftThermalInput.gameplayPassiveEnvironment(level, master.below(), -40),
+                near(helper, -5, MinecraftThermalInput.sampleAirTemperature(level, master.below(), -40),
                         "unloaded authoritative team floor");
                 helper.assertTrue(level.getChunkSource().getChunkNow(chunkX, chunkZ) == null,
                         "field query must not reload its source chunk");
@@ -352,11 +355,11 @@ public final class ThermalGameplayFieldGameTests {
                     BlockPos query = position.east(2);
                     double expected = MinecraftGameplayFields.existing(level).compose(
                             query.getX() + .5, query.getY() + .5, query.getZ() + .5, -40, -40);
-                    for (int i = 0; i < 20_000; i++) MinecraftThermalInput.gameplayPassiveEnvironment(level, query, -40);
+                    for (int i = 0; i < 20_000; i++) MinecraftThermalInput.sampleAirTemperature(level, query, -40);
                     long bytes = allocation.getThreadAllocatedBytes(thread);
                     long begin = System.nanoTime();
                     double sum = 0;
-                    for (int i = 0; i < 20_000; i++) sum += MinecraftThermalInput.gameplayPassiveEnvironment(level, query, -40);
+                    for (int i = 0; i < 20_000; i++) sum += MinecraftThermalInput.sampleAirTemperature(level, query, -40);
                     long elapsed = System.nanoTime() - begin;
                     long allocated = allocation.getThreadAllocatedBytes(thread) - bytes;
                     near(helper, expected * 20_000, sum, "production floor query result");
@@ -412,9 +415,9 @@ public final class ThermalGameplayFieldGameTests {
         it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap sourceSlots = read(physicalSources, "slotsById");
         BlockPos openSource = open.below(multiblock.masterPosInMB().getY());
         helper.startSequence().thenWaitUntil(() -> {
-            double natural = WorldTemperature.naturalBlock(level, enclosedAir);
+            double natural = WorldTemperature.naturalAir(level, enclosedAir);
             double raw = rawAir(input, enclosedAir);
-            var fields = MinecraftThermalInput.gameplayAnalyticFieldsAt(level, enclosedAir);
+            var fields = MinecraftThermalInput.analyticFieldsAt(level, enclosedAir);
             helper.assertTrue(!fields.isEmpty(), "tower must publish its gameplay floor");
             double delta = fields.get(0).temperatureCAt(enclosedAir.getX() + .5, enclosedAir.getY() + .5, enclosedAir.getZ() + .5);
             helper.assertTrue(Double.isFinite(raw) && raw > natural + delta + .25,
@@ -428,29 +431,29 @@ public final class ThermalGameplayFieldGameTests {
         }).thenExecute(() -> {
             try {
                 double raw = rawAir(input, enclosedAir);
-                double natural = WorldTemperature.naturalBlock(level, enclosedAir);
-                near(helper, raw, WorldTemperature.block(level, enclosedAir), "physical enhancement above the floor");
+                double natural = WorldTemperature.naturalAir(level, enclosedAir);
+                near(helper, raw, WorldTemperature.getTempAtBlock(level, enclosedAir), "physical enhancement above the floor");
                 var dropped = new ItemEntity(level,
                         enclosedAir.getX() + 0.5, enclosedAir.getY(), enclosedAir.getZ() + 0.5,
                         new ItemStack(FHBlocks.WARM_STONE.asItem()));
                 dropped.setPos(dropped.getX(), enclosedAir.getY() + 0.5 - dropped.getBbHeight() * 0.5, dropped.getZ());
                 ThermalEnvironmentSample itemSample = new ThermalEnvironmentSample();
                 double itemNatural = WorldTemperature.naturalAir(level, enclosedAir);
-                MinecraftThermalInput.gameplayItemEnvironment(dropped, itemNatural, itemSample);
-                var enclosedField = MinecraftThermalInput.gameplayAnalyticFieldsAt(level, enclosedAir).get(0);
+                MinecraftThermalInput.sampleDroppedItemAirAndRadiation(dropped, itemNatural, itemSample);
+                var enclosedField = MinecraftThermalInput.analyticFieldsAt(level, enclosedAir).get(0);
                 double enclosedDelta = enclosedField.temperatureCAt(dropped.getX(),
                         dropped.getY() + dropped.getBbHeight() * .5, dropped.getZ());
                 near(helper, Math.max(raw, itemNatural + enclosedDelta),
                         itemSample.airTemperatureC(), "dropped reservoir must not add the tower floor to physical heat");
                 dropped.discard();
-                double outdoorNatural = WorldTemperature.naturalBlock(level, openAir);
+                double outdoorNatural = WorldTemperature.naturalAir(level, openAir);
                 double outdoorRaw = rawAir(input, openAir);
-                double outdoor = WorldTemperature.block(level, openAir);
-                var openField = MinecraftThermalInput.gameplayAnalyticFieldsAt(level, openAir).get(0);
+                double outdoor = WorldTemperature.getTempAtBlock(level, openAir);
+                var openField = MinecraftThermalInput.analyticFieldsAt(level, openAir).get(0);
                 double outdoorDelta = openField.temperatureCAt(openAir.getX() + .5, openAir.getY() + .5, openAir.getZ() + .5);
                 helper.assertTrue(outdoor >= outdoorNatural + outdoorDelta - 0.001, "outdoor floor must hold despite dissipation");
                 FHMain.LOGGER.info("Generator production enclosure: natural={}, floor={}, raw={}, composed={}; outdoor natural={}, raw={}, composed={}",
-                        natural, natural + enclosedDelta, raw, WorldTemperature.block(level, enclosedAir), outdoorNatural, outdoorRaw, outdoor);
+                        natural, natural + enclosedDelta, raw, WorldTemperature.getTempAtBlock(level, enclosedAir), outdoorNatural, outdoorRaw, outdoor);
             } finally {
                 level.destroyBlock(enclosed, false);
                 level.destroyBlock(open, false);

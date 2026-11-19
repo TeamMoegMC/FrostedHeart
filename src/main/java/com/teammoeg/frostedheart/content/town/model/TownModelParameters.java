@@ -433,11 +433,7 @@ public record TownModelParameters(
                         Defaults.CLIMATE_EVENT_NOISE_STANDARD_DEVIATION_CELSIUS,
                         Defaults.CLIMATE_WARM_NOISE_SCALE,
                         Defaults.CLIMATE_ABSOLUTE_ZERO_CELSIUS,
-                        Defaults.CLIMATE_OVERWORLD_BASELINE_CELSIUS,
-                        Defaults.CLIMATE_STONE_INTERFACE_LEVEL,
-                        Defaults.CLIMATE_SEA_LEVEL,
-                        Defaults.CLIMATE_BLOCK_MAXIMUM_AFFECTION,
-                        Defaults.CLIMATE_BLOCK_HEAT_APPLICATION_MULTIPLIER),
+                        Defaults.CLIMATE_OVERWORLD_BASELINE_CELSIUS),
                 new ObservationParameters(
                         Defaults.TOWN_OBSERVATION_HISTORY_DAYS,
                         Defaults.TOWN_OBSERVATION_RESERVE_WARNING_DAYS,
@@ -772,11 +768,7 @@ public record TownModelParameters(
             float eventNoiseStandardDeviationCelsius,
             float warmNoiseScale,
             float absoluteZeroCelsius,
-            float overworldBaselineCelsius,
-            int stoneInterfaceLevel,
-            int seaLevel,
-            float blockMaximumClimateAffection,
-            float blockHeatApplicationMultiplier
+            float overworldBaselineCelsius
     ) {
     }
 
@@ -1006,10 +998,6 @@ public record TownModelParameters(
         public static final float CLIMATE_WARM_NOISE_SCALE = 2.0F;
         public static final float CLIMATE_ABSOLUTE_ZERO_CELSIUS = -273.0F;
         public static final float CLIMATE_OVERWORLD_BASELINE_CELSIUS = -10.0F;
-        public static final int CLIMATE_STONE_INTERFACE_LEVEL = 0;
-        public static final int CLIMATE_SEA_LEVEL = 63;
-        public static final float CLIMATE_BLOCK_MAXIMUM_AFFECTION = 0.5F;
-        public static final float CLIMATE_BLOCK_HEAT_APPLICATION_MULTIPLIER = 2.0F;
 
         public static final double MINING_BASE_OUTPUT_PER_SWE_DAY = 3.5;
         public static final double MINING_PHYSICAL_ACTIVITY = 1.0;

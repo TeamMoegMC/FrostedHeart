@@ -31,7 +31,7 @@ public final class ThermalActiveWorksetGameTests {
         ContinuousAirProductionGameTests.useItem(helper, fire, Items.FLINT_AND_STEEL);
         var sample = new ThermalEnvironmentSample(); var cold = new LevelChunk[32];
         helper.startSequence().thenIdle(60).thenWaitUntil(() -> {
-            MinecraftThermalInput.gameplayPlacedReservoirEnvironment(level, fire.above(), WorldTemperature.naturalAir(level, fire.above()), sample);
+            MinecraftThermalInput.samplePlacedReservoirAirAndRadiation(level, fire.above(), WorldTemperature.naturalAir(level, fire.above()), sample);
             helper.assertTrue(ContinuousAirProductionTiming.sourceField(sample), "Keep an actual committed control base heated throughout the cold workload");
         }).thenExecute(() -> {
             try {
@@ -59,7 +59,7 @@ public final class ThermalActiveWorksetGameTests {
                 }
                 pages.tick(level.getGameTime());
                 int afterSky = dirtySky.size();
-                MinecraftThermalInput.gameplayPlacedReservoirEnvironment(level, fire.above(), WorldTemperature.naturalAir(level, fire.above()), sample);
+                MinecraftThermalInput.samplePlacedReservoirAirAndRadiation(level, fire.above(), WorldTemperature.naturalAir(level, fire.above()), sample);
                 FHMain.LOGGER.info("THERMAL_ACTIVE_WORKSET_RESULT,coldChunks=32,eagerOwners={},explicitColdOwners={},blockChanges=2048,skyBefore={},skyAfter={},controlAvailable={}",
                         eagerOwners, attachedOwners(cold), beforeSky, afterSky, ContinuousAirProductionTiming.sourceField(sample));
                 helper.assertTrue(eagerOwners == 0, "Cold Chunk loading creates no unused per-Section thermal owners; observed=" + eagerOwners);

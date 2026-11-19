@@ -65,6 +65,7 @@ import com.teammoeg.frostedheart.content.climate.thermal.topology.PreparedTopolo
 import com.teammoeg.frostedheart.content.climate.thermal.topology.ThermalTopologyParameters;
 import com.teammoeg.frostedheart.content.climate.thermal.topology.TopologyUpdatePlanner;
 import com.teammoeg.frostedheart.content.climate.thermal.topology.WorkerPageStore;
+import com.teammoeg.frostedheart.content.climate.thermal.topology.PendingGeometryBoundaries;
 
 import java.util.Objects;
 
@@ -83,6 +84,7 @@ public final class ThermalDimensionEngine implements AutoCloseable, MaterialStat
     private final ThermalSourceLedger sources;
     private final WorkerPhysicalSourceBindings sourceBindings;
     private final TopologyUpdatePlanner topologyPlan;
+    private final PendingGeometryBoundaries pendingGeometryBoundaries;
     private final TiledThermalField fixedField;
     private final SpatialHeatBuffer fixedHeat;
     private final SpatialHeatStore fixedInputs;
@@ -97,6 +99,7 @@ public final class ThermalDimensionEngine implements AutoCloseable, MaterialStat
     private it.unimi.dsi.fastutil.longs.Long2LongOpenHashMap fixedPhysicalCuts = new it.unimi.dsi.fastutil.longs.Long2LongOpenHashMap();
     private it.unimi.dsi.fastutil.longs.Long2LongOpenHashMap fixedNextPhysicalCuts = new it.unimi.dsi.fastutil.longs.Long2LongOpenHashMap();
     private long fixedBoundaryRevision = -1, fixedBoundaryStructure = -1, fixedControlRevision = -1, fixedBoundarySequence = -1, fixedActivationRevision = -1;
+    private long fixedOutletRevision = -1;
     private long sourceFreezeRevision;
     private long fixedCapacityWait = -1;
     /**
@@ -165,7 +168,7 @@ public final class ThermalDimensionEngine implements AutoCloseable, MaterialStat
         offeredThrough = initialTick;
         airLoads = new AirLoadTable();
         sourceBindings = new WorkerPhysicalSourceBindings(
-                pages, catalog, Objects.requireNonNull(campfireProfile, "campfireProfile"), airLoads);
+                pages, arena, catalog, Objects.requireNonNull(campfireProfile, "campfireProfile"), airLoads);
         fixedHeat = new SpatialHeatBuffer(airBudget,
                 Math.min(32, SpatialSourceTimeline.MAX_PORTS_PER_SOURCE * limits.maximumSources()),
                 SpatialSourceTimeline.MAX_PORTS_PER_SOURCE * limits.maximumSources(), initialTick);
@@ -197,6 +200,7 @@ public final class ThermalDimensionEngine implements AutoCloseable, MaterialStat
                 compiler,
                 parameters,
                 limits);
+        pendingGeometryBoundaries = new PendingGeometryBoundaries(topologyPlan, pages);
         try {
             backingMeter = new AirBackingMeter(airBudget);
             reserveAirBacking();
@@ -289,7 +293,7 @@ public final class ThermalDimensionEngine implements AutoCloseable, MaterialStat
 
     private boolean sourceFrozen(SpatialSourceTimeline.Descriptor descriptor) {
         var snapshot = activeSnapshot;
-        return snapshot != null && snapshot.inputsFrozen && sourceBindings.airPortsTouchChunk(descriptor, snapshot.chunk);
+        return snapshot != null && snapshot.inputsFrozen && sourceBindings.portsTouchChunk(descriptor, snapshot.chunk);
     }
 
     private void sourceControlChanged(SourceInputWindow window, LongSet mixing) {
@@ -345,6 +349,14 @@ public final class ThermalDimensionEngine implements AutoCloseable, MaterialStat
         }
     }
 
+    /** A sealed numerical step owns its selected Sections. An open Store cursor still walks the whole owner list. */
+    private boolean checkpointInterruptsStep(long chunk) {
+        if (fixedField.idle()) return fixedClaim != null;
+        if (fixedClaim == null || fixedFromTick == fixedSolveTick) return true;
+        for (long section : fixedScope) if (chunkForSection(section) == chunk) return true;
+        return false;
+    }
+
     private boolean fixedHasReadyWork() {
         if (failureRecovery) return snapshotCommandsReady();
         if (snapshotCommandsReady() || fixedBackingReconciliationDue() || restoreReady()) return true;
@@ -360,6 +372,7 @@ public final class ThermalDimensionEngine implements AutoCloseable, MaterialStat
     }
     private boolean fixedBoundaryWorkPending() {
         return fixedBoundaryRevision != topologyInputs.revision() || fixedBoundaryStructure != structureCommits
+                || fixedOutletRevision != sourceBindings.outletRevision() || pendingGeometryBoundaries.hasCaptureChanges()
                 || fixedControlRevision != sourceIngress.controlRevision() || fixedBoundarySequence != boundarySequence
                 || fixedActivationRevision != fixedField.activationRevision() || fixedField.idle() && fixedField.domainsDirty();
     }
@@ -376,8 +389,8 @@ public final class ThermalDimensionEngine implements AutoCloseable, MaterialStat
         TiledThermalField.Domain selected = null;
         long oldest = Long.MAX_VALUE;
         for (var domain : fixedField.domains()) {
-            long from = fixedField.minimumTick(domain.sections());
-            if (from >= oldest || !fixedField.aligned(domain.sections())) continue;
+            long from = fixedField.alignedTick(domain.sections());
+            if (from < 0 || from >= oldest) continue;
             long through = fixedNumericalThrough(domain.sections(), from);
             if (through > from || fixedPending(domain.sections(), from)) { selected = domain; oldest = from; }
         }
@@ -470,10 +483,8 @@ public final class ThermalDimensionEngine implements AutoCloseable, MaterialStat
         if (fixedField.idle() && activateFixedSections()) return;
         sourceIngress.advance(deadline);
         if (System.nanoTime() >= deadline) return;
-        if (fixedField.idle()) {
-            topologyInputs.collapseUninstalledRetirements(fixedField::hasSection, transportThrough);
-            refreshFixedBoundaries();
-        }
+        if (fixedField.idle()) topologyInputs.collapseUninstalledRetirements(fixedField::hasSection, transportThrough);
+        if (fixedField.idle() || fixedOutletRevision != sourceBindings.outletRevision()) refreshFixedBoundaries();
         if (fixedGeometry != null && fixedField.idle() && !fixedGeometry.ready() && fixedGeometryYields()) {
             fixedGeometry.returningInputs = true;
             if (fixedGeometry.advance(deadline)) { fixedGeometry.close(); fixedGeometry = null; }
@@ -567,10 +578,11 @@ public final class ThermalDimensionEngine implements AutoCloseable, MaterialStat
         if (fixedInputObsolete(input)) return true;
         var boundary = fixedBoundaries.get(input);
         if (boundary == null) return false;
-        if (!fixedStorageOnly(input)) return fixedField.atBoundary(boundary.sections(), fixedApplicationTick(input));
-        if (fixedField.frozen(input.page().sectionKey())) return false;
-        long tick = fixedField.minimumTick(boundary.sections());
-        return fixedField.aligned(boundary.sections()) && (tick == Long.MAX_VALUE || tick >= input.batch().targetTick());
+        long requested = input.batch().targetTick();
+        long tick = fixedField.alignedTick(boundary.sections());
+        if (tick < requested) return false;
+        if (fixedStorageOnly(input)) return !fixedField.frozen(input.page().sectionKey());
+        return tick == Long.MAX_VALUE || tick == fixedField.applicationTick(boundary.sections(), requested);
     }
 
     private boolean fixedInputObsolete(TopologyInbox.Input input) {
@@ -589,8 +601,7 @@ public final class ThermalDimensionEngine implements AutoCloseable, MaterialStat
             long current = fixedField.minimumTick(boundary.sections());
             return current == Long.MAX_VALUE ? tick : Math.max(tick, current);
         }
-        for (long section : boundary.sections()) tick = Math.max(tick, fixedField.activeSince(section));
-        return tick;
+        return fixedField.applicationTick(boundary.sections(), tick);
     }
     private void completeObsoleteFixedInput(TopologyInbox.Input input) {
         var completed = topologyInputs.freeze(input.batch().targetTick(), input.batch().sequence(),
@@ -607,24 +618,23 @@ public final class ThermalDimensionEngine implements AutoCloseable, MaterialStat
         long revision = topologyInputs.revision(), sequence = boundarySequence;
         boolean membershipChanged = fixedField.idle() && fixedField.domainsDirty();
         if (membershipChanged) fixedField.domains();
-        if (fixedBoundaryStructure != structureCommits || membershipChanged) {
+        if (fixedBoundaryStructure != structureCommits || membershipChanged || pendingGeometryBoundaries.hasCaptureChanges()
+                || fixedOutletRevision != sourceBindings.outletRevision()) {
             fixedBoundaries.clear(); fixedActivationBoundaries.clear(); fixedBoundaryRevision = -1;
             fixedBoundaryStructure = structureCommits;
+            fixedOutletRevision = sourceBindings.outletRevision();
         }
         if (fixedBoundaryRevision != revision) {
             fixedActivationBoundaries.clear();
+            pendingGeometryBoundaries.refresh();
             var retained = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<TopologyInbox.Input, Boolean>());
             topologyInputs.forEachPendingInput(input -> {
                 retained.add(input);
                 if (fixedBoundaries.containsKey(input)) return;
-                var seeds = new LongOpenHashSet();
-                TopologyUpdatePlanner.collectBoundarySeeds(input.batch(), seeds); seeds.add(input.page().sectionKey());
-                var boundary = RegionalContinuationBoundary.hasStructuralInput(input.batch()) || topologyPlan.hasPendingRoutes()
-                        ? topologyPlan.continuationBoundary(seeds, true)
-                        : RegionalContinuationBoundary.UNCHANGED.including(seeds);
-                fixedBoundaries.put(input, includeFixedOutlets(boundary));
+                fixedBoundaries.put(input, sourceBindings.includeBoundOutlets(pendingGeometryBoundaries.get(input)));
             });
             fixedBoundaries.keySet().retainAll(retained);
+            pendingGeometryBoundaries.retain(retained);
             fixedBoundaryRevision = revision; fixedControlRevision = -1;
         }
         long controls = sourceIngress.controlRevision();
@@ -677,11 +687,6 @@ public final class ThermalDimensionEngine implements AutoCloseable, MaterialStat
         }
         return true;
     }
-    private RegionalContinuationBoundary includeFixedOutlets(RegionalContinuationBoundary boundary) {
-        var outlets = new LongOpenHashSet();
-        sourceIngress.forEachIndexedSource(boundary.sections(), id -> sourceBindings.collectBoundOutlets(id, boundary, outlets));
-        return boundary.including(outlets);
-    }
     private RegionalContinuationBoundary fixedActivationBoundary(long section) {
         return fixedActivationBoundaries.computeIfAbsent(section, key -> {
             var pending = new LongOpenHashSet();
@@ -689,7 +694,7 @@ public final class ThermalDimensionEngine implements AutoCloseable, MaterialStat
                 if (!fixedInputObsolete(input) && !fixedStorageOnly(input)) TopologyUpdatePlanner.collectBoundarySeeds(input.batch(), pending);
             });
             if (fixedGeometry != null) pending.addAll(fixedGeometry.boundary.sections());
-            return includeFixedOutlets(topologyPlan.continuationBoundary(LongSets.singleton(key), true, pending));
+            return sourceBindings.includeBoundOutlets(topologyPlan.continuationBoundary(LongSets.singleton(key), true, pending));
         });
     }
     private void stageFixedReentry(long section, long requestedTick, double ambientC, double halfLife) {
@@ -1056,14 +1061,17 @@ public final class ThermalDimensionEngine implements AutoCloseable, MaterialStat
             for (var write : prepared.pageWrites) {
                 if (write.retirement) continue;
                 long section = write.page.handle.sectionKey(), mask = write.capturedBricks();
-                for (int block = 0; block < 4096; block++) fixedSignatures[block] = write.signatures().get(block);
                 if (write.replacesLifecycle() && fixedField.hasSection(section)) fixedField.retire(section);
                 boolean existing = fixedField.hasSection(section);
+                long previousBricks = fixedField.activeBricks(section);
+                long addedBricks = mask & ~previousBricks;
+                // Storage reads new cells. Existing edits read captured cells, and withdrawn cells use UNRESOLVED.
+                write.signatures().copyBricksTo(addedBricks | (write.changedBricks() & mask), fixedSignatures);
                 if (!existing && !fixedField.admit(section, fixedSignatures, mask, write.naturalTemperatureC(), publicationTick, fieldStorage)
                         || existing && !fixedField.grow(section, fixedSignatures, mask, fieldStorage))
                     throw new IllegalStateException("Prepaid fixed geometry lost its numerical boundary");
                 if (existing) {
-                    long bricks = write.changedBricks() | (fixedField.activeBricks(section) & ~mask);
+                    long bricks = write.changedBricks() | (previousBricks & ~mask);
                     while (bricks != 0) {
                         int brick = Long.numberOfTrailingZeros(bricks); bricks &= bricks - 1;
                         for (int cell = 0; cell < 64; cell++) {
@@ -1204,6 +1212,7 @@ public final class ThermalDimensionEngine implements AutoCloseable, MaterialStat
             closeSnapshotState();
             if (fixedGeometry != null) { fixedGeometry.close(); fixedGeometry = null; }
             sourceIngress.close(); topologyIngress.close(); topologyInputs.clear(); fixedInputs.clear();
+            pendingGeometryBoundaries.clear();
             fixedBoundaries.clear(); fixedActivationBoundaries.clear(); fixedPhysicalCuts.clear(); fixedNextPhysicalCuts.clear(); fixedScope = LongSets.EMPTY_SET;
             fixedStorageCuts.clear(); fixedNextStorageCuts.clear();
             if (capacityContinuation != null) { airBudget.cancelCapacityWait(capacityContinuation); capacityContinuation = null; }
@@ -1480,8 +1489,13 @@ public final class ThermalDimensionEngine implements AutoCloseable, MaterialStat
                         if (!fixedField.frozen(section)) request.frozenSections.add(section);
                     });
                     if (!request.frozenSections.isEmpty()) {
-                        cancelFixedStep();
-                        for (long section : request.frozenSections) fixedField.freeze(section);
+                        if (checkpointInterruptsStep(request.chunk)) cancelFixedStep();
+                        for (long section : request.frozenSections) {
+                            if (fixedField.freeze(section)) continue;
+                            // Pending geometry must settle its energy against the committed field ledger.
+                            cancelFixedStep();
+                            fixedField.freeze(section);
+                        }
                         structureCommits++;
                     }
                 }
@@ -1505,7 +1519,7 @@ public final class ThermalDimensionEngine implements AutoCloseable, MaterialStat
             }
             if (request.reservation != null) request.reservation.close();
             if (!request.unloading && request.frozenSections != null && !request.frozenSections.isEmpty()) {
-                cancelFixedStep();
+                if (checkpointInterruptsStep(request.chunk)) cancelFixedStep();
                 for (long section : request.frozenSections) if (fixedField.snapshotAccepted(section, fixedSnapshotValues))
                     stageFixedReentry(section, Math.max(request.producer.tick, offeredThrough), fixedSnapshotValues.ambientC, request.halfLife);
             }
@@ -1618,6 +1632,7 @@ public final class ThermalDimensionEngine implements AutoCloseable, MaterialStat
                 int slot = table.valid(signature) ? pages.materialSlot(target.position(), table.materialProfileId(signature)) : -1;
                 int state = slot >= 0 && (target.incarnation() == 0 || arena.materialIncarnation(slot) == target.incarnation())
                         ? table.materialStateId(signature) : -1;
+                if (target.sourceGeneration() != 0 && !WorkerPhysicalSourceBindings.isSourceMaterialState(state)) state = -1;
                 target = new SpatialHeatInput.Target(target.position(), target.face(), -1, 0, target.materialProfile(),
                         0, 0, 0, state, target.minimumPageGeneration());
             }
@@ -1662,7 +1677,7 @@ public final class ThermalDimensionEngine implements AutoCloseable, MaterialStat
 
     private double exportFixedChunkPending(long chunk) {
         if (!fixedInputs.hasRetainedInputInChunk(chunk) && !fixedHeat.hasRetainedInputInChunk(chunk)) return 0;
-        cancelFixedStep();
+        if (checkpointInterruptsStep(chunk)) cancelFixedStep();
         double[] total = {fixedHeat.exportCommittedPendingInChunk(chunk)};
         fixedInputs.retireChunk(chunk, (target, joules) -> total[0] += joules);
         fixedPendingJ = fixedHeat.committedPendingJoules();
@@ -1887,6 +1902,7 @@ public final class ThermalDimensionEngine implements AutoCloseable, MaterialStat
         sourceIngress.recordBacking(meter); phases.recordBacking(meter);
         meter.container(fixedPhysicalCuts, fixedPhysicalCuts.size(), 16);
         meter.container(fixedNextPhysicalCuts, fixedNextPhysicalCuts.size(), 16);
+        pendingGeometryBoundaries.recordBacking(meter);
         meter.container(fixedBoundaries, fixedBoundaries.size(), 32);
         meter.container(fixedActivationBoundaries, fixedActivationBoundaries.size(), 16);
         meter.container(fixedStorageCuts, fixedStorageCuts.size(), 16);

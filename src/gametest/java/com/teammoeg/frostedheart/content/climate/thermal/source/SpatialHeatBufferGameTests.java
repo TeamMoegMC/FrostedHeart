@@ -20,6 +20,29 @@ import net.minecraftforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 public final class SpatialHeatBufferGameTests {
     @GameTest(template = "phase0a_empty", timeoutTicks = 200)
+    public static void sealedStepKeepsItsSlotsWhileAnotherChunkExportsSignedDebt(GameTestHelper helper) {
+        var a = new SpatialHeatBuffer.Address(BlockPos.asLong(1, 64, 1), -1);
+        var b = new SpatialHeatBuffer.Address(BlockPos.asLong(-47, 64, -31), -1);
+        for (boolean commit : new boolean[] {true, false}) {
+            try (var heat = new SpatialHeatBuffer(new ThermalMemoryBudget(1 << 20), 2, 2, 0)) {
+                heat.add(a, 50); heat.add(b, -80);
+                var first = heat.seal(0, 20); first.defer(0, 15); first.defer(1, -30); first.commit();
+                heat.add(a, 100);
+                var running = heat.seal(20, 40, position -> position == a.position());
+                running.defer(0, 7);
+                near(helper, -30, heat.exportCommittedPendingInChunk(b.chunk()), "Export B's original signed balance");
+                near(helper, 0, heat.exportCommittedPendingInChunk(b.chunk()), "Repeating export transfers nothing");
+                near(helper, 100, running.joules(0), "A keeps its fresh input");
+                near(helper, 15, running.pendingJoules(0), "A keeps its original deferred balance");
+                if (commit) running.commit(); else running.cancel();
+                near(helper, commit ? 7 : 15, heat.committedPendingJoules(), "A settles independently");
+                helper.assertTrue(!heat.hasRetainedInputInChunk(b.chunk()), "Release B's empty slot when the borrower finishes");
+            }
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "phase0a_empty", timeoutTicks = 200)
     public static void scopedCommitAndCancellationPreserveAnotherDomainsOriginalAndDeferredHeat(GameTestHelper helper) {
         var budget = new ThermalMemoryBudget(1 << 20); var store = new SpatialHeatStore();
         var a = new SpatialHeatInput.Target(BlockPos.asLong(1, 64, 1), (byte) 2, -1, 0, 0, 0, 0, 0);

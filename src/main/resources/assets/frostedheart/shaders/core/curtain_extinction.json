@@ -1,0 +1,15 @@
+{
+  "blend": {"func":"add", "srcrgb":"srcalpha", "dstrgb":"1-srcalpha", "srcalpha":"0", "dstalpha":"1"},
+  "vertex": "frostedheart:curtain_extinction",
+  "fragment": "frostedheart:curtain_extinction",
+  "attributes": ["Position"],
+  "samplers": [{"name":"Sampler0"}, {"name":"Sampler1"}],
+  "uniforms": [
+    {"name":"InverseClip", "type":"matrix4x4", "count":16, "values":[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]},
+    {"name":"BoxMin", "type":"float", "count":3, "values":[0,0,0]},
+    {"name":"BoxMax", "type":"float", "count":3, "values":[0,0,0]},
+    {"name":"StormColor", "type":"float", "count":4, "values":[1,1,1,16]},
+    {"name":"SurfaceUV", "type":"float", "count":4, "values":[1,0,0,0]},
+    {"name":"ShelterDistance", "type":"float", "count":1, "values":[0]}
+  ]
+}

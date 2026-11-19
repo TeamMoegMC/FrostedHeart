@@ -285,7 +285,7 @@ public class FHConfig {
 					.comment("Total thermal power of a lit campfire in W.")
 					.defineInRange("campfirePowerW", 8_000.0D, 0.0D, 1.0e9D);
 				campfireRadiationShare = builder
-					.comment("Fraction of campfire power emitted as direct radiation; the remainder heats Air.")
+					.comment("Fraction of campfire power emitted as direct radiation. The remaining power heats the air above and the campfire body.")
 					.defineInRange("campfireRadiationShare", 0.2D, 0.0D, 1.0D);
 				enableStaticBlockRadiation = builder
 					.comment("Enable read-only direct player radiation from static fire and exposed lava.")
@@ -405,8 +405,6 @@ public class FHConfig {
 			public final ForgeConfigSpec.DoubleValue warmEventNoiseScale;
 			public final ForgeConfigSpec.DoubleValue coverResponseDaysAtTenBlocks;
 			public final ForgeConfigSpec.IntValue coverMaximumBlocks;
-			public final ForgeConfigSpec.DoubleValue blockMaximumClimateAffection;
-			public final ForgeConfigSpec.DoubleValue blockHeatApplicationMultiplier;
 			public final ForgeConfigSpec.DoubleValue absoluteZeroCelsius;
 			public final ForgeConfigSpec.DoubleValue overworldBaselineCelsius;
 			public final ForgeConfigSpec.ConfigValue<Double> hurtingHeatUpdate;
@@ -512,12 +510,8 @@ public class FHConfig {
 				coverMaximumBlocks = builder
 					.comment("Opaque full blocks of cover counted above a position. Deeper cover adds no further climate lag.")
 					.defineInRange("coverMaximumBlocks", 16, 1, 64);
-				blockMaximumClimateAffection = builder
-					.comment("Fraction of the climate that reaches block temperature, at every height and cover.")
-					.defineInRange("blockMaximumClimateAffection", (double) TownModelParameters.Defaults.CLIMATE_BLOCK_MAXIMUM_AFFECTION, 0.0, 100.0);
-				blockHeatApplicationMultiplier = builder
-					.comment("Multiplier applied to the maximum heat-field value before the heat-field ceiling is enforced.")
-					.defineInRange("blockHeatApplicationMultiplier", (double) TownModelParameters.Defaults.CLIMATE_BLOCK_HEAT_APPLICATION_MULTIPLIER, 0.0, 100.0);
+
+
 				absoluteZeroCelsius = builder
 					.comment("Lower clamp for temperature calculations, in Celsius.")
 					.defineInRange("absoluteZeroCelsius", (double) TownModelParameters.Defaults.CLIMATE_ABSOLUTE_ZERO_CELSIUS, -1000.0, 0.0);

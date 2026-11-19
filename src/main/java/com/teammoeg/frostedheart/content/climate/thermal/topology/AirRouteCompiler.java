@@ -276,20 +276,17 @@ final class AirRouteCompiler {
         Arrays.sort(initial);
         for (int fragment : initial) {
             var page = view.pageSlot(fragment / 64);
-            if (page == null || !view.resident(page, fragment % 64)) continue;
-            long origin = brickPosition(page, fragment % 64);
-            for (int block = 0; block < 64; block++) {
+            int brick = fragment % 64;
+            if (page == null || !view.resident(page, brick)) continue;
+            // A resident Brick reads its Page's candidate signatures. Track that dependency once for the whole Brick.
+            view.readPage(page.handle.sectionKey());
+            long candidates = view.signatures(page).ventilatedMaterialMask(brick, signatures);
+            long origin = brickPosition(page, brick);
+            while (candidates != 0) {
+                int block = Long.numberOfTrailingZeros(candidates);
+                candidates &= candidates - 1;
                 long position = blockPosition(origin, block);
-                int signature =
-                        view.signatureAtWorld(
-                                BlockPos.getX(position),
-                                BlockPos.getY(position),
-                                BlockPos.getZ(position));
-                if (signatures.materialProfileId(signature) == 0
-                        || signatures.ventilation(signature) == 0
-                        || at(position) != null
-                        || capturedPositionCount() >= maximumPositions) continue;
-                seeds.add(position);
+                if (at(position) == null && capturedPositionCount() < maximumPositions) seeds.add(position);
             }
         }
     }
@@ -341,6 +338,7 @@ final class AirRouteCompiler {
         }
     }
 
+
     private void markComponentDirty(Component component) {
         dirtyBricks.addAll(component.memberBricks);
         dirtyBricks.addAll(component.edgeOwners);
@@ -383,19 +381,6 @@ final class AirRouteCompiler {
         components.remove(component);
     }
 
-    boolean hasRegion(long position) {
-        Component component = at(position);
-        return component != null
-                && component.ready
-                && component.alive
-                && Double.isFinite(component.pathResistance[component.indexes.get(position)]);
-    }
-
-    long region(long position) {
-        Component component = at(position);
-        return component.airRegionIds[component.indexes.get(position)];
-    }
-
     boolean closed(long position) {
         Component component = at(position);
         return component != null
@@ -417,14 +402,17 @@ final class AirRouteCompiler {
         AirRouteValidity[] validity = null;
         for (int block = 0; block < 64; block++) {
             long position = blockPosition(origin, block);
-            if (!hasRegion(position)) continue;
+            Component component = at(position);
+            if (component == null || !component.ready || !component.alive) continue;
+            int node = component.indexes.get(position);
+            if (!Double.isFinite(component.pathResistance[node])) continue;
             if (targets == null) {
                 targets = new long[64];
                 validity = new AirRouteValidity[64];
             }
             mask |= 1L << block;
-            targets[block] = region(position);
-            validity[block] = at(position).validity;
+            targets[block] = component.airRegionIds[node];
+            validity[block] = component.validity;
         }
         return layout.withAirRoutes(mask, targets, validity);
     }
@@ -489,19 +477,19 @@ final class AirRouteCompiler {
     private static final class Component {
         final LongArrayList positions = new LongArrayList();
         final IntArrayList ventilation = new IntArrayList();
-        final Long2IntOpenHashMap indexes = new Long2IntOpenHashMap();
-        final Long2LongOpenHashMap dependencies = new Long2LongOpenHashMap();
-        final LongOpenHashSet memberBricks = new LongOpenHashSet(),
-                missingBricks = new LongOpenHashSet(),
-                edgeOwners = new LongOpenHashSet();
+        final Long2IntOpenHashMap indexes = new Long2IntOpenHashMap(4);
+        final Long2LongOpenHashMap dependencies = new Long2LongOpenHashMap(4);
+        final LongOpenHashSet memberBricks = new LongOpenHashSet(4),
+                missingBricks = new LongOpenHashSet(2),
+                edgeOwners = new LongOpenHashSet(2);
         final IntArrayList portNodes = new IntArrayList();
         final LongArrayList portRegions = new LongArrayList();
         final LongArrayList portAirBlocks = new LongArrayList();
         final it.unimi.dsi.fastutil.bytes.ByteArrayList portAirFaces = new it.unimi.dsi.fastutil.bytes.ByteArrayList();
-        final Long2ObjectOpenHashMap<ThermalFragment.AirFaceTrace> outletTraces = new Long2ObjectOpenHashMap<>();
+        final Long2ObjectOpenHashMap<ThermalFragment.AirFaceTrace> outletTraces = new Long2ObjectOpenHashMap<>(2);
         final DoubleArrayList portResistance = new DoubleArrayList();
         final Long2ObjectOpenHashMap<Long2DoubleOpenHashMap> candidates =
-                new Long2ObjectOpenHashMap<>();
+                new Long2ObjectOpenHashMap<>(2);
         boolean alive = true, ready;
         int stage, cursor, seedCursor;
         // Cumulative normalized resistance to an Air region, not geometric distance or heat.
@@ -749,14 +737,27 @@ final class AirRouteCompiler {
             }
         }
 
-        void finish(TopologyView view, AirRouteCompiler owner) {
+        /** Preserve producer order within each region; the common single-region case already has that order. */
+        private void finishPorts() {
+            int count = portRegions.size();
+            if (count == 0) return;
+            portTraces = new ThermalFragment.AirFaceTrace[count];
+            long firstRegion = portRegions.getLong(0);
+            int end = 1;
+            while (end < count && portRegions.getLong(end) == firstRegion) end++;
+            if (end == count) {
+                long[] blocks = portAirBlocks.toLongArray();
+                byte[] faces = portAirFaces.toByteArray();
+                for (int port = 0; port < count; port++) portTraces[port] = new ThermalFragment.AirFaceTrace(blocks, faces, port, 1);
+                outletTraces.put(firstRegion, new ThermalFragment.AirFaceTrace(blocks, faces, 0, count));
+                return;
+            }
             var portsByRegion = new Long2ObjectOpenHashMap<IntArrayList>();
             for (int port = 0; port < portRegions.size(); port++) {
                 portsByRegion.computeIfAbsent(portRegions.getLong(port), ignored -> new IntArrayList()).add(port);
             }
             long[] blocks = new long[portNodes.size()];
             byte[] faces = new byte[portNodes.size()];
-            portTraces = new ThermalFragment.AirFaceTrace[portNodes.size()];
             long[] regions = portsByRegion.keySet().toLongArray();
             Arrays.sort(regions);
             int nextPort = 0;
@@ -772,6 +773,10 @@ final class AirRouteCompiler {
                 }
                 outletTraces.put(region, new ThermalFragment.AirFaceTrace(blocks, faces, firstPort, ports.size()));
             }
+        }
+
+        void finish(TopologyView view, AirRouteCompiler owner) {
+            finishPorts();
             var handles = new ArrayList<ThermalPageHandle>();
             var revisions = new LongArrayList();
             for (var dependency : dependencies.long2LongEntrySet()) {
@@ -787,11 +792,17 @@ final class AirRouteCompiler {
             validity =
                     new AirRouteValidity(
                             handles.toArray(ThermalPageHandle[]::new), revisions.toLongArray());
-            int count = 0;
-            for (var values : candidates.values()) count += values.size();
-            edgeFirst = new long[count];
-            edgeSecond = new long[count];
-            edgeResistance = new double[count];
+            if (candidateCount != 0) finishEdges(owner);
+            ready = true;
+            owner.unpublished.add(this);
+            owner.dirtyBricks.addAll(memberBricks);
+        }
+
+        /** Only components joining distinct air destinations need edge arrays and an index of their owners. */
+        private void finishEdges(AirRouteCompiler owner) {
+            edgeFirst = new long[candidateCount];
+            edgeSecond = new long[candidateCount];
+            edgeResistance = new double[candidateCount];
             var ownerIndexes = new Long2ObjectOpenHashMap<IntArrayList>();
             long[] sources = candidates.keySet().toLongArray();
             Arrays.sort(sources);
@@ -815,9 +826,6 @@ final class AirRouteCompiler {
                         .add(new EdgeSlice(this, entry.getValue()));
                 edgeOwners.add(entry.getLongKey());
             }
-            ready = true;
-            owner.unpublished.add(this);
-            owner.dirtyBricks.addAll(memberBricks);
             candidates.clear();
             candidateCount = 0;
         }

@@ -1,7 +1,7 @@
 # Heat Production And Network
 
 - Status: `Transitional; current source and material ownership described below, earlier measurements retain their build scope`
-- Last verified: `2026-11-19` for fixed-field outlet mixing and source-triggered coverage updates, `2026-11-17` for fixed T1/T2 exhaust power, 2,000 W radiation, four horizontal targets and smooth 5°C center boost; `2026-11-06` for material-frontier admission and energy-complete phase submission; `2026-10-25` for source ownership and internal subsystem retirement; `2026-10-12` for campfire fuel countdown. Other sections retain their existing provenance.
+- Last verified: `2026-11-20` for six-face campfire heat exchange and material-frontier propagation without a depth cutoff, `2026-11-19` for fixed-field outlet mixing and source-triggered coverage updates, `2026-11-17` for fixed T1/T2 exhaust power, 2,000 W radiation, four horizontal targets and smooth 5°C center boost; `2026-11-06` for energy-complete phase submission; `2026-10-25` for source ownership and internal subsystem retirement; `2026-10-12` for campfire fuel countdown. Other sections retain their existing provenance.
 - Scope: physical Minecraft sources, worker energy integration, material/phase sinks, and the separate heat-network model
 - Primary code anchors: `MinecraftPhysicalSourceProfile`, `PhysicalSourceSpatialIndex`, `WorkerPhysicalSourceBindings`, `AirMixingRegion`, `SpatialSourceTimeline`, `SpatialSourceIngress`, `SpatialHeatStore`, `ThermalSourceBatch`, `ThermalSourceLedger`, `LocalMaterialBoundary`, `MaterialThermalLaw.initialBranch`, `RegionalQuerySnapshot.materialPerturbationAtSlotC`, `WorkerPageStore.collectMaterialFrontier`, `HeatEndpoint`, `HeatNetwork`
 
@@ -22,16 +22,16 @@ and unload controls; it no longer transports a second impulse or node-integratio
 Regional jobs consume claimed J only when the accepted result is published. The coarse
 exchange step does not reconstruct intermediate geometry changes.
 
-Each positive-share `AIR_FACE` port retains its exact target Brick. Its zero/nonzero source
-reference transition updates one main-thread source-seed bit; multiple sources
-in the same Brick share one lazy count. Source seeds are the only main-thread
+Each positive-share `AIR_FACE` or `SOURCE_MATERIAL` port retains its target Brick.
+Its zero/nonzero source reference transition updates one main-thread source-seed
+bit. Multiple sources in the same Brick share one lazy count. Source seeds are the only main-thread
 cause of new thermal residency. The worker retains warmed Pages and advances
 heat through loaded neighboring Bricks with changed absolute residency masks;
 players and other queries do not hold Pages open.
 
 | Profile | Rated power | Thermal port | Other ports |
 |---|---:|---:|---|
-| Campfire | `8,000 W` default | `80%` convection into the Air block above | `20%` direct radiation |
+| Campfire and soul campfire | `8,000 W` default | `60%` to the Air above and `20%` to the campfire body at default settings | `20%` direct radiation by default |
 | T1 generator | `26,000 W` while emitting | Four horizontal exhaust targets, `6,000 W` each (`24,000 W` combined) | `2,000 W` radiation |
 | T2 generator | `34,000 W` while emitting | Four horizontal exhaust targets, `8,000 W` each (`32,000 W` combined) | `2,000 W` radiation |
 | Fountain | `2,000 W * level` | `90%` convection | `10%` radiation loss |
@@ -103,6 +103,36 @@ multiblocks. Absence from that static table does not remove the machine-source p
 Infrared display reads material temperatures and analytic fields independently
 of this declared radiation share.
 
+### Campfire Body and Six-Face Exchange
+
+`MinecraftPhysicalSourceProfile.campfire` applies `campfirePowerW` (total power
+`P` in W, default `8,000 W`) and `campfireRadiationShare` (fraction `r` in `[0, 1]`,
+default `0.20`) from `FHConfig.COMMON.THERMAL_RUNTIME`. The shares of power are
+`0.75 × (1 − r) × P` for the upward `AIR_FACE` port, `0.25 × (1 − r) × P` for the
+`SOURCE_MATERIAL` port at the campfire position, and `r × P` for direct radiation.
+At the defaults this gives `4,800 W`, `1,600 W`, and `1,600 W`, respectively.
+The partition of the non-radiative share is a source default.
+
+`MinecraftThermalProfiles` gives `minecraft:campfire` and `minecraft:soul_campfire`
+an effective material heat capacity of `900 J/K` and per-face conductance of
+`3 W/K` before waterlogging and material data overrides. It assigns six thermal
+contact faces to represent the area around the fuel and flame. `TiledThermalField`
+exchanges heat between the body and each face-adjacent Air or contacting material
+cell according to the modeled temperature difference and contact conductance.
+`PhysicalSourceSpatialIndex.refreshTargets` retains the positive-share port
+targets: the body and the upward Air target (at most two distinct Bricks).
+`WorkerPageStore.collectMaterialFrontier` admits contacting neighbors once the
+body's Accepted temperature differs from its natural material background by at
+least 1 K; an existing request uses 0.5 K. This applies to every material on a
+Brick boundary, including completely enclosed campfires and heated inner stone.
+The six neighbors are not unconditional source seeds.
+Neighbors already inside a captured Brick can exchange immediately; a neighbor
+outside it waits for the ordinary threshold and geometry admission.
+If a solid blocks the upward outlet, the body still receives its share and
+can warm the solid above it. Extinguishing the fire stops the input and the
+body sheds stored heat through the same faces. `WorldTemperature.getTempAtBlock`
+can read that body temperature.
+
 ### Campfire Fuel Lifecycle
 
 `CampfireTileEntityMixin_TimeLimit` still consumes one `lifeTime` unit on every
@@ -127,8 +157,8 @@ Blocked AIR_FACE ports become declared loss; topology-unavailable ports become
 degraded loss until their exact source Brick is compiled. Neither creates a
 fake natural sink, accumulates pending energy, or forces a chunk load. Campfire block-state changes are
 coalesced by position, and a lit/unlit change with identical thermal signature
-updates the source state and the nearby Air coefficients, without replacing
-temperature nodes merely because the source switched on or off.
+updates the source state and the nearby Air coefficients. The campfire body
+carries its accumulated heat through the lit state transition.
 
 Each air cell whose center lies within 4 blocks of a positive-share `AIR_FACE`
 outlet on an emitting source gets a mixing factor of 4. The factor is 1 outside
@@ -143,16 +173,11 @@ engine initializes newly captured Bricks and updates existing coverage when an
 outlet starts or stops emitting. The source and geometry clocks are described
 in the [thermal runtime contract](thermal-runtime-control.md).
 
-Campfire total power and radiation share are configured by
-`FHConfig.COMMON.THERMAL_RUNTIME.campfirePowerW` and
-`campfireRadiationShare`; convection receives exactly the remaining share.
-Defaults are `8,000 W` and `0.20`. The main source index and worker binding
-resolver use the same immutable configured profile.
-
-All four Minecraft profiles retain a source only while `enabled && powerW > 0`.
-Inactive/zero-power observations allocate no new slot and remove an existing
-source through the normal cut. Zero-share convection ports create no Page seed;
-a fully radiative campfire still retains its emitting source. Removing or moving
+The main source index and worker binding resolver use the same immutable
+configured profile. Minecraft profiles retain a source while `enabled && powerW > 0`.
+Inactive or zero-power observations remove an existing source through the
+normal cut. Only positive-share thermal ports seed Pages. A fully radiative
+campfire still retains its emitting source. Removing or moving
 targets recomputes their dormant support after removing old reverse references,
 preserving support from other sources and the worker's residual heat. Repeated
 off/on transitions across cuts use normal unload/register generations.
@@ -199,21 +224,8 @@ loss, unavailable-geometry loss and exported pending heat without integrating po
 
 ## Materials And Phase
 
-Each resident material block owns one enthalpy H and a shared `MaterialThermalLaw`;
-temperature comes from that law. The regional runtime stores accepted H/branch/waiting in `ThermalRegion.Accepted`;
-`MaterialStateAccess` supplies migration, phase decisions and explicit gameplay controls,
-while arena retains staged initialization, geometry and phase request identity.
-See the [regional ownership contract](continuous-air-regional-preparation.md#区域已提交状态与材料边界同步).
-A partially filled block owns no gap-Air temperature. Air and material exchange
-energy conservatively using the selected backend. `AirRouteCompiler` compiles
-ventilated geometry into region references and finite-conductance connections.
-An ordinary Brick has at most 64 Air-region plus material nodes; full Air uses one.
+`TiledThermalField` stores one accepted enthalpy and phase branch per resident material cell. `MaterialThermalLaw` converts that state to degrees Celsius. Local air/material and material/material exchange transfers equal and opposite joules. Geometry, world mutation acknowledgement and chunk handoff use the same cell identity. See the [fixed-field contract](thermal-runtime-control.md).
 
-`MaterialEdgeCompiler` aggregates each undirected contact once in its canonical contribution
-order. Fine material sweeps use `LocalMaterialBoundary` with private enthalpy/branch state;
-coarse work uses `MinimumRegionStep`. Both use the actual interval duration and bounded
-sensible/latent segments. The unused one-second exchange coefficient and its storage
-have been removed; `ThermalExchangeKernel` remains in use by actual item heat exchange.
 The phase plateau is part of H-to-temperature conversion, not a separate reservoir.
 `PhaseTransitionRuntime` owns completed-transition requests and applies explicit
 gameplay phase controls through the selected material owner. Main-thread ACK
@@ -239,29 +251,48 @@ configuration entry are removed; this applies to all phase-capable materials.
 Latent energy comes from the source/target C/O references described below.
 The old `phaseBaseEnergyJPerHeatCapacity` probability-derived configuration is removed.
 
+Blocks in `#minecraft:crops` use `GameplayMaterial.CROP` with a source-default
+heat capacity of `720 J/K` and per-face conductance of `2.5 W/K`. See
+[crop temperature](crop-fertilization.md#生长温度) for the gameplay reader.
+
+Ordinary `minecraft:farmland` has a per-face conductance of `1.5 W/K` across
+all moisture states. The source recipe sets `capacity_j_per_k` to `6,600`
+and the freezing transition to `frostedheart:dirt_permafrost` at `−10°C`.
+The value applies to physical exchange with air and adjacent solids. Glass
+shelter ventilation and the amount of heat supplied govern the long-term soil
+temperature. Crop status reads the surroundings at the crop position as
+described in [Crop Temperature and Fertilizer](crop-fertilization.md).
+
 New material bodies initialize from the Page's captured natural temperature.
 `MaterialThermalLaw.initialBranch` selects the same initial phase branch for arena
 initialization and material-frontier background calculation. A cold natural water
 or soil body can therefore start on its freezing plateau. Its latent responsibility
-retains that body; outward material admission separately requires an actual surface
+retains that body; outward material admission separately requires an actual boundary
 temperature perturbation from that material's natural initialized temperature, with
 the existing 1K/0.5K hysteresis. See [residual ownership and material expansion](thermal-residual-lifecycle.md).
 Capacity is fixed for a given material state: ordinary category defaults use
 stone 5400 J/K and wood 2700 J/K, with explicit recipe capacities taking precedence.
 Exposure changes connections, not capacity. `MaterialSectionState` stores exact
 body H, phase branch and stable BlockState identity separately from compressed Air
-history. Checkpoint format 6 retains actual state times and has no older-format migration reader.
-Dormant bodies relax toward current Section-center natural temperature on demand,
+history. Checkpoint format 7 retains actual state times and has no older-format migration reader.
+Dormant bodies relax toward the current natural temperature of their own block on demand,
 using the same source-default 30-game-second sensible half-life as Air (explicit existing configuration still applies). Latent heat is
 advanced by energy flux, not by a temperature lerp; no offline source power is integrated.
 Ordinary residuals below 0.5°C can be removed during capture or loaded-checkpoint maintenance;
 latent progress and pending input retain their existing owners. See [residual lifecycle](thermal-residual-lifecycle.md).
 
-`TopologyView.materialContactAllowed` limits material conduction to a geometric
-surface and its second material layer. A second-layer block selects one surface
-owner; second-to-second connections and connections to a different owner are
-omitted. A resident third layer cannot join that chain merely because it has H.
-This is an explicit gameplay range limit, not a physical claim about real walls.
+Material conduction has no fixed layer-depth cutoff or exclusive surface owner.
+Adjacent inner bodies can exchange and carry heat through the third and deeper
+layers. The fixed solver and reference contact compiler use
+`ThermalSignatureTable.contactFraction`. A slab or stair contributes its occupied
+eighths to the category-default heat capacity. Two adjacent bottom slabs share
+half a horizontal face; opposite halves share none. Full blocks use the full-face
+conductance. Material admission examines actual boundary-material perturbation
+with the existing 1 K / 0.5 K thresholds, whether the body is exposed to Air or
+buried inside a wall. A heated inner boundary can request the next contacting
+Brick; capture alone does not create heat or authorize a cold chain of requests.
+There are no material-layer permission masks to rebuild. See [runtime residency](thermal-runtime-control.md)
+and [residual ownership](thermal-residual-lifecycle.md).
 
 `MinecraftMaterialLawCompiler` compiles only explicitly declared heating/cooling edges.
 The shipped data preserves the ice-stage chain and its 9 C heating thresholds;
@@ -379,8 +410,7 @@ and never loads a missing chunk. Water's cooling edge retains `minecraft:water`
 boundary and `frostedheart:water_do_not_freeze` exclusion; ice heating retains
 `frostedheart:ice_do_not_smelt`; source lava cooling requires Y>−55.
 
-No-record equilibrium has no stored heat history or latent waiting time. Tracked bodies
-retain energy/latent progression. Snow's temperature conversion uses its whole-body
+An eligible natural random update initializes an unrecorded body with the local environmental estimate. An incomplete latent interval becomes a dated chunk material record. A completed interval or an explicit heating floor can commit the declared transition. At the exact threshold zero progress needs no checkpoint. Snow's temperature conversion uses its whole-body
 Air target; `SnowLayerBlockMixin_Melt` separately retains light>11 layer loss only when
 the phase controller yields to untracked gameplay. Lava's native ignition remains;
 its separate 1/1000 cooling path is removed. Water uses the original chunk surface

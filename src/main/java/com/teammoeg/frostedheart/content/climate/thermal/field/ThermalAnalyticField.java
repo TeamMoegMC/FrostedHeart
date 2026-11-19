@@ -155,9 +155,8 @@ public final class ThermalAnalyticField {
         double dy = y - centerY;
         double dz = z - centerZ;
         double distanceSquared = dx * dx + dy * dy + dz * dz;
-        if (!(distanceSquared <= radiusSquared)) return Double.NaN;
-        double weight = 1 - distanceSquared * inverseRadiusSquared;
-        return temperatureC + centerBoostC * weight * weight;
+        return SphericalHeatFieldModel.temperatureAt(distanceSquared, radiusSquared, inverseRadiusSquared,
+                temperatureC, centerBoostC);
     }
 
     public boolean contains(double x, double y, double z) {

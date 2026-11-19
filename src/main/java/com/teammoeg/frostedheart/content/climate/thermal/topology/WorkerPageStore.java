@@ -63,6 +63,8 @@ import java.util.Objects;
 public final class WorkerPageStore implements AutoCloseable, AirGeometryView {
     private TiledThermalField fixedField;
     private final TiledThermalField.Sample fixedSample = new TiledThermalField.Sample();
+    /** Six boundary planes of a 4-cubed Brick in x | z << 2 | y << 4 order; excludes its eight inner cells. */
+    private static final long MATERIAL_FRONTIER_BLOCKS = 0xffff_f99f_f99f_ffffL;
 
     /** Reuse the original residency owner with the fixed field's sole Accepted values. */
     public void setFixedField(TiledThermalField field) {
@@ -335,12 +337,26 @@ public final class WorkerPageStore implements AutoCloseable, AirGeometryView {
     }
     long haloVersion(long section) { return haloSectionVersions.get(section); }
 
+    private java.util.function.LongConsumer captureMembershipChanged;
+
+    /** Report transitions in the union of installed Page keys and captured halo Section keys. */
+    void onCaptureMembershipChanged(java.util.function.LongConsumer listener) {
+        captureMembershipChanged = listener;
+    }
+
+    private void pageMembershipChanged(long section) {
+        if (captureMembershipChanged != null && !haloSectionPositions.containsKey(section))
+            captureMembershipChanged.accept(section);
+    }
+
     private void haloChanged(long position, int positionDelta) {
         long section = SectionPos.asLong(BlockPos.getX(position) >> 4, BlockPos.getY(position) >> 4, BlockPos.getZ(position) >> 4);
         int remaining = haloSectionPositions.addTo(section, positionDelta) + positionDelta;
         long revision = ++haloVersion;
         if (remaining == 0) { haloSectionPositions.remove(section); haloSectionVersions.remove(section); }
         else haloSectionVersions.put(section, revision);
+        if (captureMembershipChanged != null && positionDelta != 0 && (remaining == 0 || remaining == positionDelta)
+                && !activeBySection.containsKey(section)) captureMembershipChanged.accept(section);
     }
 
     void replaceHalo(ThermalPageHandle owner, GeometryHalo halo) {
@@ -467,7 +483,8 @@ public final class WorkerPageStore implements AutoCloseable, AirGeometryView {
             next.geometryRevision = write.publication.geometryRevision(); next.topologyGeneration = write.publication.topologyGeneration();
             next.resolvedBrickMask = write.resolvedBrickMask; next.publication = write.publication;
             next.previousState = old; next.installToken = token; next.retiring = write.retirement;
-            activeBySection.put(source.handle.sectionKey(), next); activeBySlot.put(source.pageSlot, next);
+            if (activeBySection.put(source.handle.sectionKey(), next) == null) pageMembershipChanged(source.handle.sectionKey());
+            activeBySlot.put(source.pageSlot, next);
             source.handle.stagePublication(token, write.retirement ? PagePublication.EMPTY : write.publication);
             if (write.replacedPage != null) write.replacedPage.handle.stagePublication(token, PagePublication.EMPTY);
             return next;
@@ -479,10 +496,14 @@ public final class WorkerPageStore implements AutoCloseable, AirGeometryView {
         synchronized (captureGate) {
             var previous = staged.previousState;
             if (!token.committed()) {
-                if (previous == null) { activeBySection.remove(staged.handle.sectionKey()); activeBySlot.remove(staged.pageSlot); }
+                if (previous == null) {
+                    activeBySection.remove(staged.handle.sectionKey()); activeBySlot.remove(staged.pageSlot);
+                    pageMembershipChanged(staged.handle.sectionKey());
+                }
                 else { activeBySection.put(previous.handle.sectionKey(), previous); activeBySlot.put(previous.pageSlot, previous); }
             } else if (write.retirement) {
                 activeBySection.remove(staged.handle.sectionKey()); activeBySlot.remove(staged.pageSlot);
+                pageMembershipChanged(staged.handle.sectionKey());
                 releasePageSlot(staged.pageSlot);
             } else {
                 if (previous != null && previous.handle != staged.handle) removeHalo(previous.handle);
@@ -630,6 +651,7 @@ public final class WorkerPageStore implements AutoCloseable, AirGeometryView {
         if (airRoutes != null) airRoutes.recordDirectoryBacking(meter);
     }
 
+    /** Warm or cold boundary materials request contacting neighbors, independently of exposure or layer depth. */
     private void collectMaterialFrontier(PageState page, long activeBricks) {
         if (signatureTable == null) return;
         while (activeBricks != 0) {
@@ -637,51 +659,38 @@ public final class WorkerPageStore implements AutoCloseable, AirGeometryView {
             activeBricks &= activeBricks - 1;
             var layout = page.brick(brick).blockLayout;
             if (layout == null) continue;
-            long surfaces = layout.airContactBlocks();
+            long materialNodes = layout.materialNodeMask();
             long origin = AirRouteCompiler.brickPosition(page, brick);
-            while (surfaces != 0) {
-                int block = Long.numberOfTrailingZeros(surfaces);
-                surfaces &= surfaces - 1;
-                int slot = page.brick(brick).slotAt(block);
+            while (materialNodes != 0) {
+                int node = Long.numberOfTrailingZeros(materialNodes);
+                materialNodes &= materialNodes - 1;
+                long boundary = layout.nodeBlockMask(node) & MATERIAL_FRONTIER_BLOCKS;
+                if (boundary == 0) continue;
+                // The layout gives every material body exactly one block.
+                int block = Long.numberOfTrailingZeros(boundary);
                 long position = AirRouteCompiler.blockPosition(origin, block);
-                double perturbationC;
-                if (fixedField != null) {
-                    if (!fixedField.read(position, true, fixedSample)) continue;
-                    var law = fixedSample.law();
-                    double naturalC = fixedSample.naturalC();
-                    double backgroundC = law.temperatureC(law.enthalpyAtTemperature(naturalC), law.initialBranch(naturalC));
-                    perturbationC = Math.abs(fixedSample.temperatureC() - backgroundC);
-                } else return;
+                if (!fixedField.read(position, true, fixedSample)) continue;
+                var law = fixedSample.law();
+                double naturalC = fixedSample.naturalC();
+                double backgroundC = law.temperatureC(law.enthalpyAtTemperature(naturalC), law.initialBranch(naturalC));
+                double perturbationC = Math.abs(fixedSample.temperatureC() - backgroundC);
                 if (perturbationC < ThermalRetentionPolicy.EXIT_C) continue;
-                int x = BlockPos.getX(position),
-                        y = BlockPos.getY(position),
-                        z = BlockPos.getZ(position);
-                int contacts =
-                        signatureTable.fullContactFaces(
-                                page.signatures.get(BlockBrickLayout.pageBlock(brick, block)));
+                int x = BlockPos.getX(position), y = BlockPos.getY(position), z = BlockPos.getZ(position);
+                int sourceSignature = page.signatures.get(BlockBrickLayout.pageBlock(brick, block));
                 for (int face = 0; face < 6; face++) {
-                    if ((contacts & 1 << face) == 0) continue;
-                    int nx = x + TopologyView.DX[face],
-                            ny = y + TopologyView.DY[face],
-                            nz = z + TopologyView.DZ[face];
+                    int shift = switch (face >>> 1) { case 0 -> 0; case 1 -> 4; default -> 2; };
+                    if ((block >>> shift & 3) != (face & 1) * 3) continue;
+                    int nx = x + TopologyView.DX[face], ny = y + TopologyView.DY[face], nz = z + TopologyView.DZ[face];
                     long section = SectionPos.asLong(nx >> 4, ny >> 4, nz >> 4);
-                    int neighborBrick =
-                            (nx & 15) >>> 2 | ((nz & 15) >>> 2) << 2 | ((ny & 15) >>> 2) << 4;
+                    int neighborBrick = (nx & 15) >>> 2 | (nz & 12) | (ny & 12) << 2;
+                    if ((desiredScratch.get(section) & 1L << neighborBrick) != 0) continue;
                     double threshold = (desiredBySection.get(section) & 1L << neighborBrick) == 0
                             ? ThermalRetentionPolicy.ENTER_C : ThermalRetentionPolicy.EXIT_C;
                     if (perturbationC < threshold) continue;
-                    PageState neighbor = find(section);
-                    // A cold resident neighbor still needs the owner's incoming request.
-                    int signature =
-                            neighbor != null
-                                            && (neighbor.residentBrickMask & 1L << neighborBrick)
-                                                    != 0
-                                    ? neighbor.signatures.get(
-                                            (nx & 15) | (nz & 15) << 4 | (ny & 15) << 8)
-                                    : haloSignatureAt(nx, ny, nz);
-                    if (signatureTable.materialProfileId(signature) != 0
-                            && (signatureTable.fullContactFaces(signature) & 1 << (face ^ 1))
-                                    != 0) {
+                    int neighbor = signatureAtWorld(nx, ny, nz);
+                    if (signatureTable.isAir(neighbor) && signatureTable.ventilation(neighbor) != 0
+                            || signatureTable.materialProfileId(neighbor) != 0
+                            && signatureTable.contactFraction(sourceSignature, neighbor, face) > 0) {
                         orDesired(section, 1L << neighborBrick);
                     }
                 }

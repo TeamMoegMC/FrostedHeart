@@ -36,7 +36,7 @@
 
 自然生长仅限 `the_winter_rescue:ice_caves`，不判断区块年龄，不检查供水、湿度或每日世界湿度。手动放置可在其他群系。
 
-材料温度 T（°C）读取 `MinecraftPhaseController.temperature`：优先活动/休眠材料，确实没有材料记录时沿用 FH 环境回退；未发布/不匹配状态等待。T>0 或非有限值不生长，其他条件满足时：
+材料温度 T（°C）通过 `WorldTemperature.getTempAtBlock(level, pos, PHASE_CHANGE)` 读取。优先采样活动或休眠材料，确实没有材料记录时按当地环境估算。归属待发布或存档不匹配时等待后续采样。T>0 或非有限值不生长，其他条件满足时：
 
 ```text
 m_cold(T) = min(2, 1 - 0.1*T), T≤0
@@ -56,7 +56,7 @@ p_root = 0.005*m_cold(T)
 
 ## 热裂和预警
 
-热裂读取冰锥位置的局部环境：`gameplayPassiveEnvironment(naturalAir)`，包含可用局部供热，去掉玩家测温噪声；不使用材料本体温度。
+热裂通过 `WorldTemperature.getTempAtBlock(level, pos, SURROUNDINGS)` 读取冰锥位置的局部环境温度，包含可用的局部供热。
 
 完整冰锥每次随机刻先通过概率 1/8，才读取热裂环境温度 T（°C）。T≥5°C 时进行第二次抽样：
 

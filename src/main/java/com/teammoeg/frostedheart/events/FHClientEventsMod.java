@@ -48,7 +48,6 @@ import com.teammoeg.frostedheart.content.climate.particle.BreathParticle;
 import com.teammoeg.frostedheart.content.climate.particle.SnowParticle;
 import com.teammoeg.frostedheart.content.climate.particle.SteamParticle;
 import com.teammoeg.frostedheart.content.climate.particle.WetSteamParticle;
-import com.teammoeg.frostedheart.content.climate.tooltips.BlockTempStats;
 import com.teammoeg.frostedheart.content.climate.tooltips.EquipmentTempStats;
 import com.teammoeg.frostedheart.content.climate.tooltips.FoodTempStats;
 import com.teammoeg.frostedheart.content.climate.tooltips.PlantTempStats;
@@ -132,7 +131,6 @@ public class FHClientEventsMod {
                     .andThen(new FoodTempStats(item))
 				.andThen(TooltipModifier.mapNull(FoodNutritionStats.create(item)))
 				.andThen(TooltipModifier.mapNull(PlantTempStats.create(item)))
-				.andThen(TooltipModifier.mapNull(BlockTempStats.create(item)))
 				.andThen(TooltipModifier.mapNull(EquipmentTempStats.create(item)))
 				.andThen(TooltipModifier.mapNull(KineticStats.create(item)));
 		});

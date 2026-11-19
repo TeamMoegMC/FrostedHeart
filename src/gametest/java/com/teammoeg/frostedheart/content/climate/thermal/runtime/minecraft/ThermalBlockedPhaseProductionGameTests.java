@@ -1,6 +1,8 @@
 /* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft;
 
+import static com.teammoeg.frostedheart.content.climate.WorldTemperature.BlockTemperatureUse.SURROUNDINGS;
+
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialSample;
@@ -8,6 +10,7 @@ import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialThermalLaw
 import com.teammoeg.frostedheart.content.climate.thermal.persistence.minecraft.DormantChunkThermalState;
 import com.teammoeg.frostedheart.content.climate.thermal.persistence.minecraft.MaterialSectionState;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.input.MinecraftPhaseController;
+import com.teammoeg.frostedheart.content.climate.thermal.profile.minecraft.MinecraftThermalProfiles;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.gametest.framework.GameTest;
@@ -47,9 +50,25 @@ public final class ThermalBlockedPhaseProductionGameTests {
                         && level.getBlockState(position).is(Blocks.WATER),
                 "Untracked natural interior water retains its river-boundary rule");
         var bankWater = position.east(2);
-        helper.assertTrue(MinecraftThermalInput.tryMaterialPhaseAtRandomTick(level, chunk, bankWater,
-                        Blocks.WATER.defaultBlockState()) == MinecraftPhaseController.PhaseAttempt.CHANGED,
-                "Untracked natural bank water still starts its ordinary freezing transition");
+        var water = Blocks.WATER.defaultBlockState();
+        var bankLaw = MinecraftThermalProfiles.materialLaw(water);
+        double environment = (float) WorldTemperature.getTempAtBlock(level, bankWater, SURROUNDINGS);
+        var before = new MaterialSample();
+        MinecraftThermalInput.sampleMaterialTemperatureWithEstimate(level, bankWater, before);
+        helper.assertTrue(before.source() == MaterialSample.Source.ESTIMATED && before.temperatureC() == environment,
+                "untracked bank reads the same estimate as the natural phase controller");
+        var outcome = MinecraftThermalInput.tryMaterialPhaseAtRandomTick(level, chunk, bankWater, water);
+        if (bankLaw.cooling().complete(bankLaw.enthalpyAtTemperature(environment))) {
+            helper.assertTrue(outcome == MinecraftPhaseController.PhaseAttempt.CHANGED, "fully funded bank ice commits");
+        } else {
+            var bank = new MaterialSample();
+            helper.assertTrue(outcome == MinecraftPhaseController.PhaseAttempt.DEFERRED && level.getBlockState(bankWater) == water
+                            && MinecraftThermalInput.sampleMaterialTemperature(level, bankWater, bank)
+                            && bank.source() == MaterialSample.Source.STORED && bank.branch() == MaterialThermalLaw.COOLING
+                            && bank.temperatureC() == bankLaw.cooling().transitionTemperatureC()
+                            && bank.enthalpyJ() == bankLaw.enthalpyAtTemperature(environment),
+                    "partially funded bank water stores its latent interval at the sampled temperature");
+        }
         level.setBlockAndUpdate(bankWater, Blocks.WATER.defaultBlockState());
         int section = position.getY() >> 4;
         int local = local(position);
@@ -83,7 +102,7 @@ public final class ThermalBlockedPhaseProductionGameTests {
         for (int delay = 2000; delay <= 24000; delay += 2000) {
             int elapsed = delay;
             helper.runAfterDelay(delay, () -> {
-                boolean readable = MinecraftThermalInput.sampleMaterial(level, position, sample);
+                boolean readable = MinecraftThermalInput.sampleMaterialTemperature(level, position, sample);
                 FHMain.LOGGER.info("THERMAL_BLOCKED_PHASE_SAMPLE,elapsed={},state={},readable={},source={},temperatureC={},enthalpyJ={},branch={},naturalC={},statistics={}",
                         elapsed, level.getBlockState(position), readable, sample.source(), sample.temperatureC(), sample.enthalpyJ(),
                         sample.branch(), natural(helper, position), DormantThermalMaintenance.statistics());
@@ -111,18 +130,24 @@ public final class ThermalBlockedPhaseProductionGameTests {
             FHMain.LOGGER.info("THERMAL_COMPLETED_PHASE_COMMIT,elapsedTicks={},enthalpyJ={},state={}",
                     level.getGameTime() - started, committed.enthalpyJ(converted), level.getBlockState(position));
         }).thenIdle(200).thenExecute(() -> {
-            helper.assertTrue(MinecraftThermalInput.sampleMaterial(level, position, sample)
+            helper.assertTrue(MinecraftThermalInput.sampleMaterialTemperature(level, position, sample)
                             && sample.temperatureC() < edge.transitionTemperatureC() - 1,
                     "The committed body must continue losing sensible heat below the old plateau");
             FHMain.LOGGER.info("THERMAL_COMPLETED_PHASE_COOLING,elapsedTicks={},temperatureC={},enthalpyJ={}",
                     level.getGameTime() - started, sample.temperatureC(), sample.enthalpyJ());
-        }).thenIdle(25000).thenWaitUntil(() -> helper.assertTrue(
-                        level.getBlockState(position).is(Blocks.ICE)
-                                && MinecraftThermalInput.dormantState(chunk) == null,
-                        "The remaining real ice-stage latent interval finishes and ordinary cold history releases"))
+        }).thenWaitUntil(() -> {
+            var material = level.getBlockState(position);
+            var nextIce = MinecraftThermalProfiles.materialLaw(Block.stateById(edge.targetStateId())).cooling();
+            double localNatural = WorldTemperature.naturalAir(level, position);
+            var history = MinecraftThermalInput.dormantState(chunk);
+            boolean expectedIce = localNatural > nextIce.transitionTemperatureC()
+                    ? Block.getId(material) == edge.targetStateId() : Block.getId(material) == nextIce.targetStateId();
+            helper.assertTrue(expectedIce && (history == null || !history.hasMaterial(section, local)),
+                    "the ice stage stable at the local background releases its own residual history");
+        })
                 .thenExecute(() -> {
                     FHMain.LOGGER.info("THERMAL_COMPLETED_PHASE_RETIRED,elapsedTicks={},state={},temperatureC={},statistics={}",
-                            level.getGameTime() - started, level.getBlockState(position), WorldTemperature.material(level, position),
+                            level.getGameTime() - started, level.getBlockState(position), MinecraftThermalInput.materialTemperature(level, position),
                             DormantThermalMaintenance.statistics());
                     MinecraftThermalInput.setDormantState(chunk, null);
                     level.setChunkForced(position.getX() >> 4, position.getZ() >> 4, false);
@@ -134,7 +159,6 @@ public final class ThermalBlockedPhaseProductionGameTests {
     private static int local(BlockPos p) { return (p.getX() & 15) | (p.getZ() & 15) << 4 | (p.getY() & 15) << 8; }
 
     private static double natural(GameTestHelper helper, BlockPos p) {
-        return WorldTemperature.naturalAir(helper.getLevel(), new BlockPos((p.getX() & ~15) + 8,
-                (p.getY() & ~15) + 8, (p.getZ() & ~15) + 8));
+        return WorldTemperature.naturalAir(helper.getLevel(), p);
     }
 }

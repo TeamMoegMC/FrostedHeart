@@ -1,10 +1,13 @@
 package com.teammoeg.frostedheart.content.town;
 
+import static com.teammoeg.frostedheart.content.climate.WorldTemperature.BlockTemperatureUse.SURROUNDINGS;
+
 import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
+import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.town.block.AbstractTownBuildingBlockEntity;
 import com.teammoeg.frostedheart.content.town.block.OccupiedZoneInfo;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.BlockScanner;
@@ -533,7 +536,7 @@ public final class TownBuildingGameTests {
         helper.assertTrue(nether != null, "the real server must provide the Nether fixture dimension");
         BlockPos samplePos = new BlockPos(8, 64, 8);
         nether.getChunkAt(samplePos);
-        float expected = com.teammoeg.frostedheart.content.climate.WorldTemperature.block(nether, samplePos);
+        float expected = (float) WorldTemperature.getTempAtBlock(nether, samplePos, SURROUNDINGS);
         var oneSample = new OccupiedZoneInfo(Set.of(new OccupiedCell(samplePos, 1, 1)));
         float sampled = BlockScanner.sampleTemperature(nether, oneSample);
         helper.assertTrue(Float.isFinite(sampled) && Math.abs(sampled - expected) < 0.0001F,

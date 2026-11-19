@@ -1,11 +1,12 @@
 /* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedheart.content.climate.block;
 
+import static com.teammoeg.frostedheart.content.climate.WorldTemperature.BlockTemperatureUse.PHASE_CHANGE;
+import static com.teammoeg.frostedheart.content.climate.WorldTemperature.BlockTemperatureUse.SURROUNDINGS;
+
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClimate;
-import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput;
-import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.input.MinecraftPhaseController;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
@@ -120,7 +121,7 @@ public final class EaveIcicleBlock extends Block {
         if (random.nextDouble() >= chance * 2 || !isRoof(level, roof)) return;
         int edges = roofEdges(level, roof);
         if (edges == 0 || !hasWater(level, roof, precipitation)) return;
-        if (random.nextDouble() < .5 * IcicleBlock.growthMultiplier(MinecraftPhaseController.temperature(level, roof)))
+        if (random.nextDouble() < .5 * IcicleBlock.growthMultiplier(WorldTemperature.getTempAtBlock(level, roof, PHASE_CHANGE)))
             level.setBlockAndUpdate(target, FHBlocks.EAVE_ICICLES.get().withEdges(edges));
     }
 
@@ -155,7 +156,7 @@ public final class EaveIcicleBlock extends Block {
 
     @Override public void randomTick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
         if (random.nextInt(8) == 0) {
-            double temperature = MinecraftThermalInput.gameplayPassiveEnvironment(level, pos, WorldTemperature.naturalAir(level, pos));
+            double temperature = WorldTemperature.getTempAtBlock(level, pos, SURROUNDINGS);
             if (random.nextDouble() < IcicleBlock.fractureChance(temperature, 0, true)) fall(level, pos);
         }
     }

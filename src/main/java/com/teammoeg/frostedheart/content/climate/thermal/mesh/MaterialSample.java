@@ -24,11 +24,13 @@ package com.teammoeg.frostedheart.content.climate.thermal.mesh;
 public final class MaterialSample {
     public enum Source {
         UNAVAILABLE,
+        ESTIMATED,
         LIVE,
         STORED
     }
 
-    private boolean stored;
+    private Source source = Source.UNAVAILABLE;
+    private double estimateC;
     private double enthalpyJ;
     private MaterialThermalLaw law;
     private byte branch;
@@ -56,15 +58,15 @@ public final class MaterialSample {
     }
 
     public Source source() {
-        return law == null ? Source.UNAVAILABLE : stored ? Source.STORED : Source.LIVE;
+        return source;
     }
 
     public double temperatureC() {
-        return law == null ? Double.NaN : law.temperatureC(enthalpyJ, branch);
+        return source == Source.ESTIMATED ? estimateC : law == null ? Double.NaN : law.temperatureC(enthalpyJ, branch);
     }
 
     public void set(double energyJ, MaterialThermalLaw law, byte branch, long sampleTick) {
-        stored = false;
+        source = law == null ? Source.UNAVAILABLE : Source.LIVE;
         this.enthalpyJ = energyJ;
         this.law = law;
         this.branch = branch;
@@ -85,10 +87,18 @@ public final class MaterialSample {
 
     public void setStored(double energyJ, MaterialThermalLaw law, byte branch, long sampleTick) {
         set(energyJ, law, branch, sampleTick);
-        stored = true;
+        source = Source.STORED;
+    }
+
+    /** Report an unrecorded body at environmental equilibrium without creating stored energy. */
+    public void estimate(double temperatureC) {
+        clear();
+        estimateC = temperatureC;
+        source = Source.ESTIMATED;
     }
 
     public void clear() {
+        source = Source.UNAVAILABLE;
         law = null;
         enthalpyJ = Double.NaN;
         branch = 0;

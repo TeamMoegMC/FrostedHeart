@@ -74,7 +74,7 @@ public final class CampfireFuelProductionGameTests {
             previousFuel[0] = remaining;
             previousLit[0] = lit;
             if (elapsed % 40 == 0) {
-                MinecraftThermalInput.gameplayPlacedReservoirEnvironment(level, fire.above(),
+                MinecraftThermalInput.samplePlacedReservoirAirAndRadiation(level, fire.above(),
                         com.teammoeg.frostedheart.content.climate.WorldTemperature.naturalAir(level, fire.above()), air);
                 FHMain.LOGGER.info("THERMAL_CAMPFIRE_FUEL_TEMPERATURE,elapsedTicks={},sampleTick={},airC={},available={},lit={}",
                         elapsed, air.airSampleTick(), air.airTemperatureC(), air.airAvailable(), lit);

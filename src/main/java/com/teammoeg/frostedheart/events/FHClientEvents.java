@@ -453,7 +453,9 @@ public class FHClientEvents {
 
     @SubscribeEvent
     public static void renderSpatialWeather(RenderLevelStageEvent event) {
-        if (event.getStage() == RenderLevelStageEvent.Stage.AFTER_WEATHER) {
+        if (event.getStage() == RenderLevelStageEvent.Stage.AFTER_BLOCK_ENTITIES) {
+            SpatialWeatherRenderer.INSTANCE.renderExtinction(event);
+        } else if (event.getStage() == RenderLevelStageEvent.Stage.AFTER_WEATHER) {
             SpatialWeatherRenderer.INSTANCE.render(event);
         }
     }

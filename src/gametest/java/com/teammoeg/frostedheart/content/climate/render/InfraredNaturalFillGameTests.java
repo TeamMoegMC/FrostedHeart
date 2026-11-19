@@ -59,7 +59,7 @@ public final class InfraredNaturalFillGameTests {
         var previous = player.position();
         try {
             player.setPos(origin.getX() + .5, origin.getY(), origin.getZ() + .5);
-            InfraredSnapshot full = MinecraftThermalInput.gameplayInfraredSnapshot(player, request(null, 0));
+            InfraredSnapshot full = MinecraftThermalInput.captureInfraredSnapshot(player, request(null, 0));
             helper.assertTrue(full != null && full.natural() != null, "a reply to a client that holds nothing carries it");
             var natural = full.natural();
             int limit = ClimateCover.limit();
@@ -73,9 +73,9 @@ public final class InfraredNaturalFillGameTests {
                     "the superflat flag and the lower clamp are the server's");
             // Analytic fields refresh on every reply, so only a window without them can be quiet.
             if (full.fieldPages().length == 0)
-                helper.assertTrue(MinecraftThermalInput.gameplayInfraredSnapshot(player, request(full, natural.revision())) == null,
+                helper.assertTrue(MinecraftThermalInput.captureInfraredSnapshot(player, request(full, natural.revision())) == null,
                         "a client that holds this revision and nothing else changed gets no reply");
-            InfraredSnapshot stale = MinecraftThermalInput.gameplayInfraredSnapshot(player, request(full, natural.revision() + 1));
+            InfraredSnapshot stale = MinecraftThermalInput.captureInfraredSnapshot(player, request(full, natural.revision() + 1));
             helper.assertTrue(stale != null && natural.equals(stale.natural()), "a client with another revision gets it again");
             var wire = new FriendlyByteBuf(Unpooled.buffer());
             try {
@@ -103,7 +103,7 @@ public final class InfraredNaturalFillGameTests {
         var previous = player.position();
         try {
             player.setPos(origin.getX() + .5, origin.getY(), origin.getZ() + .5);
-            InfraredSnapshot full = MinecraftThermalInput.gameplayInfraredSnapshot(player, request(null, 0));
+            InfraredSnapshot full = MinecraftThermalInput.captureInfraredSnapshot(player, request(null, 0));
             helper.assertTrue(full != null && full.natural() != null, "the reply carries the natural climate");
             long center = SectionPos.asLong(full.centerChunkX(), full.centerSectionY(), full.centerChunkZ());
             var fill = new InfraredNaturalFill();

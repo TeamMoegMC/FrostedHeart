@@ -54,6 +54,7 @@ public final class ClientWeatherState {
     private int[] nearCandidateIndices = NO_INDICES;
     private int[] wallCandidateIndices = NO_INDICES;
     private double[] wallCandidateDistances = new double[0];
+    private final CurtainVolume candidateVolume = new CurtainVolume();
     private int nearCandidateCount;
     private int wallCandidateCount;
     private long snapshotGeneration;
@@ -268,7 +269,7 @@ public final class ClientWeatherState {
             double dx = axisDistance(cameraX, kernel.minBlockX, kernel.maxBlockXExclusive);
             double dz = axisDistance(cameraZ, kernel.minBlockZ, kernel.maxBlockZExclusive);
             double distanceSquared = dx * dx + dz * dz;
-            double wallDistanceSquared = activeFrontDistanceSquared(kernel, cameraX, cameraZ);
+            double wallDistanceSquared = snowBandDistanceSquared(kernel, cameraX, cameraZ);
             if (wallDistanceSquared <= WALL_PREFILTER_BLOCKS * WALL_PREFILTER_BLOCKS) {
                 insertWallCandidate(i, wallDistanceSquared);
             }
@@ -290,25 +291,11 @@ public final class ClientWeatherState {
         wallCandidateCount++;
     }
 
-    private double activeFrontDistanceSquared(WhiteCurtainFieldModel.VisualKernel kernel,
+    private double snowBandDistanceSquared(WhiteCurtainFieldModel.VisualKernel kernel,
                                               double cameraX, double cameraZ) {
-        double leadingDelta = kernel.leadingSnowDeltaChunks(tickClimateSeconds);
-        if (leadingDelta < -3.0 || leadingDelta > kernel.maxDeltaChunks + 3.0) {
-            return Double.POSITIVE_INFINITY;
-        }
-        if (kernel.moveX != 0.0F) {
-            double frontX = kernel.moveX > 0.0F
-                    ? (kernel.minChunkX + leadingDelta) * 16.0 + 8.0
-                    : (kernel.maxChunkX - leadingDelta) * 16.0 + 8.0;
-            double dx = cameraX - frontX;
-            double dz = axisDistance(cameraZ, kernel.minBlockZ, kernel.maxBlockZExclusive);
-            return dx * dx + dz * dz;
-        }
-        double frontZ = kernel.moveZ > 0.0F
-                ? (kernel.minChunkZ + leadingDelta) * 16.0 + 8.0
-                : (kernel.maxChunkZ - leadingDelta) * 16.0 + 8.0;
-        double dx = axisDistance(cameraX, kernel.minBlockX, kernel.maxBlockXExclusive);
-        double dz = cameraZ - frontZ;
+        if (!candidateVolume.set(kernel, tickClimateSeconds)) return Double.POSITIVE_INFINITY;
+        double dx = axisDistance(cameraX, candidateVolume.minX, candidateVolume.maxX);
+        double dz = axisDistance(cameraZ, candidateVolume.minZ, candidateVolume.maxZ);
         return dx * dx + dz * dz;
     }
 

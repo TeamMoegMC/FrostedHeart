@@ -78,7 +78,6 @@ public final class TopologyUpdatePlanner {
             new Long2ObjectOpenHashMap<>();
     private final Int2ObjectOpenHashMap<PageDraft> draftsBySlot = new Int2ObjectOpenHashMap<>();
     private final IntOpenHashSet affectedFragments = new IntOpenHashSet();
-    private final IntOpenHashSet layoutCandidates = new IntOpenHashSet();
     private final LongOpenHashSet sourceDirtySections = new LongOpenHashSet();
     private final IntArrayList removedPhaseSlots = new IntArrayList();
     private final IntArrayList addedPhaseSlots = new IntArrayList();
@@ -160,6 +159,11 @@ public final class TopologyUpdatePlanner {
 
     /** Source coefficients can reuse committed routes once geometry discovery is complete. */
     public boolean hasPendingRoutes() { return airRoutes.hasPendingWork(); }
+
+    /** The captured-section index is the walk's only mutable dependency in this state. */
+    boolean boundaryUsesOnlyCaptureIndex() {
+        return draftsBySection.isEmpty() && !airRoutes.hasPendingWork() && airRoutes.dependencySectionCount() == 0;
+    }
 
     /** Includes set/queue growth and route traversal scratch before any closure is allocated. */
     public long continuationBoundaryBytes(ThermalInputBatch batch) {
@@ -256,7 +260,7 @@ public final class TopologyUpdatePlanner {
     public void recordBacking(AirBackingMeter meter) {
         meter.container(draftPool, draftPool.size(), 8); meter.container(draftsBySection, draftsBySection.size(), 16);
         meter.container(draftsBySlot, draftsBySlot.size(), 12); meter.container(affectedFragments, affectedFragments.size(), 4);
-        meter.container(layoutCandidates, layoutCandidates.size(), 4); meter.container(sourceDirtySections, sourceDirtySections.size(), 8);
+        meter.container(sourceDirtySections, sourceDirtySections.size(), 8);
         meter.array(removedPhaseSlots.elements()); meter.array(addedPhaseSlots.elements());
         meter.container(oldSpans, oldSpans.size(), 8); meter.container(resyncTokens, resyncTokens.size(), 8);
         for (int index = 0; index < draftCount; index++) {
@@ -288,7 +292,6 @@ public final class TopologyUpdatePlanner {
                 + AirBackingMeter.containerBackingBytes(draftsBySection, draftsBySection.size(), 16)
                 + AirBackingMeter.containerBackingBytes(draftsBySlot, draftsBySlot.size(), 12)
                 + AirBackingMeter.containerBackingBytes(affectedFragments, affectedFragments.size(), 4)
-                + AirBackingMeter.containerBackingBytes(layoutCandidates, layoutCandidates.size(), 4)
                 + AirBackingMeter.containerBackingBytes(sourceDirtySections, sourceDirtySections.size(), 8)
                 + AirBackingMeter.shallowArrayBytes(removedPhaseSlots.elements())
                 + AirBackingMeter.shallowArrayBytes(addedPhaseSlots.elements())
@@ -382,7 +385,6 @@ public final class TopologyUpdatePlanner {
                 }
                 case 1 -> {
                     finalizeSignatureCuts();
-                    collectLayoutDependencies();
                     boolean dirty = airRoutes.hasPendingWork() || !mixingChanges.isEmpty();
                     for (int index = 0; !dirty && index < draftCount; index++) {
                         PageDraft draft = draftPool.get(index);
@@ -719,46 +721,6 @@ public final class TopologyUpdatePlanner {
     private void finalizeSignatureCuts() {
         for (int index = 0; index < draftCount; index++) {
             draftPool.get(index).finishSignatures(signatures);
-        }
-    }
-
-    private void collectLayoutDependencies() {
-        // First freeze candidates, then mark replacements: no recursive expansion.
-        layoutCandidates.clear();
-        int originalDrafts = draftCount;
-        for (int i = 0; i < originalDrafts; i++) {
-            PageDraft draft = draftPool.get(i);
-            long mask = draft.retirement ? draft.page.residentBrickMask : draft.topologyDirtyMask;
-            while (mask != 0) {
-                int b = Long.numberOfTrailingZeros(mask);
-                mask &= mask - 1;
-                int x = brickMinX(draft.page, b),
-                        y = brickMinY(draft.page, b),
-                        z = brickMinZ(draft.page, b);
-                for (int axis = 0; axis < 3; axis++)
-                    for (int d = -4; d <= 4; d += 8) {
-                        int nx = x + (axis == 0 ? d : 0),
-                                ny = y + (axis == 1 ? d : 0),
-                                nz = z + (axis == 2 ? d : 0);
-                        long key =
-                                SectionPos.asLong(
-                                        SectionPos.blockToSectionCoord(nx),
-                                        SectionPos.blockToSectionCoord(ny),
-                                        SectionPos.blockToSectionCoord(nz));
-                        var page = view.page(key);
-                        int nb = (nx & 15) >>> 2 | ((nz & 15) >>> 2) << 2 | ((ny & 15) >>> 2) << 4;
-                        if (page != null && view.resident(page, nb))
-                            layoutCandidates.add(page.fragmentIndex(nb));
-                    }
-            }
-        }
-        for (int index : layoutCandidates) {
-            var page = view.pageSlot(index / 64);
-            int brick = index % 64;
-            var draft = acquireDraft(page);
-            // Surface ownership can change an adjacent Brick's outward material
-            // edge even when fixed body capacity and node membership do not.
-            draft.fragmentDirtyMask |= 1L << brick;
         }
     }
 

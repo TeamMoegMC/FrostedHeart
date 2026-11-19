@@ -21,7 +21,6 @@ package com.teammoeg.frostedheart.content.climate.network;
 
 import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedheart.FHNetwork;
-import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
@@ -44,8 +43,7 @@ public record SoilThermometerRequestPacket(BlockPos pos) implements CMessage {
     public void handle(Supplier<NetworkEvent.Context> context) {
         ServerPlayer player = context.get().getSender();
         context.get().enqueueWork(() ->
-            FHNetwork.INSTANCE.sendPlayer(player, SoilThermometerUpdatePacket.sample(player.serverLevel(), pos))
-        );
+                FHNetwork.INSTANCE.sendPlayer(player, SoilThermometerUpdatePacket.sample(player.serverLevel(), pos)));
         context.get().setPacketHandled(true);
     }
 }

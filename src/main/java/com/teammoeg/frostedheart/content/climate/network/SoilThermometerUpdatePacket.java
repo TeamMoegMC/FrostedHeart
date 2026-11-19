@@ -20,42 +20,53 @@
 package com.teammoeg.frostedheart.content.climate.network;
 
 import com.teammoeg.chorda.network.CMessage;
+import com.teammoeg.frostedheart.content.agriculture.tree.CultivatedOakBlockEntity;
+import com.teammoeg.frostedheart.content.climate.WorldTemperature;
+import com.teammoeg.frostedheart.content.climate.data.PlantTempData;
 import com.teammoeg.frostedheart.content.climate.render.TemperatureGoogleRenderer;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraftforge.network.NetworkEvent;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Supplier;
 
-public record SoilThermometerUpdatePacket(float temperature, net.minecraft.core.BlockPos pos,
-        @org.jetbrains.annotations.Nullable net.minecraft.network.chat.Component plantInfo) implements CMessage {
+/** Server-authoritative growth readout for a crop or cultivated sapling. */
+public record SoilThermometerUpdatePacket(BlockPos pos, float temperature, boolean exposedToBadWeather,
+        @Nullable Component plantInfo) implements CMessage {
 
-    public SoilThermometerUpdatePacket(FriendlyByteBuf buffer) {
-        this(buffer.readFloat(), buffer.readBlockPos(), buffer.readNullable(FriendlyByteBuf::readComponent));
+    /** Samples the growth temperature and the information displayed for the plant at {@code pos}. */
+    public static SoilThermometerUpdatePacket sample(ServerLevel level, BlockPos pos) {
+        if (!level.isLoaded(pos)) return new SoilThermometerUpdatePacket(pos, Float.NaN, false, null);
+        if (level.getBlockEntity(pos) instanceof CultivatedOakBlockEntity sapling) {
+            return new SoilThermometerUpdatePacket(pos, WorldTemperature.getTempAtBlock(level, pos), false,
+                    sapling.status());
+        }
+        PlantTempData data = PlantTempData.getPlantData(level.getBlockState(pos).getBlock());
+        if (data == null) return new SoilThermometerUpdatePacket(pos, Float.NaN, false, null);
+        return new SoilThermometerUpdatePacket(pos, WorldTemperature.getTempAtBlock(level, pos),
+                WorldTemperature.plantWeatherBlocksGrowth(level, pos, data), null);
     }
 
-    /** Server-authoritative snapshot for the thermometer overlay, without tree height or seed. */
-    public static SoilThermometerUpdatePacket sample(net.minecraft.server.level.ServerLevel level,
-            net.minecraft.core.BlockPos pos) {
-        var info = level.getBlockEntity(pos) instanceof com.teammoeg.frostedheart.content.agriculture.tree.CultivatedOakBlockEntity oak
-                ? oak.status() : null;
-        return new SoilThermometerUpdatePacket(
-                com.teammoeg.frostedheart.content.climate.WorldTemperature.block(level, pos), pos, info);
+    public SoilThermometerUpdatePacket(FriendlyByteBuf buffer) {
+        this(buffer.readBlockPos(), buffer.readFloat(), buffer.readBoolean(),
+                buffer.readNullable(FriendlyByteBuf::readComponent));
     }
 
     @Override
     public void encode(FriendlyByteBuf buffer) {
-        buffer.writeFloat(temperature);
         buffer.writeBlockPos(pos);
+        buffer.writeFloat(temperature);
+        buffer.writeBoolean(exposedToBadWeather);
         buffer.writeNullable(plantInfo, FriendlyByteBuf::writeComponent);
     }
 
     @Override
     public void handle(Supplier<NetworkEvent.Context> context) {
-        context.get().enqueueWork(() -> {
-            TemperatureGoogleRenderer.cachedTemperature = temperature;
-            TemperatureGoogleRenderer.cachedPlantInfoPos = pos;
-            TemperatureGoogleRenderer.cachedPlantInfo = plantInfo;
-        });
+        context.get().enqueueWork(() -> TemperatureGoogleRenderer.receivePlantReadout(
+                pos, temperature, exposedToBadWeather, plantInfo));
         context.get().setPacketHandled(true);
     }
 }

@@ -63,6 +63,6 @@ public final class CultivatedOakBlock extends BushBlock implements EntityBlock, 
     @Override public void randomTick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
         if (!level.isAreaLoaded(pos, 1)) return; // Same entry guard as Forge SaplingBlock.
         if (level.getBlockEntity(pos) instanceof CultivatedOakBlockEntity sapling)
-            sapling.advance(level, WorldTemperature.block(level, pos), random);
+            sapling.advance(level, WorldTemperature.getTempAtBlock(level, pos), random);
     }
 }

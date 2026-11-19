@@ -936,14 +936,6 @@ public final class TownStageZeroAudit {
                 "CLIMATE_ABSOLUTE_ZERO_CELSIUS", "absoluteZeroCelsius");
         addClimateShared(values, "climate.overworldBaselineCelsius", climate.overworldBaselineCelsius(), "celsius", source,
                 "CLIMATE_OVERWORLD_BASELINE_CELSIUS", "overworldBaselineCelsius");
-        addClimateShared(values, "climate.stoneInterfaceLevel", climate.stoneInterfaceLevel(), "block-y", source,
-                "CLIMATE_STONE_INTERFACE_LEVEL", "climateStoneInterfaceLevel");
-        addClimateShared(values, "climate.seaLevel", climate.seaLevel(), "block-y", source,
-                "CLIMATE_SEA_LEVEL", "climateSeaLevel");
-        addClimateShared(values, "climate.blockMaximumClimateAffection", climate.blockMaximumClimateAffection(), "dimensionless", source,
-                "CLIMATE_BLOCK_MAXIMUM_AFFECTION", "blockMaximumClimateAffection");
-        addClimateShared(values, "climate.blockHeatApplicationMultiplier", climate.blockHeatApplicationMultiplier(), "dimensionless", source,
-                "CLIMATE_BLOCK_HEAT_APPLICATION_MULTIPLIER", "blockHeatApplicationMultiplier");
     }
 
     private static void addObservationParameters(
@@ -1237,7 +1229,7 @@ public final class TownStageZeroAudit {
                     projectRoot.resolve("src/main/java/com/teammoeg/frostedheart/content/climate/event/ClimateCommonEvents.java"),
                     projectRoot.resolve("src/main/java/com/teammoeg/frostedheart/content/climate/gamedata/climate/ClimateEventModel.java"),
                     projectRoot.resolve("src/main/java/com/teammoeg/frostedheart/content/climate/gamedata/climate/InterpolationClimateEvent.java"),
-                    projectRoot.resolve("src/main/java/com/teammoeg/frostedheart/content/climate/BlockTemperatureModel.java"),
+                    projectRoot.resolve("src/main/java/com/teammoeg/frostedheart/content/climate/thermal/field/ThermalAnalyticField.java"),
                     projectRoot.resolve("src/main/java/com/teammoeg/frostedheart/content/climate/WorldTemperature.java"),
                     projectRoot.resolve("src/main/java/com/teammoeg/frostedheart/infrastructure/config/FHConfig.java"),
                     projectRoot.resolve("src/main/resources/data/frostedheart/recipes/generator/coal.json"),

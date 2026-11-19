@@ -92,7 +92,7 @@ final class ThermalConvergenceScenes {
         };
     }
     static void read(GameTestHelper helper, BlockPos point, ThermalEnvironmentSample sample) {
-        MinecraftThermalInput.gameplayPlacedReservoirEnvironment(helper.getLevel(), point,
+        MinecraftThermalInput.samplePlacedReservoirAirAndRadiation(helper.getLevel(), point,
                 WorldTemperature.naturalAir(helper.getLevel(), point), sample);
     }
     static boolean fresh(GameTestHelper helper, BlockPos point, ThermalEnvironmentSample sample) {

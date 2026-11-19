@@ -95,7 +95,7 @@ public class HeatAdjustCommand {
         LiteralArgumentBuilder<CommandSourceStack> get = Commands.literal("get")
                 .executes((ct) -> {
                     BlockPos position = ct.getSource().getPlayerOrException().blockPosition();
-                    List<ThermalAnalyticField> fields = MinecraftThermalInput.gameplayAnalyticFieldsAt(
+                    List<ThermalAnalyticField> fields = MinecraftThermalInput.analyticFieldsAt(
                             ct.getSource().getLevel(), position);
                     if (fields.isEmpty()) {
                         ct.getSource().sendSuccess(()-> Components.str("No Active Adjust!"), true);
@@ -110,7 +110,7 @@ public class HeatAdjustCommand {
                 .then(Commands.argument("position", BlockPosArgument.blockPos())
                         .executes((ct) -> {
                             BlockPos position = BlockPosArgument.getBlockPos(ct, "position");
-                            List<ThermalAnalyticField> fields = MinecraftThermalInput.gameplayAnalyticFieldsAt(
+                            List<ThermalAnalyticField> fields = MinecraftThermalInput.analyticFieldsAt(
                                     ct.getSource().getLevel(), position);
                             if (fields.isEmpty()) {
                                 ct.getSource().sendSuccess(()-> Components.str("No Active Adjust!"), true);

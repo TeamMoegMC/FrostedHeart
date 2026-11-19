@@ -102,7 +102,7 @@ public final class ContinuousAirMultiDimensionProductionGameTests {
                 boolean all=true;
                 for(int p=0;p<8;p++) {
                     var position=probes[d][p];
-                    MinecraftThermalInput.gameplayPlacedReservoirEnvironment(levels[d],position,WorldTemperature.naturalAir(levels[d],position),sample);
+                    MinecraftThermalInput.samplePlacedReservoirAirAndRadiation(levels[d],position,WorldTemperature.naturalAir(levels[d],position),sample);
                     long age=sample.airSampleTick()<0?-1:levels[d].getGameTime()-sample.airSampleTick();
                     boolean fresh=sample.airAvailable()&&sample.airSampleTick()>=0&&age>=0
                             &&(sample.airMinimumQuality()||age<=40);
@@ -143,7 +143,7 @@ public final class ContinuousAirMultiDimensionProductionGameTests {
                 if(recovering&&all) { recovered[0]=true;FHMain.LOGGER.info("THERMAL_MULTI_RECOVERED,elapsed={},delayTicks={}",tick,tick-1600); }
                 if(tick%20==0)for(int i=0;i<50;i++) {
                     var fire=fires[d][i];consumers[d][i].setPos(fire.getX()+.5,fire.getY(),fire.getZ()+.5);
-                    MinecraftThermalInput.gameplayPlayerEnvironment(consumers[d][i],WorldTemperature.naturalAir(levels[d],fire),sample);queries[0]++;
+                    MinecraftThermalInput.samplePlayerAirTemperature(consumers[d][i],WorldTemperature.naturalAir(levels[d],fire),sample);queries[0]++;
                     if(tick>=400&&!recovering&&(!sample.airAvailable()||sample.airSampleTick()<0
                             ||!sample.airMinimumQuality()&&levels[d].getGameTime()-sample.airSampleTick()>40))consumerUnavailable[d]++;
                 }
@@ -171,7 +171,7 @@ public final class ContinuousAirMultiDimensionProductionGameTests {
         }).thenWaitUntil(()->{
             if(numericalFailure!=null)helper.fail(numericalFailure);
             for(int d=0;d<2;d++)for(var position:probes[d]) {
-                MinecraftThermalInput.gameplayPlacedReservoirEnvironment(levels[d],position,WorldTemperature.naturalAir(levels[d],position),sample);
+                MinecraftThermalInput.samplePlacedReservoirAirAndRadiation(levels[d],position,WorldTemperature.naturalAir(levels[d],position),sample);
                 helper.assertTrue(sample.airAvailable()&&sample.airSampleTick()>=0
                                 &&MinecraftThermalInput.describeAirRead(levels[d],position).startsWith("geometry_current"),
                         "Both real dimensions must drain structural pressure into readable current geometry before shutdown");

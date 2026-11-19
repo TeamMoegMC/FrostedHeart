@@ -1,6 +1,7 @@
 /* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft;
 
+import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialSample;
 import com.teammoeg.frostedheart.content.climate.thermal.persistence.DormantThermalCooling;
 import com.teammoeg.frostedheart.content.climate.thermal.persistence.ThermalRetentionPolicy;
@@ -115,13 +116,14 @@ final class DormantThermalMaintenance {
                             current.projectedTick = saved;
                             current.fraction = DormantThermalCooling.fraction(saved, current.tick, current.rate);
                         }
-                        current.materials.read(index, law, current.tick, current.natural, current.rate, current.fraction, sample);
+                        double localNatural = WorldTemperature.naturalAir(current.level, position);
+                        current.materials.read(index, law, current.tick, localNatural, current.rate, current.fraction, sample);
                         var edge = law.transition(sample.branch());
                         if (edge != null && edge.complete(sample.enthalpyJ()) && MinecraftPhaseController.applyDormantTransition(
                                 current.level, position, state, edge, sample.enthalpyJ(), current.tick)) {
                             work = null; break; // World mutation changed the checkpoint; discard this old removal proposal.
                         }
-                        if (!ThermalRetentionPolicy.retains(law, sample.enthalpyJ(), sample.branch(), current.natural))
+                        if (!ThermalRetentionPolicy.retains(law, sample.enthalpyJ(), sample.branch(), localNatural))
                             current.retirement.remove(index);
                     }
                     if (work == current && (current.materials == null || current.cursor == current.materials.size())) {
@@ -172,7 +174,8 @@ final class DormantThermalMaintenance {
 
         void commit() {
             if (!current()) return;
-            var nextAir = air == null ? null : air.retain(eligible, natural, tick, rate);
+            var nextAir = air == null ? null : air.retain(eligible, natural, tick, rate,
+                    WorldTemperature.sectionBackground(level, SectionPos.asLong(chunk.getPos().x, sectionY, chunk.getPos().z), position));
             var nextMaterials = retirement == null ? null : retirement.finish();
             if (!state.commitRetirement(sectionY, air, materials, nextAir, nextMaterials)) return;
             if (air != null && nextAir == null) removedAirSections++;

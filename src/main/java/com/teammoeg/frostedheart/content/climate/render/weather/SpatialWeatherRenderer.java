@@ -79,6 +79,14 @@ public final class SpatialWeatherRenderer {
     private SpatialWeatherRenderer() {
     }
 
+    /** Attenuates opaque scenery before foreground translucent blocks, particles and weather are drawn. */
+    public void renderExtinction(RenderLevelStageEvent event) {
+        ClientWeatherFrame frame = ClientWeatherFrame.INSTANCE;
+        if (frame.usesDepthExtinction() && !CurtainExtinction.INSTANCE.render(event, frame)) {
+            frame.useGeometryExtinction();
+        }
+    }
+
     public void render(RenderLevelStageEvent event) {
         ClientWeatherFrame frame = ClientWeatherFrame.INSTANCE;
         Minecraft minecraft = Minecraft.getInstance();
@@ -115,7 +123,7 @@ public final class SpatialWeatherRenderer {
             RenderSystem.setShader(GameRenderer::getParticleShader);
             RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
             float brightness = weatherBrightness(level.getSkyDarken(frame.partialTick()));
-            if (frame.wallCount() > 0) {
+            if (frame.wallCount() > 0 && !frame.usesDepthExtinction()) {
                 RenderSystem.setShaderTexture(0, WHITE_CURTAIN_TEXTURE);
                 renderWalls(frame, level, frustum, brightness);
             }
@@ -390,6 +398,7 @@ public final class SpatialWeatherRenderer {
     public void reset() {
         quarantinedDimension = null;
         snowLatticeValid = false;
+        CurtainExtinction.INSTANCE.reset();
     }
 
     public boolean isQuarantined(ResourceKey<Level> dimension) {

@@ -34,7 +34,6 @@ public final class BlockBrickLayout {
     private final long routedAirMask;
     private final long[] routedAirBlocks;
     private final AirRouteValidity[] routeValidity;
-    private final long airContactBlocks;
     private static final long[] LOW = {
         0xaaaaaaaaaaaaaaaaL, 0xffff0000ffff0000L, 0xf0f0f0f0f0f0f0f0L
     };
@@ -44,7 +43,7 @@ public final class BlockBrickLayout {
 
     public BlockBrickLayout(
             byte[] blockToNode, long[] nodeBlockMasks, int airNodeCount, long materialNodeMask) {
-        this(blockToNode, nodeBlockMasks, airNodeCount, materialNodeMask, 0, null, null, 0);
+        this(blockToNode, nodeBlockMasks, airNodeCount, materialNodeMask, 0, null, null);
     }
 
     private BlockBrickLayout(
@@ -54,8 +53,7 @@ public final class BlockBrickLayout {
             long materialNodeMask,
             long routedAirMask,
             long[] routedAirBlocks,
-            AirRouteValidity[] routeValidity,
-            long airContactBlocks) {
+            AirRouteValidity[] routeValidity) {
         this.blockToNode = blockToNode;
         this.nodeBlockMasks = nodeBlockMasks;
         this.airNodeCount = airNodeCount;
@@ -63,7 +61,6 @@ public final class BlockBrickLayout {
         this.routedAirMask = routedAirMask;
         this.routedAirBlocks = routedAirBlocks;
         this.routeValidity = routeValidity;
-        this.airContactBlocks = airContactBlocks;
     }
 
     public BlockBrickLayout withAirRoutes(long mask, long[] blocks, AirRouteValidity[] validity) {
@@ -75,16 +72,11 @@ public final class BlockBrickLayout {
                 materialNodeMask,
                 mask,
                 blocks,
-                validity,
-                airContactBlocks);
-    }
-
-    public long airContactBlocks() {
-        return airContactBlocks;
+                validity);
     }
 
     public void recordBacking(AirBackingMeter meter) {
-        if (!meter.objectOnce(this, meter.summaries() ? ownedBackingBytes() : 64)) return;
+        if (!meter.objectOnce(this, meter.summaries() ? ownedBackingBytes() : 56)) return;
         if (!meter.summaries()) {
             meter.array(blockToNode); meter.array(nodeBlockMasks);
             meter.array(routedAirBlocks); meter.array(routeValidity);
@@ -95,22 +87,8 @@ public final class BlockBrickLayout {
 
     /** Route witnesses belong to the routing component, rather than every Brick referring to it. */
     public long ownedBackingBytes() {
-        return 64L + AirBackingMeter.shallowArrayBytes(blockToNode) + AirBackingMeter.shallowArrayBytes(nodeBlockMasks)
+        return 56L + AirBackingMeter.shallowArrayBytes(blockToNode) + AirBackingMeter.shallowArrayBytes(nodeBlockMasks)
                 + AirBackingMeter.shallowArrayBytes(routedAirBlocks) + AirBackingMeter.shallowArrayBytes(routeValidity);
-    }
-
-    public BlockBrickLayout withAirContactBlocks(long blocks) {
-        return blocks == airContactBlocks
-                ? this
-                : new BlockBrickLayout(
-                        blockToNode,
-                        nodeBlockMasks,
-                        airNodeCount,
-                        materialNodeMask,
-                        routedAirMask,
-                        routedAirBlocks,
-                        routeValidity,
-                        blocks);
     }
 
     public boolean hasAirRoute(int block) {
@@ -119,6 +97,11 @@ public final class BlockBrickLayout {
 
     public boolean hasCommittedAirRoute(int block) {
         return (routedAirMask & 1L << block) != 0 && routeValidity[block].activeForSolve();
+    }
+
+    /** Membership of the compiled geometry cut. Live readers additionally check the corresponding route witness. */
+    public long routedAirMask() {
+        return routedAirMask;
     }
 
     public long routedAirBlock(int block) {

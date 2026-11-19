@@ -128,12 +128,12 @@ public final class SpatialSourceIngress implements AutoCloseable, ThermalSourceL
                 index(source, window.descriptor.section());
                 for (int port = 0; port < window.descriptor.ports().length; port++) {
                     var origin = bindings.originalPort(window.descriptor, port);
-                    if (origin != null) {
-                        index(source, section(origin.position()));
-                        var face = com.teammoeg.frostedheart.content.climate.thermal.mesh.BlockFace.fromOrdinal(origin.face() - 6);
-                        index(source, section(BlockPos.asLong(BlockPos.getX(origin.position()) + face.stepX(),
-                                BlockPos.getY(origin.position()) + face.stepY(), BlockPos.getZ(origin.position()) + face.stepZ())));
-                    }
+                    if (origin == null) continue;
+                    index(source, section(origin.position()));
+                    if (origin.face() == SpatialHeatInput.MATERIAL) continue;
+                    var face = com.teammoeg.frostedheart.content.climate.thermal.mesh.BlockFace.fromOrdinal(origin.face() - 6);
+                    index(source, section(BlockPos.asLong(BlockPos.getX(origin.position()) + face.stepX(),
+                            BlockPos.getY(origin.position()) + face.stepY(), BlockPos.getZ(origin.position()) + face.stepZ())));
                 }
             }
             if (!source.queued) { source.queued = true; scheduled.addLast(source); }
@@ -384,7 +384,7 @@ public final class SpatialSourceIngress implements AutoCloseable, ThermalSourceL
                     var descriptor = owned != null ? owned.descriptor : offered == null ? null : offered.window.descriptor;
                     if (descriptor == null) continue;
                     for (int port = 0; port < descriptor.ports().length; port++) {
-                        if (bindings.airPortTargets(descriptor, port, ownsTarget)) {
+                        if (bindings.portTargets(descriptor, port, ownsTarget)) {
                             through = Math.min(through, pendingThrough(source.id)); break;
                         }
                     }

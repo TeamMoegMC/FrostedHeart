@@ -76,7 +76,7 @@ public final class TiledThermalPersistenceGameTests {
                             double joules = 0;
                             for (int index = 0; index < pending.heat().size(); index++) joules += pending.heat().energyJ(index);
                             near(helper, saved.chunk == first.chunk() ? 1500 : 600, joules,
-                                    "The existing v6 capture includes the old claimed bank and new source's live bank exactly once");
+                                    "The current v7 capture includes the old claimed bank and new source's live bank exactly once");
                         }
                     }
                 } finally { resume.countDown(); finished.get(15, java.util.concurrent.TimeUnit.SECONDS); }
@@ -177,7 +177,7 @@ public final class TiledThermalPersistenceGameTests {
                     var b = checkpoints.tryCapture(new ChunkPos(source.east()).toLong(), 12, 1, 60, field, banks)) {
                 helper.assertTrue(a != null && b != null, "Pre-admitted checkpoint values do not wait for the paused numerical writer");
                 var tagA = new CompoundTag(); var tagB = new CompoundTag(); a.encode(tagA); b.encode(tagB);
-                helper.assertTrue(tagA.getCompound("FrostedHeartThermal").getInt("version") == 6, "Use the real existing v6 reader");
+                helper.assertTrue(tagA.getCompound("FrostedHeartThermal").getInt("version") == 7, "Write the current v7 thermal checkpoint");
                 var directory = helper.getLevel().getServer().getWorldPath(net.minecraft.world.level.storage.LevelResource.ROOT).resolve("tiled-checkpoint-values");
                 java.nio.file.Files.createDirectories(directory);
                 NbtIo.writeCompressed(tagA, directory.resolve("left.nbt").toFile());
@@ -208,10 +208,10 @@ public final class TiledThermalPersistenceGameTests {
                 try (var restored = field(budget, profiles, 60)) {
                     helper.assertTrue(restored.admit(left, first, 1L << 3, 0) && restored.admit(right, second, 1, 0), "Recreate current world geometry");
                     helper.assertTrue(checkpoints.restoreSection(left, loadedA, restored, 60, Double.POSITIVE_INFINITY)
-                            && checkpoints.restoreSection(right, loadedB, restored, 60, Double.POSITIVE_INFINITY), "Read the disk values through v6 import");
+                            && checkpoints.restoreSection(right, loadedB, restored, 60, Double.POSITIVE_INFINITY), "Read the disk values through v7 import");
                     near(helper, committed, restored.totalEnthalpyJ(), "The paused trial is absent from the restored Accepted field");
                 }
-                FHMain.LOGGER.info("THERMAL_TILED_CHECKPOINT_RESULT,acceptedTick={},saveTick=60,acceptedJ={},pendingJ={},workerAdvancedDuringSave=false,format=6",
+                FHMain.LOGGER.info("THERMAL_TILED_CHECKPOINT_RESULT,acceptedTick={},saveTick=60,acceptedJ={},pendingJ={},workerAdvancedDuringSave=false,format=7",
                         field.acceptedTick(), committed, pendingJ);
             } finally { resume.countDown(); finished.get(15, java.util.concurrent.TimeUnit.SECONDS); }
             field.cancel();

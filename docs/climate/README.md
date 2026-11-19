@@ -15,7 +15,7 @@
 | [thermal-validation-baseline.md](thermal-validation-baseline.md) | 简化前统一真实测试入口、温度重放、负载与分批结果 | Current for recorded baseline; startup repeatability and retirement assertion unqualified |
 | [world-climate-and-temperature.md](world-climate-and-temperature.md) | 逻辑气候时钟、事件轨道、海拔与覆盖层气候滞后、世界/空气/方块温度公式、热场自然背景、局部热区 | Current |
 | [infrared-view.md](infrared-view.md) | 红外数据架构、传输内容及客户端/服务端现场诊断 | Current for source; overseas-client failure unlocalized |
-| [thermal-legacy-gameplay-parity.md](thermal-legacy-gameplay-parity.md) | 与旧版生存难度、供暖收益的源码数值对照及待校准项目 | Current for source audit; survival/heating balance calibration outstanding |
+| [thermal-legacy-gameplay-parity.md](thermal-legacy-gameplay-parity.md) | 与旧版生存难度、供暖收益的源码数值对照及待校准项目 | Historical source comparison; survival/heating balance calibration outstanding |
 | [thermal-gameplay-balance.md](thermal-gameplay-balance.md) | 原始数值差距、后续身体定标、有限食物/强风/真实供暖结果 | Current for selected cold-survival and wind calibration; broader gameplay parity unqualified |
 | [thermal-runtime-architecture-and-optimization.md](thermal-runtime-architecture-and-optimization.md) | 运行时组成及按日期保留的架构/性能记录 | Transitional; current control contract linked above |
 | [continuous-air-runtime.md](continuous-air-runtime.md) | 区域空气场、材料成对换热、精确位置查询、空间存档及带日期的历史试验 | Partial; current control linked separately |
@@ -30,7 +30,7 @@
 | [cultivated-oak.md](cultivated-oak.md) | 原版树苗放置接管、橡树多阶段生长与产量换算 | 原型；验证范围见日志 |
 | [cultivated-spruce.md](cultivated-spruce.md) | 栽培云杉、原版单干与 2×2 巨型树完整示例 | 生产与测试源码编译通过；栽培树木专项27/27通过 |
 | [cultivated-species.md](cultivated-species.md) | 主世界八木种栽培、原生树形预算及深色橡木2×2专属生长 | 源码和资源已验证；栽培树木专项27/27通过 |
-| [crop-fertilization.md](crop-fertilization.md) | 作物肥料、多层根部定位与生长增产记账 | 实现完成，验证范围见日志 |
+| [crop-fertilization.md](crop-fertilization.md) | 作物生长温度、肥料与生长增产记账 | 实现完成，验证范围见日志 |
 | [thin-ice.md](thin-ice.md) | 薄冰踩踏、冲击、相变温度、热裂与回冻修复 | Partial |
 | [icicle.md](icicle.md) | 冰洞冰锥、生长、相变缩短、断裂坠落与振动 | Partial |
 | [eave-icicles.md](eave-icicles.md) | 房檐冰溜子、供水、轻微坠落伤害，以及冰锥/冰溜子融化滴水 | Partial |

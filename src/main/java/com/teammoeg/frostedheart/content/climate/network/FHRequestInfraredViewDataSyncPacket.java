@@ -137,7 +137,7 @@ public record FHRequestInfraredViewDataSyncPacket(
             var player = context.get().getSender();
             if (player == null) return;
             InfraredDiagnostics.request(player,this);
-            var snapshot = MinecraftThermalInput.gameplayInfraredSnapshot(player, this);
+            var snapshot = MinecraftThermalInput.captureInfraredSnapshot(player, this);
             InfraredDiagnostics.response(player,requestId,snapshot);
             InfraredTransfers.start(player,requestId,snapshot);
         });
