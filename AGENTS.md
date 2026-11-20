@@ -4,6 +4,9 @@
 
 最小复杂度下的最佳性能实现。
 
+- 相似功能优先复用或扩展已有实现。
+- 确需新建时说明原因和职责边界。
+
 ## Project Knowledge
 
 Project knowledge is separated by purpose and authority:
