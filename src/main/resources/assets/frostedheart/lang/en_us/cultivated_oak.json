@@ -7,5 +7,13 @@
   "message.frostedheart.cultivated_oak.temperature": "Waiting for suitable temperature",
   "message.frostedheart.cultivated_oak.yield": "Waiting for enough growth yield",
   "message.frostedheart.cultivated_oak.space": "Waiting for space",
-  "message.frostedheart.cultivated_oak.square": "Waiting for a same-species 2x2 square"
+  "message.frostedheart.cultivated_oak.square": "Waiting for a same-species 2x2 square",
+  "message.frostedheart.cultivated_oak.progress": "Growth progress",
+  "message.frostedheart.cultivated_oak.current_temperature": "Current temperature",
+  "message.frostedheart.cultivated_oak.ideal_temperature": "Ideal temperature",
+  "message.frostedheart.cultivated_oak.stage.0": "Sprouting",
+  "message.frostedheart.cultivated_oak.stage.1": "Seedling",
+  "message.frostedheart.cultivated_oak.stage.2": "Growing",
+  "message.frostedheart.cultivated_oak.stage.3": "Established",
+  "message.frostedheart.cultivated_oak.stage.4": "Awaiting tree growth"
 }

@@ -90,6 +90,10 @@ public class PlantTempStats implements TooltipModifier {
 
 
     public static LangBuilder getTempProgressBar(float min, float max) {
+        return getTempProgressBar(min, max, true);
+    }
+
+    public static LangBuilder getTempProgressBar(float min, float max, boolean showValues) {
         // remap from -30 to 30 to 0 to 6
         int low = Mth.ceil(Mth.clampedMap(min, -30, 30, 0, 6));
         int high = Mth.ceil(Mth.clampedMap(max, -30, 30, 0, 6));
@@ -99,21 +103,22 @@ public class PlantTempStats implements TooltipModifier {
         String s1 = s.substring(0, 3);
         String s2 = s.substring(3);
 
-        LangBuilder builder = Lang.builder()
-                .add(FHTextIcon.SOIL_THERMOMETER.getIcon())
-                .add(Lang.text(" " + TemperatureDisplayHelper.toTemperatureFloatString(min))
-                        .style(min <= 0 ? ChatFormatting.AQUA : ChatFormatting.GOLD))
+        LangBuilder builder = Lang.builder().add(FHTextIcon.SOIL_THERMOMETER.getIcon()).add(Lang.text(" "));
+        if (showValues) builder
+                .add(Lang.text(TemperatureDisplayHelper.toTemperatureFloatString(min)).style(min <= 0 ? ChatFormatting.AQUA : ChatFormatting.GOLD))
                 .add(Lang.text(" - ").style(ChatFormatting.GRAY))
-                .add(Lang.text(TemperatureDisplayHelper.toTemperatureFloatString(max))
-                        .style(max <= 0 ? ChatFormatting.AQUA : ChatFormatting.GOLD))
-                .add(Lang.text(" "))
-                .add(Lang.text(s1).style(ChatFormatting.AQUA))
-                .add(Lang.text(s2).style(ChatFormatting.GOLD));
+                .add(Lang.text(TemperatureDisplayHelper.toTemperatureFloatString(max)).style(max <= 0 ? ChatFormatting.AQUA : ChatFormatting.GOLD))
+                .add(Lang.text(" "));
+        builder.add(Lang.text(s1).style(ChatFormatting.AQUA)).add(Lang.text(s2).style(ChatFormatting.GOLD));
 
         return builder;
     }
 
     public static LangBuilder getLightProgressBar(int min, int max) {
+        return getLightProgressBar(min, max, true);
+    }
+
+    public static LangBuilder getLightProgressBar(int min, int max, boolean showValues) {
         // remap from 0 to 15 to 0 to 6
         int low = Mth.ceil(Mth.clampedMap(min, 0, 15, 0, 6));
         int high = Mth.ceil(Mth.clampedMap(max, 0, 15, 0, 6));
@@ -135,21 +140,20 @@ public class PlantTempStats implements TooltipModifier {
         String s1 = s.substring(0, 3);
         String s2 = s.substring(3);
 
-        LangBuilder builder = Lang.builder()
-                .add(FHTextIcon.LIGHT.getIcon())
-                .add(Lang.text(" " + minPercent + "%")
-                        .style(ChatFormatting.YELLOW))
+        LangBuilder builder = Lang.builder().add(FHTextIcon.LIGHT.getIcon()).add(Lang.text(" "));
+        if (showValues) builder.add(Lang.text(minPercent + "%").style(ChatFormatting.YELLOW))
                 .add(Lang.text(" - ").style(ChatFormatting.GRAY))
-                .add(Lang.text(maxPercent + "%")
-                        .style(ChatFormatting.YELLOW))
-                .add(Lang.text(" "))
-                .add(Lang.text(s1).style(ChatFormatting.YELLOW))
-                .add(Lang.text(s2).style(ChatFormatting.YELLOW));
+                .add(Lang.text(maxPercent + "%").style(ChatFormatting.YELLOW)).add(Lang.text(" "));
+        builder.add(Lang.text(s1).style(ChatFormatting.YELLOW)).add(Lang.text(s2).style(ChatFormatting.YELLOW));
 
         return builder;
     }
 
     public static LangBuilder getFertilizerStorageBar(BlockState farmland) {
+        return getFertilizerStorageBar(farmland, true);
+    }
+
+    public static LangBuilder getFertilizerStorageBar(BlockState farmland, boolean showValues) {
         int storage;
 
         FertilizerGrade grade = farmland.getValue(FertilizedDirt.GRADE);
@@ -173,13 +177,9 @@ public class PlantTempStats implements TooltipModifier {
         case PRESERVED:
         	icon=FHTextIcon.PRESERVED_FERTILIZER[grade.ordinal()].getIcon();break;
         }
-        LangBuilder builder = Lang.builder()
-                .add(icon)
-                .add(Lang.text(" " + storagePercent + "%")
-                        .style(ChatFormatting.GREEN))
-                .add(Lang.text(" "))
-                .add(Lang.text(s1).style(ChatFormatting.GREEN))
-                .add(Lang.text(s2).style(ChatFormatting.GREEN));
+        LangBuilder builder = Lang.builder().add(icon).add(Lang.text(" "));
+        if (showValues) builder.add(Lang.text(storagePercent + "% ").style(ChatFormatting.GREEN));
+        builder.add(Lang.text(s1).style(ChatFormatting.GREEN)).add(Lang.text(s2).style(ChatFormatting.GREEN));
 
         return builder;
     }

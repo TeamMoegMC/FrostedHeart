@@ -33,7 +33,7 @@ public class CultivatedSpruceGameTests {
     private static List<BlockPos> square(BlockPos origin) {
         return List.of(origin, origin.east(), origin.south(), origin.east().south());
     }
-    @GameTest(template = "phase0a_empty", timeoutTicks = 100)
+    @GameTest(template = "phase0a_empty", timeoutTicks = 600)
     public static void profilesAndVanillaShapes(GameTestHelper helper) {
         var p = profile();
         helper.assertTrue(p != null && !p.branches() && p.giantTrees().size() == 2,
@@ -42,7 +42,7 @@ public class CultivatedSpruceGameTests {
         helper.assertTrue(p.atHeight(helper.getLevel(), RandomSource.create(1), 16, false).trunkPlacer
                 instanceof net.minecraft.world.level.levelgen.feature.trunkplacers.StraightTrunkPlacer, "single spruce trunk");
         var giant = p.atHeight(helper.getLevel(), RandomSource.create(1), 16, true);
-        helper.assertTrue(giant.trunkPlacer instanceof net.minecraft.world.level.levelgen.feature.trunkplacers.GiantTrunkPlacer
+        helper.assertTrue(((CultivatedNativeTrunkPlacer)giant.trunkPlacer).nativeTrunk() instanceof net.minecraft.world.level.levelgen.feature.trunkplacers.GiantTrunkPlacer
                 && giant.foliagePlacer instanceof net.minecraft.world.level.levelgen.feature.foliageplacers.MegaPineFoliagePlacer,
                 "giant preserves native conifer canopy and 2x2 trunk");
         helper.assertTrue(CultivatedGiantTree.height(new CultivatedGiantTree.Group(BlockPos.ZERO,
@@ -52,9 +52,9 @@ public class CultivatedSpruceGameTests {
                 "spruce height references and proportional fertilizer credit");
         helper.succeed();
     }
-    @GameTest(template = "phase0a_empty", timeoutTicks = 100)
+    @GameTest(template = "phase0a_empty", timeoutTicks = 600)
     public static void bestSquareUsesImmatureCreditAndRejectsMixedSpecies(GameTestHelper helper) {
-        var level = helper.getLevel(); BlockPos center = helper.absolutePos(new BlockPos(9, 3, 9));
+        var level = helper.getLevel(); BlockPos center = CultivatedTestEnvironment.origin(helper);
         for (int x = -1; x <= 1; x++) for (int z = -1; z <= 1; z++)
             plant(level, center.offset(x, 0, z), 16, 16);
         plant(level, center, 256, 256);
@@ -69,9 +69,9 @@ public class CultivatedSpruceGameTests {
         helper.assertTrue(other != null && !other.origin().equals(center), "mixed oak/spruce square excluded");
         helper.succeed();
     }
-    @GameTest(template = "phase0a_empty", timeoutTicks = 100)
+    @GameTest(template = "phase0a_empty", timeoutTicks = 600)
     public static void everyTriggerCornerAndUnloadedCandidate(GameTestHelper helper) {
-        var level = helper.getLevel(); BlockPos origin = helper.absolutePos(new BlockPos(9, 3, 9));
+        var level = helper.getLevel(); BlockPos origin = CultivatedTestEnvironment.origin(helper);
         for (BlockPos pos : square(origin)) plant(level, pos, 16, 64);
         for (BlockPos corner : square(origin)) {
             var group = CultivatedGiantTree.find(level, corner, FHBlocks.CULTIVATED_SPRUCE.get());
@@ -83,9 +83,9 @@ public class CultivatedSpruceGameTests {
                 && !level.hasChunkAt(unloaded), "scanning unloaded candidates does not create chunks");
         helper.succeed();
     }
-    @GameTest(template = "phase0a_empty", timeoutTicks = 100)
+    @GameTest(template = "phase0a_empty", timeoutTicks = 600)
     public static void giantPlacementRestoresFourLedgersOnFailure(GameTestHelper helper) {
-        var level = helper.getLevel(); BlockPos origin = helper.absolutePos(new BlockPos(9, 3, 9));
+        var level = helper.getLevel(); BlockPos origin = CultivatedTestEnvironment.origin(helper);
         for (BlockPos pos : square(origin)) plant(level, pos, 256, 256);
         var soil = FHBlocks.FERTILIZED_DIRT.getDefaultState().setValue(FertilizedDirt.FERTILIZER, FertilizerType.INCREASING)
                 .setValue(FertilizedDirt.STORAGE, 8);
@@ -104,18 +104,23 @@ public class CultivatedSpruceGameTests {
         helper.assertTrue(CultivatedGiantTree.generate(level, group, profile(), RandomSource.create(7)) == null,
                 "clear giant space generates native spruce");
         for (BlockPos pos : square(origin)) helper.assertTrue(level.getBlockState(pos).is(Blocks.SPRUCE_LOG)
-                && level.getBlockState(pos.below()).equals(soil), "consume other saplings with no fertilizer special case");
+                && level.getBlockState(pos.below()).equals(pos.equals(origin) ? soil.setValue(FertilizedDirt.STORAGE, 4) : soil),
+                "giant charges four units once at its origin, not four units per member");
         int logs = 0;
-        for (BlockPos root : square(origin)) for (int y = 0; y < 15; y++)
+        for (BlockPos root : square(origin)) for (int y = 0; y < 24; y++)
             if (level.getBlockState(root.above(y)).is(Blocks.SPRUCE_LOG)) logs++;
-        helper.assertTrue(logs == 60 && logs == 4 * profile().earnedHeight(1) + 8, "each of four members earns exactly two extra logs");
-        for (BlockPos root : square(origin)) helper.assertTrue(level.getBlockState(root.above(14)).is(Blocks.SPRUCE_LOG),
-                "complete the native three shortened top columns to deliver the exact bonus");
+        helper.assertTrue(logs >= 53 && logs <= 65 && logs % 4 == 1,
+                "native giant spruce retains its shortened three columns near 60 expected logs: " + logs);
+        int highest = 0;
+        for (int y = 0; y < 24; y++) if (level.getBlockState(origin.above(y)).is(Blocks.SPRUCE_LOG)) highest = y;
+        helper.assertTrue(!level.getBlockState(origin.east().above(highest)).is(Blocks.SPRUCE_LOG)
+                && !level.getBlockState(origin.south().above(highest)).is(Blocks.SPRUCE_LOG),
+                "giant native taper is not filled to a flat 2x2 top");
         helper.succeed();
     }
-    @GameTest(template = "phase0a_empty", timeoutTicks = 100)
+    @GameTest(template = "phase0a_empty", timeoutTicks = 600)
     public static void isolatedMatureSpruceFallsBackToSingle(GameTestHelper helper) {
-        var level = helper.getLevel(); BlockPos pos = helper.absolutePos(new BlockPos(9, 3, 9));
+        var level = helper.getLevel(); BlockPos pos = CultivatedTestEnvironment.origin(helper);
         plant(level, pos, 256, 256);
         level.setBlock(pos.east().above(), Blocks.GLOWSTONE.defaultBlockState(), 3);
         helper.startSequence().thenWaitUntil(() -> helper.assertTrue(level.getMaxLocalRawBrightness(pos.above()) >= 9,

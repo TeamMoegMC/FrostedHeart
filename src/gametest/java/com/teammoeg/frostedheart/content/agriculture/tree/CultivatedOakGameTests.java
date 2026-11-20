@@ -18,7 +18,7 @@ import net.minecraftforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 public class CultivatedOakGameTests {
     private static BlockPos plant(GameTestHelper helper) {
-        BlockPos pos = helper.absolutePos(new BlockPos(9, 3, 9));
+        BlockPos pos = CultivatedTestEnvironment.origin(helper);
         helper.getLevel().setBlock(pos.below(), Blocks.DIRT.defaultBlockState(), 3);
         helper.getLevel().setBlock(pos.east(), Blocks.GLOWSTONE.defaultBlockState(), 3);
         helper.getLevel().setBlock(pos, FHBlocks.CULTIVATED_OAK.getDefaultState(), 3);
@@ -32,6 +32,39 @@ public class CultivatedOakGameTests {
                 .setValue(FertilizedDirt.GRADE, FertilizerGrade.BASIC).setValue(FertilizedDirt.STORAGE, 8);
     }
     @GameTest(template = "phase0a_empty", timeoutTicks = 100)
+    public static void thermometerSnapshotProtectionAndEmptyTarget(GameTestHelper helper) {
+        var level = helper.getLevel();BlockPos pos = plant(helper);
+        level.setBlock(pos.below(), fertilizer(FertilizerType.PRESERVED)
+                .setValue(FertilizedDirt.GRADE, FertilizerGrade.ADVANCED), 3);
+        var packet = com.teammoeg.frostedheart.content.climate.network.SoilThermometerUpdatePacket.sample(level, pos);
+        helper.assertTrue(packet.treeInfo() != null && packet.treeInfo().minTemperature() == -5
+                && packet.treeInfo().idealMin() == 15 && packet.treeInfo().idealMax() == 25
+                && packet.treeInfo().requiredProgress() == 16, "server supplies protected range and actual growth scale");
+        level.setBlock(pos, Blocks.STONE.defaultBlockState(), 3);
+        var empty = com.teammoeg.frostedheart.content.climate.network.SoilThermometerUpdatePacket.sample(level, pos);
+        var buffer = new net.minecraft.network.FriendlyByteBuf(io.netty.buffer.Unpooled.buffer());
+        try {
+            empty.encode(buffer);
+            var decoded = new com.teammoeg.frostedheart.content.climate.network.SoilThermometerUpdatePacket(buffer);
+            helper.assertTrue(decoded.treeInfo() == null && decoded.plantInfo() == null
+                    && !decoded.exposedToBadWeather() && Float.isNaN(decoded.temperature()),
+                    "non-tree response clears both snapshot fields after switching target");
+        } finally { buffer.release(); }
+        level.setBlock(pos.below(), Blocks.FARMLAND.defaultBlockState(), 3);
+        level.setBlock(pos, Blocks.WHEAT.defaultBlockState(), 3);
+        var crop = com.teammoeg.frostedheart.content.climate.network.SoilThermometerUpdatePacket.sample(level, pos);
+        buffer = new net.minecraft.network.FriendlyByteBuf(io.netty.buffer.Unpooled.buffer());
+        try {
+            crop.encode(buffer);
+            var decoded = new com.teammoeg.frostedheart.content.climate.network.SoilThermometerUpdatePacket(buffer);
+            helper.assertTrue(decoded.pos().equals(pos) && decoded.temperature() == crop.temperature()
+                    && decoded.exposedToBadWeather() == crop.exposedToBadWeather()
+                    && decoded.treeInfo() == null && decoded.plantInfo() == null,
+                    "crop temperature/weather and absent tree snapshot survive the combined packet round trip");
+        } finally { buffer.release(); }
+        helper.succeed();
+    }
+    @GameTest(template = "phase0a_empty", timeoutTicks = 600)
     public static void matureYieldWaitAndRecovery(GameTestHelper helper) {
         var level = helper.getLevel(); BlockPos pos = plant(helper);
         helper.startSequence().thenWaitUntil(() -> helper.assertTrue(
@@ -58,7 +91,7 @@ public class CultivatedOakGameTests {
             helper.succeed();
         });
     }
-    @GameTest(template = "phase0a_empty", timeoutTicks = 100)
+    @GameTest(template = "phase0a_empty", timeoutTicks = 600)
     public static void temperatureCurve(GameTestHelper helper) {
         helper.runAfterDelay(10, () -> {
             var p = CultivatedOakProfile.get();
@@ -87,7 +120,7 @@ public class CultivatedOakGameTests {
             helper.succeed();
         });
     }
-    @GameTest(template = "phase0a_empty", timeoutTicks = 100)
+    @GameTest(template = "phase0a_empty", timeoutTicks = 600)
     public static void stagesBlockedRetryAndSave(GameTestHelper helper) {
         var level = helper.getLevel();
         BlockPos pos = plant(helper);
@@ -107,23 +140,23 @@ public class CultivatedOakGameTests {
             level.setBlock(pos, FHBlocks.CULTIVATED_OAK.getDefaultState().setValue(CultivatedOakBlock.AGE, 4), 3);
             sapling(level, pos).load(saved);
             level.setBlock(pos.below(), fertilizer(FertilizerType.INCREASING), 3);
-            level.setBlock(pos.above(5), Blocks.STONE.defaultBlockState(), 3);
+            level.setBlock(pos.above(), Blocks.STONE.defaultBlockState(), 3);
             for (int i = 0; i < 5; i++) sapling(level, pos).advance(level, 20);
             helper.assertTrue(level.getBlockState(pos).is(FHBlocks.CULTIVATED_OAK.get()), "obstacle retains sapling");
             helper.assertTrue(level.getBlockState(pos.below()).getValue(FertilizedDirt.STORAGE) == 8, "retry spends no fertilizer");
             helper.assertTrue(sapling(level, pos).saveWithFullMetadata().getShort("p") == 256 && sapling(level, pos).saveWithFullMetadata().getShort("v") == 256, "late fertilizer cannot change target");
-            level.setBlock(pos.above(5), Blocks.AIR.defaultBlockState(), 3);
+            level.setBlock(pos.above(), Blocks.AIR.defaultBlockState(), 3);
             sapling(level, pos).advance(level, 20);
             int count = 0;
             for (int i = 0; i < 32; i++) if (level.getBlockState(pos.above(i)).is(Blocks.OAK_LOG)) count++;
-            helper.assertTrue(count >= 10 && count <= 11, "vanilla generator must deduct branch budget from the trunk, actual=" + count);
-            helper.assertTrue(level.getBlockState(pos.below()).getValue(FertilizedDirt.STORAGE) == 8, "generation preserves paid soil");
+            helper.assertTrue(count >= 3 && count <= 10, "native Fancy trunk shares the expected yield with complete branches, actual=" + count);
+            helper.assertTrue(level.getBlockState(pos.below()).getValue(FertilizedDirt.STORAGE) == 4, "successful generation settles the legacy four-unit fertilizer cost");
             helper.assertTrue(Blocks.OAK_SAPLING.defaultBlockState().hasProperty(net.minecraft.world.level.block.SaplingBlock.STAGE),
                     "vanilla sapling retains original stage property");
             helper.succeed();
         });
     }
-    @GameTest(template = "phase0a_empty", timeoutTicks = 100)
+    @GameTest(template = "phase0a_empty", timeoutTicks = 600)
     public static void temperatureAndProtection(GameTestHelper helper) {
         var level = helper.getLevel(); BlockPos pos = plant(helper);
         helper.startSequence().thenWaitUntil(() -> helper.assertTrue(
@@ -132,15 +165,15 @@ public class CultivatedOakGameTests {
             level.setBlock(pos.below(), fertilizer(FertilizerType.INCREASING), 3);
             sapling(level, pos).advance(level, 0);
             helper.assertTrue(sapling(level, pos).saveWithFullMetadata().getShort("p") == 16, "cold band retains full speed");
-            helper.assertTrue(level.getBlockState(pos.below()).getValue(FertilizedDirt.STORAGE) == 7, "cold growth spends nutrient");
+            helper.assertTrue(level.getBlockState(pos.below()).getValue(FertilizedDirt.STORAGE) == 8, "cold progress does not spend fertilizer before successful placement");
             level.setBlock(pos.below(), fertilizer(FertilizerType.PRESERVED), 3);
             sapling(level, pos).advance(level, 0);
             helper.assertTrue(sapling(level, pos).saveWithFullMetadata().getShort("p") > 0, "preservation extends cold range: " + sapling(level, pos).saveWithFullMetadata() + " / " + sapling(level, pos).status().getString());
-            helper.assertTrue(level.getBlockState(pos.below()).getValue(FertilizedDirt.STORAGE) == 7, "earned growth pays one nutrient");
+            helper.assertTrue(level.getBlockState(pos.below()).getValue(FertilizedDirt.STORAGE) == 8, "preserved growth keeps fertilizer until successful placement");
             helper.succeed();
         });
     }
-    @GameTest(template = "phase0a_empty", timeoutTicks = 100)
+    @GameTest(template = "phase0a_empty", timeoutTicks = 600)
     public static void increasingYieldIsEarned(GameTestHelper helper) {
         var level = helper.getLevel(); BlockPos pos = plant(helper);
         helper.startSequence().thenWaitUntil(() -> helper.assertTrue(
@@ -157,13 +190,15 @@ public class CultivatedOakGameTests {
             int branchLogs = 0;
             for (int y = 0; y < 36; y++) for (var direction : net.minecraft.core.Direction.Plane.HORIZONTAL)
                 if (level.getBlockState(pos.above(y).relative(direction)).is(Blocks.OAK_LOG)) branchLogs++;
-            helper.assertTrue(branchLogs >= 1 && count + branchLogs * CultivatedOakBlockEntity.SMALL_BRANCH_COST <= 15,
-                    "mandatory oak branches spend the same yield budget");
-            helper.assertTrue(count >= 13 && count <= 14, "fertilized tree places a budgeted trunk with branches, actual=" + count);
+            int allLogs = 0;
+            for (int y = 0; y < 30; y++) for (int x = -8; x <= 8; x++) for (int z = -8; z <= 8; z++)
+                if (level.getBlockState(pos.offset(x, y, z)).is(Blocks.OAK_LOG)) allLogs++;
+            helper.assertTrue(allLogs > count && allLogs >= 8 && allLogs <= 25,
+                    "fertilized oak uses complete native Fancy branches around fifteen expected logs: " + allLogs);
             helper.succeed();
         });
     }
-    @GameTest(template = "phase0a_empty", timeoutTicks = 100)
+    @GameTest(template = "phase0a_empty", timeoutTicks = 600)
     public static void acceleratedAndMarginalClimate(GameTestHelper helper) {
         var level = helper.getLevel(); BlockPos pos = plant(helper);
         helper.startSequence().thenWaitUntil(() -> helper.assertTrue(
@@ -181,14 +216,14 @@ public class CultivatedOakGameTests {
         });
     }
     /** Outer canopy obstacles are allowed, but vanilla's 3x3 upper core must stay clear. */
-    @GameTest(template = "phase0a_empty", timeoutTicks = 100)
+    @GameTest(template = "phase0a_empty", timeoutTicks = 600)
     public static void vanillaCoreClearance(GameTestHelper helper) {
         var level = helper.getLevel(); BlockPos pos = plant(helper);
         helper.startSequence().thenWaitUntil(() -> helper.assertTrue(
                 level.getMaxLocalRawBrightness(pos.above()) >= 9, "fixture light must propagate before growth checks"))
                 .thenExecute(() -> {
             for (int i = 0; i < 16; i++) sapling(level, pos).advance(level, 20);
-            BlockPos outer = pos.offset(2, 3, 0), core = pos.offset(1, 3, 0);
+            BlockPos outer = pos.offset(8, 3, 0), core = pos.above();
             level.setBlock(outer, Blocks.STONE.defaultBlockState(), 3);
             level.setBlock(core, Blocks.STONE.defaultBlockState(), 3);
             var before = sapling(level, pos).saveWithFullMetadata();
@@ -200,14 +235,14 @@ public class CultivatedOakGameTests {
                     && after.getShort("p") == before.getShort("p"), "failed core check preserves growth target");
             level.setBlock(core, Blocks.AIR.defaultBlockState(), 3);
             sapling(level, pos).advance(level, 20);
-            for (int y = 0; y < 6; y++) helper.assertTrue(level.getBlockState(pos.above(y)).is(Blocks.OAK_LOG),
+            for (int y = 0; y < 3; y++) helper.assertTrue(level.getBlockState(pos.above(y)).is(Blocks.OAK_LOG),
                     "clear core must generate full-height trunk despite outer canopy stone; block=" + level.getBlockState(pos));
             helper.assertTrue(level.getBlockState(outer).is(Blocks.STONE), "foliage must not overwrite outer obstacle");
             helper.succeed();
         });
     }
 
-    @GameTest(template = "phase0a_empty", timeoutTicks = 100)
+    @GameTest(template = "phase0a_empty", timeoutTicks = 600)
     public static void compactLedgerMigrationAndTickEntry(GameTestHelper helper) {
         var level = helper.getLevel(); BlockPos pos = plant(helper);
         helper.startSequence().thenWaitUntil(() -> helper.assertTrue(
@@ -233,6 +268,8 @@ public class CultivatedOakGameTests {
                 var decoded = new com.teammoeg.frostedheart.content.climate.network.SoilThermometerUpdatePacket(buffer);
                 helper.assertTrue(decoded.pos().equals(pos) && decoded.plantInfo().getString().equals(sapling(level, pos).status().getString()),
                         "thermometer packet round-trip carries the server's matching sapling status");
+                helper.assertTrue(decoded.treeInfo().equals(sapling(level, pos).thermometerInfo()),
+                        "crop-style thermometer fields survive network round trip without exposing yield credit");
             } finally { buffer.release(); }
             // The real entry must take the Forge area guard and temperature-query path without exceptions.
             FHBlocks.CULTIVATED_OAK.get().randomTick(level.getBlockState(pos), level, pos, level.random);

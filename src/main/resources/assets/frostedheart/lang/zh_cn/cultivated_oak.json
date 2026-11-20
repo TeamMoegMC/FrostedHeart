@@ -7,5 +7,13 @@
   "message.frostedheart.cultivated_oak.temperature": "等待适宜温度",
   "message.frostedheart.cultivated_oak.yield": "等待积累生长所需产量",
   "message.frostedheart.cultivated_oak.space": "等待生长空间",
-  "message.frostedheart.cultivated_oak.square": "等待同种 2×2 树苗"
+  "message.frostedheart.cultivated_oak.square": "等待同种 2×2 树苗",
+  "message.frostedheart.cultivated_oak.progress": "生长进度",
+  "message.frostedheart.cultivated_oak.current_temperature": "当前温度",
+  "message.frostedheart.cultivated_oak.ideal_temperature": "理想温度",
+  "message.frostedheart.cultivated_oak.stage.0": "萌芽",
+  "message.frostedheart.cultivated_oak.stage.1": "幼苗",
+  "message.frostedheart.cultivated_oak.stage.2": "生长",
+  "message.frostedheart.cultivated_oak.stage.3": "壮苗",
+  "message.frostedheart.cultivated_oak.stage.4": "等待成树"
 }

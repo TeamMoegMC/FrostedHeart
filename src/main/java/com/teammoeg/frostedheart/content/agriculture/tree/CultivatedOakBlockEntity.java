@@ -20,8 +20,6 @@ public final class CultivatedOakBlockEntity extends BlockEntity {
     private static final int SCALE = 16;
     /** Retained share of the fertilizer bonus above the unfertilized yield. */
     public static final double INCREASING_BONUS_SCALE = .2;
-    public static final double SMALL_BRANCH_COST = .6;
-    public static final double GIANT_BRANCH_COST = .15;
     private short progress;
     private short yieldCredit;
     private String waiting = "growing";
@@ -49,7 +47,7 @@ public final class CultivatedOakBlockEntity extends BlockEntity {
         if (!Double.isFinite(suitability)) { waiting = "temperature"; return; }
         int total = profile.progressPerStage() * 4 * SCALE;
         boolean mature = progress >= total;
-        int requiredHeight = profile.giantOnly() ? profile.maxHeight() : 1;
+        int requiredHeight = profile.minimumBudget();
         if (mature && suitability <= 0) { waiting = "temperature"; return; }
         if (mature && profile.earnedHeight((double)yieldCredit / total) >= requiredHeight) {
             tryGenerate(level, profile, random);
@@ -63,12 +61,7 @@ public final class CultivatedOakBlockEntity extends BlockEntity {
         if (type == FertilizerType.INCREASING) yieldFactor *= 1 + (grade.productivity - 1) * INCREASING_BONUS_SCALE;
         progress = (short)Math.min(total, progress + delta);
         yieldCredit = (short)Math.min(Short.MAX_VALUE, yieldCredit + Math.round(delta * yieldFactor));
-        // Nutrients are paid only for growth actually earned, never for blocked generation attempts.
-        if (fertilized && delta > 0) {
-            int storage = soil.getValue(FertilizedDirt.STORAGE);
-            level.setBlock(worldPosition.below(), storage > 1 ? soil.setValue(FertilizedDirt.STORAGE, storage - 1)
-                    : Blocks.DIRT.defaultBlockState(), 3);
-        }
+        // Fertilizer is settled once after successful tree placement, not per growth opportunity.
         int age = Math.min(4, progress / (profile.progressPerStage() * SCALE));
         level.setBlock(worldPosition, getBlockState().setValue(CultivatedOakBlock.AGE, age), 3);
         waiting = age == 4 && profile.earnedHeight((double)yieldCredit / total) < requiredHeight
@@ -93,30 +86,7 @@ public final class CultivatedOakBlockEntity extends BlockEntity {
             }
         }
         if (profile.giantOnly()) { waiting = "square"; return; }
-        boolean required = profile.branches() && budget > profile.vanillaMaxHeight();
-        java.util.List<net.minecraft.core.Direction> branches = new java.util.ArrayList<>();
-        boolean attempt = profile.branches() && (required || budget > (profile.minHeight() + profile.maxHeight()) / 2.0
-                && random.nextFloat() < profile.branchProbability());
-        if (attempt) {
-            int start = random.nextInt(4), desired = 1 + random.nextInt(3);
-            for (int i = 0; i < 4 && branches.size() < desired; i++) {
-                var direction = net.minecraft.core.Direction.from2DDataValue((start + i) % 4);
-                int trunk = (int)Math.floor(budget - (branches.size() + 1) * SMALL_BRANCH_COST);
-                if (trunk < profile.minHeight()) break;
-                BlockPos branch = worldPosition.above(trunk - 2).relative(direction);
-                if (level.hasChunkAt(branch) && branchReplaceable(level.getBlockState(branch))) branches.add(direction);
-            }
-        }
-        int trunkHeight = (int)Math.floor(budget - branches.size() * SMALL_BRANCH_COST);
-        // Recheck at the final trunk height, since each accepted branch lowers the crown.
-        for (var direction : branches) {
-            BlockPos branch = worldPosition.above(trunkHeight - 2).relative(direction);
-            if (!level.hasChunkAt(branch) || !branchReplaceable(level.getBlockState(branch))) {
-                waiting = "space"; return;
-            }
-        }
-        if (required && branches.isEmpty()) { waiting = "space"; return; }
-        var tree = profile.atHeight(level, random, trunkHeight, false);
+        var tree = profile.atHeight(level, random, budget, false, worldPosition);
         if (tree == null) { waiting = "profile"; return; }
         // Vanilla TreeFeature handles core clearance and any cross-chunk reads/writes.
         CompoundTag saved = saveWithFullMetadata();
@@ -125,12 +95,8 @@ public final class CultivatedOakBlockEntity extends BlockEntity {
         boolean success = Feature.TREE.place(tree, level, level.getChunkSource().getGenerator(),
                 random, worldPosition);
         if (success) {
-            for (var direction : branches) {
-                BlockPos branch = worldPosition.above(trunkHeight - 2).relative(direction);
-                level.setBlock(branch, Blocks.OAK_LOG.defaultBlockState()
-                        .setValue(net.minecraft.world.level.block.RotatedPillarBlock.AXIS, direction.getAxis()), 3);
-            }
             level.setBlock(worldPosition.below(), soil, 3);
+            CultivatedTreeFertilizer.consumeAfterSuccess(level, worldPosition);
         } else {
             level.setBlock(worldPosition, sapling, 3);
             if (level.getBlockEntity(worldPosition) instanceof CultivatedOakBlockEntity restored) {
@@ -141,13 +107,23 @@ public final class CultivatedOakBlockEntity extends BlockEntity {
         }
     }
 
-    /** Branches may replace crown leaves or empty space, never solid obstacles or fluids. */
-    private static boolean branchReplaceable(BlockState state) {
-        return state.isAir() || state.is(net.minecraft.tags.BlockTags.LEAVES);
-    }
-
     /** Credit earned so far, including immature saplings; no forecast of future yield. */
     int accumulatedYieldCredit() { return Math.max(0, yieldCredit); }
+
+    /** Authoritative thermometer fields, including cold protection from this sapling's own soil. */
+    public com.teammoeg.frostedheart.content.climate.network.SoilThermometerUpdatePacket.TreeInfo thermometerInfo() {
+        var profile = CultivatedOakProfile.get(((CultivatedOakBlock)getBlockState().getBlock()).profileId());
+        if (profile == null) return null;
+        float min = profile.minTemp();
+        if (level != null) {
+            BlockState soil = level.getBlockState(worldPosition.below());
+            if (soil.is(FHBlocks.FERTILIZED_DIRT.get()) && soil.getValue(FertilizedDirt.FERTILIZER) == FertilizerType.PRESERVED)
+                min -= profile.preservedDegrees() * soil.getValue(FertilizedDirt.GRADE).preserve;
+        }
+        return new com.teammoeg.frostedheart.content.climate.network.SoilThermometerUpdatePacket.TreeInfo(
+                getBlockState().getValue(CultivatedOakBlock.AGE), progress / (float)SCALE,
+                profile.progressPerStage() * 4, waiting, min, profile.maxTemp(), profile.idealMin(), profile.idealMax(), profile.minLight());
+    }
 
     public Component status() {
         return Component.translatable("message.frostedheart.cultivated_oak.status",

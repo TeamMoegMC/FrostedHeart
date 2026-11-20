@@ -104,17 +104,20 @@ public class TemperatureGoogleRenderer {
 
     /** Updates the growth readout for the currently inspected plant. */
     public static void receivePlantReadout(BlockPos position, float temperature, boolean exposedToBadWeather,
-            @org.jetbrains.annotations.Nullable Component plantInfo) {
+            @org.jetbrains.annotations.Nullable Component plantInfo,
+            @org.jetbrains.annotations.Nullable com.teammoeg.frostedheart.content.climate.network.SoilThermometerUpdatePacket.TreeInfo treeInfo) {
         if (position.equals(cropTarget) && Minecraft.getInstance().level == cropLevel.get()) {
             cachedTemperature = temperature;
             cropExposedToBadWeather = exposedToBadWeather;
             cachedPlantInfo = plantInfo;
+            cachedTreeInfo = treeInfo;
         }
     }
     public static BlockPos lastHeatNetworkPos = null;
     private static float cachedTemperature = Float.NaN;
     private static boolean cropExposedToBadWeather;
     private static Component cachedPlantInfo;
+    private static com.teammoeg.frostedheart.content.climate.network.SoilThermometerUpdatePacket.TreeInfo cachedTreeInfo;
     private static ClientHeatNetworkData lastHeatNetworkData = null;
 
     public static boolean hasHeatNetworkData() {
@@ -252,6 +255,7 @@ public class TemperatureGoogleRenderer {
                 if (changed) {
                     cachedTemperature = Float.NaN;
                     cachedPlantInfo = null;
+                    cachedTreeInfo = null;
                 }
                 cropTarget = pos.immutable();
                 if (world != cropLevel.get()) cropLevel = new java.lang.ref.WeakReference<>(world);
@@ -262,7 +266,8 @@ public class TemperatureGoogleRenderer {
         if (cropTarget != null) {
             List<Component> stats = List.of();
             if (cultivatedSapling && cachedPlantInfo != null) {
-                stats = List.of(cachedPlantInfo);
+                stats = com.teammoeg.frostedheart.content.climate.tooltips.CultivatedTreeTempStats.getStats(
+                        cachedTreeInfo, cachedPlantInfo, world.getBlockState(pos.below()), cachedTemperature);
             } else if (!cultivatedSapling && cachedPlantInfo == null && Float.isFinite(cachedTemperature)) {
                 stats = PlantTempStats.getStats(block, mc.player, pos, cachedTemperature, cropExposedToBadWeather);
             }
