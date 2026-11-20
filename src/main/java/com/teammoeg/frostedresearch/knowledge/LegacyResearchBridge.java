@@ -49,7 +49,10 @@ public final class LegacyResearchBridge {
                 if (r.recipes().isEmpty() || r.recipes().stream().anyMatch(t -> server.getRecipeManager().byKey(t).isEmpty())) return "recipe target unavailable: " + id;
             } else if (d.result() instanceof ResearchResult.Construction r) {
                 if (r.multiblocks().isEmpty() || r.multiblocks().stream().anyMatch(t -> MultiblockHandler.getByUniqueName(t) == null)) return "multiblock target unavailable: " + id;
-            } else return "requires Design or Construction: " + id;
+            } else if (d.result() instanceof ResearchResult.Procedure r) {
+                if (r.toolActions().isEmpty() || r.toolActions().stream().anyMatch(String::isBlank))
+                    return "requires a Procedure with a tool action: " + id;
+            } else return "requires Design, Construction or a tool Procedure: " + id;
         }
         return null;
     }

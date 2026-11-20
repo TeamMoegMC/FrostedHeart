@@ -3,6 +3,7 @@ package com.teammoeg.frostedresearch.knowledge;
 import com.teammoeg.frostedresearch.FRMain;
 import com.teammoeg.frostedresearch.knowledge.item.ItemRetrieval;
 import com.teammoeg.frostedresearch.knowledge.model.KnowledgeElement;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -14,6 +15,8 @@ import java.util.*;
 /** One post-pickup bridge and one menu transaction bridge; no duplicate craft/smelt observers. */
 @Mod.EventBusSubscriber(modid = FRMain.MODID)
 public final class KnowledgeBehaviorBridge {
+    private static final ResourceLocation COLD_AFTER_COPPER = new ResourceLocation("frostedheart", "cold_after_copper");
+    private static final ResourceLocation COPPER_ADVANCEMENT = new ResourceLocation("create", "copper");
     private static final ThreadLocal<List<IdeaAcquisitionService.Signal>> USE = new ThreadLocal<>();
     public static void beginUse() { USE.set(new ArrayList<>()); }
     public static void itemUsed(ServerPlayer player, ItemStack stack) {
@@ -33,6 +36,13 @@ public final class KnowledgeBehaviorBridge {
     }
     public static boolean interested(net.minecraft.resources.ResourceLocation event) {
         return !com.teammoeg.frostedresearch.knowledge.definition.KnowledgeDefinitions.current().behaviorIdeas(event).isEmpty();
+    }
+    public static void coldAfterCopper(ServerPlayer player) {
+        if (!interested(COLD_AFTER_COPPER)) return;
+        var advancement = player.server.getAdvancements().getAdvancement(COPPER_ADVANCEMENT);
+        if (advancement != null && player.getAdvancements().getOrStartProgress(advancement).isDone()) {
+            IdeaAcquisitionService.emit(player, COLD_AFTER_COPPER, Optional.empty());
+        }
     }
     @SubscribeEvent
     public static void pickup(PlayerEvent.ItemPickupEvent event) {

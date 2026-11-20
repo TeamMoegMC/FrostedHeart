@@ -1,4 +1,6 @@
 {
+  "knowledge.frostedresearch.tool_action.prospector_pick": "探矿镐",
+  "knowledge.frostedresearch.prospector_pick.locked": "请先在绘图台完成「探矿镐的使用方法」。",
   "block.frostedresearch.drawing_desk": "绘图台",
   "block.frostedresearch.experiment_table": "实验台",
   "block.frostedresearch.mechanical_calculator": "机械计算器",

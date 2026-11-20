@@ -25,11 +25,14 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
 
+import com.teammoeg.frostedheart.bootstrap.common.ToolCompat;
 import com.teammoeg.frostedresearch.knowledge.model.KnowledgeElement;
 import com.teammoeg.frostedresearch.knowledge.definition.KnowledgeDefinitions;
 import net.minecraft.nbt.CompoundTag;
 import com.teammoeg.frostedresearch.knowledge.model.Observation;
 import com.teammoeg.frostedresearch.knowledge.model.ObservationValue;
+import com.teammoeg.frostedresearch.knowledge.observation.ObservationSampling;
+import net.minecraft.world.phys.Vec3;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
@@ -53,17 +56,24 @@ public final class ItemRetrieval {
     }
 
     public static KnowledgeElement observe(ServerPlayer player, ItemStack original) {
+        return observe(player, original, player.position());
+    }
+
+    public static KnowledgeElement observe(ServerPlayer player, ItemStack original, Vec3 location) {
         if (!canObserve(original))
             throw new IllegalArgumentException("Retrieve a physical item, not a research note");
-        return behaviorSample(player, original);
+        return sample(player, original, ObservationSampling.environment(player, location));
     }
 
     /** An item action payload, independent of whether the item can be actively inspected. Never learns note contents. */
     public static KnowledgeElement behaviorSample(ServerPlayer player, ItemStack original) {
+        return sample(player, original, new LinkedHashMap<>());
+    }
+
+    private static KnowledgeElement sample(ServerPlayer player, ItemStack original, Map<String, ObservationValue> values) {
         if (original.isEmpty()) throw new IllegalArgumentException("Item action requires a nonempty stack");
         ItemStack sample = original.copyWithCount(1);
         ResourceLocation item = BuiltInRegistries.ITEM.getKey(sample.getItem());
-        Map<String, ObservationValue> values = new LinkedHashMap<>();
         if (sample.getItem() instanceof BlockItem block)
             values.put("item_block", ObservationValue.known(BuiltInRegistries.BLOCK.getKey(block.getBlock()).toString()));
         FIELDS.getOrDefault(item, Map.of()).forEach((field, collector) -> values.put("item." + field, ObservationValue.known(collector.apply(sample.copy()))));
@@ -72,6 +82,8 @@ public final class ItemRetrieval {
                 .forEach(rule -> itemData.merge(rule.copyAllowedData(sample)));
         for (String key : itemData.getAllKeys())
             values.put("item." + key, ObservationValue.known(itemData.get(key).toString()));
+        if (sample.canPerformAction(ToolCompat.proPick))
+            values.put("item.prospector_pick", ObservationValue.known("true"));
         Observation.Source source = new Observation.Source("item_retrieval", Optional.of(player.getUUID()), Optional.empty(), Optional.empty(), Optional.empty());
         return KnowledgeElement.observation(new Observation(UUID.randomUUID(), Observation.Type.ITEM, item, values, source, itemData.isEmpty() ? Optional.empty() : Optional.of(itemData)));
     }

@@ -38,6 +38,7 @@ import com.teammoeg.frostedresearch.research.Research;
 import com.teammoeg.frostedresearch.research.clues.Clue;
 import com.teammoeg.frostedresearch.research.clues.MinigameClue;
 import com.teammoeg.frostedresearch.research.effects.Effect;
+import com.teammoeg.frostedresearch.research.effects.EffectItemReward;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
@@ -184,7 +185,9 @@ final class ResearchProjectWorkspace extends UIElement {
             for (var line : getFont().split(Component.translatable("knowledge.frostedresearch.research." + message), width - 24)) {
                 graphics.drawString(getFont(), line, x + 12, lineY, ResearchArchiveLayer.COLOR_INK, false); lineY += 12;
             }
-            graphics.drawString(getFont(), Component.translatable("knowledge.frostedresearch.research.legacy_open"), x + 12, y + height - 20, ResearchArchiveLayer.COLOR_TEAL, false);
+            Component action = hasUnclaimedLegacyItems(research) ? CLAIM_REWARDS
+                    : Component.translatable("knowledge.frostedresearch.research.legacy_open");
+            graphics.drawString(getFont(), action, x + 12, y + height - 20, ResearchArchiveLayer.COLOR_TEAL, false);
             return;
         }
         WorkspaceRenderSnapshot renderSnapshot = renderSnapshotFor(research);
@@ -380,7 +383,13 @@ final class ResearchProjectWorkspace extends UIElement {
             return true;
         }
         if (research != null && com.teammoeg.frostedresearch.knowledge.client.LegacyResearchClient.replaced(research.getId())) {
-            if (localY >= getHeight() - FOOTER_HEIGHT) com.teammoeg.frostedresearch.knowledge.client.LegacyResearchClient.open(research.getId());
+            if (localY >= getHeight() - FOOTER_HEIGHT) {
+                if (hasUnclaimedLegacyItems(research)) {
+                    FRNetwork.INSTANCE.sendToServer(new FHEffectTriggerPacket(research));
+                } else {
+                    com.teammoeg.frostedresearch.knowledge.client.LegacyResearchClient.open(research.getId());
+                }
+            }
             return true;
         }
         if (research != null && localY >= 8 && localY <= 27
@@ -813,6 +822,12 @@ final class ResearchProjectWorkspace extends UIElement {
             tabs.add(new TabRenderData(title, Math.max(3, (tabWidth - getFont().width(title)) / 2)));
         }
         return List.copyOf(tabs);
+    }
+
+    private static boolean hasUnclaimedLegacyItems(Research research) {
+        ResearchData data = research.getData();
+        return data.isCompleted() && research.getEffects().stream()
+                .anyMatch(effect -> effect instanceof EffectItemReward && !data.isEffectGranted(effect));
     }
 
     private static boolean hasUnclaimedReward(Research research, ResearchData data, boolean completed) {

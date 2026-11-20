@@ -1,13 +1,13 @@
 # 旧研究目录与新项目衔接
 
-- Status: `Verified`：目录与两项映射已核对；不把保留定义等同逐项人工通关。
-- Last verified: `2026-11-18`（石磨公开配方及目录处置）
+- Status: `Verified`（目录与现行替换映射）
+- Last verified: `2026-11-20`（手炉与保温杯承接）
 - Scope: TWR 旧研究的当前处置、旧存档承接与验证边界。
 - Code anchors: [LegacyResearchBridge](../../src/main/java/com/teammoeg/frostedresearch/knowledge/LegacyResearchBridge.java)、[TeamResearchData](../../src/main/java/com/teammoeg/frostedresearch/data/TeamResearchData.java)、[KnowledgeService](../../src/main/java/com/teammoeg/frostedresearch/knowledge/KnowledgeService.java)。
 
 ## 当前规则
 
-正式旧目录现有80份JSON。新数据包有效时，`alloy_kiln` 与 `iron` 的旧推进入口由新项目接替，其余78份沿用。`banner` 和 `improve_energy` 仍隐藏且不可完成。`banner` 继续封锁四个多方块，`improve_energy` 定义没有 `effects` 字段。
+正式旧目录现有80份JSON。新数据包有效时，`alloy_kiln`、`iron`、`geology_understanding`、`hand_warmer` 与 `thermos_T1` 的旧推进入口由新项目接替，其余75份沿用。`banner` 和 `improve_energy` 仍隐藏且不可完成。`banner` 继续封锁四个多方块，`improve_energy` 定义没有 `effects` 字段。
 
 `millstone` 已退役，所有队伍都可在工作台合成石磨。已有队伍研究记录由 `TeamResearchData` 保留，已领取的木炭粉仍是普通物品。石磨任务改在工作台后开放。
 
@@ -15,12 +15,15 @@
 |---|---|---|
 | alloy_kiln | the_winter_rescue:earthen_smelter | 350c485a4b92425c→earthen_smelter_design；1bb68ce233ef4f21→earthen_smelter_construction |
 | iron | the_winter_rescue:iron_bloomery | c520be3259914225→iron_bloomery_design，含主冶铁炉和正常鼓风口两配方 |
+| geology_understanding | the_winter_rescue:prospecting | e1b61496f49f4857→prospecting_method |
+| hand_warmer | the_winter_rescue:hand_warmer | 69684c4aa1f4d7a→hand_stove_design。两种炭棒配方公开 |
+| thermos_T1 | the_winter_rescue:thermos | 915e5759ba344d58→thermos_design。旧档案仍可领取完成后未领的实物奖励 |
 
 旧finished承接对应成果并记旧完成信用，不伪造新实验记录；仅已领取某效果则只承接该映射，不能冒充完成。部分旧投入只授予新想法，保留原材料/点数/线索记录，不把百分比换成实验成功。成功导入有回执，重复登录/重载不重放奖励，遗忘导入成果也不强行补回。有效替换映射停用时恢复旧路线，例如整包撤除或目标配方不可用；原投入可重新选择继续。
 
 新系统真实完成且相关成果有效时可满足旧父项；外来成果可以提供技术权限，但不能单独伪造研究完成。详细来源并集、回执及生命周期见[状态与同步](state-persistence-and-sync.md)和[技术权限](results-and-access.md)。
 
-普通耐火砖是新增项目，没有同名旧项目映射。旧blast_furnace的两个效果、三条线索、mixer父项和generator_T2/simple_machines下游均保留；新成果仅管理自有控温炉批量配方，原陶窑/IE高炉/工业窑工艺继续存在。thermos_T1/T2按原项目沿用，保温杯改版仍未实施。
+普通耐火砖是新增项目，没有同名旧项目映射。旧blast_furnace的两个效果、三条线索、mixer父项和generator_T2/simple_machines下游均保留；新成果仅管理自有控温炉批量配方，原陶窑/IE高炉/工业窑工艺继续存在。`thermos_T2` 继续读取 `electrolyzer` 和一级研究的完成状态。
 
 ## 逐项处置
 
@@ -60,8 +63,8 @@
 | `generator_regain` | 沿用原研究 | [原定义](../../../TheWinterRescue/config/fhresearches/generator_regain.json) |
 | `generator_T1` | 沿用原研究 | [原定义](../../../TheWinterRescue/config/fhresearches/generator_T1.json) |
 | `generator_T2` | 沿用原研究 | [原定义](../../../TheWinterRescue/config/fhresearches/generator_T2.json) |
-| `geology_understanding` | 沿用原研究 | [原定义](../../../TheWinterRescue/config/fhresearches/geology_understanding.json) |
-| `hand_warmer` | 沿用原研究 | [原定义](../../../TheWinterRescue/config/fhresearches/hand_warmer.json) |
+| `geology_understanding` | 由探矿镐使用研究接替 | [正式流程](../knowledge/prospecting.md) |
+| `hand_warmer` | 由阴燃利用新项目接替 | [正式流程](../knowledge/hand-warmer.md) |
 | `heat_incubator` | 沿用原研究 | [原定义](../../../TheWinterRescue/config/fhresearches/heat_incubator.json) |
 | `heating_basin` | 沿用原研究 | [原定义](../../../TheWinterRescue/config/fhresearches/heating_basin.json) |
 | `heating_vest` | 沿用原研究 | [原定义](../../../TheWinterRescue/config/fhresearches/heating_vest.json) |
@@ -101,7 +104,7 @@
 | `storage_bucket` | 沿用原研究 | [原定义](../../../TheWinterRescue/config/fhresearches/storage_bucket.json) |
 | `storage_drawers` | 沿用原研究 | [原定义](../../../TheWinterRescue/config/fhresearches/storage_drawers.json) |
 | `tetra` | 沿用原研究 | [原定义](../../../TheWinterRescue/config/fhresearches/tetra.json) |
-| `thermos_T1` | 沿用原研究 | [原定义](../../../TheWinterRescue/config/fhresearches/thermos_T1.json) |
+| `thermos_T1` | 由基础隔热容器新项目接替 | [正式流程](../knowledge/thermos.md) |
 | `thermos_T2` | 沿用原研究 | [原定义](../../../TheWinterRescue/config/fhresearches/thermos_T2.json) |
 | `transmission_machinery` | 沿用原研究 | [原定义](../../../TheWinterRescue/config/fhresearches/transmission_machinery.json) |
 | `villager_language` | 沿用原研究 | [原定义](../../../TheWinterRescue/config/fhresearches/villager_language.json) |

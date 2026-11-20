@@ -51,7 +51,11 @@ public final class ObservationFields {
         if (UNIVERSAL.contains(field) || field.startsWith("source_position.")) return true;
         if (field.equals("entity_instance")) return type == Observation.Type.ENTITY;
         if (field.startsWith("block_state.")) return type == Observation.Type.BLOCK;
-        if (field.equals("item_block") || field.startsWith("item.")) return type == Observation.Type.ITEM;
-        return type != Observation.Type.ITEM;
+        if (isItemField(field)) return type == Observation.Type.ITEM;
+        return type(field).isPresent();
+    }
+
+    static boolean isItemField(String field) {
+        return field.equals("item_block") || field.startsWith("item.");
     }
 }

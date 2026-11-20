@@ -46,6 +46,35 @@ public final class IdeaAcquisitionGameTests {
     private static void learn(KnowledgeService s, String name) { s.learn(KnowledgeElement.idea(id(name)), SOURCE, KnowledgeService.Grant.NORMAL); }
     private static Observation paper() { return new Observation(UUID.randomUUID(), Observation.Type.ITEM, new ResourceLocation("minecraft:paper"), Map.of(), Observation.Source.command(), Optional.empty()); }
 
+    @GameTest(template = "empty")
+    public static void coldItemEvidenceSurvivesInboxDeduplication(GameTestHelper h) {
+        var previous = KnowledgeDefinitions.current();
+        try {
+            var cold = new LinkRule.Slot("sample", KnowledgeKey.Kind.OBSERVATION, Optional.empty(), Optional.of(Observation.Type.ITEM),
+                    List.of(new FieldCondition("temperature_type", FieldCondition.Operator.EQ, Optional.of(ObservationValue.known("extreme_cold")), Optional.empty())));
+            install(Map.of(id("target"), definition(IdeaAcquisition.NONE)), Map.of(id("cold"), new LinkRule(List.of(cold), List.of(), id("target")),
+                    id("any"), new LinkRule(List.of(item("paper").slot()), List.of(), id("target"))));
+            var s = service();
+            var legacy = KnowledgeElement.observation(paper());
+            var warm = paperAt("comfortable", 10);
+            var frozen = paperAt("extreme_cold", 20);
+            h.assertTrue(!legacy.observation().orElseThrow().value("temperature_type").known(), "legacy record has no measured environment");
+            h.assertTrue(s.receive(warm, SOURCE).succeeded() && s.receive(frozen, SOURCE).succeeded(), "both useful environments reach the inbox");
+            h.assertTrue(s.receive(paperAt("extreme_cold", 80), SOURCE).status() == KnowledgeService.Status.ALREADY_RECEIVED,
+                    "time alone does not create another pending sample");
+            h.assertTrue(s.learnInbox(warm.key()).succeeded() && s.learnInbox(frozen.key()).succeeded(), "both can be archived");
+            h.assertTrue(s.matchLink(id("cold"), List.of(frozen.key())).isPresent()
+                    && s.matchLink(id("cold"), List.of(warm.key())).isEmpty(), "only cold paper matches the cold research");
+            h.succeed();
+        } finally { KnowledgeDefinitions.install(previous); }
+    }
+
+    private static KnowledgeElement paperAt(String category, int tick) {
+        Observation item = paper();
+        return KnowledgeElement.observation(new Observation(item.recordId(), item.type(), item.object(),
+                Map.of("temperature_type", ObservationValue.known(category), "time", ObservationValue.known(tick)), item.source(), item.itemData()));
+    }
+
     private static <T> T fixture(String path, Codec<T> codec) {
         try (var reader = new java.io.InputStreamReader(Objects.requireNonNull(IdeaAcquisitionGameTests.class.getResourceAsStream("/m2-fixtures/" + path + ".json")), java.nio.charset.StandardCharsets.UTF_8)) {
             return codec.parse(JsonOps.INSTANCE, JsonParser.parseReader(reader)).getOrThrow(false, error -> {});

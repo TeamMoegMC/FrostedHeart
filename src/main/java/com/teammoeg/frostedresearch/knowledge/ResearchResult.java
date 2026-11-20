@@ -154,14 +154,20 @@ public sealed interface ResearchResult permits ResearchResult.Finding, ResearchR
         }
     }
 
-    record Procedure(ResourceLocation id, List<ResourceLocation> usableBlocks) implements ResearchResult {
+    record Procedure(ResourceLocation id, List<ResourceLocation> usableBlocks, List<String> toolActions) implements ResearchResult {
+        public Procedure(ResourceLocation id, List<ResourceLocation> usableBlocks) {
+            this(id, usableBlocks, List.of());
+        }
+
         static final MapCodec<Procedure> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
                 ResourceLocation.CODEC.fieldOf("id").forGetter(Procedure::id),
-                ResourceLocation.CODEC.listOf().fieldOf("usable_blocks").forGetter(Procedure::usableBlocks)
+                ResourceLocation.CODEC.listOf().optionalFieldOf("usable_blocks", List.of()).forGetter(Procedure::usableBlocks),
+                Codec.STRING.listOf().optionalFieldOf("tool_actions", List.of()).forGetter(Procedure::toolActions)
         ).apply(instance, Procedure::new));
 
         public Procedure {
             usableBlocks = List.copyOf(usableBlocks);
+            toolActions = List.copyOf(toolActions);
         }
 
         @Override

@@ -1,7 +1,7 @@
 # 观察、实物检索与研究笔记
 
 - Status: `Current`
-- Last verified: `2026-11-12`（M1 观察用途核对；手持遮罩实际操作验收仍另列）
+- Last verified: `2026-11-19`（物品现场采样与研究条件判重）
 - Scope: 世界、手持与容器观察、放大镜、间接记录预览、研究笔记身份和物品检索；不包含后续研究项目的证据提交规则。
 - Code anchors: [
   `ObservationSampling`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/observation/ObservationSampling.java)、[
@@ -71,7 +71,7 @@ ID。
 `afternoon`，18–20 `dusk`。
 
 没有气候能力的维度中，日期、气候与时段是 `UNKNOWN`，不会伪造零或借用接收者的位置。`Observation.value(path)` 将未采集字段表示为
-`UNKNOWN`，将该类型不适用的字段表示为 `NOT_APPLICABLE`。物品观察的所有环境坐标、时间、上下文、场信息均不适用。
+`UNKNOWN`，将该类型不适用的字段表示为 `NOT_APPLICABLE`。物品观察与方块、普通实体共享现场环境字段。掉落物取观察完成时的实体位置，手持、背包和容器槽取当时的玩家位置，绘图台实物检索取台子坐标。旧物品记录缺少的环境值读作 `UNKNOWN`。
 
 `Observation.Source` 分开保存来源机制 `kind`、实际观察者 `originalObserver`、组织 `organization` 和记录生成位置。主动观察机制为
 `player_observation`；物品检索为 `item_retrieval`。队伍本次接收方式保存在 `AcquisitionSource`，不覆盖原始来源。
@@ -103,7 +103,7 @@ UUID。方法本身不填充历史记录的缺失信息，也不自动收入来�
 ## 实物检索
 
 `ItemRetrieval.observe(player, stack)` 复制数量为 1 的实物快照，不消耗或修改原物品。默认记录物品类型，方块物品额外记录
-`item_block`。它不自动复制任意 NBT、数量、世界坐标或环境数据。后续物品变化不会修改已有记录。再次检索可以生成新的原始记录，其是否适合学习由知识用途与差异规则判断。
+`item_block`。完成检视时同时采集现场环境。物品数量和未经允许的 NBT 不进入快照。来件区对同一实物内容复用研究用途的等价判定。例如，有严寒条件时可以同时保留常温和严寒两份观察；若没有用途区分游戏刻，仅时间流逝不会多占来件槽位。学习时沿用已有的用途与独立记录数量规则。
 
 其他模组可在初始化时用 `ItemRetrieval.registerField(itemId, field, collector)` 显式注册该物品允许采集的 `item.<field>`
 字符串字段；每个采集器读取独立的数量为 1 的副本。绘图台检视直接收入来件区；世界、手持和容器长按完成后先显示记录预览，选择保留才收入来件。新增入口不修改用途、差异、理解和学习判定，观察本身不保证能够记入档案。
@@ -129,7 +129,7 @@ UUID、游戏刻或 NBT。笔记物品名也使用可读的知识或物件名称
 可复用 KnowledgeCondition.pattern 或已有 registerObservationUse，不等到阶段解锁才登记。
 
 M2：ObservationSessions 完成采样就独立派发 observation_completed，重复记录、容量或学习失败不抹去已发生的动作。
-行为事件的物品上下文使用 ItemRetrieval.behaviorSample，可描述笔记物品本身；主动观察资格和笔记内容研读不受影响。
+行为事件的物品上下文使用 ItemRetrieval.behaviorSample，只采集实物字段，可描述笔记物品本身；主动观察资格和笔记内容研读不受影响。
 IdeaAcquisition 的所有 required / optional / trigger.subject 观察条件也参与用途索引。
 
 ## M5 耐火制品与试验砖

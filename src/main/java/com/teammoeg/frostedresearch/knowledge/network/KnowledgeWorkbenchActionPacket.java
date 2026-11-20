@@ -320,7 +320,8 @@ public final class KnowledgeWorkbenchActionPacket implements CMessage {
             result = service.receive(content.get().element(), receipt,
                     content.get().originalSource().orElseGet(() -> new AcquisitionSource("unknown", java.util.Optional.empty(), -1)));
         } else {
-            result = service.receive(ItemRetrieval.observe(player, input), AcquisitionSource.of("item_retrieval", player));
+            result = service.receive(ItemRetrieval.observe(player, input, Vec3.atLowerCornerOf(desk.getBlockPos())),
+                    AcquisitionSource.of("item_retrieval", player));
         }
         addResult(results, result, service);
         if (result.key() != null && service.entry(result.key()) != null) {

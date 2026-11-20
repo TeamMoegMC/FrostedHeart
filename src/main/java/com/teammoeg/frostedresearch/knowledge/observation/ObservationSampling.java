@@ -73,7 +73,7 @@ public final class ObservationSampling {
         return property.getName(state.getValue(property));
     }
 
-    private static Map<String, ObservationValue> environment(ServerPlayer player, Vec3 location) {
+    public static Map<String, ObservationValue> environment(ServerPlayer player, Vec3 location) {
         var world = player.serverLevel();
         BlockPos position = BlockPos.containing(location);
         Map<String, ObservationValue> values = new LinkedHashMap<>();

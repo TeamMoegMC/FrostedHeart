@@ -96,7 +96,12 @@ public record ProjectRequirement(String id, Type type, String title, int level, 
     /**
      * 实验开始时一次投入的材料：物品或物品标签（两者都写时都要满足）。 / Material consumed when an experiment starts.
      */
-    public record Material(Optional<ResourceLocation> item, Optional<ResourceLocation> tag, int count, boolean returnOnComplete) {
+    public record Material(Optional<ResourceLocation> item, Optional<ResourceLocation> tag, int count,
+                           boolean returnOnComplete, Optional<String> toolAction) {
+        public Material(Optional<ResourceLocation> item, Optional<ResourceLocation> tag, int count, boolean returnOnComplete) {
+            this(item, tag, count, returnOnComplete, Optional.empty());
+        }
+
         public Material(Optional<ResourceLocation> item, Optional<ResourceLocation> tag, int count) {
             this(item, tag, count, false);
         }
@@ -105,12 +110,14 @@ public record ProjectRequirement(String id, Type type, String title, int level, 
                 ResourceLocation.CODEC.optionalFieldOf("item").forGetter(Material::item),
                 ResourceLocation.CODEC.optionalFieldOf("tag").forGetter(Material::tag),
                 field(Codec.INT, "count", 1).forGetter(Material::count),
-                field(Codec.BOOL, "return_on_complete", false).forGetter(Material::returnOnComplete)
+                field(Codec.BOOL, "return_on_complete", false).forGetter(Material::returnOnComplete),
+                KnowledgeKey.strictOptionalField(Codec.STRING, "tool_action").forGetter(Material::toolAction)
         ).apply(i, Material::new));
 
         public boolean matches(ItemStack stack) {
             return !stack.isEmpty() && item.map(id -> id.equals(ForgeRegistries.ITEMS.getKey(stack.getItem()))).orElse(true)
-                    && tag.map(id -> stack.is(TagKey.create(Registries.ITEM, id))).orElse(true);
+                    && tag.map(id -> stack.is(TagKey.create(Registries.ITEM, id))).orElse(true)
+                    && toolAction.map(action -> stack.canPerformAction(net.minecraftforge.common.ToolAction.get(action))).orElse(true);
         }
     }
 
@@ -294,7 +301,10 @@ public record ProjectRequirement(String id, Type type, String title, int level, 
                     errors.add(id + ": experiment duration must be " + MIN_DURATION + " to " + MAX_DURATION + " ticks");
                 if (materials.size() > MAX_MATERIALS) errors.add(id + ": experiments take at most " + MAX_MATERIALS + " materials");
                 for (Material material : materials) {
-                    if (material.item().isEmpty() && material.tag().isEmpty()) errors.add(id + ": a material needs an item or a tag");
+                    if (material.item().isEmpty() && material.tag().isEmpty() && material.toolAction().isEmpty())
+                        errors.add(id + ": a material needs an item, tag or tool action");
+                    if (material.toolAction().filter(String::isBlank).isPresent())
+                        errors.add(id + ": a material tool action cannot be blank");
                     material.item().filter(item -> !ForgeRegistries.ITEMS.containsKey(item))
                             .ifPresent(item -> errors.add(id + ": unknown material item " + item));
                     if (material.count() < 1 || material.count() > 64) errors.add(id + ": material count must be 1 to 64");

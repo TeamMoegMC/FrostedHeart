@@ -291,11 +291,13 @@ public class FHCommonEvents {
 		else if (event.getItemStack().canPerformAction(ToolCompat.geoHammer))
 			rs = GeologistsHammer.doProspect(event.getEntity(), event.getLevel(), event.getPos(), event.getItemStack(),
 					event.getHand());
-		else if (event.getItemStack().canPerformAction(ToolCompat.proPick))
+		else if (!(event.getItemStack().getItem() instanceof ProspectorPick)
+				&& event.getItemStack().canPerformAction(ToolCompat.proPick))
 			rs = ProspectorPick.doProspect(event.getEntity(), event.getLevel(), event.getPos(), event.getItemStack(),
 					event.getHand());
 		if (rs != null) {
-			if (event.getItemStack().getItem() instanceof IModularItem mo && event.getLevel().getRandom().nextBoolean())
+			if (rs.consumesAction() && !event.getLevel().isClientSide
+					&& event.getItemStack().getItem() instanceof IModularItem mo && event.getLevel().getRandom().nextBoolean())
 				mo.tickProgression(event.getEntity(), event.getItemStack(),1);
 			event.setCancellationResult(rs);
 			event.setCanceled(true);

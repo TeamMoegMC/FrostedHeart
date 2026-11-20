@@ -182,8 +182,6 @@ public record LinkRule(List<Slot> inputs, List<CrossCondition> conditions, Resou
                     errors.add("Distance requires a finite nonnegative value");
                 if (!field.isEmpty() || !rightField.isEmpty())
                     errors.add("Distance reads world coordinates, not a declared field");
-                if (a.observationType.filter(t -> t == Observation.Type.ITEM).isPresent() || b.observationType.filter(t -> t == Observation.Type.ITEM).isPresent())
-                    errors.add("Item observations have no world distance");
                 return;
             }
             if (value.isPresent()) errors.add("Field comparison reads the other input, not a constant value");

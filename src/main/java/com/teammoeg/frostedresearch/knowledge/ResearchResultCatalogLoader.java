@@ -180,7 +180,10 @@ public final class ResearchResultCatalogLoader {
                 }
             }
         } else if (result instanceof ResearchResult.Procedure procedure) {
-            validateNonEmpty(owner, "usable_blocks", procedure.usableBlocks(), diagnostics);
+            if (procedure.usableBlocks().isEmpty() && procedure.toolActions().isEmpty())
+                validateNonEmpty(owner, "usable_blocks", procedure.usableBlocks(), diagnostics);
+            if (procedure.toolActions().stream().anyMatch(String::isBlank))
+                diagnostics.add(owner + ": blank tool action");
             validateDuplicates(owner, "usable block", procedure.usableBlocks(), diagnostics);
             for (ResourceLocation block : procedure.usableBlocks()) {
                 if (!ForgeRegistries.BLOCKS.containsKey(block)) diagnostics.add(owner + ": unknown block " + block);

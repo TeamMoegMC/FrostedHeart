@@ -8,7 +8,12 @@ import java.util.*;
 
 /** Behavior gates; legacy links inherit them unless they declare route-specific knowledge. */
 public record IdeaAcquisition(List<Trigger> triggers, List<KnowledgeCondition> required,
-        List<KnowledgeCondition> optional, Optional<Double> chance) {
+        List<KnowledgeCondition> optional, Optional<Double> chance, Optional<Double> optionalBonus) {
+    public IdeaAcquisition(List<Trigger> triggers, List<KnowledgeCondition> required,
+            List<KnowledgeCondition> optional, Optional<Double> chance) {
+        this(triggers, required, optional, chance, Optional.empty());
+    }
+
     public static final IdeaAcquisition NONE = new IdeaAcquisition(List.of(), List.of(), List.of(), Optional.empty());
     // JsonOps accepts booleans as numbers; author probabilities must be actual finite numeric values.
     private static final Codec<Double> PROBABILITY = Codec.PASSTHROUGH.comapFlatMap(raw -> {
@@ -23,7 +28,8 @@ public record IdeaAcquisition(List<Trigger> triggers, List<KnowledgeCondition> r
         ProjectRequirement.field(Trigger.CODEC.listOf(), "triggers", List.of()).forGetter(IdeaAcquisition::triggers),
         ProjectRequirement.field(KnowledgeCondition.CODEC.listOf(), "required", List.of()).forGetter(IdeaAcquisition::required),
         ProjectRequirement.field(KnowledgeCondition.CODEC.listOf(), "optional", List.of()).forGetter(IdeaAcquisition::optional),
-        KnowledgeKey.strictOptionalField(PROBABILITY, "chance").forGetter(IdeaAcquisition::chance)
+        KnowledgeKey.strictOptionalField(PROBABILITY, "chance").forGetter(IdeaAcquisition::chance),
+        KnowledgeKey.strictOptionalField(PROBABILITY, "optional_bonus").forGetter(IdeaAcquisition::optionalBonus)
     ).apply(i, IdeaAcquisition::new));
     public record Trigger(ResourceLocation event, Optional<KnowledgeCondition> subject) {
         public static final Codec<Trigger> CODEC = RecordCodecBuilder.create(i -> i.group(

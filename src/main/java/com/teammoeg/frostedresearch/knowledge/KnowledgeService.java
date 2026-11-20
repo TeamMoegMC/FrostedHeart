@@ -140,6 +140,17 @@ public final class KnowledgeService {
         return entry == null ? state.inbox().entries().get(key) : entry;
     }
 
+    public boolean canUseToolAction(String action) {
+        boolean managed = false;
+        for (var definition : KnowledgeDefinitions.current().results().values()) {
+            if (!definition.enabled() || !(definition.result() instanceof ResearchResult.Procedure procedure)
+                    || !procedure.toolActions().contains(action)) continue;
+            if (isActive(KnowledgeKey.result(procedure.id()))) return true;
+            managed = true;
+        }
+        return !managed;
+    }
+
     public boolean isActive(KnowledgeKey key) {
         KnowledgeEntry entry = state.archive().entries().get(key);
         return entry != null && KnowledgeAvailability.available(entry.element());
@@ -190,7 +201,9 @@ public final class KnowledgeService {
             if (observation.object().equals(com.teammoeg.frostedresearch.FRMain.rl("research_note")))
                 return result(Status.INVALID_INPUT, key);
             for (KnowledgeEntry existing : state.inbox().entries().values()) {
-                if (existing.element().observation().filter(observation::sameItemContent).isPresent())
+                Observation previous = existing.element().observation().orElse(null);
+                if (previous != null && observation.sameItemContent(previous)
+                        && KnowledgeDefinitions.current().equivalentForResearch(observation, previous))
                     return result(Status.ALREADY_RECEIVED, existing.element().key());
             }
         }

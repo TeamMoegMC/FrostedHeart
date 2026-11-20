@@ -53,6 +53,7 @@ public final class ObservationGameTests {
         slot.start(Action.SLOT_ITEM, 9, Method.CURSOR_GLASS);
         ItemEntity dropped = new ItemEntity(helper.getLevel(), drop.player.getX(), drop.player.getY() + 1, drop.player.getZ(), new ItemStack(Items.PAPER, 4));
         dropped.setNoGravity(true);
+        dropped.setDeltaMovement(0, 0, 0);
         dropped.setNeverPickUp();
         helper.getLevel().addFreshEntity(dropped);
         drop.player.setItemInHand(InteractionHand.OFF_HAND, FRContents.Items.MAGNIFYING_GLASS.get().getDefaultInstance());
@@ -70,7 +71,11 @@ public final class ObservationGameTests {
                 helper.assertTrue(observer.observed(), "magnified item completes first: " + observer.replies);
                 Observation observation = Observation.CODEC.parse(NbtOps.INSTANCE, observer.last().record()).result().orElseThrow();
                 helper.assertTrue(observation.type() == Observation.Type.ITEM && observation.object().toString().equals("minecraft:paper"), "dropped/held/slot targets share item semantics");
-                helper.assertTrue(observation.value("dimension").state() == com.teammoeg.frostedresearch.knowledge.model.ObservationValue.State.NOT_APPLICABLE, "item records do not acquire world fields");
+                var position = observer == drop ? dropped.position() : observer.player.position();
+                helper.assertTrue(observation.value("dimension").text().orElseThrow().equals(helper.getLevel().dimension().location().toString())
+                        && observation.value("y").number().orElseThrow() == position.y
+                        && observation.value("biome").known() && observation.value("time").known()
+                        && observation.value("temperature_type").known(), "packet preserves environment at the inspected location");
             }
             helper.assertTrue(!key.observed() && !block.observed(), "ordinary duration is still running");
             helper.assertTrue(slot.player.containerMenu.getCarried().getCount() == 1 && slot.player.getInventory().getItem(9).getCount() == 4, "inventory inspection neither consumes nor moves items");

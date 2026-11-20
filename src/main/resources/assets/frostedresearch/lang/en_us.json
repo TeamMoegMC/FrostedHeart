@@ -1,4 +1,6 @@
 {
+  "knowledge.frostedresearch.tool_action.prospector_pick": "Prospector pick",
+  "knowledge.frostedresearch.prospector_pick.locked": "Complete Using a Prospector Pick at the drawing desk first.",
   "block.frostedresearch.drawing_desk": "Drawing Desk",
   "block.frostedresearch.experiment_table": "Experiment Table",
   "block.frostedresearch.mechanical_calculator": "Mechanical Calculator",

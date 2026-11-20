@@ -31,7 +31,7 @@ public final class IdeaAcquisitionService {
     public static double chance(KnowledgeService service, ResourceLocation idea) {
         var definition = KnowledgeDefinitions.current().ideas().get(idea);
         return Math.min(1, definition.acquisition().chance().orElse(FRConfig.SERVER.knowledgeBehaviorChance.get())
-            + optionalCount(service, idea) * FRConfig.SERVER.knowledgeBehaviorOptionalBonus.get());
+            + optionalCount(service, idea) * definition.acquisition().optionalBonus().orElse(FRConfig.SERVER.knowledgeBehaviorOptionalBonus.get()));
     }
     /** Public server API for mods/KubeJS: one custom event ID and an optional immutable typed subject. */
     public static void emit(ServerPlayer player, ResourceLocation event, Optional<KnowledgeElement> subject) {

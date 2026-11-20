@@ -330,6 +330,10 @@ public final class KnowledgeDefinitions {
             return true;
         }
 
+        public boolean equivalentForResearch(Observation first, Observation second) {
+            return equivalent(first, second, TagLookup.SERVER);
+        }
+
         private boolean equivalent(Observation first, Observation second, TagLookup tags) {
             if (first.type() != second.type()) return false;
             KnowledgeElement a = KnowledgeElement.observation(first), b = KnowledgeElement.observation(second);

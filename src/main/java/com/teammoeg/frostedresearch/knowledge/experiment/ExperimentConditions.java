@@ -137,7 +137,8 @@ public final class ExperimentConditions {
 
     private static Arg name(ProjectRequirement.Material material) {
         return material.item().map(ForgeRegistries.ITEMS::getValue).map(item -> Arg.key(item.getDescriptionId()))
-                .orElseGet(() -> Arg.text("#" + material.tag().map(Object::toString).orElse("?")));
+                .orElseGet(() -> material.toolAction().map(action -> Arg.key("knowledge.frostedresearch.tool_action." + action))
+                        .orElseGet(() -> Arg.text("#" + material.tag().map(Object::toString).orElse("?"))));
     }
 
     private static String format(double celsius) {

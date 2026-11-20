@@ -29,6 +29,7 @@ import com.teammoeg.frostedheart.content.climate.network.FHBodyDataSyncPacket;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
 import com.teammoeg.frostedheart.content.climate.player.thermalitem.WearableThermalExchangeHandler;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
+import com.teammoeg.frostedresearch.knowledge.KnowledgeBehaviorBridge;
 
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -40,6 +41,8 @@ import net.minecraftforge.event.TickEvent.PlayerTickEvent;
 import net.minecraftforge.fml.LogicalSide;
 
 public class PlayerTemperatureUpdate {
+    public static final float COLD_HUD_THRESHOLD_C = -0.5F;
+    private static final int COLD_RESEARCH_INTERVAL_TICKS = 200;
     private static final WearableThermalExchangeHandler
             WEARABLE_THERMAL_EXCHANGE_HANDLER =
             new WearableThermalExchangeHandler();
@@ -60,6 +63,12 @@ public class PlayerTemperatureUpdate {
                 PlayerTemperatureData.getCapability(player).ifPresent((data) -> {
                     if (player.isCreative() || player.isSpectator() || player.isInvulnerable()) {
                         return;
+                    }
+
+                    if (shouldUpdatePlayer(player, COLD_RESEARCH_INTERVAL_TICKS)
+                            && (data.getCoreBodyTemp() < COLD_HUD_THRESHOLD_C
+                            || severity(-data.getBodyTempByPart(BodyPart.HANDS)) >= 0)) {
+                        KnowledgeBehaviorBridge.coldAfterCopper(player);
                     }
 
                     // ConfigValue.get() 为 spec 值表查询：同一 tick 内配置恒定，hoist 到局部变量

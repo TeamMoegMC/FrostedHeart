@@ -413,7 +413,7 @@ public class ResearchCommand {
         } else if (result instanceof ResearchResult.Construction construction) {
             payload = "multiblocks=" + construction.multiblocks();
         } else if (result instanceof ResearchResult.Procedure procedure) {
-            payload = "usable_blocks=" + procedure.usableBlocks();
+            payload = "usable_blocks=" + procedure.usableBlocks() + ", tool_actions=" + procedure.toolActions();
         } else if (result instanceof ResearchResult.Prototype prototype) {
             payload = "profile=" + prototype.profile() + " profile_revision="
                     + (info.profileRevision().isPresent() ? info.profileRevision().getAsInt() : "missing");

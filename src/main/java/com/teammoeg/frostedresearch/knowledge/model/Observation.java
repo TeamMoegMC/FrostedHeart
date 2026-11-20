@@ -20,6 +20,7 @@
 /* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedresearch.knowledge.model;
 
+import com.google.common.collect.Maps;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
@@ -117,7 +118,9 @@ public record Observation(UUID recordId, Type type, ResourceLocation object,
      */
     public boolean sameItemContent(Observation other) {
         return type == Type.ITEM && other.type == Type.ITEM && object.equals(other.object)
-                && values.equals(other.values) && itemData.equals(other.itemData);
+                && itemData.equals(other.itemData)
+                && Maps.filterKeys(values, ObservationFields::isItemField)
+                        .equals(Maps.filterKeys(other.values, ObservationFields::isItemField));
     }
 
     public ObservationValue value(String field) {

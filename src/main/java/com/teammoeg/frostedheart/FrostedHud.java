@@ -44,6 +44,7 @@ import com.teammoeg.frostedheart.content.climate.ClientClimateData;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.ForecastFrame;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.ForecastFrame.FrameType;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
+import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureUpdate;
 import com.teammoeg.frostedheart.content.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.content.ui.archive.ArchiveCategory;
 import com.teammoeg.frostedheart.content.ui.tips.Tip;
@@ -913,7 +914,7 @@ public class FrostedHud {
 
         // Hypothermia
         float bt = PlayerTemperatureData.getCapability(player).map(t->t.smoothedBody).orElse(0F);
-        renderHypothermia = renderHealth && bt < -0.5 || bt > 0.5;
+        renderHypothermia = renderHealth && bt < PlayerTemperatureUpdate.COLD_HUD_THRESHOLD_C || bt > 0.5;
 
         // Overlay and vignette
         renderFrozenOverlay = FHConfig.CLIENT.enableFrozenOverlay.get() && renderHealth && bt <= -0.5;

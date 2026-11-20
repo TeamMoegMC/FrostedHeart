@@ -184,7 +184,8 @@ public final class ObservationSessions {
         }
         if (player.level().getGameTime() - session.started() < session.duration()) return;
         SESSIONS.remove(player.getUUID());
-        Observation record = !currentItem.isEmpty() ? ItemRetrieval.observe(player, currentItem).observation().orElseThrow()
+        Observation record = !currentItem.isEmpty() ? ItemRetrieval.observe(player, currentItem,
+                entity == null ? player.position() : entity.position()).observation().orElseThrow()
                 : entity == null ? ObservationSampling.block(player, session.block()) : ObservationSampling.entity(player, entity);
         com.teammoeg.frostedresearch.knowledge.furnace.RefractoryObservationIndex.observed(player,record);
         KnowledgeService.forPlayer(player).observeResearchTarget(player,record,

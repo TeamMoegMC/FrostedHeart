@@ -28,6 +28,13 @@ import com.teammoeg.frostedheart.bootstrap.common.ToolCompat;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.content.utility.FHLeveledTool;
 import com.teammoeg.frostedheart.util.Lang;
+import com.teammoeg.frostedresearch.knowledge.KnowledgeAvailability;
+import com.teammoeg.frostedresearch.knowledge.KnowledgeService;
+import com.teammoeg.frostedresearch.knowledge.model.KnowledgeElement;
+import com.teammoeg.frostedresearch.knowledge.state.AcquisitionSource;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraftforge.common.ToolAction;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
@@ -46,7 +53,31 @@ import net.minecraftforge.common.util.FakePlayer;
 import se.mickelus.tetra.properties.IToolProvider;
 
 public class ProspectorPick extends FHLeveledTool {
+    private static final ResourceLocation PROSPECTING_IDEA = new ResourceLocation("the_winter_rescue", "prospecting");
+    @Override
+    public boolean canPerformAction(ItemStack stack, ToolAction action) {
+        return action == ToolCompat.proPick || super.canPerformAction(stack, action);
+    }
+
     public static InteractionResult doProspect(Player player, Level world, BlockPos blockpos, ItemStack is, InteractionHand h) {
+        if (world.isClientSide) return InteractionResult.SUCCESS;
+        if (player instanceof ServerPlayer serverPlayer && !(player instanceof FakePlayer)) {
+            var knowledge = KnowledgeService.forPlayer(serverPlayer);
+            if (!knowledge.canUseToolAction(ToolCompat.proPick.name())) {
+                var idea = KnowledgeElement.idea(PROSPECTING_IDEA);
+                var existing = knowledge.query(idea.key());
+                if (!existing.inArchive() && !existing.inInbox() && KnowledgeAvailability.available(idea)) {
+                    knowledge.produce(idea, AcquisitionSource.of("prospector_pick", serverPlayer));
+                    var acquired = knowledge.query(idea.key());
+                    if (acquired.inArchive() || acquired.inInbox()) {
+                        player.sendSystemMessage(Component.translatable("knowledge.frostedresearch.behavior.acquired",
+                                Component.translatable("knowledge.the_winter_rescue.prospecting.idea.title")));
+                    }
+                }
+                player.displayClientMessage(Component.translatable("knowledge.frostedresearch.prospector_pick.locked"), true);
+                return InteractionResult.FAIL;
+            }
+        }
         if (player != null && (!(player instanceof FakePlayer))) {//fake players does not deserve XD
             if (world.getBlockState(blockpos).is(FHTags.Blocks.ORES.tag)) {//early exit 'cause ore found
                 player.displayClientMessage(Lang.translateKey(world.getBlockState(blockpos).getBlock().getDescriptionId()).withStyle(ChatFormatting.GOLD), false);

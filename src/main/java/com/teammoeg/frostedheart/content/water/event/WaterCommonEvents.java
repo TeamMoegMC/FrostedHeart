@@ -22,12 +22,19 @@ package com.teammoeg.frostedheart.content.water.event;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
+import com.teammoeg.frostedheart.bootstrap.common.FHFluids;
 import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
 import com.teammoeg.frostedheart.content.water.capability.WaterLevelCapability;
+import com.teammoeg.frostedheart.content.water.item.DrinkContainerItem;
 import com.teammoeg.frostedheart.content.water.network.PlayerWaterLevelSyncPacket;
 import com.teammoeg.frostedheart.content.water.util.WaterLevelUtil;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
+import com.teammoeg.frostedresearch.knowledge.IdeaAcquisitionService;
+import com.teammoeg.frostedresearch.knowledge.KnowledgeBehaviorBridge;
+import com.teammoeg.frostedresearch.knowledge.item.ItemRetrieval;
 
+import java.util.Optional;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -36,6 +43,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.material.Fluids;
 import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.TickEvent;
@@ -44,12 +52,14 @@ import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.level.BlockEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fluids.FluidUtil;
 import net.minecraftforge.fml.common.Mod;
 
 
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class WaterCommonEvents {
+    private static final ResourceLocation DRANK_COLD_WATER = FHMain.rl("drank_cold_water");
 
     @SubscribeEvent
     public static void attachToPlayer(AttachCapabilitiesEvent<Entity> event) {
@@ -67,7 +77,13 @@ public class WaterCommonEvents {
         ItemStack stack = event.getItem();
         if (entity instanceof ServerPlayer player) {
             WaterLevelUtil.drink(player, stack);
-            //FHNetwork.sendPlayer(player, new PlayerDrinkWaterMessage());
+            if (KnowledgeBehaviorBridge.interested(DRANK_COLD_WATER) && stack.getItem() instanceof DrinkContainerItem
+                    && DrinkContainerItem.isDrinkable(stack)) {
+                FluidUtil.getFluidContained(stack)
+                        .filter(fluid -> fluid.getFluid() == Fluids.WATER || fluid.getFluid() == FHFluids.PURIFIED_WATER.get())
+                        .ifPresent(fluid -> IdeaAcquisitionService.emit(player, DRANK_COLD_WATER,
+                                Optional.of(ItemRetrieval.behaviorSample(player, stack))));
+            }
         }
     }
 

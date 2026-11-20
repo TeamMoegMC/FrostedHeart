@@ -1,7 +1,7 @@
 # 知识定义、观察快照与联络规则
 
 - Status: `Current`
-- Last verified: `2026-11-18`（实验需求的固定产物与原物返还）
+- Last verified: `2026-11-19`（物品观察环境字段与用途匹配）
 - Scope: 知识身份、不可变观察、独立想法/成果定义、项目关系与研究需求、物品检索规则、服务端联络匹配及观察用途判定。
 - Code anchors: [
   `KnowledgeElement`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/model/KnowledgeElement.java)、[
@@ -33,7 +33,7 @@
 缺席表示只匹配事件 ID。有多个入口时 OR；同一次操作命中几个入口也只为该想法抽一次概率。
 acquisition.required 限制行为触发；没有单独配置前置的旧联络规则也继承它。不限制外部 receive / produce / learn，understanding 继续只负责学习。
 subject 描述当次行为载荷，required / optional 查询有效档案；不把两者混成同一种事件判断。
-chance 可按想法指定 [0,1]，未指定用服务器 knowledgeBehaviorChance。概率与联络难度公式见 [API 文档](state-and-api.md#m2-行为事件与短联络)。
+`chance` 和 `optional_bonus` 均可按想法指定 [0,1]。缺省时分别使用服务器的 `knowledgeBehaviorChance` 和 `knowledgeBehaviorOptionalBonus`。概率与联络难度公式见 [API 文档](state-and-api.md#m2-行为事件与短联络)。
 
 内置事件 ID：`frostedresearch:item_obtained`、`item_used`、`block_interacted`、`observation_completed`、`knowledge_learned`。
 前三者载荷为对应 item/block Observation，观察完成为当次采样，学习为入档的 KnowledgeElement；
@@ -44,6 +44,8 @@ LinkRule.inputs 仍必填，作者可显式给 0–5 槽。0 槽表示明确配�
 旧 2–5 槽仍按互异身份与原跨字段条件完整匹配。不会从全部想法自动生成候选目录。
 示例 [field_idea](example-datapack/data/example/frostedresearch/knowledge/ideas/field_idea.json)
 及 field_zero/field_one/field_legacy 演示三个输入规模。新可选字段严格解码，错误类型不静默变空。
+
+知识成果 `Procedure.tool_actions` 可声明由成果控制的 Forge 工具动作。动作执行入口在服务端检查队伍有效成果。基础探矿入口使用 `prospector_pick`。带该动作的物品观察写入 `item.prospector_pick` 字符串 `true`。
 
 ## 身份与观察快照
 
@@ -69,21 +71,21 @@ LinkRule.inputs 仍必填，作者可显式给 0–5 槽。0 槽表示明确配�
 | 字段                                                                  | 类型     | 适用范围、语义                                |
 |---------------------------------------------------------------------|--------|----------------------------------------|
 | `object`、`type`、`record_id`                                         | 字符串    | 从记录身份与对象派生                             |
-| `dimension`                                                         | 字符串    | 方块/实体的采样维度                             |
-| `x`、`y`、`z`                                                         | 数值     | 方块/实体采样坐标，单位格；实体保留小数位置                 |
+| `dimension`                                                         | 字符串    | 观察现场的维度                             |
+| `x`、`y`、`z`                                                         | 数值     | 观察现场坐标，单位格，实体和玩家保留小数位置                 |
 | `time`                                                              | 数值     | 原始世界 tick，供排序与间隔比较                     |
 | `year`、`month`、`day`、`hour`                                         | 数值     | 采集时 WorldClockSource 的日期展示快照           |
-| `biome`、`climate`、`temperature_type`、`time_period`                  | 字符串    | 方块/实体的离散环境上下文                          |
-| `temperature`                                                       | 数值     | 方块/实体的 `WorldTemperature.block` 温度，摄氏度 |
+| `biome`、`climate`、`temperature_type`、`time_period`                  | 字符串    | 观察现场的离散环境上下文                          |
+| `temperature`                                                       | 数值     | 观察现场的 `WorldTemperature.block` 温度，摄氏度 |
 | `block_state.<property>`                                            | 字符串    | 仅方块观察，目标方块状态属性                         |
 | `entity_instance`                                                   | 字符串    | 仅实体观察，具体实体 UUID                        |
 | `item_block`                                                        | 字符串    | 仅物品观察，方块物品对应的方块标识                      |
 | `item.<key>`                                                        | 字符串    | 仅物品观察，被检索规则允许的顶层 NBT 值的文本快照            |
-| `context.<id>`、`field.<id>`                                         | 字符串、数值 | 方块/实体扩展上下文和数值场；采集方负责定义单位与含义            |
+| `context.<id>`、`field.<id>`                                         | 字符串、数值 | 扩展上下文和数值场；采集方负责定义单位与含义            |
 | `source_kind`、`original_observer`、`organization`、`source_dimension` | 字符串    | 从原始来源派生；没有实际观察者时仍是未知                   |
 | `source_position.x`、`source_position.y`、`source_position.z`         | 数值     | 从原始来源位置派生，单位格                          |
 
-物品观察没有环境时空、气候、温度和已放置方块状态，也不能录出为研究笔记。`item_data` 不保存物品数量；检索时刻属于队伍接收记录。
+研究可以用 `observation_type: "item"` 的物品观察配合 `temperature_type eq extreme_cold`（低于 −20°C）或数值温度条件。环境描述检视现场。方块物品只记录 `item_block`，物品观察仍不能录出为研究笔记。`item_data` 不保存物品数量。
 
 烧后小炉物品通过 `TrialKilnSamples.registerObservationFields` 暴露 `item.trial_kiln_variant`，值为 `clay_rich`、`sand_rich`、`balanced`；旧样没有配比则为 `unknown`。试样绑定仍由实际物品检查，不从观察字段或旧档案推断本次研究归属。
 
@@ -213,7 +215,7 @@ research topic 内。类型效果结构见 [成果与权限](../research/results
 `ne` 比较，因此未知或不适用的值同样不满足。证据需求的条件不进入客户端快照，玩家看到的是作者撰写的 `title`，所以证据需求必须提供它。
 
 `duration`、`materials`、`result`、`space` 只属于实验需求。`materials` 至多 3 项，在实验开始时一次投入：每项写 `item` 或 `tag`
-（两者都写时都要满足）和 `count`（1–64，默认 1）。材料可加 `"return_on_complete": true`，每次成功计数后归还实际扣下的那几件，保留名称、耐久和 NBT。默认消耗。
+（两者都写时都要满足）和 `count`（1–64，默认 1）。`tool_action` 可作为独立或附加的条件，按实际物品堆的 Forge 工具动作匹配。材料可加 `"return_on_complete": true`，每次成功计数后归还实际扣下的那几件，保留名称、耐久和 NBT。默认消耗。
 实验还可加一个 `result`，用已注册的具体物品 ID 和数量指定每次成功的固定产物。数量默认 1，最多一组。两种返还可以同时使用，例如：
 
 ```json
