@@ -34,6 +34,14 @@ public class ClientClimateData {
     public static int wind = 0;
     public static float humidity = 0;
     public static float climateTemperatureC = 0;
+    /**
+     * The climate hour at which the last snow or storm at the player ended, from WorldClimate.getLastSnowEndHour, or -1.
+     */
+    public static long lastSnowEndHour = -1;
+    /**
+     * The climate hour at which the next snow or storm at the player starts, from WorldClimate.getNextSnowStartHour, or -1.
+     */
+    public static long nextSnowStartHour = -1;
 
     public static void clear() {
         secs = 0;
@@ -45,6 +53,8 @@ public class ClientClimateData {
         wind = 0;
         humidity = 0;
         climateTemperatureC = 0;
+        lastSnowEndHour = -1;
+        nextSnowStartHour = -1;
     }
 
     public static long getDate() {

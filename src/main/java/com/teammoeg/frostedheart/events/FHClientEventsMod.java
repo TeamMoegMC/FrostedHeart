@@ -48,6 +48,8 @@ import com.teammoeg.frostedheart.content.climate.particle.BreathParticle;
 import com.teammoeg.frostedheart.content.climate.particle.SnowParticle;
 import com.teammoeg.frostedheart.content.climate.particle.SteamParticle;
 import com.teammoeg.frostedheart.content.climate.particle.WetSteamParticle;
+import com.teammoeg.frostedheart.content.climate.render.sky.CalculatedSkyEffects;
+import com.teammoeg.frostedheart.content.climate.render.sky.LightPillarSources;
 import com.teammoeg.frostedheart.content.climate.tooltips.EquipmentTempStats;
 import com.teammoeg.frostedheart.content.climate.tooltips.FoodTempStats;
 import com.teammoeg.frostedheart.content.climate.tooltips.PlantTempStats;
@@ -74,8 +76,10 @@ import com.teammoeg.frostedheart.content.world.entities.CuriosityEntityRenderer;
 import com.teammoeg.frostedheart.content.world.entities.CuriosityMoundRenderer;
 import com.teammoeg.frostedresearch.gui.InsightOverlay;
 import net.minecraft.client.Minecraft;
+import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.FarmBlock;
+import net.minecraft.world.level.dimension.BuiltinDimensionTypes;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.*;
 import net.minecraftforge.client.event.EntityRenderersEvent.AddLayers;
@@ -329,6 +333,7 @@ public class FHClientEventsMod {
     @SubscribeEvent
     public static void registerReloadListeners(RegisterClientReloadListenersEvent event) {
         event.registerReloadListener(KGlyphProvider.INSTANCE);
+        event.registerReloadListener((ResourceManagerReloadListener) resourceManager -> LightPillarSources.clearColors());
     }
     
 
@@ -444,6 +449,11 @@ public class FHClientEventsMod {
     	event.registerSpriteSet(FHParticleTypes.BREATH.get(), BreathParticle.Factory::new);
     	event.registerSpriteSet(FHParticleTypes.WET_STEAM.get(), WetSteamParticle.Factory::new);
         event.registerSpriteSet(FHParticleTypes.SNOW.get(), SnowParticle.Provider::new);
+    }
+
+    @SubscribeEvent
+    public static void registerDimensionEffects(RegisterDimensionSpecialEffectsEvent event) {
+        event.register(BuiltinDimensionTypes.OVERWORLD_EFFECTS, new CalculatedSkyEffects());
     }
 
     @SubscribeEvent
