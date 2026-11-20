@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart.content.climate.render.sky;
 
+import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
@@ -56,7 +57,7 @@ final class SkyGlPass {
 
     void begin() {
         previousProgram = GL11.glGetInteger(GL20.GL_CURRENT_PROGRAM);
-        previousActiveTexture = GL11.glGetInteger(GL13.GL_ACTIVE_TEXTURE);
+        previousActiveTexture = GlStateManager._getActiveTexture();
         blending = GL11.glIsEnabled(GL11.GL_BLEND);
         depthTest = GL11.glIsEnabled(GL11.GL_DEPTH_TEST);
         for (int unit = 0; unit < previousBindings.length; unit++) {

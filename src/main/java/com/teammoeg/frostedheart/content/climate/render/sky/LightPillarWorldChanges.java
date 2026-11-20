@@ -184,9 +184,10 @@ public final class LightPillarWorldChanges {
     }
 
     /**
-     * Forgets the loaded columns of an earlier level when a hook reports a new one.
+     * Forgets the loaded columns of an earlier level when a hook or the client tick reports a new one, or no level
+     * after the client leaves the world.
      */
-    private static void followLevel(ClientLevel level) {
+    static void followLevel(@Nullable ClientLevel level) {
         if (level != queueLevel) {
             queue.reset();
             queueLevel = level;

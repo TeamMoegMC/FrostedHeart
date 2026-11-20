@@ -242,32 +242,42 @@ public final class CalculatedSkyRenderer {
         if (current == null || !isAllowed(level)) {
             return null;
         }
-        SkyFrame frame = SkyFrame.current(level, partialTick);
-        Vector3f look = camera.getLookVector();
-        double horizontalFraction = Math.min(1.0, Math.sqrt(look.x() * look.x() + look.z() * look.z()));
-        double azimuth = Math.atan2(look.z(), look.x() * frame.light().side());
-        double exposure = exposure(current, frame);
-        current.views().horizonDisplayColor(viewBlend(current, frame), depthBlend(current, frame), azimuth,
-                horizontalFraction, exposure, lightScale(current, frame), frame.nightFloor(),
-                frame.rainLevel(), frame.thunderLevel(), reusedFogColor);
-        return reusedFogColor;
+        try {
+            SkyFrame frame = SkyFrame.current(level, partialTick);
+            Vector3f look = camera.getLookVector();
+            double horizontalFraction = Math.min(1.0, Math.sqrt(look.x() * look.x() + look.z() * look.z()));
+            double azimuth = Math.atan2(look.z(), look.x() * frame.light().side());
+            double exposure = exposure(current, frame);
+            current.views().horizonDisplayColor(viewBlend(current, frame), depthBlend(current, frame), azimuth,
+                    horizontalFraction, exposure, lightScale(current, frame), frame.nightFloor(),
+                    frame.rainLevel(), frame.thunderLevel(), reusedFogColor);
+            return reusedFogColor;
+        } catch (RuntimeException exception) {
+            fail("computing the fog color", exception);
+            return null;
+        }
     }
 
     /**
      * Writes the sky light on the terrain while the calculated sky is drawn into the result, as
-     * SkyViewSet.daylightColor gives it for vanilla's sky darkness. Returns false and leaves the result unchanged when
-     * the sky is not drawn.
+     * SkyViewSet.daylightColor gives it for vanilla's sky darkness. Returns false when the sky
+     * is not drawn or an error stops it, and the result is then not to be used.
      */
     public static boolean daylightColor(ClientLevel level, float partialTick, float skyDarken, float[] result) {
         SkyState current = builder.state();
         if (current == null || !isAllowed(level)) {
             return false;
         }
-        SkyFrame frame = SkyFrame.current(level, partialTick);
-        double exposure = exposure(current, frame);
-        current.views().daylightColor(viewBlend(current, frame), depthBlend(current, frame), exposure,
-                daylightScale(current, frame), frame.rainLevel(), skyDarken, result);
-        return true;
+        try {
+            SkyFrame frame = SkyFrame.current(level, partialTick);
+            double exposure = exposure(current, frame);
+            current.views().daylightColor(viewBlend(current, frame), depthBlend(current, frame), exposure,
+                    daylightScale(current, frame), frame.rainLevel(), skyDarken, result);
+            return true;
+        } catch (RuntimeException exception) {
+            fail("computing the terrain light", exception);
+            return false;
+        }
     }
 
     /**

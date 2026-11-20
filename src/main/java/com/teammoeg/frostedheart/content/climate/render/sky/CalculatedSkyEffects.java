@@ -23,6 +23,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.DimensionSpecialEffects;
 import net.minecraft.client.renderer.LightTexture;
+import net.minecraft.world.level.material.FogType;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import org.joml.Vector3f;
@@ -47,8 +48,10 @@ public final class CalculatedSkyEffects extends DimensionSpecialEffects.Overworl
     @Nullable
     @Override
     public float[] getSunriseColor(float timeOfDay, float partialTick) {
-        ClientLevel level = Minecraft.getInstance().level;
-        if (level != null && CalculatedSkyRenderer.isDrawing(level)) {
+        Minecraft minecraft = Minecraft.getInstance();
+        ClientLevel level = minecraft.level;
+        if (level != null && CalculatedSkyRenderer.isDrawing(level)
+                && minecraft.gameRenderer.getMainCamera().getFluidInCamera() == FogType.NONE) {
             return null;
         }
         return super.getSunriseColor(timeOfDay, partialTick);

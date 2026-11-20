@@ -407,7 +407,7 @@ public final class LightPillarRenderer {
         int viewportY = viewportBuffer.get(1);
         int viewportWidth = viewportBuffer.get(2);
         int viewportHeight = viewportBuffer.get(3);
-        int activeTexture = GL11.glGetInteger(GL13.GL_ACTIVE_TEXTURE);
+        int activeTexture = GlStateManager._getActiveTexture();
         RenderSystem.activeTexture(GL13.GL_TEXTURE0 + PILLAR_LIGHT_UNIT);
         int previousPillarLightTexture = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
         RenderSystem.activeTexture(GL13.GL_TEXTURE0 + CELL_ATLAS_UNIT);

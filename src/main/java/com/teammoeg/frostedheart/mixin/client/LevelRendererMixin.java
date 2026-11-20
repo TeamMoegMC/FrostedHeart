@@ -133,7 +133,7 @@ public abstract class LevelRendererMixin {
     /**
      * Gives the vanilla sun quad no size when the calculated sky drew its own sun.
      */
-    @ModifyConstant(method = "renderSky", constant = @Constant(floatValue = 30.0F), require = 0)
+    @ModifyConstant(method = "renderSky", constant = @Constant(floatValue = 30.0F, ordinal = 0), require = 0)
     private float frostedheart$hideVanillaSun(float sunHalfSize) {
         return CalculatedSkyRenderer.isSunDrawn() ? 0.0F : sunHalfSize;
     }

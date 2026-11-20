@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.content.climate.render.sky;
 import com.lowdragmc.lowdraglib.client.shader.management.Shader;
 import com.lowdragmc.lowdraglib.client.shader.management.ShaderProgram;
 import com.mojang.blaze3d.pipeline.RenderTarget;
+import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferUploader;
 import com.mojang.logging.LogUtils;
@@ -234,7 +235,7 @@ public final class DustGlitterRenderer {
         int viewportY = viewportBuffer.get(1);
         int viewportWidth = viewportBuffer.get(2);
         int viewportHeight = viewportBuffer.get(3);
-        int activeTexture = GL11.glGetInteger(GL13.GL_ACTIVE_TEXTURE);
+        int activeTexture = GlStateManager._getActiveTexture();
         for (int unit = 0; unit < TEXTURE_UNITS; unit++) {
             RenderSystem.activeTexture(GL13.GL_TEXTURE0 + unit);
             previousTextures[unit] = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);

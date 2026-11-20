@@ -50,7 +50,6 @@ import com.teammoeg.frostedheart.content.climate.particle.SteamParticle;
 import com.teammoeg.frostedheart.content.climate.particle.WetSteamParticle;
 import com.teammoeg.frostedheart.content.climate.render.sky.CalculatedSkyEffects;
 import com.teammoeg.frostedheart.content.climate.render.sky.LightPillarSources;
-import com.teammoeg.frostedheart.content.climate.tooltips.BlockTempStats;
 import com.teammoeg.frostedheart.content.climate.tooltips.EquipmentTempStats;
 import com.teammoeg.frostedheart.content.climate.tooltips.FoodTempStats;
 import com.teammoeg.frostedheart.content.climate.tooltips.PlantTempStats;

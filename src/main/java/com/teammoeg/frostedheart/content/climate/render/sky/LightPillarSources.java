@@ -127,6 +127,7 @@ public final class LightPillarSources {
         if (level != scannedLevel) {
             reset();
             scannedLevel = level;
+            LightPillarWorldChanges.followLevel(level);
         }
         LightPillarWorldChanges.tick();
         rollStatistics();
