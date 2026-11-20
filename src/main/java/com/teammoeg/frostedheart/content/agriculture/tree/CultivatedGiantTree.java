@@ -13,7 +13,7 @@ import net.minecraft.world.level.levelgen.feature.Feature;
 
 /** Selects loaded same-species squares and generates the species' own vanilla giant configuration. */
 public final class CultivatedGiantTree {
-    /** Extra logs per member; two full 2x2 layers yield exactly eight additional logs. */
+    /** Expected extra logs per member; native shape randomness is retained. */
     public static final int PER_SAPLING_LOG_BONUS = 2;
     private CultivatedGiantTree() {}
 
@@ -54,17 +54,8 @@ public final class CultivatedGiantTree {
         for (BlockPos pos : group.members()) if (!level.hasChunkAt(pos)) return "space";
         int height = height(group, profile);
         if (height < 1) return "yield";
-        var tree = profile.atHeight(level, random, height, true);
+        var tree = profile.atHeight(level, random, height, true, group.origin());
         if (tree == null) return "profile";
-        // Vanilla leaves three columns one block short. Complete their top cells so
-        // total logs are exactly 4 * (base height + per-member bonus), not minus three.
-        List<BlockPos> topCompletion = tree.trunkPlacer instanceof CultivatedNativeTrunkPlacer ? List.of() : List.of(group.origin().east().above(height - 1),
-                group.origin().south().above(height - 1), group.origin().east().south().above(height - 1));
-        for (BlockPos pos : topCompletion) {
-            if (!level.hasChunkAt(pos)) return "space";
-            BlockState state = level.getBlockState(pos);
-            if (!state.isAir() && !state.is(net.minecraft.tags.BlockTags.LEAVES)) return "space";
-        }
         List<BlockState> states = new ArrayList<>(), soils = new ArrayList<>();
         List<CompoundTag> ledgers = new ArrayList<>();
         for (BlockPos pos : group.members()) {
@@ -75,10 +66,10 @@ public final class CultivatedGiantTree {
         }
         for (BlockPos pos : group.members()) level.setBlock(pos, Blocks.AIR.defaultBlockState(), 2);
         boolean success = Feature.TREE.place(tree, level, level.getChunkSource().getGenerator(), random, group.origin());
-        // Existing root rule applies to all four roots; no extra fertilizer spending or refunding.
+        // Preserve all four roots; settle the legacy four-unit cost only at the generation origin after success.
         for (int i = 0; i < 4; i++) level.setBlock(group.members().get(i).below(), soils.get(i), 3);
         if (success) {
-            for (BlockPos pos : topCompletion) level.setBlock(pos, tree.trunkProvider.getState(random, pos), 3);
+            CultivatedTreeFertilizer.consumeAfterSuccess(level, group.origin());
             return null;
         }
         for (int i = 0; i < 4; i++) {

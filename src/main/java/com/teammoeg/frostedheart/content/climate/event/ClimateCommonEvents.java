@@ -515,15 +515,18 @@ public class ClimateCommonEvents {
             }
 
             if (allow) {
-                if (farmlandBlockState.is(FHBlocks.FERTILIZED_DIRT.get())) {
-                    int currentStorage = farmlandBlockState.getValue(FertilizedDirt.STORAGE);
-                    int newStorage = currentStorage - 4;
-                    if (newStorage <= 0) {
-                        level.setBlock(pos.below(), Blocks.DIRT.defaultBlockState(), 2);
-                    } else {
-                        level.setBlock(pos.below(), farmlandBlockState.setValue(FertilizedDirt.STORAGE, newStorage), 2);
-                    }
-                }
+                // Legacy sapling fertilizer charging is disabled: this used to consume four units
+                // as soon as growth was allowed, before actual feature placement succeeded.
+                // Cultivated saplings account for their own earned growth in their block entity.
+                // if (farmlandBlockState.is(FHBlocks.FERTILIZED_DIRT.get())) {
+                //     int currentStorage = farmlandBlockState.getValue(FertilizedDirt.STORAGE);
+                //     int newStorage = currentStorage - 4;
+                //     if (newStorage <= 0) {
+                //         level.setBlock(pos.below(), Blocks.DIRT.defaultBlockState(), 2);
+                //     } else {
+                //         level.setBlock(pos.below(), farmlandBlockState.setValue(FertilizedDirt.STORAGE, newStorage), 2);
+                //     }
+                // }
                 event.setResult(Event.Result.DEFAULT);
             } else {
                 event.setResult(Event.Result.DENY);

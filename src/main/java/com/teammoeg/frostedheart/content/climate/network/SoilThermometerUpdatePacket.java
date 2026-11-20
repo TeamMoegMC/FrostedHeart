@@ -33,40 +33,53 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Supplier;
 
-/** Server-authoritative growth readout for a crop or cultivated sapling. */
+/** Server-authoritative crop temperature/weather and cultivated-tree progress snapshot. */
 public record SoilThermometerUpdatePacket(BlockPos pos, float temperature, boolean exposedToBadWeather,
-        @Nullable Component plantInfo) implements CMessage {
+        @Nullable Component plantInfo, @Nullable TreeInfo treeInfo) implements CMessage {
 
-    /** Samples the growth temperature and the information displayed for the plant at {@code pos}. */
+    /** Uses the same material-priority temperature as growth, without exposing internal tree budgets. */
     public static SoilThermometerUpdatePacket sample(ServerLevel level, BlockPos pos) {
-        if (!level.isLoaded(pos)) return new SoilThermometerUpdatePacket(pos, Float.NaN, false, null);
+        if (!level.isLoaded(pos)) return new SoilThermometerUpdatePacket(pos, Float.NaN, false, null, null);
         if (level.getBlockEntity(pos) instanceof CultivatedOakBlockEntity sapling) {
             return new SoilThermometerUpdatePacket(pos, WorldTemperature.getTempAtBlock(level, pos), false,
-                    sapling.status());
+                    sapling.status(), sapling.thermometerInfo());
         }
         PlantTempData data = PlantTempData.getPlantData(level.getBlockState(pos).getBlock());
-        if (data == null) return new SoilThermometerUpdatePacket(pos, Float.NaN, false, null);
+        if (data == null) return new SoilThermometerUpdatePacket(pos, Float.NaN, false, null, null);
         return new SoilThermometerUpdatePacket(pos, WorldTemperature.getTempAtBlock(level, pos),
-                WorldTemperature.plantWeatherBlocksGrowth(level, pos, data), null);
+                WorldTemperature.plantWeatherBlocksGrowth(level, pos, data), null, null);
     }
 
     public SoilThermometerUpdatePacket(FriendlyByteBuf buffer) {
         this(buffer.readBlockPos(), buffer.readFloat(), buffer.readBoolean(),
-                buffer.readNullable(FriendlyByteBuf::readComponent));
+                buffer.readNullable(FriendlyByteBuf::readComponent), buffer.readNullable(TreeInfo::new));
     }
 
     @Override
     public void encode(FriendlyByteBuf buffer) {
-        buffer.writeBlockPos(pos);
-        buffer.writeFloat(temperature);
-        buffer.writeBoolean(exposedToBadWeather);
+        buffer.writeBlockPos(pos); buffer.writeFloat(temperature); buffer.writeBoolean(exposedToBadWeather);
         buffer.writeNullable(plantInfo, FriendlyByteBuf::writeComponent);
+        buffer.writeNullable(treeInfo, (out, tree) -> tree.encode(out));
+    }
+
+    /** Only player-facing growth and environment data; no yield credit, target height or seed. */
+    public record TreeInfo(int stage, float progress, float requiredProgress, String waiting,
+            float minTemperature, float maxTemperature, float idealMin, float idealMax, int minLight) {
+        public TreeInfo(FriendlyByteBuf in) {
+            this(in.readVarInt(), in.readFloat(), in.readFloat(), in.readUtf(),
+                    in.readFloat(), in.readFloat(), in.readFloat(), in.readFloat(), in.readVarInt());
+        }
+        public void encode(FriendlyByteBuf out) {
+            out.writeVarInt(stage); out.writeFloat(progress); out.writeFloat(requiredProgress); out.writeUtf(waiting);
+            out.writeFloat(minTemperature); out.writeFloat(maxTemperature); out.writeFloat(idealMin); out.writeFloat(idealMax);
+            out.writeVarInt(minLight);
+        }
     }
 
     @Override
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> TemperatureGoogleRenderer.receivePlantReadout(
-                pos, temperature, exposedToBadWeather, plantInfo));
+                pos, temperature, exposedToBadWeather, plantInfo, treeInfo));
         context.get().setPacketHandled(true);
     }
 }

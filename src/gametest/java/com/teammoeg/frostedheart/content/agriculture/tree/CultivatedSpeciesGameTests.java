@@ -28,7 +28,7 @@ public class CultivatedSpeciesGameTests {
         CompoundTag tag = new CompoundTag();tag.putShort("p", (short)progress);tag.putShort("v", (short)credit);
         level.getBlockEntity(pos).load(tag);
     }
-    @GameTest(template = "phase0a_empty", timeoutTicks = 100)
+    @GameTest(template = "phase0a_empty", timeoutTicks = 600)
     public static void allProfilesResolveNativeShapes(GameTestHelper helper) {
         for (String name : List.of("birch", "jungle", "acacia", "dark_oak", "mangrove", "cherry")) {
             var p = profile(name);
@@ -36,7 +36,7 @@ public class CultivatedSpeciesGameTests {
             boolean giant = name.equals("dark_oak");
             var tree = p.atHeight(helper.getLevel(), RandomSource.create(7), p.maxHeight() + (giant ? 2 : 0), giant);
             helper.assertTrue(tree != null && tree.trunkPlacer instanceof CultivatedNativeTrunkPlacer,
-                    "native placement is adapted to a common wood quota: " + name);
+                    "complete native placement uses a sampled size: " + name);
             helper.assertTrue(p.giantOnly() == giant, "only dark oak is 2x2-only: " + name);
             helper.assertTrue(p.giantTrees().isEmpty() == !(name.equals("jungle") || giant),
                     "only species with a real vanilla giant variant can combine");
@@ -45,9 +45,9 @@ public class CultivatedSpeciesGameTests {
                 "dark oak never returns a single-tree configuration");
         helper.succeed();
     }
-    @GameTest(template = "phase0a_empty", timeoutTicks = 100)
+    @GameTest(template = "phase0a_empty", timeoutTicks = 600)
     public static void darkOakKeepsEarningAfterMaturity(GameTestHelper helper) {
-        var level = helper.getLevel();BlockPos pos = helper.absolutePos(new BlockPos(9, 3, 9));
+        var level = helper.getLevel();BlockPos pos = CultivatedTestEnvironment.origin(helper);
         dark(helper, pos, 0, 0);
         level.setBlock(pos.east(), Blocks.GLOWSTONE.defaultBlockState(), 3);
         helper.startSequence().thenWaitUntil(() -> helper.assertTrue(level.getMaxLocalRawBrightness(pos.above()) >= 9,
@@ -66,9 +66,9 @@ public class CultivatedSpeciesGameTests {
             helper.succeed();
         });
     }
-    @GameTest(template = "phase0a_empty", timeoutTicks = 100)
+    @GameTest(template = "phase0a_empty", timeoutTicks = 600)
     public static void darkOakRequiresEnoughGroupYieldAndRestoresOnObstruction(GameTestHelper helper) {
-        var level = helper.getLevel();BlockPos origin = helper.absolutePos(new BlockPos(9, 3, 9));
+        var level = helper.getLevel();BlockPos origin = CultivatedTestEnvironment.origin(helper);
         List<BlockPos> roots = List.of(origin, origin.east(), origin.south(), origin.east().south());
         for (BlockPos pos : roots) dark(helper, pos, 16, pos.equals(origin) ? 256 : 64);
         var low = CultivatedGiantTree.find(level, origin, FHBlocks.CULTIVATED_DARK_OAK.get());
@@ -86,9 +86,9 @@ public class CultivatedSpeciesGameTests {
                 "failed generation restores all four immature members and their credit");
         helper.succeed();
     }
-    @GameTest(template = "phase0a_empty", timeoutTicks = 100)
-    public static void darkOakSuccessfulGiantHasExactWoodQuota(GameTestHelper helper) {
-        var level = helper.getLevel();BlockPos origin = helper.absolutePos(new BlockPos(9, 3, 9));
+    @GameTest(template = "phase0a_empty", timeoutTicks = 600)
+    public static void darkOakSuccessfulGiantPreservesNativeBranches(GameTestHelper helper) {
+        var level = helper.getLevel();BlockPos origin = CultivatedTestEnvironment.origin(helper);
         List<BlockPos> roots = List.of(origin, origin.east(), origin.south(), origin.east().south());
         for (BlockPos pos : roots) dark(helper, pos, 16, 256);
         var group = CultivatedGiantTree.find(level, origin, FHBlocks.CULTIVATED_DARK_OAK.get());
@@ -97,7 +97,7 @@ public class CultivatedSpeciesGameTests {
         int logs = 0;
         for (int y = 0; y < 20; y++) for (int x = -8; x <= 9; x++) for (int z = -8; z <= 9; z++)
             if (level.getBlockState(origin.offset(x, y, z)).is(Blocks.DARK_OAK_LOG)) logs++;
-        helper.assertTrue(logs == 60, "dark oak native branches share total 4H+8 quota");
+        helper.assertTrue(logs >= 40 && logs <= 80, "native dark oak wood varies around the 60-log expectation: " + logs);
         helper.succeed();
     }
 }

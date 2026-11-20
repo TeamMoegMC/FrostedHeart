@@ -18,7 +18,7 @@
 
 `frostedheart:vertical_fertilizable_crops` 方块 tag 默认包含甘蔗和 IE 大麻。只有属于这个 tag 的连续同种方块会沿竖直方向向下寻找根部，根部下方的施肥泥土和施肥耕地均可提供肥料。tag 只声明根部定位规则，不为任意新作物自动提供成熟度适配。
 
-增速肥料沿用生长时间乘数：基础 0.5、进阶 0.25、终极 0.125。保温沿用最低温度阈值分别降低 5、10、20℃。生长许可仍保留原有温度、光照和原作物自身的生长概率。实际年龄推进或新增节段后，才以 1/8 概率消耗一格储量；未变化、成熟或受阻不消耗。树苗原有规则单独保留。
+增速肥料沿用生长时间乘数：基础 0.5、进阶 0.25、终极 0.125。保温沿用最低温度阈值分别降低 5、10、20℃。生长许可仍保留原有温度、光照和原作物自身的生长概率。实际年龄推进或新增节段后，才以 1/8 概率消耗一格储量；未变化、成熟或受阻不消耗。旧 `ClimateCommonEvents.saplingGrow(SaplingGrowTreeEvent)` 原本在生长事件获准时扣4格储量（并非等待整棵树成功生成），现已按要求注释掉该扣费块；原生树苗温度/生长许可判断仍保留。新栽培树苗直接调用 TreeFeature，不走旧事件，改为整棵树成功生成后在生成原点根部一次结算4格；2×2也是整棵共4格，而非四株各扣4；生长推进、等待或失败不扣。存量不足4时耗尽，与旧扣4耗尽规则一致。
 
 增产不再在玩家破坏事件中取消收获并额外刷物品，而是复用 Chorda 的 `BlockDropsEvent`（公共 `Block.getDrops` 六参数入口），并补充四参数自然掉落入口，Create 当前版本的 `BlockHelper.destroyBlockAs` 也使用此入口。普通作物每推进一个年龄阶段，按本阶段增产肥料的额外倍率除以最大年龄记账；成熟后施肥不补记。完整受肥生长的总倍率分别为 2、3、4，部分受肥按阶段比例计算，物品数量采用随机舍入并按最大堆叠拆分。未成熟收获不给增产。
 
@@ -36,4 +36,6 @@
 
 ## 温度验证
 
-`ThermalCropGameTests` 使用真实耕地和小麦，覆盖无热源、只点篝火、只有能量塔解析场和同时供热。另用带热场的冷材料记录核对作物面板与服务端生长判定的一致性。保温肥料用例在同一读数下验证生长和死亡判断。运行 `./gradlew --offline runGameTestServer -PgameTestNamespaces=frostedheart_crop_temperature`。面板随服务端取温回包刷新，`FHNetwork.protocolVersion` 的 `soil-thermometer-3` 对应含位置、生长温度、天气暴露标志和可选树苗状态的读数包。
+`ThermalCropGameTests` 使用真实耕地和小麦，覆盖无热源、只点篝火、只有能量塔解析场和同时供热。另用带热场的冷材料记录核对作物面板与服务端生长判定的一致性。保温肥料用例在同一读数下验证生长和死亡判断。运行 `./gradlew --offline runGameTestServer -PgameTestNamespaces=frostedheart_crop_temperature`。面板随服务端取温回包刷新，`FHNetwork.protocolVersion` 的 `soil-thermometer-4` 对应含位置、生长温度、天气暴露标志和可选树苗状态的读数包。
+
+栽培树木成功扣4格另由完整树木专项30/30验证（三类三档、实际生成、失败免费、余量耗尽及2×2单次扣费），日志 `build/cultivated-fertilizer-open-sky-validation.log`；本轮未重跑普通作物独立专项。

@@ -18,7 +18,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import java.util.Map;
 
-/** Reloadable prototype profile. Vanilla tree configuration is decoded by Minecraft's codec. */
+/** Reloadable cultivation profiles resolving complete species configurations from the vanilla registry. */
 @Mod.EventBusSubscriber(modid = FHMain.MODID)
 public final class CultivatedOakProfile extends SimpleJsonResourceReloadListener {
     public static final ResourceLocation ID = new ResourceLocation(FHMain.MODID, "oak");
@@ -74,7 +74,7 @@ public final class CultivatedOakProfile extends SimpleJsonResourceReloadListener
             case "cherry" -> { giants = java.util.List.of(); vanillaMax = 8; }
             default -> throw new IllegalArgumentException("Unsupported cultivated tree " + vanilla);
         }
-        Profile result = new Profile(tree, vanilla, giants, vanilla == null, species.equals("dark_oak"),
+        Profile result = new Profile(tree, vanilla, giants, species.equals("oak"), species.equals("dark_oak"),
                 GsonHelper.getAsInt(g, "progress_per_stage"), GsonHelper.getAsInt(g, "min_light"),
                 GsonHelper.getAsFloat(g, "branch_probability", .35f),
                 vanilla != null ? vanillaMax : GsonHelper.getAsInt(json.getAsJsonObject("tree").getAsJsonObject("trunk_placer"), "base_height")
@@ -99,7 +99,7 @@ public final class CultivatedOakProfile extends SimpleJsonResourceReloadListener
         return result;
     }
 
-    /** Height = ceil((target logs - fixed logs) / logs per height), with a one-block minimum. */
+    /** The earned-height value is now a per-sapling wood expectation, not a physical trunk height. */
     public record Profile(TreeConfiguration tree, ResourceLocation vanillaTree, java.util.List<ResourceLocation> giantTrees,
             boolean branches, boolean giantOnly, int progressPerStage, int minLight, float branchProbability, int vanillaMaxHeight,
             float baseLogs, float logsPerHeight, float fixedLogs, int minHeight, int maxHeight,
@@ -127,41 +127,58 @@ public final class CultivatedOakProfile extends SimpleJsonResourceReloadListener
                     : minHeight + (maxHeight - minHeight) * (factor - minimumYieldFactor) / (1 - minimumYieldFactor);
             return Math.max(0, (int)Math.floor(height));
         }
-        /** Resolves the species' own vanilla canopy/decorators and fixes only the trunk height. */
+        /** Complete cherry forks have a nonzero native minimum; keep earning credit rather than inventing a pole. */
+        public int minimumBudget() {
+            if (giantOnly) return maxHeight;
+            return vanillaTree != null && vanillaTree.getPath().equals("cherry")
+                    ? (int)Math.ceil(CultivatedTreeYield.minimumLogs("cherry")) : 1;
+        }
+        /** Converts a per-sapling wood budget to a complete native tree configuration. */
         public TreeConfiguration atHeight(net.minecraft.server.level.ServerLevel level, net.minecraft.util.RandomSource random,
-                int height, boolean giant) {
-            ResourceLocation id = giant ? giantTrees.get(random.nextInt(giantTrees.size())) : vanillaTree;
+                int budget, boolean giant) {
+            return atHeight(level, random, budget, giant, null);
+        }
+        /** Origin permits the native flower-dependent bee variants without querying unloaded positions. */
+        public TreeConfiguration atHeight(net.minecraft.server.level.ServerLevel level, net.minecraft.util.RandomSource random,
+                int budget, boolean giant, net.minecraft.core.BlockPos origin) {
+            if (budget < minimumBudget() && !giant || budget < 1 || !giant && giantOnly || giant && giantTrees.isEmpty()) return null;
+            String shape = vanillaTree == null ? "oak" : vanillaTree.getPath();
+            ResourceLocation id = vanillaTree;
+            if (giant) {
+                id = giantTrees.get(random.nextInt(giantTrees.size()));
+                shape = id.getPath();
+            } else if (shape.equals("oak")) {
+                // Above ordinary oak size, use real Fancy branches rather than synthetic horizontal logs.
+                if (budget > vanillaMaxHeight || budget >= 4 && random.nextInt(10) == 0) shape = "fancy_oak";
+                id = new ResourceLocation("minecraft", shape);
+            } else if (shape.equals("mangrove") && random.nextFloat() < .85f) {
+                shape = "tall_mangrove";
+                id = new ResourceLocation("minecraft", shape);
+            }
+            if (!giant && origin != null && java.util.Set.of("oak", "fancy_oak", "birch", "cherry").contains(shape)
+                    && flowersNearby(level, origin)) id = new ResourceLocation("minecraft", shape + "_bees_005");
             TreeConfiguration source = tree;
-            if (id != null) {
+            if (id != null && !(tree != null && id.equals(new ResourceLocation("minecraft:oak")))) {
                 var feature = level.registryAccess().registryOrThrow(net.minecraft.core.registries.Registries.CONFIGURED_FEATURE).get(id);
                 if (feature == null || !(feature.config() instanceof TreeConfiguration configuration)) return null;
                 source = configuration;
             }
-            if (source == null || !giant && giantOnly) return null;
-            if (vanillaTree != null && !vanillaTree.getPath().equals("spruce")) {
-                // Preserve native forks, bending stems and roots without registering a new worldgen codec.
-                var trunk = new CultivatedNativeTrunkPlacer(source.trunkPlacer, height, giant ? 2 : 1, minHeight);
-                return copyWithTrunk(source, trunk);
-            }
-            if (giant && !(source.trunkPlacer instanceof net.minecraft.world.level.levelgen.feature.trunkplacers.GiantTrunkPlacer)
-                    || !giant && !(source.trunkPlacer instanceof StraightTrunkPlacer)) return null;
-            return fixedHeight(source, height, giant);
-        }
-        /** Compatibility entry for the original embedded oak profile. */
-        public TreeConfiguration atHeight(int height) { return fixedHeight(tree, height, false); }
-        private static TreeConfiguration fixedHeight(TreeConfiguration source, int height, boolean giant) {
-            var trunk = giant ? new net.minecraft.world.level.levelgen.feature.trunkplacers.GiantTrunkPlacer(height, 0, 0)
-                    : new StraightTrunkPlacer(height, 0, 0);
-            return copyWithTrunk(source, trunk);
-        }
-        private static TreeConfiguration copyWithTrunk(TreeConfiguration source,
-                net.minecraft.world.level.levelgen.feature.trunkplacers.TrunkPlacer trunk) {
-            var builder = new TreeConfiguration.TreeConfigurationBuilder(source.trunkProvider, trunk,
-                    source.foliageProvider, source.foliagePlacer, source.rootPlacer, source.minimumSize)
+            if (source == null) return null;
+            double expectedLogs = (giant ? 4.0 : 1.0) * budget;
+            int height = CultivatedTreeYield.height(shape, expectedLogs, random);
+            var trunk = source.trunkPlacer;
+            var builder = new TreeConfiguration.TreeConfigurationBuilder(source.trunkProvider,
+                    new CultivatedNativeTrunkPlacer(trunk, height), source.foliageProvider,
+                    source.foliagePlacer, source.rootPlacer, source.minimumSize)
                     .dirt(source.dirtProvider).decorators(source.decorators);
             if (source.ignoreVines) builder.ignoreVines();
             if (source.forceDirt) builder.forceDirt();
             return builder.build();
+        }
+        private static boolean flowersNearby(net.minecraft.server.level.ServerLevel level, net.minecraft.core.BlockPos origin) {
+            for (var pos : net.minecraft.core.BlockPos.betweenClosed(origin.offset(-2, -1, -2), origin.offset(2, 1, 2)))
+                if (level.hasChunkAt(pos) && level.getBlockState(pos).is(net.minecraft.tags.BlockTags.FLOWERS)) return true;
+            return false;
         }
     }
 }
