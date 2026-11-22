@@ -19,9 +19,9 @@
 
 package com.teammoeg.frostedresearch.blocks;
 
-import net.minecraft.server.level.ServerPlayer;
+import java.util.UUID;
 
 public interface ComputeMachine {
-	int fetchPoint(ServerPlayer player, int max);
-	int getFetchablePoints(ServerPlayer player);
+	int fetchPoint(UUID teamId, int max);
+	int getFetchablePoints(UUID teamId);
 }

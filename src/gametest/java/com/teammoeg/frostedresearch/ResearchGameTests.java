@@ -94,29 +94,45 @@ public final class ResearchGameTests {
         calculator.load(points);
 
         ServerPlayer fake = FakePlayerFactory.getMinecraft(helper.getLevel());
-        helper.assertTrue(calculator.fetchPoint(fake, 10) == 0,
-                "FakePlayer must not extract points");
-        helper.assertTrue(IOwnerTile.getOwner(calculator) == null,
-                "FakePlayer must not claim an ownerless calculator");
+        helper.assertTrue(calculator.getFetchablePoints(null) == 0 && calculator.fetchPoint(null, 10) == 0,
+                "missing team UUID must not query, extract or claim");
 
         TeamsAPIProvider previousProvider = TeamsAPI.getAPI();
         TeamsAPI.register(new SinglePlayerTeamAPIProvider());
         try {
             ServerPlayer owner = testPlayer(helper);
-            helper.assertTrue(calculator.fetchPoint(owner, 30) == 30,
+            calculator.onClick(owner);
+            var ownerId = CTeamDataManager.get(owner).getId();
+            helper.assertTrue(calculator.fetchPoint(ownerId, 30) == 30,
                     "first real player interaction must claim and partially extract");
             helper.assertTrue(CTeamDataManager.get(owner).getId().equals(IOwnerTile.getOwner(calculator)),
                     "calculator owner must be the interacting player's team");
-            helper.assertTrue(calculator.getFetchablePoints(owner) == 45,
+            helper.assertTrue(calculator.getFetchablePoints(ownerId) == 45,
                     "partial extraction must retain the remaining points");
-            helper.assertTrue(calculator.fetchPoint(owner, 0) == 0,
+            helper.assertTrue(calculator.fetchPoint(ownerId, 0) == 0,
                     "non-positive extraction limits must not mutate the cache");
 
             ServerPlayer otherTeam = testPlayer(helper);
-            helper.assertTrue(calculator.fetchPoint(otherTeam, 45) == 0,
+            helper.assertTrue(calculator.fetchPoint(CTeamDataManager.get(otherTeam).getId(), 45) == 0,
                     "a different team must not extract the cache");
-            helper.assertTrue(calculator.getFetchablePoints(owner) == 45,
+            helper.assertTrue(calculator.getFetchablePoints(ownerId) == 45,
                     "denied extraction must leave the cache unchanged");
+            var savedOwner = IOwnerTile.getOwner(calculator);
+            helper.assertTrue(calculator.fetchPoint(ownerId, -1) == 0,
+                    "negative limits must preserve points");
+            helper.assertTrue(calculator.fetchPoint(ownerId, 10) == 10
+                    && calculator.getFetchablePoints(ownerId) == 35,
+                    "team UUID extraction must respect the requested limit");
+            helper.assertTrue(calculator.fetchPoint(ownerId, 100) == 35
+                    && calculator.getFetchablePoints(ownerId) == 0,
+                    "team UUID extraction must be capped by the balance");
+            helper.assertTrue(savedOwner.equals(IOwnerTile.getOwner(calculator)), "extraction must preserve ownership");
+            helper.setBlock(new BlockPos(3, 1, 1), FRContents.Blocks.MECHANICAL_CALCULATOR.get());
+            var unclaimed = (MechCalcTileEntity) helper.getBlockEntity(new BlockPos(3, 1, 1));
+            unclaimed.load(points);
+            helper.assertTrue(unclaimed.getFetchablePoints(ownerId) == 0
+                    && unclaimed.fetchPoint(ownerId, 10) == 0 && IOwnerTile.getOwner(unclaimed) == null,
+                    "team UUID extraction must not claim an ownerless calculator");
             verifyPhaseOneResultAccess(helper, owner);
             verifyInvalidCatalogReloadPreservesLiveDefinitions(helper);
             verifyListenerAndEffectLifecycle(helper, owner, otherTeam);
@@ -255,6 +271,41 @@ public final class ResearchGameTests {
                         entity.getItem().getItem() instanceof UpgradePrototypeItem);
     }
 
+    private static void verifyRubbingTeamBinding(GameTestHelper helper, ServerPlayer owner,
+                                                ServerPlayer other, Research research) {
+        var data = ResearchDataAPI.getData(owner);
+        var tool = new ItemStack(FRContents.Items.rubbing_tool.get());
+        ResearchHooks.submitItem(owner, tool);
+        helper.assertTrue(data.team().getId().equals(com.teammoeg.frostedresearch.blocks.RubbingTool.getTeam(tool)),
+                "binding research must also bind the Chorda team");
+        helper.assertTrue(com.teammoeg.frostedresearch.blocks.RubbingTool.canCollect(tool),
+                "bound team with eligible research may collect points");
+        var restored = ItemStack.of(tool.save(new CompoundTag()));
+        helper.assertTrue(data.team().getId().equals(com.teammoeg.frostedresearch.blocks.RubbingTool.getTeam(restored)),
+                "team binding must survive NBT round trip");
+        com.teammoeg.frostedresearch.blocks.RubbingTool.setPoint(tool, 1);
+        var before = tool.save(new CompoundTag());
+        ResearchHooks.submitItem(other, tool);
+        helper.assertTrue(before.equals(tool.save(new CompoundTag())), "cross-team submission must preserve the tool");
+        long committed = data.get().getData(research).getCommitted();
+        var result = ResearchHooks.submitItem(owner, tool);
+        helper.assertTrue(result.is(FRContents.Items.rubbing_pad.get())
+                && data.get().getData(research).getCommitted() == committed + 1,
+                "same-team submission must credit the bound research");
+        var legacy = new ItemStack(FRContents.Items.rubbing_tool.get());
+        com.teammoeg.frostedresearch.blocks.RubbingTool.setResearch(legacy, research.getId());
+        com.teammoeg.frostedresearch.blocks.RubbingTool.setPoint(legacy, 5);
+        var legacyTag = legacy.save(new CompoundTag());
+        ResearchHooks.submitItem(owner, legacy);
+        helper.assertTrue(legacyTag.equals(legacy.save(new CompoundTag()))
+                && !com.teammoeg.frostedresearch.blocks.RubbingTool.canCollect(legacy),
+                "legacy points with unknown team must remain unchanged and unusable");
+        com.teammoeg.frostedresearch.blocks.RubbingTool.setPoint(legacy, 0);
+        ResearchHooks.submitItem(owner, legacy);
+        helper.assertTrue(data.team().getId().equals(com.teammoeg.frostedresearch.blocks.RubbingTool.getTeam(legacy)),
+                "empty legacy tools may bind to the current research and team");
+    }
+
     private static void verifyListenerAndEffectLifecycle(
             GameTestHelper helper, ServerPlayer owner, ServerPlayer otherTeam) {
         Path catalog = FMLPaths.CONFIGDIR.get().resolve("fhresearches");
@@ -283,6 +334,8 @@ public final class ResearchGameTests {
                     "activating one team must add its scoped kill listener");
             helper.assertTrue(ResearchHooks.getTickClues().size() == 1,
                     "activating one team must add its scoped advancement listener");
+
+            verifyRubbingTeamBinding(helper, owner, otherTeam, listeners);
 
             Clue teamKill = clue(listeners, "team-kill");
             Clue alwaysKill = clue(listeners, "always-kill");

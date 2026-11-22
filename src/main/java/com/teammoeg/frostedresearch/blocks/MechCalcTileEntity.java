@@ -205,8 +205,8 @@ public class MechCalcTileEntity extends KineticBlockEntity implements IHaveGoggl
     }
 
 	@Override
-	public int fetchPoint(ServerPlayer player, int max) {
-		if (max <= 0 || !canAccess(player)) return 0;
+	public int fetchPoint(java.util.UUID teamId, int max) {
+		if (max <= 0 || !canExtract(teamId)) return 0;
 		int ret = Math.min(max, currentPoints);
 		currentPoints -= ret;
 		updatePoints();
@@ -214,16 +214,22 @@ public class MechCalcTileEntity extends KineticBlockEntity implements IHaveGoggl
 	}
 
 	@Override
-	public int getFetchablePoints(ServerPlayer player) {
-		return canAccess(player) ? currentPoints : 0;
+	public int getFetchablePoints(java.util.UUID teamId) {
+		return canExtract(teamId) ? currentPoints : 0;
 	}
 
+    /** Extraction uses the bound team's identity and never claims an ownerless machine. */
+    private boolean canExtract(java.util.UUID teamId) {
+        return teamId != null && teamId.equals(IOwnerTile.getOwner(this));
+    }
+
 	private boolean canAccess(ServerPlayer player) {
-		if (player instanceof FakePlayer) return false;
+        if (player instanceof FakePlayer) return false;
 		var team = CTeamDataManager.get(player);
 		if (team == null) return false;
 		java.util.UUID owner = IOwnerTile.getOwner(this);
 		if (owner == null) {
+			if (player instanceof FakePlayer) return false;
 			IOwnerTile.trySetOwner(this, team.getId());
 			owner = IOwnerTile.getOwner(this);
 			setChanged();

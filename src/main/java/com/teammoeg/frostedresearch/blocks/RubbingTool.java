@@ -43,11 +43,33 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult.Type;
 
 import java.util.List;
+import java.util.UUID;
+import com.teammoeg.frostedresearch.api.ResearchDataAPI;
 
 public class RubbingTool extends FRBaseItem{
 
     public RubbingTool(Properties properties) {
         super(properties);
+    }
+
+    /** Returns the bound Chorda team UUID, or null for legacy/unbound tools. */
+    public static UUID getTeam(ItemStack stack) {
+        return stack.hasTag() && stack.getTag().hasUUID("team") ? stack.getTag().getUUID("team") : null;
+    }
+
+    /** Binds an empty tool to a research and its receiving team in one operation. */
+    public static void bind(ItemStack stack, String research, UUID team) {
+        setResearch(stack, research);
+        stack.getOrCreateTag().putUUID("team", team);
+    }
+
+    /** Checks the bound team's research eligibility independently of the operator. */
+    public static boolean canCollect(ItemStack stack) {
+        UUID team = getTeam(stack);
+        Research research = FHResearch.getResearch(getResearch(stack));
+        return team != null && research != null && ResearchDataAPI.getData(team)
+                .map(data -> data.get().getData(research).canResearch()
+                        && !data.get().getData(research).isCompleted()).orElse(false);
     }
 
     public static int getPoint(ItemStack stack) {
@@ -91,6 +113,11 @@ public class RubbingTool extends FRBaseItem{
             tooltip.add(Lang.translateTooltip("rubbing.points", points));
             tooltip.add(Lang.translateTooltip("rubbing.points.hint").withStyle(ChatFormatting.YELLOW));
         }
+        UUID team = getTeam(stack);
+        if (team != null) tooltip.add(Component.literal("队伍: " + team).withStyle(ChatFormatting.GRAY));
+        else if (hasResearch(stack) || points > 0)
+            tooltip.add(Component.literal(points > 0 ? "旧工具点数来源队伍未知，无法取点或提交" : "请在绘图桌重新绑定研究与队伍")
+                    .withStyle(ChatFormatting.YELLOW));
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
 
     }
@@ -119,6 +146,7 @@ public class RubbingTool extends FRBaseItem{
         if (worldIn.isClientSide) return stack;
         if (stack.getDamageValue() >= stack.getMaxDamage()) return stack;
         if (!hasResearch(stack)) return stack;
+        if (!(entityLiving instanceof ServerPlayer player) || !canCollect(stack)) return stack;
         Player entityplayer = entityLiving instanceof Player ? (Player) entityLiving : null;
         if (entityplayer instanceof ServerPlayer) {
             BlockHitResult brtr = getPlayerPOVHitResult(worldIn, entityplayer, Fluid.NONE);
@@ -126,8 +154,8 @@ public class RubbingTool extends FRBaseItem{
 
             BlockEntity te = CUtils.getExistingTileEntity(worldIn, brtr.getBlockPos());
             if (te instanceof ComputeMachine mcte) {
-	            if(mcte.getFetchablePoints((ServerPlayer) entityplayer)>=100) {
-	                int crp = mcte.fetchPoint((ServerPlayer) entityplayer, 100);
+	            if(mcte.getFetchablePoints(getTeam(stack))>=100) {
+	                int crp = mcte.fetchPoint(getTeam(stack), 100);
 	                if (crp > 0) {
 	                    stack.setDamageValue(stack.getDamageValue() + 1);
 	                    crp += getPoint(stack);
