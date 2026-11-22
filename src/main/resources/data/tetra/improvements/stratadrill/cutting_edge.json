@@ -4,7 +4,7 @@
     "key": "stratadrill/cutting_edge/",
     "level": 0,
     "group": "stratadrill/cutting_edge",
-    "durability": -250,
+    "durability": -9000,
     "tools": {
       "pickaxe_dig": [ 0, -2.4 ]
     },

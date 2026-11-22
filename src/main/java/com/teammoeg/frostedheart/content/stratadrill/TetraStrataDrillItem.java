@@ -21,13 +21,18 @@ package com.teammoeg.frostedheart.content.stratadrill;
 
 import com.teammoeg.chorda.creativeTab.CreativeTabItemHelper;
 import com.teammoeg.chorda.creativeTab.ICreativeModeTabItem;
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
 import com.teammoeg.frostedheart.content.stratadrill.client.StrataDrillHands;
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
+import net.minecraft.locale.Language;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
@@ -42,8 +47,11 @@ import net.minecraftforge.common.ToolAction;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
 import se.mickelus.tetra.items.modular.IModularItem;
 import se.mickelus.tetra.items.modular.ItemModularHandheld;
+import se.mickelus.tetra.module.BasicMajorModule;
 import se.mickelus.tetra.module.ItemModule;
 import se.mickelus.tetra.module.ItemModuleMajor;
+import se.mickelus.tetra.module.ModuleRegistry;
+import se.mickelus.tetra.module.data.ModuleData;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import javax.annotation.Nullable;
@@ -65,6 +73,8 @@ public final class TetraStrataDrillItem extends ItemModularHandheld
     private static final String CUTTING_EDGE_TAG_PREFIX = HEAD_SLOT + ":" + CUTTING_EDGE + "/";
     private static final String STEAM = "stratadrill/steam";
     private static final String DIESEL = "stratadrill/diesel";
+    private static final int FUEL_BAR_WIDTH = 13;
+    private static final int FUEL_BAR_COLOR = 0xB7C8CE;
 
     public TetraStrataDrillItem() {
         super(new Properties().stacksTo(1));
@@ -73,6 +83,11 @@ public final class TetraStrataDrillItem extends ItemModularHandheld
         requiredModules = majorModuleKeys;
         // S04 does not add progression or new honing outcomes in this version.
         canHone = false;
+    }
+
+    /** Register the S04-only display subtype after Tetra has constructed its module registry. */
+    public static void registerHeadModule() {
+        ModuleRegistry.instance.registerModuleType(FHMain.rl("stratadrill_head"), HeadModule::new);
     }
 
     @Override
@@ -104,23 +119,23 @@ public final class TetraStrataDrillItem extends ItemModularHandheld
     @Override
     public Component getName(ItemStack stack) {
         String key = getDescriptionId();
-        CompoundTag tag = stack.getTag();
-        if (tag == null || !DRIVE_SLOT.equals(tag.getString(DRIVE_SLOT))) return Component.translatable(key);
-
-        // A missing or unknown variant can fall back in Tetra, but must not be named as an installed drive.
-        String variant = tag.getString(DRIVE_SLOT + "_material");
-        String suffix = switch (variant) {
-            case STEAM -> ".steam";
-            case DIESEL -> ".diesel";
-            default -> null;
-        };
-        if (suffix != null) {
-            ItemModule drive = getModuleFromSlot(stack, DRIVE_SLOT);
-            if (drive != null && DRIVE_SLOT.equals(drive.getKey()) && variantIs(stack, drive, variant)) {
-                key += suffix;
-            }
-        }
+        String drive = getInstalledDriveVariant(stack);
+        if (STEAM.equals(drive)) key += ".steam";
+        else if (DIESEL.equals(drive)) key += ".diesel";
         return Component.translatable(key);
+    }
+
+    /** Display the installed drive independently of the head, wear and fuel level. */
+    @Nullable
+    private String getInstalledDriveVariant(ItemStack stack) {
+        CompoundTag tag = stack.getTag();
+        if (tag == null || !DRIVE_SLOT.equals(tag.getString(DRIVE_SLOT))) return null;
+
+        // Do not display Tetra's default variant for a missing or unknown drive.
+        String variant = tag.getString(DRIVE_SLOT + "_material");
+        if (!STEAM.equals(variant) && !DIESEL.equals(variant)) return null;
+        ItemModule drive = getModuleFromSlot(stack, DRIVE_SLOT);
+        return drive != null && DRIVE_SLOT.equals(drive.getKey()) && variantIs(stack, drive, variant) ? variant : null;
     }
 
     @Override
@@ -180,18 +195,65 @@ public final class TetraStrataDrillItem extends ItemModularHandheld
     }
 
     @Override
-    public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tooltip, TooltipFlag flags) {
-        super.appendHoverText(stack, level, tooltip, flags);
-        StrataDrillAssembly assembly = resolveAssembly(stack, true);
-        if (assembly == null) return;
-        if (assembly.steam()) {
-            tooltip.add(Component.translatable("tooltip.frostedheart.stratadrill.steam",
-                    (int) StrataDrillPower.steamStored(stack), StrataDrillPower.STEAM_CAPACITY));
-            tooltip.add(Component.translatable("tooltip.frostedheart.stratadrill.steam_dock"));
-        } else {
-            tooltip.add(Component.translatable("tooltip.frostedheart.stratadrill.diesel",
-                    StrataDrillPower.dieselStored(stack), StrataDrillPower.DIESEL_CAPACITY));
+    public boolean isBarVisible(ItemStack stack) {
+        return getInstalledDriveVariant(stack) != null;
+    }
+
+    @Override
+    public int getBarWidth(ItemStack stack) {
+        String drive = getInstalledDriveVariant(stack);
+        if (STEAM.equals(drive)) {
+            return fuelBarWidth((int) StrataDrillPower.steamStored(stack), StrataDrillPower.STEAM_CAPACITY);
         }
+        if (DIESEL.equals(drive)) {
+            return fuelBarWidth(StrataDrillPower.dieselStored(stack), StrataDrillPower.DIESEL_CAPACITY);
+        }
+        return 0;
+    }
+
+    @Override
+    public int getBarColor(ItemStack stack) {
+        return FUEL_BAR_COLOR;
+    }
+
+    private static int fuelBarWidth(int fuel, int capacity) {
+        // Leave the vanilla track visible at empty; reserve the full-width fill for a full tank.
+        if (fuel <= 0) return 0;
+        if (fuel >= capacity) return FUEL_BAR_WIDTH;
+        return Mth.clamp(Math.round((float) fuel * FUEL_BAR_WIDTH / capacity), 1, FUEL_BAR_WIDTH - 1);
+    }
+
+    @Override
+    public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tooltip, TooltipFlag flags) {
+        String drive = getInstalledDriveVariant(stack);
+        boolean steam = STEAM.equals(drive);
+        // ItemStack has appended the name; add fuel before Tetra's tooltip details.
+        if (steam) {
+            tooltip.add(Component.translatable("tooltip.frostedheart.stratadrill.steam",
+                    (int) StrataDrillPower.steamStored(stack), StrataDrillPower.STEAM_CAPACITY)
+                    .withStyle(ChatFormatting.GRAY));
+        } else if (DIESEL.equals(drive)) {
+            tooltip.add(Component.translatable("tooltip.frostedheart.stratadrill.diesel",
+                    StrataDrillPower.dieselStored(stack), StrataDrillPower.DIESEL_CAPACITY)
+                    .withStyle(ChatFormatting.GRAY));
+        }
+        appendHeadDurability(stack, tooltip, flags);
+        super.appendHoverText(stack, level, tooltip, flags);
+        if (steam) tooltip.add(Component.translatable("tooltip.frostedheart.stratadrill.steam_dock")
+                .withStyle(ChatFormatting.GRAY));
+    }
+
+    private void appendHeadDurability(ItemStack stack, List<Component> tooltip, TooltipFlag flags) {
+        ItemModule head = getModuleFromSlot(stack, HEAD_SLOT);
+        if (head == null || !HEAD_SLOT.equals(head.getKey())) return;
+        int max = stack.getMaxDamage();
+        if (max <= 0) return;
+        int damage = stack.getDamageValue();
+        boolean broken = isBroken(damage, max);
+        // F3+H adds the vanilla raw value to worn items later. Only repeat it if the drill has stopped at max − 1.
+        if (flags.isAdvanced() && !broken && stack.isDamaged()) return;
+        tooltip.add(Component.translatable("tooltip.frostedheart.stratadrill.head_durability",
+                broken ? 0 : max - damage, max).withStyle(ChatFormatting.GRAY));
     }
 
     @Override
@@ -215,6 +277,12 @@ public final class TetraStrataDrillItem extends ItemModularHandheld
         if (tag == null || tag.getString(IModularItem.identifierKey).isEmpty()) {
             IModularItem.updateIdentifier(stack);
         }
+    }
+
+    @Override
+    public boolean sameVisualIdentity(ItemStack previous, ItemStack current) {
+        String id = getIdentifier(previous);
+        return id != null && !id.isEmpty() && id.equals(getIdentifier(current));
     }
 
     /** A client display stack uses the same item model but omits fuel, damage, name and cache ID. */
@@ -242,6 +310,20 @@ public final class TetraStrataDrillItem extends ItemModularHandheld
         return display.save(new CompoundTag());
     }
 
+    /** Check the selected S04 part against the current stack, not the workbench's earlier selection. */
+    public boolean allowsPartSwap(ItemStack stack, @Nullable String slot, String schematic) {
+        String targetSlot = switch (schematic) {
+            case SPIRAL, WHEEL -> HEAD_SLOT;
+            case STEAM, DIESEL -> DRIVE_SLOT;
+            default -> null;
+        };
+        if (targetSlot == null) return true;
+        if (!targetSlot.equals(slot)) return false;
+
+        ItemModule installed = getModuleFromSlot(stack, targetSlot);
+        return installed == null || !targetSlot.equals(installed.getKey()) || !variantIs(stack, installed, schematic);
+    }
+
     /**
      * Drop dormant cutter tags only on actual head work, after Tetra has applied the new cutter.
      * Tetra's exclusivity group removes loaded improvements but cannot see an unloaded profile.
@@ -266,5 +348,39 @@ public final class TetraStrataDrillItem extends ItemModularHandheld
     private static boolean variantIs(ItemStack stack, ItemModule module, String variant) {
         var data = module.getVariantData(stack);
         return data != null && variant.equals(data.key);
+    }
+
+    /** Keeps the head variant independent of the installed cutting-edge improvement. */
+    private static final class HeadModule extends BasicMajorModule {
+        private HeadModule(ResourceLocation id, ModuleData data) {
+            super(id, data);
+        }
+
+        @Override
+        public String getName(ItemStack stack) {
+            Language language = Language.getInstance();
+            String title = "tetra.variant." + getVariantData(stack).key + ".material_name";
+            if (!language.has(title)) return super.getName(stack);
+
+            String material = cutterMaterial(stack);
+            String prefix = "frostedheart.stratadrill.cutter." + material;
+            if (!language.has(prefix)) prefix = "tetra.material." + material + ".prefix";
+            return language.has(prefix) ? Component.translatable(title, Component.translatable(prefix)).getString()
+                    : super.getName(stack);
+        }
+
+        private String cutterMaterial(ItemStack stack) {
+            CompoundTag tag = stack.getTag();
+            if (tag != null) {
+                for (String key : tag.getAllKeys()) {
+                    if (key.startsWith(CUTTING_EDGE_TAG_PREFIX) && tag.contains(key, Tag.TAG_ANY_NUMERIC)
+                            && isLoadedCutter(this, tag, key)) {
+                        return key.substring(CUTTING_EDGE_TAG_PREFIX.length());
+                    }
+                }
+            }
+            // The stock head and heads whose material data was removed have iron's base stats.
+            return "iron";
+        }
     }
 }

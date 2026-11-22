@@ -2,15 +2,25 @@
   "slots": [
     "stratadrill/head"
   ],
-  "materialSlotCount": 0,
+  "materialSlotCount": 1,
   "repair": false,
   "displayType": "major",
   "glyph": {
     "textureX": 176,
     "textureY": 0
   },
+  "requirement": {
+    "type": "tetra:not",
+    "requirement": {
+      "type": "tetra:module",
+      "module": "stratadrill/head",
+      "variant": "stratadrill/wheel"
+    }
+  },
   "outcomes": [
     {
+      "material": { "tag": "forge:plates/steel", "count": 3 },
+      "requiredTools": { "hammer_dig": "minecraft:iron" },
       "moduleKey": "stratadrill/head",
       "moduleVariant": "stratadrill/wheel"
     }

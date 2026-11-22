@@ -171,7 +171,9 @@ public class ChargerTileEntity extends CBlockEntity implements CTickableBlockEnt
             if (dockedItem.isEmpty()) {
                 setDockedItem(held.split(1), steamDrill);
                 if (held.isEmpty()) player.setItemInHand(hand, ItemStack.EMPTY);
-                player.displayClientMessage(Lang.translateMessage("charger.dock_inserted"), true);
+                if (!steamDrill) {
+                    player.displayClientMessage(Lang.translateMessage("charger.dock_inserted"), true);
+                }
                 syncClientState();
             } else {
                 player.displayClientMessage(Lang.translateMessage("charger.dock_busy"), true);

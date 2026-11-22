@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Convert the approved Generic Blockbench drill to Forge OBJ item parts.
+"""Convert the approved Generic Blockbench drill to Forge OBJ modules and two item descriptors.
 
 Usage: python Scripts/export-stratadrill.py path/to/model.bbmodel [--resources src/main/resources]
 The editable Blockbench project is the source of truth and is opened read-only.
@@ -16,8 +16,8 @@ import struct
 NS = "frostedheart"
 MODEL_DIR = "models/item/stratadrill"
 TEXTURE_DIR = "item/stratadrill"
-# Ship one OBJ per physical module. Animation roles are separate Forge
-# visibility views of that geometry, not extra files.
+# Ship one OBJ per physical module. Animation roles are inline Forge visibility
+# views of that geometry, not separate files.
 MODULE_PARTS = {
     "body": ("body",),
     "steam": ("steam_fixed", "steam_crank", "steam_rod", "steam_piston"),
@@ -311,7 +311,6 @@ def main():
     for module, roles in MODULE_PARTS.items():
         stats = write_obj(models / f"{module}.obj", roles, elements, parts, sizes)
         for part, (counts, marked) in stats.items():
-            save_json(models / f"{part}.json", obj_json(module, part))
             totals += counts
             by_part[part] = counts.total()
             print(f"{part:16s} {counts[4]:3d} quads + {counts[3]:2d} triangles, {marked} cutter faces")
@@ -319,7 +318,18 @@ def main():
     base["gui_light"] = "front" if model["front_gui_light"] else "side"
     base["ambientocclusion"] = model["ambientocclusion"]
     base["display"] = model["display"]
-    save_json(models / "base.json", base)
+    save_json(models.with_suffix(".json"), base)
+    save_json(models / "parts.json", {
+        "loader": "forge:composite",
+        "textures": base["textures"],
+        # This model is a bake-time parts catalogue, not an item render pass.
+        "item_render_order": [],
+        "children": {
+            part: obj_json(module, part)
+            for module, roles in MODULE_PARTS.items() if module != "body"
+            for part in roles
+        },
+    })
     print(f"Total textured outputs: {totals.total()} faces ({totals[4]} quads, {totals[3]} tris)")
     for power in ("steam", "diesel"):
         active = by_part["body"] + sum(v for k, v in by_part.items() if k.startswith(power + "_"))

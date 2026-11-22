@@ -2,15 +2,25 @@
   "slots": [
     "stratadrill/drive"
   ],
-  "materialSlotCount": 0,
+  "materialSlotCount": 1,
   "repair": false,
   "displayType": "major",
   "glyph": {
     "textureX": 176,
     "textureY": 32
   },
+  "requirement": {
+    "type": "tetra:not",
+    "requirement": {
+      "type": "tetra:module",
+      "module": "stratadrill/drive",
+      "variant": "stratadrill/steam"
+    }
+  },
   "outcomes": [
     {
+      "material": { "tag": "forge:plates/iron", "count": 3 },
+      "requiredTools": { "hammer_dig": "minecraft:stone" },
       "moduleKey": "stratadrill/drive",
       "moduleVariant": "stratadrill/steam"
     }

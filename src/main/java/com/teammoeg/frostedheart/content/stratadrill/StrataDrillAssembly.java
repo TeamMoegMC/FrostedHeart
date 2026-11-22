@@ -52,6 +52,12 @@ public enum StrataDrillAssembly {
         return stack.getItem() instanceof ItemView;
     }
 
+    /** A synchronized replacement stack can still be the same drill for the work pose. */
+    public static boolean sameVisualTool(ItemStack previous, ItemStack current) {
+        return previous == current || (previous.getItem() instanceof ItemView drill
+                && previous.getItem() == current.getItem() && drill.sameVisualIdentity(previous, current));
+    }
+
     /** Snapshot only the stock item-model inputs for a charger, never the actual inventory stack. */
     @Nullable
     public static CompoundTag dockAppearance(ItemStack stack) {
@@ -90,5 +96,7 @@ public enum StrataDrillAssembly {
         CompoundTag dockAppearance(ItemStack stack);
 
         void ensureIdentity(ItemStack stack);
+
+        boolean sameVisualIdentity(ItemStack previous, ItemStack current);
     }
 }

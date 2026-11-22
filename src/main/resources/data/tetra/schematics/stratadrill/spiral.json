@@ -2,15 +2,25 @@
   "slots": [
     "stratadrill/head"
   ],
-  "materialSlotCount": 0,
+  "materialSlotCount": 1,
   "repair": false,
   "displayType": "major",
   "glyph": {
     "textureX": 176,
     "textureY": 0
   },
+  "requirement": {
+    "type": "tetra:not",
+    "requirement": {
+      "type": "tetra:module",
+      "module": "stratadrill/head",
+      "variant": "stratadrill/spiral"
+    }
+  },
   "outcomes": [
     {
+      "material": { "tag": "forge:ingots/iron", "count": 2 },
+      "requiredTools": { "hammer_dig": "minecraft:stone" },
       "moduleKey": "stratadrill/head",
       "moduleVariant": "stratadrill/spiral"
     }

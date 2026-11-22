@@ -42,6 +42,7 @@ import net.minecraftforge.client.ForgeRenderTypes;
 import net.minecraftforge.client.RenderTypeGroup;
 import net.minecraftforge.client.event.ModelEvent;
 import net.minecraftforge.client.model.BakedModelWrapper;
+import net.minecraftforge.client.model.CompositeModel;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
@@ -60,6 +61,7 @@ public final class StrataDrillModels {
 
     private static final ModelResourceLocation INVENTORY =
             new ModelResourceLocation(FHMain.rl("stratadrill"), "inventory");
+    private static final ResourceLocation PARTS = FHMain.rl("item/stratadrill/parts");
     private static final Map<Direction, List<BakedQuad>> NO_CULLED_FACES;
     static {
         EnumMap<Direction, List<BakedQuad>> sides = new EnumMap<>(Direction.class);
@@ -75,7 +77,6 @@ public final class StrataDrillModels {
     private static volatile Generation loaded;
 
     enum Part {
-        BODY("body"),
         STEAM_FIXED("steam_fixed"),
         STEAM_CRANK("steam_crank"),
         STEAM_ROD("steam_rod"),
@@ -86,10 +87,10 @@ public final class StrataDrillModels {
         WHEEL_FIXED("wheel_fixed"),
         WHEEL_ROTOR("wheel_rotor");
 
-        final ResourceLocation id;
+        final String name;
 
-        Part(String path) {
-            id = FHMain.rl("item/stratadrill/" + path);
+        Part(String name) {
+            this.name = name;
         }
     }
 
@@ -111,10 +112,7 @@ public final class StrataDrillModels {
 
     @SubscribeEvent
     public static void register(ModelEvent.RegisterAdditional event) {
-        if (!ModList.get().isLoaded("tetra")) return;
-        for (Part part : Part.values()) {
-            event.register(part.id);
-        }
+        if (ModList.get().isLoaded("tetra")) event.register(PARTS);
     }
 
     @SubscribeEvent
@@ -123,12 +121,17 @@ public final class StrataDrillModels {
         Map<ResourceLocation, BakedModel> baked = event.getModels();
         BakedModel root = baked.get(INVENTORY);
         if (root == null) return;
+        if (!(baked.get(PARTS) instanceof CompositeModel.Baked group)) {
+            FHMain.LOGGER.warn("Missing or invalid StrataDrill assembly model {}", PARTS);
+            return;
+        }
 
+        // Unpack the named parts once at bake time; no composite draw path is used.
         EnumMap<Part, BakedModel> parts = new EnumMap<>(Part.class);
         for (Part part : Part.values()) {
-            BakedModel model = baked.get(part.id);
+            BakedModel model = group.getPart(part.name);
             if (model == null) {
-                FHMain.LOGGER.warn("Missing StrataDrill model part {}", part.id);
+                FHMain.LOGGER.warn("Missing StrataDrill model part {} in {}", part.name, PARTS);
                 return;
             }
             parts.put(part, model);
@@ -144,7 +147,8 @@ public final class StrataDrillModels {
             BakedModel rod = assembly.steam() ? parts.get(Part.STEAM_ROD) : null;
             BakedModel piston = assembly.steam() ? parts.get(Part.STEAM_PISTON) : null;
             BakedMaterialVariants<BakedModel> head = assembly.wheel() ? wheel : spiral;
-            BakedModel fixed = combine(root, renderType, parts.get(Part.BODY),
+            // The inventory root already baked the same body OBJ with the authored display metadata.
+            BakedModel fixed = combine(root, renderType, root,
                     parts.get(assembly.steam() ? Part.STEAM_FIXED : Part.DIESEL_FIXED),
                     assembly.wheel() ? parts.get(Part.WHEEL_FIXED) : null);
             assemblies[assembly.ordinal()] =

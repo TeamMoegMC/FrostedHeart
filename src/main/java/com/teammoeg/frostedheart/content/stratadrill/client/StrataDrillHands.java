@@ -48,7 +48,8 @@ public final class StrataDrillHands {
     // Left palm on the outer end of the existing wood, just inboard of the metal stop.
     private static final Point FRONT_PALM_RIGHT_1P = new Point(-0.303125F, -0.021875F, 0.388125F);
     private static final Point FRONT_PALM_LEFT_1P = new Point(-0.31875F, -0.021875F, 0.24F);
-    private static final float FIRST_SCALE = 0.82F;
+    private static final float FIRST_SCALE = 0.90F;
+    private static final float FIRST_REAR_Z = -0.507F;
     private static final float THIRD_SCALE = 0.70F;
     private static final float MAIN_PALM_DEPTH = -1.18F;
     private static final float SUPPORT_PALM_DEPTH = -1.15F;
@@ -246,10 +247,10 @@ public final class StrataDrillHands {
         Quaternionf rotation = new Quaternionf().rotationY(yaw);
         // Model -X is the drill's working axis. The original two arms follow the same lift and
         // axial movement, rather than aiming, sweeping sideways or chasing the block position.
-        float press = 0.095F * load;
+        float press = 0.082F * load;
         Point rear = new Point(sign * 0.49F - press * Mth.cos(yaw),
-                -0.434F + 0.048F * load - 0.59F * HeldGripPose.equipWeight(equipProgress),
-                -0.545F + press * Mth.sin(yaw));
+                -0.434F + 0.034F * load - 0.59F * HeldGripPose.equipWeight(equipProgress),
+                FIRST_REAR_Z + press * Mth.sin(yaw));
         poses.pushPose();
         poses.translate(rear.x(), rear.y(), rear.z());
         poses.mulPose(rotation);

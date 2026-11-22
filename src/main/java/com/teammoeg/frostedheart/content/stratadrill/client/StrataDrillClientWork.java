@@ -29,6 +29,7 @@ import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraftforge.api.distmarker.Dist;
@@ -41,14 +42,19 @@ import net.minecraftforge.fml.common.Mod;
 @Mod.EventBusSubscriber(modid = FHMain.MODID, value = Dist.CLIENT)
 public final class StrataDrillClientWork {
     private static final int PREDICT_TICKS = 4;
+    // The completion tick and five vanilla destroy-delay ticks before the next START.
+    private static final int BETWEEN_BLOCKS_TICKS = 6;
     private static final Int2ObjectOpenHashMap<MotionClock> REMOTE = new Int2ObjectOpenHashMap<>();
     private static final MotionClock LOCAL = new MotionClock();
 
     private static ClientLevel level;
     private static ItemStack localDrill = ItemStack.EMPTY;
     private static StrataDrillAssembly localAssembly;
+    private static int localSlot = -1;
     private static BlockPos predictedTarget;
+    private static Block predictedBlock;
     private static long predictUntil;
+    private static long continueUntil;
     private static boolean serverRunning;
 
     private StrataDrillClientWork() {}
@@ -57,11 +63,28 @@ public final class StrataDrillClientWork {
         if (level == next) return;
         level = next;
         REMOTE.clear();
-        LOCAL.clear();
         localDrill = ItemStack.EMPTY;
         localAssembly = null;
-        predictedTarget = null;
+        localSlot = -1;
+        clearLocalWork();
+    }
+
+    private static void clearLocalWork() {
+        LOCAL.clear();
+        clearMiningIntent();
         serverRunning = false;
+    }
+
+    private static void clearMiningIntent() {
+        predictedTarget = null;
+        predictedBlock = null;
+        predictUntil = 0;
+        continueUntil = 0;
+    }
+
+    private static boolean holdsLocalTool(AbstractClientPlayer player, ItemStack stack) {
+        return localAssembly != null && localSlot == player.getInventory().selected
+                && StrataDrillAssembly.sameVisualTool(localDrill, stack);
     }
 
     /** Called on the main client thread by the FH work-edge packet after ordinary entity pairing. */
@@ -72,9 +95,10 @@ public final class StrataDrillClientWork {
         if (current == null || minecraft.player == null) return;
         if (entityId == minecraft.player.getId()) {
             // Keep the local predicted clock continuous; the server acknowledgement sets authority, not a new pose.
-            if (minecraft.player.getMainHandItem() != localDrill) return;
-            serverRunning = running;
-            if (!running) predictUntil = Long.MIN_VALUE;
+            if (!holdsLocalTool(minecraft.player, minecraft.player.getMainHandItem())) return;
+            // A late acknowledgement must not re-lift the drill after the local button was released.
+            // A STOP can refer to the previous block, so it only clears the server's confirmation.
+            serverRunning = running && minecraft.options.keyAttack.isDown();
             return;
         }
         if (!(current.getEntity(entityId) instanceof AbstractClientPlayer)) return;
@@ -100,39 +124,49 @@ public final class StrataDrillClientWork {
         StrataDrillAssembly assembly = StrataDrillAssembly.read(main);
         if (assembly == null) {
             if (localAssembly != null) {
-                LOCAL.clear();
                 localDrill = ItemStack.EMPTY;
                 localAssembly = null;
-                predictedTarget = null;
-                serverRunning = false;
+                localSlot = -1;
+                clearLocalWork();
             }
             return;
         }
-        if (main != localDrill || assembly != localAssembly) {
-            localDrill = main;
+        if (assembly != localAssembly || !holdsLocalTool(player, main)) {
+            clearLocalWork();
             localAssembly = assembly;
-            LOCAL.clear();
-            predictedTarget = null;
-            serverRunning = false;
+            localSlot = player.getInventory().selected;
         }
+        localDrill = main;
 
         long now = current.getGameTime();
         boolean canUse = !player.isSpectator() && !player.isUsingItem() && player.isAlive();
         boolean pressingMine = canUse && minecraft.screen == null && minecraft.options.keyAttack.isDown();
+        BlockPos target = pressingMine && minecraft.hitResult instanceof BlockHitResult block
+                && block.getType() == HitResult.Type.BLOCK ? block.getBlockPos() : null;
+
         boolean predicts = false;
-        if (pressingMine && minecraft.gameMode.isDestroying()
-                && minecraft.hitResult instanceof BlockHitResult block && block.getType() == HitResult.Type.BLOCK) {
-            BlockPos target = block.getBlockPos();
+        if (target == null) {
+            clearMiningIntent();
+            serverRunning = false;
+        } else if (minecraft.gameMode.isDestroying()) {
             if (!target.equals(predictedTarget)) {
                 predictedTarget = target.immutable();
+                predictedBlock = current.getBlockState(target).getBlock();
                 predictUntil = now + PREDICT_TICKS;
             }
             predicts = now < predictUntil;
-        } else if (!pressingMine) {
+        } else if (predictedTarget != null && LOCAL.running
+                && current.getBlockState(predictedTarget).getBlock() != predictedBlock) {
+            // Keep the pose across a locally observed completion, not an arbitrary STOP, abort or denied START.
+            continueUntil = now + BETWEEN_BLOCKS_TICKS;
             predictedTarget = null;
+            predictedBlock = null;
         }
         // A cancelled START may not send an animation edge. Never leave a local prediction running indefinitely.
-        boolean active = canUse && (serverRunning || predicts) && StrataDrillPower.canRun(main, player.isCreative());
+        boolean betweenBlocks = target != null && now < continueUntil;
+        boolean active = (serverRunning || predicts || betweenBlocks)
+                && StrataDrillPower.canRun(main, player.isCreative());
+        if (!active) continueUntil = 0;
         LOCAL.setRunning(active, now);
     }
 
@@ -159,7 +193,7 @@ public final class StrataDrillClientWork {
     private static MotionClock clockFor(AbstractClientPlayer actor) {
         if (actor.level() != level || level == null) return null;
         if (actor == Minecraft.getInstance().player) {
-            return actor.getMainHandItem() == localDrill ? LOCAL : null;
+            return holdsLocalTool(actor, actor.getMainHandItem()) ? LOCAL : null;
         }
         return REMOTE.get(actor.getId());
     }

@@ -29,12 +29,21 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-/** Cleans only dormant S04 cutter state on the crafted copy, before Tetra refreshes its cache ID. */
+/** Keeps S04 part swaps consistent with the current stack and Tetra's crafted result. */
 @Pseudo
 @Mixin(targets = "se.mickelus.tetra.module.schematic.ConfigSchematic", remap = false)
 public abstract class ConfigSchematicMixin_StrataDrill {
     @Shadow
     public abstract String getKey();
+
+    @Inject(method = "isMaterialsValid", at = @At("HEAD"), cancellable = true)
+    private void fh$checkCurrentStrataDrillPart(ItemStack input, String slot, ItemStack[] materials,
+                                               CallbackInfoReturnable<Boolean> callback) {
+        // Tetra checks the schematic requirement when listing choices, not when crafting a saved selection.
+        if (input.getItem() instanceof TetraStrataDrillItem drill && !drill.allowsPartSwap(input, slot, getKey())) {
+            callback.setReturnValue(false);
+        }
+    }
 
     @Inject(method = "applyUpgrade", at = @At("RETURN"))
     private void fh$pruneInactiveCutters(ItemStack input, ItemStack[] materials, boolean consumeMaterials,
