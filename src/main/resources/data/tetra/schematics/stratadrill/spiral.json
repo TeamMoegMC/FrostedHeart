@@ -1,0 +1,18 @@
+{
+  "slots": [
+    "stratadrill/head"
+  ],
+  "materialSlotCount": 0,
+  "repair": false,
+  "displayType": "major",
+  "glyph": {
+    "textureX": 176,
+    "textureY": 0
+  },
+  "outcomes": [
+    {
+      "moduleKey": "stratadrill/head",
+      "moduleVariant": "stratadrill/spiral"
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "key": "steel",
+  "category": "metal",
+  "hidden": true,
+  "tints": { "texture": "DAE7F5" },
+  "primary": 0,
+  "secondary": 0,
+  "tertiary": 0,
+  "durability": 350,
+  "toolLevel": 0,
+  "toolEfficiency": 7,
+  "material": {
+    "tag": "forge:ingots/steel",
+    "count": 2
+  }
+}

@@ -197,12 +197,12 @@ public final class ThermalGameplayFieldGameTests {
         oldTower.setOwner(firstTeam.getId());
         newTower.setOwner(firstTeam.getId());
         oldTower.regist(level, first, (short) 1);
-        heat(firstTeam);
+        heat(firstTeam, level);
         helper.runAfterDelay(3, () -> {
             helper.assertTrue(MinecraftThermalInput.hasAnalyticFieldAt(level, first), "first binding publication");
             newTower.regist(level, second, (short) 1);
             helper.assertTrue(!MinecraftThermalInput.hasAnalyticFieldAt(level, first), "rebind removes old field immediately");
-            heat(firstTeam);
+            heat(firstTeam, level);
             helper.runAfterDelay(3, () -> {
                 level.destroyBlock(first, false);
                 helper.assertTrue(second.equals(firstTeam.getData(FHSpecialDataTypes.GENERATOR_DATA).actualPos),
@@ -231,7 +231,7 @@ public final class ThermalGameplayFieldGameTests {
         GeneratorState tower = (GeneratorState) CMultiblockHelper.getBEHelper(level, master).getState();
         tower.setOwner(team.getId());
         tower.regist(level, master, (short) 1);
-        heat(team);
+        heat(team, level);
         helper.runAfterDelay(10, () -> level.setChunkForced(chunkX, chunkZ, false));
         helper.startSequence().thenWaitUntil(() -> {
             helper.assertTrue(level.getChunkSource().getChunkNow(chunkX, chunkZ) == null, "tower chunk must actually unload");
@@ -396,8 +396,8 @@ public final class ThermalGameplayFieldGameTests {
         openTower.setOwner(openTeam.getId());
         enclosedTower.regist(level, enclosed, (short) 1);
         openTower.regist(level, open, (short) 1);
-        heat(enclosedTeam);
-        heat(openTeam);
+        heat(enclosedTeam, level);
+        heat(openTeam, level);
         enclosedTeam.getData(FHSpecialDataTypes.GENERATOR_DATA).isActive = true;
         openTeam.getData(FHSpecialDataTypes.GENERATOR_DATA).isActive = true;
         var multiblock = CMultiblockHelper.getBEHelper(level, enclosed).getMultiblock();
@@ -470,11 +470,11 @@ public final class ThermalGameplayFieldGameTests {
         return CTeamDataManager.INSTANCE.get(new SinglePlayerTeam(id));
     }
 
-    private static void heat(TeamDataHolder team) {
+    private static void heat(TeamDataHolder team, ServerLevel level) {
         var data = team.getData(FHSpecialDataTypes.GENERATOR_DATA);
         data.RLevel = 1;
         data.TLevel = 3;
-        data.townProcessedTicks = 10_000;
+        data.baseAccountedThrough = level.getGameTime() + 10_000;
     }
 
     private static void command(ServerLevel level, String action, BlockPos position, String suffix) {

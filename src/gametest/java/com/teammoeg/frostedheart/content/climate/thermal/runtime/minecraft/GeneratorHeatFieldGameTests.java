@@ -3,21 +3,32 @@ package com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft;
 
 import java.util.UUID;
 
+import com.mojang.authlib.GameProfile;
+import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
+import com.teammoeg.chorda.dataholders.team.SinglePlayerTeam;
+import com.teammoeg.chorda.multiblock.CMultiblockHelper;
+import com.teammoeg.frostedheart.bootstrap.common.FHFluids;
+import com.teammoeg.frostedheart.bootstrap.common.FHMultiblocks;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorData;
+import com.teammoeg.frostedheart.content.climate.block.generator.t2.T2GeneratorState;
 import com.teammoeg.frostedheart.content.climate.thermal.consumer.TownThermalProjection;
 import com.teammoeg.frostedheart.content.climate.thermal.field.ThermalAnalyticField;
 import com.teammoeg.frostedheart.content.climate.thermal.field.ThermalAnalyticField.CombineMode;
 import com.teammoeg.frostedheart.content.climate.thermal.field.ThermalAnalyticFieldIndex;
 import com.teammoeg.frostedheart.content.climate.thermal.field.ThermalFieldKey;
 import com.teammoeg.frostedheart.content.climate.thermal.query.ThermalEnvironmentSample;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.common.util.FakePlayerFactory;
+import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
 import net.minecraftforge.gametest.GameTestHolder;
 import net.minecraftforge.gametest.PrefixGameTestTemplate;
 
@@ -141,6 +152,51 @@ public final class GeneratorHeatFieldGameTests {
     @GameTest(template = TEMPLATE, batch = "generator_boost_t2", timeoutTicks = 340)
     public static void formedT2KeepsNormalProductionAndAfterheat(GameTestHelper helper) {
         ThermalLoadedWorldGameTests.formedT2RecoversFromItsNormalProductionTick(helper);
+    }
+
+    @GameTest(template = TEMPLATE, batch = "generator_t2_warmup", timeoutTicks = 100)
+    public static void t2WarmupKeepsExactDoseAndShortageBehavior(GameTestHelper helper) {
+        var level = helper.getLevel();
+        var structure = FHMultiblocks.GENERATOR_T2;
+        BlockPos master = ThermalLoadedWorldGameTests.form(helper, structure, helper.absolutePos(new BlockPos(2, 2, 2)));
+        var state = (T2GeneratorState) CMultiblockHelper.getBEHelper(level, master).getState();
+        ThermalLoadedWorldGameTests.prepareProfileCache(level.getServer());
+        UUID id = UUID.randomUUID();
+        level.getServer().getProfileCache().add(new GameProfile(id, "Warm" + id.toString().substring(0, 8)));
+        var team = CTeamDataManager.INSTANCE.get(new SinglePlayerTeam(id));
+        state.setOwner(team.getId());
+        state.regist(level, master, (short) structure.getMasterFromOriginOffset().getY());
+        var data = state.getData(master).orElseThrow();
+        data.isWorking = true;
+        data.process = 200;
+
+        int rate = FHConfig.SERVER.CLIMATE.generatorSteamSpeed.get();
+        int duration = FHConfig.SERVER.CLIMATE.generatorSteamCost.get();
+        CompoundTag before = new CompoundTag();
+        state.writeSaveNBT(before);
+        before.putInt("steamLevel", 40);
+        before.putInt("liquidtick", duration - 1);
+        state.readSaveNBT(before);
+        var steam = FHFluids.STEAM.get();
+        helper.assertTrue(state.tank.fill(new FluidStack(steam, rate), FluidAction.EXECUTE) == rate, "one real steam dose");
+
+        helper.runAfterDelay(1, () -> {
+            CompoundTag wet = new CompoundTag();
+            state.writeSaveNBT(wet);
+            helper.assertTrue(state.tank.isEmpty() && wet.getInt("steamLevel") == 41
+                    && wet.getInt("liquidtick") == 0 && wet.getInt("noliquidtick") == 0,
+                    "exact dose increments warm-up once and drains exactly that dose; " + wet);
+            if (rate > 1) state.tank.fill(new FluidStack(steam, rate - 1), FluidAction.EXECUTE);
+            helper.runAfterDelay(1, () -> {
+                CompoundTag dry = new CompoundTag();
+                state.writeSaveNBT(dry);
+                helper.assertTrue(state.tank.isEmpty() && dry.getInt("steamLevel") == 40
+                        && dry.getInt("liquidtick") == duration - 1 && dry.getInt("noliquidtick") == 40,
+                        "short dose follows the unchanged empty/cooling/cooldown path; " + dry);
+                level.destroyBlock(master, false);
+                helper.succeed();
+            });
+        });
     }
 
     @GameTest(template = TEMPLATE, batch = "generator_boost_enclosure", timeoutTicks = 900)

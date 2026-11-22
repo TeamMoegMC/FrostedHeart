@@ -1,7 +1,7 @@
 # Player Temperature
 
 - Status: `Current`
-- Last verified: `2026-11-08` for equipment demand, stacking and reservoir implementation (validation recorded below); `2026-11-06` for body time/parameters and cold calibration; `2026-11-05` for heat/exposure separation and the orb's combined air/radiation reading. Earlier evidence retains its scope.
+- Last verified: `2026-11-22` for steam equipment runtime and charger accounting; `2026-11-08` for equipment demand, stacking and reservoir implementation; `2026-11-06` for body time/parameters and cold calibration; `2026-11-05` for heat/exposure separation and the orb's combined air/radiation reading. Earlier evidence retains its scope.
 - Scope: player environment sampling, five-part body energy, wearable thermal reservoirs, clothing, Wet, heating equipment, thermometers, HUD, effects, persistence, and synchronization
 - Primary code anchors: `PlayerTemperatureUpdate.updateTemperature`, `PlayerTemperatureComputation.updatePlayer`, `PlayerThermalEnvironment`, `PlayerEquipmentHeating`, `PlayerThermoregulation`, `PlayerThermalModel`, `PlayerThermalInjury`, `PlayerTemperatureData`, `ThermometerItem`, `CreativeThermometerItem`, `FHTemperatureDisplayPacket`, `WearableThermalExchangeHandler`, `ThreeNodeWearableHeatExchange`, `ThermalReservoirBlock`, `ThermalReservoirBlockEntity.serverTick`, `FHBodyDataSyncPacket`, `FrostedHud.renderTemperature`
 
@@ -339,10 +339,10 @@ exponential or environment query is added to ordinary body integration.
 |---|---:|---|
 | `frostedheart:hand_stove` | main hand `12 W`; offhand `110 W` | hands / torso; fuel and ash advance by elapsed seconds |
 | `frostedheart:heating_pad` | `110 W` | torso; activated pad lasts `200 s` |
-| `frostedheart:steam_bottle` | approximately `70 W` | torso; up to `1.5` stored heat units per elapsed second |
+| `frostedheart:steam_bottle` | approximately `70 W` | torso; `240` stored points, up to `1.5` per game second; `160 s` per fill |
 | `frostedheart:oxygen_candle` | `28 W` | torso; activated candle lasts `600 s` |
 | `frostedheart:straw_briquette_red_mushroom`, `frostedheart:straw_briquette_brown_mushroom` | `3 W` | torso; the existing growth/durability clock runs only above `36 C` |
-| `frostedheart:heater_vest` | up to `275 W` | torso; controlled steam consumption for the uncovered demand |
+| `frostedheart:heater_vest` | up to `275 W` | torso; `30,000` stored points; controlled consumption, `3,600 s` per fill at rated output |
 
 Fixed-output devices continue their established burn/discharge/growth clocks
 while active and equipped; unused heat does not enter the body or become a new
@@ -359,6 +359,97 @@ steam. Its existing `55 W/K` feedback gain and maximum output remain, and the
 request also respects the exact step's `37 C` allowance. The existing standby
 charge applies only when the vest actually requests heat. Thus adding a pad or
 stove cannot make the vest independently buy the same heat again.
+
+#### Steam equipment and charger costs
+
+Let `P` be the vest's requested torso output in watts, capped at `275 W`.
+When `P > 0`, its drain is `(0.05 + (30,000/3,600 - 0.05) × P/275) × dt`
+stored points, with `dt` in game seconds. No demand uses no charge. At full
+output the rate is `25/3` points per second; one fill supplies one game hour.
+Lower output extends the runtime. The vest reads the existing numeric
+`frostedheart:steam` key without rescaling old stacks and writes it with double
+precision when consuming, so repeated small deductions do not cut the rated
+hour short.
+
+Hold either steam item and right-click the FH charger (`frostedheart:charger`)
+to park it. It shares a single slot with the [steam StrataDrill](../stratadrill.md#补给与耗尽).
+An empty main hand retrieves the original item at any time. A second item does
+not replace it; breaking the charger returns it. The same top seat and renderer
+show the actual assembled drill or either steam item's stock pixel model.
+The display packet sends just the warm item's identity, not its steam or name.
+Converting a glass bottle with the existing charger recipe produces an
+empty steam bottle. The recipe's existing `energy` tag is not an
+`ITEM_HEAT` reserve and cannot supply warmth. The first actual charge and
+later refills use the same rate.
+
+| Item | Station points per stored point | Empty-to-full station points | FH network heat units | Ideal charge at 5 heat/tick, 20 TPS |
+|---|---:|---:|---:|---:|
+| Heater vest | 288 | 8,640,000 | 8,640 | 86.4 s |
+| Steam bottle | 400 | 96,000 | 96 | 1.0 s (20 ticks) |
+
+The network-to-station conversion remains `1,000` station points per FH heat
+unit. These are game units, not mB, FE, or joules; the watts above belong to
+the body model. An unspent remainder stays in the station and the dock stops
+charging a full item. Runtime and charge duration use game time; charging
+also depends on network supply, station buffer, and chunk ticking. The
+unpriced `ITEM_HEAT` compatibility path still uses the original 1:1 hand
+transfer. The pad, stove, wearable thermal reservoirs, and drill keep their
+separate rules. See `HeaterVestItem`, `SteamBottleItem`,
+`HeatStorageCapability`, `ChargerTransfer`, and `ChargerTileEntity`.
+
+To make another ordinary steam item use the dock, bind `FHCapabilities.ITEM_HEAT`
+to `new HeatStorageCapability(stack, capacity, chargerPrice)` with a price above
+one. It uses the existing slot, proportional debit and stock display; define
+what actually consumes its reserve in the item itself. No new renderer, packet,
+or second inventory is needed. A price of one keeps the old hand-charge path.
+`dockedDrill` remains the existing save key for the single original stack;
+descriptions use a separate model-only projection.
+
+The charger's endpoint debit is from its actual stored `net_power` before
+crediting the buffer. A disconnected reload may spend that stored reserve
+once, but does not repeat the general endpoint startup grace as new steam.
+The older recipe actions also check a real balance before consuming input or
+producing an output. Defrost retains its cost of `cooking ticks / 80` station
+points. Smoking retains the 100-station-point entry check and charges the
+specific recipe's `cooking ticks / 20`; a zero-price recipe is not charged.
+An old negative station balance is restored as zero. Buffer changes still
+sync while the dock is empty or full, keeping ordinary click prediction up to
+date. While a parked item still needs charge, `ChargerTileEntity.useExistingCharge`
+claims a matching legacy recipe on both sides, even without enough station
+points. The server alone checks the current balance and consumes
+ingredients or produces output. An unaffordable match leaves the held item and
+station balance unchanged; the click does not fall through to item or offhand
+use. Unmatched inputs, or unaffordable recipes when no dock charge is pending,
+still pass through as before. The old 1:1 hand transfer also runs only on the
+server. When a legacy recipe or hand transfer succeeds, the server sends the
+initiating player the existing steam particle through the vanilla particle
+packet; there is no new packet type.
+
+In `ChargerTileEntity.tick`, progress on a still-partial charge only marks the
+chunk for saving, without a progress packet or neighbor notification. Insertion,
+removal, completion, and changes to the `LIT` block state still synchronize.
+A parked item with the same unaffordable remainder is not tried again until the
+balance or item changes.
+
+In the warm, unresearched, single 5-heat/tick receiver fixture, corrected T2
+produced 2,165.625 FH heat per coal (2,134.375 with town batching over the same
+test window). That makes a vest fill roughly four coal equivalents and
+a coal about 22 bottle fills. This is a controlled accounting reference, not
+a cold-start or shared-network guarantee.
+
+The Forge `frostedheart_equipment_heating` suite keeps the sustained-demand case:
+3,600 game seconds using the actual vest capability at 1- and 100-tick updates,
+starting with old float NBT and saving/reloading halfway. The next step provides
+zero watts. Other cases check paid fractional charge, no free crafted fill, no
+replay of stored intake, and an unchanged model projection on reaching full
+charge. These are fixed demand/charging fixtures, not one hour of elapsed play.
+
+The follow-up combined run passed 36 Forge tests, including all 14 equipment
+tests. The added cases cover actual recipe balances (including zero price),
+an empty bottle leaving its NBT untouched, and resuming a parked fractional
+top-up after incoming heat or a load at the same buffer balance. A native
+survival client also checked the stock seed, smoking, and glass recipes
+and refilling the station through a real heat pipe.
 
 Validation on `2026-11-08`: the final build retaining original float reservoir
 storage passed `30/30` Forge entries, including eight equipment entries and

@@ -27,6 +27,8 @@ import org.jetbrains.annotations.Nullable;
 
 import com.simibubi.create.content.equipment.goggles.IHaveGoggleInformation;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
+import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
+import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorData;
 import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorState;
 import com.teammoeg.frostedheart.content.climate.render.TemperatureGoogleRenderer;
 import com.teammoeg.frostedheart.content.steamenergy.ClientHeatNetworkData;
@@ -38,11 +40,15 @@ import com.teammoeg.frostedheart.util.Lang;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.util.StoredCapability;
 import net.minecraft.ChatFormatting;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.world.level.Level;
 import net.minecraft.network.chat.Component;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fluids.capability.templates.FluidTank;
 
 public class T2GeneratorState extends GeneratorState implements HeatNetworkProvider, IHaveGoggleInformation {
+    // A saved zero is authoritative too; it must not be replaced by a stale team offer.
+    private boolean outletBalanceInitialized;
     public static final int TANK_CAPACITY = 5 * 1000;
     public FluidTank tank = new FluidTank(TANK_CAPACITY,
             f -> FHTags.Fluids.STEAM.matches(f.getFluid()));
@@ -64,6 +70,7 @@ public class T2GeneratorState extends GeneratorState implements HeatNetworkProvi
     @Override
     public void writeSaveNBT(CompoundTag nbt) {
         super.writeSaveNBT(nbt);
+        if (outletBalanceInitialized) nbt.putFloat("outletHeat", endpoint.getHeat());
         nbt.putInt("liquidtick", liquidtick);
         nbt.putInt("noliquidtick", noliquidtick);
         nbt.putInt("tickUntilStopBoom", tickUntilStopBoom);
@@ -77,6 +84,8 @@ public class T2GeneratorState extends GeneratorState implements HeatNetworkProvi
     @Override
     public void readSaveNBT(CompoundTag nbt) {
         super.readSaveNBT(nbt);
+        outletBalanceInitialized = nbt.contains("outletHeat", Tag.TAG_ANY_NUMERIC);
+        endpoint.setHeat(nbt.getFloat("outletHeat"));
         liquidtick = nbt.getInt("liquidtick");
         noliquidtick = nbt.getInt("noliquidtick");
         tickUntilStopBoom = nbt.getInt("tickUntilStopBoom");
@@ -87,6 +96,18 @@ public class T2GeneratorState extends GeneratorState implements HeatNetworkProvi
             manager.deserializeNBT(nbt.getCompound("manager"));
     }
 
+
+    @Override
+    protected void updateOutlet(Level level, TeamDataHolder team, GeneratorData data) {
+        // Consume the old offer even if this master already owns the authoritative balance.
+        float legacy = data.takeLegacyOutletHeat();
+        if (!outletBalanceInitialized) {
+            endpoint.addHeat(Math.max(0, legacy));
+            outletBalanceInitialized = true;
+        }
+        float purchased = data.buyOutletHeat(level, team, endpoint.getHeat());
+        if (purchased > 0) endpoint.addHeat(purchased);
+    }
 
     @Override
     public @Nullable HeatNetwork getNetwork() {

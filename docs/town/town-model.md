@@ -7,6 +7,8 @@
 
 > 2026-10-18 局部复核：第 4.3 节的公式是离线 Stage 4 保留的旧热场模型，不能作为当前游戏温度或发布平衡验收的依据。当前住宅与狩猎基地使用 `BlockScanner.RoomData.calculateTemperature` → `WorldTemperature.block`；不再经过已移除的 `HouseBlockScanner` / `HuntingBaseBlockScanner`。下文已更正这个调用关系，其余历史模拟结果仍需按现行玩法重新验证。
 
+> 2026-11-22 局部复核：第 5.3–5.4 节的 T2 余压、真实燃料成本及城镇/方块交接以本次运行和存档契约为准，不改变其余离线模拟的验证范围。
+
 ## 1. 设计原则
 
 ### 1.1 代码是模型的起点
@@ -369,16 +371,15 @@ C_{network}=\left\lfloor
 
 研究加成的效果是：同样的缓冲缺口需要更少燃料过程 tick。
 
-### 5.4 当前 T2 实现必须先验证的问题
+### 5.4 T2 网络实际结算
 
-设计意图上，\(P_{before}\) 应当是热网消费者取走热量后，塔端点真实剩余的热缓冲。但当前代码存在两条状态同步路径：
+`T2GeneratorLogic.tickFuel` 先运行热网：按优先级分发热量，未被消费者接收的部分退回供给端。这之后 `T2GeneratorState.updateOutlet` 才读取端点真实余额 \(P_{before}\)，按 5.3 的公式请求补充。只有已支付基础运行、仍开启且未损坏的塔可以买热；实际扣费取请求和剩余可用燃料过程 tick 的较小者。每个实扣过程 tick 增加 \((1+e_{heat})\times25/8\) heat。已经付费的余压可在停炉、断料后排完一次，不再按上次显示的供给量回填。
 
-- `GeneratorState.tickData` 把端点剩余热量写入 `GeneratorData.lastPower`。
-- `GeneratorData.townTick` 随后又执行 `lastPower = power`，可能用上次生成值覆盖端点消费后的余量。
+城镇每次只预结算基础运行、热度和过载。`GeneratorData.townTick` 保留团队存档键 `baseAccountedThrough`，代表城镇已结算到的世界 game tick（含该 tick，不是 dayTime），即使该批次因燃料不足而不运行。方块的实时基础结算只在内存记 `lastLiveBaseTick`，同一运行周期内重复 tick 不会重算，也不会只因时钟前进而持续改团队存档。两条路径都以这两个时钟的较晚值跳过重叠，只结算未处理的区间；重载继续尊重原键保存的城镇范围。
 
-如果确实如此，城镇每秒接管期间的网络补充燃料可能低估，甚至在第一次填充后接近免费。首版文档不把这一点猜成既定公式。
+实际加载的 T2 即使落在城镇预结算区间，也要为本次补压单独付费；未 tick 的塔不预支网络热，不积存待重放的供给。城镇对新覆盖的基础区间仍整批结算：剩余过程 tick 不足支付这一段时留存，不凭空支付。
 
-实现顺序必须是：先写一个只包含 `GeneratorData`、provider 端点、热网和若干加热器的 Java 夹具，记录每 tick 的 `endpoint.heat`、`power`、`lastPower`、加热器取得热量和燃料过程 tick；确认实际时序后，再确定 T2 模拟器使用“忠实复现当前行为”还是修正后的目标行为。T2 蒙特卡洛在该验证完成前不进入平衡结论。
+正常新存档的热量只在 T2 主块 `outletHeat` 中；团队燃料不变。旧存档只有 `powerLevel` 与重复的 `lastPowerLevel`，不能追溯更早的逐次消耗：若主块尚无新余额，仅接收一次前者，不把两者相加。真实 Forge 单站夹具及其边界见[热网说明](../climate/heat-production-and-network.md#heat-network)。这些检查不是完整城镇蒙特卡洛平衡结论。
 
 ## 6. SWE：标准工人当量
 

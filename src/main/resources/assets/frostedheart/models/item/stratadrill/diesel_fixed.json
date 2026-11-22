@@ -1,0 +1,15 @@
+{
+  "loader": "forge:obj",
+  "model": "frostedheart:models/item/stratadrill/diesel.obj",
+  "automatic_culling": false,
+  "flip_v": true,
+  "emissive_ambient": false,
+  "render_type": "minecraft:solid",
+  "textures": {
+    "particle": "frostedheart:item/stratadrill/cast_iron"
+  },
+  "visibility": {
+    "diesel_fixed": true,
+    "diesel_flywheel": false
+  }
+}

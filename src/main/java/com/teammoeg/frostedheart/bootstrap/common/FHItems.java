@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.bootstrap.common;
 import com.simibubi.create.content.processing.sequenced.SequencedAssemblyItem;
 import com.simibubi.create.foundation.item.ItemDescription;
 import com.teammoeg.caupona.CPTags;
+import com.teammoeg.chorda.CompatModule;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
 import com.teammoeg.frostedheart.bootstrap.reference.FHArmorMaterial;
@@ -31,6 +32,7 @@ import com.teammoeg.frostedheart.content.agriculture.Fertilizer;
 import com.teammoeg.frostedheart.content.health.food.CannedFoodItem;
 import com.teammoeg.frostedheart.content.health.food.FHSoupItem;
 import com.teammoeg.frostedheart.content.steamenergy.debug.HeatDebugItem;
+import com.teammoeg.frostedheart.content.stratadrill.TetraStrataDrillItem;
 import com.teammoeg.frostedheart.content.town.transport.device.FreightRouteCardItem;
 import com.teammoeg.frostedheart.content.utility.*;
 import com.teammoeg.frostedheart.content.utility.handstoves.CoalHandStove;
@@ -97,7 +99,10 @@ public class FHItems {
     }
 
     public static void init() {
-
+        if (CompatModule.isTetraLoaded()) {
+            // The constructor is never linked unless the optional dependency is present.
+            ITEMS.register(TetraStrataDrillItem.ID, TetraStrataDrillItem::new);
+        }
     }
 
     private static ItemEntry<Item> ingredient(String name) {

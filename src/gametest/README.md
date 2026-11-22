@@ -27,9 +27,14 @@ They cover the smooth center boost, unchanged boundary, overlap, player/crop/tow
 infrared updates, item caches, real T1/T2 production, four horizontal outlets across Chunk boundaries,
 blocked/reopened outlets, physical enclosure heating, phase acknowledgements and tower lifecycle.
 The real T1/T2 cases also check per-target power at temperature levels `10` and `1`,
-fixed `2,000 W` radiation and discovery of both generator profile IDs.
+fixed `2,000 W` radiation and discovery of both generator profile IDs. The formed
+T2 warm-up check compares an exact steam dose with a short dose.
 The [temperature composition reference](../../docs/climate/world-climate-and-temperature.md#7-analytic-control-fields)
 owns the formula and units.
+
+The heat-network check uses `-PgameTestNamespaces=frostedheart_heat_pipe_revalidation,frostedheart_t2_pressure`.
+It covers fallback visits on real pipes, merge/removal/reconnect callbacks,
+an actual absent/reloaded adjacent chunk, and the independent T2 pressure ledger.
 
 For infrared transport and actual GL display, run [`Scripts/run-infrared-network-e2e.py`](../../Scripts/run-infrared-network-e2e.py) with Java 17. It starts an isolated dedicated server, two rendering clients and an ordered TCP delay/rate proxy; the [infrared reference](../../docs/climate/infrared-view.md) owns its scenarios, invocation and verification limits.
 

@@ -1,0 +1,17 @@
+{
+  "loader": "forge:obj",
+  "model": "frostedheart:models/item/stratadrill/steam.obj",
+  "automatic_culling": false,
+  "flip_v": true,
+  "emissive_ambient": false,
+  "render_type": "minecraft:solid",
+  "textures": {
+    "particle": "frostedheart:item/stratadrill/cast_iron"
+  },
+  "visibility": {
+    "steam_fixed": false,
+    "steam_crank": false,
+    "steam_rod": false,
+    "steam_piston": true
+  }
+}

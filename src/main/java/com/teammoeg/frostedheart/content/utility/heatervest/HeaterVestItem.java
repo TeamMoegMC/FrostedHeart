@@ -43,7 +43,6 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.extensions.common.IClientItemExtensions;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
-import net.minecraftforge.common.util.LazyOptional;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -56,9 +55,13 @@ import java.util.function.Consumer;
 public class HeaterVestItem extends FHBaseItem {
     public static final String NBT_HEATER_VEST = FHMain.MODID + "heater_vest";
     private static final String ENERGY_KEY="steam";
-    private static final float STANDBY_HEAT = 0.05F;
+    private static final int STEAM_CAPACITY = 30_000;
+    private static final int FULL_POWER_SECONDS = 3_600;
+    private static final int CHARGER_POINTS_PER_UNIT = 288;
+    private static final double STANDBY_HEAT = 0.05D;
     private static final float MAX_POWER_W = 275.0F;
-    private static final float HEAT_PER_STORED_UNIT_W = MAX_POWER_W / 6.0F;
+    private static final double HEAT_PER_STORED_UNIT_W =
+            MAX_POWER_W / ((double) STEAM_CAPACITY / FULL_POWER_SECONDS - STANDBY_HEAT);
     private static final float CONTROL_GAIN_W_PER_K = 55.0F;
     public HeaterVestItem(Properties properties) {
         super(properties);
@@ -69,7 +72,7 @@ public class HeaterVestItem extends FHBaseItem {
         String stored = FHCapabilities.ITEM_HEAT.getCapability(stack).map(t->{
 			return t.getEnergyStored();
 		}).orElse(0F) + "/" + this.getMaxEnergyStored(stack);
-        list.add(Lang.translateTooltip("charger.heat_vest").withStyle(ChatFormatting.GRAY));
+        list.add(Lang.translateTooltip("charger.dock_supply").withStyle(ChatFormatting.GRAY));
         list.add(Lang.translateTooltip("steam_stored", stored).withStyle(ChatFormatting.GOLD));
     }
 
@@ -79,7 +82,7 @@ public class HeaterVestItem extends FHBaseItem {
 		if(helper.isType(FHTabs.TOOLS)) {
         	helper.accept(new ItemStack(this));
             ItemStack is = new ItemStack(this);
-            FHCapabilities.ITEM_HEAT.getCapability(is).ifPresent(t->t.receiveEnergy(30000, false));
+            FHCapabilities.ITEM_HEAT.getCapability(is).ifPresent(t->t.receiveEnergy(STEAM_CAPACITY, false));
             helper.accept(is);
 	        
 		}
@@ -104,43 +107,34 @@ public class HeaterVestItem extends FHBaseItem {
     }
 
     public int getMaxEnergyStored(ItemStack container) {
-        return 30000;
+        return STEAM_CAPACITY;
     }
 
 
 	@Override
 	public ICapabilityProvider initCapabilities(ItemStack stack,CompoundTag nbt) {
 		return CapabilityDispatchBuilder.builder()
-				.add(FHCapabilities.ITEM_HEAT, ()->new HeatStorageCapability(stack, 30000))
+				.add(FHCapabilities.ITEM_HEAT,
+                        () -> new HeatStorageCapability(stack, STEAM_CAPACITY, CHARGER_POINTS_PER_UNIT))
 				.add(FHCapabilities.EQUIPMENT_HEATING, ()->new BodyHeatingCapability() {
 
 					@Override
 					public void tickHeating(HeatingDeviceSlot slot, ItemStack stack, HeatingDeviceContext data) {
-						if(slot.isHand())return;
+						if (slot.isHand()) return;
 						double elapsedSeconds = data.getElapsedSeconds();
 						if (!(elapsedSeconds > 0.0D)) return;
-						LazyOptional<HeatStorageCapability> cap=FHCapabilities.ITEM_HEAT.getCapability(stack);
-						if(cap.isPresent()) {
-							HeatStorageCapability t=cap.resolve().get();
-							float requestedPowerW = (float) Math.min(MAX_POWER_W,
-									data.remainingHeatingDemandW(BodyPart.TORSO, CONTROL_GAIN_W_PER_K));
-							if (requestedPowerW > 0.0F) {
-								float requestedUnits = (float) ((
-										STANDBY_HEAT + requestedPowerW
-										/ HEAT_PER_STORED_UNIT_W)
-										* elapsedSeconds);
-								float extracted = t.extractEnergy(
-										requestedUnits,
-										false);
-								data.addPower(BodyPart.TORSO,
-										Math.min(requestedPowerW,
-										Math.max(0.0D,
-										extracted / elapsedSeconds
-										- STANDBY_HEAT)
+						double requestedPowerW = Math.min(MAX_POWER_W,
+								data.remainingHeatingDemandW(BodyPart.TORSO, CONTROL_GAIN_W_PER_K));
+						if (!(requestedPowerW > 0D)) return;
+						HeatStorageCapability storage = FHCapabilities.ITEM_HEAT.getCapability(stack).orElse(null);
+						if (storage == null) return;
+
+						double requestedUnits = (STANDBY_HEAT + requestedPowerW / HEAT_PER_STORED_UNIT_W)
+								* elapsedSeconds;
+						double extracted = storage.extractPreciseEnergy(requestedUnits);
+						data.addPower(BodyPart.TORSO, Math.min(requestedPowerW,
+								Math.max(0D, extracted / elapsedSeconds - STANDBY_HEAT)
 										* HEAT_PER_STORED_UNIT_W));
-							}
-						}
-						
 					}
 
 					@Override
@@ -151,9 +145,9 @@ public class HeaterVestItem extends FHBaseItem {
 					@Override
 					public float getMaxPowerW(ItemStack stack) {
 						return FHCapabilities.ITEM_HEAT.getCapability(stack)
-								.map(value -> Math.max(0.0F, Math.min(6.0F,
-										value.getEnergyStored() - STANDBY_HEAT)))
-								.orElse(0.0F) * HEAT_PER_STORED_UNIT_W;
+								.map(value -> (float) Math.min(MAX_POWER_W, Math.max(0D,
+										value.getEnergyStored() - STANDBY_HEAT) * HEAT_PER_STORED_UNIT_W))
+								.orElse(0F);
 					}
 
 					@Override

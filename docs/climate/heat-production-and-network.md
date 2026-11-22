@@ -1,7 +1,7 @@
 # Heat Production And Network
 
 - Status: `Transitional; current source and material ownership described below, earlier measurements retain their build scope`
-- Last verified: `2026-11-20` for six-face campfire heat exchange and material-frontier propagation without a depth cutoff, `2026-11-19` for fixed-field outlet mixing and source-triggered coverage updates, `2026-11-17` for fixed T1/T2 exhaust power, 2,000 W radiation, four horizontal targets and smooth 5°C center boost; `2026-11-06` for energy-complete phase submission; `2026-10-25` for source ownership and internal subsystem retirement; `2026-10-12` for campfire fuel countdown. Other sections retain their existing provenance.
+- Last verified: `2026-11-22` for T2 pressure accounting; `2026-11-20` for six-face campfire heat exchange and material-frontier propagation without a depth cutoff, `2026-11-19` for fixed-field outlet mixing and source-triggered coverage updates, `2026-11-17` for fixed T1/T2 exhaust power, 2,000 W radiation, four horizontal targets and smooth 5°C center boost; `2026-11-06` for energy-complete phase submission; `2026-10-25` for source ownership and internal subsystem retirement; `2026-10-12` for campfire fuel countdown. Other sections retain their existing provenance.
 - Scope: physical Minecraft sources, worker energy integration, material/phase sinks, and the separate heat-network model
 - Primary code anchors: `MinecraftPhysicalSourceProfile`, `PhysicalSourceSpatialIndex`, `WorkerPhysicalSourceBindings`, `AirMixingRegion`, `SpatialSourceTimeline`, `SpatialSourceIngress`, `SpatialHeatStore`, `ThermalSourceBatch`, `ThermalSourceLedger`, `LocalMaterialBoundary`, `MaterialThermalLaw.initialBranch`, `RegionalQuerySnapshot.materialPerturbationAtSlotC`, `WorkerPageStore.collectMaterialFrontier`, `HeatEndpoint`, `HeatNetwork`
 
@@ -452,6 +452,49 @@ its own block/entity lifecycle and does not write directly to thermal Page
 cells. A machine may report a physical source and also expose a heat-network
 endpoint; the two channels must not be counted twice by a caller.
 
+**Pipe revalidation.** `ConnectorNetworkRevalidator.tick` checks the open faces
+of a connected pipe once per 10 valid block-entity ticks. The fallback checks
+already-loaded neighbors and does not load chunks. An opened face still attempts
+to connect immediately; a closed face, removed pipe, or changed network owner
+still queues the existing topology refresh. The interval is unrelated to how
+often an already-connected network distributes heat.
+The focused Forge fixture `HeatPipeRevalidationGameTests` measured
+10 fallback visits in each of two consecutive 100-tick windows and verified
+reconnect/removal/merge plus an unloaded neighbor that reconnects after reload.
+This is a call count for stable pipes, not a server-tick speedup measurement.
+
+**T2 outlet inventory.** `HeatNetwork.tick` transfers from the provider and returns
+unused heat before the generator refills. `T2GeneratorState.updateOutlet` buys
+only the deficit below `25 × steamLevel` using whole extra fuel process ticks
+at `(1 + GENERATOR_HEAT bonus) × 25/8` heat per tick actually paid.
+The native provider is the only live balance and the master saves it as
+`outletHeat`; switching off, breaking or running out of fuel permits a final
+discharge of existing heat, not another offer of its previous value. A tower
+without a ticking master buys no network heat. A legacy team offer can seed
+an old master once; see [town fuel accounting](../town/town-model.md#54-t2-网络实际结算).
+No heat-to-watts conversion, station conversion or physical exhaust rate changes.
+The separate T2 fluid tank warms when it can supply the configured
+`generatorSteamRate` (mB per active tick). The same exact dose and shortage
+behavior are kept by checking the local tank amount before one real drain.
+
+The focused Forge namespace `frostedheart_t2_pressure` uses a real T2 state,
+town and live fuel paths, native heat network, the coal recipe, and a continuously
+drained endpoint with the same 5-heat/tick intake and demand as one station.
+Its `T2PressureGameTests.oneCoalFeedsAHotSingleStationWithAndWithoutTown` measurement
+starts empty at steam level 1, no research or overdrive, with one ordinary coal worth
+1,120 process ticks. It does not simulate boiler warm-up, an entire town, or a chargeable item.
+
+| Base settlement | Base ticks spent | Extra process ticks spent buying heat | Process remaining | Network heat delivered |
+|---|---:|---:|---:|---:|
+| Each live tick | 427 | 693 | 0 | 2,165.625 |
+| Town, 20-tick batches | 420 | 683 | 17 | 2,134.375 |
+
+Both outlets and both receiver buffers finished empty. In the town case the final 17
+process ticks cannot pay another base batch; they stay in the team fuel balance.
+These are two measured finite-run results, not a universal heat-per-coal constant.
+
+
+
 ## Lifecycle And Performance
 
 Machine ticks call `MinecraftThermalInput.onGeneratorTick`,
@@ -459,10 +502,13 @@ Machine ticks call `MinecraftThermalInput.onGeneratorTick`,
 Enabled positive-power output starts the existing runtime if absent, without a
 player query. Inactive/zero-power reports do not create a runtime.
 T1/T2 generator publication continues even when `GeneratorData.tickBlock` skips
-fuel consumption through `townProcessedTicks`. Runtime startup/reload does not
-execute extra production or heat-network consumption: machines recover on their
-next valid normal tick. Merely loaded but non-ticking machines are not actively
-advanced; town/offline simulation is not a physical-source publisher.
+base simulation already covered by a saved town batch (`baseAccountedThrough`)
+or by the in-memory last live tick. Loaded T2 pressure purchases are independent
+of that skip; see [town fuel accounting](../town/town-model.md#54-t2-网络实际结算).
+Runtime startup/reload does not execute extra production or heat-network
+consumption: machines recover on their next valid normal tick. Merely loaded
+but non-ticking machines are not actively advanced; town/offline simulation
+is not a physical-source publisher.
 
 Campfires are discovered through the runtime's shared startup/load/retry queue
 after bootstrap by chunk load, first ignition, or the one-time loaded-source check

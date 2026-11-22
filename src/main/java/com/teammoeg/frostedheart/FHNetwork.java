@@ -28,6 +28,7 @@ import com.teammoeg.frostedheart.content.scenario.network.*;
 import com.teammoeg.frostedheart.content.steamenergy.EndPointDataPacket;
 import com.teammoeg.frostedheart.content.steamenergy.HeatNetworkRequestC2SPacket;
 import com.teammoeg.frostedheart.content.steamenergy.HeatNetworkResponseS2CPacket;
+import com.teammoeg.frostedheart.content.stratadrill.StrataDrillWorkPacket;
 import com.teammoeg.frostedheart.content.town.citizen.sync.C2SCitizenActionPacket;
 import com.teammoeg.frostedheart.content.town.citizen.sync.S2CCitizenBatchPacket;
 import com.teammoeg.frostedheart.content.town.citizen.sync.S2CCitizenDespawnPacket;
@@ -73,7 +74,7 @@ import com.teammoeg.frostedheart.item.snowsack.network.ToggleDeleteOverflowMessa
 
 public class FHNetwork extends CBaseNetwork {
     @Override
-    protected String protocolVersion(String modVersion) { return modVersion + ":town-view-1:building-data-3:town-ui-3:infrared-stream-1:citizen-road-1:soil-thermometer-4"; }
+    protected String protocolVersion(String modVersion) { return modVersion + ":town-view-1:building-data-3:town-ui-3:infrared-stream-1:citizen-road-1:soil-thermometer-4:stratadrill-work-1"; }
 	private FHNetwork() {
 		super(FHMain.MODID);
 	}
@@ -210,5 +211,6 @@ public class FHNetwork extends CBaseNetwork {
         registerMessage("open_snow_sack", C2SOpenSnowSackScreenMessage.class);
         registerMessage("town_snapshot_request", com.teammoeg.frostedheart.content.town.network.TownSnapshotRequestPacket.class);
         registerMessage("infrared_continue_c2s", FHContinueInfraredViewPacket.class);
+        registerMessage("stratadrill_work", StrataDrillWorkPacket.class);
     }
 }

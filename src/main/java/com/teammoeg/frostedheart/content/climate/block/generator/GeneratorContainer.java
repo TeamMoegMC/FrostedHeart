@@ -106,7 +106,7 @@ public abstract class GeneratorContainer<R extends GeneratorState, T extends Gen
 			process.bind(() -> data.process);
 			processMax.bind(() -> data.processMax);
 			overdrive.bind(() -> data.overdriveLevel * 1f / data.getMaxOverdrive());
-			power.bind(() -> data.power);
+			power.bind(state.endpoint::getHeat);
 			tempLevel.bind(() -> data.TLevel);
 			rangeLevel.bind(() -> data.RLevel);
 			tempDegree.bind(() -> data.getTempMod());

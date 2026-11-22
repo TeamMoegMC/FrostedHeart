@@ -645,14 +645,14 @@ public final class ThermalLoadedWorldGameTests {
         data.RLevel = 1;
         data.heated = 1_000;
         data.process = 10_000;
-        data.townProcessedTicks = 1_000;
+        data.baseAccountedThrough = level.getGameTime() + 1_000;
         BlockPos source = master.below(structure.getMasterFromOriginOffset().getY());
         for (Direction direction : Direction.Plane.HORIZONTAL) {
             BlockPos outlet = source.above(2).relative(direction, 2);
             level.setBlockAndUpdate(outlet, Blocks.AIR.defaultBlockState());
         }
         helper.runAfterDelay(10, () -> {
-            helper.assertTrue(data.townProcessedTicks < 1_000 && state.getTempLevel() == 10,
+            helper.assertTrue(data.baseAccountedThrough - level.getGameTime() < 1_000 && data.process == 10_000 && state.getTempLevel() == 10,
                     "formed machine must tick through the town-processed branch");
             BlockPos query = source.east(5);
             double natural = WorldTemperature.naturalAir(level, query);

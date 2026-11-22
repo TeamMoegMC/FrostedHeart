@@ -1,0 +1,7 @@
+{
+  "tooltip.frostedheart.charger.dock_supply": "Dock in a Steam Charger to recharge.",
+  "tooltip.frostedheart.charger.dock_occupied": "Steam equipment docked. Collect with an empty main hand.",
+  "tooltip.frostedheart.charger.dock_ready": "Steam equipment fully charged. Collect with an empty main hand.",
+  "message.frostedheart.charger.dock_inserted": "Steam equipment docked. It charges while supplied. Collect with an empty main hand.",
+  "message.frostedheart.charger.dock_busy": "The charger is occupied. Collect the item with an empty main hand."
+}

@@ -1,0 +1,24 @@
+newmtl cast_iron
+Kd 1 1 1
+forge_TintIndex -1
+map_Kd frostedheart:item/stratadrill/cast_iron
+
+newmtl spiral_steel
+Kd 1 1 1
+forge_TintIndex -1
+map_Kd frostedheart:item/stratadrill/spiral_steel
+
+newmtl spiral_steel_cutter
+Kd 1 1 1
+forge_TintIndex 31
+map_Kd frostedheart:item/stratadrill/spiral_steel
+
+newmtl wheel_steel
+Kd 1 1 1
+forge_TintIndex -1
+map_Kd frostedheart:item/stratadrill/wheel_steel
+
+newmtl wheel_steel_cutter
+Kd 1 1 1
+forge_TintIndex 31
+map_Kd frostedheart:item/stratadrill/wheel_steel

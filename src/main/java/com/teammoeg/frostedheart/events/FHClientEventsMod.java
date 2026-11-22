@@ -53,6 +53,7 @@ import com.teammoeg.frostedheart.content.climate.tooltips.FoodTempStats;
 import com.teammoeg.frostedheart.content.climate.tooltips.PlantTempStats;
 import com.teammoeg.frostedheart.content.health.tooltip.FoodNutritionStats;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.font.KGlyphProvider;
+import com.teammoeg.frostedheart.content.steamenergy.charger.client.ChargerDockRenderer;
 import com.teammoeg.frostedheart.content.town.citizen.client.FakeCitizenRenderer;
 import com.teammoeg.frostedheart.content.town.render.SpaceOutlineRenderer;
 import com.teammoeg.frostedheart.content.town.resident.WanderingRefugeeRenderer;
@@ -360,6 +361,7 @@ public class FHClientEventsMod {
 		FHMain.LOGGER.info("===========Dynamic Block Renderers========");
         event.registerBlockEntityRenderer(FHMultiblocks.Registration.GENERATOR_T1.masterBE().get(), T1GeneratorRenderer::new);
         event.registerBlockEntityRenderer(FHMultiblocks.Registration.GENERATOR_T2.masterBE().get(), T2GeneratorRenderer::new);
+        event.registerBlockEntityRenderer(FHBlockEntityTypes.CHARGER.get(), ChargerDockRenderer::new);
         
         
         /*event.registerBlockEntityRenderer(FHBlockEntityTypes.HOUSE.get(), SpaceOutlineRenderer::new);

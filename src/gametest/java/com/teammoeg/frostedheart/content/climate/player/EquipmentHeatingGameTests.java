@@ -1,5 +1,7 @@
 package com.teammoeg.frostedheart.content.climate.player;
 
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import com.mojang.authlib.GameProfile;
@@ -14,6 +16,7 @@ import com.teammoeg.frostedheart.content.climate.player.thermalitem.WearableTher
 import com.teammoeg.frostedheart.content.climate.player.thermalitem.WearableThermalReservoir;
 import com.teammoeg.frostedheart.content.climate.player.thermalitem.WearableThermalState;
 import com.teammoeg.frostedheart.content.climate.player.thermalitem.ThreeNodeWearableHeatExchange;
+import com.teammoeg.frostedheart.content.climate.recipe.CampfireDefrostRecipe;
 import com.teammoeg.frostedheart.content.climate.thermal.field.ThermalAnalyticField;
 import com.teammoeg.frostedheart.content.climate.thermal.field.ThermalFieldKey;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftGameplayFields;
@@ -21,20 +24,34 @@ import com.teammoeg.frostedheart.content.utility.HeatingPadItem;
 import com.teammoeg.frostedheart.content.utility.OxygenCandleItem;
 import com.teammoeg.frostedheart.content.utility.handstoves.CoalHandStove;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
+import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerRecipe;
+import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerTileEntity;
+import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import io.netty.channel.embedded.EmbeddedChannel;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.Connection;
 import net.minecraft.network.ConnectionProtocol;
 import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.crafting.CookingBookCategory;
+import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.world.item.crafting.SmokingRecipe;
 import net.minecraft.world.level.GameType;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.ComparatorBlockEntity;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.gametest.GameTestHolder;
 import net.minecraftforge.gametest.PrefixGameTestTemplate;
@@ -113,6 +130,259 @@ public final class EquipmentHeatingGameTests {
             }
         }
         helper.succeed();
+    }
+
+    @GameTest(template = TEMPLATE, batch = "equipment_logic", timeoutTicks = 80)
+    public static void fullVestSuppliesOneHourAtRatedPower(GameTestHelper helper) {
+        var trace = new Trace(helper, "vest", false, 30D);
+        var slot = HeatingDeviceSlot.vanilla(EquipmentSlot.CHEST);
+        for (int intervalTicks : new int[]{1, 100}) {
+            ItemStack vest = new ItemStack(FHItems.heater_vest.get());
+            // Exercise the old persisted float without any conversion on load.
+            vest.getOrCreateTag().putFloat("frostedheart:steam", 30_000F);
+            int steps = 3_600 * 20 / intervalTicks;
+            double seconds = intervalTicks / 20D;
+            String caseName = "vest rated power through 3,600 seconds, then zero (interval ticks " + intervalTicks + ")";
+            var heater = FHCapabilities.EQUIPMENT_HEATING.getCapability(vest).orElseThrow(IllegalStateException::new);
+            for (int step = 0; step <= steps; ++step) {
+                if (step == steps / 2) {
+                    vest = ItemStack.of(vest.save(new CompoundTag()));
+                    heater = FHCapabilities.EQUIPMENT_HEATING.getCapability(vest).orElseThrow(IllegalStateException::new);
+                }
+                trace.context.reset(trace.player, seconds, seconds, trace.data);
+                heater.tickHeating(slot, vest, trace.context);
+                near(helper, step < steps ? 275D : 0D, trace.context.getPowerW(BodyPart.TORSO), 3.0e-5D, caseName);
+            }
+            near(helper, 0D, stored(vest), 1.0e-6D, "sustained full-power use consumes the full tank");
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = TEMPLATE, batch = "equipment_logic", timeoutTicks = 80)
+    public static void warmGearChargesAtItsOwnPriceAndDryBottleIsInert(GameTestHelper helper) {
+        ItemStack vest = new ItemStack(FHItems.heater_vest.get());
+        var storage = FHCapabilities.ITEM_HEAT.getCapability(vest).orElseThrow(IllegalStateException::new);
+        helper.assertTrue(storage.usesChargerDock(), "a wearable's rate must never fall back to hand charge");
+        near(helper, 19_872D, storage.chargeAtDock(20_000F), 0D, "20,000 station points buys 69 vest points");
+        near(helper, 69D, stored(vest), 0D, "remaining 128 station points were not transferred");
+        vest.getOrCreateTag().putDouble("frostedheart:steam", 30_000D);
+        near(helper, 0D, storage.chargeAtDock(1_000F), 0D, "a full tank does not bill");
+        var trace = new Trace(helper, "none", false, 30D);
+        ItemStack bottle = new ItemStack(FHItems.steam_bottle.get());
+        bottle.getItem().onCraftedBy(bottle, helper.getLevel(), trace.player);
+        near(helper, 0D, stored(bottle), 0D, "ordinary crafting cannot mint a prefilled bottle");
+        trace.context.reset(trace.player, 1D, 1D, trace.data);
+        FHCapabilities.EQUIPMENT_HEATING.getCapability(bottle).orElseThrow(IllegalStateException::new)
+                .tickHeating(HeatingDeviceSlot.vanilla(EquipmentSlot.OFFHAND), bottle, trace.context);
+        near(helper, 0D, trace.context.getPowerW(BodyPart.TORSO), 0D, "dry bottle cannot provide heat");
+        helper.assertTrue(!bottle.hasTag(), "a dry bottle should not acquire an empty steam tag");
+        var bottleStorage = FHCapabilities.ITEM_HEAT.getCapability(bottle).orElseThrow(IllegalStateException::new);
+        near(helper, 20_000D, bottleStorage.chargeAtDock(20_000F), 0D, "bottle debits 400 station points per unit");
+        near(helper, 50D, stored(bottle), 0D, "20,000 station points buys 50 bottle points");
+        helper.succeed();
+    }
+
+    @GameTest(template = TEMPLATE, batch = "equipment_logic", timeoutTicks = 80)
+    public static void savedChargerIntakeCreatesOnlyPaidStationPoints(GameTestHelper helper) {
+        BlockPos pos = helper.absolutePos(new BlockPos(1, 2, 1));
+        helper.getLevel().setBlockAndUpdate(pos, FHBlocks.CHARGER.get().defaultBlockState());
+        var charger = (ChargerTileEntity) helper.getLevel().getBlockEntity(pos);
+        for (float before : new float[]{0F, 19_000F}) {
+            var saved = new CompoundTag();
+            saved.putFloat("power", before);
+            saved.putFloat("net_power", 5F);
+            charger.readCustomNBT(saved, false);
+            for (int tick = 0; tick < 25; ++tick) charger.tick();
+            var after = new CompoundTag();
+            charger.writeCustomNBT(after, false);
+            near(helper, before == 0F ? 5_000D : 20_000D, after.getFloat("power"), 0D,
+                    "disconnected charger must not monetise its saved intake more than once");
+            near(helper, before == 0F ? 0D : 4D, after.getFloat("net_power"), 1.0e-6D,
+                    "only heat which fits in the station buffer is withdrawn");
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = TEMPLATE, batch = "equipment_logic", timeoutTicks = 80)
+    public static void chargerRequiresActualRecipeBalanceAndKeepsFreeRecipes(GameTestHelper helper) {
+        var charger = placeCharger(helper);
+        var player = newPlayer(helper);
+        var manager = helper.getLevel().getRecipeManager();
+        var originalRecipes = List.copyOf(manager.getRecipes());
+        var originalDefrost = CampfireDefrostRecipe.recipeList;
+        var thaw = new CampfireDefrostRecipe(FHMain.rl("test_charger_thaw"), "",
+                Ingredient.of(FHItems.frozen_seeds.get()), new ItemStack[]{new ItemStack(Items.WHEAT_SEEDS)}, 0F, 400);
+        var freeThaw = new CampfireDefrostRecipe(FHMain.rl("test_charger_free_thaw"), "",
+                Ingredient.of(Items.POTATO), new ItemStack[]{new ItemStack(Items.BAKED_POTATO)}, 0F, 0);
+        var smoke = new SmokingRecipe(FHMain.rl("test_charger_smoke"), "", CookingBookCategory.FOOD,
+                Ingredient.of(Items.BEEF), new ItemStack(Items.COOKED_BEEF), 0F, 3000);
+        var freeSmoke = new SmokingRecipe(FHMain.rl("test_charger_free_smoke"), "", CookingBookCategory.FOOD,
+                Ingredient.of(Items.CHICKEN), new ItemStack(Items.COOKED_CHICKEN), 0F, 0);
+        try {
+            manager.replaceRecipes(List.of(smoke, freeSmoke));
+            CampfireDefrostRecipe.recipeList = Map.of(thaw.getId(), thaw, freeThaw.getId(), freeThaw);
+            assertCooking(helper, charger, player, FHItems.frozen_seeds.get(), Items.WHEAT_SEEDS, 4.75F, 4.75F, false);
+            assertCooking(helper, charger, player, FHItems.frozen_seeds.get(), Items.WHEAT_SEEDS, 5F, 0F, true);
+            assertCooking(helper, charger, player, Items.POTATO, Items.BAKED_POTATO, -5F, 0F, true);
+            assertCooking(helper, charger, player, Items.BEEF, Items.COOKED_BEEF, 149.75F, 149.75F, false);
+            assertCooking(helper, charger, player, Items.BEEF, Items.COOKED_BEEF, 150F, 0F, true);
+            assertCooking(helper, charger, player, Items.CHICKEN, Items.COOKED_CHICKEN, 99F, 99F, false);
+            assertCooking(helper, charger, player, Items.CHICKEN, Items.COOKED_CHICKEN, 100F, 100F, true);
+        } finally {
+            manager.replaceRecipes(originalRecipes);
+            CampfireDefrostRecipe.recipeList = originalDefrost;
+        }
+        helper.succeed();
+    }
+
+    private static void assertCooking(GameTestHelper helper, ChargerTileEntity charger, ServerPlayer player,
+                                      Item input, Item output, float before, float after, boolean success) {
+        assertLegacyClick(helper, charger, player, input, output, before, after, false,
+                success ? InteractionResult.SUCCESS : InteractionResult.PASS);
+    }
+
+    private static void assertLegacyClick(GameTestHelper helper, ChargerTileEntity charger, ServerPlayer player,
+                                          Item input, Item output, float before, float after,
+                                          boolean occupied, InteractionResult expected) {
+        player.getInventory().clearContent();
+        player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(input));
+        var saved = new CompoundTag();
+        saved.putFloat("power", before);
+        if (occupied) saved.put("dockedDrill", new ItemStack(FHItems.heater_vest.get()).save(new CompoundTag()));
+        charger.readCustomNBT(saved, false);
+        helper.assertTrue(charger.onClick(player, InteractionHand.MAIN_HAND) == expected,
+                "charger action result must agree with the station balance for " + input);
+        boolean success = expected == InteractionResult.SUCCESS;
+        helper.assertTrue(player.getInventory().countItem(input) == (success ? 0 : 1)
+                        && player.getInventory().countItem(output) == (success ? 1 : 0),
+                "charger must only process the input when affordable");
+        near(helper, after, chargerSnapshot(charger).getFloat("power"), 0D, "charger debits the unchanged recipe price");
+        if (occupied) near(helper, 0D, savedDockCharge(charger), 0D, "legacy click does not change the original parked stack");
+    }
+
+    @GameTest(template = TEMPLATE, batch = "equipment_logic", timeoutTicks = 80)
+    public static void pendingDockCapturesOnlyMatchingLegacyClicks(GameTestHelper helper) {
+        var charger = placeCharger(helper);
+        var player = newPlayer(helper);
+        var manager = helper.getLevel().getRecipeManager();
+        var originalRecipes = List.copyOf(manager.getRecipes());
+        var originalDefrost = CampfireDefrostRecipe.recipeList;
+        var smoke = new SmokingRecipe(FHMain.rl("test_pending_smoke"), "", CookingBookCategory.FOOD,
+                Ingredient.of(Items.BEEF), new ItemStack(Items.COOKED_BEEF), 0F, 3000);
+        var bottle = new ChargerRecipe(FHMain.rl("test_pending_bottle"), new ItemStack(FHItems.steam_bottle.get()),
+                new IngredientWithSize(Ingredient.of(Items.GLASS_BOTTLE), 1), 240F);
+        var thaw = new CampfireDefrostRecipe(FHMain.rl("test_pending_thaw"), "",
+                Ingredient.of(FHItems.frozen_seeds.get()), new ItemStack[]{new ItemStack(Items.WHEAT_SEEDS)}, 0F, 400);
+        try {
+            manager.replaceRecipes(List.of(smoke, bottle));
+            CampfireDefrostRecipe.recipeList = Map.of(thaw.getId(), thaw);
+            assertLegacyClick(helper, charger, player, Items.BEEF, Items.COOKED_BEEF, 99F, 99F, true, InteractionResult.CONSUME);
+            assertLegacyClick(helper, charger, player, Items.BEEF, Items.COOKED_BEEF, 149F, 149F, true, InteractionResult.CONSUME);
+            assertLegacyClick(helper, charger, player, Items.BEEF, Items.COOKED_BEEF, 150F, 0F, true, InteractionResult.SUCCESS);
+            assertLegacyClick(helper, charger, player, Items.GLASS_BOTTLE, FHItems.steam_bottle.get(), 239F, 239F, true, InteractionResult.CONSUME);
+            assertLegacyClick(helper, charger, player, Items.GLASS_BOTTLE, FHItems.steam_bottle.get(), 240F, 0F, true, InteractionResult.SUCCESS);
+            assertLegacyClick(helper, charger, player, FHItems.frozen_seeds.get(), Items.WHEAT_SEEDS, 4F, 4F, true, InteractionResult.CONSUME);
+            assertLegacyClick(helper, charger, player, FHItems.frozen_seeds.get(), Items.WHEAT_SEEDS, 5F, 0F, true, InteractionResult.SUCCESS);
+            assertLegacyClick(helper, charger, player, Items.APPLE, Items.DIAMOND, 150F, 150F, true, InteractionResult.PASS);
+        } finally {
+            manager.replaceRecipes(originalRecipes);
+            CampfireDefrostRecipe.recipeList = originalDefrost;
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = TEMPLATE, batch = "equipment_charger_dirty", timeoutTicks = 80)
+    public static void chargerProgressPersistsWithoutNotifyingComparators(GameTestHelper helper) {
+        var charger = placeCharger(helper);
+        var level = helper.getLevel();
+        var pos = charger.getBlockPos();
+        var comparatorPos = pos.east();
+        level.setBlockAndUpdate(comparatorPos.below(), Blocks.STONE.defaultBlockState());
+        level.setBlockAndUpdate(comparatorPos, Blocks.COMPARATOR.defaultBlockState()
+                .setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.WEST));
+
+        helper.runAfterDelay(4, () -> {
+            var saved = new CompoundTag();
+            saved.putFloat("power", 288F);
+            saved.put("dockedDrill", new ItemStack(FHItems.heater_vest.get()).save(new CompoundTag()));
+            charger.readCustomNBT(saved, false);
+            // The first simulated tick leaves LIT unchanged, so only internal progress can dirty the chunk.
+            level.setBlock(pos, charger.getBlockState().setValue(BlockStateProperties.LIT, true),
+                    Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE);
+            var comparator = (ComparatorBlockEntity) level.getBlockEntity(comparatorPos);
+            comparator.setOutputSignal(7); // If notified, the real comparator schedules correction to zero.
+            var chunk = level.getChunkAt(pos);
+            chunk.setUnsaved(false);
+            helper.assertTrue(!level.getBlockTicks().hasScheduledTick(comparatorPos, Blocks.COMPARATOR), "quiet fixture at start");
+
+            charger.tick();
+            near(helper, 1D, savedDockCharge(charger), 0D, "partial live charge");
+            helper.assertTrue(chunk.isUnsaved(), "partial charge dirties the chunk for saving");
+            helper.assertTrue(!level.getBlockTicks().hasScheduledTick(comparatorPos, Blocks.COMPARATOR),
+                    "internal progress must not notify the adjacent comparator");
+
+            charger.tick();
+            helper.assertTrue(!level.getBlockState(pos).getValue(BlockStateProperties.LIT),
+                    "actual charger LIT transition still occurs after charge stops");
+            helper.succeed();
+        });
+    }
+
+    @GameTest(template = TEMPLATE, batch = "equipment_logic", timeoutTicks = 80)
+    public static void dockRetriesAnUnchangedRemainderAfterReloadOrActualHeat(GameTestHelper helper) {
+        var charger = placeCharger(helper);
+        var vest = new ItemStack(FHItems.heater_vest.get());
+        vest.getOrCreateTag().putDouble("frostedheart:steam", 29_999.5D);
+        var saved = new CompoundTag();
+        saved.putFloat("power", 143F);
+        saved.put("dockedDrill", vest.save(new CompoundTag()));
+        charger.readCustomNBT(saved, false);
+        for (int i = 0; i < 5; ++i) charger.tick();
+        near(helper, 143D, chargerSnapshot(charger).getFloat("power"), 0D, "stable unaffordable remainder stays put");
+        near(helper, 29_999.5D, savedDockCharge(charger), 0D, "fractional reserve also stays put");
+        var visible = new CompoundTag();
+        charger.writeCustomNBT(visible, true);
+        var appearance = visible.getCompound("drillDockAppearance").copy();
+        helper.assertTrue(appearance.size() == 2 && appearance.getByte("Count") == 1
+                        && appearance.getString("id").equals("frostedheart:heater_vest")
+                        && !visible.contains("dockedDrill") && visible.getByte("drillDockState") == 1,
+                "tracking projects just the warm gear item, not the server's stored stack");
+        charger.getCapability(FHCapabilities.HEAT_EP.capability(), Direction.SOUTH)
+                .orElseThrow(IllegalStateException::new).setHeat(0.001F);
+        charger.tick();
+        near(helper, 0D, chargerSnapshot(charger).getFloat("power"), 0D, "one new station point enables the pending half point");
+        near(helper, 30_000D, savedDockCharge(charger), 0D, "paid receipt finishes the existing item");
+        var full = new CompoundTag();
+        charger.writeCustomNBT(full, true);
+        helper.assertTrue(full.getByte("drillDockState") == 2
+                        && appearance.equals(full.getCompound("drillDockAppearance")),
+                "charging can mark the dock full without changing its display stack");
+
+        charger.readCustomNBT(saved, false);
+        charger.tick();
+        vest.getOrCreateTag().putDouble("frostedheart:steam", 29_999.75D);
+        saved.put("dockedDrill", vest.save(new CompoundTag()));
+        charger.readCustomNBT(saved, false);
+        charger.tick();
+        near(helper, 71D, chargerSnapshot(charger).getFloat("power"), 0D, "reload at same station balance tests a different reserve");
+        near(helper, 30_000D, savedDockCharge(charger), 0D, "replacement legacy fraction reaches full");
+        helper.succeed();
+    }
+
+    private static double savedDockCharge(ChargerTileEntity charger) {
+        return chargerSnapshot(charger).getCompound("dockedDrill").getCompound("tag").getDouble("frostedheart:steam");
+    }
+
+    private static ChargerTileEntity placeCharger(GameTestHelper helper) {
+        BlockPos pos = helper.absolutePos(new BlockPos(1, 2, 1));
+        helper.getLevel().setBlockAndUpdate(pos, FHBlocks.CHARGER.get().defaultBlockState());
+        return (ChargerTileEntity) helper.getLevel().getBlockEntity(pos);
+    }
+
+    private static CompoundTag chargerSnapshot(ChargerTileEntity charger) {
+        var nbt = new CompoundTag();
+        charger.writeCustomNBT(nbt, false);
+        return nbt;
     }
 
     @GameTest(template = TEMPLATE, batch = "equipment_logic", timeoutTicks = 80)

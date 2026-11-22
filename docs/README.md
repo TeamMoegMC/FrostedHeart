@@ -15,6 +15,7 @@ This directory explains implemented, player-facing game systems. Source, configu
 | Scenario 剧情系统           | [scenario/README.md](scenario/README.md)                 | Partial      |
 | Scenario font rendering       | [scenario-font-rendering.md](scenario-font-rendering.md) | Current      |
 | Ice cave world generation     | [worldgen/README.md](worldgen/README.md)                   | Partial      |
+| S04 StrataDrill                | [stratadrill.md](stratadrill.md)                          | Partial      |
 
 `Current` means verified against implementation. `Partial` omits known areas. `Transitional` mixes verified material with legacy, experimental, or proposed content. [`deprecated/`](deprecated/) is historical only.
 

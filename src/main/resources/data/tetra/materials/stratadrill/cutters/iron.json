@@ -1,0 +1,16 @@
+{
+  "key": "iron",
+  "category": "metal",
+  "hidden": true,
+  "tints": { "texture": "F5EADA" },
+  "primary": 0,
+  "secondary": 0,
+  "tertiary": 0,
+  "durability": 250,
+  "toolLevel": 0,
+  "toolEfficiency": 6,
+  "material": {
+    "tag": "forge:ingots/iron",
+    "count": 1
+  }
+}

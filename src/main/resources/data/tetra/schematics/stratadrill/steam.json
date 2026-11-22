@@ -1,0 +1,18 @@
+{
+  "slots": [
+    "stratadrill/drive"
+  ],
+  "materialSlotCount": 0,
+  "repair": false,
+  "displayType": "major",
+  "glyph": {
+    "textureX": 176,
+    "textureY": 32
+  },
+  "outcomes": [
+    {
+      "moduleKey": "stratadrill/drive",
+      "moduleVariant": "stratadrill/steam"
+    }
+  ]
+}
