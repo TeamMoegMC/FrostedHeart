@@ -36,6 +36,7 @@
     "immersiveengineering.OwnerableStateMixin",
     "immersiveengineering.ToolboxItemMixin",
     "minecraft.accessors.BlockBehaviourAccessor_LightPillars",
+    "minecraft.accessors.BlockStateBaseAccessor_StrataHardness",
     "minecraft.accessors.CacheAllInCellAccessor",
     "minecraft.accessors.HeightmapAccessor",
     "minecraft.accessors.MultiNoiseBiomeSourceAccessor",

@@ -20,11 +20,12 @@
 package com.teammoeg.frostedheart.content.stratadrill;
 
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
 import net.minecraft.world.item.ItemStack;
 
 import javax.annotation.Nullable;
 
-/** The bounded set of visual assemblies, independent of the optional Tetra implementation. */
+/** The four S04 assemblies used by gameplay, rendering and the optional workbench. */
 public enum StrataDrillAssembly {
     STEAM_SPIRAL(true, false),
     STEAM_WHEEL(true, true),
@@ -47,56 +48,61 @@ public enum StrataDrillAssembly {
         return wheel;
     }
 
-    /** Checks only the item identity, without resolving Tetra slots or variants. */
+    /** Checks only the item type, without reading its parts, cutter or fuel. */
     public static boolean isDrill(ItemStack stack) {
-        return stack.getItem() instanceof ItemView;
+        return stack.getItem() instanceof StrataDrillItem;
     }
 
     /** A synchronized replacement stack can still be the same drill for the work pose. */
     public static boolean sameVisualTool(ItemStack previous, ItemStack current) {
-        return previous == current || (previous.getItem() instanceof ItemView drill
-                && previous.getItem() == current.getItem() && drill.sameVisualIdentity(previous, current));
+        if (previous == current) return true;
+        if (!isDrill(previous) || previous.getItem() != current.getItem()) return false;
+        String id = StrataDrillData.identity(previous);
+        return !id.isEmpty() && id.equals(StrataDrillData.identity(current));
     }
 
     /** Snapshot only the stock item-model inputs for a charger, never the actual inventory stack. */
     @Nullable
     public static CompoundTag dockAppearance(ItemStack stack) {
-        return stack.getItem() instanceof ItemView drill ? drill.dockAppearance(stack) : null;
+        StrataDrillAssembly assembly = read(stack);
+        if (assembly == null) return null;
+        ItemStack display = new ItemStack(stack.getItem());
+        StrataDrillData.setAssembly(display, assembly);
+        StrataDrillData.setCutter(display, StrataDrillData.cutterId(stack));
+        if (stack.hasFoil()) {
+            // Vanilla's foil layer only needs a nonempty enchantment list, not the actual enchantments.
+            ListTag foil = new ListTag();
+            foil.add(new CompoundTag());
+            display.addTagElement(ItemStack.TAG_ENCH, foil);
+        }
+        return display.save(new CompoundTag());
     }
 
-    /** Returns the installed assembly, or null for items other than S04. Empty slots use the default visual parts. */
+    /** Returns the installed assembly even when dry or worn out; raw drills use steam and a spiral. */
     @Nullable
     public static StrataDrillAssembly read(ItemStack stack) {
-        return stack.getItem() instanceof ItemView drill ? drill.resolveAssembly(stack, false) : null;
+        return isDrill(stack) ? StrataDrillData.assembly(StrataDrillData.read(stack)) : null;
     }
 
-    /** Resolve both slots once, rejecting missing modules and tools out of durability. */
+    /** Resolve the installed parts, rejecting a worn-out cutter but not empty fuel tanks. */
     @Nullable
     static StrataDrillAssembly operable(ItemStack stack) {
-        return stack.getItem() instanceof ItemView drill ? drill.resolveAssembly(stack, true) : null;
+        if (!isDrill(stack)) return null;
+        CompoundTag data = StrataDrillData.read(stack);
+        return StrataDrillItem.cutterCanRun(data) ? StrataDrillData.assembly(data) : null;
     }
 
-    /** Migrate an older unidentified drill only when a real refill has changed its state. */
+    /** Give a raw command drill its identity only when a real refill has changed its state. */
     static void identifyAfterRefill(ItemStack stack) {
-        if (stack.getItem() instanceof ItemView drill) drill.ensureIdentity(stack);
+        if (isDrill(stack)) StrataDrillData.ensureIdentity(stack);
     }
 
-    static StrataDrillAssembly of(boolean steam, boolean wheel) {
+    /** Select the shared assembly without creating a per-stack part object. */
+    public static StrataDrillAssembly of(boolean steam, boolean wheel) {
         if (steam) {
             return wheel ? STEAM_WHEEL : STEAM_SPIRAL;
         }
         return wheel ? DIESEL_WHEEL : DIESEL_SPIRAL;
     }
 
-    /** Keeps the common API loadable on installations without Tetra. */
-    interface ItemView {
-        @Nullable
-        StrataDrillAssembly resolveAssembly(ItemStack stack, boolean requireOperable);
-
-        CompoundTag dockAppearance(ItemStack stack);
-
-        void ensureIdentity(ItemStack stack);
-
-        boolean sameVisualIdentity(ItemStack previous, ItemStack current);
-    }
 }

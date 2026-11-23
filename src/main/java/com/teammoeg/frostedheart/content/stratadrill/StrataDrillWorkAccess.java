@@ -20,13 +20,9 @@
 package com.teammoeg.frostedheart.content.stratadrill;
 
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.item.ItemStack;
 
-/** Server game-mode access for current drill work and the native wheel callbacks. */
+/** Server game-mode access for synchronizing current drill work. */
 public interface StrataDrillWorkAccess {
     /** Sends the original start tick if the player is still operating the drill. */
     void fh$sendStrataDrillSnapshot(ServerPlayer observer);
-
-    /** Matches only this extra cell's original live tool or its own pre-wear vanilla loot snapshot. */
-    boolean fh$isDiscountedWheelStack(ItemStack stack);
 }

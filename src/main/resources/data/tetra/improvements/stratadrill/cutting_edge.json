@@ -3,16 +3,6 @@
     "materials": [ "tetra:stratadrill/cutters/" ],
     "key": "stratadrill/cutting_edge/",
     "level": 0,
-    "group": "stratadrill/cutting_edge",
-    "durability": -9000,
-    "tools": {
-      "pickaxe_dig": [ 0, -2.4 ]
-    },
-    "extract": {
-      "durability": 1,
-      "tools": {
-        "pickaxe_dig": [ 1, 0.4 ]
-      }
-    }
+    "group": "stratadrill/cutting_edge"
   }
 ]

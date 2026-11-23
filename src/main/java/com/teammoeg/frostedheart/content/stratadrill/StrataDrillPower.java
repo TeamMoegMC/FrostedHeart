@@ -47,32 +47,26 @@ public final class StrataDrillPower {
     // Portable charge points, not the charger's own points or fluid mB.
     public static final int STEAM_CAPACITY = 32_000;
     public static final int STEAM_PER_BLOCK = 25;
-    public static final int STEAM_PER_WHEEL_NEIGHBOR = 20;
     private static final int CHARGER_POINTS_PER_STEAM_POINT = 34;
     // mB of IE biodiesel.
     public static final int DIESEL_CAPACITY = 16_800;
     public static final int DIESEL_PER_BLOCK = 7;
-    public static final int DIESEL_PER_WHEEL_NEIGHBOR = 6;
     public static final float DIESEL_SPEED_MULTIPLIER = 1.25F;
-    private static final String STEAM_KEY = "frostedheart:stratadrill_steam";
-    private static final String DIESEL_KEY = "frostedheart:stratadrill_diesel";
-    private static final int AFFORDABLE_STEAM = 1;
-    private static final int AFFORDABLE_DIESEL = 2;
-    // Only synchronous server wheel callbacks (including Forge harvest and the native loot copy).
-    private static final ThreadLocal<StrataDrillWorkAccess> WHEEL_NEIGHBOR = new ThreadLocal<>();
+    private static final String STEAM_KEY = "steam";
+    private static final String DIESEL_KEY = "diesel_mb";
 
     private StrataDrillPower() {}
 
     /** Non-mutating read so checking a held item cannot change vanilla mining's stack identity. */
     public static float steamStored(ItemStack stack) {
-        CompoundTag tag = stack.getTag();
+        CompoundTag tag = StrataDrillData.read(stack);
         float stored = tag == null ? 0 : tag.getFloat(STEAM_KEY);
         return Float.isFinite(stored) ? Mth.clamp(stored, 0, STEAM_CAPACITY) : 0;
     }
 
     private static void setSteam(ItemStack stack, float value) {
-        if (value > 0) stack.getOrCreateTag().putFloat(STEAM_KEY, value);
-        else stack.removeTagKey(STEAM_KEY);
+        if (value > 0) StrataDrillData.edit(stack).putFloat(STEAM_KEY, value);
+        else removeReserve(stack, STEAM_KEY);
     }
 
     /** Resolve the assembly when a charger takes ownership, not on every charging tick. */
@@ -96,13 +90,18 @@ public final class StrataDrillPower {
 
     /** Non-mutating read, independent of the steam reserve and currently installed drive. */
     public static int dieselStored(ItemStack stack) {
-        CompoundTag tag = stack.getTag();
+        CompoundTag tag = StrataDrillData.read(stack);
         return tag == null ? 0 : Mth.clamp(tag.getInt(DIESEL_KEY), 0, DIESEL_CAPACITY);
     }
 
     private static void setDiesel(ItemStack stack, int value) {
-        if (value > 0) stack.getOrCreateTag().putInt(DIESEL_KEY, value);
-        else stack.removeTagKey(DIESEL_KEY);
+        if (value > 0) StrataDrillData.edit(stack).putInt(DIESEL_KEY, value);
+        else removeReserve(stack, DIESEL_KEY);
+    }
+
+    private static void removeReserve(ItemStack stack, String key) {
+        CompoundTag tag = StrataDrillData.read(stack);
+        if (tag != null) tag.remove(key);
     }
 
     private static boolean isBiodiesel(FluidStack resource) {
@@ -152,7 +151,7 @@ public final class StrataDrillPower {
         return InteractionResult.PASS;
     }
 
-    /** Require a valid Tetra assembly and, outside Creative, one block's worth of active fuel. */
+    /** Require a working drill assembly and, outside Creative, one block's worth of active fuel. */
     public static boolean canRun(ItemStack stack, boolean creative) {
         return poweredAssembly(stack, creative) != null;
     }
@@ -160,79 +159,36 @@ public final class StrataDrillPower {
     /** Resolve once at the caller's validation boundary; no persistent or mutable-stack cache. */
     @Nullable
     public static StrataDrillAssembly poweredAssembly(ItemStack stack, boolean creative) {
-        return poweredAssembly(stack, creative, false);
+        return StrataDrillAssembly.isDrill(stack) ? poweredAssembly(StrataDrillData.read(stack), creative) : null;
     }
 
-    /** Check affordability before the server attempts an extra cell from an already paid center. */
+    /** Known drill: reuse the decoded compound and read only the installed drive's reserve. */
     @Nullable
-    public static StrataDrillAssembly poweredWheelNeighbor(ItemStack stack) {
-        return poweredAssembly(stack, false, true);
+    static StrataDrillAssembly poweredAssembly(@Nullable CompoundTag data, boolean creative) {
+        if (data == null && !creative) return null;
+        StrataDrillAssembly assembly = StrataDrillData.assembly(data);
+        if (!creative && !hasFuel(data, assembly.steam())) return null;
+        return StrataDrillItem.cutterCanRun(data) ? assembly : null;
     }
 
-    /** Cheap dry-path rejection only; the installed drive and durability are checked separately. */
-    static boolean hasAnyAffordableReserve(ItemStack stack) {
-        return affordableFuel(stack, false) != 0;
+    private static boolean hasFuel(CompoundTag data, boolean steam) {
+        if (!steam) return data.getInt(DIESEL_KEY) >= DIESEL_PER_BLOCK;
+        float stored = data.getFloat(STEAM_KEY);
+        return Float.isFinite(stored) && stored >= STEAM_PER_BLOCK;
     }
 
-    @Nullable
-    private static StrataDrillAssembly poweredAssembly(ItemStack stack, boolean creative, boolean wheelNeighbor) {
-        if (!(stack.getItem() instanceof StrataDrillAssembly.ItemView drill)) return null;
-        if (creative) return drill.resolveAssembly(stack, true);
-        int affordable = affordableFuel(stack, wheelNeighbor);
-        if (affordable == 0) return null;
-        StrataDrillAssembly assembly = drill.resolveAssembly(stack, true);
-        return assembly != null && (affordable & (assembly.steam() ? AFFORDABLE_STEAM : AFFORDABLE_DIESEL)) != 0
-                ? assembly : null;
-    }
-
-    private static int affordableFuel(ItemStack stack, boolean wheelNeighbor) {
-        CompoundTag tag = stack.getTag();
-        if (tag == null) return 0;
-        float steam = tag.getFloat(STEAM_KEY);
-        int diesel = tag.getInt(DIESEL_KEY);
-        boolean finiteSteam = Float.isFinite(steam);
-        boolean hasSteam = finiteSteam && steam >= STEAM_PER_BLOCK;
-        boolean hasDiesel = diesel >= DIESEL_PER_BLOCK;
-        boolean steamAtNeighborPrice = !hasSteam && finiteSteam && steam >= STEAM_PER_WHEEL_NEIGHBOR;
-        boolean dieselAtNeighborPrice = !hasDiesel && diesel >= DIESEL_PER_WHEEL_NEIGHBOR;
-        // Only a reserve between the two prices needs to look up the scoped native call.
-        if ((steamAtNeighborPrice || dieselAtNeighborPrice) && (wheelNeighbor || isScopedWheelNeighbor(stack))) {
-            hasSteam |= steamAtNeighborPrice;
-            hasDiesel |= dieselAtNeighborPrice;
-        }
-        return (hasSteam ? AFFORDABLE_STEAM : 0) | (hasDiesel ? AFFORDABLE_DIESEL : 0);
-    }
-
-    /** Bind one authorized synchronous wheel batch; the caller restores any enclosing batch in finally. */
-    @Nullable
-    public static StrataDrillWorkAccess enterWheelNeighborScope(StrataDrillWorkAccess current) {
-        StrataDrillWorkAccess previous = WHEEL_NEIGHBOR.get();
-        WHEEL_NEIGHBOR.set(current);
-        return previous;
-    }
-
-    public static void restoreWheelNeighborScope(@Nullable StrataDrillWorkAccess previous) {
-        if (previous == null) WHEEL_NEIGHBOR.remove();
-        else WHEEL_NEIGHBOR.set(previous);
-    }
-
-    private static boolean isScopedWheelNeighbor(ItemStack stack) {
-        StrataDrillWorkAccess scope = WHEEL_NEIGHBOR.get();
-        return scope != null && scope.fh$isDiscountedWheelStack(stack);
-    }
-
-    /** Price picked before wear but only charged if the corresponding block is actually removed. */
-    public record Removal(ItemStack stack, BlockPos pos, boolean steam, boolean wheelNeighbor, int wheelDepth,
-                          @Nullable Removal previous) {}
+    /** Capture the active drive before wear; only an actual removal settles the debit. */
+    public record Removal(ItemStack stack, BlockPos pos, boolean steam, int wheelDepth, @Nullable Removal previous) {}
 
     /** Called only after Forge's actual block removal succeeds, even if that hit wore out the tool. */
     public static void spend(Removal removal) {
         ItemStack stack = removal.stack();
         if (removal.steam()) {
-            setSteam(stack, steamStored(stack) - (removal.wheelNeighbor() ? STEAM_PER_WHEEL_NEIGHBOR : STEAM_PER_BLOCK));
+            setSteam(stack, steamStored(stack) - STEAM_PER_BLOCK);
         } else {
-            setDiesel(stack, dieselStored(stack) - (removal.wheelNeighbor() ? DIESEL_PER_WHEEL_NEIGHBOR : DIESEL_PER_BLOCK));
+            setDiesel(stack, dieselStored(stack) - DIESEL_PER_BLOCK);
         }
+        StrataDrillData.ensureIdentity(stack);
     }
 
     /** Diesel still uses Forge fluid filling; the FH dock is the only steam charging path. */

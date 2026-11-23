@@ -43,13 +43,27 @@ import javax.annotation.Nullable;
 
 /** S04 grip profile. Uses actual V3.7 wood grip centers and the ordinary player skin and sleeves. */
 public final class StrataDrillHands {
-    // V3.7 grip coordinates (editor position minus 8, in sixteenths).
+    // Grip coordinates (editor position minus 8, in sixteenths).
     private static final Point REAR_PALM_1P = new Point(0.7109375F, -0.0228125F, 0);
+    // In the braced pose the distal hand covers part of the real D upright, still inside the wood.
+    private static final Point REAR_BRACED_RIGHT_1P = new Point(
+            REAR_PALM_1P.x() - 0.16F / 16, REAR_PALM_1P.y() + 0.25F / 16, REAR_PALM_1P.z());
+    private static final float REAR_BRACE_START = 0.85F;
     // Left palm on the outer end of the existing wood, just inboard of the metal stop.
-    private static final Point FRONT_PALM_RIGHT_1P = new Point(-0.303125F, -0.021875F, 0.388125F);
-    private static final Point FRONT_PALM_LEFT_1P = new Point(-0.31875F, -0.021875F, 0.24F);
+    private static final Point FRONT_PALM_RIGHT_1P = new Point(-0.303125F, -0.021875F, 0.4225F);
+    // With the left hand on the motor, the right hand takes this same bar from below.
+    private static final Point FRONT_PALM_LEFT_1P = new Point(-0.3125F, -0.05F, 0.375F);
     private static final float FIRST_SCALE = 0.90F;
-    private static final float FIRST_REAR_Z = -0.507F;
+    // Positive means nose up. The long axis of the authored drill is -X, not camera -Z.
+    private static final float CARRY_PITCH = -5 * Mth.DEG_TO_RAD;
+    private static final float PRESS_PITCH = 3 * Mth.DEG_TO_RAD;
+    // Expose the original wood and the end of the right hand at the lower edge, not above the frame.
+    private static final float RIGHT_WORK_VIEW_ROLL = 7 * Mth.DEG_TO_RAD;
+    private static final float RIGHT_WORK_VIEW_YAW = 4 * Mth.DEG_TO_RAD;
+    // Common centreline at the cutting end (editor x=-8); preserve its old loaded position.
+    private static final Point CUT_CONTACT_1P = new Point(-1, 0, 0);
+    private static final FirstHold FIRST_RIGHT = FirstHold.forSide(true);
+    private static final FirstHold FIRST_LEFT = FirstHold.forSide(false);
     private static final float THIRD_SCALE = 0.70F;
     private static final float MAIN_PALM_DEPTH = -1.18F;
     private static final float SUPPORT_PALM_DEPTH = -1.15F;
@@ -222,6 +236,31 @@ public final class StrataDrillHands {
         }
     }
 
+    /** The same tool and physical grips at the hip and at the wall; neither endpoint reads the crosshair. */
+    private record FirstHold(float carryYaw, float pressYaw, Point hip, Point pressed) {
+        static FirstHold forSide(boolean right) {
+            float side = right ? 1 : -1;
+            float yaw = (right ? -80 : -106) * Mth.DEG_TO_RAD;
+            // Turning slightly up about the old cutting end (rather than about the wrist)
+            // leaves the bite on the wall. This correction is constant for each main arm.
+            Quaternionf tool = new Quaternionf().rotationY(yaw);
+            Vector3f end = CUT_CONTACT_1P.offsetFrom(REAR_PALM_1P, tool, FIRST_SCALE, new Vector3f());
+            Vector3f lifted = CUT_CONTACT_1P.offsetFrom(REAR_PALM_1P, tool.rotateZ(-PRESS_PITCH),
+                    FIRST_SCALE, new Vector3f());
+            end.sub(lifted);
+            Point pressed = new Point(side * 0.49F - 0.082F * Mth.cos(yaw) + end.x,
+                    -0.40F + end.y, -0.507F + 0.082F * Mth.sin(yaw) + end.z);
+            return new FirstHold((-90 - 8 * side) * Mth.DEG_TO_RAD, yaw,
+                    new Point(side * 0.525F, -0.565F, -0.415F), pressed);
+        }
+
+        Point rearPalm(float load, float equipProgress) {
+            return new Point(Mth.lerp(load, hip.x(), pressed.x()),
+                    Mth.lerp(load, hip.y(), pressed.y()) - 0.59F * HeldGripPose.equipWeight(equipProgress),
+                    Mth.lerp(load, hip.z(), pressed.z()));
+        }
+    }
+
     /**
      * Called from the actual vanilla arm draw, downstream of Oculus's pass selector. The supplied
      * buffers belong to that pass. Suppression is only for the S04 branch actually drawn here.
@@ -238,19 +277,21 @@ public final class StrataDrillHands {
         HumanoidArm primary = main ? player.getMainArm() : player.getMainArm().getOpposite();
         boolean right = primary == HumanoidArm.RIGHT;
         boolean support = main && displayedOffhand.isEmpty() && player.getOffhandItem().isEmpty();
-        float phase = main ? StrataDrillClientWork.phase(player, partialTick) : Float.NaN;
-        float load = main ? StrataDrillClientWork.loadAmount(player, partialTick) : 0;
-        float sign = HeldGripPose.side(primary);
-        // Keep the level drill in the operator's carrying lane. The shallow inward angle clears
-        // the asymmetric auxiliary handle, not the crosshair, and stays fixed under pressure.
-        float yaw = (right ? -80 : -106) * Mth.DEG_TO_RAD;
-        Quaternionf rotation = new Quaternionf().rotationY(yaw);
-        // Model -X is the drill's working axis. The original two arms follow the same lift and
-        // axial movement, rather than aiming, sweeping sideways or chasing the block position.
-        float press = 0.082F * load;
-        Point rear = new Point(sign * 0.49F - press * Mth.cos(yaw),
-                -0.434F + 0.034F * load - 0.59F * HeldGripPose.equipWeight(equipProgress),
-                FIRST_REAR_Z + press * Mth.sin(yaw));
+        boolean moving = main && StrataDrillClientWork.firstPersonMatches(player, stack);
+        long now = moving ? player.level().getGameTime() : 0;
+        float phase = moving ? StrataDrillClientWork.firstPersonPhase(now, partialTick) : Float.NaN;
+        float load = moving ? StrataDrillClientWork.firstPersonLoadAmount(now, partialTick) : 0;
+        FirstHold hold = right ? FIRST_RIGHT : FIRST_LEFT;
+        Point rear = hold.rearPalm(load, equipProgress);
+        // Both original arms follow this single rigid pose through the existing smooth work clock.
+        // At rest the motor hangs by the waist; pushing lifts and advances the drill, nose up.
+        Quaternionf rotation = new Quaternionf().rotationY(Mth.lerp(load, hold.carryYaw(), hold.pressYaw()))
+                .rotateZ(-Mth.lerp(load, CARRY_PITCH, PRESS_PITCH));
+        boolean frameRightWork = main && right && load > 0;
+        if (frameRightWork) {
+            poses.pushPose();
+            applyRightWorkFraming(poses, rear, rotation, load);
+        }
         poses.pushPose();
         poses.translate(rear.x(), rear.y(), rear.z());
         poses.mulPose(rotation);
@@ -265,27 +306,43 @@ public final class StrataDrillHands {
             boolean previous = drawingFirstPersonSkin;
             drawingFirstPersonSkin = true;
             try {
-                // Sample the support palm before the arm draw reuses the quaternion.
-                Point supportPalm = support ? viewPalm(rear, REAR_PALM_1P,
-                        right ? FRONT_PALM_RIGHT_1P : FRONT_PALM_LEFT_1P, rotation) : null;
-                drawSkinArm(renderer, player, primary, rear, false, rotation, poses, buffers, light);
+                // Resolve both hands before the first arm draw reuses the tool quaternion.
+                Point supportPalm = support ? viewPalm(rear,
+                        right ? FRONT_PALM_RIGHT_1P : FRONT_PALM_LEFT_1P, rotation, 1) : null;
+                Point primaryPalm = rear;
+                if (frameRightWork && load > REAR_BRACE_START) {
+                    // Settle into the wood under pressure; keep the unbraced wrist below the rails.
+                    float brace = (load - REAR_BRACE_START) / (1 - REAR_BRACE_START);
+                    primaryPalm = viewPalm(rear, REAR_BRACED_RIGHT_1P, rotation, brace * brace);
+                }
+                drawSkinArm(renderer, player, primary, primaryPalm, false, load, rotation, poses, buffers, light);
                 if (supportPalm != null) {
-                    drawSkinArm(renderer, player, primary.getOpposite(), supportPalm, true, rotation, poses, buffers, light);
+                    drawSkinArm(renderer, player, primary.getOpposite(), supportPalm, true, load, rotation, poses, buffers, light);
                 }
             } finally {
                 drawingFirstPersonSkin = previous;
             }
         }
+        if (frameRightWork) poses.popPose();
         return true;
     }
 
-    private static Point viewPalm(Point mount, Point modelMount, Point contact, Quaternionf rotation) {
-        Vector3f offset = contact.offsetFrom(modelMount, rotation, FIRST_SCALE, new Vector3f());
+    /** Turn the whole held rig about its existing bite point, so neither hand leaves its wood. */
+    private static void applyRightWorkFraming(PoseStack poses, Point rear, Quaternionf tool, float load) {
+        Vector3f bite = CUT_CONTACT_1P.offsetFrom(REAR_PALM_1P, tool, FIRST_SCALE, new Vector3f())
+                .add(rear.x(), rear.y(), rear.z());
+        poses.translate(bite.x, bite.y, bite.z);
+        poses.mulPose(new Quaternionf().rotationZ(RIGHT_WORK_VIEW_ROLL * load).rotateY(RIGHT_WORK_VIEW_YAW * load));
+        poses.translate(-bite.x, -bite.y, -bite.z);
+    }
+
+    private static Point viewPalm(Point mount, Point contact, Quaternionf rotation, float weight) {
+        Vector3f offset = contact.offsetFrom(REAR_PALM_1P, rotation, FIRST_SCALE * weight, new Vector3f());
         return new Point(mount.x() + offset.x, mount.y() + offset.y, mount.z() + offset.z);
     }
 
     private static void drawSkinArm(PlayerRenderer renderer, AbstractClientPlayer player, HumanoidArm arm,
-                                    Point target, boolean support, Quaternionf scratch, PoseStack poses,
+                                    Point target, boolean support, float load, Quaternionf scratch, PoseStack poses,
                                     MultiBufferSource buffers, int light) {
         float sign = HeldGripPose.side(arm);
         // PlayerRenderer renders a reset arm and sleeve. At age zero vanilla arm bob is ±0.1 Z.
@@ -296,16 +353,29 @@ public final class StrataDrillHands {
         float palmX = sign * (support ? 0.52F : 0.65F);
         float palmY = leftAuxiliary ? 9.55F : support ? 9.15F : 9.10F;
         float palmZ = leftAuxiliary ? 0.98F : support ? 1.55F : -1.10F;
+        boolean rightRear = !support && arm == HumanoidArm.RIGHT;
+        if (rightRear) {
+            // The distal edge wraps the wood from below and behind. The stock arm
+            // must not cross the D-frame's upper and lower rails in the braced pose.
+            palmX = Mth.lerp(load, palmX, -0.05F);
+            palmY = Mth.lerp(load, palmY, 9.98F);
+            palmZ = Mth.lerp(load, palmZ, -1.97F);
+        }
         Point palm = new Point((-sign * 5 + palmX * Mth.cos(bob) - palmY * Mth.sin(bob)) / 16,
                 (2 + palmX * Mth.sin(bob) + palmY * Mth.cos(bob)) / 16, palmZ / 16);
         // The left arm approaches the bar from the outer/rear side. Roll the entire stock cuboid
         // so its distal edge crosses the wood broadly instead of pointing one corner at it.
-        Point shoulder = leftAuxiliary ? new Point(-0.18F, -0.76F, -0.25F)
-                : new Point(sign * (support ? 0.52F : 0.64F),
-                        support ? -0.74F : -0.76F, support ? -0.28F : -0.24F);
+        // Relax the rear arm from above/behind the handle when carrying; brace from behind
+        // it under load. These are approach guides, not extra joints or stretched player arms.
+        // The right support must pass below the asymmetric gearbox to reach its far-side wood.
+        Point approach = !support ? new Point(sign * Mth.lerp(load, 0.46F, rightRear ? 0.475F : 0.64F),
+                Mth.lerp(load, -0.39F, rightRear ? -1.025F : -0.76F),
+                Mth.lerp(load, -0.08F, rightRear ? -0.164F : -0.24F))
+                : leftAuxiliary ? new Point(-0.18F, -0.76F, -0.25F) : new Point(-0.20F, -1.51F, -0.50F);
         float roll = leftAuxiliary ? -0.30F : sign * (support ? -0.30F : 0.05F);
+        if (rightRear) roll = Mth.lerp(load, roll, 0.132F);
         poses.pushPose();
-        HeldGripPose.placeArm(poses, palm, target, shoulder, roll, scratch);
+        HeldGripPose.placeArm(poses, palm, target, approach, roll, scratch);
         if (arm == HumanoidArm.RIGHT) {
             renderer.renderRightHand(poses, buffers, light, player);
         } else {

@@ -92,7 +92,6 @@ public abstract class ServerPlayerGameModeMixin_StrataDrill implements StrataDri
     @Unique private BlockState fh$wheelExtraState;
     @Unique private BlockPos fh$wheelExtraPos;
     @Unique private boolean fh$inWheelExtraRemoval;
-    @Unique private ItemStack fh$wheelExtraLoot;
 
     /** The first progress notification is inside START after Forge, reach, and vanilla restrictions. */
     @Inject(method = "handleBlockBreakAction",
@@ -161,12 +160,7 @@ public abstract class ServerPlayerGameModeMixin_StrataDrill implements StrataDri
         if (fh$wheelCenter == null || --fh$wheelDepth != 0 || fh$cuttingWheelNeighbors) return;
         try {
             fh$cuttingWheelNeighbors = true;
-            StrataDrillWorkAccess previous = StrataDrillPower.enterWheelNeighborScope(this);
-            try {
-                fh$cutWheelNeighbors(player.gameMode);
-            } finally {
-                StrataDrillPower.restoreWheelNeighborScope(previous);
-            }
+            fh$cutWheelNeighbors(player.gameMode);
         } finally {
             fh$clearWheelCut();
         }
@@ -207,8 +201,7 @@ public abstract class ServerPlayerGameModeMixin_StrataDrill implements StrataDri
                     && level.getBlockState(pos) == originalState;
         }
         if (powered != null && !player.isCreative()) {
-            if (extra) fh$wheelExtraLoot = toolBeforeWear;
-            fh$pendingRemoval = new StrataDrillPower.Removal(actualTool, pos, powered.steam(), extra,
+            fh$pendingRemoval = new StrataDrillPower.Removal(actualTool, pos, powered.steam(),
                     fh$wheelDepth, fh$pendingRemoval);
         }
     }
@@ -337,12 +330,6 @@ public abstract class ServerPlayerGameModeMixin_StrataDrill implements StrataDri
         return fh$inWheelExtraRemoval && fh$wheelDepth == 1 && pos.equals(fh$wheelExtraPos);
     }
 
-    @Override
-    public boolean fh$isDiscountedWheelStack(ItemStack stack) {
-        if (fh$wheelExtraPos == null || fh$wheelDepth != (fh$inWheelExtraRemoval ? 1 : 0)) return false;
-        return stack == fh$wheelExtraLoot || (stack == fh$wheelStack && fh$ownsWheelStack(stack));
-    }
-
     @Unique
     private boolean fh$wheelMode() {
         return player.gameMode.getGameModeForPlayer() == GameType.SURVIVAL
@@ -395,13 +382,12 @@ public abstract class ServerPlayerGameModeMixin_StrataDrill implements StrataDri
     @Unique
     private boolean fh$tryWheelNeighbor(ServerPlayerGameMode gameMode, BlockPos pos) {
         if (!fh$ownsWheelStack(fh$wheelStack)
-                || StrataDrillPower.poweredWheelNeighbor(fh$wheelStack) != fh$wheelAssembly) return false;
+                || StrataDrillPower.poweredAssembly(fh$wheelStack, false) != fh$wheelAssembly) return false;
         if (!fh$wheelCanReach(pos)) return true;
         BlockState state = level.getBlockState(pos);
         if (!fh$isWheelBlock(pos, state)) return true;
 
-        // The cheaper fuel threshold applies even in these native harvest and wear calls,
-        // not just when spending. A reentrant removal is not the planned extra operation.
+        // A reentrant removal is not the planned extra operation.
         fh$wheelExtraPos = pos;
         fh$wheelExtraState = state;
         StrataDrillPower.Removal previous = fh$pendingRemoval;
@@ -419,7 +405,6 @@ public abstract class ServerPlayerGameModeMixin_StrataDrill implements StrataDri
             fh$inWheelExtraRemoval = false;
             fh$wheelExtraPos = null;
             fh$wheelExtraState = null;
-            fh$wheelExtraLoot = null;
         }
         return true;
     }
@@ -437,7 +422,6 @@ public abstract class ServerPlayerGameModeMixin_StrataDrill implements StrataDri
         fh$inWheelExtraRemoval = false;
         fh$wheelExtraPos = null;
         fh$wheelExtraState = null;
-        fh$wheelExtraLoot = null;
     }
 
     @Unique

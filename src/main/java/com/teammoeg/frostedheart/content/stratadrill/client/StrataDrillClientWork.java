@@ -44,8 +44,11 @@ public final class StrataDrillClientWork {
     private static final int PREDICT_TICKS = 4;
     // The completion tick and five vanilla destroy-delay ticks before the next START.
     private static final int BETWEEN_BLOCKS_TICKS = 6;
+    // Most of the lift follows the trigger. Only the final press follows contact.
+    private static final float FREE_SPIN_LIFT = 0.85F;
     private static final Int2ObjectOpenHashMap<MotionClock> REMOTE = new Int2ObjectOpenHashMap<>();
     private static final MotionClock LOCAL = new MotionClock();
+    private static final MotionClock HELD = new MotionClock();
 
     private static ClientLevel level;
     private static ItemStack localDrill = ItemStack.EMPTY;
@@ -71,6 +74,7 @@ public final class StrataDrillClientWork {
 
     private static void clearLocalWork() {
         LOCAL.clear();
+        HELD.clear();
         clearMiningIntent();
         serverRunning = false;
     }
@@ -80,6 +84,11 @@ public final class StrataDrillClientWork {
         predictedBlock = null;
         predictUntil = 0;
         continueUntil = 0;
+    }
+
+    private static boolean hasWorldControls(Minecraft minecraft) {
+        return minecraft.screen == null && minecraft.getOverlay() == null
+                && minecraft.isWindowActive() && minecraft.mouseHandler.isMouseGrabbed();
     }
 
     private static boolean holdsLocalTool(AbstractClientPlayer player, ItemStack stack) {
@@ -140,7 +149,8 @@ public final class StrataDrillClientWork {
 
         long now = current.getGameTime();
         boolean canUse = !player.isSpectator() && !player.isUsingItem() && player.isAlive();
-        boolean pressingMine = canUse && minecraft.screen == null && minecraft.options.keyAttack.isDown();
+        boolean worldControls = hasWorldControls(minecraft);
+        boolean pressingMine = canUse && worldControls && minecraft.options.keyAttack.isDown();
         BlockPos target = pressingMine && minecraft.hitResult instanceof BlockHitResult block
                 && block.getType() == HitResult.Type.BLOCK ? block.getBlockPos() : null;
 
@@ -164,10 +174,17 @@ public final class StrataDrillClientWork {
         }
         // A cancelled START may not send an animation edge. Never leave a local prediction running indefinitely.
         boolean betweenBlocks = target != null && now < continueUntil;
-        boolean active = (serverRunning || predicts || betweenBlocks)
-                && StrataDrillPower.canRun(main, player.isCreative());
+        boolean held = pressingMine && StrataDrillPower.canRun(main, player.isCreative());
+        boolean active = held && (serverRunning || predicts || betweenBlocks);
         if (!active) continueUntil = 0;
         LOCAL.setRunning(active, now);
+        // Local presentation only. A miss or an old STOP must not restart the visible shaft.
+        if (worldControls) {
+            HELD.setRunning(held, now);
+        } else {
+            // Menus and focus loss can also suspend the level clock. Don't retain a raised pose there.
+            HELD.clear();
+        }
     }
 
     @SubscribeEvent
@@ -188,6 +205,29 @@ public final class StrataDrillClientWork {
     static float loadAmount(AbstractClientPlayer actor, float partialTick) {
         MotionClock clock = clockFor(actor);
         return clock == null ? 0 : clock.loadAmount(level.getGameTime(), partialTick);
+    }
+
+    /** Only the same displayed main-hand drill may use the local trigger pose. */
+    static boolean firstPersonMatches(AbstractClientPlayer actor, ItemStack displayed) {
+        Minecraft minecraft = Minecraft.getInstance();
+        if (level == null || actor.level() != level || actor != minecraft.player || !hasWorldControls(minecraft)) {
+            return false;
+        }
+        ItemStack main = actor.getMainHandItem();
+        return holdsLocalTool(actor, main) && StrataDrillAssembly.sameVisualTool(main, displayed);
+    }
+
+    /** Free spin shares one continuous visual shaft phase across gaps and actual cuts. */
+    static float firstPersonPhase(long now, float partialTick) {
+        return HELD.phase(now, partialTick);
+    }
+
+    /** Reuse the contact blend for a short, separate push into the block. */
+    static float firstPersonLoadAmount(long now, float partialTick) {
+        float lift = HELD.loadAmount(now, partialTick);
+        if (lift == 0) return 0;
+        float press = Math.min(lift, LOCAL.loadAmount(now, partialTick));
+        return FREE_SPIN_LIFT * lift + (1 - FREE_SPIN_LIFT) * press;
     }
 
     private static MotionClock clockFor(AbstractClientPlayer actor) {

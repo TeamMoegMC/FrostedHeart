@@ -12,13 +12,6 @@
       "glyph": {
         "textureX": 176,
         "textureY": 0
-      },
-      "durability": 9000,
-      "tools": {
-        "pickaxe_dig": [
-          "minecraft:iron",
-          2.4
-        ]
       }
     },
     {
@@ -26,13 +19,6 @@
       "glyph": {
         "textureX": 176,
         "textureY": 0
-      },
-      "durability": 9000,
-      "tools": {
-        "pickaxe_dig": [
-          "minecraft:iron",
-          2.4
-        ]
       }
     }
   ]

@@ -23,6 +23,8 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.teammoeg.chorda.client.model.BakedMaterialVariants;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.stratadrill.StrataDrillAssembly;
+import com.teammoeg.frostedheart.content.stratadrill.StrataDrillData;
+import com.teammoeg.frostedheart.content.stratadrill.StrataDrillMaterials;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.RenderType;
@@ -44,9 +46,7 @@ import net.minecraftforge.client.event.ModelEvent;
 import net.minecraftforge.client.model.BakedModelWrapper;
 import net.minecraftforge.client.model.CompositeModel;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -106,18 +106,12 @@ public final class StrataDrillModels {
     }
 
     @SubscribeEvent
-    public static void clientSetup(FMLClientSetupEvent event) {
-        if (ModList.get().isLoaded("tetra")) event.enqueueWork(StrataDrillCutterPalette::bindTetra);
-    }
-
-    @SubscribeEvent
     public static void register(ModelEvent.RegisterAdditional event) {
-        if (ModList.get().isLoaded("tetra")) event.register(PARTS);
+        event.register(PARTS);
     }
 
     @SubscribeEvent
     public static void bake(ModelEvent.ModifyBakingResult event) {
-        if (!ModList.get().isLoaded("tetra")) return;
         Map<ResourceLocation, BakedModel> baked = event.getModels();
         BakedModel root = baked.get(INVENTORY);
         if (root == null) return;
@@ -228,7 +222,7 @@ public final class StrataDrillModels {
     private static final class Generation {
         private final BakedMaterialVariants<BakedModel> spiral, wheel;
         private final AssemblyVariants[] assemblies;
-        private StrataDrillCutterPalette palette = StrataDrillCutterPalette.current();
+        private StrataDrillMaterials.Catalog palette = StrataDrillMaterials.clientCatalog();
 
         Generation(BakedMaterialVariants<BakedModel> spiral, BakedMaterialVariants<BakedModel> wheel,
                    AssemblyVariants[] assemblies) {
@@ -238,14 +232,14 @@ public final class StrataDrillModels {
         }
 
         AssemblyModels resolve(StrataDrillAssembly assembly, ItemStack stack) {
-            StrataDrillCutterPalette active = StrataDrillCutterPalette.current();
+            StrataDrillMaterials.Catalog active = StrataDrillMaterials.clientCatalog();
             if (active != palette) {
                 spiral.clearColors();
                 wheel.clearColors();
                 for (AssemblyVariants variants : assemblies) variants.byColor.clear();
                 palette = active;
             }
-            return assemblies[assembly.ordinal()].resolve(active.rgb(stack));
+            return assemblies[assembly.ordinal()].resolve(active.rgb(StrataDrillData.cutterId(stack)));
         }
     }
 

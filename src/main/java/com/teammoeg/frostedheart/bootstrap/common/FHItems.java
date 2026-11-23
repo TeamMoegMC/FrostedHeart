@@ -32,6 +32,7 @@ import com.teammoeg.frostedheart.content.agriculture.Fertilizer;
 import com.teammoeg.frostedheart.content.health.food.CannedFoodItem;
 import com.teammoeg.frostedheart.content.health.food.FHSoupItem;
 import com.teammoeg.frostedheart.content.steamenergy.debug.HeatDebugItem;
+import com.teammoeg.frostedheart.content.stratadrill.StrataDrillItem;
 import com.teammoeg.frostedheart.content.stratadrill.TetraStrataDrillItem;
 import com.teammoeg.frostedheart.content.town.transport.device.FreightRouteCardItem;
 import com.teammoeg.frostedheart.content.utility.*;
@@ -99,9 +100,14 @@ public class FHItems {
     }
 
     public static void init() {
-        if (CompatModule.isTetraLoaded()) {
-            // The constructor is never linked unless the optional dependency is present.
-            ITEMS.register(TetraStrataDrillItem.ID, TetraStrataDrillItem::new);
+        ITEMS.register(StrataDrillItem.ID, () -> CompatModule.isTetraLoaded()
+                ? TetraDrillFactory.create() : new StrataDrillItem());
+    }
+
+    /** Keep the Tetra subtype out of verifier/linker paths on the ordinary item. */
+    private static final class TetraDrillFactory {
+        private static StrataDrillItem create() {
+            return new TetraStrataDrillItem();
         }
     }
 

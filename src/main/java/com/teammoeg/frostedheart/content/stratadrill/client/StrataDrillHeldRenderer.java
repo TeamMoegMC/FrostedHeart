@@ -38,6 +38,11 @@ import net.minecraftforge.client.ForgeRenderTypes;
 public final class StrataDrillHeldRenderer {
     private static final float MODEL_UNIT = 1 / 16.0F;
     private static final float TAU = Mth.TWO_PI;
+    // Wide-head axle follows the enlarged wheel, measured from the unchanged chuck interface.
+    private static final float WHEEL_AXLE_X = -5.66F;
+    // Center of the raised diesel side-drive, shared by the flywheel and opposite shaft end.
+    private static final float DIESEL_AXLE_X = 9.10F;
+    private static final float DIESEL_AXLE_Y = 9.70F;
     private static final float CRANK_X = 9.55F;
     private static final float CRANK_Y = 7.65F;
     // Allowed by V3.7 cylinder/piston overlap at both ends: 0.86 model units total stroke.
@@ -80,7 +85,7 @@ public final class StrataDrillHeldRenderer {
         float angle = phase * TAU;
         poses.pushPose();
         if (models.wheel()) {
-            poses.rotateAround(Axis.ZP.rotation(angle), -3.78F * MODEL_UNIT, 0.5F, 0.5F);
+            poses.rotateAround(Axis.ZP.rotation(angle), WHEEL_AXLE_X * MODEL_UNIT, 0.5F, 0.5F);
         } else {
             poses.rotateAround(Axis.XP.rotation(angle * 2), 0, 0.5F, 0.5F);
         }
@@ -91,7 +96,8 @@ public final class StrataDrillHeldRenderer {
         if (models.steam()) {
             poses.rotateAround(Axis.ZP.rotation(angle), CRANK_X * MODEL_UNIT, CRANK_Y * MODEL_UNIT, 10.6F * MODEL_UNIT);
         } else {
-            poses.rotateAround(Axis.ZP.rotation(angle * 2), 10 * MODEL_UNIT, 7.65F * MODEL_UNIT, 10.69F * MODEL_UNIT);
+            poses.rotateAround(Axis.ZP.rotation(angle * 2), DIESEL_AXLE_X * MODEL_UNIT,
+                    DIESEL_AXLE_Y * MODEL_UNIT, 10.69F * MODEL_UNIT);
         }
         render(renderer, models.shaft(), stack, poses, vertex, light);
         poses.popPose();
