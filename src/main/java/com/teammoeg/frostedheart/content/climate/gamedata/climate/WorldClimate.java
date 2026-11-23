@@ -90,6 +90,11 @@ import java.util.*;
 public class WorldClimate implements NBTSerializable {
 
     public static final int DAY_CACHE_LENGTH = 8;
+    /**
+     * How many climate hours getLastSnowEndHour and getNextSnowStartHour search back and ahead.
+     */
+    public static final int SNOW_SEARCH_HOURS = 24;
+    private static final long SECONDS_PER_HOUR = 50L;
 
 
     protected WorldClockSource clockSource;
@@ -690,6 +695,49 @@ public class WorldClimate implements NBTSerializable {
     public ClimateType getClimate(ChunkPos pos) {
 		ClimateResult cr=getCachedClimateOfWhiteCurtain(pos);
         return cr.climate().merge(this.getHourData().getType());
+    }
+
+    /**
+     * The climate hour at which the last snow or storm at the position ended, searched over the SNOW_SEARCH_HOURS
+     * before the current hour, or -1 when there was none. The current hour itself is not searched.
+     */
+    public long getLastSnowEndHour(ChunkPos pos) {
+        for (int hoursBack = 1; hoursBack <= SNOW_SEARCH_HOURS; hoursBack++) {
+            if (isSnowyHour(-hoursBack, pos)) {
+                return clockSource.getHours() - hoursBack + 1;
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * The climate hour at which the next snow or storm at the position starts, searched over the SNOW_SEARCH_HOURS
+     * after the current hour, or -1 when there is none. The current hour itself is not searched.
+     */
+    public long getNextSnowStartHour(ChunkPos pos) {
+        for (int hoursAhead = 1; hoursAhead <= SNOW_SEARCH_HOURS; hoursAhead++) {
+            if (isSnowyHour(hoursAhead, pos)) {
+                return clockSource.getHours() + hoursAhead;
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * Whether it snows or storms at the position in the climate hour that is the given number of hours from the
+     * current one, with a white curtain that covers the position sampled in the middle of that hour.
+     */
+    private boolean isSnowyHour(int deltaHours, ChunkPos pos) {
+        ClimateType hourClimate = getFutureClimate(deltaHours).climate();
+        long middleSeconds = (clockSource.getHours() + deltaHours) * SECONDS_PER_HOUR + SECONDS_PER_HOUR / 2;
+        for (WhiteCurtainInfo curtain : whitecurtains) {
+            if (curtain.isAffected(pos)) {
+                hourClimate = WhiteCurtainFieldModel.sampleGameplay(curtain.descriptor(), middleSeconds, pos).climate()
+                        .merge(hourClimate);
+                break;
+            }
+        }
+        return hourClimate.isSnowyOrBlizzard();
     }
     public float getTemp(BlockPos pos) {
     	if(daycache!=null) {

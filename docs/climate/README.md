@@ -37,6 +37,7 @@
 | [hot-spring.md](hot-spring.md) | 温泉液体、接触换热、湿身与采集限制 | Partial |
 | [ice-cave-blocks.md](ice-cave-blocks.md) | 冰晶、荧石晶体、软锰矿与装饰热液岩 | Partial |
 | [weather-rendering.md](weather-rendering.md) | 暴风雪与白幕的空间状态、天气同步、降水/雾/粒子/声音渲染 | Current |
+| [calculated-sky.md](calculated-sky.md) | Optional overworld sky calculated from air, nanobot, and ice scattering, with ice crystal halos on sky-fixed texels, the fog color taken from it; config and client command | Partial; seen in game, edge cases not yet checked |
 | [player-temperature.md](player-temperature.md) | 玩家环境查询、分部位体温、衣物、效果与同步 | Current |
 | [heat-production-and-network.md](heat-production-and-network.md) | 物理 source、worker 能量、材料/phase 与独立热网 | Transitional |
 | [data-lifecycle-and-integration.md](data-lifecycle-and-integration.md) | 配方、能力、持久化、服务端生命周期、网络与消费者 | Transitional |

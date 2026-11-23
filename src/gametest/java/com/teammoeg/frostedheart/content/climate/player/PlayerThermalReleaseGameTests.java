@@ -480,6 +480,8 @@ public final class PlayerThermalReleaseGameTests {
                 roundTrip.readFloat();
                 near(helper, expected, roundTrip.readShort() / 10.0F, 1.0e-5D,
                         "the forecast uses actual chunk climate, independent of room heating and radiation");
+                roundTrip.readLong();
+                roundTrip.readLong();
                 helper.assertTrue(!roundTrip.isReadable(), "the forecast adds only its final temperature");
             } finally {
                 encoded.release();

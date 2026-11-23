@@ -25,6 +25,7 @@ import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.bootstrap.reference.FHParticleTypes;
 import com.teammoeg.frostedheart.bootstrap.reference.FHSoundEvents;
 import com.teammoeg.frostedheart.content.climate.render.InfraredViewRenderer;
+import com.teammoeg.frostedheart.content.climate.render.sky.CalculatedSkyRenderer;
 import com.teammoeg.frostedheart.content.climate.render.weather.ClientWeatherFrame;
 import com.teammoeg.frostedheart.content.climate.render.weather.ClientWeatherState;
 import com.teammoeg.frostedheart.content.climate.render.weather.SpatialWeatherRenderer;
@@ -118,6 +119,66 @@ public abstract class LevelRendererMixin {
         var cameraPosition = pCamera.getPosition();
         ClientWeatherFrame.INSTANCE.begin(ClientWeatherState.INSTANCE, mode,
                 cameraPosition.x, cameraPosition.y, cameraPosition.z, pPartialTick);
+    }
+
+    /**
+     * Draws the calculated sky and its sun over the vanilla sky dome, so vanilla still draws the moon and stars on top.
+     */
+    @Inject(method = "renderSky", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/VertexBuffer;unbind()V", ordinal = 0, shift = At.Shift.AFTER), require = 0)
+    private void frostedheart$drawCalculatedSky(PoseStack poseStack, Matrix4f projectionMatrix, float partialTick,
+                                                Camera camera, boolean isFoggy, Runnable skyFogSetup, CallbackInfo ci) {
+        CalculatedSkyRenderer.render(level, poseStack, projectionMatrix, partialTick, camera);
+    }
+
+    /**
+     * Gives the vanilla sun quad no size when the calculated sky drew its own sun.
+     */
+    @ModifyConstant(method = "renderSky", constant = @Constant(floatValue = 30.0F, ordinal = 0), require = 0)
+    private float frostedheart$hideVanillaSun(float sunHalfSize) {
+        return CalculatedSkyRenderer.isSunDrawn() ? 0.0F : sunHalfSize;
+    }
+
+    /**
+     * Tints vanilla's moon by the calculated sky's moon color. The call sets the color of the sun and the moon, and
+     * vanilla's sun has no size while the calculated sky is drawn.
+     */
+    @ModifyArg(method = "renderSky", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;setShaderColor(FFFF)V", ordinal = 2), index = 0, require = 0)
+    private float frostedheart$tintMoonRed(float red) {
+        return CalculatedSkyRenderer.isDrawnThisFrame() ? red * CalculatedSkyRenderer.moonColor(0) : red;
+    }
+
+    @ModifyArg(method = "renderSky", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;setShaderColor(FFFF)V", ordinal = 2), index = 1, require = 0)
+    private float frostedheart$tintMoonGreen(float green) {
+        return CalculatedSkyRenderer.isDrawnThisFrame() ? green * CalculatedSkyRenderer.moonColor(1) : green;
+    }
+
+    @ModifyArg(method = "renderSky", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;setShaderColor(FFFF)V", ordinal = 2), index = 2, require = 0)
+    private float frostedheart$tintMoonBlue(float blue) {
+        return CalculatedSkyRenderer.isDrawnThisFrame() ? blue * CalculatedSkyRenderer.moonColor(2) : blue;
+    }
+
+    /**
+     * Dims vanilla's stars by the calculated sky's star scale. Vanilla uses the star brightness as the color and the
+     * alpha of the stars, so each is scaled.
+     */
+    @ModifyArg(method = "renderSky", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;setShaderColor(FFFF)V", ordinal = 3), index = 0, require = 0)
+    private float frostedheart$dimStarsRed(float red) {
+        return CalculatedSkyRenderer.isDrawnThisFrame() ? red * CalculatedSkyRenderer.starScale() : red;
+    }
+
+    @ModifyArg(method = "renderSky", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;setShaderColor(FFFF)V", ordinal = 3), index = 1, require = 0)
+    private float frostedheart$dimStarsGreen(float green) {
+        return CalculatedSkyRenderer.isDrawnThisFrame() ? green * CalculatedSkyRenderer.starScale() : green;
+    }
+
+    @ModifyArg(method = "renderSky", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;setShaderColor(FFFF)V", ordinal = 3), index = 2, require = 0)
+    private float frostedheart$dimStarsBlue(float blue) {
+        return CalculatedSkyRenderer.isDrawnThisFrame() ? blue * CalculatedSkyRenderer.starScale() : blue;
+    }
+
+    @ModifyArg(method = "renderSky", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;setShaderColor(FFFF)V", ordinal = 3), index = 3, require = 0)
+    private float frostedheart$dimStarsAlpha(float alpha) {
+        return CalculatedSkyRenderer.isDrawnThisFrame() ? alpha * CalculatedSkyRenderer.starScale() : alpha;
     }
 
     /**

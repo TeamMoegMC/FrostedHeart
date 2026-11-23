@@ -23,6 +23,7 @@ import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 import com.teammoeg.chorda.client.cui.screenadapter.OverlayPositioner;
 import com.teammoeg.chorda.math.Colors;
 import com.teammoeg.frostedheart.content.climate.FHTemperatureDifficulty;
+import com.teammoeg.frostedheart.content.climate.render.sky.SkySetting;
 import com.teammoeg.frostedheart.content.climate.render.weather.WeatherRenderingMode;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.ClimateEventModel;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClockSource;
@@ -74,6 +75,7 @@ public class FHConfig {
 		public final ForgeConfigSpec.BooleanValue snowSounds;
 		public final ForgeConfigSpec.BooleanValue windSounds;
 		public final ForgeConfigSpec.BooleanValue skyRenderChanges;
+		public final ForgeConfigSpec.BooleanValue calculatedSky;
 		public final ForgeConfigSpec.IntValue scenarioRenderQuality;
 		public final ForgeConfigSpec.IntValue scenarioRenderThread;
 		public final ForgeConfigSpec.BooleanValue scenarioAntiAliasing;
@@ -197,6 +199,13 @@ public class FHConfig {
 			skyRenderChanges = builder
 				.comment("Changes the sky renderer to one which does not render sunrise or sunset effects during a snowstorm.")
 				.define("skyRenderChanges", true);
+			builder.pop();
+
+			builder.push("CalculatedSky");
+			calculatedSky = builder
+				.comment("Draws the overworld sky from light scattered by air, titanium dioxide nanobots, and ice crystals. Off when a shader pack is active.")
+				.define("enabled", true);
+			SkySetting.define(builder);
 			builder.pop();
 
 
