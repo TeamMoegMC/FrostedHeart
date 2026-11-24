@@ -1,0 +1,11 @@
+{
+  "replace": false,
+  "values": [
+    "frostedheart:insulator",
+    "frostedheart:iron_fence_remains",
+    "frostedheart:iron_plating",
+    "frostedheart:iron_parts",
+    "frostedheart:iron_truss_remains",
+    "frostedheart:rusted_iron_ingot"
+  ]
+}

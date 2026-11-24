@@ -1,0 +1,16 @@
+{
+  "conditions": {
+    "bloomery": {
+      "kind": "result",
+      "definition": "the_winter_rescue:iron_bloomery_design"
+    },
+    "legacy": {
+      "kind": "idea",
+      "definition": "the_winter_rescue:transmission_machinery"
+    }
+  },
+  "discover_any": [
+    "bloomery",
+    "legacy"
+  ]
+}

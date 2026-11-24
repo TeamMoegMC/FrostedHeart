@@ -107,15 +107,16 @@ public final class IdeaAcquisitionGameTests {
         h.assertTrue(LinkMatcher.bindExact(List.of(copper, clay), earthen.pattern(), TagLookup.NONE).isEmpty(), "generic exact binding remains strict; manual linking handles auxiliaries separately");
         // Inject real authored tag members: this tests predicates, not full-pack registration.
         TagLookup tags = (type, field, value, tag) -> type == Observation.Type.ITEM && field.equals("object") && switch (tag.toString()) {
+            case "the_winter_rescue:research/iron_ore_materials" -> Set.of("minecraft:raw_iron", "frostedheart:raw_pyrite", "create:crushed_raw_iron").contains(value.toString());
             case "the_winter_rescue:research/iron_carbon_fuel" -> Set.of("minecraft:coal", "minecraft:charcoal", "immersiveengineering:coal_coke").contains(value.toString());
             case "the_winter_rescue:research/sandy_bricks" -> Set.of("charcoal_pit:sandy_brick_item", "charcoal_pit:sandy_brick").contains(value.toString());
             default -> false;
         };
         var iron = rules.get("iron_smelting");
         for (String fuel : List.of("minecraft:coal", "minecraft:charcoal", "immersiveengineering:coal_coke")) {
-            var rawIron = observe.apply("minecraft:raw_iron"); var carbon = observe.apply(fuel);
-            h.assertTrue(LinkMatcher.bindExact(List.of(rawIron, carbon), iron.pattern(), tags).isPresent(), "raw iron and each fuel alternative match");
-            h.assertTrue(LinkMatcher.bindExact(List.of(carbon, rawIron), iron.pattern(), tags).isPresent(), "desk order is irrelevant");
+            var ore = observe.apply("frostedheart:raw_pyrite"); var carbon = observe.apply(fuel);
+            h.assertTrue(LinkMatcher.bindExact(List.of(ore, carbon), iron.pattern(), tags).isPresent(), "pyrite and each fuel alternative match");
+            h.assertTrue(LinkMatcher.bindExact(List.of(carbon, ore), iron.pattern(), tags).isPresent(), "desk order is irrelevant");
         }
         h.assertTrue(LinkMatcher.bindExact(List.of(observe.apply("minecraft:raw_iron")), iron.pattern(), tags).isEmpty(), "iron link still needs fuel");
         var refractory = rules.get("refractory_firing");
@@ -162,11 +163,11 @@ public final class IdeaAcquisitionGameTests {
             h.assertTrue(service.isActive(KnowledgeKey.idea(earthen.output()))
                     && service.state().links().get(id("formal_earthen")).inputs().equals(Map.of("raw_copper", copper.key())),
                     "ordinary win learns the idea and records only mandatory witnesses");
-            var bare = service();
             var placedSand = KnowledgeElement.observation(new Observation(UUID.randomUUID(), Observation.Type.BLOCK,
                     sandId, Map.of(), Observation.Source.command(), Optional.empty()));
             service.learn(placedSand, SOURCE, KnowledgeService.Grant.NORMAL);
             h.assertTrue(KnowledgeLinkSessions.numbers(service, earthen) == 0, "placed sand also removes one ordered number");
+            var bare = service();
             h.assertTrue(KnowledgeLinkSessions.numbers(bare, refractory) == 3, "refractory starts at three numbers");
             for (String material : List.of("frostedheart:kaolin", "frostedheart:bauxite", "minecraft:clay_ball"))
                 bare.learn(observe.apply(material), SOURCE, KnowledgeService.Grant.NORMAL);

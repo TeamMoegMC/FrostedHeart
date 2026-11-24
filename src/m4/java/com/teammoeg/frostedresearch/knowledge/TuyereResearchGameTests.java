@@ -4,6 +4,7 @@ import com.google.gson.JsonParser;
 import com.mojang.authlib.GameProfile;
 import com.mojang.serialization.*;
 import com.teammoeg.chorda.dataholders.team.*;
+import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 import com.teammoeg.frostedresearch.*;
 import com.teammoeg.frostedresearch.api.*;
 import com.teammoeg.frostedresearch.blocks.DrawingDeskTileEntity;
@@ -35,6 +36,7 @@ import java.util.*;
 public final class TuyereResearchGameTests {
     static ResourceLocation id(String path) { return new ResourceLocation("the_winter_rescue",path); }
     static final ResourceLocation PROJECT=id("iron_bloomery"),IDEA=id("iron_smelting"),DESIGN=id("iron_bloomery_design");
+    static final ResourceLocation TRANSMISSION = id("transmission_machinery");
     static final ResourceLocation PROTOTYPE=id("research/prototype_tuyere"),NORMAL=id("research/sandy_tuyere"),BLOOMERY=id("research/main_bloomery");
     static final AcquisitionSource SOURCE=new AcquisitionSource("test_external",Optional.empty(),1);
     static <T> T formal(String path,Codec<T> codec) {
@@ -43,9 +45,12 @@ public final class TuyereResearchGameTests {
         } catch(java.io.IOException e) { throw new IllegalStateException(e); }
     }
     static void install() {
-        var snapshot=new KnowledgeDefinitions.Snapshot(0,Map.of(IDEA,formal("ideas/iron_smelting",IdeaDefinition.CODEC)),
+        var transmissionAccess = formal("access/transmission_machinery", ProjectAccess.CODEC);
+        var transmission = new ProjectDefinition("", "", List.of(DESIGN), List.of(), Optional.of(transmissionAccess));
+        var transmissionIdea = new IdeaDefinition("", "", List.of(), List.of(), true, IdeaAcquisition.NONE);
+        var snapshot=new KnowledgeDefinitions.Snapshot(0,Map.of(IDEA,formal("ideas/iron_smelting",IdeaDefinition.CODEC), TRANSMISSION, transmissionIdea),
             Map.of(DESIGN,formal("results/iron_bloomery_design",ResultDefinition.CODEC)),Map.of(IDEA,formal("links/iron_smelting",com.teammoeg.frostedresearch.knowledge.link.LinkRule.CODEC)),
-            Map.of(),Map.of(PROJECT,formal("projects/iron_bloomery",ProjectDefinition.CODEC)),List.of());
+            Map.of(),Map.of(PROJECT,formal("projects/iron_bloomery",ProjectDefinition.CODEC), TRANSMISSION, transmission),List.of());
         if(!KnowledgeDefinitions.validate(snapshot).isEmpty()) throw new IllegalStateException(KnowledgeDefinitions.validate(snapshot).toString());
         KnowledgeDefinitions.install(snapshot);LegacyResearchBridge.refreshDefinitions();TemporaryResearchRecipes.refresh();
     }
@@ -77,12 +82,11 @@ public final class TuyereResearchGameTests {
             closed=true;for(var actor:actors) actor.close();TeamsAPI.register(provider);KnowledgeDefinitions.install(previous);LegacyResearchBridge.refreshDefinitions();TemporaryResearchRecipes.refresh();
         } }
     }
-    static void learnMaterials(Actor a,Item metal,Item fuel) {
-        var service=a.service();service.learn(KnowledgeElement.idea(IDEA),SOURCE,KnowledgeService.Grant.NORMAL);
-        for(var item:List.of(Items.RAW_IRON,metal,fuel)) service.learn(ItemRetrieval.observe(a.player,new ItemStack(item)),SOURCE,KnowledgeService.Grant.NORMAL);
-    }
     static UUID begin(Actor actor) {
-        learnMaterials(actor,Items.COPPER_INGOT,Items.CHARCOAL);return actor.service().startResearch(PROJECT).orElseThrow();
+        var service=actor.service();
+        service.learn(KnowledgeElement.idea(IDEA),SOURCE,KnowledgeService.Grant.NORMAL);
+        for(var item:List.of(FHItems.CRUSHED_RAW_PYRITE.get(),Items.CHARCOAL)) service.learn(ItemRetrieval.observe(actor.player,new ItemStack(item)),SOURCE,KnowledgeService.Grant.NORMAL);
+        return service.startResearch(PROJECT).orElseThrow();
     }
     static DrawingDeskTileEntity desk(GameTestHelper h,BlockPos local) { h.setBlock(local,FRContents.Blocks.DRAWING_DESK.get());return (DrawingDeskTileEntity)h.getBlockEntity(local); }
     static void solve(DrawingDeskTileEntity desk,Actor actor,UUID run) {
@@ -108,11 +112,12 @@ public final class TuyereResearchGameTests {
             service.learn(ItemRetrieval.observe(actor.player,new ItemStack(Items.COAL)),SOURCE,KnowledgeService.Grant.NORMAL);
             var link=KnowledgeDefinitions.current().links().get(IDEA);
             h.assertTrue(KnowledgeLinkSessions.numbers(service,link)==1,"mandatory fuel and inbox metal do not discount the link");
-            h.assertTrue(service.startResearch(PROJECT).isEmpty(),"metal in inbox does not satisfy access");service.learnInbox(copper.key());
-            h.assertTrue(service.startResearch(PROJECT).isEmpty(),"raw iron observation is also required to start");
+            h.assertTrue(service.startResearch(PROJECT).isEmpty(),"iron ore observation is required to start");
             service.learn(ItemRetrieval.observe(actor.player,new ItemStack(Items.RAW_IRON)),SOURCE,KnowledgeService.Grant.NORMAL);
-            h.assertTrue(KnowledgeLinkSessions.numbers(service,link)==0,"learned copper/bronze gives the one optional discount");
+            h.assertTrue(!service.projectAccess(PROJECT).revealedConditions().contains("copper_or_bronze"),"the project checklist omits optional metal");
             UUID run=service.startResearch(PROJECT).orElseThrow();
+            service.learnInbox(copper.key());
+            h.assertTrue(KnowledgeLinkSessions.numbers(service,link)==0,"learned copper/bronze gives the one optional discount");
             h.assertTrue(!TechnologyAccessResolver.project(actor.team).recipe(PROTOTYPE).allowed(),"prototype managed before airflow success");
             var desk=desk(h,new BlockPos(1,1,1));h.assertTrue(desk.startAirflow(actor.player,run,"airflow_win"),"formal minigame target starts");
             h.assertTrue(!desk.airflowView().getBoolean("won") && !service.state().research().get(run).stageState().visits().get("airflow").ready(),"unexcavated board is not an automatic win");
@@ -134,6 +139,8 @@ public final class TuyereResearchGameTests {
         var scope=new Scope();guard(scope,() -> {
             install();var placer=scope.actor(h);var observer=scope.actor(h);scope.share(observer,placer);
             var service=placer.service();UUID run=begin(placer);solve(desk(h,new BlockPos(1,1,1)),placer,run);service.advanceStage(run,"airflow");
+            h.assertTrue(service.researchStartStatus(TRANSMISSION) == KnowledgeService.Status.NOT_FOUND,
+                "the prototype stage does not unlock transmission");
             BlockPos bellows=new BlockPos(3,1,2),target=new BlockPos(4,1,2);
             h.setBlock(bellows,charcoalPit.core.ModBlockRegistry.Bellows.defaultBlockState().setValue(charcoalPit.block.BlockBellows.FACING,Direction.EAST));
             placePrototype(h,placer,target);
@@ -158,6 +165,8 @@ public final class TuyereResearchGameTests {
                 h.assertTrue(PendingResearchProofs.get(world).at(targetPos).isEmpty(),"completion clears pending proof");
                 h.assertTrue(service.finishResearch(run).get(0).succeeded(),"normal final stage produces formal Design");
                 var access=TechnologyAccessResolver.project(placer.team);h.assertTrue(!access.recipe(PROTOTYPE).allowed() && access.recipe(NORMAL).allowed() && access.recipe(BLOOMERY).allowed(),"temporary prototype source withdrawn, final Design grants both production recipes");
+                h.assertTrue(service.researchStartStatus(TRANSMISSION) == KnowledgeService.Status.LEARNABLE,
+                    "the bloomery design opens the formal transmission access route");
                 h.succeed();
             } finally { scope.close(); } });
         });
@@ -207,24 +216,47 @@ public final class TuyereResearchGameTests {
         }
     }
     @GameTest(batch="m4_access_groups",template="empty",timeoutTicks=60)
-    public static void formalAllMetalFuelAlternativesAndSingleLegacyCompensation(GameTestHelper h) {
+    public static void formalOreAndFuelAlternativesAndSingleLegacyCompensation(GameTestHelper h) {
         try(var scope=new Scope()) {
             install();var actor=scope.actor(h);var idea=KnowledgeDefinitions.current().ideas().get(IDEA);
             h.assertTrue(idea.acquisition().required().isEmpty() && idea.acquisition().optional().size()==2,"formal idea acquisition keeps both observation groups optional");
-            var bronze=ForgeRegistries.ITEMS.getValue(new ResourceLocation("frostedheart:bronze_ingot"));var coke=ForgeRegistries.ITEMS.getValue(new ResourceLocation("immersiveengineering:coal_coke"));
-            h.assertTrue(bronze!=null && coke!=null,"actual registry contains group alternatives");
-            for(var metal:List.of(Items.COPPER_INGOT,bronze)) for(var fuel:List.of(Items.COAL,Items.CHARCOAL,coke)) {
+            var coke=ForgeRegistries.ITEMS.getValue(new ResourceLocation("immersiveengineering:coal_coke"));
+            h.assertTrue(coke!=null,"actual registry contains coke");
+            var acquisitionSubject = idea.acquisition().triggers().get(0).subject().orElseThrow();
+            var ores = List.of("minecraft:iron_ore", "minecraft:deepslate_iron_ore", "minecraft:raw_iron",
+                "minecraft:raw_iron_block", "frostedheart:pyrite_ore", "frostedheart:deepslate_pyrite_ore",
+                "frostedheart:raw_pyrite", "frostedheart:crushed_raw_pyrite", "create:crushed_raw_iron",
+                "immersiveengineering:dust_iron", "frostedheart:iron_slurry", "frostedheart:iron_sludge",
+                "frostedheart:iron_sludge_block", "frostedheart:condensed_iron_ore",
+                "frostedheart:condensed_iron_ore_block", "frostedheart:condensed_ball_iron_ore",
+                "frostedheart:condensed_pyrite_ore", "frostedheart:condensed_pyrite_ore_block",
+                "frostedheart:condensed_ball_pyrite_ore");
+            for (String oreId : ores) for (var fuel : List.of(Items.COAL, Items.CHARCOAL, coke)) {
                 var service=new KnowledgeService(UUID.randomUUID(),new KnowledgeState(),1,() -> {});
-                service.learn(KnowledgeElement.idea(IDEA),SOURCE,KnowledgeService.Grant.NORMAL);
-                service.learn(ItemRetrieval.observe(actor.player,new ItemStack(Items.RAW_IRON)),SOURCE,KnowledgeService.Grant.NORMAL);
-                service.learn(ItemRetrieval.observe(actor.player,new ItemStack(metal)),SOURCE,KnowledgeService.Grant.NORMAL);
-                h.assertTrue(service.startResearch(PROJECT).isEmpty(),"metal alone still lacks fuel group");
-                service.learn(ItemRetrieval.observe(actor.player,new ItemStack(fuel)),SOURCE,KnowledgeService.Grant.NORMAL);
-                h.assertTrue(service.startResearch(PROJECT).isPresent(),"each formal metal/fuel combination starts");
+                var oreItem = ForgeRegistries.ITEMS.getValue(new ResourceLocation(oreId));
+                h.assertTrue(oreItem != null && oreItem != Items.AIR, "registered ore material " + oreId);
+                var ore = ItemRetrieval.observe(actor.player, new ItemStack(oreItem));
+                h.assertTrue(acquisitionSubject.matches(ore), "obtaining " + oreId + " qualifies for the inspiration roll");
+                var carbon = ItemRetrieval.observe(actor.player, new ItemStack(fuel));
+                service.learn(ore, SOURCE, KnowledgeService.Grant.NORMAL);
+                service.learn(carbon, SOURCE, KnowledgeService.Grant.NORMAL);
+                h.assertTrue(service.matchLink(IDEA, List.of(ore.key(), carbon.key())).isPresent(), "links " + oreId + " and " + fuel);
+                service.learn(KnowledgeElement.idea(IDEA), SOURCE, KnowledgeService.Grant.NORMAL);
+                h.assertTrue(service.startResearch(PROJECT).isPresent(), "starts research with " + oreId + " and " + fuel);
             }
+            var service = new KnowledgeService(UUID.randomUUID(), new KnowledgeState(), 1, () -> {});
+            var ingot = ItemRetrieval.observe(actor.player, new ItemStack(Items.IRON_INGOT));
+            var carbon = ItemRetrieval.observe(actor.player, new ItemStack(Items.CHARCOAL));
+            service.learn(ingot, SOURCE, KnowledgeService.Grant.NORMAL);
+            service.learn(carbon, SOURCE, KnowledgeService.Grant.NORMAL);
+            h.assertTrue(service.matchLink(IDEA, List.of(ingot.key(), carbon.key())).isEmpty(), "an ingot cannot substitute for ore in the link");
+            service.learn(KnowledgeElement.idea(IDEA), SOURCE, KnowledgeService.Grant.NORMAL);
+            h.assertTrue(service.startResearch(PROJECT).isEmpty(), "an ingot cannot substitute for ore in project access");
             actor.team.getData(FRSpecialDataTypes.RESEARCH_DATA).getData("iron").setFinished(true);actor.service().initialize();
             h.assertTrue(actor.service().isActive(KnowledgeKey.result(DESIGN)) && actor.service().legacyCompleted(PROJECT) && actor.service().state().research().isEmpty(),"old iron completion imports one dual-recipe Design without new run");
             h.assertTrue(TechnologyAccessResolver.project(actor.team).recipe(NORMAL).allowed() && TechnologyAccessResolver.project(actor.team).recipe(BLOOMERY).allowed(),"legacy compensation grants both actual recipe targets");
+            h.assertTrue(actor.service().researchStartStatus(TRANSMISSION) == KnowledgeService.Status.LEARNABLE,
+                "the migrated design also opens transmission");
             h.succeed();
         }
     }
