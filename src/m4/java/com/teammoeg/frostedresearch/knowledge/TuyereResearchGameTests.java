@@ -228,6 +228,47 @@ public final class TuyereResearchGameTests {
             h.succeed();
         }
     }
+    @GameTest(batch = "m4_manual_bellows_idea", template = "trial_kiln_empty", timeoutTicks = 80)
+    public static void manualBellowsIdeaRequiresAirDelivery(GameTestHelper h) {
+        var scope = new Scope();
+        guard(scope, () -> {
+            var idea = id("mechanical_bellows");
+            var acquisition = new IdeaAcquisition(List.of(new IdeaAcquisition.Trigger(
+                new ResourceLocation("frostedheart:manual_bellows_blow"), Optional.empty())),
+                List.of(), List.of(), Optional.of(1.0));
+            var definition = new IdeaDefinition("Bellows", "", List.of(), List.of(), true, acquisition);
+            KnowledgeDefinitions.install(new KnowledgeDefinitions.Snapshot(0, Map.of(idea, definition),
+                Map.of(), Map.of(), Map.of(), Map.of(), List.of()));
+            var actor = scope.actor(h);
+            var bellows = new BlockPos(2, 1, 2);
+            var tuyere = bellows.east();
+            var bloomery = tuyere.east();
+            h.setBlock(bellows, charcoalPit.core.ModBlockRegistry.Bellows.defaultBlockState()
+                .setValue(charcoalPit.block.BlockBellows.FACING, Direction.EAST));
+            h.setBlock(tuyere, charcoalPit.core.ModBlockRegistry.TuyereSandy);
+            var level = h.getLevel();
+            var pos = h.absolutePos(bellows);
+            Runnable press = () -> level.getBlockState(pos).use(level, actor.player, InteractionHand.MAIN_HAND,
+                new BlockHitResult(Vec3.atCenterOf(pos), Direction.UP, pos, false));
+            press.run();
+            h.runAfterDelay(35, () -> guard(scope, () -> {
+                h.assertTrue(!actor.service().query(KnowledgeKey.idea(idea)).inInbox(), "No idea without a furnace");
+                h.setBlock(bloomery, charcoalPit.core.ModBlockRegistry.Bloomery.defaultBlockState()
+                    .setValue(charcoalPit.block.BlockBloomery.DUMMY, false));
+                press.run();
+            }));
+            h.runAfterDelay(50, () -> {
+                try {
+                    var found = actor.service().query(KnowledgeKey.idea(idea));
+                    h.assertTrue(found.inInbox() || found.inArchive(), "The actual delayed blow awards the idea to the player");
+                    h.succeed();
+                } finally {
+                    scope.close();
+                }
+            });
+        });
+    }
+
     @GameTest(batch="m4_mechanical_bellows",template="trial_kiln_empty",timeoutTicks=60)
     public static void mechanicalBellowsActualTickAndOrdinaryBloomerySupply(GameTestHelper h) {
         var scope=new Scope();guard(scope,() -> {

@@ -74,7 +74,7 @@
 | `industrial_electrolyzer` | 沿用原研究 | [原定义](../../../TheWinterRescue/config/fhresearches/industrial_electrolyzer.json) |
 | `iron` | 由冶铁炉新项目接替 | [原定义](../../../TheWinterRescue/config/fhresearches/iron.json) |
 | `lining_upgrade` | 沿用原研究 | [原定义](../../../TheWinterRescue/config/fhresearches/lining_upgrade.json) |
-| `mechanical_bellows` | 沿用原研究 | [原定义](../../../TheWinterRescue/config/fhresearches/mechanical_bellows.json) |
+| `mechanical_bellows` | 已迁移 | [机械风箱研究](../knowledge/mechanical-bellows.md) |
 | `mechanical_calculator` | 沿用原研究 | [原定义](../../../TheWinterRescue/config/fhresearches/mechanical_calculator.json) |
 | `mechanical_crafter` | 沿用原研究 | [原定义](../../../TheWinterRescue/config/fhresearches/mechanical_crafter.json) |
 | `mechanical_press` | 沿用原研究 | [原定义](../../../TheWinterRescue/config/fhresearches/mechanical_press.json) |

@@ -8,7 +8,12 @@ import java.util.*;
 
 /** Behavior gates; legacy links inherit them unless they declare route-specific knowledge. */
 public record IdeaAcquisition(List<Trigger> triggers, List<KnowledgeCondition> required,
-        List<KnowledgeCondition> optional, Optional<Double> chance, Optional<Double> optionalBonus) {
+        List<KnowledgeCondition> optional, Optional<Double> chance, Optional<Double> optionalBonus,
+        List<WeightedBonus> weightedBonuses) {
+    public IdeaAcquisition(List<Trigger> triggers, List<KnowledgeCondition> required,
+            List<KnowledgeCondition> optional, Optional<Double> chance, Optional<Double> optionalBonus) {
+        this(triggers, required, optional, chance, optionalBonus, List.of());
+    }
     public IdeaAcquisition(List<Trigger> triggers, List<KnowledgeCondition> required,
             List<KnowledgeCondition> optional, Optional<Double> chance) {
         this(triggers, required, optional, chance, Optional.empty());
@@ -29,17 +34,30 @@ public record IdeaAcquisition(List<Trigger> triggers, List<KnowledgeCondition> r
         ProjectRequirement.field(KnowledgeCondition.CODEC.listOf(), "required", List.of()).forGetter(IdeaAcquisition::required),
         ProjectRequirement.field(KnowledgeCondition.CODEC.listOf(), "optional", List.of()).forGetter(IdeaAcquisition::optional),
         KnowledgeKey.strictOptionalField(PROBABILITY, "chance").forGetter(IdeaAcquisition::chance),
-        KnowledgeKey.strictOptionalField(PROBABILITY, "optional_bonus").forGetter(IdeaAcquisition::optionalBonus)
+        KnowledgeKey.strictOptionalField(PROBABILITY, "optional_bonus").forGetter(IdeaAcquisition::optionalBonus),
+        ProjectRequirement.field(WeightedBonus.CODEC.listOf(), "weighted_bonuses", List.of()).forGetter(IdeaAcquisition::weightedBonuses)
     ).apply(i, IdeaAcquisition::new));
+    public record WeightedBonus(KnowledgeCondition condition, double bonus) {
+        public static final Codec<WeightedBonus> CODEC = RecordCodecBuilder.create(i -> i.group(
+            KnowledgeCondition.CODEC.fieldOf("condition").forGetter(WeightedBonus::condition),
+            PROBABILITY.fieldOf("bonus").forGetter(WeightedBonus::bonus)
+        ).apply(i, WeightedBonus::new));
+    }
     public record Trigger(ResourceLocation event, Optional<KnowledgeCondition> subject) {
         public static final Codec<Trigger> CODEC = RecordCodecBuilder.create(i -> i.group(
             ResourceLocation.CODEC.fieldOf("event").forGetter(Trigger::event),
             KnowledgeKey.strictOptionalField(KnowledgeCondition.CODEC, "subject").forGetter(Trigger::subject)
         ).apply(i, Trigger::new));
     }
-    public IdeaAcquisition { triggers = List.copyOf(triggers); required = List.copyOf(required); optional = List.copyOf(optional); }
+    public IdeaAcquisition {
+        triggers = List.copyOf(triggers);
+        required = List.copyOf(required);
+        optional = List.copyOf(optional);
+        weightedBonuses = List.copyOf(weightedBonuses);
+    }
     public List<KnowledgeCondition> allConditions() {
         List<KnowledgeCondition> all = new ArrayList<>(required); all.addAll(optional);
+        weightedBonuses.forEach(bonus -> all.add(bonus.condition()));
         triggers.forEach(t -> t.subject().ifPresent(all::add)); return List.copyOf(all);
     }
 }

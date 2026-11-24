@@ -139,7 +139,7 @@ codec 错误而不是异常。`ObservationSampling` 把非有限的坐标与温�
 | knowledgeBehaviorChance = 0.15 | 未指定 chance 的行为基础概率，0–1 |
 | knowledgeBehaviorOptionalBonus = 0.1 | 每项已掌握 optional 的加概率，0–1 |
 
-行为概率 p = min(1, p0 + n × bonus)，p0 为想法 chance 或基础配置；n 为有效档案中满足的 optional 项数。
+行为概率 p = min(1, p0 + n × bonus + Σw)，p0 为想法 chance 或基础配置；n 为有效档案中满足的 optional 项数，Σw 为满足的 `weighted_bonuses` 加成之和。
 联络辅助来自所选`LinkRule.optional_knowledge`，省略才继承想法`acquisition.optional`；显式空列表代表没有辅助条件。`missingOptional(service, rule)`数有效档案尚未满足的条件，`numbers(service, rule)=min(7, missingOptional)`选择实际顺序数字数。每项条件最多计一次，tag内多个形态不会叠加；来件不算掌握。必要前置规则仍独立，省略才继承行为required。没有联络时长配置或时间公式。
 
 `KnowledgeLinkSessions.start`生成可解的`ResearchGame`，本局数字数固定；`reset`按当前档案重新生成，`play`使用普通配对/结束牌规则，只有获胜时调用`KnowledgeService.link`，不抽概率。`check`只重检有效性，不随时间推进。`Update.payload`包含`link_state`及运行时的`link_missing/link_numbers/link_title/link_game`。

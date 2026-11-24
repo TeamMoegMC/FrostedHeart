@@ -33,7 +33,7 @@
 缺席表示只匹配事件 ID。有多个入口时 OR；同一次操作命中几个入口也只为该想法抽一次概率。
 acquisition.required 限制行为触发；没有单独配置前置的旧联络规则也继承它。不限制外部 receive / produce / learn，understanding 继续只负责学习。
 subject 描述当次行为载荷，required / optional 查询有效档案；不把两者混成同一种事件判断。
-`chance` 和 `optional_bonus` 均可按想法指定 [0,1]。缺省时分别使用服务器的 `knowledgeBehaviorChance` 和 `knowledgeBehaviorOptionalBonus`。概率与联络难度公式见 [API 文档](state-and-api.md#m2-行为事件与短联络)。
+`chance` 和 `optional_bonus` 均可按想法指定 [0,1]。缺省时分别使用服务器的 `knowledgeBehaviorChance` 和 `knowledgeBehaviorOptionalBonus`。可用 `weighted_bonuses` 为单项行为辅助知识指定额外加成，每项包含 `condition` 和 [0,1] 的 `bonus`。概率与联络难度公式见 [API 文档](state-and-api.md#m2-行为事件与短联络)。
 
 内置事件 ID：`frostedresearch:item_obtained`、`item_used`、`block_interacted`、`observation_completed`、`knowledge_learned`。
 前三者载荷为对应 item/block Observation，观察完成为当次采样，学习为入档的 KnowledgeElement；
