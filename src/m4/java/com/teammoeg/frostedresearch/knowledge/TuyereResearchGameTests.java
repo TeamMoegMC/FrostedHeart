@@ -296,7 +296,7 @@ public final class TuyereResearchGameTests {
                  "condition":{"kind":"observation","observation_type":"item","conditions":[{"field":"object","operator":"eq","value":{"state":"known","type":"string","text":"minecraft:stone"}}]}}}
                 """)).getOrThrow(false,e -> {});
             var trial=new StageDefinition("trial","Trial","Observe","","",List.of(new StageDefinition.Task(observation,false,"")),List.of(),List.of());
-            var modified=new ProjectDefinition(project.title(),project.body(),project.results(),List.of(),project.access(),project.legacyReplacement(),List.of(project.stages().get(0),trial));
+            var modified=new ProjectDefinition(project.title(),project.body(),project.results(),List.of(),project.access(),project.legacyReplacements(),List.of(project.stages().get(0),trial));
             KnowledgeDefinitions.install(new KnowledgeDefinitions.Snapshot(0,definitions.ideas(),definitions.results(),definitions.links(),Map.of(),Map.of(PROJECT,modified),List.of()));
             var actor=scope.actor(h);var service=actor.service();var run=begin(actor);solve(desk(h,new BlockPos(1,1,1)),actor,run);service.advanceStage(run,"airflow");
             var stack=new ItemStack(Items.STONE);var record=ItemRetrieval.observe(actor.player,stack).observation().orElseThrow();

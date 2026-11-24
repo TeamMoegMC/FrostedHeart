@@ -318,6 +318,7 @@ ServerStarted 也刷新最终目标，ServerStopped 清理静态缓存。配方�
 - `TeamResearchData.variants["frostedresearch:legacy_replacements"][<项目ID>]` 保存 imported_results 字符串集合、
   completed_credit 与 partial_idea_granted。成果仅在成功/确实已入档后写回执，取消的成果在下次生命周期重试；
   已导入再主动遗忘不会重新强发。completed_credit 只来自旧 finished，是承接凭据，不能当作实验历史。
+- 多项旧研究并入同一项目时，`completed_researches` 按旧 ID 记录完成资格，全部映射均有效且记为完成时才覆盖新项目。每项旧成果仍单独导入，完成其中一项也可取得新项目的想法。此前已有真实完成记录时，新增加的有效映射成果补入该记录，产出或进入来件。已记录的产出遵循正常遗忘规则。
 
 带 completed_credit 的当前有效替换项目可见，`start_status=LEGACY_COMPLETED`、`completion_source=legacy`，
 即使没有想法也显示“旧研究承接完成”并免重复启动。已有真实 open run 保留，视图状态为 legacy_superseded；
@@ -327,7 +328,7 @@ ServerStarted 也刷新最终目标，ServerStopped 清理静态缓存。配方�
 统一拒绝正常推进；初始化/重载清除旧当前选择并解除线索订阅，但不清 active/committed/clueData。
 显式行政 setResearchFinished 仍保留原语义。
 
-`isPrerequisiteCompleted(team, legacyId)` 判定为旧 raw finished，或当前有效映射的真实 completed run 加两成果
+`isPrerequisiteCompleted(team, legacyId)` 判定为旧 raw finished，或当前有效映射的真实 completed run 加该旧项映射的成果
 均有效入档。单靠外来两成果只能获得技术权限，不能伪装完成来开旧后继。旧 Research.isUnlocked 和 commitItem
 都用这一等价查询；客户端消费服务端 legacy_replacements 中的 effective_completed，不自行推断。
 新成果遗忘/学习和真实完成通过 TeamResearchService.sync 使权限与旧父项投影一起刷新；真实旧来源仍独立保留。

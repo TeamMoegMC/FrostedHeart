@@ -22,6 +22,7 @@ package com.teammoeg.frostedresearch.knowledge.definition;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.mojang.datafixers.util.Either;
 import net.minecraft.resources.ResourceLocation;
 
 import java.util.List;
@@ -32,14 +33,18 @@ import java.util.Optional;
  * A project with its results and research requirements; progress lives in each research run.
  */
 public record ProjectDefinition(String title, String body, List<ResourceLocation> results,
-                                List<ProjectRequirement> requirements, Optional<ProjectAccess> access, Optional<LegacyReplacement> legacyReplacement, List<StageDefinition> stages) {
+                                List<ProjectRequirement> requirements, Optional<ProjectAccess> access, List<LegacyReplacement> legacyReplacements, List<StageDefinition> stages) {
+    private static final Codec<List<LegacyReplacement>> LEGACY_REPLACEMENTS =
+            Codec.either(LegacyReplacement.CODEC, LegacyReplacement.CODEC.listOf()).xmap(
+                    value -> value.map(List::of, entries -> entries),
+                    entries -> entries.size() == 1 ? Either.left(entries.get(0)) : Either.right(entries));
     public static final Codec<ProjectDefinition> CODEC = RecordCodecBuilder.create(i -> i.group(
             Codec.STRING.optionalFieldOf("title", "").forGetter(ProjectDefinition::title),
             Codec.STRING.optionalFieldOf("body", "").forGetter(ProjectDefinition::body),
             ResourceLocation.CODEC.listOf().fieldOf("results").forGetter(ProjectDefinition::results),
             ProjectRequirement.field(ProjectRequirement.CODEC.listOf(), "requirements", List.of()).forGetter(ProjectDefinition::requirements),
             com.teammoeg.frostedresearch.knowledge.model.KnowledgeKey.strictOptionalField(ProjectAccess.CODEC, "access").forGetter(ProjectDefinition::access),
-            com.teammoeg.frostedresearch.knowledge.model.KnowledgeKey.strictOptionalField(LegacyReplacement.CODEC, "legacy_replacement").forGetter(ProjectDefinition::legacyReplacement),
+            ProjectRequirement.field(LEGACY_REPLACEMENTS, "legacy_replacement", List.of()).forGetter(ProjectDefinition::legacyReplacements),
             ProjectRequirement.field(StageDefinition.CODEC.listOf(), "stages", List.of()).forGetter(ProjectDefinition::stages)
     ).apply(i, ProjectDefinition::new));
 
@@ -47,19 +52,20 @@ public record ProjectDefinition(String title, String body, List<ResourceLocation
         stages = List.copyOf(stages);
         results = List.copyOf(results);
         requirements = List.copyOf(requirements);
+        legacyReplacements = List.copyOf(legacyReplacements);
     }
 
     public ProjectDefinition(String title, String body, List<ResourceLocation> results, List<ProjectRequirement> requirements) {
-        this(title, body, results, requirements, Optional.empty(), Optional.empty(), List.of());
+        this(title, body, results, requirements, Optional.empty(), List.of(), List.of());
     }
 
     public ProjectDefinition(String title, String body, List<ResourceLocation> results, List<ProjectRequirement> requirements, Optional<ProjectAccess> access) {
-        this(title, body, results, requirements, access, Optional.empty(), List.of());
+        this(title, body, results, requirements, access, List.of(), List.of());
     }
 
     public ProjectDefinition(String title, String body, List<ResourceLocation> results, List<ProjectRequirement> requirements,
             Optional<ProjectAccess> access, Optional<LegacyReplacement> legacyReplacement) {
-        this(title,body,results,requirements,access,legacyReplacement,List.of());
+        this(title, body, results, requirements, access, legacyReplacement.stream().toList(), List.of());
     }
     public List<StageDefinition> orderedStages() {
         return stages.isEmpty() ? List.of(new StageDefinition("main",title,"","","",requirements.stream()

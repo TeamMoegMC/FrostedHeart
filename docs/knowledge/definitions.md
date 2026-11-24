@@ -378,7 +378,7 @@ M3-A：ProjectRequirement.type=sample 使用 sample.experiment 与 sample.item�
 
 ## 旧研究的可选替换映射（M3-B）
 
-`ProjectDefinition.legacy_replacement` 缺席时不影响旧路线。格式固定为：
+`ProjectDefinition.legacy_replacement` 可用一个映射对象或一个映射对象数组。缺席时旧路线保留。单对象示例：
 
 ```json
 "legacy_replacement": {
@@ -391,8 +391,8 @@ M3-A：ProjectRequirement.type=sample 使用 sample.experiment 与 sample.item�
 }
 ```
 
-这是静态的一项旧研究到新项目的映射，不是通用迁移脚本。`research` 是旧 JSON 文件名得到的字符串 ID，
-`effects` 的键是旧效果 nonce；effects 必须非空，目标属于本项目 results，允许 Design、Construction 或二者组合；同一 Design 可承载多条生产配方。
+数组用于多项旧研究并入同一个新项目。每项的 `research` 是旧 JSON 文件名得到的字符串 ID。
+`effects` 的键是旧效果 nonce。effects 必须非空，目标属于本项目 results，支持 Design、Construction 和带工具动作的 Procedure。同一 Design 可承载多条生产配方。
 映射成果必须启用、understanding 为空；Design 的每个 recipe 必须在当前服务器 RecipeManager 中存在，
 Construction 的每个 multiblock 必须能由 IE `MultiblockHandler.getByUniqueName` 解析；partial_idea 也必须存在且启用。
 同一旧 ID 多重映射停用该 ID 的替换并告警。缺任一映射定义或目标时记录诊断，保留旧入口；最终 recipes/tags、

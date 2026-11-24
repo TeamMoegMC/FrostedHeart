@@ -111,12 +111,12 @@ public final class KnowledgeDefinitions {
         });
         s.projects.forEach((id, p) -> {
             if (p.results().isEmpty()) errors.add(id + ": project must produce at least one result");
-            for (var result : p.results()) if (!resultExists(s, result) && p.legacyReplacement().filter(m -> m.effects().containsValue(result)).isEmpty()) errors.add(id + ": missing result " + result);
+            for (var result : p.results()) if (!resultExists(s, result) && p.legacyReplacements().stream().noneMatch(m -> m.effects().containsValue(result))) errors.add(id + ": missing result " + result);
             p.access().ifPresent(access -> {
                 access.validate().forEach(error -> errors.add(id + ": access: " + error));
                 access.conditions().values().forEach(c -> c.definition().ifPresent(def -> {
                     if ((c.kind() == KnowledgeKey.Kind.IDEA ? !s.ideas.containsKey(def) : !resultExists(s, def))
-                            && p.legacyReplacement().filter(m -> m.partialIdea().equals(def) || m.effects().containsValue(def)).isEmpty())
+                            && p.legacyReplacements().stream().noneMatch(m -> m.partialIdea().equals(def) || m.effects().containsValue(def)))
                         errors.add(id + ": access: missing knowledge " + def);
                 }));
             });

@@ -51,7 +51,7 @@ public final class TrialKilnGameTests {
             var formal = ProjectDefinition.CODEC.parse(JsonOps.INSTANCE, JsonParser.parseReader(reader)).getOrThrow(false, error -> {});
             var original = KnowledgeDefinitions.current();
             // Keep the real formal conditions/tasks; a neutral Finding isolates experiment settlement from IE recipes.
-            var project = new ProjectDefinition(formal.title(), formal.body(), List.of(id("trial_kiln_finding")), formal.requirements(), formal.access(), Optional.empty(), formal.stages());
+            var project = new ProjectDefinition(formal.title(), formal.body(), List.of(id("trial_kiln_finding")), formal.requirements(), formal.access(), List.of(), formal.stages());
             KnowledgeDefinitions.install(new KnowledgeDefinitions.Snapshot(0,
                 Map.of(new ResourceLocation("the_winter_rescue:earthen_smelting"), original.ideas().get(id("trial_kiln"))),
                 original.results(), Map.of(), Map.of(), Map.of(FORMAL, project), List.of()));

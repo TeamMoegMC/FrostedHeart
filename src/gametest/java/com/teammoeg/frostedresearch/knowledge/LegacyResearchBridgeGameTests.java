@@ -144,7 +144,7 @@ public final class LegacyResearchBridgeGameTests {
             Map.of(designId,design,constructionId,construction),Map.of(ideaId,formal("links/earthen_smelting",com.teammoeg.frostedresearch.knowledge.link.LinkRule.CODEC)),
             Map.of(),Map.of(projectId,project),List.of());
         h.assertTrue(KnowledgeDefinitions.validate(snapshot).isEmpty(),"formal project/idea/link/results parse and references validate");
-        h.assertTrue(project.legacyReplacement().orElseThrow().effects().equals(Map.of(DN,designId,CN,constructionId)),"formal legacy schema and effect nonces match bridge");
+        h.assertTrue(project.legacyReplacements().get(0).effects().equals(Map.of(DN,designId,CN,constructionId)),"formal legacy schema and effect nonces match bridge");
         h.assertTrue(((ResearchResult.Design)design.result()).recipes().equals(List.of(new ResourceLocation("the_winter_rescue:research/alloybrick"))),"formal stable recipe target is exact; actual pack registration is separate");
         h.assertTrue(((ResearchResult.Construction)construction.result()).multiblocks().equals(List.of(MULTIBLOCK)) && blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.getByUniqueName(MULTIBLOCK)!=null,"formal forming target matches real IE registration");
         h.assertTrue(project.allRequirements().size()==3 && project.allRequirements().stream().allMatch(task -> task.type()==ProjectRequirement.Type.OBSERVATION
@@ -180,6 +180,67 @@ public final class LegacyResearchBridgeGameTests {
         var building=new EffectBuilding(new Effect.BaseData("",List.of(),Optional.empty(),CN,false,List.of()),blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.getByUniqueName(MULTIBLOCK));
         return new Research(OLD,"Old kiln",0,100,com.teammoeg.chorda.client.icon.CIcons.nop(),ResearchCategory.RESCUE,List.of(),List.of(),List.of(),List.of(),List.of(),List.of(crafting,building),List.of(new ItemClue("old_clue","Inspect stone","","",0.5f,false,com.mojang.datafixers.util.Pair.of(net.minecraft.world.item.crafting.Ingredient.of(net.minecraft.world.item.Items.STONE),1),false)),true,false,false,false,false,false);
     }
+
+    @GameTest(batch="m3_bridge_combined",template="empty",timeoutTicks=80)
+    public static void multipleLegacyEntriesAndAlreadyCompletedRun(GameTestHelper h) {
+        var previous = KnowledgeDefinitions.current();
+        var fixture = definitions(true, true);
+        var original = fixture.projects().get(PROJECT);
+        var initialMapping = new LegacyReplacement(OLD, Map.of(DN, DESIGN), IDEA);
+        var oldProject = new ProjectDefinition(original.title(), original.body(), List.of(DESIGN),
+                original.requirements(), original.access(), Optional.of(initialMapping));
+        var expanded = new ProjectDefinition(original.title(), original.body(), original.results(),
+                original.requirements(), original.access(), List.of(initialMapping,
+                new LegacyReplacement("advanced_tools", Map.of(CN, CONSTRUCTION), IDEA)), original.stages());
+        try (var newCompletion = new Actor(h); var oldCompletion = new Actor(h); var partial = new Actor(h)) {
+            KnowledgeDefinitions.install(new KnowledgeDefinitions.Snapshot(0, fixture.ideas(), fixture.results(),
+                    Map.of(), Map.of(), Map.of(PROJECT, oldProject), List.of()));
+            newCompletion.service.learn(KnowledgeElement.idea(IDEA), SOURCE, KnowledgeService.Grant.NORMAL);
+            UUID run = newCompletion.service.startResearch(PROJECT).orElseThrow();
+            newCompletion.service.recordCalculation(run, "calculate", 1);
+            newCompletion.service.finishResearch(run);
+            oldCompletion.raw().setFinished(true);
+            oldCompletion.reconcile();
+            h.assertTrue(oldCompletion.service.legacyCompleted(PROJECT), "one old entry completed the original project");
+
+            var json = ProjectDefinition.CODEC.encodeStart(JsonOps.INSTANCE, expanded).getOrThrow(false, s -> {});
+            var decoded = ProjectDefinition.CODEC.parse(JsonOps.INSTANCE, json).getOrThrow(false, s -> {});
+            h.assertTrue(decoded.legacyReplacements().equals(expanded.legacyReplacements()), "array mappings round trip");
+            KnowledgeDefinitions.install(new KnowledgeDefinitions.Snapshot(0, fixture.ideas(), fixture.results(),
+                    Map.of(), Map.of(), Map.of(PROJECT, decoded), List.of()));
+            newCompletion.reconcile();
+            h.assertTrue(newCompletion.service.isActive(KnowledgeKey.result(CONSTRUCTION))
+                    && newCompletion.service.state().research().get(run).results().contains(KnowledgeKey.result(CONSTRUCTION)),
+                    "existing experiment receives the additional mapped result in the same run");
+            h.assertTrue(LegacyResearchBridge.isPrerequisiteCompleted(newCompletion.team, "advanced_tools"),
+                    "the expanded run satisfies the second legacy prerequisite");
+            newCompletion.service.forget(KnowledgeKey.result(CONSTRUCTION));
+            newCompletion.reconcile();
+            h.assertTrue(!newCompletion.service.query(KnowledgeKey.result(CONSTRUCTION)).inArchive(),
+                    "reconciliation does not reissue an intentionally forgotten result");
+
+            oldCompletion.reconcile();
+            h.assertTrue(!oldCompletion.service.legacyCompleted(PROJECT)
+                    && oldCompletion.service.isActive(KnowledgeKey.idea(IDEA))
+                    && !oldCompletion.service.isActive(KnowledgeKey.result(CONSTRUCTION)),
+                    "the original legacy completion preserves its own result and can start the expanded project");
+            oldCompletion.legacy.getData("advanced_tools").setFinished(true);
+            oldCompletion.reconcile();
+            h.assertTrue(oldCompletion.service.legacyCompleted(PROJECT) && oldCompletion.service.state().research().isEmpty(),
+                    "both legacy completions cover the expanded project without manufacturing a run");
+
+            partial.legacy.getData("advanced_tools").setEffectGranted(CN, true);
+            partial.reconcile();
+            h.assertTrue(partial.service.isActive(KnowledgeKey.result(CONSTRUCTION))
+                    && !partial.service.isActive(KnowledgeKey.result(DESIGN)) && !partial.service.legacyCompleted(PROJECT),
+                    "one advanced effect imports only its matching permission");
+            h.succeed();
+        } finally {
+            KnowledgeDefinitions.install(previous);
+            LegacyResearchBridge.refreshDefinitions();
+        }
+    }
+
     @GameTest(batch="m3_bridge_guards",template="empty",timeoutTicks=80)
     public static void selectedOldCannotAdvanceAndMappingRemovalRestoresRoute(GameTestHelper h) {
         var previous=KnowledgeDefinitions.current(); install(true,false);

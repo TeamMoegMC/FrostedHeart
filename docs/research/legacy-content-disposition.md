@@ -1,13 +1,13 @@
 # 旧研究目录与新项目衔接
 
 - Status: `Verified`（目录与现行替换映射）
-- Last verified: `2026-11-20`（手炉与保温杯承接）
+- Last verified: `2026-11-21`（探矿研究合并）
 - Scope: TWR 旧研究的当前处置、旧存档承接与验证边界。
 - Code anchors: [LegacyResearchBridge](../../src/main/java/com/teammoeg/frostedresearch/knowledge/LegacyResearchBridge.java)、[TeamResearchData](../../src/main/java/com/teammoeg/frostedresearch/data/TeamResearchData.java)、[KnowledgeService](../../src/main/java/com/teammoeg/frostedresearch/knowledge/KnowledgeService.java)。
 
 ## 当前规则
 
-正式旧目录现有80份JSON。新数据包有效时，`alloy_kiln`、`iron`、`geology_understanding`、`hand_warmer` 与 `thermos_T1` 的旧推进入口由新项目接替，其余75份沿用。`banner` 和 `improve_energy` 仍隐藏且不可完成。`banner` 继续封锁四个多方块，`improve_energy` 定义没有 `effects` 字段。
+正式旧目录现有80份JSON。新数据包有效时，下表所列项目的旧推进入口由新项目接替。`banner` 和 `improve_energy` 仍隐藏且不可完成。`banner` 继续封锁四个多方块，`improve_energy` 定义没有 `effects` 字段。
 
 `millstone` 已退役，所有队伍都可在工作台合成石磨。已有队伍研究记录由 `TeamResearchData` 保留，已领取的木炭粉仍是普通物品。石磨任务改在工作台后开放。
 
@@ -16,6 +16,8 @@
 | alloy_kiln | the_winter_rescue:earthen_smelter | 350c485a4b92425c→earthen_smelter_design；1bb68ce233ef4f21→earthen_smelter_construction |
 | iron | the_winter_rescue:iron_bloomery | c520be3259914225→iron_bloomery_design，含主冶铁炉和正常鼓风口两配方 |
 | geology_understanding | the_winter_rescue:prospecting | e1b61496f49f4857→prospecting_method |
+| advanced_geological_tools | the_winter_rescue:prospecting | 原两项效果分别承接铜探铲、铜地质锤配方 |
+| prospecting_upgrade | the_winter_rescue:prospecting | 原六项效果分别承接铁、钢工具配方 |
 | hand_warmer | the_winter_rescue:hand_warmer | 69684c4aa1f4d7a→hand_stove_design。两种炭棒配方公开 |
 | thermos_T1 | the_winter_rescue:thermos | 915e5759ba344d58→thermos_design。旧档案仍可领取完成后未领的实物奖励 |
 
@@ -29,7 +31,7 @@
 
 | 旧ID | 处置 | 权威定义 |
 |---|---|---|
-| `advanced_geological_tools` | 沿用原研究 | [原定义](../../../TheWinterRescue/config/fhresearches/advanced_geological_tools.json) |
+| `advanced_geological_tools` | 并入探矿研究，承接两项铜配方 | [现行流程](../knowledge/prospecting.md) · [原定义](../../../TheWinterRescue/config/fhresearches/advanced_geological_tools.json) |
 | `alloy_kiln` | 由土制冶炼炉新项目接替 | [原定义](../../../TheWinterRescue/config/fhresearches/alloy_kiln.json) |
 | `animal_cage` | 沿用原研究 | [原定义](../../../TheWinterRescue/config/fhresearches/animal_cage.json) |
 | `arc_furnace` | 沿用原研究 | [原定义](../../../TheWinterRescue/config/fhresearches/arc_furnace.json) |
@@ -87,7 +89,7 @@
 | `multiblock_structure` | 沿用原研究 | [原定义](../../../TheWinterRescue/config/fhresearches/multiblock_structure.json) |
 | `precision_mechanism` | 沿用原研究 | [原定义](../../../TheWinterRescue/config/fhresearches/precision_mechanism.json) |
 | `propaganda` | 沿用原研究 | [原定义](../../../TheWinterRescue/config/fhresearches/propaganda.json) |
-| `prospecting_upgrade` | 沿用原研究 | [原定义](../../../TheWinterRescue/config/fhresearches/prospecting_upgrade.json) |
+| `prospecting_upgrade` | 并入探矿研究，承接六项铁钢配方 | [现行流程](../knowledge/prospecting.md) · [原定义](../../../TheWinterRescue/config/fhresearches/prospecting_upgrade.json) |
 | `rescue_plan_initiated` | 沿用原研究 | [原定义](../../../TheWinterRescue/config/fhresearches/rescue_plan_initiated.json) |
 | `revolver` | 沿用原研究 | [原定义](../../../TheWinterRescue/config/fhresearches/revolver.json) |
 | `rotary_kiln` | 沿用原研究 | [原定义](../../../TheWinterRescue/config/fhresearches/rotary_kiln.json) |

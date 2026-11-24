@@ -27,7 +27,7 @@ public final class LegacyResearchBridge {
         var defs = KnowledgeDefinitions.current();
         Map<String, ResourceLocation> next = new LinkedHashMap<>();
         Set<String> duplicates = new HashSet<>();
-        defs.projects().forEach((id, p) -> p.legacyReplacement().ifPresent(m -> {
+        defs.projects().forEach((id, p) -> p.legacyReplacements().forEach(m -> {
             String problem = problem(p, m);
             if (problem != null) {
                 if (revision != defs.revision()) FRMain.LOGGER.warn("Legacy replacement {} disabled: {}", id, problem);
@@ -62,8 +62,23 @@ public final class LegacyResearchBridge {
     }
     public static boolean isReplaced(String id) { return replacements().containsKey(id); }
     public static boolean completedCredit(TeamResearchData data, ResourceLocation project) {
-        return replacements().containsValue(project) && data.getVariants().getCompound(RECEIPTS).getCompound(project.toString()).getBoolean("completed_credit");
+        var definition = KnowledgeDefinitions.current().projects().get(project);
+        if (definition == null || definition.legacyReplacements().isEmpty()) return false;
+        var receipt = data.getVariants().getCompound(RECEIPTS).getCompound(project.toString());
+        boolean single = definition.legacyReplacements().size() == 1;
+        return definition.legacyReplacements().stream().allMatch(mapping ->
+                project.equals(replacements().get(mapping.research())) && hasCredit(receipt, mapping.research(), single));
     }
+
+    private static boolean hasCredit(CompoundTag receipt, String old, boolean single) {
+        return receipt.getCompound("completed_researches").getBoolean(old)
+                || (single && receipt.getBoolean("completed_credit"));
+    }
+
+    private static LegacyReplacement mapping(ProjectDefinition definition, String old) {
+        return definition.legacyReplacements().stream().filter(m -> m.research().equals(old)).findFirst().orElseThrow();
+    }
+
     public static void reconcile(TeamDataHolder team, KnowledgeService service) {
         refreshDefinitions();
         var legacy = team.getData(FRSpecialDataTypes.RESEARCH_DATA);
@@ -73,7 +88,9 @@ public final class LegacyResearchBridge {
         for (var e : replacements().entrySet()) {
             var raw = legacy.getExistingData(e.getKey()).orElse(null);
             if (raw == null) continue;
-            var m = KnowledgeDefinitions.current().projects().get(e.getValue()).legacyReplacement().orElseThrow();
+            var definition = KnowledgeDefinitions.current().projects().get(e.getValue());
+            var m = mapping(definition, e.getKey());
+            boolean single = definition.legacyReplacements().size() == 1;
             var tag = root.getCompound(e.getValue().toString()).copy(); var before = tag.copy();
             Set<String> imported = new TreeSet<>();
             tag.getList("imported_results", Tag.TAG_STRING).forEach(t -> imported.add(t.getAsString()));
@@ -86,11 +103,16 @@ public final class LegacyResearchBridge {
             });
             ListTag list = new ListTag(); imported.forEach(id -> list.add(StringTag.valueOf(id))); tag.put("imported_results", list);
             if (raw.isCompleted()) {
-                tag.putBoolean("completed_credit", true);
-                service.state().research().values().stream().filter(run -> run.open() && run.project().equals(e.getValue()))
-                    .forEach(run -> com.teammoeg.frostedresearch.knowledge.experiment.PendingResearchProofs.removeRun(run.id()));
+                if (single) {
+                    tag.putBoolean("completed_credit", true);
+                } else {
+                    var completed = tag.getCompound("completed_researches");
+                    completed.putBoolean(e.getKey(), true);
+                    tag.put("completed_researches", completed);
+                }
             }
-            if (!raw.isCompleted() && !tag.getBoolean("partial_idea_granted") && (raw.isActive() || raw.getCommitted() > 0 || raw.getClueData().values().stream().anyMatch(ClueData::isCompleted))) {
+            boolean invested = raw.isActive() || raw.getCommitted() > 0 || raw.getClueData().values().stream().anyMatch(ClueData::isCompleted);
+            if (!tag.getBoolean("partial_idea_granted") && (raw.isCompleted() ? !single : invested)) {
                 service.produce(KnowledgeElement.idea(m.partialIdea()), source);
                 var query = service.query(KnowledgeKey.idea(m.partialIdea()));
                 if (query.inArchive() || query.inInbox()) tag.putBoolean("partial_idea_granted", true);
@@ -98,6 +120,37 @@ public final class LegacyResearchBridge {
             if (!tag.equals(before)) { root.put(e.getValue().toString(), tag); changed = true; }
         }
         if (changed) { legacy.getVariants().put(RECEIPTS, root); TeamResearchService.sync(team); }
+        if (reconcileExpandedProjects(service)) TeamResearchService.sync(team);
+    }
+
+    private static boolean reconcileExpandedProjects(KnowledgeService service) {
+        var completed = ResearchRuns.sorted(service.state()).stream().filter(run -> run.completed())
+                .collect(java.util.stream.Collectors.groupingBy(run -> run.project()));
+        boolean changed = false;
+        for (var entry : completed.entrySet()) {
+            var project = entry.getKey();
+            var runs = entry.getValue();
+            var definition = KnowledgeDefinitions.current().projects().get(project);
+            if (definition == null || definition.legacyReplacements().size() < 2) continue;
+            var missing = new LinkedHashSet<KnowledgeKey>();
+            for (var mapping : definition.legacyReplacements()) {
+                if (project.equals(replacements().get(mapping.research()))) {
+                    mapping.effects().values().stream().map(KnowledgeKey::result).forEach(missing::add);
+                }
+            }
+            runs.forEach(run -> missing.removeAll(run.results()));
+            if (missing.isEmpty()) continue;
+            var run = runs.get(0);
+            var results = new ArrayList<>(run.results());
+            results.addAll(missing);
+            service.state().recordResearch(run.completedWith(results));
+            var source = new AcquisitionSource("research:" + run.id(), Optional.empty(), service.time());
+            for (var key : missing) {
+                service.produce(KnowledgeElement.result(new ResourceLocation(key.id())), source);
+            }
+            changed = true;
+        }
+        return changed;
     }
     public static boolean isPrerequisiteCompleted(TeamDataHolder team, String id) {
         var data = team.getData(FRSpecialDataTypes.RESEARCH_DATA);
@@ -105,7 +158,7 @@ public final class LegacyResearchBridge {
         var project = replacements().get(id);
         if (project == null) return false;
         var service = KnowledgeService.forTeam(team, 0);
-        var m = KnowledgeDefinitions.current().projects().get(project).legacyReplacement().orElseThrow();
+        var m = mapping(KnowledgeDefinitions.current().projects().get(project), id);
         return service.state().research().values().stream().anyMatch(run -> run.completed() && run.project().equals(project)) && m.effects().values().stream().allMatch(r -> service.isActive(KnowledgeKey.result(r)));
     }
     public static ListTag projection(TeamDataHolder team) {
@@ -114,8 +167,9 @@ public final class LegacyResearchBridge {
             CompoundTag tag = new CompoundTag(); tag.putString("research", old); tag.putString("project", project.toString());
             tag.putBoolean("effective_completed", isPrerequisiteCompleted(team, old));
             var receipt = team.getData(FRSpecialDataTypes.RESEARCH_DATA).getVariants().getCompound(RECEIPTS).getCompound(project.toString());
-            tag.putBoolean("completed_credit", receipt.getBoolean("completed_credit"));
-            tag.putBoolean("partial_idea_granted", receipt.getBoolean("partial_idea_granted")); list.add(tag);
+            tag.putBoolean("completed_credit", hasCredit(receipt, old, KnowledgeDefinitions.current().projects().get(project).legacyReplacements().size() == 1));
+            tag.putBoolean("partial_idea_granted", receipt.getBoolean("partial_idea_granted"));
+            list.add(tag);
         }); return list;
     }
     /** Union this subkey alone, keeping unrelated variables and raw legacy progress. */
@@ -127,6 +181,9 @@ public final class LegacyResearchBridge {
             for (CompoundTag tag : List.of(a, b)) tag.getList("imported_results", Tag.TAG_STRING).forEach(t -> ids.add(t.getAsString()));
             ListTag list = new ListTag(); ids.forEach(id -> list.add(StringTag.valueOf(id))); a.put("imported_results", list);
             for (String flag : List.of("completed_credit", "partial_idea_granted")) a.putBoolean(flag, a.getBoolean(flag) || b.getBoolean(flag));
+            var completed = a.getCompound("completed_researches");
+            completed.merge(b.getCompound("completed_researches"));
+            if (!completed.isEmpty()) a.put("completed_researches", completed);
             root.put(project, a);
         }
         target.getVariants().put(RECEIPTS, root);

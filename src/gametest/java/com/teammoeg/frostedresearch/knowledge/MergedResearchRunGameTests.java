@@ -45,7 +45,7 @@ public final class MergedResearchRunGameTests {
         """)).getOrThrow(false,e->{});
     }
     public static void install(){
-        var p=project();var other=new ProjectDefinition(p.title(),p.body(),List.of(id("other_result")),p.requirements(),p.access(),p.legacyReplacement(),p.stages());
+        var p=project();var other=new ProjectDefinition(p.title(),p.body(),List.of(id("other_result")),p.requirements(),p.access(),p.legacyReplacements(),p.stages());
         var defs=new KnowledgeDefinitions.Snapshot(0,
             Map.of(IDEA,new IdeaDefinition("Idea","",List.of(),List.of(PROJECT,OTHER),true)),
             Map.of(RESULT,new ResultDefinition(new ResearchResult.Design(RESULT,List.of(new ResourceLocation("minecraft:oak_planks"))),"Result","",List.of(),true),
@@ -137,7 +137,7 @@ public final class MergedResearchRunGameTests {
     public static void standbyRequiresEveryResultToRemainValidAndLearned(GameTestHelper h){
         var previous=KnowledgeDefinitions.current();try{
             install();var base=KnowledgeDefinitions.current();var projects=new HashMap<>(base.projects());var original=projects.get(PROJECT);
-            projects.put(PROJECT,new ProjectDefinition(original.title(),original.body(),List.of(RESULT,id("other_result")),original.requirements(),original.access(),original.legacyReplacement(),original.stages()));
+            projects.put(PROJECT,new ProjectDefinition(original.title(),original.body(),List.of(RESULT,id("other_result")),original.requirements(),original.access(),original.legacyReplacements(),original.stages()));
             KnowledgeDefinitions.install(new KnowledgeDefinitions.Snapshot(0,base.ideas(),base.results(),base.links(),base.itemRetrievalRules(),projects,base.initialKnowledge()));
             var s=service();mergePair(s);s.recordCalculation(LATE,"finish",1);s.finishResearch(LATE);h.assertTrue(s.standby(EARLY),"initially paused");
             var defs=KnowledgeDefinitions.current();var results=new HashMap<>(defs.results());var d=results.get(RESULT);results.put(RESULT,new ResultDefinition(d.result(),d.title(),d.body(),d.understanding(),false));
