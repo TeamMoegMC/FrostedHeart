@@ -30,7 +30,7 @@ import static com.teammoeg.frostedresearch.knowledge.model.ObservationValue.Valu
  */
 public final class ObservationFields {
     private static final Set<String> NUMBERS = Set.of("x", "y", "z", "time", "year", "month", "day", "hour", "temperature", "source_position.x", "source_position.y", "source_position.z");
-    private static final Set<String> STRINGS = Set.of("object", "type", "record_id", "dimension", "biome", "climate", "temperature_type", "time_period", "entity_instance", "item_block", "source_kind", "original_observer", "organization", "source_dimension");
+    private static final Set<String> STRINGS = Set.of("object", "block_object", "type", "record_id", "dimension", "biome", "climate", "temperature_type", "time_period", "entity_instance", "item_block", "source_kind", "original_observer", "organization", "source_dimension");
     private static final Set<String> UNIVERSAL = Set.of("object", "type", "record_id", "source_kind", "original_observer", "organization", "source_dimension");
 
     private ObservationFields() {
@@ -50,6 +50,7 @@ public final class ObservationFields {
     public static boolean applies(String field, Observation.Type type) {
         if (UNIVERSAL.contains(field) || field.startsWith("source_position.")) return true;
         if (field.equals("entity_instance")) return type == Observation.Type.ENTITY;
+        if (field.equals("block_object")) return type == Observation.Type.BLOCK || type == Observation.Type.ITEM;
         if (field.startsWith("block_state.")) return type == Observation.Type.BLOCK;
         if (isItemField(field)) return type == Observation.Type.ITEM;
         return type(field).isPresent();

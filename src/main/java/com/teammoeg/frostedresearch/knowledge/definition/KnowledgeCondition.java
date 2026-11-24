@@ -32,7 +32,10 @@ public record KnowledgeCondition(KnowledgeKey.Kind kind, Optional<ResourceLocati
     }
     public void validate(List<String> errors) {
         slot().validate(errors);
-        if (kind == KnowledgeKey.Kind.OBSERVATION && observationType.isEmpty()) errors.add("observation_type required");
+        if (kind == KnowledgeKey.Kind.OBSERVATION && observationType.isEmpty()
+                && conditions.stream().noneMatch(c -> c.field().equals("block_object")
+                    && (c.operator() == FieldCondition.Operator.EQ || c.operator() == FieldCondition.Operator.TAG)))
+            errors.add("observation_type required unless matching block_object by ID or tag");
         if (conditions.stream().anyMatch(c -> c.field().equals("record_id") || c.field().equals("entity_instance")))
             errors.add("runtime observation identities cannot be prerequisites");
     }

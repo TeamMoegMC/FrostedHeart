@@ -85,6 +85,8 @@ LinkRule.inputs 仍必填，作者可显式给 0–5 槽。0 槽表示明确配�
 | `source_kind`、`original_observer`、`organization`、`source_dimension` | 字符串    | 从原始来源派生；没有实际观察者时仍是未知                   |
 | `source_position.x`、`source_position.y`、`source_position.z`         | 数值     | 从原始来源位置派生，单位格                          |
 
+仅关注方块身份的条件可以省略 `observation_type`，使用 `block_object` 配合 `eq` 或 `tag`。该字段从方块观察读取对象 ID，从方块物品观察读取 `item_block`，并在比较标签时查询方块标签。
+
 研究可以用 `observation_type: "item"` 的物品观察配合 `temperature_type eq extreme_cold`（低于 −20°C）或数值温度条件。环境描述检视现场。方块物品只记录 `item_block`，物品观察仍不能录出为研究笔记。`item_data` 不保存物品数量。
 
 烧后小炉物品通过 `TrialKilnSamples.registerObservationFields` 暴露 `item.trial_kiln_variant`，值为 `clay_rich`、`sand_rich`、`balanced`；旧样没有配比则为 `unknown`。试样绑定仍由实际物品检查，不从观察字段或旧档案推断本次研究归属。
@@ -181,7 +183,7 @@ research topic 内。类型效果结构见 [成果与权限](../research/results
 
 [`KnowledgeCondition`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/definition/KnowledgeCondition.java)
 复用 `LinkRule.Slot` / `FieldCondition` 匹配，仅查询有效档案；来件不等于掌握。
-条件必填 kind；idea/result 必填 definition；observation 必填 observation_type，可带 conditions 数组、title 与 hint。
+条件必填 kind；idea/result 必填 definition；observation 可带 conditions 数组、title 与 hint。用 `block_object` 匹配方块 ID 或标签时可以省略 `observation_type`，其他观察条件需要指定类型。
 观察按 item/block/entity 及字段/标签匹配，不接受固定 record_id / entity_instance 作为前置。
 
 项目可选 [`ProjectAccess`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/definition/ProjectAccess.java) `access`：

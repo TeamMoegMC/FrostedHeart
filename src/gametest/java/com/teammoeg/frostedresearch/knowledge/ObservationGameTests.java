@@ -3,11 +3,17 @@ package com.teammoeg.frostedresearch.knowledge;
 
 import com.mojang.authlib.GameProfile;
 import com.teammoeg.frostedresearch.FRContents;
+import com.teammoeg.frostedresearch.knowledge.definition.KnowledgeCondition;
+import com.teammoeg.frostedresearch.knowledge.item.ItemRetrieval;
+import com.teammoeg.frostedresearch.knowledge.link.LinkRule;
+import com.teammoeg.frostedresearch.knowledge.link.TagLookup;
+import com.teammoeg.frostedresearch.knowledge.model.KnowledgeElement;
 import com.teammoeg.frostedresearch.knowledge.model.Observation;
 import com.teammoeg.frostedresearch.knowledge.observation.ObservationActionPacket;
 import com.teammoeg.frostedresearch.knowledge.observation.ObservationActionPacket.Action;
 import com.teammoeg.frostedresearch.knowledge.observation.ObservationActionPacket.Method;
 import com.teammoeg.frostedresearch.knowledge.observation.ObservationSessions;
+import com.teammoeg.frostedresearch.knowledge.observation.ObservationSampling;
 import com.teammoeg.frostedresearch.knowledge.observation.ObservationStatePacket;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
@@ -39,6 +45,52 @@ import java.util.UUID;
 @GameTestHolder("frostedresearch_observation")
 @PrefixGameTestTemplate(false)
 public final class ObservationGameTests {
+    @GameTest(template = "empty")
+    public static void blockIdentityMatchesPlacedBlocksAndBlockItems(GameTestHelper helper) {
+        var observer = new Observer(helper);
+        try {
+            var local = new BlockPos(1, 1, 1);
+            helper.setBlock(local, Blocks.PISTON);
+            var placed = KnowledgeElement.observation(ObservationSampling.block(observer.player, helper.absolutePos(local)));
+            var held = ItemRetrieval.observe(observer.player, new ItemStack(Items.PISTON));
+            var sticky = ItemRetrieval.observe(observer.player, new ItemStack(Items.STICKY_PISTON));
+            var paper = ItemRetrieval.observe(observer.player, new ItemStack(Items.PAPER));
+            var predicate = com.google.gson.JsonParser.parseString("""
+                {"kind":"observation","name":"piston","conditions":[
+                  {"field":"block_object","operator":"eq","value":{"state":"known","type":"string","text":"minecraft:piston"}}
+                ]}
+                """);
+            var condition = KnowledgeCondition.CODEC.parse(com.mojang.serialization.JsonOps.INSTANCE, predicate)
+                .getOrThrow(false, helper::fail);
+            var slot = LinkRule.Slot.CODEC.parse(com.mojang.serialization.JsonOps.INSTANCE, predicate)
+                .getOrThrow(false, helper::fail);
+            var errors = new ArrayList<String>();
+            condition.validate(errors);
+            slot.validate(errors);
+            helper.assertTrue(errors.isEmpty(), "Both observation predicates validate");
+            for (var observation : List.of(placed, held)) {
+                helper.assertTrue(condition.matches(observation) && slot.matches(observation, TagLookup.SERVER),
+                    "Either piston observation satisfies the same prerequisite and link slot");
+            }
+            for (var observation : List.of(sticky, paper)) {
+                helper.assertTrue(!condition.matches(observation) && !slot.matches(observation, TagLookup.SERVER),
+                    "Other items do not satisfy the piston condition");
+            }
+            var stone = ItemRetrieval.observe(observer.player, new ItemStack(Items.STONE));
+            var tagged = LinkRule.Slot.CODEC.parse(com.mojang.serialization.JsonOps.INSTANCE, com.google.gson.JsonParser.parseString("""
+                {"kind":"observation","name":"stone","conditions":[
+                  {"field":"block_object","operator":"tag","tag":"minecraft:stone_tool_materials"}
+                ]}
+                """)).getOrThrow(false, helper::fail);
+            helper.assertTrue(tagged.matches(stone, (type, field, id, tag) -> type == Observation.Type.BLOCK
+                && field.equals("object") && id.toString().equals("minecraft:stone")),
+                "A block item uses its block identity and the block registry for tag matching");
+            helper.succeed();
+        } finally {
+            observer.discard();
+        }
+    }
+
     @GameTest(template = "empty", timeoutTicks = 90)
     public static void itemsUseSharedSamplingAndOnlyMagnifiedItemsTakeHalfTime(GameTestHelper helper) {
         Observer key = new Observer(helper), glass = new Observer(helper), slot = new Observer(helper), drop = new Observer(helper), block = new Observer(helper);

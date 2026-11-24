@@ -50,7 +50,9 @@ public record FieldCondition(String field, Operator operator, Optional<Observati
             case NOT_APPLICABLE -> actual.state() == ObservationValue.State.NOT_APPLICABLE;
             case TAG -> actual.known() && actual.text().isPresent() && tag.isPresent()
                     && ResourceLocation.tryParse(actual.text().get()) != null
-                    && tags.contains(observation.type(), field, new ResourceLocation(actual.text().get()), tag.get());
+                    && (field.equals("block_object")
+                        ? tags.contains(Observation.Type.BLOCK, "object", new ResourceLocation(actual.text().get()), tag.get())
+                        : tags.contains(observation.type(), field, new ResourceLocation(actual.text().get()), tag.get()));
             default -> value.isPresent() && compare(actual, value.get(), operator);
         };
     }
@@ -68,8 +70,8 @@ public record FieldCondition(String field, Operator operator, Optional<Observati
                 if (value.isPresent() || tag.isPresent()) errors.add(operator + " must not declare value/tag");
             }
             case TAG -> {
-                if (!field.equals("object") && !field.equals("biome"))
-                    errors.add("Tags apply to object or biome fields");
+                if (!field.equals("object") && !field.equals("block_object") && !field.equals("biome"))
+                    errors.add("Tags apply to object, block_object or biome fields");
                 if (tag.isEmpty() || value.isPresent()) errors.add("Tag condition requires tag only");
                 if (field.equals("object") && type.isEmpty())
                     errors.add("Object tag condition requires observation_type");

@@ -128,6 +128,7 @@ public record Observation(UUID recordId, Type type, ResourceLocation object,
         if (!ObservationFields.applies(field, type)) return ObservationValue.notApplicable(valueType);
         return switch (field) {
             case "object" -> ObservationValue.known(object.toString());
+            case "block_object" -> type == Type.BLOCK ? ObservationValue.known(object.toString()) : value("item_block");
             case "type" -> ObservationValue.known(type.name().toLowerCase(java.util.Locale.ROOT));
             case "record_id" -> ObservationValue.known(recordId.toString());
             case "source_kind" -> ObservationValue.known(source.kind());
