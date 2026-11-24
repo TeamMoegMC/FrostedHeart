@@ -27,6 +27,7 @@ import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedresearch.FHResearch;
 import com.teammoeg.frostedresearch.FRSpecialDataTypes;
 import com.teammoeg.frostedresearch.data.TeamResearchData;
+import com.teammoeg.frostedresearch.knowledge.LegacyResearchBridge;
 import com.teammoeg.frostedresearch.research.Research;
 
 import net.minecraft.network.FriendlyByteBuf;
@@ -61,11 +62,8 @@ public class FHEffectTriggerPacket implements CMessage {
             }
             TeamDataHolder data = CTeamDataManager.get(spe);
             TeamResearchData trd = data.getData(FRSpecialDataTypes.RESEARCH_DATA);
-            if (trd.getData(r).isCompleted()) {
-
-                trd.grantEffects(data, spe, r);
-
-            }
+            LegacyResearchBridge.claimItemRewards(data, spe, researchID);
+            if (trd.getData(r).isCompleted()) trd.grantEffects(data, spe, r);
         });
         context.get().setPacketHandled(true);
     }

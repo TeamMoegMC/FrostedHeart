@@ -20,6 +20,7 @@
 | prospecting_upgrade | the_winter_rescue:prospecting | 原六项效果分别承接铁、钢工具配方 |
 | hand_warmer | the_winter_rescue:hand_warmer | 69684c4aa1f4d7a→hand_stove_design。两种炭棒配方公开 |
 | thermos_T1 | the_winter_rescue:thermos | 915e5759ba344d58→thermos_design。旧档案仍可领取完成后未领的实物奖励 |
+| generator_T1 | the_winter_rescue:generator_t1 | 158adfb5d2a649d0→generator_t1_design，91c6a3ae87914f7a→generator_t1_construction。实物奖励沿用原领取状态 |
 
 旧finished承接对应成果并记旧完成信用，不伪造新实验记录；仅已领取某效果则只承接该映射，不能冒充完成。部分旧投入只授予新想法，保留原材料/点数/线索记录，不把百分比换成实验成功。成功导入有回执，重复登录/重载不重放奖励，遗忘导入成果也不强行补回。有效替换映射停用时恢复旧路线，例如整包撤除或目标配方不可用；原投入可重新选择继续。
 
@@ -63,7 +64,7 @@
 | `generator_efficiency_2` | 沿用原研究 | [原定义](../../../TheWinterRescue/config/fhresearches/generator_efficiency_2.json) |
 | `generator_heat_1` | 沿用原研究 | [原定义](../../../TheWinterRescue/config/fhresearches/generator_heat_1.json) |
 | `generator_regain` | 沿用原研究 | [原定义](../../../TheWinterRescue/config/fhresearches/generator_regain.json) |
-| `generator_T1` | 沿用原研究 | [原定义](../../../TheWinterRescue/config/fhresearches/generator_T1.json) |
+| `generator_T1` | 接续为阶段研究，保留塔芯配方、搭建权限和核心奖励 | [能量核心再利用](../knowledge/generator-t1.md) · [原定义](../../../TheWinterRescue/config/fhresearches/generator_T1.json) |
 | `generator_T2` | 沿用原研究 | [原定义](../../../TheWinterRescue/config/fhresearches/generator_T2.json) |
 | `geology_understanding` | 由探矿镐使用研究接替 | [正式流程](../knowledge/prospecting.md) |
 | `hand_warmer` | 由阴燃利用新项目接替 | [正式流程](../knowledge/hand-warmer.md) |

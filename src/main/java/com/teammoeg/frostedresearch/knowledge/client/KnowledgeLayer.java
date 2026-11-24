@@ -26,6 +26,7 @@ import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.*;
 import com.teammoeg.chorda.client.cui.widgets.TextBox;
 import com.teammoeg.frostedresearch.FRNetwork;
+import com.teammoeg.frostedresearch.FHResearch;
 import com.teammoeg.frostedresearch.blocks.DrawingDeskTileEntity;
 import com.teammoeg.frostedresearch.gui.TechIcons;
 import com.teammoeg.frostedresearch.gui.archive.ResearchProjectFrame;
@@ -34,6 +35,7 @@ import com.teammoeg.frostedresearch.knowledge.client.ui.*;
 import com.teammoeg.frostedresearch.knowledge.model.*;
 import com.teammoeg.frostedresearch.knowledge.network.KnowledgeWorkbenchActionPacket;
 import com.teammoeg.frostedresearch.knowledge.network.KnowledgeWorkbenchActionPacket.Action;
+import com.teammoeg.frostedresearch.network.FHEffectTriggerPacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.locale.Language;
@@ -494,6 +496,7 @@ public final class KnowledgeLayer extends UILayer {
         }
         if (creativePreviewBack == null && project.startStatus().equals("LEGACY_COMPLETED")) {
             reading.text(List.of(Component.translatable("knowledge.frostedresearch.research.legacy_completed"), Component.translatable("knowledge.frostedresearch.research.legacy_completed_explain")));
+            addResearchRewardButton(project.id(), x, w, bottom);
             return;
         }
         var run = selectedRun(project.id());
@@ -572,6 +575,7 @@ public final class KnowledgeLayer extends UILayer {
         reading.text(paragraphs);
         if (creativePreviewBack != null) return;
         if (run == null) {
+            if (addResearchRewardButton(project.id(), x, w, bottom)) return;
             boolean startable = project.startStatus().equals("LEARNABLE") && (project.staged() || !requirements.isEmpty());
             button(x, bottom - 23, w, 20, t("research.start"), false,
                     () -> send(Action.START_RESEARCH, List.of(), project.id(), "", ""))
@@ -617,6 +621,15 @@ public final class KnowledgeLayer extends UILayer {
             rebuild();
         });
         reading.setHeight(Math.max(20, reading.getHeight() - (projectTab != 2 || actionable ? 46 : 23)));
+    }
+
+    private boolean addResearchRewardButton(String project, int x, int width, int bottom) {
+        var research = LegacyResearchClient.pendingItemReward(project).map(FHResearch::getResearch);
+        if (research.isEmpty()) return false;
+        button(x, bottom - 23, width, 20, Component.translatable("gui.frostedresearch.research.claim_rewards"), false,
+                () -> FRNetwork.INSTANCE.sendToServer(new FHEffectTriggerPacket(research.get())));
+        reading.setHeight(Math.max(20, reading.getHeight() - 23));
+        return true;
     }
 
     private void requirementAction(KnowledgeJournalData.Requirement requirement, KnowledgeJournalData.Run run, int x, int y, int w) {

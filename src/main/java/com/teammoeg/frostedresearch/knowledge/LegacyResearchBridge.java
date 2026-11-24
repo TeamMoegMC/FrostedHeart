@@ -3,12 +3,15 @@ package com.teammoeg.frostedresearch.knowledge;
 import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
 import com.teammoeg.frostedresearch.FRSpecialDataTypes;
 import com.teammoeg.frostedresearch.FRMain;
+import com.teammoeg.frostedresearch.FHResearch;
 import com.teammoeg.frostedresearch.api.TeamResearchService;
 import com.teammoeg.frostedresearch.data.TeamResearchData;
 import com.teammoeg.frostedresearch.data.ClueData;
 import com.teammoeg.frostedresearch.knowledge.definition.*;
 import com.teammoeg.frostedresearch.knowledge.model.*;
 import com.teammoeg.frostedresearch.knowledge.state.AcquisitionSource;
+import com.teammoeg.frostedresearch.research.effects.EffectItemReward;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.nbt.*;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.server.ServerLifecycleHooks;
@@ -169,8 +172,33 @@ public final class LegacyResearchBridge {
             var receipt = team.getData(FRSpecialDataTypes.RESEARCH_DATA).getVariants().getCompound(RECEIPTS).getCompound(project.toString());
             tag.putBoolean("completed_credit", hasCredit(receipt, old, KnowledgeDefinitions.current().projects().get(project).legacyReplacements().size() == 1));
             tag.putBoolean("partial_idea_granted", receipt.getBoolean("partial_idea_granted"));
+            tag.putBoolean("item_reward_available", !pendingItemRewards(team, old, project).isEmpty());
             list.add(tag);
         }); return list;
+    }
+    private static List<EffectItemReward> pendingItemRewards(TeamDataHolder team, String old, ResourceLocation project) {
+        var definition = KnowledgeDefinitions.current().projects().get(project);
+        if (definition == null || !mapping(definition, old).carryItemRewards()) return List.of();
+        var research = FHResearch.getResearch(old);
+        if (research == null) return List.of();
+        var existing = team.getData(FRSpecialDataTypes.RESEARCH_DATA).getExistingData(old);
+        if (existing.filter(raw -> raw.isCompleted()).isEmpty()
+                && !ResearchRuns.completed(team.getData(FRSpecialDataTypes.KNOWLEDGE_DATA), project)) return List.of();
+        return research.getEffects().stream().filter(EffectItemReward.class::isInstance)
+                .map(EffectItemReward.class::cast)
+                .filter(reward -> existing.filter(raw -> raw.isEffectGranted(reward)).isEmpty())
+                .toList();
+    }
+
+    public static void claimItemRewards(TeamDataHolder team, ServerPlayer player, String old) {
+        var project = replacements().get(old);
+        if (project == null) return;
+        var pending = pendingItemRewards(team, old, project);
+        if (pending.isEmpty()) return;
+        var research = FHResearch.getResearch(old);
+        var data = team.getData(FRSpecialDataTypes.RESEARCH_DATA);
+        pending.forEach(reward -> data.grantEffect(team, research, reward, player));
+        TeamResearchService.sync(team);
     }
     /** Union this subkey alone, keeping unrelated variables and raw legacy progress. */
     public static void mergeReceipts(TeamResearchData target, TeamResearchData source) {

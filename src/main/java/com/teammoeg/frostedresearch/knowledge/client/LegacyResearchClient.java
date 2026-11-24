@@ -12,6 +12,15 @@ public final class LegacyResearchClient {
     }
     public static boolean replaced(String id) { return !replacement(id).isEmpty(); }
     public static boolean completed(String id) { return replacement(id).getBoolean("effective_completed"); }
+    public static java.util.Optional<String> pendingItemReward(String project) {
+        for (Tag tag : KnowledgeClientState.snapshot().getList("legacy_replacements", Tag.TAG_COMPOUND)) {
+            CompoundTag entry = (CompoundTag) tag;
+            if (entry.getString("project").equals(project) && entry.getBoolean("item_reward_available")) {
+                return java.util.Optional.of(entry.getString("research"));
+            }
+        }
+        return java.util.Optional.empty();
+    }
     public static void open(String id) {
         String project = replacement(id).getString("project");
         var minecraft = net.minecraft.client.Minecraft.getInstance();

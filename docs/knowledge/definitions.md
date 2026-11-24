@@ -399,6 +399,8 @@ Construction 的每个 multiblock 必须能由 IE `MultiblockHandler.getByUnique
 队伍加载与登录重新核对。映射成果/想法引用缺席属于桥接局部不可用，不以保留上一快照的方式留住已失效替换。
 其他项目引用错误仍遵守现有原子重载验证。
 
+映射可用 `carry_item_rewards: true` 在新研究详情开放原项目的实物奖励。旧档已完成或新项目已完成的队伍都能领取，领取状态沿用旧项目的效果 nonce。缺省为 false，旧研究已完成队伍仍可走原项目的领奖入口。
+
 运行时桥接和回执语义见 [状态与 API](state-and-api.md#旧研究承接与完成等价查询m3-b)。
 
 ## 有序阶段（M4）
