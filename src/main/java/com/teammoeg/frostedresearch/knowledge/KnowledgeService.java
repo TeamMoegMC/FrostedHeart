@@ -42,6 +42,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.common.MinecraftForge;
 
 import java.util.*;
+import java.util.stream.Stream;
 
 /**
  * 服务器统一知识入口。 / Server authority for learning, forgetting, linking and acquisition.
@@ -213,6 +214,7 @@ public final class KnowledgeService {
         KnowledgeEntry entry = new KnowledgeEntry(KnowledgeAvailability.describe(element), source, -1, KnowledgeAvailability.resultType(key), originalSource);
         state.putInbox(entry);
         state.recordAcquisition(entry);
+        if (observation != null) refreshRecordedObservations();
         committed("receive", entry);
         notifyChanged();
         return result(Status.SUCCESS, key);
@@ -244,6 +246,7 @@ public final class KnowledgeService {
         state.putArchive(entry);
         state.removeInbox(key);
         if (pending == null) state.recordAcquisition(entry);
+        if (pending == null && key.kind() == KnowledgeKey.Kind.OBSERVATION) refreshRecordedObservations();
         committed(operation, entry);
         notifyChanged();
         return result(Status.SUCCESS, key);
@@ -406,6 +409,7 @@ public final class KnowledgeService {
     }
     public void merge(KnowledgeState source) {
         state.merge(source);
+        refreshRecordedObservations();
         clearSupersededProofs();
         notifyChanged();
     }
@@ -524,7 +528,12 @@ public final class KnowledgeService {
      */
     public boolean requirementMet(ResearchHistory run, ProjectRequirement requirement) {
         return switch (requirement.type()) {
-            case MINIGAME, OBSERVATION -> run.stageState().completedTasks().contains(requirement.id());
+            case MINIGAME -> run.stageState().completedTasks().contains(requirement.id());
+            case OBSERVATION -> run.stageState().completedTasks().contains(requirement.id())
+                || requirement.observation().filter(ProjectRequirement.ObservationTask::acceptRecorded)
+                    .filter(task -> Stream.concat(state.archive().entries().values().stream(),
+                            state.inbox().entries().values().stream())
+                        .anyMatch(entry -> task.condition().matches(entry.element()))).isPresent();
             case SAMPLE -> requirement.sample().filter(value -> value.equals(run.samples().get(requirement.id()))).isPresent();
             case CALCULATION -> calculationsDone(run, requirement) >= requirement.count();
             case EXPERIMENT -> experimentsDone(run, requirement) >= requirement.count();
@@ -534,6 +543,17 @@ public final class KnowledgeService {
                         requirement.pattern(), TagLookup.SERVER).isPresent();
             }
         };
+    }
+
+    private void refreshRecordedObservations() {
+        for (var run : ResearchRuns.sorted(state)) {
+            if (!runActive(run) || requirements(run).stream().noneMatch(requirement ->
+                    !run.stageState().completedTasks().contains(requirement.id())
+                        && requirement.observation().filter(ProjectRequirement.ObservationTask::acceptRecorded).isPresent()))
+                continue;
+            var updated = ResearchStages.update(this, run);
+            if (!updated.equals(run)) state.recordResearch(updated);
+        }
     }
 
     /**
@@ -711,7 +731,7 @@ public final class KnowledgeService {
             for(var requirement:requirements(run)) {
                 if(requirement.type()!=ProjectRequirement.Type.OBSERVATION || requirementMet(run,requirement)) continue;
                 var task=requirement.observation().orElseThrow();
-                if(!task.condition().matches(KnowledgeElement.observation(observation))) continue;
+                if(task.acceptRecorded() || !task.condition().matches(KnowledgeElement.observation(observation))) continue;
                 com.teammoeg.frostedresearch.knowledge.experiment.ResearchSampleBinding binding=null;
                 if(task.teamCurrentRun()) {
                     if(observation.type()==Observation.Type.BLOCK && liveBlock!=null && player.serverLevel().hasChunkAt(liveBlock)

@@ -413,7 +413,7 @@ Construction 的每个 multiblock 必须能由 IE `MultiblockHandler.getByUnique
 全部阶段的证据、观察谓词及变体参考知识都会登记观察用途，不等进入阶段才允许观察入档。
 
 新增任务：minigame 的 game 固定 frostedresearch:airflow；observation 的 observation 包含 condition、可选experiment、
-team_current_run（缺省false）。有experiment须team_current_run=true；只接受新鲜采样动作，不能靠学来件/旧笔记完成。
+team_current_run（缺省false）。绑定 experiment 的任务要求 team_current_run=true 和新鲜采样。普通观察任务可设 `accept_recorded: true`，自动检查队伍来件和档案中的匹配记录，并把当前阶段的成功记入研究进度。此选项缺省为 false，且只适用于未绑定本次试验的任务。
 当前队伍样品沿用ResearchSampleBinding四字段，无个人owner；world试件使用位置proof，不把它塞入知识字段。
 
 铜/青铜和碳燃料任选组仍使用已有物品tag谓词，start_all在两组之间取AND；没有新增OR表达式。

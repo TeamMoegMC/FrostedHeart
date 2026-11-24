@@ -19,6 +19,7 @@
 | hand_warmer | the_winter_rescue:hand_warmer | 69684c4aa1f4d7a→hand_stove_design。两种炭棒配方公开 |
 | thermos_T1 | the_winter_rescue:thermos | 915e5759ba344d58→thermos_design。旧档案仍可领取完成后未领的实物奖励 |
 | generator_T1 | the_winter_rescue:generator_t1 | 158adfb5d2a649d0→generator_t1_design，91c6a3ae87914f7a→generator_t1_construction。实物奖励沿用原领取状态 |
+| transmission_machinery | the_winter_rescue:transmission_machinery | 6aa606dd64b94197→shaft_design，7866174699b54cd8→hand_crank_design，afbec057af9c49af→bronze_cogwheel_design，a6ea06ff08b4a27→bronze_large_cogwheel_design |
 
 旧finished承接对应成果并记旧完成信用，不伪造新实验记录；仅已领取某效果则只承接该映射，不能冒充完成。部分旧投入只授予新想法，保留原材料/点数/线索记录，不把百分比换成实验成功。成功导入有回执，重复登录/重载不重放奖励，遗忘导入成果也不强行补回。有效替换映射停用时恢复旧路线，例如整包撤除或目标配方不可用；原投入可重新选择继续。
 

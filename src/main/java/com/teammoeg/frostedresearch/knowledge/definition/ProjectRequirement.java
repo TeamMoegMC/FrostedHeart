@@ -160,11 +160,13 @@ public record ProjectRequirement(String id, Type type, String title, int level, 
         }
     }
 
-    public record ObservationTask(KnowledgeCondition condition,Optional<ResourceLocation> experiment,boolean teamCurrentRun) {
+    public record ObservationTask(KnowledgeCondition condition, Optional<ResourceLocation> experiment,
+                                  boolean teamCurrentRun, boolean acceptRecorded) {
         public static final Codec<ObservationTask> CODEC=RecordCodecBuilder.create(i -> i.group(
             KnowledgeCondition.CODEC.fieldOf("condition").forGetter(ObservationTask::condition),
             KnowledgeKey.strictOptionalField(ResourceLocation.CODEC,"experiment").forGetter(ObservationTask::experiment),
-            field(Codec.BOOL,"team_current_run",false).forGetter(ObservationTask::teamCurrentRun)
+            field(Codec.BOOL,"team_current_run",false).forGetter(ObservationTask::teamCurrentRun),
+            field(Codec.BOOL, "accept_recorded", false).forGetter(ObservationTask::acceptRecorded)
         ).apply(i,ObservationTask::new));
     }
     public ProjectRequirement(String id,Type type,String title,int level,int count,List<LinkRule.Slot> inputs,
@@ -263,6 +265,8 @@ public record ProjectRequirement(String id, Type type, String title, int level, 
                         observation.get().condition().validate(errors);
                         if (observation.get().condition().kind()!=KnowledgeKey.Kind.OBSERVATION) errors.add(id+": observation predicate required");
                         if (observation.get().teamCurrentRun()!=observation.get().experiment().isPresent()) errors.add(id+": experiment requires team_current_run");
+                        if (observation.get().acceptRecorded() && observation.get().teamCurrentRun())
+                            errors.add(id + ": accept_recorded cannot be used for an observation bound to the current run");
                     }
                 }
             }
