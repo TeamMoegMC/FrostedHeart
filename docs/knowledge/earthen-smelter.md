@@ -1,13 +1,13 @@
 # 土制冶炼炉：正式整合包路线
 
 - Status: `Verified`：三配比观察的服务端和正式客户端定向检查通过；使用准备好的材料，不代表完整生存通关。
-- Last verified: `2026-11-23`（炉壁图纸、阶段配方与旧档承接）
+- Last verified: `2026-11-24`（沙的方块与物品观察、炉壁图纸与试烧）
 - Scope: TWR `earthen_smelting` 想法、`earthen_smelter` 项目、两项成果及小炉比较观察路线。
 - Code/data anchors: [小炉与实物提交](trial-kilns-and-samples.md)、[正式项目](../../../TheWinterRescue/kubejs/data/the_winter_rescue/frostedresearch/knowledge/projects/earthen_smelter.json)、[正式想法](../../../TheWinterRescue/kubejs/data/the_winter_rescue/frostedresearch/knowledge/ideas/earthen_smelting.json)、[合金配方](../../../TheWinterRescue/kubejs/server_scripts/src/recipes_types/immersiveengineering/alloy.js)。
 
 ## 玩家操作
 
-1. **准备并开始研究。** 获取铜/锡原矿或碎矿可产生“土制冶炼炉的构想”。也可先观察粗铜并学会入档；在「档案」把这份物品观察放到桌面联络，在绘图台通用页面完成连连看。黏土球和沙观察每缺一项增加一级难度；全缺为2级、齐全为0级，辅助不必摆到桌面，摆入也可正常合成。构想正常自动入档，已取得的构想不再列为候选。研究页要求想法、粗铜观察、黏土球观察、沙观察全部掌握；只有条目确实留在来件中尚未学会时，才需手动学习它。绘图台仍按整合包原有木板、台阶、铜板配方制作。
+1. **准备并开始研究。** 获取铜/锡原矿或碎矿可产生“土制冶炼炉的构想”。也可先观察粗铜并学会入档，把这份物品观察放到桌面联络，在绘图台通用页面完成连连看。黏土球和沙观察每缺一项增加一级难度，全缺为2级，齐全为0级。沙可观察世界中的方块或手里的物品，任一形式入档即可。辅助记录只需学会，摆到桌面也可以正常联络。开始研究需要掌握构想、粗铜、黏土球和沙的观察。
 2. **拼出炉壁截面。** 在绘图台用零件铺满凹槽，可以剩件。确认定稿后，队伍在本次研究期间取得三种未烧小炉的配方。点击进入下一阶段。
 3. **在本次研究中试烧。** 随身 2×2 合成黏土球与沙：3:1 为黏土偏多小炉，1:3 为沙偏多小炉，2:2 为均衡小炉。进入试烧阶段后放置小炉，主手持至少 4 根木棍右键，消耗 4 根，烧制 400 个加载中的游戏 tick（20 TPS 时 20 秒）。均衡炉完好，另两种损坏；三种配比都需要试烧并观察结果。无进行中研究时也能烧，但未绑定的旧样不能用于之后的研究。若多个研究目标同时开放，先空手右键选择，再供燃料。
 4. **比较样品并完成研究。** 烧完后空手右键收取三份样品，按物品提示中的配比区分两种坏样和一种好样，再逐一观察物品。观察会直接完成对应任务，不消耗样品，不必保留或学习入档；也不使用实验台。重复观察同一配比不能代替另一配比。随后完成研究，“土制炉砖设计”和“土制冶炼炉建造”正常自动入档，立即分别取得炉砖配方和正式炉成型权限，无需再找成果来件；只有成果确实留在来件中未学时才手动学习。未烧、未关联、其他队伍或旧研究run的样品不能顶替本次样品；丢失可在当前任务重烧。
@@ -23,7 +23,7 @@
 - 正式定义位于 TWR `kubejs/data/the_winter_rescue/frostedresearch/knowledge/`，随 KubeJS 数据加载；不依赖手动装知识示例包。
 - `the_winter_rescue:research/alloy_kiln_minerals` 标签收录当前合金脚本的四种矿物输入标签：铜/锡 `raw_materials` 和 `crushed_raw_materials`。`kiln_dust` 是配料；石、沙、玻璃原料和黄铜配方中的金属锭不作为本项目矿物获取触发。正式客户端已核对实际 RecipeManager 中唯一的炉砖配方及其材料、产量。
 - 想法 `acquisition.required=[]`，行为获取不强制先有黏土球/沙观察；它们仍是 acquisition.optional，增加行为概率并降低联络连连看难度。主动联络另由 LinkRule.inputs 要求粗铜（minecraft:raw_copper）物品观察，显式 required_knowledge=[]，optional_knowledge 为黏土与沙；不再有本项目的零输入入口。未指定 `chance`，源码默认 `knowledgeBehaviorChance=0.15`，每项已掌握 optional 加 `knowledgeBehaviorOptionalBonus=0.1`，上限 1。联络不计时；缺0/1/2项辅助时，需要完成0/1/2数字的连连看，通关立即结算。
-- `access.start_all` 引用局部条件 `idea`、`raw_copper`、`clay_material`、`sand_material`；观察按 `item` 的 `object` 匹配，不存在固定观察定义 ID。
+- `access.start_all` 引用局部条件 `idea`、`raw_copper`、`clay_material`、`sand_material`。粗铜和黏土球匹配物品观察的 `object`，沙通过 `block_object` 匹配 `minecraft:sand`。想法加成、联络减难和开题使用同一沙条件。
 - `earthen_smelter_design` 为 Design，只解锁稳定 recipe ID；`earthen_smelter_construction` 为 Construction，只解锁 `immersiveengineering:multiblocks/alloy_smelter`。本项目的想法和两成果均为 `understanding=[]`，行为/联络和完成研究通过 `produce` 正常自动学入档；不会要求先使用尚未解锁的设备，也不额外要求手动学习一次成果。
 - 项目声明 `legacy_replacement` 对应旧 `alloy_kiln` 和原两项 effect nonce；旧 JSON 保留。旧完成承接两成果，旧部分投入只授予想法，原投入留存；映射撤除可继续旧路线。详见[状态与 API](state-and-api.md)及[桥接验证记录](../../diary/2026-11-12_15-29-57_research-m3b-legacy-bridge-handoff.md)。
 

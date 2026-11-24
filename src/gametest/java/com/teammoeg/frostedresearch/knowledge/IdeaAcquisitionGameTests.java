@@ -97,7 +97,9 @@ public final class IdeaAcquisitionGameTests {
         java.util.function.Function<String, KnowledgeElement> observe = name -> KnowledgeElement.observation(new Observation(
                 UUID.randomUUID(), Observation.Type.ITEM, new ResourceLocation(name), Map.of(), Observation.Source.command(), Optional.empty()));
         var clay = observe.apply("minecraft:clay_ball");
-        var sand = observe.apply("minecraft:sand");
+        var sandId = new ResourceLocation("minecraft:sand");
+        var sand = KnowledgeElement.observation(new Observation(UUID.randomUUID(), Observation.Type.ITEM,
+                sandId, Map.of("item_block", ObservationValue.known(sandId.toString())), Observation.Source.command(), Optional.empty()));
         var copper = observe.apply("minecraft:raw_copper");
         var earthen = rules.get("earthen_smelting");
         h.assertTrue(LinkMatcher.bindExact(List.of(copper), earthen.pattern(), TagLookup.NONE).isPresent(), "raw copper alone is sufficient for linking");
@@ -161,6 +163,10 @@ public final class IdeaAcquisitionGameTests {
                     && service.state().links().get(id("formal_earthen")).inputs().equals(Map.of("raw_copper", copper.key())),
                     "ordinary win learns the idea and records only mandatory witnesses");
             var bare = service();
+            var placedSand = KnowledgeElement.observation(new Observation(UUID.randomUUID(), Observation.Type.BLOCK,
+                    sandId, Map.of(), Observation.Source.command(), Optional.empty()));
+            service.learn(placedSand, SOURCE, KnowledgeService.Grant.NORMAL);
+            h.assertTrue(KnowledgeLinkSessions.numbers(service, earthen) == 0, "placed sand also removes one ordered number");
             h.assertTrue(KnowledgeLinkSessions.numbers(bare, refractory) == 3, "refractory starts at three numbers");
             for (String material : List.of("frostedheart:kaolin", "frostedheart:bauxite", "minecraft:clay_ball"))
                 bare.learn(observe.apply(material), SOURCE, KnowledgeService.Grant.NORMAL);

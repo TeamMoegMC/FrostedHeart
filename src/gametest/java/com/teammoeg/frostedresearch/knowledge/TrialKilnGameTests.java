@@ -10,6 +10,7 @@ import com.teammoeg.frostedresearch.knowledge.definition.*;
 import com.teammoeg.frostedresearch.knowledge.experiment.*;
 import com.teammoeg.frostedresearch.knowledge.item.ItemRetrieval;
 import com.teammoeg.frostedresearch.knowledge.model.*;
+import com.teammoeg.frostedresearch.knowledge.observation.ObservationSampling;
 import com.teammoeg.frostedresearch.knowledge.state.*;
 import net.minecraft.core.*;
 import net.minecraft.gametest.framework.*;
@@ -58,11 +59,12 @@ public final class TrialKilnGameTests {
                 original.results(), Map.of(), Map.of(), Map.of(FORMAL, project), List.of()));
         } catch (java.io.IOException e) { throw new IllegalStateException(e); }
     }
-    private static UUID beginFormal(KnowledgeService service, ServerPlayer player) {
+    private static UUID beginFormal(KnowledgeService service, ServerPlayer player, BlockPos sandPos) {
         var source = new AcquisitionSource("test_external", Optional.empty(), 42);
         service.learn(KnowledgeElement.idea(new ResourceLocation("the_winter_rescue:earthen_smelting")), source, KnowledgeService.Grant.NORMAL);
-        for (Item item : List.of(Items.RAW_COPPER, Items.CLAY_BALL, Items.SAND))
+        for (Item item : List.of(Items.RAW_COPPER, Items.CLAY_BALL))
             service.learn(ItemRetrieval.observe(player, new ItemStack(item)), source, KnowledgeService.Grant.NORMAL);
+        service.learn(KnowledgeElement.observation(ObservationSampling.block(player, sandPos)), source, KnowledgeService.Grant.NORMAL);
         return service.startResearch(FORMAL).orElseThrow();
     }
     private static boolean taskMet(KnowledgeService service, UUID run, String task) {
@@ -252,7 +254,10 @@ public final class TrialKilnGameTests {
     public static void threeFiredObservationsAreDistinctNonConsumingAndRunBound(GameTestHelper h) {
         var previous = KnowledgeDefinitions.current(); install(); installFormal();
         try (var actor = new PlayerFixture(h)) {
-            var service = KnowledgeService.forPlayer(actor.player); var run = beginFormal(service, actor.player);
+            var sandPos = new BlockPos(1, 1, 2);
+            h.setBlock(sandPos, Blocks.SAND);
+            var service = KnowledgeService.forPlayer(actor.player);
+            var run = beginFormal(service, actor.player, h.absolutePos(sandPos));
             var recipes = TrialKilnSamples.VARIANTS.stream()
                 .map(variant -> new ResourceLocation("frostedresearch", "trial_kiln_" + variant)).toList();
             var team = com.teammoeg.chorda.dataholders.team.CTeamDataManager.get(actor.player);
