@@ -1,7 +1,7 @@
 # 编写研究内容
 
 - Status: `Verified`：本页核对当前数据格式与服务端实现；各正式项目的客户端及游玩验证范围见其操作文档。
-- Last verified: `2026-11-20`（折线图纸校核；其它流程见各自验证记录）
+- Last verified: `2026-11-24`（折线图纸校核；其它流程见各自验证记录）
 - Scope: 数据包内容作者的入口与可复制范例，不替代完整字段参考。
 - Code anchors: [ProjectDefinition](../../src/main/java/com/teammoeg/frostedresearch/knowledge/definition/ProjectDefinition.java)、[StageDefinition](../../src/main/java/com/teammoeg/frostedresearch/knowledge/definition/StageDefinition.java)、[IdeaAcquisitionService.emit](../../src/main/java/com/teammoeg/frostedresearch/knowledge/IdeaAcquisitionService.java)。
 
@@ -49,7 +49,7 @@
 | 1 | 交错 | 2 | 8 | 4 |
 | 2 | 三线 | 3 | 9 | 5 |
 
-底稿已接通 A 线。玩家左键切换空位、正斜镜和反斜镜，右键清除。实心字母表示入口，空框表示出口，点击字母可只看该线，再点恢复全图。盘面提供撤销、恢复底稿、局部批注和同难度换题。三档各有 32 份基础图，开题时随机选择横纵位置、方向与转置。图纸生成与镜片调整均无纸笔消耗。
+左页说明如何将热辐射从实心字母反射到同字母出口。底稿已接通 A 线。玩家左键切换空位、正斜镜和反斜镜，右键清除。实心字母表示入口，空框表示出口，点击字母可只看该线，再点恢复全图。盘面提供撤销、恢复底稿和同难度换题。三档各有 32 份基础图，开题时随机选择横纵位置、方向与转置。图纸生成与镜片调整均无纸笔消耗。
 
 每个任务需要一次定稿。服务器检查镜片总数与所有实际出口，接受任意符合条件的布局。定稿后记录本次研究的任务完成，回到研究页按阶段要求继续。未定稿时，在同一张绘图台上重开同一研究任务会续上上次的题目和镜片。不同绘图台各存自己的草稿，完成情况属于队伍。
 

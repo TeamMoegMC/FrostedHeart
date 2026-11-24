@@ -30,8 +30,8 @@ public final class FoldlineDeskPanel extends DeskMinigamePanel {
     private FoldlineGame game;
     private String mirrors = "";
     private boolean done, unavailable;
-    private int focus = -1, hint = -1;
-    private JournalButton stamp, revert, reset, reroll, note;
+    private int focus = -1;
+    private JournalButton stamp, revert, reset, reroll;
 
     public FoldlineDeskPanel(DrawDeskLayer parent, DrawDeskScreen desk, String run, String task, Component title) {
         super(parent);
@@ -56,7 +56,7 @@ public final class FoldlineDeskPanel extends DeskMinigamePanel {
         if (unavailable) { game = null; return; }
         if (game == null || game.seed != paper.getLong("seed") || game.level != paper.getInt("level")) {
             game = new FoldlineGame(paper.getInt("level"), paper.getLong("seed"));
-            focus = hint = -1;
+            focus = -1;
             undo.clear();
         }
         mirrors = paper.getString("mirrors");
@@ -65,7 +65,6 @@ public final class FoldlineDeskPanel extends DeskMinigamePanel {
     private void edit(String next) {
         if (pending != null || done || next.equals(mirrors)) return;
         undo.push(mirrors);
-        hint = -1;
         send(Action.EDIT_FOLDLINE, next);
     }
     private JournalButton button(String key, int x, int y, int width, Runnable action) {
@@ -77,13 +76,10 @@ public final class FoldlineDeskPanel extends DeskMinigamePanel {
         var grid = new Grid();
         grid.setPosAndSize(2, 15, CELL * 7, CELL * 7); add(grid);
         revert = button("foldline_undo", 129, 64, 79, () -> {
-            if (pending == null && !undo.isEmpty()) { hint = -1; send(Action.EDIT_FOLDLINE, undo.pop()); }
+            if (pending == null && !undo.isEmpty()) send(Action.EDIT_FOLDLINE, undo.pop());
         });
         reset = button("foldline_reset", 129, 82, 79, () -> edit(game.draft));
         reroll = button("foldline_reroll", 129, 100, 79, () -> send(Action.REROLL_FOLDLINE, ""));
-        note = button("foldline_note", 129, 118, 79, () -> {
-            for (int i = 0; i < mirrors.length(); i++) if (mirrors.charAt(i) != game.solution.charAt(i)) { hint = i; break; }
-        });
         stamp = button("foldline_stamp", 2, 142, 100, () -> send(Action.STAMP_FOLDLINE, ""));
         button("airflow_back", 108, 142, 100, desk::closeDeskGame);
     }
@@ -94,7 +90,6 @@ public final class FoldlineDeskPanel extends DeskMinigamePanel {
         boolean edit = game != null && !done && pending == null;
         stamp.setEnabled(edit && game.solved(mirrors)); revert.setEnabled(edit && !undo.isEmpty());
         reroll.setEnabled(edit); reset.setEnabled(edit && !mirrors.equals(game.draft));
-        note.setEnabled(edit && !game.solved(mirrors));
     }
     @Override public void render(GuiGraphics g, int x, int y, int w, int h, RenderingHint rh) {
         super.render(g,x,y,w,h,rh);
@@ -151,14 +146,10 @@ public final class FoldlineDeskPanel extends DeskMinigamePanel {
             }
             for(int i=0;i<game.pads.length;i++) {
                 int xx=cx(x,game.pads[i]), yy=cy(y,game.pads[i]);
-                g.renderOutline(xx-6,yy-6,13,13,hint==i ? 0xFFE29121 : 0xFF9D927C);
+                g.renderOutline(xx-6,yy-6,13,13,0xFF9D927C);
                 char mirror=mirrors.charAt(i);
                 if(mirror!='0') for(int j=-4;j<=4;j++) {
                     int dy=mirror=='1' ? -j : j; g.fill(xx+j,yy+dy,xx+j+1,yy+dy+2,INK);
-                }
-                if(hint==i) {
-                    String glyph=switch(game.solution.charAt(i)) { case '1' -> "/"; case '2' -> "\\"; default -> "·"; };
-                    g.drawString(getFont(),glyph,xx+3,yy-9,0xFFB46517,false);
                 }
             }
             for(int i=0;i<game.entries.length;i++) {
