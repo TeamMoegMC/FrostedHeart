@@ -108,7 +108,7 @@
 | `tetra` | 沿用原研究 | [原定义](../../../TheWinterRescue/config/fhresearches/tetra.json) |
 | `thermos_T1` | 由基础隔热容器新项目接替 | [正式流程](../knowledge/thermos.md) |
 | `thermos_T2` | 沿用原研究 | [原定义](../../../TheWinterRescue/config/fhresearches/thermos_T2.json) |
-| `transmission_machinery` | 沿用原研究 | [原定义](../../../TheWinterRescue/config/fhresearches/transmission_machinery.json) |
+| `transmission_machinery` | 接续为阶段研究，保留旧成果映射 | [传动机械](../knowledge/transmission-machinery.md) · [原定义](../../../TheWinterRescue/config/fhresearches/transmission_machinery.json) |
 | `villager_language` | 沿用原研究 | [原定义](../../../TheWinterRescue/config/fhresearches/villager_language.json) |
 | `wind_utilize` | 沿用原研究 | [原定义](../../../TheWinterRescue/config/fhresearches/wind_utilize.json) |
 | `wool_armor` | 沿用原研究 | [原定义](../../../TheWinterRescue/config/fhresearches/wool_armor.json) |
