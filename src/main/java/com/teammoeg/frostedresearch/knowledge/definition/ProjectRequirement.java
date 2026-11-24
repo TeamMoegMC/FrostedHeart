@@ -252,8 +252,11 @@ public record ProjectRequirement(String id, Type type, String title, int level, 
         if (type != Type.OBSERVATION && observation.isPresent()) errors.add(id+": observation only applies to observation tasks");
         switch (type) {
             case MINIGAME, OBSERVATION -> {
-                if (level!=0 || count!=1 || !inputs.isEmpty() || !conditions.isEmpty() || !distinct.isEmpty()) errors.add(id+": task takes one fresh success");
-                if (type==Type.MINIGAME && (game.isEmpty() || !game.get().equals(new ResourceLocation("frostedresearch:airflow")))) errors.add(id+": unsupported minigame");
+                boolean foldline = type == Type.MINIGAME && game.filter(com.teammoeg.frostedresearch.knowledge.game.FoldlineGame.ID::equals).isPresent();
+                if ((foldline ? level < 0 || level > 2 : level != 0) || count!=1 || !inputs.isEmpty() || !conditions.isEmpty() || !distinct.isEmpty()) errors.add(id+": task takes one fresh success");
+                if (type==Type.MINIGAME && !foldline && game.filter(g -> g.equals(new ResourceLocation("frostedresearch:airflow"))
+                        || g.equals(com.teammoeg.frostedresearch.knowledge.game.NestingGame.PACK)
+                        || g.equals(com.teammoeg.frostedresearch.knowledge.game.NestingGame.FILL)).isEmpty()) errors.add(id+": unsupported minigame");
                 if (type==Type.OBSERVATION) {
                     if (observation.isEmpty()) errors.add(id+": observation definition required");
                     else {

@@ -62,7 +62,7 @@ public final class KnowledgeJournalData {
      * evidence slot; {@code ready} says a full set can be submitted now.
      */
     public record Requirement(String id, String type, Component title, int level, int count, int done, boolean satisfied,
-                              boolean ready, List<Integer> slots, List<KnowledgeKey> bound, int duration, boolean optional, Component method) {
+                              boolean ready, List<Integer> slots, List<KnowledgeKey> bound, int duration, boolean optional, Component method, String game) {
         public boolean sample() { return type.equals("sample"); }
 
         public boolean evidence() {
@@ -209,7 +209,7 @@ public final class KnowledgeJournalData {
             }
             result.add(new Requirement(tag.getString("id"), tag.getString("type"), KnowledgePresentation.text(tag.getString("title")),
                     tag.getInt("level"), tag.getInt("count"), tag.getInt("done"), tag.getBoolean("satisfied"), tag.getBoolean("ready"),
-                    List.copyOf(slots), List.copyOf(bound), tag.getInt("duration"),tag.getBoolean("optional"),requirementMethod(tag)));
+                    List.copyOf(slots), List.copyOf(bound), tag.getInt("duration"),tag.getBoolean("optional"),requirementMethod(tag), tag.getString("game")));
         }
         return List.copyOf(result);
     }

@@ -640,10 +640,15 @@ public final class KnowledgeLayer extends UILayer {
             return;
         }
         if (requirement.type().equals("minigame")) {
-            button(x,y,w,19,t("research.airflow_start"),false,() -> {
+            boolean foldline = isFoldline(requirement);
+            var label = t(minigameKey(requirement) + "_start");
+            button(x,y,w,19,label,false,() -> {
                 if (getParent() instanceof DrawDeskScreen desk) {
                     var project = researchProject(run.project());
-                    desk.openAirflow(run.id(), requirement.id(), project == null ? t("research.airflow_start") : project.title());
+                    var title = project == null ? label : project.title();
+                    if (isNesting(requirement)) desk.openNesting(run.id(), requirement.id(), title, requirement.game().endsWith("_fill"));
+                    else if (foldline) desk.openFoldline(run.id(), requirement.id(), title);
+                    else desk.openAirflow(run.id(), requirement.id(), title);
                 }
             });
             return;
@@ -684,9 +689,22 @@ public final class KnowledgeLayer extends UILayer {
         }
     }
 
+    private static boolean isNesting(KnowledgeJournalData.Requirement r) {
+        return r.game().equals("frostedresearch:nesting_pack") || r.game().equals("frostedresearch:nesting_fill");
+    }
+
+    private static String minigameKey(KnowledgeJournalData.Requirement r) {
+        if (isNesting(r)) return r.game().endsWith("_fill") ? "research.nesting_fill" : "research.nesting_pack";
+        return isFoldline(r) ? "research.foldline" : "research.airflow";
+    }
+
+    private static boolean isFoldline(KnowledgeJournalData.Requirement requirement) {
+        return com.teammoeg.frostedresearch.knowledge.game.FoldlineGame.ID.toString().equals(requirement.game());
+    }
+
     private Component requirementLine(KnowledgeJournalData.Requirement r, boolean started, boolean selected) {
         Component title = r.title().getString().isBlank()
-                ? t(r.type().equals("minigame") ? "research.airflow_start" : r.type().equals("observation") ? "research.observe_target" : r.sample() ? "research.sample" : r.evidence() ? "research.evidence" : r.experiment() ? "research.experiment" : "research.calculation") : r.title();
+                ? t(r.type().equals("minigame") ? minigameKey(r) + "_start" : r.type().equals("observation") ? "research.observe_target" : r.sample() ? "research.sample" : r.evidence() ? "research.evidence" : r.experiment() ? "research.experiment" : "research.calculation") : r.title();
         if(r.optional()) title=title.copy().append(t("research.optional"));
         if (!started) return t("research.line.plain", title);
         Component progress = r.type().equals("minigame") || r.type().equals("observation") ? t(r.satisfied() ? "research.requirement_done" : "research.task_waiting") : r.sample() ? t("research.sample.progress", r.done()) : r.evidence()
@@ -699,7 +717,7 @@ public final class KnowledgeLayer extends UILayer {
     private List<Component> requirementDetails(KnowledgeJournalData.Requirement r) {
         List<Component> lines = new ArrayList<>();
         if(r.type().equals("observation")) return lines;
-        if(r.type().equals("minigame")) { lines.add(t("research.airflow_explain"));return lines; }
+        if(r.type().equals("minigame")) { lines.add(t(minigameKey(r) + "_explain"));return lines; }
         if (r.sample()) { lines.add(t("research.sample.explain")); return lines; }
         if (r.experiment()) {
             lines.add(t("research.experiment.explain", r.duration() / 20));
@@ -1098,7 +1116,7 @@ public final class KnowledgeLayer extends UILayer {
 
     public void receiveReply(CompoundTag payload) {
         if (projectDetails && payload.getString("message").equals("research.start.success")) projectTab = 2;
-        if (payload.contains("airflow")) return; // Late reply after returning from the desk game.
+        if (payload.contains("nesting") || payload.contains("airflow") || payload.getString("action").endsWith("_FOLDLINE")) return; // Late reply after returning from the desk game.
         if (payload.contains("link_state")) {
             String linkState = payload.getString("link_state");
             if (linkState.equals("completed") || linkState.equals("cancelled")) {

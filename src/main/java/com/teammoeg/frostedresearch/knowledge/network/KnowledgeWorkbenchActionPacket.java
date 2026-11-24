@@ -55,7 +55,9 @@ import net.minecraftforge.network.NetworkEvent;
 public final class KnowledgeWorkbenchActionPacket implements CMessage {
     public enum Action {
         REFRESH, LEARN, DELETE, PREVIEW_LINK, LINK, CANCEL_LINK, RETRIEVE, EXPORT, DREAM_TOPIC, DISCUSS,
-        START_RESEARCH, SUBMIT_EVIDENCE, CALCULATE, STOP_CALCULATION, COMPLETE_RESEARCH, ABANDON_RESEARCH, SUBMIT_SAMPLE, ADVANCE_STAGE, START_AIRFLOW, ROTATE_AIRFLOW, RESET_AIRFLOW, DIG_AIRFLOW
+        START_RESEARCH, SUBMIT_EVIDENCE, CALCULATE, STOP_CALCULATION, COMPLETE_RESEARCH, ABANDON_RESEARCH, SUBMIT_SAMPLE, ADVANCE_STAGE, START_AIRFLOW, ROTATE_AIRFLOW, RESET_AIRFLOW, DIG_AIRFLOW,
+        START_FOLDLINE, EDIT_FOLDLINE, STAMP_FOLDLINE, REROLL_FOLDLINE,
+        START_NESTING, EDIT_NESTING, STAMP_NESTING, REROLL_NESTING
     }
 
     public static final int REQUIREMENT_LIMIT = 64;
@@ -197,6 +199,12 @@ public final class KnowledgeWorkbenchActionPacket implements CMessage {
                     response.put("airflow",desk.airflowView());
                     response.putString("message",accepted ? "research.airflow_updated" : "research.unchanged");
                 }
+                case START_FOLDLINE, EDIT_FOLDLINE, STAMP_FOLDLINE, REROLL_FOLDLINE -> {
+                    var view = desk.foldlineAction(player, run(), requirement, action, title, remarks);
+                    response.put("foldline", view);
+                }
+                case START_NESTING, EDIT_NESTING, STAMP_NESTING, REROLL_NESTING ->
+                        response.put("nesting", desk.nestingAction(player, run(), requirement, action, title, remarks));
                 case ADVANCE_STAGE -> {
                     var result=service.advanceStage(run(),requirement);addResult(results,result,service);
                     response.putString("message",result.succeeded() ? "research.stage_advanced" : "research.unmet");

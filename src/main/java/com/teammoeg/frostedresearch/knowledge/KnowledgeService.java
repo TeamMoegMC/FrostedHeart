@@ -363,7 +363,8 @@ public final class KnowledgeService {
     public void initialize() {
         for (var run : ResearchRuns.sorted(state)) if (runActive(run)) {
             var definition=KnowledgeDefinitions.current().projects().get(run.project());
-            var prepared=ResearchStages.prepare(this,run);
+            var saved = definition == null ? run : com.teammoeg.frostedresearch.knowledge.experiment.TrialKilnSamples.adoptDrawingStage(run, definition);
+            var prepared=ResearchStages.prepare(this,saved);
             if (definition != null) prepared=com.teammoeg.frostedresearch.knowledge.experiment.TrialKilnSamples.reconcile(prepared,definition);
             prepared=ResearchStages.update(this,prepared);
             if(!prepared.equals(run)) {
@@ -726,6 +727,12 @@ public final class KnowledgeService {
                     com.teammoeg.frostedresearch.knowledge.experiment.PendingResearchProofs.removeBinding(binding);
             }
         }
+    }
+
+    public OptionalInt minigameLevel(UUID run, String task, ResourceLocation game) {
+        var requirement = openRequirement(state.research().get(run), task, ProjectRequirement.Type.MINIGAME);
+        return requirement != null && requirement.game().filter(game::equals).isPresent()
+                ? OptionalInt.of(requirement.level()) : OptionalInt.empty();
     }
 
     public boolean taskAvailable(UUID runId,String task,ProjectRequirement.Type type) {

@@ -1,9 +1,59 @@
 # 编写研究内容
 
 - Status: `Verified`：本页核对当前数据格式与服务端实现；各正式项目的客户端及游玩验证范围见其操作文档。
-- Last verified: `2026-11-17`（联络连连看；其它流程见既有验证记录）
+- Last verified: `2026-11-20`（折线图纸校核；其它流程见各自验证记录）
 - Scope: 数据包内容作者的入口与可复制范例，不替代完整字段参考。
 - Code anchors: [ProjectDefinition](../../src/main/java/com/teammoeg/frostedresearch/knowledge/definition/ProjectDefinition.java)、[StageDefinition](../../src/main/java/com/teammoeg/frostedresearch/knowledge/definition/StageDefinition.java)、[IdeaAcquisitionService.emit](../../src/main/java/com/teammoeg/frostedresearch/knowledge/IdeaAcquisitionService.java)。
+
+## 绘图台小游戏的开发称呼
+
+| 开发称呼 | 配置 ID | 判定目标 |
+|---|---|---|
+| 风道 | `frostedresearch:airflow` | 让冷风经过炭床并从炉顶排出 |
+| 转镜子 | `frostedresearch:foldline` | 用限额内的镜片将每条线接到同字母出口 |
+| 填满的拼图 | `frostedresearch:nesting_fill` | 铺满整个凹槽，盘内可剩件 |
+| 用完零件的拼图 | `frostedresearch:nesting_pack` | 装入所有零件，槽内可留空 |
+
+「方块拼图」是「填满的拼图」和「用完零件的拼图」的统称。转镜子分 0、1、2 级，例如「手炉用 0 级转镜子」。
+
+## 方块排样
+
+在阶段的 `tasks` 数组中用下列条目要求完成一次排样。使用 `frostedresearch:nesting_pack` 要求把所有零件放入凹槽，允许留空。改用 `frostedresearch:nesting_fill` 则须铺满凹槽，允许剩件。两种模式都使用默认 `level=0`，可在任务外层加 `"optional": true`。
+
+```json
+{ "requirement": { "id": "fit_parts", "type": "minigame", "game": "frostedresearch:nesting_pack" } }
+```
+
+左键点选后放置或直接拖放，R 或「旋转」顺时针转动。右键点槽内零件的任意一格即可整件收回，撤销可恢复上一步。同一绘图台保存每个研究任务的当前排样。可免费换题。满足目标后点击「确认定稿」才记录研究进度。
+
+试玩命令为 `/knowledge grant idea frostedresearch:nesting_debug`。在绘图台打开「调试：方块排样」，两个模式各有一个任务。
+
+## 折线图纸校核
+
+在研究阶段的 `tasks` 数组中加入以下条目。玩家从任务详情点击「校核图纸」。`id` 在项目内唯一，`title` 和外层 `method` 可使用项目自己的语言键。省略标题时显示「校核图纸」。需要可选工作时在 `requirement` 同层设 `"optional": true`。
+
+```json
+{
+  "requirement": {
+    "id": "check_drawing",
+    "type": "minigame",
+    "game": "frostedresearch:foldline",
+    "level": 1
+  }
+}
+```
+
+| level | 图纸 | 线路 | 镜位 | 镜片上限 |
+|---|---|---:|---:|---:|
+| 0（默认） | 双线 | 2 | 7 | 3 |
+| 1 | 交错 | 2 | 8 | 4 |
+| 2 | 三线 | 3 | 9 | 5 |
+
+底稿已接通 A 线。玩家左键切换空位、正斜镜和反斜镜，右键清除。实心字母表示入口，空框表示出口，点击字母可只看该线，再点恢复全图。盘面提供撤销、恢复底稿、局部批注和同难度换题。三档各有 32 份基础图，开题时随机选择横纵位置、方向与转置。图纸生成与镜片调整均无纸笔消耗。
+
+每个任务需要一次定稿。服务器检查镜片总数与所有实际出口，接受任意符合条件的布局。定稿后记录本次研究的任务完成，回到研究页按阶段要求继续。未定稿时，在同一张绘图台上重开同一研究任务会续上上次的题目和镜片。不同绘图台各存自己的草稿，完成情况属于队伍。
+
+试玩命令为 `/knowledge grant idea frostedresearch:foldline_debug`。打开绘图台，在研究页开启「调试：折线图纸」，选任一档点击「校核图纸」。三项都定稿后可完成项目。示例定义见 [foldline_debug.json](../../src/main/resources/data/frostedresearch/frostedresearch/knowledge/projects/foldline_debug.json)。
 
 ## 从现有项目复制
 

@@ -1,6 +1,7 @@
 package com.teammoeg.frostedresearch.knowledge;
 
 import com.google.gson.JsonParser;
+import com.teammoeg.frostedresearch.knowledge.network.KnowledgeWorkbenchActionPacket.Action;
 import com.mojang.authlib.GameProfile;
 import com.mojang.serialization.*;
 import com.teammoeg.frostedresearch.FRContents;
@@ -83,7 +84,7 @@ public final class TrialKilnGameTests {
         return h.getLevel().getEntitiesOfClass(ItemEntity.class, new AABB(h.absolutePos(local)).inflate(1)).stream()
             .filter(e -> e.getItem().is(item)).mapToInt(e -> e.getItem().getCount()).sum();
     }
-    private static final class PlayerFixture implements AutoCloseable {
+    static final class PlayerFixture implements AutoCloseable {
         final ServerPlayer player;
         final io.netty.channel.embedded.EmbeddedChannel channel;
         PlayerFixture(GameTestHelper h) {
@@ -252,6 +253,24 @@ public final class TrialKilnGameTests {
         var previous = KnowledgeDefinitions.current(); install(); installFormal();
         try (var actor = new PlayerFixture(h)) {
             var service = KnowledgeService.forPlayer(actor.player); var run = beginFormal(service, actor.player);
+            var recipes = TrialKilnSamples.VARIANTS.stream()
+                .map(variant -> new ResourceLocation("frostedresearch", "trial_kiln_" + variant)).toList();
+            var team = com.teammoeg.chorda.dataholders.team.CTeamDataManager.get(actor.player);
+            h.assertTrue(recipes.stream().noneMatch(id -> TechnologyAccessResolver.project(team).recipe(id).allowed())
+                && !service.advanceStage(run, "drawing").succeeded(), "drawing gates all three recipes and stage advancement");
+            var deskPos = new BlockPos(1, 1, 1);
+            h.setBlock(deskPos, FRContents.Blocks.DRAWING_DESK.get());
+            var desk = (com.teammoeg.frostedresearch.blocks.DrawingDeskTileEntity) h.getBlockEntity(deskPos);
+            var task = "kiln_wall_drawing";
+            var paper = desk.nestingAction(actor.player, run, task, Action.START_NESTING, "", "");
+            var seed = paper.getLong("seed");
+            var board = new com.teammoeg.frostedresearch.knowledge.game.NestingGame(true, seed);
+            desk.nestingAction(actor.player, run, task, Action.EDIT_NESTING, seed + "/" + paper.getString("pieces"), board.solution);
+            h.assertTrue(desk.nestingAction(actor.player, run, task, Action.STAMP_NESTING, seed + "/" + board.solution, "").getBoolean("done")
+                && recipes.stream().allMatch(id -> TechnologyAccessResolver.project(team).recipe(id).allowed()),
+                "stamping the wall unlocks every mixture");
+            h.assertTrue(service.observationTargets(TrialKilnSamples.experiment("balanced")).isEmpty()
+                && service.advanceStage(run, "drawing").succeeded(), "firing tasks open on entering the next stage");
             int archive = service.state().archive().entries().size();
             var blocks = List.of(FRContents.Blocks.TRIAL_KILN_CLAY_RICH.get(), FRContents.Blocks.TRIAL_KILN_SAND_RICH.get(), FRContents.Blocks.TRIAL_KILN_BALANCED.get());
             var samples = new ArrayList<ItemStack>();
@@ -274,13 +293,13 @@ public final class TrialKilnGameTests {
                 h.assertTrue(!taskMet(service, run, binding.requirement()), "a different run's real sample cannot count");
                 service.observeResearchTarget(actor.player, observation, null, sample);
                 service.observeResearchTarget(actor.player, ItemRetrieval.observe(actor.player, sample).observation().orElseThrow(), null, sample);
-                h.assertTrue(service.state().research().get(run).stageState().completedTasks().size() == i + 1 && sample.getCount() == 1,
+                h.assertTrue(service.state().research().get(run).stageState().completedTasks().size() == i + 2 && sample.getCount() == 1,
                     "repeated observations count one mixture once and never consume it");
                 if (i == 0) h.assertTrue(!taskMet(service, run, "observe_sand_rich"), "clay-rich cracked sample cannot stand in for sand-rich cracked sample");
             }
             h.assertTrue(service.state().archive().entries().size() == archive, "no manual archiving or automatic permanent learning is needed");
             var saved = KnowledgeState.read(service.state().write());
-            h.assertTrue(saved.research().get(run).stageState().completedTasks().size() == 3 && service.requirementsMet(run), "all three observation credits persist and make research ready");
+            h.assertTrue(saved.research().get(run).stageState().completedTasks().size() == 4 && service.requirementsMet(run), "all three observation credits persist and make research ready");
             h.assertTrue(service.finishResearch(run).stream().allMatch(KnowledgeService.OperationResult::succeeded)
                 && service.state().research().get(run).completed() && samples.stream().allMatch(s -> s.getCount() == 1), "normal finish grants the result without consuming samples");
             service.initialize();

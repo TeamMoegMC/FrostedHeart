@@ -40,12 +40,30 @@ public final class TrialKilnSamples {
             ItemRetrieval.registerField(new ResourceLocation("frostedresearch", item), "trial_kiln_variant", TrialKilnSamples::variant);
     }
 
+    /** Existing kiln trials already reached firing before drawings became a prerequisite. */
+    public static ResearchHistory adoptDrawingStage(ResearchHistory run, ProjectDefinition project) {
+        var previous = run.stageState();
+        if (!run.project().equals(new ResourceLocation("the_winter_rescue:earthen_smelter"))
+            || !previous.order().equals(List.of("main"))) return run;
+        var stages = project.orderedStages();
+        if (stages.size() != 2 || !stages.get(0).id().equals("drawing") || !stages.get(1).id().equals("main")) return run;
+        var drawing = stages.get(0);
+        var taskIds = drawing.tasks().stream().map(task -> task.requirement().id()).toList();
+        var state = new StageRunState(List.of("drawing", "main"), "main", previous.visits(),
+            previous.completedTasks(), previous.legacyProgress());
+        state = state.enter("drawing", new StageRunState.Visit("default", taskIds, true, drawing.completionRecipes()));
+        for (String task : taskIds) state = state.success(task);
+        var trial = previous.visits().getOrDefault("main", new StageRunState.Visit("default",
+            stages.get(1).tasks().stream().map(task -> task.requirement().id()).toList(), false, List.of()));
+        return run.withStages(state.enter("main", trial));
+    }
+
     /** Upgrade only the former single-sample route, keeping its intact-sample credit and run identity. */
     public static ResearchHistory reconcile(ResearchHistory run, ProjectDefinition project) {
         if (!run.open()) return run;
-        var stages = project.orderedStages();
-        if (stages.size() != 1 || !stages.get(0).id().equals("main")) return run;
-        var requirements = stages.get(0).tasks().stream().map(task -> task.requirement()).toList();
+        var trial = project.stage("main");
+        if (trial.isEmpty() || !run.stageState().current().equals("main")) return run;
+        var requirements = trial.get().tasks().stream().map(task -> task.requirement()).toList();
         if (requirements.size() != 3) return run;
         var visit = run.stageState().visits().get("main");
         if (visit == null) return run;

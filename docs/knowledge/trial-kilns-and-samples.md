@@ -1,13 +1,13 @@
 # 小炉试烧与研究实物提交
 
 - Status: `Current`（源码与 Forge GameTest 验证范围见最新开发记录；客户端画面、生存获取和独立进程重启另验）
-- Last verified: `2026-11-16`（三种配比观察；消耗提交仍作为通用独立示例）
+- Last verified: `2026-11-23`（正式整合包的配方开放阶段）
 - Scope: M3-A 三组小炉、固定燃料试烧、收取/拆除/保存、当前 run 样品绑定、三配比观察与绘图台实物提交；正式解锁及旧研究承接由[土制冶炼炉](earthen-smelter.md)说明。
 - Code anchors: [TrialKilnBlock](../../src/main/java/com/teammoeg/frostedresearch/knowledge/experiment/TrialKilnBlock.java)、[TrialKilnBlockEntity](../../src/main/java/com/teammoeg/frostedresearch/knowledge/experiment/TrialKilnBlockEntity.java)、[ResearchSampleBinding](../../src/main/java/com/teammoeg/frostedresearch/knowledge/experiment/ResearchSampleBinding.java)、[ProjectRequirement](../../src/main/java/com/teammoeg/frostedresearch/knowledge/definition/ProjectRequirement.java)、[KnowledgeService.submitSample](../../src/main/java/com/teammoeg/frostedresearch/knowledge/KnowledgeService.java)。
 
 ## 制作与试烧
 
-三条 FH 原生 shapeless 配方均直接可用，放在随身 2×2 格中即可，不需要正式炉、工具、水桶、M4 临时权限或额外阶段。
+三条 FH 原生 shapeless 配方均适用于随身 2×2 合成格。TWR 队伍在土制冶炼炉研究中定稿炉壁截面图后获得临时制作权限。
 
 | 方块/同名物品 ID（frostedresearch:） | 黏土球:沙 | 固定结果 |
 |---|---|---|

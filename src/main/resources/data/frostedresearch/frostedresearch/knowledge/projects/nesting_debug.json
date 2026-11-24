@@ -1,0 +1,52 @@
+{
+  "title": "knowledge.frostedresearch.nesting_debug.project",
+  "body": "knowledge.frostedresearch.nesting_debug.body",
+  "results": [
+    "frostedresearch:nesting_debug"
+  ],
+  "access": {
+    "conditions": {
+      "debug": {
+        "kind": "idea",
+        "definition": "frostedresearch:nesting_debug",
+        "title": "knowledge.frostedresearch.nesting_debug.idea"
+      }
+    },
+    "start_all": [
+      "debug"
+    ],
+    "groups": [
+      {
+        "id": "debug",
+        "conditions": [
+          "debug"
+        ],
+        "reveal_any": [
+          "debug"
+        ]
+      }
+    ]
+  },
+  "stages": [
+    {
+      "id": "layout",
+      "title": "knowledge.frostedresearch.nesting_debug.stage",
+      "tasks": [
+        {
+          "requirement": {
+            "id": "pack",
+            "type": "minigame",
+            "game": "frostedresearch:nesting_pack"
+          }
+        },
+        {
+          "requirement": {
+            "id": "fill",
+            "type": "minigame",
+            "game": "frostedresearch:nesting_fill"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -12,7 +12,7 @@
 `ProjectDefinition.stages` 与非空顶层 requirements 互斥；旧平铺任务适配为 main 单阶段，不增加推进点击。
 阶段包含 id/title/objective/method/conclusion、tasks、variants、completion_recipes。
 Task 包装 requirement/optional/method；任务 ID 在项目内唯一，旧 calculation/evidence/experiment/sample 进度键不变。
-新类型 minigame 的 game 为 frostedresearch:airflow；observation 的 observation 包含 condition、可选 experiment、team_current_run。
+绘图台 `minigame` 任务由 `game` 选择盘面。`frostedresearch:airflow` 用于风道，`frostedresearch:foldline` 用于[折线图纸校核](authoring-guide.md#折线图纸校核)。`frostedresearch:nesting_pack` 和 `frostedresearch:nesting_fill` 分别用于[布置零件和拼合衬板](authoring-guide.md#方块排样)。每项小游戏通关一次即可完成对应任务。observation 的 observation 包含 condition、可选 experiment、team_current_run。
 专用试验关联不增加知识记录或 M3 样品字段。
 
 变体按顺序选首个满足项；when.knowledge_all 查询有效入档知识，tasks_all 仅引用先前阶段可选任务的已成功事实。

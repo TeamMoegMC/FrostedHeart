@@ -22,7 +22,7 @@ import static com.teammoeg.frostedresearch.knowledge.client.KnowledgePresentatio
 import static com.teammoeg.frostedresearch.knowledge.client.ui.KnowledgeUiTheme.*;
 
 /** Excavation and continuous wind, hosted on the drawing desk's parchment. */
-public final class AirflowDeskPanel extends UILayer {
+public final class AirflowDeskPanel extends DeskMinigamePanel {
     private static final int CELL = 4, WIND = 0xFF56B9D3;
     private final DrawDeskScreen desk;
     private final String run, task;
@@ -105,7 +105,7 @@ public final class AirflowDeskPanel extends UILayer {
             canvas.last = -1; send(Action.RESET_AIRFLOW, "");
         });
         reset.setPosAndSize(1, 140, 104, 20); add(reset);
-        var back = new JournalButton(this, t("research.airflow_back"), false, desk::closeAirflow);
+        var back = new JournalButton(this, t("research.airflow_back"), false, desk::closeDeskGame);
         back.setPosAndSize(109, 140, 104, 20); add(back);
     }
     @Override public void alignWidgets() {}

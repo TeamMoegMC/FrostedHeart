@@ -1,0 +1,66 @@
+{
+  "title": "knowledge.frostedresearch.foldline_debug.project",
+  "body": "knowledge.frostedresearch.foldline_debug.body",
+  "results": [
+    "frostedresearch:foldline_debug"
+  ],
+  "access": {
+    "conditions": {
+      "debug": {
+        "kind": "idea",
+        "definition": "frostedresearch:foldline_debug",
+        "title": "knowledge.frostedresearch.foldline_debug.idea"
+      }
+    },
+    "start_all": [
+      "debug"
+    ],
+    "groups": [
+      {
+        "id": "debug",
+        "reveal_any": [
+          "debug"
+        ],
+        "conditions": [
+          "debug"
+        ]
+      }
+    ]
+  },
+  "stages": [
+    {
+      "id": "draft",
+      "title": "knowledge.frostedresearch.foldline_debug.stage",
+      "method": "knowledge.frostedresearch.foldline_debug.method",
+      "tasks": [
+        {
+          "requirement": {
+            "id": "foldline_0",
+            "type": "minigame",
+            "game": "frostedresearch:foldline",
+            "level": 0,
+            "title": "knowledge.frostedresearch.foldline_debug.level0"
+          }
+        },
+        {
+          "requirement": {
+            "id": "foldline_1",
+            "type": "minigame",
+            "game": "frostedresearch:foldline",
+            "level": 1,
+            "title": "knowledge.frostedresearch.foldline_debug.level1"
+          }
+        },
+        {
+          "requirement": {
+            "id": "foldline_2",
+            "type": "minigame",
+            "game": "frostedresearch:foldline",
+            "level": 2,
+            "title": "knowledge.frostedresearch.foldline_debug.level2"
+          }
+        }
+      ]
+    }
+  ]
+}

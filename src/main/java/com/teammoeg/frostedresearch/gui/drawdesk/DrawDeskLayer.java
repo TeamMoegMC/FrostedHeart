@@ -58,15 +58,15 @@ public class DrawDeskLayer extends UILayer {
 	@Override
 	public void addUIElements() {
 
-        var airflow = dd.getAirflowPanel();
-        if (airflow != null) {
-            add(airflow);
-            var title = new com.teammoeg.chorda.client.cui.widgets.TextField(this).setMaxWidth(108).setText(airflow.projectTitle());
+        var game = dd.getDeskGame();
+        if (game != null) {
+            add(game);
+            var title = new com.teammoeg.chorda.client.cui.widgets.TextField(this).setMaxWidth(108).setText(game.projectTitle());
             title.setPosAndSize(16, 21, 108, 19);
             add(title);
             var help = new com.teammoeg.chorda.client.cui.widgets.TextField(this)
                 .setMaxWidth(108)
-                .setText(com.teammoeg.frostedresearch.knowledge.client.KnowledgePresentation.t(airflow.statusKey()));
+                .setText(com.teammoeg.frostedresearch.knowledge.client.KnowledgePresentation.t(game.statusKey()));
             help.setPosAndSize(16, 42, 108, 44);
             add(help);
             return;
@@ -160,7 +160,7 @@ public class DrawDeskLayer extends UILayer {
 	@Override
 	public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h, RenderingHint hint) {
 		DrawDeskIcons.Background.draw(matrixStack, x, y, w, h);
-		if (dd.getAirflowPanel() != null) {
+		if (dd.getDeskGame() != null) {
 			// The matching-game grid is baked into Background; other games use the blank parchment.
 			DrawDeskIcons.DIALOG.draw(matrixStack, x + 160, y + 19, 215, 170);
 		}

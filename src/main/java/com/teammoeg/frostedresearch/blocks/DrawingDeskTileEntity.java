@@ -19,6 +19,13 @@
 
 package com.teammoeg.frostedresearch.blocks;
 
+import com.teammoeg.frostedresearch.knowledge.KnowledgeService;
+import com.teammoeg.frostedresearch.knowledge.game.FoldlineGame;
+import com.teammoeg.frostedresearch.knowledge.game.DeskDrawing;
+import com.teammoeg.frostedresearch.knowledge.game.NestingGame;
+import net.minecraft.resources.ResourceLocation;
+import java.util.function.LongFunction;
+import com.teammoeg.frostedresearch.knowledge.network.KnowledgeWorkbenchActionPacket.Action;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Random;
@@ -81,7 +88,7 @@ public class DrawingDeskTileEntity extends CBlockEntity implements MenuProvider 
     public CompoundTag airflowView() { return airflow.view(); }
     public boolean startAirflow(ServerPlayer player,UUID run,String task) {
         var service=com.teammoeg.frostedresearch.knowledge.KnowledgeService.forPlayer(player);
-        if(!service.taskAvailable(run,task,com.teammoeg.frostedresearch.knowledge.definition.ProjectRequirement.Type.MINIGAME)) return false;
+        if(service.minigameLevel(run,task,new net.minecraft.resources.ResourceLocation("frostedresearch:airflow")).isEmpty()) return false;
         var target=new com.teammoeg.frostedresearch.knowledge.experiment.ResearchSampleBinding(service.teamId(),run,task,new net.minecraft.resources.ResourceLocation("frostedresearch:airflow"));
         if(!target.equals(airflowTarget)) { airflowTarget=target;airflow.reset();setChanged(); }
         if(service.state().research().get(run).stageState().completedTasks().contains(task) && !airflow.won()) {
@@ -93,7 +100,7 @@ public class DrawingDeskTileEntity extends CBlockEntity implements MenuProvider 
             java.util.List<com.teammoeg.frostedresearch.knowledge.game.AirflowGame.Stroke> strokes,boolean reset) {
         var service=com.teammoeg.frostedresearch.knowledge.KnowledgeService.forPlayer(player);
         if(airflowTarget==null || !airflowTarget.team().equals(service.teamId()) || !airflowTarget.run().equals(run)
-            || !airflowTarget.requirement().equals(task) || !service.taskAvailable(run,task,com.teammoeg.frostedresearch.knowledge.definition.ProjectRequirement.Type.MINIGAME)) return false;
+            || !airflowTarget.requirement().equals(task) || service.minigameLevel(run,task,airflowTarget.experiment()).isEmpty()) return false;
         var record=service.state().research().get(run);
         if(record.stageState().completedTasks().contains(task)) return false;
         boolean changed=reset;
@@ -103,6 +110,69 @@ public class DrawingDeskTileEntity extends CBlockEntity implements MenuProvider 
         if(airflow.won()) service.recordMinigameWin(run,task,airflowTarget.experiment());
         setChanged();return true;
     }
+    private CompoundTag foldlineDrafts = new CompoundTag();
+
+    public CompoundTag foldlineAction(ServerPlayer player, UUID run, String task, Action action,
+                                      String expected, String layout) {
+        var service = KnowledgeService.forPlayer(player);
+        var level = service.minigameLevel(run, task, FoldlineGame.ID);
+        if (level.isEmpty()) return new CompoundTag();
+        return drawingAction(service, player, run, task, action, expected, layout, FoldlineGame.ID,
+                level.getAsInt(), "mirrors", seed -> new FoldlineGame(level.getAsInt(), seed));
+    }
+
+    public CompoundTag nestingAction(ServerPlayer player, UUID run, String task, Action action, String expected, String layout) {
+        var service = KnowledgeService.forPlayer(player);
+        boolean fill = service.minigameLevel(run, task, NestingGame.FILL).isPresent();
+        if (!fill && service.minigameLevel(run, task, NestingGame.PACK).isEmpty()) return new CompoundTag();
+        return drawingAction(service, player, run, task, action, expected, layout, fill ? NestingGame.FILL : NestingGame.PACK,
+                0, "pieces", seed -> new NestingGame(fill, seed));
+    }
+
+    private CompoundTag drawingAction(KnowledgeService service, ServerPlayer player, UUID run, String task,
+                                      Action action, String expected, String layout, ResourceLocation gameId,
+                                      int level, String field, LongFunction<DeskDrawing> factory) {
+        String group = run.toString();
+        CompoundTag tasks = foldlineDrafts.getCompound(group);
+        CompoundTag paper = tasks.getCompound(task);
+        boolean opening = action == Action.START_FOLDLINE || action == Action.START_NESTING;
+        if (!paper.contains(field) || paper.getInt("level") != level ||
+                !gameId.toString().equals(paper.contains("game") ? paper.getString("game") : FoldlineGame.ID.toString())) {
+            if (!opening) return new CompoundTag();
+            long seed = player.getRandom().nextLong();
+            paper = new CompoundTag();
+            paper.putString("game", gameId.toString());
+            var fresh = factory.apply(seed);
+            paper.putLong("seed", seed);
+            paper.putInt("level", level);
+            paper.putString(field, fresh.initialLayout());
+            tasks.put(task, paper);
+            foldlineDrafts.put(group, tasks);
+            setChanged();
+        }
+        long seed = paper.getLong("seed");
+        var board = factory.apply(seed);
+        String current = paper.getString(field);
+        boolean done = service.state().research().get(run).stageState().completedTasks().contains(task);
+        if (!done && !opening && expected.equals(seed + "/" + current)) {
+            if ((action == Action.EDIT_FOLDLINE || action == Action.EDIT_NESTING) && board.valid(layout)) {
+                paper.putString(field, layout);
+                setChanged();
+            } else if ((action == Action.STAMP_FOLDLINE || action == Action.STAMP_NESTING) && board.solved(current)) {
+                done = service.recordMinigameWin(run, task, gameId).succeeded();
+            } else if (action == Action.REROLL_FOLDLINE || action == Action.REROLL_NESTING) {
+                long next = player.getRandom().nextLong();
+                var fresh = factory.apply(next);
+                paper.putLong("seed", next);
+                paper.putString(field, fresh.initialLayout());
+                setChanged();
+            }
+        }
+        CompoundTag view = paper.copy();
+        view.putBoolean("done", done);
+        return view;
+    }
+
     private UUID calculationRun;
     private String calculationRequirement = "";
     private int calculationLevel = -1;
@@ -223,6 +293,7 @@ public class DrawingDeskTileEntity extends CBlockEntity implements MenuProvider 
 
     @Override
     public void readCustomNBT(CompoundTag nbt, boolean descPacket) {
+        if (!descPacket) foldlineDrafts = nbt.getCompound("foldline_drafts");
         if(nbt.contains("airflow_game")) airflow.load(nbt.getCompound("airflow_game"));
         airflowTarget=nbt.contains("airflow_target") ? com.teammoeg.frostedresearch.knowledge.experiment.ResearchSampleBinding.CODEC.parse(net.minecraft.nbt.NbtOps.INSTANCE,nbt.get("airflow_target")).result().orElse(null) : null;
         if (nbt.contains("gamedata"))
@@ -284,6 +355,7 @@ public class DrawingDeskTileEntity extends CBlockEntity implements MenuProvider 
 
     @Override
     public void writeCustomNBT(CompoundTag nbt, boolean descPacket) {
+        if (!descPacket && !foldlineDrafts.isEmpty()) nbt.put("foldline_drafts", foldlineDrafts.copy());
         nbt.put("airflow_game",airflow.save());
         if(airflowTarget!=null) nbt.put("airflow_target",com.teammoeg.frostedresearch.knowledge.experiment.ResearchSampleBinding.CODEC.encodeStart(net.minecraft.nbt.NbtOps.INSTANCE,airflowTarget).result().orElseThrow());
         nbt.put("gamedata", game.serialize());

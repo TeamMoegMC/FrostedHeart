@@ -57,7 +57,7 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
     private com.teammoeg.frostedresearch.knowledge.client.KnowledgeLayer knowledge;
     private boolean knowledgeOpen;
     private boolean initialSurfaceOpened;
-    private AirflowDeskPanel airflow;
+    private DeskMinigamePanel deskGame;
     private com.teammoeg.frostedresearch.gui.drawdesk.game.ResearchGame linkGame;
     private Component linkTitle = Component.empty();
     private int linkNumbers, linkMissing;
@@ -143,8 +143,8 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
             cancelLinkGame();
             return;
         }
-        if (airflow != null) {
-            closeAirflow();
+        if (deskGame != null) {
+            closeDeskGame();
             return;
         }
         if (knowledge == null) {
@@ -169,7 +169,8 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
         knowledge.openCreativeProject(project, this::showTechTree);
     }
 
-    public AirflowDeskPanel getAirflowPanel() { return airflow; }
+    public AirflowDeskPanel getAirflowPanel() { return deskGame instanceof AirflowDeskPanel airflow ? airflow : null; }
+    public DeskMinigamePanel getDeskGame() { return deskGame; }
 
     public boolean isLinkGameOpen() { return linkGame != null; }
     public Component linkTitle() { return linkTitle; }
@@ -214,20 +215,32 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
     }
 
     public void openAirflow(String run, String task, Component projectTitle) {
+        openDeskGame(new AirflowDeskPanel(p, this, run, task, projectTitle));
+    }
+
+    public void openNesting(String run, String task, Component title, boolean fill) {
+        openDeskGame(new NestingDeskPanel(p, this, run, task, title, fill));
+    }
+
+    public void openFoldline(String run, String task, Component projectTitle) {
+        openDeskGame(new FoldlineDeskPanel(p, this, run, task, projectTitle));
+    }
+
+    private void openDeskGame(DeskMinigamePanel game) {
         getLayerHolder().focusOn(null);
-        airflow = new AirflowDeskPanel(p, this, run, task, projectTitle);
+        deskGame = game;
         knowledgeOpen = false;
         workspaceState.setSurface(ResearchWorkspaceState.Surface.DRAWING_DESK);
         p.closeHelp();
         p.refresh();
         applyWorkspaceSurface();
-        airflow.start();
+        deskGame.start();
     }
 
-    public void closeAirflow() {
-        if (airflow == null) return;
-        airflow.flushPending();
-        airflow = null;
+    public void closeDeskGame() {
+        if (deskGame == null) return;
+        deskGame.flushPending();
+        deskGame = null;
         knowledgeOpen = true;
         p.refresh();
         if (knowledge != null) knowledge.refreshSnapshot();
@@ -235,6 +248,15 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
     }
 
     public boolean receiveAirflowReply(CompoundTag payload) {
+        if (deskGame instanceof NestingDeskPanel nesting && payload.getString("action").endsWith("_NESTING")) {
+            nesting.receive(payload);
+            return true;
+        }
+        if (deskGame instanceof FoldlineDeskPanel foldline && payload.getString("action").endsWith("_FOLDLINE")) {
+            foldline.receive(payload);
+            return true;
+        }
+        var airflow = getAirflowPanel();
         if (airflow == null || !java.util.Set.of("START_AIRFLOW", "ROTATE_AIRFLOW", "RESET_AIRFLOW", "DIG_AIRFLOW").contains(payload.getString("action"))) return false;
         boolean wasWon = airflow.won(), wasFailed = airflow.failed();
         airflow.receive(payload);
@@ -282,7 +304,7 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
 		p.setEnabled(!showArchive);
 		menu.setSlotVisible(!showArchive);
 
-        if (airflow != null || isLinkGameOpen()) for (int index = 0; index < 3; index++)
+        if (deskGame != null || isLinkGameOpen()) for (int index = 0; index < 3; index++)
             if (menu.slots.get(index) instanceof com.teammoeg.chorda.client.cui.menu.DeactivatableSlot slot) slot.setActived(false);
 		if (showArchive) {
 			resizeArchiveToWindow();
@@ -324,7 +346,7 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
 
 	@Override
 	public void onClosed() {
-		if (airflow != null) airflow.flushPending();
+		if (deskGame != null) deskGame.flushPending();
 		restoreExternalWidgets();
 		super.onClosed();
 	}
@@ -373,8 +395,8 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
             cancelLinkGame();
             return;
         }
-        if (airflow != null) {
-            closeAirflow();
+        if (deskGame != null) {
+            closeDeskGame();
             return;
         }
         if (knowledgeOpen) {
@@ -393,7 +415,7 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
 
 	@Override
 	public boolean onKeyPressed(int keyCode, int scanCode, int modifier) {
-        if ((knowledgeOpen || airflow != null) && CInputHelper.isEsc(keyCode)) {
+        if ((knowledgeOpen || deskGame != null) && CInputHelper.isEsc(keyCode)) {
             back();
             return true;
         }
@@ -423,7 +445,7 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
 
 	@Override
 	public void onResearchProgressChanged(String researchId) {
-		if ((airflow != null || isLinkGameOpen()) && knowledge != null) knowledge.refreshSnapshot();
+		if ((deskGame != null || isLinkGameOpen()) && knowledge != null) knowledge.refreshSnapshot();
 		if (archive != null) {
 			archive.onResearchProgressChanged(researchId);
 		}

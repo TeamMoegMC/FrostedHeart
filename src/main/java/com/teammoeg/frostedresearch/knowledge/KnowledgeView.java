@@ -253,6 +253,7 @@ public final class KnowledgeView {
         tag.putString("type", requirement.type().name().toLowerCase(Locale.ROOT));
         tag.putString("title", requirement.title());
         tag.putInt("level", requirement.level());
+        requirement.game().ifPresent(id -> tag.putString("game", id.toString()));
         tag.putInt("count", requirement.count());
         if (requirement.type() == ProjectRequirement.Type.EXPERIMENT) tag.putInt("duration", requirement.duration());
         return tag;
