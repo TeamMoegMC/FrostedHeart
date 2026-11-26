@@ -5,7 +5,7 @@
 - Scope: 《冬季救援》T2 流体运输研究、实验台和旧蒸汽动力前置
 - Code anchors: `the_winter_rescue:fluid_transport`、`frostedresearch:water_collected`、`item.filled_container`、`ExperimentConditions`、`LegacyResearchBridge`
 
-掌握青铜小齿轮设计后，在世界中用桶或陶桶成功盛取普通水可获得想法。也可以在绘图台联络三份物品观察，分别是有内容的液体容器或桶、小齿轮和铜板。旧容器观察缺少内容记录时可重新检视。队伍学会想法并掌握青铜小齿轮设计后开题。
+在世界中用桶或陶桶成功盛取普通水时，每次有 5% 的基础概率获得想法。队伍掌握青铜小齿轮设计时加 20 个百分点，合计 25%。也可以在绘图台联络三份物品观察，分别是有内容的液体容器或桶、小齿轮和铜板。旧容器观察缺少内容记录时可重新检视。队伍学会想法并掌握青铜小齿轮设计后开题。
 
 1. 完成 `frostedresearch:drafting/four_blade_pump` 尺规绘图。
 2. 完成 `frostedresearch:nesting_pack`，把全部零件装进槽内。
