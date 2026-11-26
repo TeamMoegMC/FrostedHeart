@@ -6,6 +6,7 @@
   "refmap": "chorda.refmap.json",
   "plugin": "com.teammoeg.frostedheart.mixin.FrostedHeartMixinPlugin",
   "mixins": [
+    "minecraft.agriculture.BlockItemMixin_CultivatedSapling",
     "minecraft.town.LevelChunkMixin_TownSectionCache",
     "caupona.CauponaBonemealableBlockMixin_CheckTemp",
     "create.HandCrankBlockMixin",

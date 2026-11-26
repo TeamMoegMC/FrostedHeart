@@ -95,3 +95,7 @@
 ## 完整原版树形验证（2026-11-20）
 
 `compileJava`、`compileGameTestJava`及专用`runGameTestServer`成功，36/36项通过；日志`build/cultivated-native-final-validation.log`。包括2912组同种子同尺寸逐块原版对照、75组预算×512独立种子的木头均值、完整树冠／根／装饰／蜂巢来源保留、实际生成64格云杉及樱花不足完整分叉预算继续攒信用。保留温度计、p/v存档、随机刻、肥料和2×2既有回归。详见[完整原版树形与验证数据](cultivated-tree-shapes.md)。先前27／28／30项通过记录是旧版本历史，不代表本次重写的视觉验收。
+
+### 放置预测同步（2026-11-26）
+
+`BlockItemMixin_CultivatedSapling` 在 `BlockItem.getPlacementState` 返回时，将有效的原版树苗放置状态转换为初始栽培状态，客户端预测与服务端一致，避免先显示原版树苗再切换。保留原版放置失败结果与含水状态。`CultivatedSaplingPlacement.placed` 继续为其他触发放置事件的途径提供转换。
