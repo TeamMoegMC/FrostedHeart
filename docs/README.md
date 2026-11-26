@@ -26,6 +26,7 @@ Reusable tests and fixtures live in [src/gametest/](../src/gametest/README.md), 
 ## Library Guides
 
 - [Chorda UI (CUI) 指南](chorda-cui.md): element tree, lifecycle, layout, input, themes, screen adapters, widgets, content panels, pan/zoom viewport, and editors.
+- [CUI 选择器与客户端调试工具](chorda-cui-tools.md)：启动、六条 CUI 命令、反射字段读写、动态子元素增删及完整示例。
 
 Read the system README, then follow its document and code anchors. When behavior, formulas, persistence, networking, configuration, data formats, commands, or cross-system contracts change, update the owning document and record the impact in [`diary/`](../diary/).
 

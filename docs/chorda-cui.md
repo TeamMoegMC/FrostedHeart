@@ -1,7 +1,7 @@
 # Chorda UI (CUI) 指南
 
 - Status: `Current`
-- Last verified: `2026-11-10`
+- Last verified: `2026-11-26`（选择器章节；其余章节沿用原核验）
 - Scope: `com.teammoeg.chorda.client.cui` 的架构、生命周期、布局、输入、主题、适配器、控件库、内容面板、平移缩放视口与编辑器框架
 - Code anchors: [`UIElement`](../src/main/java/com/teammoeg/chorda/client/cui/base/UIElement.java), [`UILayer`](../src/main/java/com/teammoeg/chorda/client/cui/base/UILayer.java), [`PrimaryLayer`](../src/main/java/com/teammoeg/chorda/client/cui/base/PrimaryLayer.java), [`CUIScreenWrapper`](../src/main/java/com/teammoeg/chorda/client/cui/screenadapter/CUIScreenWrapper.java), [`CUIMenuScreenWrapper`](../src/main/java/com/teammoeg/chorda/client/cui/screenadapter/CUIMenuScreenWrapper.java), [`CUIOverlay`](../src/main/java/com/teammoeg/chorda/client/cui/screenadapter/CUIOverlay.java), [`ContentPanel`](../src/main/java/com/teammoeg/chorda/client/cui/contentpanel/ContentPanel.java), [`Theme`](../src/main/java/com/teammoeg/chorda/client/cui/theme/Theme.java), [`PanZoomViewport`](../src/main/java/com/teammoeg/chorda/client/cui/base/PanZoomViewport.java), [`Editor`](../src/main/java/com/teammoeg/chorda/client/cui/editor/Editor.java)
 
@@ -329,3 +329,64 @@ public final class ExampleScreen extends PrimaryLayer {
 
 CUI 是客户端框架，行为验证以实机界面为主；改动后至少确认：界面能打开、滚动条可用、ESC/侧键能返回、
 容器菜单槽位正常、HUD 覆盖层交互条件符合预期。
+
+## 元素选择器
+
+完整命令参数、返回格式、构造器规则及操作示例见 [选择器与客户端调试工具使用手册](chorda-cui-tools.md)。
+
+`UIElement.setName/getName` 提供可选名称，`#name` 匹配名称；`.Button` 等 class
+来自 `getSelectorClasses()`：当前类名（匿名类略过）、当前类直接接口、父类名、父类直接接口，
+依次到 UIElement；不递归接口继承。名称和类名区分大小写，支持 Java 标识符字符及连字符。
+
+`UIElement.querySelector(String)` 在当前子树（包括自身）按子元素顺序深度优先查询，返回首个匹配，可选择任意深度的元素。
+空选择器、无匹配返回 null。支持 `*`、`.Button#confirm` 复合匹配、空格后代路径、
+`>` 直接子节点路径及从 1 开始的 `[n]`。不实现完整浏览器 CSS 语法。
+空格匹配任意深度后代，`>` 仅匹配直接子节点；支持完整 debug selector 回查。
+UILayer 通过子节点钩子逐层委派；叶子匹配完成即返回自身，无后续子层时返回 null。
+`ClientUtils.querySelector(String)` 查询当前打开 Screen 的 CUI 主层，非 CUI Screen 返回 null。
+
+`UIElement.getUniqueSelector()` 生成从根开始、以 ` > ` 连接的唯一路径，debug tooltip 显示
+`Selector:`。每一层按以下优先级选择片段：可解析且在同级唯一的 `#name`；同级唯一的
+`.当前类名`；同级唯一的 `.直接父类名`；最后使用从 1 开始的 `*[n]`。
+匿名类没有当前类名，不以接口或更深的父类名作为候选。唯一性按查询器的实际匹配规则
+检查，包括兄弟节点通过继承或接口匹配到同一类名的情况；name 重复或包含不支持字符时回退。
+例如 `.DrawDeskScreen > .ResearchArchiveLayer > #search`。
+未加入父容器的元素返回 null。名称、类型、树结构及子节点顺序不变时可回查同一元素；
+界面 refresh 重建或这些属性变化后应重新取得路径。
+
+### 开发客户端控制桥
+
+使用 `Scripts/dev_client_bridge.init.gradle` 启动客户端后，可用 `Scripts/agent_client.py` 发送：
+
+- `cui-elements`：当前 CUI 根的直接子元素一层，按子元素顺序返回 `elements` 数组，包含隐藏和禁用元素，不包含根。
+- `cui-query <selector>`：在当前根及所有下级元素中返回首个匹配的 `element`，不受枚举的一层限制，未命中明确返回 JSON null。
+- `cui-get {"selector":".TextBox","field":"name"}`：反射读取字段，查找规则与 set 相同，返回 field、declaringClass、fieldType、value 和元素 debug 信息；null 值保留为 JSON null。
+- `cui-set {"selector":".TextBox","field":"name","value":"search"}`：沿匹配元素的类继承链查找字段（优先最近声明，支持 private），按字段声明类型从 JSON 转换后反射赋值。
+
+元素 debug 数据包含 selector、name、type、classes、parentSelector、title、局部 rect、
+与 UIElement.getScreenX/Y 一致的 screenRect、enabled、visible；不递归嵌套 children。
+非 CUI 界面返回命令错误；set 未匹配、字段不存在、类型不兼容或不可写也返回错误。
+只修改实例字段，不修改 static 字段。set 返回 declaringClass、before、after 和修改后的元素信息；
+标量保持 JSON 类型，其他对象以字符串描述，避免展开 UI 对象图。
+value 使用 Gson 对声明类型的转换，常用值为字符串、数字、布尔、枚举名及引用类型的 null。
+这是直接字段赋值，不调用 setter、不刷新或重建 UI；修改 name 后应使用返回的新 selector 继续查询。
+
+### 动态增加与移除子元素
+
+`cui-remove <selector>` 从匹配元素的直接父 UILayer 调用 `remove(UIElement)`，
+返回移除前的 `removed` debug 信息和更新后的 `parent` 信息。根节点、非容器父节点、
+未命中或容器拒绝操作均返回命令错误。UILayer.remove 清除滚动条引用、使内容尺寸缓存失效并调用 onClosed。
+
+`cui-add {"selector":".ResearchArchiveLayer","class":"com.teammoeg.chorda.client.cui.widgets.TextField","args":[]}`
+在匹配的 UILayer 内构造并添加元素，返回添加后的 `element` debug 信息。
+`class` 必须是 UIElement 子类的全限定名称；构造器第一个参数自动传入选中的父元素，
+`args` 只提供其余参数（可省略，默认为空数组），使用 Gson 按声明的泛型参数类型反序列化。
+不指定签名时，按构造器签名字典序依次尝试参数数量为 args 数量加一、首参兼容父元素的构造器，
+转换或构造失败后继续尝试，全部失败返回各候选失败原因；构造器中的副作用不会自动撤销。
+
+可选 `parameterTypes` 指定完整构造器参数类型列表，**包含父元素参数类型**，例如
+`["com.teammoeg.chorda.client.cui.base.UIElement"]`；此时精确查找，不尝试其他重载。
+类型使用全限定名称或 int、boolean 等基本类型名，支持 `[]` 数组和 `$` 嵌套类名。
+支持非 public 构造器。仅在构造成功后调用容器 add；父元素不支持添加或拒绝 add 时返回错误。
+不会自动 refresh 或重新布局，以免重建界面并覆盖动态修改；新元素使用构造后的实际尺寸与位置。
+增删后索引和类名唯一性可能变化，继续操作前应重新取得 selector。

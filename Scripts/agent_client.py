@@ -27,6 +27,12 @@ Apart from the bridge class, the client has the same mods and data as a plain ./
     scroll <x> <y> <delta>         scroll inside the open screen
     move <x> <y>                   move the in-game cursor (hover/tooltips) without moving the OS cursor
     screen                         describe the open screen: vanilla widgets, container slots, CUI element tree
+    cui-elements                   debug array of direct CUI children only, including hidden elements
+    cui-query <selector>           first matching CUI element at any depth, or null
+    cui-remove <selector>          remove matching element from its direct parent
+    cui-add <JSON>                 construct/add child: selector, class, args, optional parameterTypes
+    cui-get <JSON>                 reflectively read an instance field: selector, field
+    cui-set <JSON>                 reflectively assign an instance field: selector, field, value
     screenshot [name]              save a PNG of the next frame and return its path
     wait <ticks>                   wait for game ticks
     roads setup|populate|status    disposable town-road fixture / real residents / rendering observations

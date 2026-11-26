@@ -80,6 +80,14 @@ public class ClientUtils {
     public static LocalPlayer getLocalPlayer() {
         return getMc().player;
     }
+    /** Queries the currently open CUI screen; returns null for other screens or no match. */
+    public static com.teammoeg.chorda.client.cui.base.UIElement querySelector(String selector) {
+        if (getScreen() instanceof com.teammoeg.chorda.client.cui.screenadapter.CUIScreen screen
+                && screen.getPrimaryLayer() != null)
+            return screen.getPrimaryLayer().querySelector(selector);
+        return null;
+    }
+
     public static Screen getScreen() {
         return getMc().screen;
     }

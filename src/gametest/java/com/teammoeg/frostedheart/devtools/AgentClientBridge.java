@@ -103,7 +103,7 @@ import org.slf4j.Logger;
 public final class AgentClientBridge {
     private static final boolean ENABLED = Boolean.getBoolean("frostedheart.agentBridge");
     private static final Logger LOG = LogUtils.getLogger();
-    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
+    private static final Gson GSON = new GsonBuilder().serializeNulls().setPrettyPrinting().disableHtmlEscaping().create();
     private static final int DEFAULT_TIMEOUT_TICKS = 200;
     private static final int JOIN_TIMEOUT_TICKS = 20 * 300;
     private static final int COMMAND_REPLY_TICKS = 20;
@@ -449,6 +449,79 @@ public final class AgentClientBridge {
                     return j.age >= 2;
                 };
             }
+            case "cui-elements" -> job.tick = (mc, j) -> {
+                List<Map<String, Object>> elements = new ArrayList<>();
+                collectCuiElements(requireCuiRoot(mc), elements);
+                j.out.put("elements", elements);
+                return true;
+            };
+            case "cui-query" -> job.tick = (mc, j) -> {
+                UIElement found = requireCuiRoot(mc).querySelector(rest);
+                j.out.put("element", found == null ? null : cuiDebugInfo(found));
+                return true;
+            };
+            case "cui-remove" -> job.tick = (mc, j) -> {
+                UIElement found = requireCuiRoot(mc).querySelector(rest);
+                if (found == null) throw new IllegalArgumentException("no CUI element matches: " + rest);
+                if (!(found.getParent() instanceof UILayer parent))
+                    throw new IllegalArgumentException("the direct parent does not support removal");
+                Map<String, Object> before = cuiDebugInfo(found);
+                if (!parent.remove(found)) throw new IllegalStateException("parent refused removal");
+                j.out.put("removed", before);
+                j.out.put("parent", cuiDebugInfo(parent));
+                return true;
+            };
+            case "cui-add" -> job.tick = (mc, j) -> {
+                com.google.gson.JsonObject request = com.google.gson.JsonParser.parseString(rest).getAsJsonObject();
+                UIElement found = requireCuiRoot(mc).querySelector(request.get("selector").getAsString());
+                if (found == null) throw new IllegalArgumentException("no CUI parent matches selector");
+                if (!(found instanceof UILayer parent))
+                    throw new IllegalArgumentException("selected element does not support addition");
+                UIElement child = constructCuiElement(parent, request);
+                if (!parent.add(child)) throw new IllegalStateException("parent refused addition");
+                j.out.put("element", cuiDebugInfo(child));
+                return true;
+            };
+            case "cui-get" -> job.tick = (mc, j) -> {
+                com.google.gson.JsonObject request = com.google.gson.JsonParser.parseString(rest).getAsJsonObject();
+                String selector = request.get("selector").getAsString();
+                String fieldName = request.get("field").getAsString();
+                UIElement found = requireCuiRoot(mc).querySelector(selector);
+                if (found == null) throw new IllegalArgumentException("no CUI element matches: " + selector);
+                Field field = cuiField(found.getClass(), fieldName);
+                if (java.lang.reflect.Modifier.isStatic(field.getModifiers()))
+                    throw new IllegalArgumentException("expected an instance field: " + fieldName);
+                field.setAccessible(true);
+                j.out.put("field", fieldName);
+                j.out.put("declaringClass", field.getDeclaringClass().getName());
+                j.out.put("fieldType", field.getGenericType().getTypeName());
+                j.out.put("value", cuiFieldValue(field.get(found)));
+                j.out.put("element", cuiDebugInfo(found));
+                return true;
+            };
+            case "cui-set" -> job.tick = (mc, j) -> {
+                com.google.gson.JsonObject request = com.google.gson.JsonParser.parseString(rest).getAsJsonObject();
+                String selector = request.get("selector").getAsString();
+                String fieldName = request.get("field").getAsString();
+                if (!request.has("value")) throw new IllegalArgumentException("missing value");
+                UIElement found = requireCuiRoot(mc).querySelector(selector);
+                if (found == null) throw new IllegalArgumentException("no CUI element matches: " + selector);
+                Field field = cuiField(found.getClass(), fieldName);
+                if (java.lang.reflect.Modifier.isStatic(field.getModifiers()))
+                    throw new IllegalArgumentException("expected an instance field: " + fieldName);
+                field.setAccessible(true);
+                Object value = GSON.fromJson(request.get("value"), field.getGenericType());
+                if (value == null && field.getType().isPrimitive())
+                    throw new IllegalArgumentException("null cannot be assigned to " + field.getType().getName());
+                Object before = field.get(found);
+                field.set(found, value);
+                j.out.put("field", fieldName);
+                j.out.put("declaringClass", field.getDeclaringClass().getName());
+                j.out.put("before", cuiFieldValue(before));
+                j.out.put("after", cuiFieldValue(field.get(found)));
+                j.out.put("element", cuiDebugInfo(found));
+                return true;
+            };
             case "screen" -> job.tick = (mc, j) -> {
                 j.out.put("screen", describeScreen(mc));
                 return true;
@@ -752,6 +825,124 @@ public final class AgentClientBridge {
             out.put("error", e.toString());
         }
         return out;
+    }
+
+    /** Requires the currently open screen to expose a CUI root. */
+    private static PrimaryLayer requireCuiRoot(Minecraft mc) {
+        if (mc.screen instanceof CUIScreen screen && screen.getPrimaryLayer() != null)
+            return screen.getPrimaryLayer();
+        throw new IllegalStateException("the current screen is not a CUI screen");
+    }
+
+    /** Collects only direct children in order, including invisible and disabled elements. */
+    private static void collectCuiElements(UIElement root, List<Map<String, Object>> out) {
+        if (root instanceof UILayer layer) {
+            for (UIElement child : layer.getElements()) {
+                out.add(cuiDebugInfo(child));
+            }
+        }
+    }
+
+    /** Describes one element without recursively duplicating its descendants. */
+    private static Map<String, Object> cuiDebugInfo(UIElement element) {
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("selector", element.getUniqueSelector());
+        out.put("name", element.getName());
+        out.put("type", typeName(element.getClass()));
+        out.put("classes", element.getSelectorClasses());
+        out.put("parentSelector", element.getParent() == null ? null : element.getParent().getUniqueSelector());
+        out.put("title", element.getTitle().getString());
+        out.put("rect", List.of(element.getX(), element.getY(), element.getWidth(), element.getHeight()));
+        out.put("screenRect", List.of(element.getScreenX(), element.getScreenY(), element.getWidth(), element.getHeight()));
+        out.put("enabled", element.isEnabled());
+        out.put("visible", element.isVisible());
+        return out;
+    }
+
+    /** Constructs a child with the selected parent supplied as the first argument. */
+    private static UIElement constructCuiElement(UIElement parent, com.google.gson.JsonObject request)
+            throws ReflectiveOperationException {
+        Class<?> type = Class.forName(request.get("class").getAsString());
+        if (!UIElement.class.isAssignableFrom(type))
+            throw new IllegalArgumentException("class must extend UIElement: " + type.getName());
+        com.google.gson.JsonArray args = request.has("args") ? request.getAsJsonArray("args")
+                : new com.google.gson.JsonArray();
+        if (request.has("parameterTypes")) {
+            com.google.gson.JsonArray names = request.getAsJsonArray("parameterTypes");
+            Class<?>[] types = new Class<?>[names.size()];
+            for (int i = 0; i < types.length; i++) types[i] = cuiParameterType(names.get(i).getAsString());
+            return invokeCuiConstructor(type.getDeclaredConstructor(types), parent, args);
+        }
+        java.lang.reflect.Constructor<?>[] constructors = type.getDeclaredConstructors();
+        java.util.Arrays.sort(constructors, java.util.Comparator.comparing(java.lang.reflect.Constructor::toGenericString));
+        List<String> failures = new ArrayList<>();
+        for (java.lang.reflect.Constructor<?> constructor : constructors) {
+            Class<?>[] types = constructor.getParameterTypes();
+            if (types.length != args.size() + 1 || !types[0].isInstance(parent)) continue;
+            try {
+                return invokeCuiConstructor(constructor, parent, args);
+            } catch (ReflectiveOperationException | RuntimeException failure) {
+                Throwable cause = failure instanceof InvocationTargetException && failure.getCause() != null
+                        ? failure.getCause() : failure;
+                failures.add(constructor.toGenericString() + ": " + cause);
+            }
+        }
+        throw new IllegalArgumentException("no usable constructor for " + type.getName()
+                + " with parent and " + args.size() + " JSON arguments; attempts=" + failures);
+    }
+
+    /** Converts only the remaining arguments with Gson, preserving generic parameter types. */
+    private static UIElement invokeCuiConstructor(java.lang.reflect.Constructor<?> constructor,
+            UIElement parent, com.google.gson.JsonArray args) throws ReflectiveOperationException {
+        Class<?>[] types = constructor.getParameterTypes();
+        if (types.length != args.size() + 1 || !types[0].isInstance(parent))
+            throw new IllegalArgumentException("constructor requires a compatible parent followed by args");
+        java.lang.reflect.Type[] genericTypes = constructor.getGenericParameterTypes();
+        Object[] values = new Object[types.length];
+        values[0] = parent;
+        for (int i = 1; i < values.length; i++) {
+            values[i] = GSON.fromJson(args.get(i - 1), genericTypes[i]);
+            if (values[i] == null && types[i].isPrimitive())
+                throw new IllegalArgumentException("null cannot be assigned to parameter " + i);
+        }
+        constructor.setAccessible(true);
+        return (UIElement) constructor.newInstance(values);
+    }
+
+    /** Resolves fully qualified reference types, primitive names and Java-style arrays. */
+    private static Class<?> cuiParameterType(String name) throws ClassNotFoundException {
+        if (name.endsWith("[]"))
+            return java.lang.reflect.Array.newInstance(cuiParameterType(name.substring(0, name.length() - 2)), 0).getClass();
+        return switch (name) {
+            case "boolean" -> boolean.class;
+            case "byte" -> byte.class;
+            case "short" -> short.class;
+            case "int" -> int.class;
+            case "long" -> long.class;
+            case "float" -> float.class;
+            case "double" -> double.class;
+            case "char" -> char.class;
+            default -> Class.forName(name);
+        };
+    }
+
+    /** Finds the nearest declared instance field, including private inherited fields. */
+    private static Field cuiField(Class<?> type, String name) throws NoSuchFieldException {
+        for (Class<?> current = type; current != null; current = current.getSuperclass()) {
+            try {
+                return current.getDeclaredField(name);
+            } catch (NoSuchFieldException ignored) {
+                // Continue through the superclass chain.
+            }
+        }
+        throw new NoSuchFieldException(type.getName() + "." + name);
+    }
+
+    /** Keeps scalar field values typed without serializing arbitrary UI object graphs. */
+    private static Object cuiFieldValue(Object value) {
+        if (value == null || value instanceof Number || value instanceof Boolean || value instanceof String)
+            return value;
+        return String.valueOf(value);
     }
 
     private static String typeName(Class<?> type) {
