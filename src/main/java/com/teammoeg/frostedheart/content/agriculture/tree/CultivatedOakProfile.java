@@ -168,7 +168,7 @@ public final class CultivatedOakProfile extends SimpleJsonResourceReloadListener
             int height = CultivatedTreeYield.height(shape, expectedLogs, random);
             var trunk = source.trunkPlacer;
             var builder = new TreeConfiguration.TreeConfigurationBuilder(source.trunkProvider,
-                    new CultivatedNativeTrunkPlacer(trunk, height), source.foliageProvider,
+                    new CultivatedNativeTrunkPlacer(trunk, height, giant), source.foliageProvider,
                     source.foliagePlacer, source.rootPlacer,
                     new net.minecraft.world.level.levelgen.feature.featuresize.TwoLayersFeatureSize(0, 0, 0))
                     .dirt(source.dirtProvider).decorators(source.decorators);
