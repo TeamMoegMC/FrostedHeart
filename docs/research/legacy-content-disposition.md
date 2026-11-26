@@ -1,7 +1,7 @@
 # 旧研究目录与新项目衔接
 
 - Status: `Verified`（目录与现行替换映射）
-- Last verified: `2026-11-24`（探矿工具配方公开）
+- Last verified: `2026-11-26`（流体运输承接）
 - Scope: TWR 旧研究的当前处置、旧存档承接与验证边界。
 - Code anchors: [LegacyResearchBridge](../../src/main/java/com/teammoeg/frostedresearch/knowledge/LegacyResearchBridge.java)、[TeamResearchData](../../src/main/java/com/teammoeg/frostedresearch/data/TeamResearchData.java)、[KnowledgeService](../../src/main/java/com/teammoeg/frostedresearch/knowledge/KnowledgeService.java)。
 
@@ -20,6 +20,7 @@
 | thermos_T1 | the_winter_rescue:thermos | 915e5759ba344d58→thermos_design。旧档案仍可领取完成后未领的实物奖励 |
 | generator_T1 | the_winter_rescue:generator_t1 | 158adfb5d2a649d0→generator_t1_design，91c6a3ae87914f7a→generator_t1_construction。实物奖励沿用原领取状态 |
 | transmission_machinery | the_winter_rescue:transmission_machinery | 6aa606dd64b94197→shaft_design，7866174699b54cd8→hand_crank_design，afbec057af9c49af→bronze_cogwheel_design，a6ea06ff08b4a27→bronze_large_cogwheel_design |
+| fluid_transport | the_winter_rescue:fluid_transport | bb870b08370d472f→fluid_pipe_design，9bb14fc7e47640d6→mechanical_pump_design，31145c0bc7d4435b→fluid_tank_design |
 
 旧finished承接对应成果并记旧完成信用，不伪造新实验记录；仅已领取某效果则只承接该映射，不能冒充完成。部分旧投入只授予新想法，保留原材料/点数/线索记录，不把百分比换成实验成功。成功导入有回执，重复登录/重载不重放奖励，遗忘导入成果也不强行补回。有效替换映射停用时恢复旧路线，例如整包撤除或目标配方不可用；原投入可重新选择继续。
 
@@ -57,7 +58,7 @@
 | `electron_tube` | 沿用原研究 | [原定义](../../../TheWinterRescue/config/fhresearches/electron_tube.json) |
 | `enchantment_table` | 沿用原研究 | [原定义](../../../TheWinterRescue/config/fhresearches/enchantment_table.json) |
 | `fermenter` | 沿用原研究 | [原定义](../../../TheWinterRescue/config/fhresearches/fermenter.json) |
-| `fluid_transport` | 沿用原研究 | [原定义](../../../TheWinterRescue/config/fhresearches/fluid_transport.json) |
+| `fluid_transport` | 由新流体运输项目接替 | [现行流程](../knowledge/fluid-transport.md) · [旧定义](../../../TheWinterRescue/config/fhresearches/fluid_transport.json) |
 | `gain_experience` | 沿用原研究 | [原定义](../../../TheWinterRescue/config/fhresearches/gain_experience.json) |
 | `generator_efficiency_1` | 沿用原研究 | [原定义](../../../TheWinterRescue/config/fhresearches/generator_efficiency_1.json) |
 | `generator_efficiency_2` | 沿用原研究 | [原定义](../../../TheWinterRescue/config/fhresearches/generator_efficiency_2.json) |

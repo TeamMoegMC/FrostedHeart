@@ -377,6 +377,59 @@ public final class IdeaAcquisitionGameTests {
     }
 
     @GameTest(template = "empty", timeoutTicks = 60)
+    public static void successfulWaterCollectionAndContainerEvidence(GameTestHelper h) {
+        var previous = KnowledgeDefinitions.current();
+        var server = h.getLevel().getServer();
+        var player = new ServerPlayer(server, h.getLevel(), new GameProfile(UUID.randomUUID(), "m2-bucket"));
+        var connection = new net.minecraft.network.Connection(net.minecraft.network.protocol.PacketFlow.SERVERBOUND);
+        var channel = new io.netty.channel.embedded.EmbeddedChannel(connection);
+        connection.setProtocol(net.minecraft.network.ConnectionProtocol.PLAY);
+        ResourceLocation eventId = new ResourceLocation("frostedresearch", "water_collected");
+        AtomicInteger collected = new AtomicInteger();
+        java.util.function.Consumer<com.teammoeg.frostedresearch.knowledge.event.KnowledgeBehaviorEvent> listener = event -> {
+            if (event.id().equals(eventId) && event.actor().filter(player.getUUID()::equals).isPresent())
+                collected.incrementAndGet();
+        };
+        try {
+            install(Map.of(id("water"), definition(acquisition(List.of(trigger(eventId, null)), List.of(), List.of()))), Map.of());
+            MinecraftForge.EVENT_BUS.addListener(listener);
+            server.getPlayerList().placeNewPlayer(connection, player);
+            player.setGameMode(net.minecraft.world.level.GameType.SURVIVAL);
+            BlockPos source = new BlockPos(1, 1, 1);
+            BlockPos above = h.absolutePos(source.above());
+            h.setBlock(source.below(), Blocks.STONE);
+            player.teleportTo(h.getLevel(), above.getX() + 0.5, above.getY(), above.getZ() + 0.5, Set.of(), 0, 90);
+            var ceramic = net.minecraftforge.registries.ForgeRegistries.ITEMS.getValue(new ResourceLocation("frostedheart", "ceramic_bucket"));
+            var hand = InteractionHand.MAIN_HAND;
+            for (Item empty : List.of(Items.BUCKET, ceramic)) {
+                player.setItemInHand(hand, new ItemStack(empty));
+                var dry = com.teammoeg.frostedresearch.knowledge.item.ItemRetrieval.behaviorSample(player, player.getItemInHand(hand));
+                h.assertTrue(!dry.observation().orElseThrow().value("item.filled_container").known(), "empty bucket supplies no filled-container evidence");
+                int count = collected.get();
+                player.gameMode.useItem(player, h.getLevel(), player.getItemInHand(hand), hand);
+                h.assertTrue(collected.get() == count, "dry use produces no water collection");
+                h.setBlock(source, Blocks.WATER);
+                player.gameMode.useItem(player, h.getLevel(), player.getItemInHand(hand), hand);
+                h.assertTrue(collected.get() == count + 1, "successful collection emits exactly once for " + empty);
+                var wet = com.teammoeg.frostedresearch.knowledge.item.ItemRetrieval.behaviorSample(player, player.getItemInHand(hand));
+                h.assertTrue(wet.observation().orElseThrow().value("item.filled_container").equals(ObservationValue.known("true")),
+                        "filled bucket supplies the link observation for " + empty);
+                player.gameMode.useItem(player, h.getLevel(), player.getItemInHand(hand), hand);
+                h.assertTrue(collected.get() == count + 1, "pouring does not count as collection");
+                h.setBlock(source, Blocks.AIR);
+            }
+            h.assertTrue(KnowledgeService.forPlayer(player).isActive(KnowledgeKey.idea(id("water"))),
+                    "collection produces the idea");
+            h.succeed();
+        } finally {
+            MinecraftForge.EVENT_BUS.unregister(listener);
+            if (server.getPlayerList().getPlayers().contains(player)) server.getPlayerList().remove(player);
+            channel.finishAndReleaseAll();
+            KnowledgeDefinitions.install(previous);
+        }
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 60)
     public static void realPickupCraftSmeltContainerUseAndInternalMove(GameTestHelper h) {
         var previous = KnowledgeDefinitions.current();
         var server = h.getLevel().getServer();

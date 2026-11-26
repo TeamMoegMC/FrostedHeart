@@ -112,6 +112,8 @@ UUID。方法本身不填充历史记录的缺失信息，也不自动收入来�
 `KnowledgeDefinitions.current().itemRetrievalRules()` 的匹配规则可通过 `nbt_keys` 明确允许复制指定顶层附加 NBT
 键；匹配规则的允许键取并集。选中的内容保存为独立 `itemData` 副本，并以 `item.<key>` 的 SNBT 字符串参与条件匹配，不包含物品堆数量。
 
+检视非空流体容器、药水瓶或装有内容的桶时，`item.filled_container` 记录字符串 `true`，可用于流体运输联络。旧记录或空容器的该字段为未知。
+
 ## 玩家展示（2026-09-08 CUI 更新）
 
 观察聚焦与记录预览使用 Chorda `PrimaryLayer` / `CUIScreenWrapper`，纸页和按钮框沿用研究 UI 素材。按键提示读取实际

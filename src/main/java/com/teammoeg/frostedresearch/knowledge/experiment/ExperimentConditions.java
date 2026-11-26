@@ -162,11 +162,18 @@ public final class ExperimentConditions {
         @Override
         protected void processAirBlock(BlockPos pos) {
             volume++;
+            countBlock(pos);
         }
 
         @Override
         protected void processNonAirBlock(BlockPos pos) {
+            countBlock(pos);
+        }
+
+        private void countBlock(BlockPos pos) {
+            if (wanted.isEmpty()) return;
             BlockState state = world.getBlockState(pos);
+            if (state.isAir()) return;
             for (int i = 0; i < wanted.size(); i++) if (wanted.get(i).matches(state)) counts[i]++;
         }
     }

@@ -57,6 +57,16 @@ public final class ExperimentSpaceGameTests {
         helper.assertTrue(lines.stream().allMatch(ExperimentReport.Line::ok), "the closed room satisfies every line: " + lines);
         helper.assertTrue(lines.get(1).args().get(0).value().equals("1"), "the room holds one air block: " + lines);
 
+        var water = new ProjectRequirement.BlockCount(Optional.of(new ResourceLocation("minecraft", "water")), Optional.empty(), 1);
+        var wetSpace = new ProjectRequirement.Space(true, 1, 8, Optional.empty(), Optional.empty(), List.of(planks, water));
+        var dry = ExperimentConditions.space(helper.getLevel(), helper.absolutePos(table), wetSpace);
+        helper.assertTrue(!dry.get(3).ok(), "an empty room does not satisfy the water condition");
+        helper.setBlock(table.above(), Blocks.WATER);
+        var wet = ExperimentConditions.space(helper.getLevel(), helper.absolutePos(table), wetSpace);
+        helper.assertTrue(wet.stream().allMatch(ExperimentReport.Line::ok) && wet.get(3).args().get(1).value().equals("1"),
+                "one water block in the traversable room counts exactly once: " + wet);
+        helper.setBlock(table.above(), Blocks.AIR);
+
         helper.setBlock(new BlockPos(1, 2, 1), Blocks.AIR);
         var open = ExperimentConditions.space(helper.getLevel(), helper.absolutePos(table), space);
         helper.assertTrue(open.get(0).key().equals("space.open") && !open.get(0).ok(), "an opening to the sky is not enclosed: " + open);

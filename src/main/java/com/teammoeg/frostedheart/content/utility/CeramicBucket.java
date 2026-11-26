@@ -24,6 +24,7 @@ import javax.annotation.Nullable;
 
 import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.item.FHBaseItem;
+import com.teammoeg.frostedresearch.knowledge.KnowledgeBehaviorBridge;
 
 import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.world.item.BucketItem;
@@ -135,7 +136,8 @@ public class CeramicBucket extends FHBaseItem {
 					FluidActionResult res=CUtils.pickupFluidFromWorld(itemstack, pPlayer, pLevel, blockpos,direction,true);
 					if(res.isSuccess()) {
 						ItemStack result=res.getResult();
-						//player.setItemInHand(hand, result);
+						if (pPlayer instanceof ServerPlayer serverPlayer)
+							KnowledgeBehaviorBridge.bucketFilled(serverPlayer, result);
 						return InteractionResultHolder.sidedSuccess(result,pLevel.isClientSide);
 					}
 					return InteractionResultHolder.fail(itemstack);

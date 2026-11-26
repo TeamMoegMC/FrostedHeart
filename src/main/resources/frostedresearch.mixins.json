@@ -19,6 +19,7 @@
     "minecraft.research.ResultContainerMixin_Research",
     "minecraft.research.KnowledgeMenuAcquisitionMixin",
     "minecraft.research.KnowledgeUseAcquisitionMixin",
+    "minecraft.research.FilledBucketTriggerMixin",
     "minecraft.research.KnowledgeItemUseAcquisitionMixin"
   ],
   "client": [

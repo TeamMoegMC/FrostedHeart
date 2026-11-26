@@ -38,6 +38,11 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.MilkBucketItem;
+import net.minecraft.world.item.MobBucketItem;
+import net.minecraft.world.item.PotionItem;
+import net.minecraft.world.item.SolidBucketItem;
+import net.minecraftforge.fluids.FluidUtil;
 
 /**
  * 检索只读取显式声明的附加字段，不复制数量与任意 NBT。
@@ -82,10 +87,24 @@ public final class ItemRetrieval {
                 .forEach(rule -> itemData.merge(rule.copyAllowedData(sample)));
         for (String key : itemData.getAllKeys())
             values.put("item." + key, ObservationValue.known(itemData.get(key).toString()));
+        if (hasContents(sample))
+            values.put("item.filled_container", ObservationValue.known("true"));
         if (sample.canPerformAction(ToolCompat.proPick))
             values.put("item.prospector_pick", ObservationValue.known("true"));
         Observation.Source source = new Observation.Source("item_retrieval", Optional.of(player.getUUID()), Optional.empty(), Optional.empty(), Optional.empty());
         return KnowledgeElement.observation(new Observation(UUID.randomUUID(), Observation.Type.ITEM, item, values, source, itemData.isEmpty() ? Optional.empty() : Optional.of(itemData)));
+    }
+
+    private static boolean hasContents(ItemStack sample) {
+        if (sample.getItem() instanceof MilkBucketItem || sample.getItem() instanceof MobBucketItem
+                || sample.getItem() instanceof PotionItem || sample.getItem() instanceof SolidBucketItem)
+            return true;
+        return FluidUtil.getFluidHandler(sample).map(handler -> {
+            for (int tank = 0; tank < handler.getTanks(); tank++) {
+                if (!handler.getFluidInTank(tank).isEmpty()) return true;
+            }
+            return false;
+        }).orElse(false);
     }
 
     public static boolean canObserve(ItemStack stack) {

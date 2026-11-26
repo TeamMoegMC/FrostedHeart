@@ -7,6 +7,10 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.material.Fluids;
+import net.minecraftforge.common.util.FakePlayer;
+import net.minecraftforge.fluids.FluidUtil;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -17,6 +21,7 @@ import java.util.*;
 public final class KnowledgeBehaviorBridge {
     private static final ResourceLocation COLD_AFTER_COPPER = new ResourceLocation("frostedheart", "cold_after_copper");
     private static final ResourceLocation COPPER_ADVANCEMENT = new ResourceLocation("create", "copper");
+    private static final ResourceLocation WATER_COLLECTED = new ResourceLocation("frostedresearch", "water_collected");
     private static final ThreadLocal<List<IdeaAcquisitionService.Signal>> USE = new ThreadLocal<>();
     public static void beginUse() { USE.set(new ArrayList<>()); }
     public static void itemUsed(ServerPlayer player, ItemStack stack) {
@@ -36,6 +41,13 @@ public final class KnowledgeBehaviorBridge {
     }
     public static boolean interested(net.minecraft.resources.ResourceLocation event) {
         return !com.teammoeg.frostedresearch.knowledge.definition.KnowledgeDefinitions.current().behaviorIdeas(event).isEmpty();
+    }
+    public static void bucketFilled(ServerPlayer player, ItemStack filled) {
+        if (player instanceof FakePlayer || !interested(WATER_COLLECTED)) return;
+        if (filled.is(Items.WATER_BUCKET) || FluidUtil.getFluidContained(filled)
+                .filter(fluid -> fluid.getFluid() == Fluids.WATER).isPresent()) {
+            IdeaAcquisitionService.emit(player, WATER_COLLECTED, Optional.empty());
+        }
     }
     public static void coldAfterCopper(ServerPlayer player) {
         if (!interested(COLD_AFTER_COPPER)) return;
