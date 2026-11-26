@@ -222,6 +222,10 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
         openDeskGame(new NestingDeskPanel(p, this, run, task, title, fill));
     }
 
+    public void openDraft(String run, String task, Component title) {
+        openDeskGame(new DraftingDeskPanel(p,this,run,task,title));
+    }
+
     public void openFoldline(String run, String task, Component projectTitle) {
         openDeskGame(new FoldlineDeskPanel(p, this, run, task, projectTitle));
     }
@@ -248,6 +252,10 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
     }
 
     public boolean receiveAirflowReply(CompoundTag payload) {
+        if (deskGame instanceof DraftingDeskPanel draft && payload.contains("draft")) {
+            draft.receive(payload);
+            return true;
+        }
         if (deskGame instanceof NestingDeskPanel nesting && payload.getString("action").endsWith("_NESTING")) {
             nesting.receive(payload);
             return true;

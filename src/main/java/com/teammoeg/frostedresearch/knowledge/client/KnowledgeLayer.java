@@ -647,6 +647,7 @@ public final class KnowledgeLayer extends UILayer {
                     var project = researchProject(run.project());
                     var title = project == null ? label : project.title();
                     if (isNesting(requirement)) desk.openNesting(run.id(), requirement.id(), title, requirement.game().endsWith("_fill"));
+                    else if (isDraft(requirement)) desk.openDraft(run.id(), requirement.id(), title);
                     else if (foldline) desk.openFoldline(run.id(), requirement.id(), title);
                     else desk.openAirflow(run.id(), requirement.id(), title);
                 }
@@ -693,7 +694,12 @@ public final class KnowledgeLayer extends UILayer {
         return r.game().equals("frostedresearch:nesting_pack") || r.game().equals("frostedresearch:nesting_fill");
     }
 
+    private static boolean isDraft(KnowledgeJournalData.Requirement r) {
+        return com.teammoeg.frostedresearch.knowledge.game.DraftingSheet.matches(net.minecraft.resources.ResourceLocation.tryParse(r.game()));
+    }
+
     private static String minigameKey(KnowledgeJournalData.Requirement r) {
+        if (isDraft(r)) return "research.drafting";
         if (isNesting(r)) return r.game().endsWith("_fill") ? "research.nesting_fill" : "research.nesting_pack";
         return isFoldline(r) ? "research.foldline" : "research.airflow";
     }

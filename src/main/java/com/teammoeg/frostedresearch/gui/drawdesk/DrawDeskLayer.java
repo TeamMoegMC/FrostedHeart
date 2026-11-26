@@ -61,6 +61,7 @@ public class DrawDeskLayer extends UILayer {
         var game = dd.getDeskGame();
         if (game != null) {
             add(game);
+            if (game instanceof DraftingDeskPanel) return;
             var title = new com.teammoeg.chorda.client.cui.widgets.TextField(this).setMaxWidth(108).setText(game.projectTitle());
             title.setPosAndSize(16, 21, 108, 19);
             add(title);

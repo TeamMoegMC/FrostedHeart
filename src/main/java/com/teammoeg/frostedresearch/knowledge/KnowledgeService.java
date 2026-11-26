@@ -749,6 +749,11 @@ public final class KnowledgeService {
         }
     }
 
+    public Optional<ResourceLocation> minigameId(UUID run, String task) {
+        var requirement = openRequirement(state.research().get(run), task, ProjectRequirement.Type.MINIGAME);
+        return requirement == null ? Optional.empty() : requirement.game();
+    }
+
     public OptionalInt minigameLevel(UUID run, String task, ResourceLocation game) {
         var requirement = openRequirement(state.research().get(run), task, ProjectRequirement.Type.MINIGAME);
         return requirement != null && requirement.game().filter(game::equals).isPresent()

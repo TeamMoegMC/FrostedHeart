@@ -57,7 +57,8 @@ public final class KnowledgeWorkbenchActionPacket implements CMessage {
         REFRESH, LEARN, DELETE, PREVIEW_LINK, LINK, CANCEL_LINK, RETRIEVE, EXPORT, DREAM_TOPIC, DISCUSS,
         START_RESEARCH, SUBMIT_EVIDENCE, CALCULATE, STOP_CALCULATION, COMPLETE_RESEARCH, ABANDON_RESEARCH, SUBMIT_SAMPLE, ADVANCE_STAGE, START_AIRFLOW, ROTATE_AIRFLOW, RESET_AIRFLOW, DIG_AIRFLOW,
         START_FOLDLINE, EDIT_FOLDLINE, STAMP_FOLDLINE, REROLL_FOLDLINE,
-        START_NESTING, EDIT_NESTING, STAMP_NESTING, REROLL_NESTING
+        START_NESTING, EDIT_NESTING, STAMP_NESTING, REROLL_NESTING,
+        OPEN_DRAFT, EDIT_DRAFT, CHECK_DRAFT, TIMER_DRAFT
     }
 
     public static final int REQUIREMENT_LIMIT = 64;
@@ -98,7 +99,7 @@ public final class KnowledgeWorkbenchActionPacket implements CMessage {
         keys = buffer.readList(buf -> new KnowledgeKey(buf.readEnum(KnowledgeKey.Kind.class), buf.readUtf()));
         rule = buffer.readUtf();
         title = buffer.readUtf(ResearchNotes.TITLE_LIMIT);
-        remarks = buffer.readUtf(ResearchNotes.REMARKS_LIMIT);
+        remarks = buffer.readUtf(action == Action.EDIT_DRAFT ? 32767 : ResearchNotes.REMARKS_LIMIT);
         requirement = buffer.readUtf(REQUIREMENT_LIMIT);
     }
 
@@ -113,7 +114,7 @@ public final class KnowledgeWorkbenchActionPacket implements CMessage {
         });
         buffer.writeUtf(rule);
         buffer.writeUtf(title, ResearchNotes.TITLE_LIMIT);
-        buffer.writeUtf(remarks, ResearchNotes.REMARKS_LIMIT);
+        buffer.writeUtf(remarks, action == Action.EDIT_DRAFT ? 32767 : ResearchNotes.REMARKS_LIMIT);
         buffer.writeUtf(requirement, REQUIREMENT_LIMIT);
     }
 
@@ -205,6 +206,8 @@ public final class KnowledgeWorkbenchActionPacket implements CMessage {
                 }
                 case START_NESTING, EDIT_NESTING, STAMP_NESTING, REROLL_NESTING ->
                         response.put("nesting", desk.nestingAction(player, run(), requirement, action, title, remarks));
+                case OPEN_DRAFT, EDIT_DRAFT, CHECK_DRAFT, TIMER_DRAFT ->
+                    response.put("draft", desk.draftAction(service, run(), requirement, action, title, remarks));
                 case ADVANCE_STAGE -> {
                     var result=service.advanceStage(run(),requirement);addResult(results,result,service);
                     response.putString("message",result.succeeded() ? "research.stage_advanced" : "research.unmet");

@@ -258,6 +258,7 @@ public record ProjectRequirement(String id, Type type, String title, int level, 
                 if ((foldline ? level < 0 || level > 2 : level != 0) || count!=1 || !inputs.isEmpty() || !conditions.isEmpty() || !distinct.isEmpty()) errors.add(id+": task takes one fresh success");
                 if (type==Type.MINIGAME && !foldline && game.filter(g -> g.equals(new ResourceLocation("frostedresearch:airflow"))
                         || g.equals(com.teammoeg.frostedresearch.knowledge.game.NestingGame.PACK)
+                        || com.teammoeg.frostedresearch.knowledge.game.DraftingSheet.matches(g)
                         || g.equals(com.teammoeg.frostedresearch.knowledge.game.NestingGame.FILL)).isEmpty()) errors.add(id+": unsupported minigame");
                 if (type==Type.OBSERVATION) {
                     if (observation.isEmpty()) errors.add(id+": observation definition required");

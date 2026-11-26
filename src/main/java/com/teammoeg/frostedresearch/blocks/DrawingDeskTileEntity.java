@@ -21,6 +21,7 @@ package com.teammoeg.frostedresearch.blocks;
 
 import com.teammoeg.frostedresearch.knowledge.KnowledgeService;
 import com.teammoeg.frostedresearch.knowledge.game.FoldlineGame;
+import com.teammoeg.frostedresearch.knowledge.game.DraftingSheet;
 import com.teammoeg.frostedresearch.knowledge.game.DeskDrawing;
 import com.teammoeg.frostedresearch.knowledge.game.NestingGame;
 import net.minecraft.resources.ResourceLocation;
@@ -111,6 +112,61 @@ public class DrawingDeskTileEntity extends CBlockEntity implements MenuProvider 
         setChanged();return true;
     }
     private CompoundTag foldlineDrafts = new CompoundTag();
+
+    public CompoundTag draftAction(KnowledgeService service, UUID run, String task, Action action,
+                                   String revision, String layout) {
+        var game = service.minigameId(run, task).filter(DraftingSheet::matches);
+        if (game.isEmpty()) return new CompoundTag();
+        ResourceLocation id = game.get();
+        var resource = new ResourceLocation(id.getNamespace(), id.getPath() + ".json");
+        var tasks = foldlineDrafts.getCompound(run.toString());
+        var paper = tasks.getCompound(task);
+        try (var reader = getLevel().getServer().getResourceManager().openAsReader(resource)) {
+            var definition = com.google.gson.JsonParser.parseReader(reader).getAsJsonObject();
+            var sheet = DraftingSheet.read(definition);
+            if (!paper.getString("game").equals(id.toString())) {
+                if (action != Action.OPEN_DRAFT) return new CompoundTag();
+                paper = new CompoundTag();
+                paper.putString("game", id.toString());
+                paper.putString("ink", "[]");
+                tasks.put(task, paper);
+                foldlineDrafts.put(run.toString(), tasks);
+                setChanged();
+            }
+            boolean done = service.state().research().get(run).stageState().completedTasks().contains(task);
+            int version = paper.getInt("revision");
+            long now = getLevel().getGameTime();
+            if (!done && revision.equals(Integer.toString(version))) {
+                if (action == Action.EDIT_DRAFT) {
+                    DraftingSheet.curves(com.google.gson.JsonParser.parseString(layout).getAsJsonArray());
+                    paper.putString("ink", layout);
+                } else if (action == Action.TIMER_DRAFT) {
+                    if (paper.contains("until")) paper.remove("until");
+                    else paper.putLong("until", now + sheet.seconds()*20L);
+                } else if (action == Action.CHECK_DRAFT) {
+                    boolean timed = paper.contains("until") && now >= paper.getLong("until");
+                    var ink = DraftingSheet.curves(com.google.gson.JsonParser.parseString(paper.getString("ink")).getAsJsonArray());
+                    if (timed || sheet.gaps(ink).isEmpty()) {
+                        done = service.recordMinigameWin(run,task,id).succeeded();
+                        if (timed && done) paper.putString("ink", DraftingSheet.encode(sheet.targets()));
+                        if (done) paper.remove("until");
+                    }
+                }
+                if (action != Action.OPEN_DRAFT) {
+                    paper.putInt("revision", version+1);
+                    setChanged();
+                }
+            }
+            var view = paper.copy();
+            if (action == Action.OPEN_DRAFT) view.putString("sheet", definition.toString());
+            view.putBoolean("done", done);
+            view.putLong("remaining", paper.contains("until") ? Math.max(0, paper.getLong("until")-now) : -1);
+            return view;
+        } catch (java.io.IOException | RuntimeException e) {
+            com.teammoeg.frostedresearch.FRMain.LOGGER.warn("Cannot read draft {} for {}", resource, task, e);
+            return new CompoundTag();
+        }
+    }
 
     public CompoundTag foldlineAction(ServerPlayer player, UUID run, String task, Action action,
                                       String expected, String layout) {
