@@ -15,7 +15,7 @@ import java.util.*;
 import static com.teammoeg.frostedresearch.knowledge.game.DraftingGeometry.*;
 
 public final class DraftingDeskPanel extends DeskMinigamePanel {
-    private enum Tool { SEGMENT, LINE, RAY, CIRCLE, SPAN, ANGLE, BOX, POINT, DISTANCE, ERASE, REMOVE }
+    private enum Tool { CIRCLE, FIXED, SPAN, SEGMENT, LINE, RAY, ANGLE, BOX, POINT, DISTANCE, ERASE, REMOVE }
     private static final int CX=96,CY=99,HALF=82, LEFT=191, ROW=14;
     private final DrawDeskScreen desk;
     private final String run, task;
@@ -65,6 +65,11 @@ public final class DraftingDeskPanel extends DeskMinigamePanel {
         gaps=sheet.gaps(ink);
         List<Curve> good=new ArrayList<>(),extra=new ArrayList<>(), guides=new ArrayList<>(axes());
         Set<P> points=new LinkedHashSet<>(sheet.datums());
+        for (Curve target : sheet.targets()) {
+            points.add(target.at(0));
+            points.add(target.at(1));
+            for (Curve axis : guides) points.addAll(intersections(target, axis));
+        }
         for(Curve c:ink) {
             points.add(c.a()); points.add(c.at(0)); points.add(c.at(1));
             for(Curve g:guides) points.addAll(intersections(c,g));
@@ -151,16 +156,20 @@ public final class DraftingDeskPanel extends DeskMinigamePanel {
         if(tool==Tool.ERASE || tool==Tool.REMOVE) { erase(raw); return; }
         P p=locate(raw);
         List<Curve> next=new ArrayList<>(ink);
-        if(tool==Tool.CIRCLE) next.add(Curve.arc(p,radius,0,360));
+        if(tool==Tool.FIXED) next.add(Curve.arc(p,radius,0,360));
         else if(tool==Tool.POINT) next.add(Curve.line(p,p));
         else if(anchors.isEmpty()) { anchors.add(p); return; }
         else {
             P a=anchors.get(0);
             if(p.dist(a)<EPS) return;
             switch(tool) {
+                case CIRCLE -> {
+                    radius = a.dist(p);
+                    next.add(Curve.arc(a, radius, 0, 360));
+                }
                 case SEGMENT,LINE,RAY -> next.add(ruled(a,p));
                 case DISTANCE -> feedback=String.format(Locale.ROOT,"%.2f mm",p.dist(a));
-                case SPAN -> { radius=p.dist(a); tool=Tool.CIRCLE; }
+                case SPAN -> { radius=p.dist(a); tool=Tool.FIXED; }
                 case ANGLE -> {
                     double angle=Math.atan2(p.y()-a.y(),p.x()-a.x())+Math.toRadians(degrees);
                     P end=a.plus(new P(Math.cos(angle),Math.sin(angle)).times(a.dist(p)));
@@ -181,6 +190,7 @@ public final class DraftingDeskPanel extends DeskMinigamePanel {
     }
     @Override public boolean onMouseScrolled(double scroll) {
         if(sheet==null || done || !isMouseOver()) return false;
+        if (tool != Tool.ANGLE && tool != Tool.FIXED) return true;
         adjust(scroll>0?1:-1); return true;
     }
     @Override public boolean onMousePressed(MouseButton button) {
@@ -193,8 +203,9 @@ public final class DraftingDeskPanel extends DeskMinigamePanel {
         if(Math.abs(x-CX)<=HALF && Math.abs(y-CY)<=HALF) { drawAt(mouse()); return true; }
         if(x<LEFT || x>=LEFT+180 || y<20) return true;
         int col=(x-LEFT)/60,row=(y-20)/ROW,index=row*3+col;
+        if ((x-LEFT)%60 >= 58 || (y-20)%ROW >= 12) return true;
         if(index<Tool.values().length) { tool=Tool.values()[index]; anchors.clear(); feedback=""; return true; }
-        if(row==4) { adjust(col==0?-1:col==2?1:0); return true; }
+        if(row==4 && (tool==Tool.FIXED || tool==Tool.ANGLE)) { adjust(col==0?-1:col==2?1:0); return true; }
         if(row==5) {
             if(col==0 && !undo.isEmpty()) { redo.push(ink); update(undo.pop()); }
             if(col==1 && !redo.isEmpty()) { undo.push(ink); update(redo.pop()); }
@@ -221,14 +232,15 @@ public final class DraftingDeskPanel extends DeskMinigamePanel {
     private void label(GuiGraphics g,int x,int y,int row,int col,String text,boolean selected) {
         int xx=x+LEFT+col*60, yy=y+20+row*ROW;
         g.fill(xx,yy,xx+58,yy+12,selected?0xff245966:0xffd7cbb5);
-        g.drawCenteredString(getFont(),text,xx+29,yy+2,selected?0xffffffff:0xff393026);
+        g.drawString(getFont(),text,xx+(58-getFont().width(text))/2,yy+2,selected?0xffffffff:0xff393026,false);
     }
     @Override public void render(GuiGraphics g,int x,int y,int w,int h,RenderingHint rh) {
-        g.fill(x,y,x+w,y+h,0xfff2e9d6);
+        DrawDeskIcons.DIALOG.draw(g,x,y,w,h);
         label(g,x,y,11,2,tr("back"),false);
         if(sheet==null) { g.drawString(getFont(),feedback,x+9,y+8,0xff453a31,false); return; }
-        g.drawString(getFont(),Component.translatable(sheet.title()),x+9,y+4,0xff342d27,false);
-        g.drawString(getFont(),sheet.dimensions(),x+LEFT,y+5,0xff493c30,false);
+        g.drawString(getFont(),Component.translatable(sheet.title()),x+14,y+7,0xff342d27,false);
+        g.drawString(getFont(),sheet.dimensions(),x+LEFT,y+7,0xff493c30,false);
+        g.renderOutline(x+CX-HALF-1,y+CY-HALF-1,2*HALF+3,2*HALF+3,0xff937951);
         g.fill(x+CX-HALF,y+CY-HALF,x+CX+HALF+1,y+CY+HALF+1,0xfffaf6e9);
         g.drawManaged(() -> drawGeometry(g,x,y));
         drawControls(g,x,y);
@@ -246,18 +258,26 @@ public final class DraftingDeskPanel extends DeskMinigamePanel {
         if(hint>=0) for(P p:sheet.hints().get(hint).points()) mark(g,x,y,p,0xffad683a);
         if(!done && Math.abs(getMouseX()-CX)<=HALF && Math.abs(getMouseY()-CY)<=HALF) {
             P hover=locate(mouse());
-            if(tool==Tool.CIRCLE) plot(g,x,y,Curve.arc(hover,radius,0,360),0x665c86a1,false);
+            if(tool==Tool.CIRCLE && !anchors.isEmpty()) {
+                P center = anchors.get(0);
+                plot(g,x,y,Curve.arc(center,center.dist(hover),0,360),0xff7898a4,false);
+            }
+            if(tool==Tool.FIXED) plot(g,x,y,Curve.arc(hover,radius,0,360),0x665c86a1,false);
             if(!anchors.isEmpty()) plot(g,x,y,Curve.line(anchors.get(0),hover),0xff7898a4,false);
             mark(g,x,y,hover,0xff32718a);
         }
     }
     private void drawControls(GuiGraphics g,int x,int y) {
         for(Tool t:Tool.values()) label(g,x,y,t.ordinal()/3,t.ordinal()%3,tr(t.name().toLowerCase(Locale.ROOT)),t==tool);
-        label(g,x,y,4,0,"−",false); label(g,x,y,4,1,String.format(Locale.ROOT,tool==Tool.ANGLE?"%.1f°":"R%.1f",tool==Tool.ANGLE?degrees:radius),false);
-        label(g,x,y,4,2,"+",false); label(g,x,y,5,0,tr("undo"),false); label(g,x,y,5,1,tr("redo"),false);
+        if (tool==Tool.FIXED || tool==Tool.ANGLE) {
+            label(g,x,y,4,0,"−",false); label(g,x,y,4,1,String.format(Locale.ROOT,tool==Tool.ANGLE?"%.1f°":"R%.1f",tool==Tool.ANGLE?degrees:radius),false);
+            label(g,x,y,4,2,"+",false);
+        }
+        label(g,x,y,5,0,tr("undo"),false); label(g,x,y,5,1,tr("redo"),false);
         label(g,x,y,5,2,tr("aux"),showAux); label(g,x,y,6,0,tr("hint"),hint>=0);
         label(g,x,y,6,1,tr("check"),checked); label(g,x,y,6,2,remaining>=0?tr("cancel")+(remaining+19)/20:tr("auto")+sheet.seconds()+"s",remaining>=0);
         String note=done?tr("won"):!feedback.isEmpty()?feedback:checked && !gaps.isEmpty()?tr("gaps"):
+            tool==Tool.CIRCLE && !anchors.isEmpty()?tr("rim"):
             hint>=0?Component.translatable(sheet.hints().get(hint).text()).getString():tr("controls");
         g.drawWordWrap(getFont(),Component.literal(note),x+LEFT,y+123,178,0xff514332);
     }

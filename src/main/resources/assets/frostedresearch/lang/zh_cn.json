@@ -1,4 +1,7 @@
 {
+  "gui.frostedresearch.journal.research.drafting_explain": "在绘图台用尺规描出灰色轮廓。圆规先点圆心，再点圆周。画完后点击校验。",
+  "drafting.frostedresearch.rim": "点圆周上的一点落笔，或右键取消。",
+  "drafting.frostedresearch.fixed": "定径圆规",
   "knowledge.frostedresearch.tool_action.prospector_pick": "探矿镐",
   "knowledge.frostedresearch.prospector_pick.locked": "请先在绘图台完成「探矿镐的使用方法」。",
   "block.frostedresearch.drawing_desk": "绘图台",
@@ -764,7 +767,7 @@
   "drafting.frostedresearch.hint_tips": "横向连接左右叶尖，再竖向连接上下叶尖。",
   "drafting.frostedresearch.unavailable": "图纸不可用，请返回查看研究阶段。",
   "drafting.frostedresearch.full": "纸面笔迹已满，可先擦除多余笔迹。",
-  "drafting.frostedresearch.controls": "圆规点一下落笔。滚轮或 ± 调整半径或角度。直尺工具点两次，右键取消。",
+  "drafting.frostedresearch.controls": "圆规先点圆心，再点圆周。右键取消取点。定径圆规和量角器可用滚轮或 ± 调值。",
   "drafting.frostedresearch.gaps": "红色标出尚未覆盖的轮廓。",
   "drafting.frostedresearch.won": "图纸通过，可返回研究。",
   "gui.frostedresearch.journal.research.drafting_start": "尺规绘图",

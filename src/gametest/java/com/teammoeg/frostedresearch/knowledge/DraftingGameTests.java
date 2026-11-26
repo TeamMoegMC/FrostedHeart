@@ -17,7 +17,7 @@ public final class DraftingGameTests {
         try(var reader=h.getLevel().getServer().getResourceManager().openAsReader(resource)) {
             var sheet=DraftingSheet.read(JsonParser.parseReader(reader).getAsJsonObject());
             P origin=new P(0,0);
-            h.assertTrue(sheet.datums().equals(List.of(origin)) && sheet.seconds()==16,"Single datum and blueprint workload");
+            h.assertTrue(sheet.datums().equals(List.of(origin, new P(24,0))) && sheet.seconds()==16,"Shaft and blade centre datums and blueprint workload");
             h.assertTrue(sheet.gaps(List.of()).size()==10,"Blank drawing has ten missing outlines");
             List<Curve> ink=new ArrayList<>();
             for(double r:new double[]{48,12,24}) ink.add(Curve.arc(origin,r,0,360));

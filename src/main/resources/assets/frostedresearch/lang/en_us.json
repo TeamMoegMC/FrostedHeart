@@ -1,4 +1,7 @@
 {
+  "gui.frostedresearch.journal.research.drafting_explain": "Trace the outline at the Drawing Desk. Click the centre and then the rim with the compass. Check the finished drawing.",
+  "drafting.frostedresearch.rim": "Click a point on the rim to draw, or right-click to cancel.",
+  "drafting.frostedresearch.fixed": "Fixed radius",
   "knowledge.frostedresearch.tool_action.prospector_pick": "Prospector pick",
   "knowledge.frostedresearch.prospector_pick.locked": "Complete Using a Prospector Pick at the drawing desk first.",
   "block.frostedresearch.drawing_desk": "Drawing Desk",
@@ -764,7 +767,7 @@
   "drafting.frostedresearch.hint_tips": "Connect opposite blade tips across both axes.",
   "drafting.frostedresearch.unavailable": "Drawing unavailable. Return to the project.",
   "drafting.frostedresearch.full": "Sheet full. Erase unused strokes.",
-  "drafting.frostedresearch.controls": "Click to place a circle. Scroll or use ± to adjust radius or angle. Ruler tools take two clicks. Right-click to cancel.",
+  "drafting.frostedresearch.controls": "Click the centre, then the rim. Right-click to cancel. Use the wheel or ± for the fixed compass and angle tool.",
   "drafting.frostedresearch.gaps": "Red marks show the missing outlines.",
   "drafting.frostedresearch.won": "Drawing accepted. Return to the project.",
   "gui.frostedresearch.journal.research.drafting_start": "Draw blueprint",

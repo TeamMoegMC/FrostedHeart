@@ -310,7 +310,7 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
 		}
 		p.setVisible(!showArchive);
 		p.setEnabled(!showArchive);
-		menu.setSlotVisible(!showArchive);
+		menu.setSlotVisible(!showArchive && !(deskGame instanceof DraftingDeskPanel));
 
         if (deskGame != null || isLinkGameOpen()) for (int index = 0; index < 3; index++)
             if (menu.slots.get(index) instanceof com.teammoeg.chorda.client.cui.menu.DeactivatableSlot slot) slot.setActived(false);
