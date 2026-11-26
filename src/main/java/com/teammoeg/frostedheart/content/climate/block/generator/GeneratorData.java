@@ -38,15 +38,13 @@ import com.teammoeg.frostedheart.content.climate.thermal.field.ThermalAnalyticFi
 import com.teammoeg.frostedheart.content.climate.thermal.field.ThermalFieldKey;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftGameplayFields;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
-import com.teammoeg.frostedheart.util.Lang;
+import com.teammoeg.frostedheart.content.town.observation.TownSignalEvent;
 import com.teammoeg.frostedresearch.FRSpecialDataTypes;
 import com.teammoeg.frostedresearch.data.ResearchVariant;
 
-import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
@@ -339,7 +337,6 @@ public class GeneratorData implements SpecialData {
     public boolean hasFuel() {
     	return process>0||!inventory.getStackInSlot(INPUT_SLOT).isEmpty();
     }
-    private static final Style WARN_STYLE=Style.EMPTY.withColor(ChatFormatting.RED).withBold(true);
     public boolean tickFuelProcess(Level w,SpecialDataHolder<?> teamData,int ticks) {
 
         int lastOverdrive=overdriveLevel;
@@ -372,10 +369,10 @@ public class GeneratorData implements SpecialData {
             }
             if(teamData instanceof TeamDataHolder team) {
 	        	if(lastOverdrive<=getCriticalOverdriveValue()&&overdriveLevel>getCriticalOverdriveValue()) {
-		        	team.forEachOnline(t->t.sendSystemMessage(Lang.translateTooltip("generator.critical").withStyle(WARN_STYLE)));
+                    team.getData(FHSpecialDataTypes.TOWN_DATA).queueTowerOverdriveWarning(TownSignalEvent.Type.TOWER_OVERDRIVE_CRITICAL);
 		        }else
 		        if(lastOverdrive<=getWarningOverdriveValue()&&overdriveLevel>getWarningOverdriveValue()) {
-		        	team.forEachOnline(t->t.sendSystemMessage(Lang.translateTooltip("generator.warning").withStyle(WARN_STYLE)));
+                    team.getData(FHSpecialDataTypes.TOWN_DATA).queueTowerOverdriveWarning(TownSignalEvent.Type.TOWER_OVERDRIVE_WARNING);
 		        }
 	        }
         }

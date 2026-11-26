@@ -99,7 +99,9 @@ public record TownSignalEvent(
         RESIDENT_EXIT_BOTH,
         CRISIS_RECOVERED,
         STAFFING_TARGET_UNMET,
-        STAFFING_TARGET_RECOVERED
+        STAFFING_TARGET_RECOVERED,
+        TOWER_OVERDRIVE_WARNING,
+        TOWER_OVERDRIVE_CRITICAL
     }
 
     public enum Severity {

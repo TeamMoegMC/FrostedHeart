@@ -1037,6 +1037,12 @@ public class TeamTownData implements com.teammoeg.chorda.dataholders.PersistentC
         }
     }
 
+    /** Queues a generator threshold warning through the existing tower popup channel. */
+    public void queueTowerOverdriveWarning(TownSignalEvent.Type type) {
+        pendingTowerTipSignals.add(new TownSignalNotice(
+                type, TownSignalEventModel.defaultSeverity(type), 1));
+    }
+
     private void queueTowerServiceCrossing(ServerLevel world, boolean active) {
         if (lastObservedTowerActive != null && lastObservedTowerActive != active) {
             int hour = (int) ((world.getDayTime() % 24000L) / 1000L);

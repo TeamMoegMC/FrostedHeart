@@ -2655,5 +2655,7 @@
   "gui.frostedheart.temperature_sensor.output": "红石输出：%s",
   "gui.frostedheart.temperature_sensor.inversion_on": "红石反转：开",
   "gui.frostedheart.temperature_sensor.inversion_off": "红石反转：关",
-  "gui.frostedheart.temperature_sensor.target_label": "目标温度"
+  "gui.frostedheart.temperature_sensor.target_label": "目标温度",
+  "tips.frostedheart.town.event.tower_overdrive_warning": "能量塔过载已达危险！",
+  "tips.frostedheart.town.event.tower_overdrive_critical": "能量塔过载已达临界！"
 }

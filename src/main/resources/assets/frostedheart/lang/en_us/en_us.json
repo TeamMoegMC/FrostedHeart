@@ -2039,5 +2039,7 @@
   "gui.frostedheart.temperature_sensor.output": "Redstone output: %s",
   "gui.frostedheart.temperature_sensor.inversion_on": "Invert: On",
   "gui.frostedheart.temperature_sensor.inversion_off": "Invert: Off",
-  "gui.frostedheart.temperature_sensor.target_label": "Target"
+  "gui.frostedheart.temperature_sensor.target_label": "Target",
+  "tips.frostedheart.town.event.tower_overdrive_warning": "Generator stress has reached dangerous levels!",
+  "tips.frostedheart.town.event.tower_overdrive_critical": "Generator stress has reached critical levels!"
 }
