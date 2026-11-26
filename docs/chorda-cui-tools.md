@@ -2,11 +2,11 @@
 
 - 状态：`Current`，按当前源码及真实客户端演示核对。
 - 最后核验：`2026-11-26`。
-- 范围：UIElement 选择器、debug 路径和开发客户端控制桥的六条 CUI 命令。
+- 范围：UIElement 选择器、debug 路径和开发客户端控制桥的七条 CUI 命令。
 - 代码锚点（以下路径相对 `FrostedHeart/`）：`src/main/java/com/teammoeg/chorda/client/cui/base/UIElement.java`、同目录 `UILayer.java`、`src/main/java/com/teammoeg/chorda/client/ClientUtils.java`、`src/main/java/com/teammoeg/chorda/client/cui/CUIDebugHelper.java`、`src/gametest/java/com/teammoeg/frostedheart/devtools/AgentClientBridge.java`、`Scripts/agent_client.py`、`Scripts/dev_client_bridge.init.gradle`。
 
 本工具用于在运行中的 CUI 界面里定位元素、读取和修改字段、动态添加或移除子元素。
-**列举只列当前界面根节点的一层直接子元素；selector 可以定位任意深度的元素。**
+**列举只列所选容器的一层直接子元素；省略目标时使用界面根。`cui-query` 返回任意深度的全部匹配元素。**
 修改只作用于当前客户端中的元素对象，不是保存 UI 布局的编辑器；关闭、重开或重建界面后，修改可能消失。
 
 配套材料：[真实客户端演示视频](../../ai_files/chorda-ui-tools-demo.mp4)（2 分 11.67 秒，中文字幕，无配音）；[CUI 架构指南](chorda-cui.md)。
@@ -52,7 +52,7 @@ python3 Scripts/agent_client.py 'cui-elements'
 python3 Scripts/agent_client.py 'cui-query .TextBox'
 ```
 
-`state` 可在没有打开 CUI 界面时使用；六条 `cui-*` 命令要求当前 Minecraft `Screen` 实现 `CUIScreen`，且主层不为 null。
+`state` 可在没有打开 CUI 界面时使用；`cui-open` 可直接创建测试界面，不要求事先打开 CUI；其余六条 `cui-*` 命令要求当前 Minecraft `Screen` 实现 `CUIScreen`，且主层不为 null。
 原版界面、主菜单、没有界面或只显示 HUD overlay 时，不会自动被当作该 CUI 查询根。
 
 研究页的 `.TextBox`、`.ResearchArchiveLayer` 是本文示例使用的类型，并不是每个界面都有。
@@ -79,7 +79,7 @@ python3 Scripts/agent_client.py \
 ```
 
 脚本会逐条打印 JSON；某条结果 `ok=false` 时退出，后面的命令不再发送。
-`cui-query` 未命中属于正常结果 `ok=true, element=null`，不会让脚本停止。
+`cui-query` 未命中属于正常结果 `ok=true, elements=[]`，不会让脚本停止。
 
 ### 2.2 目录与等待时间
 
@@ -146,10 +146,11 @@ name 和 class 名区分大小写。可用字符是 Java 标识符组成字符�
 例如 `.TextBox[2]` 要求该元素既是 TextBox，又恰好处于父列表第二位。
 不支持 `[0]`、负数、`:nth-child()`、逗号分组、`+`/`~` 兄弟组合器、CSS 属性匹配或完整浏览器 CSS 语法。
 
-### 3.2 查询范围和首个匹配
+### 3.2 查询范围、全部匹配与首个匹配
 
 `querySelector` 在当前根及其子树中查找，包含根自身，也包含隐藏和禁用的元素。
-按子元素列表顺序递归查找，返回首个满足完整 selector 的元素，**不是所有匹配的数组**。
+`cui-query` 使用 `UIElement.querySelectorAll` 返回全部匹配，按深度优先树顺序排列；同一元素即使有多个满足条件的祖先路径，也只返回一次。
+Java `querySelector`、反射读写和增删命令仍使用首个匹配；`cui-elements` 的可选目标 selector 也使用首个匹配。
 相同 name 允许存在；`#name` 不承诺全局唯一。需要确定目标时，使用返回的完整 `selector` 或增加父路径约束。
 
 空格可以跨层，`>` 不能跨层。研究界面的例子：
@@ -159,7 +160,7 @@ python3 Scripts/agent_client.py 'cui-query .DrawDeskScreen .TextBox'
 python3 Scripts/agent_client.py 'cui-query .DrawDeskScreen > .TextBox'
 ```
 
-前一条能选中深层搜索框；后一条若根的直接子元素中没有 TextBox，就返回 null，不会越过中间容器。
+前一条能选中深层搜索框；后一条若根的直接子元素中没有 TextBox，就返回空数组，不会越过中间容器。
 空字符串或非法 selector 不匹配；最外层命令参数仍应遵守命令格式。
 
 ### 3.3 class 列表如何生成
@@ -192,14 +193,14 @@ class 列表仍可包含深层父类和直接接口；这与“自动生成路�
 
 ### 4.1 公共外层
 
-成功查询示意，`id` 和 `state` 的具体值依运行状态变化：
+成功查询示意（只有一个匹配时数组也不省略），`id` 和 `state` 的具体值依运行状态变化：
 
 ```json
 {
   "id": "01795671200000000000",
   "command": "cui-query .TextBox",
   "ok": true,
-  "element": {
+  "elements": [{
     "selector": ".DrawDeskScreen > .ResearchArchiveLayer > .TextBox",
     "name": null,
     "type": "ResearchArchiveLayer$1",
@@ -210,7 +211,7 @@ class 列表仍可包含深层父类和直接接口；这与“自动生成路�
     "screenRect": [6, 35, 92, 17],
     "enabled": true,
     "visible": true
-  },
+  }],
   "state": {
     "user": "Dev",
     "screen": "CUIMenuScreenWrapper",
@@ -220,7 +221,7 @@ class 列表仍可包含深层父类和直接接口；这与“自动生成路�
 ```
 
 `state` 示例仅列部分字段。公共外层有 `id`、原始 `command`、`ok` 和当前客户端 `state`。
-错误返回 `ok=false` 与 `error` 字符串。查询未命中返回 `ok=true` 与显式 `element=null`。
+错误返回 `ok=false` 与 `error` 字符串。`cui-query` 未命中返回 `ok=true` 与显式 `elements=[]`。单目标读写和添加仍返回 `element` 对象，移除返回 `removed` 和 `parent`。
 
 ### 4.2 元素 debug 信息
 
@@ -244,18 +245,58 @@ class 列表仍可包含深层父类和直接接口；这与“自动生成路�
 菜单 Screen 可能在渲染时额外加上 `guiOrigin`；`screen` 命令输出的 CUI `rect` 使用其适配逻辑转换后的 GUI 坐标。
 要做点击或悬停，请先查看 `screen` 的 `guiScale`、`guiOrigin` 和元素位置。截图像素与 GUI 坐标之间还需要按 `guiScale` 转换。
 
-## 5. 六条命令参考
+## 5. 七条命令参考
 
-### 5.1 `cui-elements`：只列举当前根的一层
+### 5.1 `cui-open <width> <height>`：打开空白固定尺寸界面
+
+```bash
+python3 Scripts/agent_client.py 'cui-open 320 180'
+python3 Scripts/agent_client.py 'cui-elements'
+python3 Scripts/agent_client.py 'cui-query .EmptyCuiLayer'
+```
+
+两个参数都是必填的正整数，按“宽、高”顺序传入，单位为 Minecraft GUI 坐标，不是窗口物理像素。
+省略参数、传入多余参数、非整数或非正值都会报错，校验在切换界面前完成。
+
+命令使用 CUIScreenWrapper 打开一个新的 EmptyCuiLayer：
+
+- 根尺寸固定为请求值，不按空内容自动缩小；后续添加子元素也不会自动撑大根。
+- 没有默认子元素、按钮、文本、边框或背景渐变。游戏内保持透明，显示世界画面；没有加载世界时使用纯黑底清除主菜单旧帧，不绘制标题或控件。
+- `cui-elements` 立即返回 `elements=[]`；`cui-query *` 会包含根自身。
+- 可以用 `.EmptyCuiLayer` 或 `*` 作为后续 `cui-add` 的目标，仍然沿用 VanillaTheme 供新加元素使用。
+- 返回根的 `element` debug 信息和 `screen` 屏幕描述。`element.rect` 的宽高是请求值；`screen.size` 仍是 Minecraft 整个窗口的 GUI 尺寸，不会修改游戏窗口大小或 guiScale。
+- 屏幕包装器按 GUI 窗口居中主层；请求大于 GUI 窗口的尺寸不会自动裁小，部分内容可能出现在视野外。
+- 再次执行会打开一个新的空界面，不复用之前根上的动态元素；按 Esc 使用现有 CUI 返回机制回到前一屏幕。
+
+用于独立测试动态添加的示例：
+
+```bash
+python3 Scripts/agent_client.py 'cui-open 320 180'
+python3 Scripts/agent_client.py 'cui-add {"selector":".EmptyCuiLayer","class":"com.teammoeg.chorda.client.cui.widgets.ProgressBar","args":[0.72,-13056135]}'
+python3 Scripts/agent_client.py 'cui-elements .EmptyCuiLayer'
+```
+
+初始进度条使用构造器的默认位置和尺寸。需要放大或移动时，再通过 `cui-set` 设置它的字段；构造时必须满足组件本身的可渲染条件。
+
+### 5.2 `cui-elements [selector]`：只列举目标的一层
 
 ```bash
 python3 Scripts/agent_client.py 'cui-elements'
 ```
 
-无参数。返回 `elements` 数组，按当前 CUI 根的直接子元素顺序排列，包含隐藏和禁用项，不包含根自身，也不展开孙节点。
-当前没有 `cui-elements <selector>` 或递归枚举参数；要定位未列出的深层节点，使用 `cui-query` 或游戏内 debug。
+省略 selector 时，返回当前 CUI 根的一层直接子元素。可选 selector 是普通字符串而非 JSON，支持完整多级路径：
 
-### 5.2 `cui-query <selector>`：查任意深度
+```bash
+python3 Scripts/agent_client.py 'cui-elements .ResearchArchiveLayer'
+python3 Scripts/agent_client.py 'cui-elements .DrawDeskScreen > .ResearchArchiveLayer > .ResearchGraphViewport'
+```
+
+指定 selector 时，先在整个当前界面查找首个匹配元素，再返回它的一层直接子元素；有多个目标匹配时不会把多个容器的子元素合并。
+返回的 `elements` 数组按直接子元素顺序排列，包含隐藏和禁用项，不包含目标自身，也不展开孙节点。
+匹配叶子或空容器返回 `[]`；目标 selector 未匹配返回 `ok=false`，与 `cui-query` 的未命中空数组不同。
+目前没有递归枚举参数。
+
+### 5.3 `cui-query <selector>`：查任意深度
 
 ```bash
 python3 Scripts/agent_client.py 'cui-query .ResearchGraphViewport'
@@ -263,10 +304,12 @@ python3 Scripts/agent_client.py 'cui-query #demo-progress'
 python3 Scripts/agent_client.py 'cui-query .ResearchGraphViewport > *[1]'
 ```
 
-参数是命令名后面完整的 selector 字符串，不是 JSON。返回首个匹配的 `element` 或 null。
+参数是命令名后面完整的 selector 字符串，不是 JSON。返回所有匹配的 `elements` 数组；没有匹配时返回 `[]`，只有一个匹配时也返回数组。
+数组按树顺序排列，包含匹配的隐藏、禁用元素及根自身；重叠的祖先匹配路径不会重复返回同一元素。
+例如 `.Button` 会返回当前界面所有匹配 Button 类型的实例，而不是只返回一个或仅返回不同的类名。
 只查询，不修改 UI。
 
-### 5.3 `cui-get <JSON>`：反射读取字段
+### 5.4 `cui-get <JSON>`：读取属性或字段
 
 ```bash
 python3 Scripts/agent_client.py 'cui-get {"selector":".TextBox","field":"name"}'
@@ -276,18 +319,18 @@ python3 Scripts/agent_client.py 'cui-get {"selector":".TextBox","field":"x"}'
 | JSON 参数 | 类型 | 是否必填 | 含义 |
 |---|---|---|---|
 | `selector` | string | 是 | 目标元素，支持任意深度 |
-| `field` | string | 是 | Java 字段名，不是 getter 名或字段路径 |
+| `field` | string | 是 | 属性或字段名，不是方法名或嵌套路径 |
 
-查找从实际类开始逐级向父类查找，遇到最近的同名声明就使用它。支持 private/protected/public 实例字段；不读取 static 字段。
-不会调用 `getName()` 等方法，不支持 `parent.name` 这样的嵌套路径，也没有“列出所有字段”命令。
+默认优先调用公开（含继承）的布尔 `isX()`，其次 `getX()`；没有 getter 时沿类继承链读取最近声明的实例字段，支持 private/protected/public。
+添加 `"direct":true` 可跳过目标属性的 getter，直接读字段。不读取 static 字段，不支持嵌套路径。
 
 返回 `field`、`declaringClass`、`fieldType`、`value` 和当前 `element`。
-`declaringClass` 是字段真正声明所在类的全限定名称；`fieldType` 是声明的泛型类型字符串。
+`declaringClass` 是所用 getter 或字段的声明类；`fieldType` 是 getter 返回类型或字段的泛型类型。
 
 null、字符串、Number、Boolean 保持 JSON 类型；char、enum、集合、UI 对象及其他对象采用 `String.valueOf` 字符串描述。
 因此复杂对象的 `value` 不承诺可以原样传回 `cui-set` 恢复。
 
-### 5.4 `cui-set <JSON>`：反射修改字段
+### 5.5 `cui-set <JSON>`：修改属性或字段
 
 ```bash
 python3 Scripts/agent_client.py 'cui-set {"selector":".TextBox","field":"name","value":"search"}'
@@ -298,11 +341,12 @@ python3 Scripts/agent_client.py 'cui-set {"selector":"#search","field":"name","v
 | JSON 参数 | 类型 | 是否必填 | 含义 |
 |---|---|---|---|
 | `selector` | string | 是 | 目标元素 |
-| `field` | string | 是 | Java 实例字段名，规则与 get 相同 |
+| `field` | string | 是 | 属性或实例字段名，规则与 get 相同 |
 | `value` | JSON value | 是 | 按字段声明类型反序列化的新值；null 也必须明确写出 |
 
-返回 `field`、`declaringClass`、`before`、`after` 和修改后的 `element`。
-查找和读取规则与 get 相同，`value` 使用 Gson 按字段声明的泛型类型转换。
+默认优先调用公开（含继承）的 `setX(value)`，按参数泛型类型用 Gson 转换。重载优先匹配 JSON 原始值类别，再按方法签名排序尝试可转换候选；setter 执行失败会报告错误，不回退字段。只有没有 setter 时才直接写字段。
+返回 `field`、`declaringClass`、`after` 和修改后的 `element`；存在 getter 时返回 `before`，并通过 getter 读取实际 `after`，否则 `after` 为传给 setter 的值。字段分支总是返回实际字段的 `before`/`after`。
+`direct` 是可选 boolean，默认 false，与 `cui-get` 参数名一致；设为 true 后目标字段的读写均绕过 getter/setter。
 
 常用值示例：
 
@@ -318,11 +362,15 @@ python3 Scripts/agent_client.py 'cui-set {"selector":"#search","field":"name","v
 
 不允许给 primitive 字段写 null。字段不可写、JSON 不适配类型或字段不存在时返回错误。
 
-这是直接 `Field.set`，**不会调用 setter、重新布局、refresh、发送业务网络包或保存字段原值**。
-例如反射设置 `width` 不会执行 `TextBox.setWidth()` 中附带的滚动处理；修改客户端字段也不能当作服务器业务状态已经改变。
+默认模式会执行 setter 自身的布局、缓存更新等逻辑，例如 `TextField.setText(String)`。`direct:true` 或没有 setter 的字段分支直接 `Field.set`，不会触发这些逻辑。返回的元素 debug 信息仍通过常规方法采集；direct 仅控制目标属性访问。客户端修改不代表服务器业务状态已改变。
+
+```bash
+python3 Scripts/agent_client.py 'cui-get {"selector":"#search","field":"width","direct":true}'
+python3 Scripts/agent_client.py 'cui-set {"selector":"#search","field":"width","value":140,"direct":true}'
+```
 修改后重新 query 检查实际状态；需要恢复时，使用事先记录的原值。
 
-### 5.5 `cui-add <JSON>`：构造并添加子元素
+### 5.6 `cui-add <JSON>`：构造并添加子元素
 
 下面是演示中实际使用的自动构造器匹配示例：
 
@@ -380,7 +428,7 @@ primitive `int` 与包装类 `java.lang.Integer` 是不同签名；泛型参数�
 - 本轮实测中，零尺寸的 `new TextBox(parent)` 加入研究页后，在 DrawDeskTheme 背景绘制触发除零崩溃；后续设置尺寸的命令来不及执行。演示改用默认尺寸有效的 ProgressBar。该问题尚未修复。
 - 构造失败只代表未进入 add，不会撤销构造器自身已经产生的副作用；add 后读取 debug 失败也不代表该元素没有加入。
 
-### 5.6 `cui-remove <selector>`：从直接父级移除
+### 5.7 `cui-remove <selector>`：从直接父级移除
 
 ```bash
 python3 Scripts/agent_client.py 'cui-remove #demo-progress'
@@ -396,7 +444,7 @@ python3 Scripts/agent_client.py 'cui-query #demo-progress'
 - `parent`：完成移除后的直接父节点 debug 信息。
 
 `UILayer.remove` 要求父引用正确且元素确实在其直接列表里；移除后清理该元素对应的滚动条引用、失效内容尺寸缓存，并调用元素 `onClosed()`。
-对容器移除后，其整棵子树从当前根的 selector 查询中消失。
+对容器移除后，其整棵子树从当前根的 selector 查询中消失，`cui-query` 对该 selector 返回空数组。
 不自动重排剩余元素，不自动重新创建默认内容，也不提供 undo。`onClosed` 抛异常时，元素可能已经从列表移除；重新 query 可确认实际状态。
 
 ## 6. 一次完整的添加、修改、读取、移除操作
@@ -444,7 +492,7 @@ try:
     print("当前 x：", read["value"], "字段声明类：", read["declaringClass"])
 finally:
     send("cui-remove " + selector)
-assert send("cui-query #guide-progress")["element"] is None
+assert send("cui-query #guide-progress")["elements"] == []
 ```
 
 修改已有元素时，先用 get 记录原值，结束后 set 回原值。不要把示例中的 `value=null` 当作通用恢复命令；它只适用于原值确实为 null 且允许 null 的引用字段。
@@ -475,7 +523,7 @@ python3 Scripts/agent_client.py 'screenshot cui-inspection'
 | 返回或现象 | 含义与处理方式 |
 |---|---|
 | `the current screen is not a CUI screen` | 打开真正的 CUI Screen 后再执行；HUD overlay 不会被自动选作根 |
-| `cui-query` 的 `element=null` | 查询正常完成但没匹配；检查名字大小写、路径、当前界面和中间层 |
+| `cui-query` 的 `elements=[]` | 查询正常完成但没匹配；检查名字大小写、路径、当前界面和中间层 |
 | `no CUI element matches ...` / `no CUI parent matches selector` | get/set/remove/add 的 selector 未命中；先 query 确认 |
 | `NoSuchFieldException` | 检查 Java 字段名；不要传 getter 名或 `parent.name` |
 | `expected an instance field` | 找到了 static 字段；当前 get/set 只支持实例字段 |
@@ -506,6 +554,7 @@ if (current != null) {
 }
 ```
 
+`panel.querySelectorAll(".TextBox")` 可取得 panel 子树全部匹配，空或无匹配返回空列表。
 `panel.querySelector` 查询 panel 及其子树；`ClientUtils.querySelector` 查询当前打开 Screen 的 CUI 主层，非 CUI Screen 返回 null。
 在自定义控件中可用 `setName("search")` 设置 name；`getSelectorClasses()` 提供匹配列表。
 自定义容器需要通过 `getSelectorChildren()` 暴露子节点；控制桥的枚举、添加和移除命令当前只认 UILayer 及其子类，不会反射查找其他类型的 add/remove 方法。
@@ -522,6 +571,7 @@ if (current != null) {
 | 01:33 | 未命中、不支持添加、字段不存在 |
 | 01:43 | 移除、回查 null、恢复字段 |
 
+视频录制于数组返回、可选枚举目标和 cui-open 新增之前（不包含空界面命令）：其中 `cui-query` 的 `element/null` 是旧返回格式；当前应按 `elements` 数组读取，且支持 `cui-elements <selector>`。
 视频使用真实研究界面，连续录制时长 131.67 秒，1280×1040、15 fps、H.264。
 六条 CUI 命令均在客户端执行；包含 44 次实际命令结果（也包括悬停及 F12）。
 视频完整解码通过，抽查了查询、debug、新增、恢复及结尾画面；录制后重新回查确认新增元素不存在、name 为 null、ghostText 为 Find。

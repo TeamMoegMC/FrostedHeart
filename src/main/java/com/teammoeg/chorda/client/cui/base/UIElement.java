@@ -103,6 +103,42 @@ public class UIElement {
         return null;
     }
 
+    /**
+     * Finds all matches in this subtree (including this element) in tree order.
+     * Each element is visited once, even when several ancestor paths match it.
+     * Empty, invalid or unmatched selectors return an empty list.
+     */
+    public java.util.List<UIElement> querySelectorAll(String selector) {
+        if (selector == null || selector.isBlank()) return java.util.Collections.emptyList();
+        String[] parts = selector.trim().replaceAll("\\s*>\\s*", " > ").split("\\s+");
+        if (parts[0].equals(">") || parts[parts.length - 1].equals(">"))
+            return java.util.Collections.emptyList();
+        java.util.List<UIElement> matches = new java.util.ArrayList<>();
+        collectSelectorMatches(parts, this, matches);
+        return matches;
+    }
+
+    private void collectSelectorMatches(String[] parts, UIElement scope, java.util.List<UIElement> matches) {
+        if (matchesSelectorPath(parts, parts.length - 1, scope)) matches.add(this);
+        for (UIElement child : getSelectorChildren()) child.collectSelectorMatches(parts, scope, matches);
+    }
+
+    /** Matches ancestors backwards without crossing the query subtree root. */
+    private boolean matchesSelectorPath(String[] parts, int index, UIElement scope) {
+        if (!matchesSelector(parts[index])) return false;
+        if (index == 0) return true;
+        if (this == scope) return false;
+        int previous = index - 1;
+        boolean direct = parts[previous].equals(">");
+        if (direct) previous--;
+        if (previous < 0 || parts[previous].equals(">")) return false;
+        for (UIElement ancestor = parent; ancestor != null; ancestor = ancestor.parent) {
+            if (ancestor.matchesSelectorPath(parts, previous, scope)) return true;
+            if (direct || ancestor == scope) break;
+        }
+        return false;
+    }
+
     /** Child traversal hook; leaf elements have no children. */
     protected java.util.List<UIElement> getSelectorChildren() {
         return java.util.Collections.emptyList();

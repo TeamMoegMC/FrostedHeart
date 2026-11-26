@@ -198,7 +198,7 @@ card.mulTransform(CSSStylingUtil.skewX(-2f));         // 叠加
 | `VanillaItemSlot` | 原版外观的槽位背景 |
 | `AbstractFilterGhostSlot` | 过滤用幽灵槽基类（带滚轮步进） |
 | `Panel` | 带标题面板，子元素自动内缩 |
-| `SimpleLayer` | 空白层，纯手工布局 |
+| `SimpleLayer` | 空白层，纯手工布局；`setBackgroundColor(int)` 设置 ARGB 背景，默认 `0x00000000` 透明，`getBackgroundColor()` 读取 |
 | `ToolTipElement` | 不可见元素，只为悬停提示 |
 | `ScrollBar` / `LayerScrollBar` | 见第 6 节 |
 | `TabImageButtonElement` | 标签页按钮（激活/未激活图标） |
@@ -343,6 +343,7 @@ CUI 是客户端框架，行为验证以实机界面为主；改动后至少确�
 `>` 直接子节点路径及从 1 开始的 `[n]`。不实现完整浏览器 CSS 语法。
 空格匹配任意深度后代，`>` 仅匹配直接子节点；支持完整 debug selector 回查。
 UILayer 通过子节点钩子逐层委派；叶子匹配完成即返回自身，无后续子层时返回 null。
+`UIElement.querySelectorAll(String)` 返回当前子树全部匹配元素，按树顺序排列，重叠祖先路径不会重复返回同一元素；空或无匹配返回空列表。
 `ClientUtils.querySelector(String)` 查询当前打开 Screen 的 CUI 主层，非 CUI Screen 返回 null。
 
 `UIElement.getUniqueSelector()` 生成从根开始、以 ` > ` 连接的唯一路径，debug tooltip 显示
@@ -358,10 +359,11 @@ UILayer 通过子节点钩子逐层委派；叶子匹配完成即返回自身，
 
 使用 `Scripts/dev_client_bridge.init.gradle` 启动客户端后，可用 `Scripts/agent_client.py` 发送：
 
-- `cui-elements`：当前 CUI 根的直接子元素一层，按子元素顺序返回 `elements` 数组，包含隐藏和禁用元素，不包含根。
-- `cui-query <selector>`：在当前根及所有下级元素中返回首个匹配的 `element`，不受枚举的一层限制，未命中明确返回 JSON null。
-- `cui-get {"selector":".TextBox","field":"name"}`：反射读取字段，查找规则与 set 相同，返回 field、declaringClass、fieldType、value 和元素 debug 信息；null 值保留为 JSON null。
-- `cui-set {"selector":".TextBox","field":"name","value":"search"}`：沿匹配元素的类继承链查找字段（优先最近声明，支持 private），按字段声明类型从 JSON 转换后反射赋值。
+- `cui-open <width> <height>`：以正整数 GUI 尺寸创建空白 CUIScreen 主层，居中、不添加子元素、不绘制渐变；游戏内透明，无世界时清为黑底避免残留旧菜单。返回根 `element` 和 `screen`；主层不按内容自动缩小，可直接供 add/get/set/query 等命令使用。
+- `cui-elements [selector]`：省略 selector 时列当前 CUI 根的一层直接子元素；指定时列首个匹配元素的一层直接子元素。返回 `elements` 数组，包含隐藏和禁用元素，不包含目标自身；叶子返回空数组，selector 未命中报错。
+- `cui-query <selector>`：在当前根及所有下级元素中返回全部匹配的 `elements` 数组，按树顺序排列并避免重叠路径产生重复；未命中返回 `[]`。反射读写及增删仍选择首个匹配。
+- `cui-get {"selector":".TextBox","field":"name"}`：优先 getter 读取属性，否则读取字段，查找规则与 set 相同，返回 field、declaringClass、fieldType、value 和元素 debug 信息；null 值保留为 JSON null。
+- `cui-set {"selector":".TextBox","field":"name","value":"search"}`：优先调用 setter；没有 setter 时沿继承链查找最近声明的实例字段（支持 private），按声明类型转换后赋值。
 
 元素 debug 数据包含 selector、name、type、classes、parentSelector、title、局部 rect、
 与 UIElement.getScreenX/Y 一致的 screenRect、enabled、visible；不递归嵌套 children。
@@ -369,7 +371,7 @@ UILayer 通过子节点钩子逐层委派；叶子匹配完成即返回自身，
 只修改实例字段，不修改 static 字段。set 返回 declaringClass、before、after 和修改后的元素信息；
 标量保持 JSON 类型，其他对象以字符串描述，避免展开 UI 对象图。
 value 使用 Gson 对声明类型的转换，常用值为字符串、数字、布尔、枚举名及引用类型的 null。
-这是直接字段赋值，不调用 setter、不刷新或重建 UI；修改 name 后应使用返回的新 selector 继续查询。
+get 默认优先公开的 isX/getX，set 默认优先公开的 setX；没有对应访问器才回退字段。两者均支持 `"direct":true` 绕过目标属性访问器直接访问字段。setter 重载选择、返回值及副作用详见 [工具指南](chorda-cui-tools.md#55-cui-set-json修改属性或字段)。修改 name 后应使用返回的新 selector 继续查询。
 
 ### 动态增加与移除子元素
 

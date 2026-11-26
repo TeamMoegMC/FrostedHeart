@@ -24,10 +24,12 @@ import com.google.gson.GsonBuilder;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.logging.LogUtils;
+import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.PrimaryLayer;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.base.UILayer;
 import com.teammoeg.chorda.client.cui.screenadapter.CUIScreen;
+import com.teammoeg.chorda.client.cui.screenadapter.CUIScreenWrapper;
 import com.teammoeg.frostedheart.FHMain;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -48,6 +50,7 @@ import net.minecraft.client.KeyboardHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.MouseHandler;
 import net.minecraft.client.Screenshot;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.ConnectScreen;
@@ -449,15 +452,33 @@ public final class AgentClientBridge {
                     return j.age >= 2;
                 };
             }
+            case "cui-open" -> {
+                if (args.length != 2) throw new IllegalArgumentException("usage: cui-open <width> <height>");
+                int width = Integer.parseInt(args[0]);
+                int height = Integer.parseInt(args[1]);
+                if (width <= 0 || height <= 0)
+                    throw new IllegalArgumentException("width and height must be positive GUI dimensions");
+                job.tick = (mc, j) -> {
+                    EmptyCuiLayer layer = new EmptyCuiLayer(width, height);
+                    mc.setScreen(new CUIScreenWrapper(layer));
+                    j.out.put("element", cuiDebugInfo(layer));
+                    j.out.put("screen", describeScreen(mc));
+                    return true;
+                };
+            }
             case "cui-elements" -> job.tick = (mc, j) -> {
                 List<Map<String, Object>> elements = new ArrayList<>();
-                collectCuiElements(requireCuiRoot(mc), elements);
+                UIElement root = requireCuiRoot(mc);
+                UIElement target = rest.isBlank() ? root : root.querySelector(rest);
+                if (target == null) throw new IllegalArgumentException("no CUI element matches: " + rest);
+                collectCuiElements(target, elements);
                 j.out.put("elements", elements);
                 return true;
             };
             case "cui-query" -> job.tick = (mc, j) -> {
-                UIElement found = requireCuiRoot(mc).querySelector(rest);
-                j.out.put("element", found == null ? null : cuiDebugInfo(found));
+                List<Map<String, Object>> elements = new ArrayList<>();
+                for (UIElement found : requireCuiRoot(mc).querySelectorAll(rest)) elements.add(cuiDebugInfo(found));
+                j.out.put("elements", elements);
                 return true;
             };
             case "cui-remove" -> job.tick = (mc, j) -> {
@@ -488,6 +509,17 @@ public final class AgentClientBridge {
                 String fieldName = request.get("field").getAsString();
                 UIElement found = requireCuiRoot(mc).querySelector(selector);
                 if (found == null) throw new IllegalArgumentException("no CUI element matches: " + selector);
+                // Match cui-set: direct mode reads the target field without its getter.
+                boolean direct = request.has("direct") && request.get("direct").getAsBoolean();
+                Method getter = direct ? null : cuiGetter(found.getClass(), fieldName);
+                if (getter != null) {
+                    j.out.put("field", fieldName);
+                    j.out.put("declaringClass", getter.getDeclaringClass().getName());
+                    j.out.put("fieldType", getter.getGenericReturnType().getTypeName());
+                    j.out.put("value", cuiFieldValue(getter.invoke(found)));
+                    j.out.put("element", cuiDebugInfo(found));
+                    return true;
+                }
                 Field field = cuiField(found.getClass(), fieldName);
                 if (java.lang.reflect.Modifier.isStatic(field.getModifiers()))
                     throw new IllegalArgumentException("expected an instance field: " + fieldName);
@@ -506,6 +538,20 @@ public final class AgentClientBridge {
                 if (!request.has("value")) throw new IllegalArgumentException("missing value");
                 UIElement found = requireCuiRoot(mc).querySelector(selector);
                 if (found == null) throw new IllegalArgumentException("no CUI element matches: " + selector);
+                // Explicit direct mode bypasses property accessors for the target field.
+                boolean direct = request.has("direct") && request.get("direct").getAsBoolean();
+                Method setter = direct ? null : cuiSetter(found.getClass(), fieldName, request.get("value"));
+                if (setter != null) {
+                    Method getter = cuiGetter(found.getClass(), fieldName);
+                    j.out.put("field", fieldName);
+                    j.out.put("declaringClass", setter.getDeclaringClass().getName());
+                    if (getter != null) j.out.put("before", cuiFieldValue(getter.invoke(found)));
+                    Object value = GSON.fromJson(request.get("value"), setter.getGenericParameterTypes()[0]);
+                    setter.invoke(found, value);
+                    j.out.put("after", cuiFieldValue(getter == null ? value : getter.invoke(found)));
+                    j.out.put("element", cuiDebugInfo(found));
+                    return true;
+                }
                 Field field = cuiField(found.getClass(), fieldName);
                 if (java.lang.reflect.Modifier.isStatic(field.getModifiers()))
                     throw new IllegalArgumentException("expected an instance field: " + fieldName);
@@ -827,6 +873,27 @@ public final class AgentClientBridge {
         return out;
     }
 
+    /** Blank fixed-size test surface; no default widgets, layout or background gradient. */
+    private static final class EmptyCuiLayer extends PrimaryLayer {
+        private EmptyCuiLayer(int width, int height) {
+            setSize(width, height);
+            setRenderGradient(false);
+        }
+
+        /** Clears stale menu pixels when no world exists to supply a fresh background frame. */
+        @Override
+        public void drawBackground(GuiGraphics graphics, int x, int y, int width, int height, RenderingHint hint) {
+            Minecraft mc = Minecraft.getInstance();
+            if (mc.level == null)
+                graphics.fill(0, 0, mc.getWindow().getGuiScaledWidth(), mc.getWindow().getGuiScaledHeight(), 0xFF000000);
+        }
+
+        /** Keeps the requested dimensions instead of shrinking to empty content bounds. */
+        @Override
+        public void alignWidgets() {
+        }
+    }
+
     /** Requires the currently open screen to expose a CUI root. */
     private static PrimaryLayer requireCuiRoot(Minecraft mc) {
         if (mc.screen instanceof CUIScreen screen && screen.getPrimaryLayer() != null)
@@ -927,6 +994,61 @@ public final class AgentClientBridge {
     }
 
     /** Finds the nearest declared instance field, including private inherited fields. */
+    /** Finds a public bean getter, including inherited boolean accessors. */
+    private static Method cuiGetter(Class<?> type, String name) {
+        String suffix = Character.toUpperCase(name.charAt(0)) + name.substring(1);
+        for (String prefix : List.of("is", "get")) {
+            try {
+                Method method = type.getMethod(prefix + suffix);
+                if (java.lang.reflect.Modifier.isStatic(method.getModifiers())) continue;
+                Class<?> result = method.getReturnType();
+                if (result == void.class) continue;
+                if (prefix.equals("is") && result != boolean.class && result != Boolean.class) continue;
+                return method;
+            } catch (NoSuchMethodException ignored) {
+                // Try the other bean naming convention, then fall back to the field.
+            }
+        }
+        return null;
+    }
+
+    /** Selects a convertible public setter, preferring the JSON primitive's native type. */
+    private static Method cuiSetter(Class<?> type, String name, com.google.gson.JsonElement value) {
+        String setterName = "set" + Character.toUpperCase(name.charAt(0)) + name.substring(1);
+        List<Method> candidates = new ArrayList<>();
+        for (Method method : type.getMethods()) {
+            if (method.getName().equals(setterName) && method.getParameterCount() == 1
+                    && !java.lang.reflect.Modifier.isStatic(method.getModifiers())
+                    && !method.isBridge() && !method.isSynthetic()) candidates.add(method);
+        }
+        candidates.sort(java.util.Comparator
+                .comparingInt((Method method) -> cuiSetterRank(method.getParameterTypes()[0], value))
+                .thenComparing(Method::toGenericString));
+        for (Method method : candidates) {
+            if (value.isJsonNull() && method.getParameterTypes()[0].isPrimitive()) continue;
+            try {
+                GSON.fromJson(value, method.getGenericParameterTypes()[0]);
+                return method;
+            } catch (RuntimeException ignored) {
+                // Another overload may accept this value.
+            }
+        }
+        if (!candidates.isEmpty()) throw new IllegalArgumentException("no setter accepts value for: " + name);
+        return null;
+    }
+
+    /** Ranks exact primitive categories ahead of Gson coercions. */
+    private static int cuiSetterRank(Class<?> type, com.google.gson.JsonElement value) {
+        if (value.isJsonPrimitive()) {
+            var primitive = value.getAsJsonPrimitive();
+            if (primitive.isString() && type == String.class) return 0;
+            if (primitive.isBoolean() && (type == boolean.class || type == Boolean.class)) return 0;
+            if (primitive.isNumber() && (Number.class.isAssignableFrom(type)
+                    || (type.isPrimitive() && type != boolean.class && type != char.class))) return 0;
+        }
+        return 1;
+    }
+
     private static Field cuiField(Class<?> type, String name) throws NoSuchFieldException {
         for (Class<?> current = type; current != null; current = current.getSuperclass()) {
             try {
