@@ -20,7 +20,7 @@
 8. [阶段与风道](stages-and-airflow.md)：阶段选择、可选任务、临时配方与鼓风口试验。
 9. [冶铁炉正式路线](iron-bloomery.md)：材料观察、风道规划、风箱试吹与最终生产配方。
 10. [编写研究内容](authoring-guide.md)：可复制的项目、知识入口、自定义事件及最小验证步骤；新内容先填[内容模板](content-template.md)。
-11. [控温实验炉](controlled-furnace.md)：温度、批次、试样与生产权限的当前实现。
+11. [控温实验炉](controlled-furnace.md)：温度、倒计时、样品格与停炉结算。
 12. [普通耐火砖正式路线](refractory-brick.md)：原料、参考知识、试烧与批量生产。
 13. [探矿镐的使用方法](prospecting.md)说明观察、实验台、探测权限与旧档承接。
 14. [阴燃利用](hand-warmer.md)说明寒冷观察、试制铜制手炉、配方权限与旧档承接。

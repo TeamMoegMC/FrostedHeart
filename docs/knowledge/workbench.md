@@ -178,13 +178,13 @@ M3-A实物任务：成功样可直接留在背包/快捷栏，在研究详情选
 
 ## M5 控温炉
 
-自有 `controlled_furnace` 使用独立三槽 CUI，模式、下一炉设定、本炉锁定工艺温度、加载 tick、开始/取消与配方数量均由服务端判断；不扩展绘图台输入槽或样品提交。JEI 注册 `controlled_firing` 分类，生产配方使用现有权限投影显隐。见 [控温实验炉](controlled-furnace.md)。
+独立的 `controlled_furnace` 界面提供温度、倒计时与六个样品格。停炉时服务器按 `controlled_firing` 配方在原格结算。见 [控温实验炉](controlled-furnace.md)。
 
 ## M6 多份进行中记录
 
 显式merge保留多份同项目研究时，研究页仅在多份可推进记录下显示左右选择，附记录序号、当前阶段和任务进度；本地按项目保留选择，操作携带已有run UUID。默认顺序与服务端/设备均为创建时间+UUID。真实完成且全部成果有效已学时，页面优先完成，备用进度以说明保留、停止任务和临时授权；遗忘后恢复。确认放弃仅影响当前选择。实验台多目标说明也包含记录/阶段。规则与存档边界见[状态/API](state-and-api.md)。
 
 
-实验台 `ExperimentTableActionPacket` 的CHECK/START/STOP核对点击时run/requirement与当前台面绑定；队友已切换目标时仅同步，不停止/启动另一份记录。备用目标已从候选列表暂停时，停止按钮仍发送台面实际绑定。控温炉实际CUI开始入口携带所见模式/四字段binding并由服务端对比；旧公开start API保留，见[控温炉](controlled-furnace.md)。
+实验台 `ExperimentTableActionPacket` 的CHECK/START/STOP核对点击时run/requirement与当前台面绑定；队友已切换目标时仅同步，不停止/启动另一份记录。备用目标已从候选列表暂停时，停止按钮仍发送台面实际绑定。控温实验炉的开始包携带本次输入的温度和时间。
 
 联络棋盘由`DrawDeskScreen.receiveLinkReply`交给原`MainGamePanel`，`ClientResearchGame.bind`切换显示/操作上下文，复用同一套`CardButton`、`CardStatPanel`、`OrderWidget`和`HelpPanel`；不再有独立的札记棋盘组件。通过 `FHDrawingDeskOperationPacket` 的4/5/6操作发送重排、单格、配对；操作0–3仍服务旧桌面功能。服务端仅在当前会话的真实棋盘完成后调用`KnowledgeService.link`，不会把联络胜局写入研究演算。取消后的迟到联络操作不会作用于旧棋盘。

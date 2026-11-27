@@ -150,9 +150,7 @@ public class JEICompat implements IModPlugin {
         Map<ItemStack, Boolean> stackLockedStatus = new HashMap<>(); // true=锁定, false=解锁
         for (Recipe<?> i : recipesToRefresh.values()) {
             boolean currentlyManaged = currentManagedRecipes.containsKey(i.getId());
-            boolean controlledProduction = i instanceof com.teammoeg.frostedresearch.knowledge.furnace.ControlledFiringRecipe firing && firing.experiment().isEmpty();
-            boolean locked = controlledProduction && !ClientKnowledgeDataAPI.technologyProjection().managedRecipes().contains(i.getId())
-                    || currentlyManaged && !ClientKnowledgeDataAPI.technologyProjection().recipe(i.getId()).allowed();
+            boolean locked = currentlyManaged && !ClientKnowledgeDataAPI.technologyProjection().recipe(i.getId()).allowed();
             updateRecipeVisibility(i.getId(), locked);
 
             ItemStack out = RecipeUtil.getResultItem(i);
@@ -226,8 +224,6 @@ public class JEICompat implements IModPlugin {
         RecipeManager recipes = Minecraft.getInstance().level == null
                 ? null : Minecraft.getInstance().level.getRecipeManager();
         if (recipes != null) {
-            for (var firing : recipes.getAllRecipesFor(com.teammoeg.frostedresearch.FRContents.Recipes.CONTROLLED_FIRING.get()))
-                if (firing.experiment().isEmpty()) managed.put(firing.getId(), firing);
             for (ResourceLocation id : ClientKnowledgeDataAPI.technologyProjection().managedRecipes()) {
                 recipes.byKey(id).ifPresent(recipe -> managed.put(id, recipe));
             }

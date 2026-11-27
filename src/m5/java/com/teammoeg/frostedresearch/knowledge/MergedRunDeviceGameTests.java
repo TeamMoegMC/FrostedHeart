@@ -19,23 +19,26 @@ import static com.teammoeg.frostedresearch.knowledge.MergedResearchRunGameTests.
 @GameTestHolder("frostedresearch_m6_devices")
 @PrefixGameTestTemplate(false)
 public final class MergedRunDeviceGameTests {
-    @GameTest(batch="m6_device_selection",template="trial_kiln_empty",timeoutTicks=100)
-    public static void mergedStageOrderAndExplicitFurnaceSelectionSurviveNbt(GameTestHelper h){
-        try(var scope=new ControlledFurnaceGameTests.Scope()){
-            install();var a=scope.actor(h);var s=a.service();mergePair(s);var data=new KnowledgeJournalData(KnowledgeView.create(s));
-            var f=ControlledFurnaceGameTests.furnace(h,new BlockPos(1,1,1));ControlledFurnaceGameTests.fill(f,2,2);ControlledFurnaceGameTests.temp(f,1100);
-            h.assertTrue(f.start(a.player).equals("choose_target") && f.remaining()==0 && f.inventory().getStackInSlot(0).getCount()==2,"multiple run furnace does not silently choose another run");
-            var menu=new ControlledFurnaceMenu(1,a.player.getInventory(),f);a.player.containerMenu=menu;
-            h.assertTrue(menu.clickMenuButton(a.player,5) && f.selectedTarget().orElseThrow().run().equals(EARLY),"vanilla menu selects journal default order");
-            h.assertTrue(menu.clickMenuButton(a.player,5) && f.selectedTarget().orElseThrow().run().equals(LATE),"same menu explicitly selects second current task");
-            f.refreshTargets(a.player);h.assertTrue(f.selectedTarget().orElseThrow().run().toString().equals(data.openRun(PROJECT.toString(),LATE.toString()).id()),"valid explicit furnace selection and chosen journal record agree");
-            var saved=f.saveWithFullMetadata();var restored=new ControlledFurnaceBlockEntity(f.getBlockPos(),f.getBlockState());restored.load(saved);restored.setLevel(h.getLevel());
-            h.assertTrue(restored.selectedTarget().equals(f.selectedTarget()) && restored.start(a.player).equals("running") && restored.binding().orElseThrow().run().equals(LATE),"real BE NBT preserves selection; start keeps it");
-            h.assertTrue(restored.binding().orElseThrow().requirement().equals("late_brick"),"batch belongs to selected record's current stage task");
-            var old=restored.saveWithFullMetadata();old.remove("selected_target");old.remove("target_title");old.remove("target_count");
-            var compatible=new ControlledFurnaceBlockEntity(f.getBlockPos(),f.getBlockState());compatible.load(old);compatible.setLevel(h.getLevel());
-            h.assertTrue(compatible.binding().equals(restored.binding()) && compatible.remaining()==restored.remaining(),"old M5 NBT without optional selection keeps invested batch API");
-            compatible.cancel();restored.cancel();h.succeed();
+    @GameTest(batch="m6_device_selection", template="trial_kiln_empty", timeoutTicks=100)
+    public static void parallelResearchRecordsDoNotGateFurnace(GameTestHelper h) {
+        try (var scope = new ControlledFurnaceGameTests.Scope()) {
+            install();
+            var actor = scope.actor(h);
+            var service = actor.service();
+            mergePair(service);
+            var journal = new KnowledgeJournalData(KnowledgeView.create(service));
+            h.assertTrue(journal.openRun(PROJECT.toString(), LATE.toString()).id().equals(LATE.toString()),
+                "journal can still select either research record");
+            var furnace = ControlledFurnaceGameTests.furnace(h, new BlockPos(1, 1, 1));
+            ControlledFurnaceGameTests.fill(furnace, 2, 1);
+            furnace.start(1100, 21);
+            ControlledFurnaceGameTests.ticks(furnace, 420);
+            for (int slot = 0; slot < 2; slot++) {
+                var product = furnace.inventory().getStackInSlot(slot);
+                h.assertTrue(product.is(ControlledFurnaceGameTests.item("frostedheart:refractory_brick"))
+                    && ResearchSampleBinding.read(product).isEmpty(), "parallel records leave furnace specimens unbound");
+            }
+            h.succeed();
         }
     }
     @GameTest(batch="m6_m3_m4_targets",template="trial_kiln_empty",timeoutTicks=100)
@@ -57,25 +60,6 @@ public final class MergedRunDeviceGameTests {
             s.observeResearchTarget(a.player,ItemRetrieval.observe(a.player,brick).observation().orElseThrow(),null,brick);
             h.assertTrue(brick.getTag().equals(originalTag) && !s.state().research().get(LATE).stageState().completedTasks().contains("late_brick"),"knowledge merge neither rewrites old team sample binding nor credits it");
             h.succeed();
-        }
-    }
-    @GameTest(batch="m6_selected_backup",template="trial_kiln_empty",timeoutTicks=100)
-    public static void pausedBackupStopsNewBatchesRetainsChoiceAndResumesAfterForgetting(GameTestHelper h){
-        try(var scope=new ControlledFurnaceGameTests.Scope()){
-            install();var a=scope.actor(h);var s=a.service();mergePair(s);var f=ControlledFurnaceGameTests.furnace(h,new BlockPos(1,1,1));
-            ControlledFurnaceGameTests.fill(f,1,1);f.cycleTarget(a.player);var selected=f.selectedTarget().orElseThrow();h.assertTrue(selected.run().equals(EARLY),"chosen early backup");
-            var invested=ControlledFurnaceGameTests.furnace(h,new BlockPos(4,1,1));ControlledFurnaceGameTests.fill(invested,1,1);ControlledFurnaceGameTests.temp(invested,1100);
-            invested.cycleTarget(a.player);h.assertTrue(invested.start(a.player).equals("running"),"start paid batch before standby");
-            s.recordCalculation(LATE,"finish",1);s.finishResearch(LATE);f.refreshTargets(a.player);
-            ControlledFurnaceGameTests.ticks(invested,400);var brick=invested.inventory().getStackInSlot(2);
-            s.observeResearchTarget(a.player,ItemRetrieval.observe(a.player,brick).observation().orElseThrow(),null,brick);
-            h.assertTrue(brick.getCount()==1 && !s.state().research().get(EARLY).stageState().completedTasks().contains("early_brick"),"paid batch delivers but standby does not advance from its sample");
-            h.assertTrue(f.targetCount()==0 && f.selectedTarget().filter(selected::equals).isPresent() && f.start(a.player).equals("no_trial")
-                && f.inventory().getStackInSlot(0).getCount()==1,"standby cannot start; optional selected binding and unspent clay are retained");
-            s.forget(KnowledgeKey.result(RESULT));f.refreshTargets(a.player);
-            h.assertTrue(f.selectedTarget().filter(selected::equals).isPresent() && f.start(a.player).equals("running") && f.binding().filter(selected::equals).isPresent(),"forget resumes same selected record without changing its identity");
-            f.cancel();s.observeResearchTarget(a.player,ItemRetrieval.observe(a.player,brick).observation().orElseThrow(),null,brick);
-            h.assertTrue(s.state().research().get(EARLY).stageState().completedTasks().contains("early_brick") && brick.getCount()==1,"fresh sample can advance the same preserved task after forgetting");h.succeed();
         }
     }
     @GameTest(batch="m6_invested_experiment",template="trial_kiln_empty",timeoutTicks=160)
@@ -189,18 +173,18 @@ public final class MergedRunDeviceGameTests {
                     delayedStop.apply(a.player);delayedStart.apply(a.player);
                     h.assertTrue(table.run().equals(LATE) && table.requirement().equals("late_experiment") && table.progress()==progress
                         && table.status()==ExperimentTableBlockEntity.Status.RUNNING && table.getInventory().getStackInSlot(0).isEmpty(),"A's old R1 stop/start only refresh; R2 paid progress is intact");
-                    var f=ControlledFurnaceGameTests.furnace(h,new BlockPos(4,1,1));ControlledFurnaceGameTests.fill(f,1,1);ControlledFurnaceGameTests.temp(f,1100);
-                    var menuA=new ControlledFurnaceMenu(30,a.player.getInventory(),f);var menuB=new ControlledFurnaceMenu(31,b.player.getInventory(),f);
-                    a.player.containerMenu=menuA;b.player.containerMenu=menuB;f.cycleTarget(a.player);
-                    var oldSeen=f.selectedTarget();h.assertTrue(oldSeen.orElseThrow().run().equals(EARLY),"A saw furnace R1");
-                    var queued=wire(new ControlledFurnaceStartPacket(menuA.containerId,f.getBlockPos(),true,oldSeen));
-                    f.cycleTarget(b.player);h.assertTrue(f.selectedTarget().orElseThrow().run().equals(LATE),"B selected furnace R2");
+                    var f=ControlledFurnaceGameTests.furnace(h,new BlockPos(4,1,1));
+                    f.claim(a.player);
+                    ControlledFurnaceGameTests.fill(f, 1, 2);
+                    var menuA=new ControlledFurnaceMenu(30,a.player.getInventory(),f);
+                    var menuB=new ControlledFurnaceMenu(31,b.player.getInventory(),f);
+                    a.player.containerMenu=menuA;b.player.containerMenu=menuB;
+                    var queued=wire(new ControlledFurnaceStartPacket(menuA.containerId, f.getBlockPos(), 998, 20));
+                    wire(new ControlledFurnaceStartPacket(menuB.containerId, f.getBlockPos(), 1107, 21)).apply(b.player);
                     queued.apply(a.player);
-                    h.assertTrue(!f.busy() && f.inventory().getStackInSlot(0).getCount()==1 && f.inventory().getStackInSlot(1).getCount()==1,"A's stale furnace start does not consume or start R2");
-                    wire(new ControlledFurnaceStartPacket(menuB.containerId,f.getBlockPos(),true,f.selectedTarget())).apply(b.player);
-                    h.assertTrue(f.busy() && f.binding().orElseThrow().run().equals(LATE) && f.inventory().getStackInSlot(0).isEmpty(),"B's current endpoint starts exactly the selected R2 batch");
-                    int remaining=f.remaining();queued.apply(a.player);
-                    h.assertTrue(f.remaining()==remaining && f.binding().orElseThrow().run().equals(LATE),"late stale request cannot replace the paid batch");
+                    h.assertTrue(f.running() && f.temperature()==1107 && f.timerSeconds()==21
+                        && f.inventory().getStackInSlot(ControlledFurnaceBlockEntity.FUEL_SLOT).getCount()==1,
+                        "a second start cannot replace settings or spend fuel on a running furnace");
                     h.succeed();
                 }finally{scope.close();}
             }));

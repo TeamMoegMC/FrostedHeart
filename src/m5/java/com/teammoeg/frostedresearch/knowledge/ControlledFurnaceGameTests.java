@@ -29,7 +29,7 @@ import java.util.*;
 @PrefixGameTestTemplate(false)
 public final class ControlledFurnaceGameTests {
     static ResourceLocation id(String p){return new ResourceLocation("the_winter_rescue",p);}
-    static final ResourceLocation IDEA=id("refractory_firing"),PROJECT=id("refractory_brick"),DESIGN=id("controlled_refractory_production"),BATCH=id("research/refractory_brick_batch");
+    static final ResourceLocation IDEA=id("refractory_firing"),PROJECT=id("refractory_brick"),DESIGN=id("controlled_refractory_production");
     static final AcquisitionSource SOURCE=new AcquisitionSource("test_external",Optional.empty(),1);
     static Item item(String id){return Objects.requireNonNull(ForgeRegistries.ITEMS.getValue(new ResourceLocation(id)));}
     static <T>T formal(String path,Codec<T> codec){
@@ -75,131 +75,51 @@ public final class ControlledFurnaceGameTests {
     }
     static UUID firing(Actor a){var run=begin(a);a.service().advanceStage(run,"prepare");return run;}
     static ControlledFurnaceBlockEntity furnace(GameTestHelper h,BlockPos pos){h.setBlock(pos,FRContents.Blocks.CONTROLLED_FURNACE.get());return (ControlledFurnaceBlockEntity)h.getBlockEntity(pos);}
-    static void fill(ControlledFurnaceBlockEntity f,int clay,int fuel){f.inventory().setStackInSlot(0,new ItemStack(item("frostedheart:fire_clay_ball"),clay));f.inventory().setStackInSlot(1,new ItemStack(Items.CHARCOAL,fuel));}
-
-    @GameTest(batch="m5_generic_firing",template="trial_kiln_empty",timeoutTicks=100)
-    public static void otherExperimentMaterialsCountsAndProductionUseSameFurnace(GameTestHelper h){
-        var manager=h.getLevel().getRecipeManager();var original=List.copyOf(manager.getRecipes());
-        try(var scope=new Scope()){
-            install();var a=scope.actor(h);
-            var idea=id("ceramic_idea");var project=id("ceramic_study");var design=id("ceramic_design");var experiment=id("ceramic_trial");
-            var trialId=id("research/ceramic_trial");var productionId=id("research/ceramic_production");
-            var task=ProjectRequirement.CODEC.parse(JsonOps.INSTANCE,JsonParser.parseString("""
-                {"id":"observe_ceramic","type":"observation","title":"Observe this ceramic sample",
-                 "observation":{"experiment":"the_winter_rescue:ceramic_trial","team_current_run":true,
-                  "condition":{"kind":"observation","observation_type":"item","conditions":[
-                    {"field":"object","operator":"eq","value":{"state":"known","type":"string","text":"minecraft:brick"}}]}}}
-                """)).getOrThrow(false,e->{});
-            var definitions=KnowledgeDefinitions.current();var ideas=new HashMap<>(definitions.ideas());
-            ideas.put(idea,new IdeaDefinition("Ceramics","",List.of(),List.of(project),true));
-            var projects=new HashMap<>(definitions.projects());projects.put(project,new ProjectDefinition("Ceramics","",List.of(design),List.of(task)));
-            var results=new HashMap<>(definitions.results());results.put(design,new ResultDefinition(new ResearchResult.Design(design,List.of(productionId)),"Ceramic design","",List.of(),true));
-            var snapshot=new KnowledgeDefinitions.Snapshot(0,ideas,results,definitions.links(),Map.of(),projects,List.of());
-            h.assertTrue(KnowledgeDefinitions.validate(snapshot).isEmpty(),"a second experiment uses the ordinary knowledge definitions");
-            KnowledgeDefinitions.install(snapshot);
-            var trial=new ControlledFiringRecipe.Serializer().fromJson(trialId,JsonParser.parseString("""
-                {"input":{"item":"minecraft:clay_ball","count":2},"fuel":{"item":"minecraft:coal"},
-                 "result":{"item":"minecraft:brick","count":3},"failure":{"item":"minecraft:brick"},
-                 "temperature_min":900,"temperature_max":950,"duration":20,"experiment":"the_winter_rescue:ceramic_trial"}
-                """).getAsJsonObject());
-            var production=new ControlledFiringRecipe(productionId,new ItemStack(Items.CLAY_BALL,4),new ItemStack(Items.CHARCOAL,2),900,950,30,
-                    new ItemStack(Items.BRICK,6),new ItemStack(Items.FLINT,2),Optional.empty());
-            var recipes=new ArrayList<Recipe<?>>(original);recipes.add(trial);recipes.add(production);manager.replaceRecipes(recipes);
-            var buffer=new net.minecraft.network.FriendlyByteBuf(io.netty.buffer.Unpooled.buffer());
-            try{
-                var serializer=new ControlledFiringRecipe.Serializer();serializer.toNetwork(buffer,trial);var decoded=serializer.fromNetwork(trialId,buffer);
-                h.assertTrue(decoded.input().is(Items.CLAY_BALL) && decoded.fuel().is(Items.COAL) && decoded.result().getCount()==3 && decoded.failure().getCount()==1,
-                        "generic materials and independent output counts survive recipe synchronization");
-            }finally{buffer.release();}
-            var service=a.service();service.learn(KnowledgeElement.idea(idea),SOURCE,KnowledgeService.Grant.NORMAL);
-            var run=service.startResearch(project).orElseThrow();var f=furnace(h,new BlockPos(1,1,1));f.claim(a.player);
-            f.mode();f.inventory().setStackInSlot(0,new ItemStack(Items.CLAY_BALL,4));f.inventory().setStackInSlot(1,new ItemStack(Items.CHARCOAL,2));
-            h.assertTrue(f.start(a.player).equals("need_design") && f.inventory().getStackInSlot(0).getCount()==4,"a generic production recipe still needs its Design");
-            f.mode();temp(f,1000);f.inventory().setStackInSlot(0,new ItemStack(Items.CLAY_BALL,2));f.inventory().setStackInSlot(1,new ItemStack(Items.COAL));
-            h.assertTrue(f.start(a.player).equals("running"),"same machine accepts the other experiment and coal fuel");ticks(f,20);
-            var failed=f.inventory().getStackInSlot(2);
-            h.assertTrue(failed.is(Items.BRICK) && failed.getCount()==1 && ResearchSampleBinding.read(failed).isEmpty(),"failure sharing the success item never gets a successful-sample binding");
-            f.inventory().setStackInSlot(2,ItemStack.EMPTY);temp(f,900);f.inventory().setStackInSlot(0,new ItemStack(Items.CLAY_BALL,2));f.inventory().setStackInSlot(1,new ItemStack(Items.COAL));
-            h.assertTrue(f.start(a.player).equals("running"),"second trial starts");ticks(f,20);var output=f.inventory().getStackInSlot(2);
-            h.assertTrue(output.getCount()==3 && ResearchSampleBinding.read(output).orElseThrow().experiment().equals(experiment),"successful output binds the other experiment ID");
-            var observation=ItemRetrieval.observe(a.player,output).observation().orElseThrow();service.observeResearchTarget(a.player,observation,null,output);
-            h.assertTrue(service.requirementsMet(run),"fresh observation completes the other experiment task");
-            var completed=service.finishResearch(run);
-            h.assertTrue(!completed.isEmpty() && completed.stream().allMatch(KnowledgeService.OperationResult::succeeded),"the other experiment produces its Design normally");
-            f.inventory().setStackInSlot(2,ItemStack.EMPTY);f.mode();f.inventory().setStackInSlot(0,new ItemStack(Items.CLAY_BALL,4));f.inventory().setStackInSlot(1,new ItemStack(Items.CHARCOAL,2));
-            h.assertTrue(f.start(a.player).equals("running"),"its own Design enables production");ticks(f,30);
-            h.assertTrue(f.inventory().getStackInSlot(2).is(Items.BRICK) && f.inventory().getStackInSlot(2).getCount()==6
-                    && ResearchSampleBinding.read(f.inventory().getStackInSlot(2)).isEmpty(),"independent production count with no experiment binding");
-            var menu=new ControlledFurnaceMenu(1,a.player.getInventory(),f);
-            h.assertTrue(menu.slots.size()==39 && menu.getSlot(3).x==ControlledFurnaceMenu.INVENTORY_X && menu.getSlot(3).y==ControlledFurnaceMenu.HOTBAR_Y
-                    && menu.getSlot(12).y==ControlledFurnaceMenu.INVENTORY_Y && !menu.getSlot(2).mayPlace(new ItemStack(Items.BRICK)),"native inventory has 27 main slots, 9 hotbar slots and a take-only output");
-            h.succeed();
-        }finally{manager.replaceRecipes(original);}
+    static void fill(ControlledFurnaceBlockEntity f, int clay, int fuel) {
+        for (int i = 0; i < clay; i++) f.inventory().setStackInSlot(i, new ItemStack(item("frostedheart:fire_clay_ball")));
+        f.inventory().setStackInSlot(ControlledFurnaceBlockEntity.FUEL_SLOT, new ItemStack(Items.CHARCOAL, fuel));
     }
-    static void temp(ControlledFurnaceBlockEntity f,int temp){while(f.temperature()!=temp)f.adjust(Integer.compare(temp,f.temperature()));}
     static void ticks(ControlledFurnaceBlockEntity f,int n){for(int i=0;i<n;i++)f.tick();}
     static void guard(Scope scope,Runnable r){try{r.run();}catch(RuntimeException|Error e){scope.close();throw e;}}
 
-    @GameTest(batch="m5_furnace_timer",template="trial_kiln_empty",timeoutTicks=80)
-    public static void timedAndContinuousRunsThroughMenu(GameTestHelper h){
+    @GameTest(batch="m5_furnace_specimens",template="trial_kiln_empty",timeoutTicks=80)
+    public static void independentFiringLocksSlotsAndSettlesInPlace(GameTestHelper h) {
         try (var scope = new Scope()) {
-            install();
             var actor = scope.actor(h);
-            firing(actor);
-            var furnace = furnace(h, new BlockPos(1, 1, 1));
+            var furnace = furnace(h, new BlockPos(1,1,1));
             furnace.claim(actor.player);
-            furnace.refreshTargets(actor.player);
-            temp(furnace, 1100);
-            fill(furnace, 3, 3);
+            fill(furnace, 0, 4);
             var menu = new ControlledFurnaceMenu(1, actor.player.getInventory(), furnace);
             actor.player.containerMenu = menu;
-            var packet = new ControlledFurnaceStartPacket(menu.containerId, furnace.getBlockPos(), true, furnace.selectedTarget(), 25);
+            ItemStack clay = new ItemStack(item("frostedheart:fire_clay_ball"), 4);
+            h.assertTrue(menu.quickMoveIn(clay) && clay.isEmpty(), "shift-click spreads a stack over single-item slots");
+            for (int slot = 0; slot < 4; slot++) h.assertTrue(menu.getSlot(slot).getItem().getCount() == 1, "one item per specimen slot");
+            furnace.inventory().setStackInSlot(5, new ItemStack(Items.STONE));
             var buffer = new net.minecraft.network.FriendlyByteBuf(io.netty.buffer.Unpooled.buffer());
             try {
-                packet.encode(buffer);
+                new ControlledFurnaceStartPacket(menu.containerId, furnace.getBlockPos(), 1107, 20).encode(buffer);
                 new ControlledFurnaceStartPacket(buffer).apply(actor.player);
-            } finally {
-                buffer.release();
-            }
-            h.assertTrue(furnace.activeRun() && furnace.timerSeconds() == 25, "the menu start packet starts the requested countdown");
+            } finally { buffer.release(); }
+            h.assertTrue(actor.service().state().research().isEmpty() && furnace.running() && furnace.temperature() == 1107,
+                "manual temperature is exact and firing starts before research");
+            h.assertTrue(!menu.getSlot(0).mayPickup(actor.player) && !menu.getSlot(4).mayPlace(new ItemStack(Items.STONE))
+                && menu.quickMoveStack(actor.player, 0).isEmpty() && furnace.inventory().extractItem(0, 1, false).isEmpty(),
+                "all sample slots stay locked");
             ticks(furnace, 400);
-            var output = furnace.inventory().getStackInSlot(2);
-            h.assertTrue(output.getCount() == 1 && ResearchSampleBinding.read(output).isPresent()
-                && furnace.timerSeconds() == 5 && furnace.remaining() == 400, "the next batch starts immediately with the same trial");
-
-            var restored = new ControlledFurnaceBlockEntity(furnace.getBlockPos(), furnace.getBlockState());
-            restored.load(furnace.saveWithFullMetadata());
-            restored.setLevel(h.getLevel());
-            ticks(restored, 99);
-            h.assertTrue(restored.activeRun() && restored.timerSeconds() == 1, "the saved countdown resumes without rounding away the last second");
-            ticks(restored, 1);
-            h.assertTrue(!restored.busy() && restored.inventory().getStackInSlot(2).getCount() == 1
-                && restored.inventory().getStackInSlot(0).getCount() == 2 && restored.inventory().getStackInSlot(1).getCount() == 1,
-                "timeout preserves finished output and refunds only the unfinished batch's input");
-
-            furnace.cancel();
-            furnace.inventory().setStackInSlot(2, ItemStack.EMPTY);
-            fill(furnace, 3, 3);
-            h.assertTrue(menu.startSeen(actor.player, true, furnace.selectedTarget(), 40), "menu accepts an exact two-batch timer");
-            ticks(furnace, 800);
-            h.assertTrue(!furnace.busy() && furnace.inventory().getStackInSlot(2).getCount() == 2
-                && furnace.inventory().getStackInSlot(0).getCount() == 1 && furnace.inventory().getStackInSlot(1).getCount() == 1,
-                "a batch finishing on the deadline is delivered without starting a third batch");
-
-            furnace.inventory().setStackInSlot(2, ItemStack.EMPTY);
-            fill(furnace, 1, 1);
-            menu.clickMenuButton(actor.player, 3);
-            ticks(furnace, 800);
-            h.assertTrue(furnace.activeRun() && furnace.timerSeconds() == 0 && furnace.remaining() == 0, "no timer stays active while waiting for supplies");
-            fill(furnace, 1, 1);
-            furnace.inventory().setStackInSlot(2, new ItemStack(Items.STONE));
-            ticks(furnace, 20);
-            h.assertTrue(furnace.remaining() == 0 && furnace.inventory().getStackInSlot(1).getCount() == 1, "blocked output does not spend fuel");
-            furnace.inventory().setStackInSlot(2, ItemStack.EMPTY);
-            ticks(furnace, 401);
-            h.assertTrue(furnace.inventory().getStackInSlot(2).getCount() == 1, "continuous firing resumes after the output is cleared");
-            menu.clickMenuButton(actor.player, 4);
-            h.assertTrue(!furnace.busy(), "the stop button also stops a run that is waiting");
+            h.assertTrue(!furnace.running() && menu.getSlot(0).getItem().is(item("frostedheart:fire_clay_ball")),
+                "the exact duration threshold retains the input");
+            menu.start(actor.player, 1107, 0);
+            ticks(furnace, 480);
+            h.assertTrue(furnace.running() && menu.getSlot(0).getItem().is(item("frostedheart:fire_clay_ball")),
+                "an untimed run holds samples until stop");
+            menu.clickMenuButton(actor.player, ControlledFurnaceMenu.STOP);
+            for (int slot = 0; slot < 4; slot++) {
+                var result = menu.getSlot(slot).getItem();
+                h.assertTrue(result.is(item("frostedheart:refractory_brick")) && ResearchSampleBinding.read(result).isEmpty(),
+                    "each sample becomes its unbound result in the original slot");
+            }
+            h.assertTrue(menu.getSlot(5).getItem().is(Items.STONE), "unrecognized samples remain in place");
+            h.assertTrue(menu.getSlot(ControlledFurnaceBlockEntity.FUEL_SLOT).getItem().getCount() == 2, "one charcoal per run");
             h.succeed();
         }
     }
@@ -220,77 +140,69 @@ public final class ControlledFurnaceGameTests {
         }
     }
     @GameTest(batch="m5_temperature_boundaries",template="trial_kiln_empty",timeoutTicks=80)
-    public static void actualBatchBoundaryTicksAndLatchedSettings(GameTestHelper h){
-        try(var scope=new Scope()){
-            install();var a=scope.actor(h);firing(a);int x=0;
-            for(int t:new int[]{600,1000,1050,1100,1150,1200,1400}){
-                var f=furnace(h,new BlockPos(1+(x++%3)*2,1,1+(x/3)*2));fill(f,2,2);temp(f,t);
-                h.assertTrue(f.start(a.player).equals("running") && f.remaining()==400,"real recipe start consumes one batch");
-                ticks(f,399);h.assertTrue(f.inventory().getStackInSlot(2).isEmpty(),"399 loaded ticks do not finish");
-                f.adjust(t<1400?1:-1);h.assertTrue(f.lockedTemperature()==t,"running adjustment does not change locked process");ticks(f,1);
-                var out=f.inventory().getStackInSlot(2);boolean good=t>=1050&&t<=1150;
-                h.assertTrue(out.is(good?item("frostedheart:refractory_brick"):FRContents.Items.CRACKED_REFRACTORY_BRICK.get()) && out.getCount()==1,"inclusive good window; all others cracked");
-                h.assertTrue(ResearchSampleBinding.read(out).isPresent()==good,"only actual good trial output is bound");
-                ticks(f,800);h.assertTrue(out.getCount()==1 && f.inventory().getStackInSlot(0).getCount()==1 && f.inventory().getStackInSlot(1).getCount()==1,"no automatic second batch");
-            }h.succeed();
+    public static void timingTemperatureAndReload(GameTestHelper h) {
+        for (int temperature : new int[]{600, 1049, 1050, 1107, 1150, 1151, 1400}) {
+            var f = furnace(h, new BlockPos(1,1,1));
+            fill(f, 1, 1);
+            f.start(temperature, 21);
+            ticks(f, 411);
+            var restored = new ControlledFurnaceBlockEntity(f.getBlockPos(), f.getBlockState());
+            restored.load(f.saveWithFullMetadata());
+            restored.setLevel(h.getLevel());
+            f.stop();
+            ticks(restored, 8);
+            h.assertTrue(restored.running() && restored.timerSeconds() == 1, "resume the precise saved timer");
+            ticks(restored, 1);
+            boolean good = temperature >= 1050 && temperature <= 1150;
+            h.assertTrue(!restored.running() && restored.inventory().getStackInSlot(0).is(good
+                ? item("frostedheart:refractory_brick") : FRContents.Items.CRACKED_REFRACTORY_BRICK.get()),
+                "timeout resolves the inclusive temperature range in place");
         }
+        h.succeed();
     }
+
     @GameTest(batch="m5_settlement",template="trial_kiln_empty",timeoutTicks=80)
-    public static void cancelFullOutputRemovalAndDurableBatch(GameTestHelper h){
-        try(var scope=new Scope()){
-            install();var a=scope.actor(h);firing(a);var f=furnace(h,new BlockPos(1,1,1));fill(f,2,2);temp(f,1100);f.start(a.player);ticks(f,50);
-            var saved=f.saveWithFullMetadata();var restored=new ControlledFurnaceBlockEntity(f.getBlockPos(),f.getBlockState());restored.load(saved);restored.setLevel(h.getLevel());
-            h.assertTrue(restored.remaining()==350 && restored.binding().equals(f.binding()),"NBT owns remaining duration and exact trial identity");restored.cancel();restored.cancel();
-            h.assertTrue(restored.inventory().getStackInSlot(0).getCount()==2 && restored.inventory().getStackInSlot(1).getCount()==1,"cancel returns clay exactly once and never spent fuel");
-            f.inventory().setStackInSlot(2,new ItemStack(Items.STONE,64));ticks(f,350);var pending=f.saveWithFullMetadata();
-            h.assertTrue(f.remaining()==0 && !ItemStack.of(pending.getCompound("pending")).isEmpty() && ItemStack.of(pending.getCompound("refund")).isEmpty(),"blocked finished output replaces refundable clay");
-            f.cancel();h.assertTrue(f.busy(),"cancel cannot turn finished pending product back into raw clay");
-            var drops=f.settle();h.assertTrue(drops.stream().filter(s->s.is(item("frostedheart:refractory_brick"))).mapToInt(ItemStack::getCount).sum()==1 && f.settle().isEmpty(),"pending settlement once, no duplication");
-            var g=furnace(h,new BlockPos(4,1,1));fill(g,1,1);temp(g,1100);g.start(a.player);g.inventory().setStackInSlot(2,new ItemStack(Items.STONE,64));ticks(g,400);g.inventory().setStackInSlot(2,ItemStack.EMPTY);g.tick();
-            h.assertTrue(g.inventory().getStackInSlot(2).is(item("frostedheart:refractory_brick")) && !g.busy(),"clearing blocked output delivers preserved product");
-            var raw=furnace(h,new BlockPos(6,1,1));fill(raw,1,1);raw.start(a.player);h.getLevel().destroyBlock(raw.getBlockPos(),true,a.player);
-            var entities=h.getLevel().getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class,new AABB(raw.getBlockPos()).inflate(1));
-            h.assertTrue(entities.stream().filter(e->e.getItem().is(item("frostedheart:fire_clay_ball"))).mapToInt(e->e.getItem().getCount()).sum()==1
-                && entities.stream().noneMatch(e->e.getItem().is(Items.CHARCOAL)) && raw.settle().isEmpty(),"actual removal refunds internal clay, never fuel");h.succeed();
-        }
+    public static void legacyInventoryMigratesWithoutItemLoss(GameTestHelper h) {
+        var f = furnace(h, new BlockPos(1,1,1));
+        var old = new net.minecraftforge.items.ItemStackHandler(3);
+        old.setStackInSlot(0, new ItemStack(item("frostedheart:fire_clay_ball"), 10));
+        old.setStackInSlot(1, new ItemStack(Items.CHARCOAL, 3));
+        old.setStackInSlot(2, new ItemStack(item("frostedheart:refractory_brick"), 11));
+        var data = new CompoundTag();
+        data.put("inventory", old.serializeNBT());
+        data.put("pending", new ItemStack(item("frostedheart:refractory_brick"), 2).save(new CompoundTag()));
+        data.put("refund", new ItemStack(item("frostedheart:fire_clay_ball"), 4).save(new CompoundTag()));
+        f.load(data);
+        h.assertTrue(!f.running() && f.inventory().getStackInSlot(0).getCount() == 1, "old furnaces migrate to single-item slots");
+        var drops = f.settle();
+        h.assertTrue(drops.stream().filter(stack -> stack.is(item("frostedheart:fire_clay_ball"))).mapToInt(ItemStack::getCount).sum() == 14
+            && drops.stream().filter(stack -> stack.is(item("frostedheart:refractory_brick"))).mapToInt(ItemStack::getCount).sum() == 13
+            && drops.stream().filter(stack -> stack.is(Items.CHARCOAL)).mapToInt(ItemStack::getCount).sum() == 3
+            && f.settle().isEmpty(), "old stacks, refundable input and pending output survive exactly once");
+        h.succeed();
     }
-    @GameTest(batch="m5_permissions",template="trial_kiln_empty",timeoutTicks=80)
-    public static void batchRequiresCurrentDesignAndForgettingOnlyAffectsNext(GameTestHelper h){
-        try(var scope=new Scope()){
-            install();var a=scope.actor(h);var run=firing(a);var f=furnace(h,new BlockPos(1,1,1));f.claim(a.player);f.mode();fill(f,32,4);temp(f,1100);
-            h.assertTrue(f.start(a.player).equals("need_design"),"research trial does not unlock batch");
-            a.service().receive(KnowledgeElement.result(DESIGN),SOURCE);h.assertTrue(f.start(a.player).equals("need_design"),"inbox result grants no machine capability");
-            a.service().learnInbox(KnowledgeKey.result(DESIGN));var recipe=(ControlledFiringRecipe)h.getLevel().getRecipeManager().byKey(BATCH).orElseThrow();
-            h.assertTrue(ResearchHooks.canUseRecipe(a.team.getId(),recipe) && f.start(a.player).equals("running"),"valid Design and actual access API permit production");
-            a.service().forget(KnowledgeKey.result(DESIGN));ticks(f,599);h.assertTrue(f.inventory().getStackInSlot(2).isEmpty(),"production duration600");ticks(f,1);
-            var out=f.inventory().getStackInSlot(2);h.assertTrue(out.getCount()==16 && ResearchSampleBinding.read(out).isEmpty(),"spent batch delivers sixteen unbound normal bricks after forgetting");
-            f.inventory().setStackInSlot(2,ItemStack.EMPTY);h.assertTrue(f.start(a.player).equals("need_design"),"forget blocks next production");
-            var defs=KnowledgeDefinitions.current();KnowledgeDefinitions.install(KnowledgeDefinitions.Snapshot.empty());h.assertTrue(!ControlledFurnaceBlockEntity.managed(recipe) && f.start(a.player).equals("need_design"),"missing Design never exposes unmanaged production default");KnowledgeDefinitions.install(defs);
-            a.service().abandonResearch(run);f.mode();h.assertTrue(f.start(a.player).equals("no_trial"),"abandoned run cannot continue trial supply");h.succeed();
-        }
-    }
-    @GameTest(batch="m5_live_sampling",template="trial_kiln_empty",timeoutTicks=500)
+
+    @GameTest(batch="m5_live_sampling",template="trial_kiln_empty",timeoutTicks=520)
     public static void trueLoadedTicksAndTeammateFreshObservationWithoutSubmission(GameTestHelper h){
         var scope=new Scope();try{
             install();var a=scope.actor(h);var b=scope.actor(h);scope.share(b,a);var s=a.service();var run=firing(a);
-            var f=furnace(h,new BlockPos(1,1,1));fill(f,1,1);temp(f,1100);h.assertTrue(f.start(a.player).equals("running"),"start actual ticking furnace");
-            var outsider=scope.actor(h);h.assertTrue(f.start(outsider.player).equals("not_owned"),"other teams cannot operate this furnace");
+            var f=furnace(h,new BlockPos(1,1,1));fill(f,1,1);f.claim(a.player);f.start(1100,21);h.assertTrue(f.running(),"start actual ticking furnace");
+            var outsider=scope.actor(h);h.assertTrue(!f.claim(outsider.player),"other teams cannot operate this furnace");
             h.onEachTick(()->{if(!b.closed)ObservationSessions.tick(new net.minecraftforge.event.TickEvent.PlayerTickEvent(net.minecraftforge.event.TickEvent.Phase.END,b.player));});
-            h.runAfterDelay(398,()->guard(scope,()->h.assertTrue(f.inventory().getStackInSlot(2).isEmpty(),"real server ticks still running before400")));
-            h.runAfterDelay(405,()->guard(scope,()->{
-                var sample=f.inventory().extractItem(2,1,false);h.assertTrue(sample.getCount()==1,"real server ticker produced sample");
-                ItemStack ordinary=new ItemStack(item("frostedheart:refractory_brick"));var record=ItemRetrieval.observe(b.player,ordinary).observation().orElseThrow();
-                s.observeResearchTarget(b.player,record,null,ordinary);var wrong=sample.copy();new ResearchSampleBinding(a.team.getId(),UUID.randomUUID(),"observe_fired_brick",new ResourceLocation("frostedresearch:refractory_trial")).write(wrong);s.observeResearchTarget(b.player,record,null,wrong);
-                outsider.service().observeResearchTarget(outsider.player,record,null,sample);
-                h.assertTrue(!s.requirementsMet(run),"unbound, old run and foreign observer fail");
+            h.runAfterDelay(398,()->guard(scope,()->h.assertTrue(f.inventory().getStackInSlot(0).is(item("frostedheart:fire_clay_ball")),"real server ticks still running before400")));
+            h.runAfterDelay(425,()->guard(scope,()->{
+                var sample=f.inventory().extractItem(0,1,false);
+                h.assertTrue(sample.is(item("frostedheart:refractory_brick")) && ResearchSampleBinding.read(sample).isEmpty(),
+                    "real server ticker produces an unbound sample");
+                h.assertTrue(!s.requirementsMet(run),"the brick still needs a fresh observation");
                 b.player.setItemInHand(InteractionHand.MAIN_HAND,sample);a.close();
                 ObservationSessions.handle(b.player,new ObservationActionPacket(ObservationActionPacket.Action.HELD_ITEM,BlockPos.ZERO,0,-1,ObservationActionPacket.Method.KEY));
             }));
-            h.runAfterDelay(470,()->guard(scope,()->{
+            h.runAfterDelay(425 + ObservationSessions.DURATION_TICKS + 5,()->guard(scope,()->{
                 h.assertTrue(s.requirementsMet(run) && b.player.getMainHandItem().getCount()==1,"teammate fresh observation completes without consuming or submitting; maker offline");
                 h.assertTrue(!s.query(KnowledgeKey.result(DESIGN)).inArchive(),"observation does not silently grant result");
                 s.finishResearch(run);h.assertTrue(s.query(KnowledgeKey.result(DESIGN)).inArchive()
-                    && ResearchHooks.canUseRecipe(a.team.getId(),(ControlledFiringRecipe)h.getLevel().getRecipeManager().byKey(BATCH).orElseThrow()),"normal produce learns the completed result when understanding is already met");scope.close();h.succeed();
+                   ,"normal produce learns the completed result when understanding is already met");scope.close();h.succeed();
             }));
         }catch(RuntimeException|Error e){scope.close();throw e;}
     }
@@ -367,17 +279,17 @@ public final class ControlledFurnaceGameTests {
     @GameTest(batch="m5_unloaded_furnace",template="trial_kiln_empty",timeoutTicks=480)
     public static void actualChunkUnloadPausesAndRestoresBatch(GameTestHelper h){
         var scope=new Scope();guard(scope,()->{
-            install();var a=scope.actor(h);var run=firing(a);var world=h.getLevel();BlockPos pos=new BlockPos(720,80,720);int cx=pos.getX()>>4,cz=pos.getZ()>>4;
+            install();var world=h.getLevel();BlockPos pos=new BlockPos(720,80,720);int cx=pos.getX()>>4,cz=pos.getZ()>>4;
             world.setChunkForced(cx,cz,true);world.getChunkAt(pos);world.setBlockAndUpdate(pos,FRContents.Blocks.CONTROLLED_FURNACE.get().defaultBlockState());
-            var f=(ControlledFurnaceBlockEntity)world.getBlockEntity(pos);fill(f,1,1);temp(f,1100);f.start(a.player);world.setChunkForced(cx,cz,false);
+            var f=(ControlledFurnaceBlockEntity)world.getBlockEntity(pos);fill(f,1,1);f.start(1100,30);world.setChunkForced(cx,cz,false);
             h.runAfterDelay(350,()->guard(scope,()->{
-                h.assertTrue(!world.getChunkSource().hasChunk(cx,cz),"far furnace chunk really left ServerChunkCache");int frozen=f.remaining();
-                h.assertTrue(frozen>0 && frozen<=400,"unloaded batch is unfinished");
+                h.assertTrue(!world.getChunkSource().hasChunk(cx,cz),"far furnace chunk really left ServerChunkCache");int frozen=f.timerSeconds();
+                h.assertTrue(frozen>0 && frozen<=30,"unloaded batch is unfinished");
                 h.runAfterDelay(40,()->guard(scope,()->{
                     try{
-                        h.assertTrue(!world.getChunkSource().hasChunk(cx,cz) && f.remaining()==frozen,"unloaded furnace executes no ticks");world.getChunkAt(pos);
+                        h.assertTrue(!world.getChunkSource().hasChunk(cx,cz) && f.timerSeconds()==frozen,"unloaded furnace executes no ticks");world.getChunkAt(pos);
                         var restored=(ControlledFurnaceBlockEntity)world.getBlockEntity(pos);
-                        h.assertTrue(restored.remaining()==frozen && restored.binding().filter(b->b.run().equals(run)).isPresent(),"actual chunk restore keeps remaining duration and binding without catchup");
+                        h.assertTrue(restored.timerSeconds()==frozen && restored.running(),"actual chunk restore keeps remaining duration and locked slots without catchup");
                         h.succeed();
                     }finally{world.setBlockAndUpdate(pos,Blocks.AIR.defaultBlockState());scope.close();}
                 }));
@@ -401,13 +313,13 @@ public final class ControlledFurnaceGameTests {
     public static void formalRecipesNetworkRoundTripAndPublicEarlyCrafting(GameTestHelper h){
         try(var scope=new Scope()){
             install();var a=scope.actor(h);var manager=h.getLevel().getRecipeManager();var registry=h.getLevel().registryAccess();
-            for(String mode:List.of("trial","batch")){
-                var recipe=(ControlledFiringRecipe)manager.byKey(id("research/refractory_brick_"+mode)).orElseThrow();
+            {
+                var recipe=(ControlledFiringRecipe)manager.byKey(id("research/refractory_brick_trial")).orElseThrow();
                 var buffer=new net.minecraft.network.FriendlyByteBuf(io.netty.buffer.Unpooled.buffer());
                 try{
                     var serializer=new ControlledFiringRecipe.Serializer();serializer.toNetwork(buffer,recipe);var restored=serializer.fromNetwork(recipe.id(),buffer);
-                    h.assertTrue(restored.input().getCount()==recipe.input().getCount() && restored.fuel().getCount()==recipe.fuel().getCount()
-                        && restored.duration()==recipe.duration() && restored.experiment().equals(recipe.experiment()),"actual custom recipe packet retains counted format and independent experiment");
+                    h.assertTrue(restored.input().is(recipe.input().getItem()) && restored.duration()==recipe.duration()
+                        && restored.temperatureMin()==recipe.temperatureMin(),"custom recipe retains sample item, temperature and duration");
                 }finally{buffer.release();}
             }
             var grid=new net.minecraft.world.inventory.TransientCraftingContainer(a.player.inventoryMenu,3,3);
@@ -418,12 +330,10 @@ public final class ControlledFurnaceGameTests {
             var furnaceRecipe=(CraftingRecipe)manager.byKey(id("research/controlled_furnace")).orElseThrow();
             h.assertTrue(furnaceRecipe.matches(grid,h.getLevel()) && furnaceRecipe.assemble(grid,registry).is(FRContents.Blocks.CONTROLLED_FURNACE.get().asItem())
                 && ResearchHooks.canUseRecipe(a.team.getId(),furnaceRecipe),"clay/sand/campfire craft real furnace without brick or Design");
-            var run=firing(a);var f=furnace(h,new BlockPos(1,1,1));f.claim(a.player);fill(f,1,0);
+            var f=furnace(h,new BlockPos(1,1,1));f.claim(a.player);fill(f,1,0);
             var menu=new ControlledFurnaceMenu(1,a.player.getInventory(),f);a.player.containerMenu=menu;
-            h.assertTrue(!menu.getSlot(2).mayPlace(new ItemStack(Items.STONE)),"real output slot rejects manual insertion");
-            h.assertTrue(menu.clickMenuButton(a.player,3) && f.message().equals("materials") && f.inventory().getStackInSlot(0).getCount()==1,"actual server menu start reports insufficient fuel without consumption");
-            for(int i=0;i<30;i++)menu.clickMenuButton(a.player,0);h.assertTrue(f.temperature()==600,"lower clamp");
-            for(int i=0;i<30;i++)menu.clickMenuButton(a.player,1);h.assertTrue(f.temperature()==1400,"upper clamp");
+            menu.start(a.player, 1100, 21);
+            h.assertTrue(!f.running() && f.message().equals("need_fuel") && menu.getSlot(0).hasItem(),"missing fuel leaves the specimen in place");
             h.succeed();
         }
     }

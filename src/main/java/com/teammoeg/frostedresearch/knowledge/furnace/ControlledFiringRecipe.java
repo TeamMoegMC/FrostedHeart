@@ -1,6 +1,7 @@
 package com.teammoeg.frostedresearch.knowledge.furnace;
 
-import com.google.gson.*;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonSyntaxException;
 import com.teammoeg.frostedresearch.FRContents;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.network.FriendlyByteBuf;
@@ -8,54 +9,67 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.GsonHelper;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.crafting.*;
+import net.minecraft.world.item.crafting.Recipe;
+import net.minecraft.world.item.crafting.RecipeSerializer;
+import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.registries.ForgeRegistries;
-import java.util.Optional;
 
-/** Small, counted kiln batches. Experiment identity is content, not a hardcoded pack recipe ID. */
-public record ControlledFiringRecipe(ResourceLocation id, ItemStack input, ItemStack fuel, int temperatureMin,
-        int temperatureMax, int duration, ItemStack result, ItemStack failure, Optional<ResourceLocation> experiment)
-        implements Recipe<Container> {
+/** A single specimen changes in place after firing past the recipe's duration. */
+public record ControlledFiringRecipe(ResourceLocation id, ItemStack input, int temperatureMin, int temperatureMax,
+        int duration, ItemStack result, ItemStack failure) implements Recipe<Container> {
     public ControlledFiringRecipe {
-        input=input.copy(); fuel=fuel.copy(); result=result.copy(); failure=failure.copy();
-        if(input.isEmpty() || fuel.isEmpty() || result.isEmpty() || failure.isEmpty() || duration<1
-            || temperatureMin<600 || temperatureMax>1400 || temperatureMin>temperatureMax)
-            throw new IllegalArgumentException("Invalid controlled firing batch");
+        if (input.getCount() != 1 || result.getCount() != 1 || failure.getCount() != 1 || duration < 1
+                || temperatureMin < ControlledFurnaceBlockEntity.MIN_TEMPERATURE
+                || temperatureMax > ControlledFurnaceBlockEntity.MAX_TEMPERATURE || temperatureMin > temperatureMax)
+            throw new IllegalArgumentException("Invalid controlled firing recipe: " + id);
+        input = input.copy();
+        result = result.copy();
+        failure = failure.copy();
     }
-    @Override public ItemStack input(){return input.copy();}
-    @Override public ItemStack fuel(){return fuel.copy();}
-    @Override public ItemStack result(){return result.copy();}
-    @Override public ItemStack failure(){return failure.copy();}
-    public ItemStack outcome(int temperature){return (temperature>=temperatureMin && temperature<=temperatureMax ? result : failure).copy();}
-    @Override public boolean matches(Container c,Level l){return c.getContainerSize()>=2 && matches(c.getItem(0),c.getItem(1));}
-    public boolean matches(ItemStack a,ItemStack b){return a.is(input.getItem()) && a.getCount()>=input.getCount() && b.is(fuel.getItem()) && b.getCount()>=fuel.getCount();}
-    @Override public ItemStack assemble(Container c,RegistryAccess r){return result.copy();}
-    @Override public boolean canCraftInDimensions(int w,int h){return true;}
-    @Override public ItemStack getResultItem(RegistryAccess r){return result.copy();}
-    @Override public ResourceLocation getId(){return id;}
-    @Override public RecipeType<?> getType(){return FRContents.Recipes.CONTROLLED_FIRING.get();}
-    @Override public RecipeSerializer<?> getSerializer(){return FRContents.Recipes.CONTROLLED_FIRING_SERIALIZER.get();}
-    @Override public boolean isSpecial(){return true;}
+
+    @Override public ItemStack input() { return input.copy(); }
+    @Override public ItemStack result() { return result.copy(); }
+    @Override public ItemStack failure() { return failure.copy(); }
+    public boolean matches(ItemStack stack) { return stack.is(input.getItem()); }
+    public ItemStack outcome(int temperature) { return temperature >= temperatureMin && temperature <= temperatureMax ? result() : failure(); }
+    @Override public boolean matches(Container c, Level l) { return c.getContainerSize() > 0 && matches(c.getItem(0)); }
+    @Override public ItemStack assemble(Container c, RegistryAccess r) { return result(); }
+    @Override public boolean canCraftInDimensions(int w, int h) { return true; }
+    @Override public ItemStack getResultItem(RegistryAccess r) { return result(); }
+    @Override public ResourceLocation getId() { return id; }
+    @Override public RecipeType<?> getType() { return FRContents.Recipes.CONTROLLED_FIRING.get(); }
+    @Override public RecipeSerializer<?> getSerializer() { return FRContents.Recipes.CONTROLLED_FIRING_SERIALIZER.get(); }
+    @Override public boolean isSpecial() { return true; }
+
     public static final class Serializer implements RecipeSerializer<ControlledFiringRecipe> {
-        private static ItemStack stack(JsonObject root,String name){
-            JsonObject o=GsonHelper.getAsJsonObject(root,name);
-            ResourceLocation id=new ResourceLocation(GsonHelper.getAsString(o,"item"));
-            var item=ForgeRegistries.ITEMS.getValue(id);int count=GsonHelper.getAsInt(o,"count",1);
-            if(item==null || count<1 || count>item.getMaxStackSize()) throw new JsonSyntaxException("Invalid counted item: "+id);
-            return new ItemStack(item,count);
+        private static ItemStack stack(JsonObject root, String name) {
+            JsonObject data = GsonHelper.getAsJsonObject(root, name);
+            ResourceLocation id = new ResourceLocation(GsonHelper.getAsString(data, "item"));
+            var item = ForgeRegistries.ITEMS.getValue(id);
+            if (item == null || GsonHelper.getAsInt(data, "count", 1) != 1)
+                throw new JsonSyntaxException("Controlled firing requires one item for " + name + ": " + id);
+            return new ItemStack(item);
         }
-        @Override public ControlledFiringRecipe fromJson(ResourceLocation id,JsonObject o){
-            return new ControlledFiringRecipe(id,stack(o,"input"),stack(o,"fuel"),GsonHelper.getAsInt(o,"temperature_min"),
-                GsonHelper.getAsInt(o,"temperature_max"),GsonHelper.getAsInt(o,"duration"),stack(o,"result"),stack(o,"failure"),
-                o.has("experiment") ? Optional.of(new ResourceLocation(GsonHelper.getAsString(o,"experiment"))) : Optional.empty());
+
+        @Override public ControlledFiringRecipe fromJson(ResourceLocation id, JsonObject data) {
+            return new ControlledFiringRecipe(id, stack(data, "input"), GsonHelper.getAsInt(data, "temperature_min"),
+                    GsonHelper.getAsInt(data, "temperature_max"), GsonHelper.getAsInt(data, "duration"),
+                    stack(data, "result"), stack(data, "failure"));
         }
-        @Override public ControlledFiringRecipe fromNetwork(ResourceLocation id,FriendlyByteBuf b){
-            return new ControlledFiringRecipe(id,b.readItem(),b.readItem(),b.readVarInt(),b.readVarInt(),b.readVarInt(),b.readItem(),b.readItem(),b.readOptional(FriendlyByteBuf::readResourceLocation));
+
+        @Override public ControlledFiringRecipe fromNetwork(ResourceLocation id, FriendlyByteBuf buffer) {
+            return new ControlledFiringRecipe(id, buffer.readItem(), buffer.readVarInt(), buffer.readVarInt(),
+                    buffer.readVarInt(), buffer.readItem(), buffer.readItem());
         }
-        @Override public void toNetwork(FriendlyByteBuf b,ControlledFiringRecipe r){
-            b.writeItem(r.input);b.writeItem(r.fuel);b.writeVarInt(r.temperatureMin);b.writeVarInt(r.temperatureMax);b.writeVarInt(r.duration);
-            b.writeItem(r.result);b.writeItem(r.failure);b.writeOptional(r.experiment,FriendlyByteBuf::writeResourceLocation);
+
+        @Override public void toNetwork(FriendlyByteBuf buffer, ControlledFiringRecipe recipe) {
+            buffer.writeItem(recipe.input);
+            buffer.writeVarInt(recipe.temperatureMin);
+            buffer.writeVarInt(recipe.temperatureMax);
+            buffer.writeVarInt(recipe.duration);
+            buffer.writeItem(recipe.result);
+            buffer.writeItem(recipe.failure);
         }
     }
 }

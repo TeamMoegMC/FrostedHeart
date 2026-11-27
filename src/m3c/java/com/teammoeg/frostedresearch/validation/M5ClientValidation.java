@@ -52,7 +52,7 @@ public final class M5ClientValidation {
     private static final boolean ENABLED=Boolean.getBoolean("frostedresearch.m5Validation");
     private static final Path ROOT=Path.of(System.getProperty("frostedresearch.m5Root","build/m5-client"));
     private static final ResourceLocation PROJECT=id("the_winter_rescue:refractory_brick"), IDEA=id("the_winter_rescue:refractory_firing"),
-        RESULT=id("the_winter_rescue:controlled_refractory_production"), BATCH=id("the_winter_rescue:research/refractory_brick_batch");
+        RESULT=id("the_winter_rescue:controlled_refractory_production");
     private static final BlockPos DESK=new BlockPos(0,64,-2), TABLE=new BlockPos(2,64,-2), FURNACE=new BlockPos(2,64,1);
     private static final long CHAPTER=0x4A8E1F92C73B605DL;
     private static final long[] QUESTS={0x507C594CBE4EDD30L,0x56B3257EE1F12A5BL,0x564A135A9DC0E980L,0x594A74A3D9A1A554L,0x5A6E8872E26A30E3L};
@@ -93,7 +93,6 @@ public final class M5ClientValidation {
     private static KnowledgeJournalData.Project project(){return data().projects.stream().filter(p->p.id().equals(PROJECT.toString())).findFirst().orElseThrow();}
     private static KnowledgeJournalData.Run current(){return run==null?null:data().run(run.toString());}
     private static boolean archived(KnowledgeKey key){return data().archive.stream().anyMatch(e->e.key().equals(key)&&e.active());}
-    private static boolean allowed(){return ClientKnowledgeDataAPI.technologyProjection().recipe(BATCH).allowed();}
     private static void use(BlockPos pos){mc().gameMode.useItemOn(mc().player,InteractionHand.MAIN_HAND,new BlockHitResult(Vec3.atCenterOf(pos),Direction.UP,pos,false));}
     private static void close(){if(mc().player!=null)mc().player.closeContainer();}
     private static boolean openDesk(){if(mc().screen==null)use(DESK);if(mc().screen instanceof CUIScreen cui&&cui.getPrimaryLayer() instanceof DrawDeskScreen d){desk=d;desk.showKnowledge();layer=desk.getKnowledgeLayer();return true;}return false;}
@@ -114,7 +113,19 @@ public final class M5ClientValidation {
     private static ControlledFurnaceMenu furnaceMenu(){return (ControlledFurnaceMenu)mc().player.containerMenu;}
     private static ControlledFurnaceBlockEntity furnace(){return furnaceMenu().getBlock();}
     private static boolean openFurnace(){if(mc().screen==null)use(FURNACE);return mc().player.containerMenu instanceof ControlledFurnaceMenu;}
-    private static void furnaceClick(String key)throws Exception{require(mc().screen instanceof CUIScreen,"furnace screen");press(button(((CUIScreen)mc().screen).getPrimaryLayer(),Component.translatable("gui.frostedresearch.furnace."+key).getString()));}
+    static void enterFurnaceSettings(int degrees, int seconds) {
+        var fields = Minecraft.getInstance().screen.children().stream()
+                .filter(net.minecraft.client.gui.components.EditBox.class::isInstance)
+                .map(net.minecraft.client.gui.components.EditBox.class::cast).toList();
+        fields.get(0).setValue(Integer.toString(degrees));
+        fields.get(1).setValue(Integer.toString(seconds));
+        String start = Component.translatable("gui.frostedresearch.furnace.start").getString();
+        var button = Minecraft.getInstance().screen.children().stream()
+                .filter(net.minecraft.client.gui.components.Button.class::isInstance)
+                .map(net.minecraft.client.gui.components.Button.class::cast)
+                .filter(widget -> widget.getMessage().getString().equals(start)).findFirst().orElseThrow();
+        button.onPress();
+    }
     private static void slot(int slot){mc().gameMode.handleInventoryMouseClick(mc().player.containerMenu.containerId,slot,0,ClickType.PICKUP,mc().player);}
     private static void move(int from,int to){slot(from);slot(to);}
     private static void nativeN(boolean down){
@@ -165,11 +176,10 @@ public final class M5ClientValidation {
         if(phase==800){
             if(ticks<20||JEICompat.jei==null||JEICompat.man==null)return;
             var visible=JEICompat.man.createRecipeLookup(ControlledFiringCategory.TYPE).get().map(ControlledFiringRecipe::id).toList();
-            require(visible.contains(id("the_winter_rescue:research/refractory_brick_trial"))&&visible.contains(BATCH)==jeiUnlocked,"JEI actual lookup follows trial/production access");
-            require(JEICompat.man.createRecipeLookup(ControlledFiringCategory.TYPE).includeHidden().get().anyMatch(r->r.id().equals(BATCH)),"production is registered even when hidden");
+            require(visible.contains(id("the_winter_rescue:research/refractory_brick_trial")),"JEI shows the public specimen recipe");
             facts.put(jeiUnlocked?"jei_after_design_visible":"jei_before_design_visible",visible.stream().map(Object::toString).toList());
             JEICompat.jei.getRecipesGui().showTypes(List.of(ControlledFiringCategory.TYPE));go(801);
-        }else if(phase==801&&ticks>=20){shot(jeiUnlocked?"21a-jei-trial-and-unlocked-batch":"16a-jei-trial-only-before-design");mc().setScreen(null);go(jeiReturn);}
+        }else if(phase==801&&ticks>=20){shot(jeiUnlocked?"21a-jei-after-research":"16a-jei-before-research");mc().setScreen(null);go(jeiReturn);}
     }
     private static void stageShot(String name,int after)throws Exception{
         readingShot=name;readingReturn=after;var reading=(JournalText)read(layer,"reading");
@@ -201,34 +211,25 @@ public final class M5ClientValidation {
                 case 12->{if(ticks<20||!project().startStatus().equals("LEARNABLE"))return;require(project().accessConditions().stream().allMatch(KnowledgeJournalData.AccessCondition::met),"all start conditions via real observation and learning");shot("08-all-materials-ready");click("research.start");next();}
                 case 13->{if(ticks<20||project().openRun().isBlank())return;run=firstRun=UUID.fromString(project().openRun());require(current().stage().id().equals("prepare")&&current().stage().ready(),"manual preparation stage");shot("09-prepare-stage");click("research.advance_stage");next();}
                 case 14->{if(ticks<20||current()==null||!current().stage().id().equals("firing"))return;defaultMethod=current().stage().method().getString();require(defaultMethod.equals(Component.translatable("knowledge.the_winter_rescue.refractory_brick.method.default").getString()),"default hint without earlier reference");stageShot("10-default-firing-hint",145);}
-                case 145->observe("11-reference-after-entry","frostedheart:refractory_brick",true,15,true);
-                case 15->{if(!projectView())return;require(current().stage().method().getString().equals(defaultMethod)&&!current().stage().ready(),"reference learned after entry neither rerolls hint nor passes real sample task");facts.put("after_entry_reference_does_not_reroll_or_complete",true);stageShot("12-default-frozen-after-reference",155);}
+                case 145->{go(155);}
                 case 155->craft("the_winter_rescue:research/fire_clay_hand_mix",1,16);
                 case 16->craft("the_winter_rescue:research/controlled_furnace",0,17);
                 case 17->{if(ticks<20||mc().screen!=null)return;require(mc().player.getMainHandItem().is(item("frostedresearch:controlled_furnace")),"crafted furnace in hand");use(FURNACE.below());next();}
                 case 18->{if(ticks<20||!mc().level.getBlockState(FURNACE).is(FRContents.Blocks.CONTROLLED_FURNACE.get()))return;onServer(()->{player().getInventory().setItem(9,new ItemStack(Items.CHARCOAL));player().inventoryMenu.broadcastChanges();});next();}
-                case 19->{if(ticks<20||!openFurnace())return;require(!allowed(),"production locked before Design");move(4,0);move(12,1);furnaceClick("plus");furnaceClick("plus");furnaceClick("trial");next();}
-                case 20->{if(ticks<20||furnace().trial())return;furnaceClick("start");next();}
-                case 21->{if(ticks<20)return;require(furnace().message().equals("need_design")&&!furnace().displayedBusy()&&mc().player.containerMenu.getSlot(0).getItem().getCount()==1,"normal production UI refuses without Design and retains input");shot("16-production-locked");furnaceClick("production");jei(false,22);}
-                case 22->{if(ticks<15||!openFurnace()||!furnace().trial())return;furnaceClick("start");next();}
-                case 23->{if(ticks<15||!furnace().displayedBusy())return;require(furnace().duration()==400&&furnace().lockedTemperature()==1100,"real trial latches 1100 and 400 ticks");furnaceClick("plus");next();}
-                case 24->{if(ticks<15)return;require(furnace().temperature()==1150&&furnace().lockedTemperature()==1100,"running adjustment affects next batch only");shot("17-running-current1100-next1150");next();}
-                case 25->{if(ticks<15||mc().player.containerMenu.getSlot(2).getItem().isEmpty())return;var stack=mc().player.containerMenu.getSlot(2).getItem();require(stack.is(item("frostedheart:refractory_brick"))&&stack.getCount()==1&&ResearchSampleBinding.read(stack).orElseThrow().run().equals(firstRun),"real bound trial output");shot("18-real-trial-output");move(2,3);close();observe("19-trial-sample","frostedheart:refractory_brick",false,26,false);}
-                case 26->{if(!projectView())return;if(current()==null||!current().stage().ready())return;require(mc().player.getMainHandItem().getCount()==1,"sample observation does not consume brick");facts.put("fresh_bound_observation_no_consumption",true);shot("20-trial-observation-ready");click("research.complete");next();}
-                case 27->{if(ticks<20||!current().status().equals("completed")||!allowed())return;onServer(()->{require(rewards()==1&&ResearchHooks.canUseRecipe(service().teamId(),player().serverLevel().getRecipeManager().byKey(BATCH).orElseThrow()),"first result and actual recipe access");facts.put("first_run_rewards",rewards());supplyBatch(16,2);});shot("21-completed-production-unlocked");jei(true,28);}
-                case 28->{if(ticks<20||!openFurnace())return;move(12,0);move(13,1);furnaceClick("trial");next();}
-                case 29->{if(ticks<15||furnace().trial())return;furnaceClick("start");next();}
-                case 30->{if(ticks<15||!furnace().displayedBusy())return;require(furnace().duration()==600&&furnace().lockedTemperature()==1150,"production real 600 ticks at inclusive upper boundary");shot("22-batch-production-running");next();}
-                case 31->{if(ticks<15||mc().player.containerMenu.getSlot(2).getItem().isEmpty())return;var stack=mc().player.containerMenu.getSlot(2).getItem();require(stack.is(item("frostedheart:refractory_brick"))&&stack.getCount()==16&&ResearchSampleBinding.read(stack).isEmpty(),"real 16-brick production has no trial binding");shot("23-real-sixteen-brick-batch");move(2,5);facts.put("real_batch_output",16);close();onServer(()->{service().forget(KnowledgeKey.result(RESULT));require(rewards()==1,"forget does not create research rewards");facts.put("explicit_second_run_forget_fixture",true);TeamResearchService.send(player(),CTeamDataManager.get(player()));});next();}
+                case 19->{if(ticks<20||!openFurnace())return;move(8,0);move(16,6);enterFurnaceSettings(1107,21);go(23);}
+                case 23->{if(ticks<10||!furnace().running())return;require(furnace().temperature()==1107,"exact manual temperature");shot("17-running");go(25);}
+                case 25->{if(furnace().running())return;var stack=mc().player.containerMenu.getSlot(0).getItem();require(stack.is(item("frostedheart:refractory_brick"))&&ResearchSampleBinding.read(stack).isEmpty(),"unbound result in its specimen slot");shot("18-fired-specimen");move(0,7);close();observe("19-trial-sample","frostedheart:refractory_brick",true,26,true);}
+                case 26->{if(!projectView()||!current().stage().ready())return;require(mc().player.getMainHandItem().getCount()==1&&current().stage().method().getString().equals(defaultMethod),"observation completes the task and keeps the original hint");click("research.complete");next();}
+                case 27->{if(ticks<20||!current().status().equals("completed"))return;onServer(()->{require(rewards()==1,"first firing finding");service().forget(KnowledgeKey.result(RESULT));TeamResearchService.send(player(),CTeamDataManager.get(player()));});jei(true,32);}
                 case 32->{if(!projectView()||!project().startStatus().equals("LEARNABLE"))return;click("research.start");next();}
                 case 33->{if(ticks<20||project().openRun().isBlank()||project().openRun().equals(firstRun.toString()))return;run=UUID.fromString(project().openRun());click("research.advance_stage");next();}
                 case 34->{if(ticks<20||!current().stage().id().equals("firing"))return;require(current().stage().method().getString().equals(Component.translatable("knowledge.the_winter_rescue.refractory_brick.method.reference").getString()),"pre-entry learned reference selects precise hint");facts.put("before_entry_reference_precise_hint",true);stageShot("24-second-run-precise-reference",345);}
                 case 345->{close();onServer(()->supplyBatch(1,1));go(35);}
-                case 35->{if(ticks<20||!openFurnace())return;move(3,6);move(12,0);move(13,1);furnaceClick("production");next();}
-                case 36->{if(ticks<15||!furnace().trial())return;furnaceClick("start");next();}
-                case 37->{if(ticks<15||mc().player.containerMenu.getSlot(2).getItem().isEmpty())return;require(ResearchSampleBinding.read(mc().player.containerMenu.getSlot(2).getItem()).orElseThrow().run().equals(run),"second run real sample");move(2,3);close();observe("25-second-trial-sample","frostedheart:refractory_brick",false,38,false);}
+                case 35->{if(ticks<20||!openFurnace())return;move(7,10);move(16,0);move(17,6);enterFurnaceSettings(1150,21);go(36);}
+                case 36->{if(ticks<10||!furnace().running())return;next();}
+                case 37->{if(furnace().running())return;require(mc().player.containerMenu.getSlot(0).getItem().is(item("frostedheart:refractory_brick")),"second firing result");move(0,7);close();observe("25-second-trial-sample","frostedheart:refractory_brick",false,38,false);}
                 case 38->{if(!projectView()||!current().stage().ready())return;click("research.complete");next();}
-                case 39->{if(ticks<20||!current().status().equals("completed")||!allowed())return;onServer(()->{require(rewards()==2,"one result per legitimately completed run");facts.put("two_legitimate_runs_rewards",rewards());});close();go(Boolean.getBoolean("frostedresearch.m5WithM6")?390:40);}
+                case 39->{if(ticks<20||!current().status().equals("completed"))return;onServer(()->{require(rewards()==2,"one result per legitimately completed run");facts.put("two_legitimate_runs_rewards",rewards());});close();go(Boolean.getBoolean("frostedresearch.m5WithM6")?390:40);}
                 case 390->{if(ticks<15)return;facts.put("m5_gameplay_completed_before_m6",true);synchronized(facts){save("m5-gameplay-checkpoint.json",facts);}delegated=true;M6ClientValidation.startAfterM5(error->{if(error!=null){finish(error);return;}try{facts.put("m6_brief_completed_same_jvm",true);go(40);delegated=false;}catch(Exception e){finish(e);}});}
                 case 40->{if(ticks<20||ClientQuestFile.INSTANCE==null)return;var file=ClientQuestFile.INSTANCE;Chapter chapter=file.getChapter(CHAPTER);require(chapter!=null&&chapter.getQuests().size()==5&&chapter.isVisible(file.selfTeamData),"actual FTB chapter loaded and visible");require(file.getVisibleChapters(file.selfTeamData).contains(chapter),"normal visible chapter list includes tutorial");require(dev.ftb.mods.ftbquests.quest.QuestObjectBase.getID(chapter.getGroup())==0x121B12860A7D323AL,"existing rebuild group");facts.put("ftb_actual_guide_title",chapter.getTitle().getString());for(long q:QUESTS)require(file.getQuest(q)!=null&&file.getQuest(q).isVisible(file.selfTeamData),"actual visible tutorial quest "+Long.toHexString(q));questScreen=ClientQuestFile.openGui();questScreen.selectChapter(chapter);next();}
                 case 41->{if(ticks<20)return;shot("26-ftb-guide-chapter");questIndex=0;questScreen.viewQuest(ClientQuestFile.INSTANCE.getQuest(QUESTS[questIndex]));next();}

@@ -45,7 +45,7 @@ import java.util.*;
 public final class M6ClientValidation {
     private static final boolean ENABLED=Boolean.getBoolean("frostedresearch.m6Validation");
     private static final Path ROOT=Path.of(System.getProperty("frostedresearch.m6Root",System.getProperty("frostedresearch.m5Root","build/m6-client")+"/m6-brief"));
-    private static final ResourceLocation PROJECT=id("the_winter_rescue:refractory_brick"),IDEA=id("the_winter_rescue:refractory_firing"),RESULT=id("the_winter_rescue:controlled_refractory_production"),BATCH=id("the_winter_rescue:research/refractory_brick_batch");
+    private static final ResourceLocation PROJECT=id("the_winter_rescue:refractory_brick"),IDEA=id("the_winter_rescue:refractory_firing"),RESULT=id("the_winter_rescue:controlled_refractory_production");
     private static final BlockPos DESK=new BlockPos(0,64,-2),FURNACE=new BlockPos(2,64,1);
     private static final Map<String,Object> facts=Collections.synchronizedMap(new LinkedHashMap<>());
     private static final long START=System.nanoTime();
@@ -53,7 +53,7 @@ public final class M6ClientValidation {
     private static String originalLanguage;
     private static boolean captured,finished,originalPause,chained;
     private static java.util.function.Consumer<Throwable> continuation;
-    private static volatile boolean busy,checked;
+    private static volatile boolean busy;
     private static volatile Throwable failure;
     private static volatile UUID first,second;
     private static DrawDeskScreen desk;
@@ -83,8 +83,6 @@ public final class M6ClientValidation {
     private static UUID selected()throws Exception{return UUID.fromString(((Map<?,?>)read(layer,"selectedRuns")).get(PROJECT.toString()).toString());}
     private static ControlledFurnaceBlockEntity furnace(){return ((ControlledFurnaceMenu)mc().player.containerMenu).getBlock();}
     private static boolean openFurnace(){if(mc().screen==null)use(FURNACE);return mc().player.containerMenu instanceof ControlledFurnaceMenu;}
-    private static void furnaceClick(String key)throws Exception{press(button(((CUIScreen)mc().screen).getPrimaryLayer(),Component.translatable("gui.frostedresearch.furnace."+key).getString()));}
-    private static void target()throws Exception{var root=((CUIScreen)mc().screen).getPrimaryLayer();press(root.getElements().stream().filter(JournalButton.class::isInstance).map(JournalButton.class::cast).filter(b->b.getWidth()==285&&b.getHeight()==19).findFirst().orElseThrow());}
     private static void slot(int i){mc().gameMode.handleInventoryMouseClick(mc().player.containerMenu.containerId,i,0,ClickType.PICKUP,mc().player);}
     private static void move(int a,int b){slot(a);slot(b);}
     public static void startAfterM5(java.util.function.Consumer<Throwable> callback){
@@ -118,18 +116,14 @@ public final class M6ClientValidation {
                 case 4->{if(ticks<20||run(first)==null||run(second)==null)return;require(run(first).number()==1&&run(second).number()==2&&run(first).copies()==2&&run(second).copies()==2,"client visible ordinals for same project");require(selected().equals(first),"default oldest run selection");shot("01-first-run-ordinal");arrow("›");next();}
                 case 5->{if(ticks<15)return;require(selected().equals(second),"actual next callback selects second run");shot("02-second-run-ordinal");arrow("‹");next();}
                 case 6->{if(ticks<15)return;require(selected().equals(first),"actual previous callback restores first run");facts.put("journal_two_run_ordinals_and_switch",true);shot("03-first-run-restored");close();next();}
-                case 7->{if(ticks<20||!openFurnace()||furnace().targetCount()!=2)return;move(12,0);move(13,1);furnaceClick("start");next();}
-                case 8->{if(ticks<20)return;require(furnace().message().equals("choose_target")&&!furnace().displayedBusy()&&mc().player.containerMenu.getSlot(0).getItem().getCount()==2,"normal CUI requires target when two runs");shot("04-explicit-target-required");target();next();}
-                case 9->{if(ticks<20||furnace().selectedTarget().isEmpty())return;require(furnace().selectedTarget().orElseThrow().run().equals(first),"first device target matches first journal run");shot("05-first-furnace-target");target();next();}
-                case 10->{if(ticks<20)return;require(furnace().selectedTarget().orElseThrow().run().equals(second),"second explicit device target");shot("06-second-furnace-target");furnaceClick("plus");furnaceClick("plus");next();}
-                case 11->{if(ticks<20||furnace().temperature()!=1100)return;furnaceClick("start");next();}
-                case 12->{if(ticks<20||!furnace().displayedBusy())return;require(furnace().lockedTemperature()==1100&&furnace().duration()==400,"new real CUI start endpoint starts normal batch");if(!checked){onServer(()->{var f=(ControlledFurnaceBlockEntity)player().serverLevel().getBlockEntity(FURNACE);require(f.binding().orElseThrow().run().equals(second),"server batch binds clicked second target");checked=true;});return;}shot("07-normal-new-endpoint-running");next();}
-                case 13->{if(ticks<20||mc().player.containerMenu.getSlot(2).getItem().isEmpty())return;var stack=mc().player.containerMenu.getSlot(2).getItem();require(stack.is(item("frostedheart:refractory_brick"))&&stack.getCount()==1&&ResearchSampleBinding.read(stack).orElseThrow().run().equals(second),"actual normal output belongs to chosen second run");shot("08-real-second-run-output");move(2,3);close();mc().player.setXRot(-85);mc().player.setYRot(180);next();}
+                case 7->{if(ticks<20||!openFurnace())return;slot(16);slot(0);slot(1);move(17,6);M5ClientValidation.enterFurnaceSettings(1107,21);phase=12;ticks=0;}
+                case 12->{if(ticks<10||!furnace().running())return;require(furnace().temperature()==1107,"both research records allow the independent furnace to start");shot("07-running");next();}
+                case 13->{if(furnace().running())return;for(int index=0;index<2;index++){var stack=mc().player.containerMenu.getSlot(index).getItem();require(stack.is(item("frostedheart:refractory_brick"))&&ResearchSampleBinding.read(stack).isEmpty(),"unbound firing results");}shot("08-fired-specimens");move(0,7);close();mc().player.setXRot(-85);mc().player.setYRot(180);next();}
                 case 14->{if(ticks<20||mc().screen!=null)return;FRNetwork.INSTANCE.sendToServer(new ObservationActionPacket(ObservationActionPacket.Action.HELD_ITEM,BlockPos.ZERO,0));next();}
-                case 15->{if(ticks<80||!openDesk()||!run(second).stage().ready())return;require(!run(first).stage().ready()&&mc().player.getMainHandItem().getCount()==1,"fresh observation credits only selected run without consumption");FRNetwork.INSTANCE.sendToServer(new ObservationActionPacket(ObservationActionPacket.Action.DISCARD));next();}
+                case 15->{if(ticks<80||!openDesk()||!run(second).stage().ready())return;require(run(first).stage().ready()&&mc().player.getMainHandItem().getCount()==1,"fresh observation credits both applicable records without consumption");FRNetwork.INSTANCE.sendToServer(new ObservationActionPacket(ObservationActionPacket.Action.DISCARD));next();}
                 case 16->{if(ticks<20||!openDesk())return;focus();next();}
                 case 17->{if(ticks<20)return;if(!selected().equals(second)){arrow("›");ticks=0;return;}shot("09-only-second-run-ready");click("research.complete");next();}
-                case 18->{if(ticks<20||!run(second).status().equals("completed")||!run(first).status().equals("standby"))return;require(ClientKnowledgeDataAPI.technologyProjection().recipe(BATCH).allowed(),"actual production access after completion");shot("10-completed-second-run-and-standby-counter");facts.put("normal_start_selected_output_and_standby",true);onServer(()->require(service().state().acquisitions().stream().filter(e->e.element().key().equals(KnowledgeKey.result(RESULT))).count()==1,"one final design event"));next();}
+                case 18->{if(ticks<20||!run(second).status().equals("completed")||!run(first).status().equals("standby"))return;shot("10-completed-second-run-and-standby-counter");facts.put("normal_start_selected_output_and_standby",true);onServer(()->require(service().state().acquisitions().stream().filter(e->e.element().key().equals(KnowledgeKey.result(RESULT))).count()==1,"one final finding event"));next();}
                 case 19->{if(ticks<20)return;facts.put("standby_history_retained_not_actionable",true);next();}
                 case 20->{if(ticks<10)return;finish(null);}
             }

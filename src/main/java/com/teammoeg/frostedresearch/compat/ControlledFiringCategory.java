@@ -10,6 +10,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 public final class ControlledFiringCategory implements IRecipeCategory<ControlledFiringRecipe>{
     public static final RecipeType<ControlledFiringRecipe> TYPE=RecipeType.create("frostedresearch","controlled_firing",ControlledFiringRecipe.class);
     private final IDrawable background,icon;
@@ -20,15 +21,15 @@ public final class ControlledFiringCategory implements IRecipeCategory<Controlle
     @Override public IDrawable getIcon(){return icon;}
     @Override public void setRecipe(IRecipeLayoutBuilder b,ControlledFiringRecipe r,IFocusGroup focus){
         b.addInputSlot(2,2).setStandardSlotBackground().addItemStack(r.input());
-        b.addInputSlot(26,2).setStandardSlotBackground().addItemStack(r.fuel());
+        b.addInputSlot(26,2).setStandardSlotBackground().addItemStack(new ItemStack(Items.CHARCOAL));
         b.addOutputSlot(105,2).setOutputSlotBackground().addItemStack(r.result());
         b.addOutputSlot(140,2).setStandardSlotBackground().addItemStack(r.failure());
     }
     @Override public void draw(ControlledFiringRecipe r,mezz.jei.api.gui.ingredient.IRecipeSlotsView slots,GuiGraphics g,double mx,double my){
         var font=Minecraft.getInstance().font;
-        g.drawString(font,Component.translatable("gui.frostedresearch.furnace."+(r.experiment().isPresent()?"trial":"production")),2,29,0x555555,false);
-        g.drawString(font,r.temperatureMin()+" - "+r.temperatureMax()+" C",2,43,0x555555,false);
-        g.drawString(font,Component.translatable("gui.frostedresearch.furnace.jei_duration",r.duration()/20),2,57,0x555555,false);
-        g.drawString(font,Component.translatable("gui.frostedresearch.furnace.jei_failure"),2,71,0x555555,false);
+        g.drawString(font,r.temperatureMin()+" - "+r.temperatureMax()+" °C",2,29,0x555555,false);
+        g.drawString(font,Component.translatable("gui.frostedresearch.furnace.jei_duration",
+                java.math.BigDecimal.valueOf(r.duration()).divide(java.math.BigDecimal.valueOf(20)).stripTrailingZeros().toPlainString()),2,43,0x555555,false);
+        g.drawString(font,Component.translatable("gui.frostedresearch.furnace.jei_failure"),2,57,0x555555,false);
     }
 }
