@@ -19,6 +19,7 @@ import org.lwjgl.glfw.GLFW;
 public final class ControlledFurnaceScreen extends AbstractContainerScreen<ControlledFurnaceMenu> {
     private static final ResourceLocation PANEL = new ResourceLocation("minecraft", "textures/gui/demo_background.png");
     private static final ResourceLocation FURNACE = new ResourceLocation("minecraft", "textures/gui/container/furnace.png");
+    private static final ResourceLocation FUEL_HINT = new ResourceLocation("frostedresearch", "textures/gui/furnace_fuel_hint.png");
     private EditBox temperature, timer;
     private Button cooler, hotter, start, stop;
 
@@ -111,6 +112,9 @@ public final class ControlledFurnaceScreen extends AbstractContainerScreen<Contr
         graphics.blitNineSliced(PANEL, leftPos, topPos, imageWidth, imageHeight, 4, 248, 166, 0, 0);
         for (var slot : menu.slots)
             graphics.blit(FURNACE, leftPos + slot.x - 1, topPos + slot.y - 1, 55, 16, 18, 18);
+        if (fuelSlotEmpty())
+            graphics.blit(FUEL_HINT, leftPos + ControlledFurnaceMenu.FUEL_X + 2,
+                    topPos + ControlledFurnaceMenu.FUEL_Y + 2, 0, 0, 12, 12, 12, 12);
     }
 
     private void line(GuiGraphics graphics, Component text, int x, int y, int width) {
@@ -129,10 +133,14 @@ public final class ControlledFurnaceScreen extends AbstractContainerScreen<Contr
             line(graphics, t("timer"), 8, 51, 102);
             line(graphics, t("timer_blank"), 182, 51, 88);
         }
-        Component specimens = t(furnace.running() ? "locked_samples" : "samples");
-        line(graphics, specimens, ControlledFurnaceMenu.SAMPLE_X + (106 - font.width(specimens)) / 2, 70, 106);
-        Component fuel = t("fuel");
-        line(graphics, fuel, ControlledFurnaceMenu.FUEL_X + (16 - font.width(fuel)) / 2, 70, 58);
+        int sampleWidth = ControlledFurnaceBlockEntity.SAMPLE_SLOTS * 18;
+        int sampleLeft = ControlledFurnaceMenu.SAMPLE_X - 1;
+        Component specimens = t("samples");
+        line(graphics, specimens, sampleLeft + (sampleWidth - font.width(specimens)) / 2, 70, sampleWidth);
+        if (furnace.running()) {
+            int sampleTop = ControlledFurnaceMenu.SAMPLE_Y - 1;
+            graphics.fill(sampleLeft, sampleTop, sampleLeft + sampleWidth, sampleTop + 18, 250, 0x990F1216);
+        }
         line(graphics, t(furnace.message()), 156, 118, 112);
     }
 
@@ -142,5 +150,11 @@ public final class ControlledFurnaceScreen extends AbstractContainerScreen<Contr
         renderTooltip(graphics, mouseX, mouseY);
         if (isHovering(156, 112, 112, 20, mouseX, mouseY))
             graphics.renderTooltip(font, t(menu.getBlock().message()), mouseX, mouseY);
+        else if (fuelSlotEmpty() && isHovering(ControlledFurnaceMenu.FUEL_X, ControlledFurnaceMenu.FUEL_Y, 16, 16, mouseX, mouseY))
+            graphics.renderTooltip(font, t("fuel"), mouseX, mouseY);
+    }
+
+    private boolean fuelSlotEmpty() {
+        return !menu.getSlot(ControlledFurnaceBlockEntity.FUEL_SLOT).hasItem();
     }
 }
