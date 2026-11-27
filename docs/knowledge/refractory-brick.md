@@ -1,7 +1,7 @@
 # 普通耐火砖与控温炉正式路线
 
 - Status: Current
-- Last verified: 2026-11-27
+- Last verified: 2026-11-28
 - Scope: 耐火砖构想、独立试烧、实物观察和研究发现。
 - Anchors: [控温实验炉](controlled-furnace.md)、[正式项目](../../../TheWinterRescue/kubejs/data/the_winter_rescue/frostedresearch/knowledge/projects/refractory_brick.json)、[单件烧制配方](../../../TheWinterRescue/kubejs/data/the_winter_rescue/recipes/research/refractory_brick_trial.json)。
 
@@ -29,4 +29,4 @@
 
 正式知识资源在 TWR kubejs/data/the_winter_rescue/frostedresearch/knowledge/。三项原料观察用于 `acquisition.optional` 和联络的 `optional_knowledge`。联络的 `required_knowledge` 为空，`inputs` 要求砂砖物品观察。项目的 `access.start_all` 只引用 `idea`。参考砖只在 firing.variants 的 knowledge_all，按 item、block、默认顺序选首个成立路径。直接含砖制品事件是 frostedresearch:refractory_component_observed；索引只算一跳，特殊机器可通过 research/refractory_products_extra 的 item/block 标签补充，目前两标签为空。refractory_bricks 标签含普通/高耐火砖和可选存在的 II 炉砖，只用于触发/提示，不能改变控温炉产物。
 
-耐火砖配方类型为 `frostedresearch:controlled_firing`。炉体和耐火黏土球手混配方公开。历史验证记录保存在[旧版客户端记录](../../diary/2026-11-12_20-12-00_research-m5-m6-client-validation.md)。
+三个温区分别配置为 `frostedresearch:controlled_firing` 配方，分别对应 `refractory_brick_trial`、`refractory_brick_trial_low` 和 `refractory_brick_trial_high`。炉体和耐火黏土球手混配方公开。历史验证记录保存在[旧版客户端记录](../../diary/2026-11-12_20-12-00_research-m5-m6-client-validation.md)。

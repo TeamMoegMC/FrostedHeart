@@ -1,0 +1,13 @@
+{
+  "type": "frostedresearch:controlled_firing",
+  "input": {
+    "item": "minecraft:sand"
+  },
+  "temperature_min": 1200,
+  "temperature_max": 1300,
+  "duration": 20,
+  "duration_max": 40,
+  "result": {
+    "item": "minecraft:gravel"
+  }
+}

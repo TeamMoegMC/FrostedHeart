@@ -1,0 +1,12 @@
+{
+  "type": "frostedresearch:controlled_firing",
+  "input": {
+    "item": "minecraft:sand"
+  },
+  "temperature_min": 1050,
+  "temperature_max": 1150,
+  "duration": 40,
+  "result": {
+    "item": "minecraft:flint"
+  }
+}

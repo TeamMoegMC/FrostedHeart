@@ -124,24 +124,38 @@ public final class ControlledFurnaceGameTests {
         }
     }
 
-    @GameTest(batch="m5_firing_duration_max", template="trial_kiln_empty", timeoutTicks=80)
-    public static void optionalFiringDurationMaxAndOverfire(GameTestHelper h) {
+    @GameTest(batch="m5_firing_ranges", template="trial_kiln_empty", timeoutTicks=80)
+    public static void multipleRecipesMatchByTemperatureAndDuration(GameTestHelper h) {
         var furnace = furnace(h, new BlockPos(1, 1, 1));
-        fill(furnace, 1, 5);
+        fill(furnace, 1, 9);
         var inventory = furnace.inventory();
-        for (int elapsed : new int[]{20, 21, 40, 41}) {
-            inventory.setStackInSlot(1, new ItemStack(Items.SAND));
-            furnace.start(1100, 0);
-            ticks(furnace, elapsed);
-            h.assertTrue(furnace.running() && inventory.getStackInSlot(1).is(Items.SAND),
-                    "the recipe duration limit is evaluated only at shutdown");
+        record FiringCase(int temperature, int elapsed, Item expected) {}
+        var cases = List.of(
+                new FiringCase(1100, 20, Items.SAND),
+                new FiringCase(1100, 21, Items.GLASS),
+                new FiringCase(1100, 40, Items.GLASS),
+                new FiringCase(1100, 41, Items.FLINT),
+                new FiringCase(1250, 21, Items.GRAVEL),
+                new FiringCase(1250, 41, Items.SAND),
+                new FiringCase(1000, 30, Items.SAND));
+        for (var test : cases) {
+            var original = new ItemStack(Items.SAND);
+            original.getOrCreateTag().putBoolean("test_specimen", true);
+            inventory.setStackInSlot(1, original);
+            furnace.start(test.temperature(), 0);
+            ticks(furnace, test.elapsed());
+            h.assertTrue(furnace.running() && inventory.getStackInSlot(1) == original,
+                    "samples remain unchanged until shutdown");
             furnace.stop();
-            Item expected = elapsed == 20 ? Items.SAND : (elapsed <= 40 ? Items.GLASS : Items.FLINT);
-            h.assertTrue(inventory.getStackInSlot(1).is(expected), "duration boundary at " + elapsed + " ticks");
+            var result = inventory.getStackInSlot(1);
+            h.assertTrue(result.is(test.expected()), "result for " + test);
+            if (test.expected() == Items.SAND) {
+                h.assertTrue(result == original, "an unmatched recipe preserves the original stack and its data");
+            }
         }
 
         inventory.setStackInSlot(1, new ItemStack(Items.SAND));
-        furnace.start(1000, 21);
+        furnace.start(1100, 21);
         ticks(furnace, 30);
         CompoundTag saved = new CompoundTag();
         furnace.writeCustomNBT(saved, false);
@@ -150,9 +164,23 @@ public final class ControlledFurnaceGameTests {
         restored.readCustomNBT(saved, false);
         ticks(restored, 390);
         h.assertTrue(!restored.running() && restored.inventory().getStackInSlot(1).is(Items.FLINT),
-                "timed shutdown after reload uses the overfire product even at a failing temperature");
-        h.assertTrue(restored.inventory().getStackInSlot(0).is(item("frostedresearch:cracked_refractory_brick")),
-                "the uncapped specimen in the same run still uses the temperature outcome");
+                "timed shutdown after reload matches another duration range of the same specimen");
+        h.assertTrue(restored.inventory().getStackInSlot(0).is(item("frostedheart:refractory_brick")),
+                "the uncapped specimen in the same run resolves its own recipe");
+
+        var candidates = saved.getList("firing", Tag.TAG_COMPOUND);
+        candidates.removeIf(tag -> ((CompoundTag) tag).getInt("slot") == 1);
+        var old = new CompoundTag();
+        old.putInt("slot", 1);
+        old.putInt("duration", 20);
+        old.putInt("duration_max", 40);
+        old.put("product", new ItemStack(Items.GLASS).save(new CompoundTag()));
+        old.put("overfire_result", new ItemStack(Items.FLINT).save(new CompoundTag()));
+        candidates.add(old);
+        restored.readCustomNBT(saved, false);
+        ticks(restored, 390);
+        h.assertTrue(restored.inventory().getStackInSlot(1).is(Items.FLINT),
+                "an already running furnace from an older save keeps its pending outcome");
         h.succeed();
     }
 
@@ -357,8 +385,8 @@ public final class ControlledFurnaceGameTests {
                     buffer.clear();
                     serializer.toNetwork(buffer, capped);
                     var restoredCapped = serializer.fromNetwork(capped.id(), buffer);
-                    h.assertTrue(restoredCapped.durationMax() == 40 && restoredCapped.overfireResult().is(Items.FLINT),
-                            "custom recipe retains upper bound and overfire product");
+                    h.assertTrue(restoredCapped.durationMax() == 40 && restoredCapped.result().is(Items.GLASS),
+                            "custom recipe retains upper duration bound and result");
                 }finally{buffer.release();}
             }
             var grid=new net.minecraft.world.inventory.TransientCraftingContainer(a.player.inventoryMenu,3,3);
