@@ -23,6 +23,7 @@ public final class DraftingDeskPanel extends DeskMinigamePanel {
     private static final int VALUE_TOP=77, VALUE_HEIGHT=14, VALUE_BUTTON_WIDTH=28;
     private static final int VALUE_LEFT=LEFT+29, VALUE_RIGHT=LEFT+149;
     private static final int EDIT_TOP=97, REVIEW_TOP=112, NOTE_TOP=132, BACK_TOP=174;
+    private static final int TARGET_INK=0xff726555, GUIDE_INK=0x3852647a, PREVIEW_INK=0x5050798b;
     private final DrawDeskScreen desk;
     private final String run, task;
     private final Component title;
@@ -245,9 +246,12 @@ public final class DraftingDeskPanel extends DeskMinigamePanel {
     private int py(double y) { return CY+(int)Math.round(y*scale()); }
     private void plot(GuiGraphics g,int x,int y,Curve c,int color,boolean rainbow) {
         int steps=Math.max(1,(int)Math.ceil(c.length()*scale()*1.5));
+        int previousX=Integer.MIN_VALUE, previousY=Integer.MIN_VALUE;
         for(int i=0;i<=steps;i++) {
             P p=c.at((double)i/steps); int xx=px(p.x()),yy=py(p.y());
-            if(Math.abs(xx-CX)>HALF || Math.abs(yy-CY)>HALF) continue;
+            if(Math.abs(xx-CX)>HALF || Math.abs(yy-CY)>HALF || (xx==previousX && yy==previousY)) continue;
+            previousX=xx;
+            previousY=yy;
             int tint=rainbow?java.awt.Color.HSBtoRGB((System.currentTimeMillis()%4000)/4000f+(xx+yy)/110f,.8f,.82f):color;
             g.fill(x+xx,y+yy,x+xx+1,y+yy+1,tint);
         }
@@ -300,8 +304,8 @@ public final class DraftingDeskPanel extends DeskMinigamePanel {
     }
     private void drawGeometry(GuiGraphics g,int x,int y) {
         for(Curve c:axes()) plot(g,x,y,c,0xffc8bdad,false);
-        for(Curve c:sheet.targets()) plot(g,x,y,c,0xff9b9486,false);
-        if(showAux) for(Curve c:auxiliary) plot(g,x,y,c,0x7752647a,false);
+        for(Curve c:sheet.targets()) plot(g,x,y,c,TARGET_INK,false);
+        if(showAux) for(Curve c:auxiliary) plot(g,x,y,c,GUIDE_INK,false);
         for(Curve c:green) plot(g,x,y,c,0xff168153,done);
         if(checked && !done) for(Curve c:gaps) {
             plot(g,x,y,c,0xffc74835,false);
@@ -313,10 +317,10 @@ public final class DraftingDeskPanel extends DeskMinigamePanel {
             P hover=locate(mouse());
             if(tool==Tool.CIRCLE && !anchors.isEmpty()) {
                 P center = anchors.get(0);
-                plot(g,x,y,Curve.arc(center,center.dist(hover),0,360),0xff7898a4,false);
+                plot(g,x,y,Curve.arc(center,center.dist(hover),0,360),PREVIEW_INK,false);
             }
-            if(tool==Tool.FIXED) plot(g,x,y,Curve.arc(hover,radius,0,360),0x665c86a1,false);
-            if(!anchors.isEmpty()) plot(g,x,y,Curve.line(anchors.get(0),hover),0xff7898a4,false);
+            if(tool==Tool.FIXED) plot(g,x,y,Curve.arc(hover,radius,0,360),PREVIEW_INK,false);
+            if(!anchors.isEmpty()) plot(g,x,y,Curve.line(anchors.get(0),hover),PREVIEW_INK,false);
             mark(g,x,y,hover,0xff32718a);
         }
     }
