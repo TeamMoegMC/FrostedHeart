@@ -892,5 +892,7 @@
   "gui.frostedresearch.archive.new_projects": "New research (Creative)",
   "gui.frostedresearch.archive.new_projects.empty": "No matching datapack projects.",
   "gui.frostedresearch.archive.new_projects.locked": "Not yet unlocked",
+  "gui.frostedresearch.archive.new_projects.start": "Start directly",
+  "gui.frostedresearch.archive.new_projects.complete": "Complete directly",
   "gui.frostedresearch.archive.new_projects.preview": "Creative preview"
 }

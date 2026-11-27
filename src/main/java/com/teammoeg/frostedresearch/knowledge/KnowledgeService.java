@@ -59,7 +59,7 @@ public final class KnowledgeService {
      */
     public static final int EVIDENCE_SEARCH_STEPS = 20_000;
 
-    public enum Grant {NORMAL, INITIAL, COMMAND}
+    public enum Grant {NORMAL, INITIAL, COMMAND, CREATIVE}
 
     public record OperationResult(Status status, KnowledgeKey key) {
         public boolean succeeded() {
@@ -256,7 +256,11 @@ public final class KnowledgeService {
      * Generated idea/results retain output in the inbox when normal learning cannot commit.
      */
     public OperationResult produce(KnowledgeElement element, AcquisitionSource source) {
-        OperationResult learned = learn(element, source, Grant.NORMAL);
+        return produce(element, source, Grant.NORMAL);
+    }
+
+    private OperationResult produce(KnowledgeElement element, AcquisitionSource source, Grant grant) {
+        OperationResult learned = learn(element, source, grant);
         if (learned.succeeded() || learned.status() == Status.ALREADY_OWNED) return learned;
         if (element.key().kind() == KnowledgeKey.Kind.OBSERVATION) {
             receive(element, source);
@@ -482,10 +486,24 @@ public final class KnowledgeService {
         var evaluation = projectAccess(project);
         var definition = KnowledgeDefinitions.current().projects().get(project);
         List<KnowledgeKey> origins = definition.access().isEmpty() && idea != null ? List.of(idea) : evaluation.origins();
+        return Optional.of(createRun(project, origins));
+    }
+
+    /** Resolves a creative catalogue selection against current team progress. */
+    public Optional<UUID> creativeResearchRun(ResourceLocation project) {
+        var access = projectAccess(project);
+        return switch (access.startStatus()) {
+            case ACTIVE -> openRun(project).map(ResearchHistory::id);
+            case NOT_FOUND, NOT_UNDERSTOOD, LEARNABLE -> Optional.of(createRun(project, access.origins()));
+            default -> Optional.empty();
+        };
+    }
+
+    private UUID createRun(ResourceLocation project, List<KnowledgeKey> origins) {
         UUID id = UUID.randomUUID();
         state.recordResearch(ResearchStages.update(this, new ResearchHistory(id, project, origins, time, false, List.of())));
         notifyChanged();
-        return Optional.of(id);
+        return id;
     }
 
     public Optional<ResearchHistory> openRun(ResourceLocation project) {
@@ -825,6 +843,16 @@ public final class KnowledgeService {
     }
 
     public List<OperationResult> completeResearch(UUID run, List<ResourceLocation> results) {
+        return completeResearch(run, results, Grant.NORMAL);
+    }
+
+    public List<OperationResult> completeCreativeResearch(ResourceLocation project) {
+        var run = creativeResearchRun(project);
+        return run.isEmpty() ? List.of() : completeResearch(run.get(),
+            KnowledgeDefinitions.current().projects().get(project).results(), Grant.CREATIVE);
+    }
+
+    private List<OperationResult> completeResearch(UUID run, List<ResourceLocation> results, Grant grant) {
         ResearchHistory history = state.research().get(run);
         if (!runActive(history) || results.isEmpty()) return List.of();
         var definition = KnowledgeDefinitions.current().projects().get(history.project());
@@ -832,7 +860,7 @@ public final class KnowledgeService {
         List<KnowledgeKey> keys = results.stream().distinct().map(KnowledgeKey::result).toList();
         state.recordResearch(history.completedWith(keys));
         com.teammoeg.frostedresearch.knowledge.experiment.PendingResearchProofs.removeRun(run);
-        List<OperationResult> outputs = results.stream().distinct().map(id -> produce(KnowledgeElement.result(id), new AcquisitionSource("research:" + run, actor, time))).toList();
+        List<OperationResult> outputs = results.stream().distinct().map(id -> produce(KnowledgeElement.result(id), new AcquisitionSource("research:" + run, actor, time), grant)).toList();
         notifyChanged();
         return outputs;
     }

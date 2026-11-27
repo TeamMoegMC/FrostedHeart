@@ -2,6 +2,9 @@ package com.teammoeg.frostedresearch.gui.archive;
 
 import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.UILayer;
+import com.teammoeg.frostedresearch.FRNetwork;
+import com.teammoeg.frostedresearch.knowledge.network.KnowledgeWorkbenchActionPacket;
+import com.teammoeg.frostedresearch.knowledge.network.KnowledgeWorkbenchActionPacket.Action;
 import com.teammoeg.frostedresearch.gui.drawdesk.DrawDeskScreen;
 import com.teammoeg.frostedresearch.knowledge.client.KnowledgeClientState;
 import com.teammoeg.frostedresearch.knowledge.client.KnowledgeJournalData;
@@ -25,6 +28,8 @@ final class CreativeProjectCatalogue extends UILayer {
     private final JournalList list;
     private final JournalText summary;
     private final JournalButton details;
+    private final JournalButton start;
+    private final JournalButton complete;
     private KnowledgeJournalData data;
     private String selected;
     private String query = "";
@@ -40,9 +45,21 @@ final class CreativeProjectCatalogue extends UILayer {
             refreshSummary();
         });
         summary = new JournalText(this);
+        start = actionButton("start", Action.CREATIVE_START_RESEARCH);
+        complete = actionButton("complete", Action.CREATIVE_COMPLETE_RESEARCH);
         details = new JournalButton(this, Component.translatable("gui.frostedresearch.journal.research.details"), false, () -> {
             if (available() && selected != null && getParent() instanceof ResearchArchiveLayer archive
                 && archive.getParent() instanceof DrawDeskScreen desk) desk.showCreativeProject(selected);
+        });
+    }
+
+    private JournalButton actionButton(String label, Action action) {
+        return new JournalButton(this, Component.translatable("gui.frostedresearch.archive.new_projects." + label), false, () -> {
+            if (available() && selected != null && getParent() instanceof ResearchArchiveLayer archive
+                && archive.getParent() instanceof DrawDeskScreen desk) {
+                FRNetwork.INSTANCE.sendToServer(new KnowledgeWorkbenchActionPacket(desk.getTile().getBlockPos(),
+                    action, List.of(), selected, "", ""));
+            }
         });
     }
 
@@ -56,6 +73,8 @@ final class CreativeProjectCatalogue extends UILayer {
         add(list);
         add(summary);
         add(details);
+        add(start);
+        add(complete);
     }
 
     @Override
@@ -69,7 +88,12 @@ final class CreativeProjectCatalogue extends UILayer {
         list.setPosAndSize(0, 0, listWidth, height);
         int right = listWidth + 12;
         summary.setPosAndSize(right, 5, Math.max(20, width - right - 6), Math.max(20, height - 34));
-        details.setPosAndSize(right, height - 23, Math.max(20, width - right - 6), 20);
+        int availableWidth = width - right - 6;
+        int buttonWidth = (availableWidth - 6) / 3;
+        int y = height - 23;
+        details.setPosAndSize(right, y, buttonWidth, 20);
+        start.setPosAndSize(right + buttonWidth + 3, y, buttonWidth, 20);
+        complete.setPosAndSize(right + 2 * buttonWidth + 6, y, availableWidth - 2 * buttonWidth - 6, 20);
     }
 
     void refresh(String search) {
@@ -90,6 +114,9 @@ final class CreativeProjectCatalogue extends UILayer {
         list.focus(selected);
         var project = data == null ? null : data.creativeProjects.stream().filter(p -> p.id().equals(selected)).findFirst().orElse(null);
         details.setEnabled(project != null);
+        boolean unfinished = project != null && !project.completed();
+        start.setEnabled(unfinished && data.openRun(project.id()) == null);
+        complete.setEnabled(unfinished);
         if (project == null) {
             summary.text(List.of(Component.translatable("gui.frostedresearch.archive.new_projects.empty")));
             return;

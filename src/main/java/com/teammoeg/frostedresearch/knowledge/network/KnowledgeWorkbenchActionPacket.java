@@ -58,7 +58,8 @@ public final class KnowledgeWorkbenchActionPacket implements CMessage {
         START_RESEARCH, SUBMIT_EVIDENCE, CALCULATE, STOP_CALCULATION, COMPLETE_RESEARCH, ABANDON_RESEARCH, SUBMIT_SAMPLE, ADVANCE_STAGE, START_AIRFLOW, ROTATE_AIRFLOW, RESET_AIRFLOW, DIG_AIRFLOW,
         START_FOLDLINE, EDIT_FOLDLINE, STAMP_FOLDLINE, REROLL_FOLDLINE,
         START_NESTING, EDIT_NESTING, STAMP_NESTING, REROLL_NESTING,
-        OPEN_DRAFT, EDIT_DRAFT, CHECK_DRAFT, TIMER_DRAFT
+        OPEN_DRAFT, EDIT_DRAFT, CHECK_DRAFT, TIMER_DRAFT,
+        CREATIVE_START_RESEARCH, CREATIVE_COMPLETE_RESEARCH
     }
 
     public static final int REQUIREMENT_LIMIT = 64;
@@ -211,6 +212,13 @@ public final class KnowledgeWorkbenchActionPacket implements CMessage {
                 case ADVANCE_STAGE -> {
                     var result=service.advanceStage(run(),requirement);addResult(results,result,service);
                     response.putString("message",result.succeeded() ? "research.stage_advanced" : "research.unmet");
+                }
+                case CREATIVE_START_RESEARCH, CREATIVE_COMPLETE_RESEARCH -> {
+                    ResourceLocation project = ResourceLocation.tryParse(rule);
+                    if (project != null && player.isCreative()) {
+                        if (action == Action.CREATIVE_START_RESEARCH) service.creativeResearchRun(project);
+                        else service.completeCreativeResearch(project).forEach(result -> addResult(results, result, service));
+                    }
                 }
                 case START_RESEARCH -> startResearch(service, results, response);
                 case SUBMIT_SAMPLE -> {

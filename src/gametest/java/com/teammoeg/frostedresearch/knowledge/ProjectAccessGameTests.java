@@ -124,6 +124,27 @@ public final class ProjectAccessGameTests {
     }
 
     @GameTest(template = "empty", timeoutTicks = 40)
+    public static void creativeCatalogueBypassesProjectAccess(GameTestHelper h) {
+        var previous = KnowledgeDefinitions.current();
+        try {
+            install(fixture("projects/joint_study", ProjectDefinition.CODEC));
+            var project = id("joint_study");
+            var service = service();
+            h.assertTrue(service.startResearch(project).isEmpty(), "ordinary start requires discovery");
+            UUID run = service.creativeResearchRun(project).orElseThrow();
+            h.assertTrue(service.creativeResearchRun(project).orElseThrow().equals(run), "reuse active run");
+            service.completeCreativeResearch(project);
+            h.assertTrue(ResearchRuns.completed(service.state(), project), "finish active run with results");
+            var fresh = service();
+            fresh.completeCreativeResearch(project);
+            fresh.completeCreativeResearch(project);
+            h.assertTrue(ResearchRuns.completed(fresh.state(), project) && fresh.state().research().size() == 1,
+                "one click completes undiscovered project and repeated completion is harmless");
+            h.succeed();
+        } finally { KnowledgeDefinitions.install(previous); }
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 40)
     public static void disclosureAndStartUseLearnedKnowledge(GameTestHelper h) {
         var previous = KnowledgeDefinitions.current();
         try {
