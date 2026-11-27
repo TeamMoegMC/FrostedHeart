@@ -124,6 +124,38 @@ public final class ControlledFurnaceGameTests {
         }
     }
 
+    @GameTest(batch="m5_firing_duration_max", template="trial_kiln_empty", timeoutTicks=80)
+    public static void optionalFiringDurationMaxAndOverfire(GameTestHelper h) {
+        var furnace = furnace(h, new BlockPos(1, 1, 1));
+        fill(furnace, 1, 5);
+        var inventory = furnace.inventory();
+        for (int elapsed : new int[]{20, 21, 40, 41}) {
+            inventory.setStackInSlot(1, new ItemStack(Items.SAND));
+            furnace.start(1100, 0);
+            ticks(furnace, elapsed);
+            h.assertTrue(furnace.running() && inventory.getStackInSlot(1).is(Items.SAND),
+                    "the recipe duration limit is evaluated only at shutdown");
+            furnace.stop();
+            Item expected = elapsed == 20 ? Items.SAND : (elapsed <= 40 ? Items.GLASS : Items.FLINT);
+            h.assertTrue(inventory.getStackInSlot(1).is(expected), "duration boundary at " + elapsed + " ticks");
+        }
+
+        inventory.setStackInSlot(1, new ItemStack(Items.SAND));
+        furnace.start(1000, 21);
+        ticks(furnace, 30);
+        CompoundTag saved = new CompoundTag();
+        furnace.writeCustomNBT(saved, false);
+        var restored = new ControlledFurnaceBlockEntity(furnace.getBlockPos(), furnace.getBlockState());
+        restored.setLevel(h.getLevel());
+        restored.readCustomNBT(saved, false);
+        ticks(restored, 390);
+        h.assertTrue(!restored.running() && restored.inventory().getStackInSlot(1).is(Items.FLINT),
+                "timed shutdown after reload uses the overfire product even at a failing temperature");
+        h.assertTrue(restored.inventory().getStackInSlot(0).is(item("frostedresearch:cracked_refractory_brick")),
+                "the uncapped specimen in the same run still uses the temperature outcome");
+        h.succeed();
+    }
+
     @GameTest(batch="m5_formal_branches",template="trial_kiln_empty",timeoutTicks=80)
     public static void formalAccessAndReferenceFreeze(GameTestHelper h){
         try(var scope=new Scope()){
@@ -319,7 +351,14 @@ public final class ControlledFurnaceGameTests {
                 try{
                     var serializer=new ControlledFiringRecipe.Serializer();serializer.toNetwork(buffer,recipe);var restored=serializer.fromNetwork(recipe.id(),buffer);
                     h.assertTrue(restored.input().is(recipe.input().getItem()) && restored.duration()==recipe.duration()
-                        && restored.temperatureMin()==recipe.temperatureMin(),"custom recipe retains sample item, temperature and duration");
+                        && restored.temperatureMin()==recipe.temperatureMin() && restored.durationMax() == 0,
+                        "custom recipe retains sample item, temperature and uncapped duration");
+                    var capped = (ControlledFiringRecipe) manager.byKey(new ResourceLocation("m5_test", "capped_firing")).orElseThrow();
+                    buffer.clear();
+                    serializer.toNetwork(buffer, capped);
+                    var restoredCapped = serializer.fromNetwork(capped.id(), buffer);
+                    h.assertTrue(restoredCapped.durationMax() == 40 && restoredCapped.overfireResult().is(Items.FLINT),
+                            "custom recipe retains upper bound and overfire product");
                 }finally{buffer.release();}
             }
             var grid=new net.minecraft.world.inventory.TransientCraftingContainer(a.player.inventoryMenu,3,3);

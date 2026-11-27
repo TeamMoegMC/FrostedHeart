@@ -194,9 +194,9 @@ Legacy mappings now accept a nonempty set of Design/Construction targets, includ
 ordinary tuyere and bloomery recipes. Completion/effect facts, per-result receipts and prerequisite equivalence
 retain the M3 bridge semantics; neither temporary grants nor external results manufacture completion history.
 
-## M5 自有炉生产接点
+## 控温实验炉
 
-`ControlledFurnaceBlockEntity.start` 的无 experiment 配方必须由当前 enabled Design 声明且 `ResearchHooks.canUseRecipe(team, recipe)` 允许。它不改变全局 unmanaged 策略或旧三方耐火砖工艺；遗忘仅阻止下一炉，已扣料批次继续交付。JEI 自有分类沿原投影刷新配方显隐。见 [控温实验炉](../knowledge/controlled-furnace.md)。
+`ControlledFurnaceBlockEntity.start` 从配方系统读取控温烧制条件，玩家可独立开炉。控温烧制配方已从 JEI 移除。见 [控温实验炉](../knowledge/controlled-furnace.md)。
 
 ## M6 备用run的临时来源
 

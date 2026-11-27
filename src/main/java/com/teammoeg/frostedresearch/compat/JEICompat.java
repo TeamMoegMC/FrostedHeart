@@ -35,28 +35,23 @@ import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
 import mezz.jei.api.constants.RecipeTypes;
 import mezz.jei.api.constants.VanillaTypes;
-import mezz.jei.api.helpers.IGuiHelper;
 import mezz.jei.api.recipe.IRecipeManager;
 import mezz.jei.api.recipe.RecipeIngredientRole;
 import mezz.jei.api.recipe.RecipeType;
 import mezz.jei.api.recipe.vanilla.IJeiIngredientInfoRecipe;
 import mezz.jei.api.registration.IGuiHandlerRegistration;
-import mezz.jei.api.registration.IRecipeCatalystRegistration;
-import mezz.jei.api.registration.IRecipeCategoryRegistration;
 import mezz.jei.api.registration.IRecipeRegistration;
 import mezz.jei.api.registration.IVanillaCategoryExtensionRegistration;
 import mezz.jei.api.runtime.IJeiRuntime;
 import mezz.jei.library.plugins.jei.info.IngredientInfoRecipe;
 import mezz.jei.library.util.RecipeUtil;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeManager;
 
-import javax.annotation.Nullable;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.stream.Stream;
@@ -112,11 +107,6 @@ public class JEICompat implements IModPlugin {
         infos = newInfos;
     }
 
-    public static <T> void checkNotNull(@Nullable T object, String name) {
-        if (object == null) {
-            throw new NullPointerException(name + " must not be null.");
-        }
-    }
     public static void resetRuntime() {
         man = null;
         jei = null;
@@ -278,27 +268,11 @@ public class JEICompat implements IModPlugin {
     private record RegisteredRecipe(RecipeType<?> type, Object recipe) {
     }
     @Override
-    public void registerCategories(IRecipeCategoryRegistration registration) {
-        IGuiHelper guiHelper = registration.getJeiHelpers().getGuiHelper();
-        registration.addRecipeCategories(new ControlledFiringCategory(guiHelper));
-    }
-
-    @Override
     public void registerGuiHandlers(IGuiHandlerRegistration registry) {
     }
 
     @Override
-    public void registerRecipeCatalysts(IRecipeCatalystRegistration registration) {
-        registration.addRecipeCatalyst(new ItemStack(com.teammoeg.frostedresearch.FRContents.Blocks.CONTROLLED_FURNACE.get()),ControlledFiringCategory.TYPE);
-
-    }
-
-    @Override
     public void registerRecipes(IRecipeRegistration registration) {
-        ClientLevel world = Minecraft.getInstance().level;
-        checkNotNull(world, "minecraft world");
-        RecipeManager recipeManager = world.getRecipeManager();
-        registration.addRecipes(ControlledFiringCategory.TYPE, recipeManager.getAllRecipesFor(com.teammoeg.frostedresearch.FRContents.Recipes.CONTROLLED_FIRING.get()));
         JEICompat.scheduleSyncJEI();
     }
 

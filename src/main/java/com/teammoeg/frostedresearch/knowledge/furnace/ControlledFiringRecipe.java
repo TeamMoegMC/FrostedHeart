@@ -17,12 +17,16 @@ import net.minecraftforge.registries.ForgeRegistries;
 
 /** A single specimen changes in place after firing past the recipe's duration. */
 public record ControlledFiringRecipe(ResourceLocation id, ItemStack input, int temperatureMin, int temperatureMax,
-        int duration, ItemStack result, ItemStack failure) implements Recipe<Container> {
+        int duration, ItemStack result, ItemStack failure, int durationMax, ItemStack overfireResult) implements Recipe<Container> {
     public ControlledFiringRecipe {
         if (input.getCount() != 1 || result.getCount() != 1 || failure.getCount() != 1 || duration < 1
                 || temperatureMin < ControlledFurnaceBlockEntity.MIN_TEMPERATURE
                 || temperatureMax > ControlledFurnaceBlockEntity.MAX_TEMPERATURE || temperatureMin > temperatureMax)
             throw new IllegalArgumentException("Invalid controlled firing recipe: " + id);
+        if (durationMax < 0 || (durationMax > 0 && durationMax <= duration)
+                || (!overfireResult.isEmpty() && (durationMax == 0 || overfireResult.getCount() != 1)))
+            throw new IllegalArgumentException("Invalid controlled firing duration limit or overfire result: " + id);
+        overfireResult = durationMax > 0 && overfireResult.isEmpty() ? failure.copy() : overfireResult.copy();
         input = input.copy();
         result = result.copy();
         failure = failure.copy();
@@ -31,6 +35,7 @@ public record ControlledFiringRecipe(ResourceLocation id, ItemStack input, int t
     @Override public ItemStack input() { return input.copy(); }
     @Override public ItemStack result() { return result.copy(); }
     @Override public ItemStack failure() { return failure.copy(); }
+    @Override public ItemStack overfireResult() { return overfireResult.copy(); }
     public boolean matches(ItemStack stack) { return stack.is(input.getItem()); }
     public ItemStack outcome(int temperature) { return temperature >= temperatureMin && temperature <= temperatureMax ? result() : failure(); }
     @Override public boolean matches(Container c, Level l) { return c.getContainerSize() > 0 && matches(c.getItem(0)); }
@@ -53,14 +58,18 @@ public record ControlledFiringRecipe(ResourceLocation id, ItemStack input, int t
         }
 
         @Override public ControlledFiringRecipe fromJson(ResourceLocation id, JsonObject data) {
+            int durationMax = GsonHelper.getAsInt(data, "duration_max", 0);
+            if (data.has("duration_max") && durationMax <= 0)
+                throw new JsonSyntaxException("Controlled firing duration_max must be positive: " + id);
+            ItemStack overfireResult = data.has("overfire_result") ? stack(data, "overfire_result") : ItemStack.EMPTY;
             return new ControlledFiringRecipe(id, stack(data, "input"), GsonHelper.getAsInt(data, "temperature_min"),
                     GsonHelper.getAsInt(data, "temperature_max"), GsonHelper.getAsInt(data, "duration"),
-                    stack(data, "result"), stack(data, "failure"));
+                    stack(data, "result"), stack(data, "failure"), durationMax, overfireResult);
         }
 
         @Override public ControlledFiringRecipe fromNetwork(ResourceLocation id, FriendlyByteBuf buffer) {
             return new ControlledFiringRecipe(id, buffer.readItem(), buffer.readVarInt(), buffer.readVarInt(),
-                    buffer.readVarInt(), buffer.readItem(), buffer.readItem());
+                    buffer.readVarInt(), buffer.readItem(), buffer.readItem(), buffer.readVarInt(), buffer.readItem());
         }
 
         @Override public void toNetwork(FriendlyByteBuf buffer, ControlledFiringRecipe recipe) {
@@ -70,6 +79,8 @@ public record ControlledFiringRecipe(ResourceLocation id, ItemStack input, int t
             buffer.writeVarInt(recipe.duration);
             buffer.writeItem(recipe.result);
             buffer.writeItem(recipe.failure);
+            buffer.writeVarInt(recipe.durationMax);
+            buffer.writeItem(recipe.overfireResult);
         }
     }
 }

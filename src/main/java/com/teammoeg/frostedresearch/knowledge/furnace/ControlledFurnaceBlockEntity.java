@@ -33,7 +33,7 @@ public final class ControlledFurnaceBlockEntity extends CBlockEntity implements 
     public static final int MAX_TIMER_SECONDS = 24 * 60 * 60;
     private static final int TICKS_PER_SECOND = 20;
 
-    private record Firing(int slot, int duration, ItemStack product) {}
+    private record Firing(int slot, int duration, ItemStack product, int durationMax, ItemStack overfireResult) {}
 
     private final ItemStackHandler inventory = new ItemStackHandler(SLOT_COUNT) {
         @Override public int getSlotLimit(int slot) { return slot == FUEL_SLOT ? 64 : 1; }
@@ -90,7 +90,8 @@ public final class ControlledFurnaceBlockEntity extends CBlockEntity implements 
             loaded = true;
             for (var recipe : recipes) {
                 if (!recipe.matches(sample)) continue;
-                results.add(new Firing(slot, recipe.duration(), recipe.outcome(temperature)));
+                results.add(new Firing(slot, recipe.duration(), recipe.outcome(temperature),
+                        recipe.durationMax(), recipe.overfireResult()));
                 break;
             }
         }
@@ -113,7 +114,9 @@ public final class ControlledFurnaceBlockEntity extends CBlockEntity implements 
     public void stop() {
         if (!running) return;
         for (Firing sample : firing) {
-            if (elapsedTicks > sample.duration()) inventory.setStackInSlot(sample.slot(), sample.product());
+            if (elapsedTicks <= sample.duration()) continue;
+            boolean overfired = sample.durationMax() > 0 && elapsedTicks > sample.durationMax();
+            inventory.setStackInSlot(sample.slot(), overfired ? sample.overfireResult() : sample.product());
         }
         firing = List.of();
         running = false;
@@ -170,6 +173,10 @@ public final class ControlledFurnaceBlockEntity extends CBlockEntity implements 
             entry.putInt("slot", sample.slot());
             entry.putInt("duration", sample.duration());
             entry.put("product", sample.product().save(new CompoundTag()));
+            if (sample.durationMax() > 0) {
+                entry.putInt("duration_max", sample.durationMax());
+                entry.put("overfire_result", sample.overfireResult().save(new CompoundTag()));
+            }
             samples.add(entry);
         }
         data.put("firing", samples);
@@ -196,7 +203,8 @@ public final class ControlledFurnaceBlockEntity extends CBlockEntity implements 
         inventory.deserializeNBT(data.getCompound("specimen_inventory"));
         for (Tag tag : data.getList("firing", Tag.TAG_COMPOUND)) {
             CompoundTag entry = (CompoundTag) tag;
-            firing.add(new Firing(entry.getInt("slot"), entry.getInt("duration"), ItemStack.of(entry.getCompound("product"))));
+            firing.add(new Firing(entry.getInt("slot"), entry.getInt("duration"), ItemStack.of(entry.getCompound("product")),
+                    entry.getInt("duration_max"), ItemStack.of(entry.getCompound("overfire_result"))));
         }
         for (Tag tag : data.getList("migrated_items", Tag.TAG_COMPOUND)) migratedItems.add(ItemStack.of((CompoundTag) tag));
     }

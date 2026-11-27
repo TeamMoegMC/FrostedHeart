@@ -12,7 +12,6 @@ import com.teammoeg.frostedresearch.*;
 import com.teammoeg.frostedresearch.api.*;
 import com.teammoeg.frostedresearch.gui.drawdesk.DrawDeskScreen;
 import com.teammoeg.frostedresearch.compat.JEICompat;
-import com.teammoeg.frostedresearch.compat.ControlledFiringCategory;
 import com.teammoeg.frostedresearch.knowledge.*;
 import com.teammoeg.frostedresearch.knowledge.client.*;
 import com.teammoeg.frostedresearch.knowledge.client.observation.ObservationRecordScreen;
@@ -58,11 +57,11 @@ public final class M5ClientValidation {
     private static final long[] QUESTS={0x507C594CBE4EDD30L,0x56B3257EE1F12A5BL,0x564A135A9DC0E980L,0x594A74A3D9A1A554L,0x5A6E8872E26A30E3L};
     private static final Map<String,Object> facts=Collections.synchronizedMap(new LinkedHashMap<>());
     private static final long START=System.nanoTime();
-    private static int phase,ticks,originalScale,observationReturn,craftReturn,craftDestination,questIndex,jeiReturn,readingReturn;
+    private static int phase,ticks,originalScale,observationReturn,craftReturn,craftDestination,questIndex,readingReturn;
     private static String originalLanguage,observationLabel,craftRecipe,defaultMethod,readingShot;
     private static ResourceLocation observationItem;
     private static KnowledgeKey observationKey;
-    private static boolean originalPause,captured,finished,keepObservation,keyHeld,jeiUnlocked,delegated;
+    private static boolean originalPause,captured,finished,keepObservation,keyHeld,delegated;
     private static volatile boolean busy,initialChecked,serverChecked;
     private static volatile Throwable failure;
     private static volatile long linkStart,linkEnd;
@@ -171,15 +170,10 @@ public final class M5ClientValidation {
     }
     private static void supplyBatch(int count,int fuel){var p=player();p.getInventory().setItem(9,new ItemStack(item("frostedheart:fire_clay_ball"),count));p.getInventory().setItem(10,new ItemStack(Items.CHARCOAL,fuel));p.inventoryMenu.broadcastChanges();p.containerMenu.broadcastChanges();}
     private static long rewards(){return service().state().acquisitions().stream().filter(e->e.element().key().equals(KnowledgeKey.result(RESULT))).count();}
-    private static void jei(boolean unlocked,int after)throws Exception{jeiUnlocked=unlocked;jeiReturn=after;close();go(800);}
-    private static void jeiTick()throws Exception{
-        if(phase==800){
-            if(ticks<20||JEICompat.jei==null||JEICompat.man==null)return;
-            var visible=JEICompat.man.createRecipeLookup(ControlledFiringCategory.TYPE).get().map(ControlledFiringRecipe::id).toList();
-            require(visible.contains(id("the_winter_rescue:research/refractory_brick_trial")),"JEI shows the public specimen recipe");
-            facts.put(jeiUnlocked?"jei_after_design_visible":"jei_before_design_visible",visible.stream().map(Object::toString).toList());
-            JEICompat.jei.getRecipesGui().showTypes(List.of(ControlledFiringCategory.TYPE));go(801);
-        }else if(phase==801&&ticks>=20){shot(jeiUnlocked?"21a-jei-after-research":"16a-jei-before-research");mc().setScreen(null);go(jeiReturn);}
+    private static void checkFiringHiddenInJei() throws Exception {
+        require(JEICompat.man.getRecipeType(id("frostedresearch:controlled_firing")).isEmpty(),
+                "JEI does not register controlled firing");
+        facts.put("controlled_firing_hidden_in_jei", true);
     }
     private static void stageShot(String name,int after)throws Exception{
         readingShot=name;readingReturn=after;var reading=(JournalText)read(layer,"reading");
@@ -194,7 +188,7 @@ public final class M5ClientValidation {
         try{
             require(System.nanoTime()-START<2_400_000_000_000L,"M5 client timeout phase "+phase);if(failure!=null)throw new IllegalStateException("server fixture/assertion",failure);if(busy||mc().getOverlay()!=null)return;
             if(mc().screen instanceof ImageScreenDialog){Screen screen=mc().screen;for(int i=0;i<5;i++)if(screen.shouldCloseOnEsc()){screen.onClose();break;}return;}
-            ticks++;if(phase>=600&&phase<700){observationTick();return;}if(phase>=700&&phase<800){craftTick();return;}if(phase>=800&&phase<900){jeiTick();return;}if(phase>=900){readingTick();return;}
+            ticks++;if(phase>=600&&phase<700){observationTick();return;}if(phase>=700&&phase<800){craftTick();return;}if(phase>=900){readingTick();return;}
             switch(phase){
                 case 0->{if(mc().level!=null||mc().screen==null)return;captured=true;originalScale=mc().options.guiScale().get();originalLanguage=mc().options.languageCode;originalPause=mc().options.pauseOnLostFocus;mc().options.pauseOnLostFocus=false;mc().options.guiScale().set(2);GLFW.glfwSetWindowSize(mc().getWindow().getWindow(),1280,800);mc().resizeDisplay();mc().options.languageCode="zh_cn";mc().getLanguageManager().setSelected("zh_cn");reload=originalLanguage.equals("zh_cn")?java.util.concurrent.CompletableFuture.completedFuture(null):mc().reloadResourcePacks();next();}
                 case 1->{if(!reload.isDone())return;reload.join();mc().createWorldOpenFlows().createFreshLevel("m5-entry-"+System.currentTimeMillis(),new LevelSettings("M5 normal entry and controlled furnace",GameType.SURVIVAL,false,Difficulty.PEACEFUL,true,new GameRules(),WorldDataConfiguration.DEFAULT),new WorldOptions(755111011717574880L,false,false),r->r.registryOrThrow(Registries.WORLD_PRESET).getHolderOrThrow(WorldPresets.FLAT).value().createWorldDimensions());next();}
@@ -220,7 +214,7 @@ public final class M5ClientValidation {
                 case 23->{if(ticks<10||!furnace().running())return;require(furnace().temperature()==1107,"exact manual temperature");shot("17-running");go(25);}
                 case 25->{if(furnace().running())return;var stack=mc().player.containerMenu.getSlot(0).getItem();require(stack.is(item("frostedheart:refractory_brick"))&&ResearchSampleBinding.read(stack).isEmpty(),"unbound result in its specimen slot");shot("18-fired-specimen");move(0,7);close();observe("19-trial-sample","frostedheart:refractory_brick",true,26,true);}
                 case 26->{if(!projectView()||!current().stage().ready())return;require(mc().player.getMainHandItem().getCount()==1&&current().stage().method().getString().equals(defaultMethod),"observation completes the task and keeps the original hint");click("research.complete");next();}
-                case 27->{if(ticks<20||!current().status().equals("completed"))return;onServer(()->{require(rewards()==1,"first firing finding");service().forget(KnowledgeKey.result(RESULT));TeamResearchService.send(player(),CTeamDataManager.get(player()));});jei(true,32);}
+                case 27->{if(ticks<20||!current().status().equals("completed")||JEICompat.man==null)return;checkFiringHiddenInJei();onServer(()->{require(rewards()==1,"first firing finding");service().forget(KnowledgeKey.result(RESULT));TeamResearchService.send(player(),CTeamDataManager.get(player()));});close();go(32);}
                 case 32->{if(!projectView()||!project().startStatus().equals("LEARNABLE"))return;click("research.start");next();}
                 case 33->{if(ticks<20||project().openRun().isBlank()||project().openRun().equals(firstRun.toString()))return;run=UUID.fromString(project().openRun());click("research.advance_stage");next();}
                 case 34->{if(ticks<20||!current().stage().id().equals("firing"))return;require(current().stage().method().getString().equals(Component.translatable("knowledge.the_winter_rescue.refractory_brick.method.reference").getString()),"pre-entry learned reference selects precise hint");facts.put("before_entry_reference_precise_hint",true);stageShot("24-second-run-precise-reference",345);}

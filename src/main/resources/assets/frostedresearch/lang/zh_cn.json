@@ -836,8 +836,6 @@
   "gui.frostedresearch.furnace.need_samples": "请放入至少一件样品。",
   "gui.frostedresearch.furnace.need_fuel": "请放入一块木炭。",
   "gui.frostedresearch.furnace.not_owned": "此炉属于其他队伍。",
-  "gui.frostedresearch.furnace.jei_duration": "烧制超过 %s 秒",
-  "gui.frostedresearch.furnace.jei_failure": "温度范围外的产物",
   "block.frostedresearch.controlled_furnace": "控温实验炉",
   "item.frostedresearch.cracked_refractory_brick": "碎裂耐火砖",
   "gui.frostedresearch.journal.research.run_number": "记录 %s",

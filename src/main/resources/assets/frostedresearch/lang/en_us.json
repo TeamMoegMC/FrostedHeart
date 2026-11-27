@@ -836,8 +836,6 @@
   "gui.frostedresearch.furnace.need_samples": "Load at least one specimen.",
   "gui.frostedresearch.furnace.need_fuel": "Load one charcoal.",
   "gui.frostedresearch.furnace.not_owned": "This furnace belongs to another team.",
-  "gui.frostedresearch.furnace.jei_duration": "Fire for more than %s s",
-  "gui.frostedresearch.furnace.jei_failure": "Output outside the temperature range",
   "block.frostedresearch.controlled_furnace": "Controlled Furnace",
   "item.frostedresearch.cracked_refractory_brick": "Cracked Refractory Brick",
   "gui.frostedresearch.journal.research.run_number": "Record %s",

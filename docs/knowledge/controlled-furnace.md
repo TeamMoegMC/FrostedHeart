@@ -3,7 +3,7 @@
 - Status: Current
 - Last verified: 2026-11-27
 - Scope: 独立控温烧制、样品格、停炉结算及耐火制品观察索引。
-- Code anchors: ControlledFurnaceBlockEntity、ControlledFurnaceMenu、ControlledFurnaceScreen、ControlledFiringRecipe、ControlledFiringCategory、RefractoryObservationIndex。
+- Code anchors: ControlledFurnaceBlockEntity、ControlledFurnaceMenu、ControlledFurnaceScreen、ControlledFiringRecipe、RefractoryObservationIndex。
 
 ## 操作与停炉结算
 
@@ -13,13 +13,21 @@
 
 空燃料格用火焰标识，烧制中的样品格以灰色遮罩标示锁定。
 
-手动或定时停炉时，每个样品独立结算。时长小于或等于配方阈值时保留原料。超过阈值时，在温区内得到成功产物，温区外得到失败产物，两者都在原格取出。例如耐火黏土球的阈值为 400 游戏刻（正常速度 20 秒），成功温区为 1050–1150°C（含端点）。倒计时填 21 秒即可超过阈值。
+手动或定时停炉时，每个样品在原格独立结算。
+
+- 时长小于或等于下限时保留原料。
+- 超过已配置的上限时得到超时产物。
+- 超过下限且在时长范围内时，按设定温度决定结果。温区内得到成功产物，温区外得到失败产物。
+
+耐火黏土球的时长下限为 400 游戏刻（正常速度 20 秒），无时长上限，成功温区为 1050–1150°C（含端点）。倒计时填 21 秒即可超过下限。
 
 ## 数据与存档
 
-`frostedresearch:controlled_firing` 配方定义 `input`、`result`、`failure`（各为含 `item` 的单件物品）、`temperature_min`、`temperature_max` 和 `duration`（正整数游戏刻）。同物品匹配多个配方时，使用 ID 排序第一条。开炉时保存每格的时长阈值和候选结果。配方可在 JEI 查询。
+`frostedresearch:controlled_firing` 配方定义 `input`、`result`、`failure`（各为含 `item` 的单件物品）、`temperature_min`、`temperature_max` 和 `duration`（下限，正整数游戏刻）。可选的 `duration_max` 同样以游戏刻为单位，必须大于 `duration`，达到上限的当刻仍在范围内。省略 `duration_max` 时，超过下限的时长均可接受。设有上限时，可通过 `overfire_result` 配置超时产物，格式与 `result` 相同，默认使用 `failure`。样品的时长上限在停炉时参与结算，炉子的自动停炉时间由玩家设置的倒计时决定。
 
-`specimen_inventory` 保存格内物品，`running`、`elapsed_ticks`、`limit_ticks`、`temperature` 与 `firing` 保存本炉条件和进度。旧档中仍在运行的旧批次以退回原料结束。旧炉里的剩余燃料、成品和退款原料在迁移时保留，超出样品格的物品会在同队成员首次开炉界面时还给玩家。烧成的耐火砖可以用来完成正式项目的实物观察，见[耐火砖研究](refractory-brick.md)。
+同物品匹配多个配方时，使用 ID 排序第一条。开炉时保存每格的时长范围和候选产物。控温烧制配方由炉子读取，已从 JEI 移除。
+
+`specimen_inventory` 保存格内物品，`running`、`elapsed_ticks`、`limit_ticks`、`temperature` 与 `firing` 保存本炉条件和进度。支持样品格的旧存档会继续当前烧制，已有的运行记录按无时长上限读取。早期三格炉中仍在运行的批次以退回原料结束。旧炉里的剩余燃料、成品和退款原料在迁移时保留，超出样品格的物品会在同队成员首次开炉界面时还给玩家。烧成的耐火砖可以用来完成正式项目的实物观察，见[耐火砖研究](refractory-brick.md)。
 
 ## 耐火制品观察索引
 
