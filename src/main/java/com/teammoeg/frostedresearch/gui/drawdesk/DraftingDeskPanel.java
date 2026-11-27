@@ -16,7 +16,13 @@ import static com.teammoeg.frostedresearch.knowledge.game.DraftingGeometry.*;
 
 public final class DraftingDeskPanel extends DeskMinigamePanel {
     private enum Tool { CIRCLE, FIXED, SPAN, SEGMENT, LINE, RAY, ANGLE, BOX, POINT, DISTANCE, ERASE, REMOVE }
-    private static final int CX=96,CY=99,HALF=82, LEFT=191, ROW=14;
+    private static final Tool[] TOOLS=Tool.values();
+    private static final int CX=96,CY=99,HALF=82;
+    private static final int LEFT=191, COLUMNS=3, COLUMN_STEP=60, BUTTON_WIDTH=58, BUTTON_HEIGHT=12;
+    private static final int TOOL_TOP=20, TOOL_ROW_STEP=14, TOOL_ROWS=(TOOLS.length+COLUMNS-1)/COLUMNS;
+    private static final int VALUE_TOP=77, VALUE_HEIGHT=14, VALUE_BUTTON_WIDTH=28;
+    private static final int VALUE_LEFT=LEFT+29, VALUE_RIGHT=LEFT+149;
+    private static final int EDIT_TOP=97, REVIEW_TOP=112, NOTE_TOP=132, BACK_TOP=174;
     private final DrawDeskScreen desk;
     private final String run, task;
     private final Component title;
@@ -198,25 +204,42 @@ public final class DraftingDeskPanel extends DeskMinigamePanel {
         if(button==MouseButton.RIGHT) { anchors.clear(); feedback=""; return true; }
         if(button!=MouseButton.LEFT) return false;
         int x=(int)getMouseX(), y=(int)getMouseY();
-        if(x>=LEFT+120 && x<LEFT+178 && y>=174 && y<186) { desk.closeDeskGame(); return true; }
+        if(controlColumn(x,y,BACK_TOP)==2) { desk.closeDeskGame(); return true; }
         if(sheet==null || done || pending!=null) return true;
         if(Math.abs(x-CX)<=HALF && Math.abs(y-CY)<=HALF) { drawAt(mouse()); return true; }
-        if(x<LEFT || x>=LEFT+180 || y<20) return true;
-        int col=(x-LEFT)/60,row=(y-20)/ROW,index=row*3+col;
-        if ((x-LEFT)%60 >= 58 || (y-20)%ROW >= 12) return true;
-        if(index<Tool.values().length) { tool=Tool.values()[index]; anchors.clear(); feedback=""; return true; }
-        if(row==4 && (tool==Tool.FIXED || tool==Tool.ANGLE)) { adjust(col==0?-1:col==2?1:0); return true; }
-        if(row==5) {
-            if(col==0 && !undo.isEmpty()) { redo.push(ink); update(undo.pop()); }
-            if(col==1 && !redo.isEmpty()) { undo.push(ink); update(redo.pop()); }
-            if(col==2) showAux=!showAux;
+        if(y>=TOOL_TOP && y<TOOL_TOP+TOOL_ROWS*TOOL_ROW_STEP) {
+            int row=(y-TOOL_TOP)/TOOL_ROW_STEP;
+            int column=controlColumn(x,y,TOOL_TOP+row*TOOL_ROW_STEP);
+            int index=row*COLUMNS+column;
+            if(column>=0 && index<TOOLS.length) {
+                tool=TOOLS[index];
+                anchors.clear();
+                feedback="";
+            }
+            return true;
         }
-        if(row==6) {
-            if(col==0 && !sheet.hints().isEmpty()) { hint=(hint+1)%sheet.hints().size(); feedback=""; }
-            if(col==1) { checked=true;send(Action.CHECK_DRAFT,""); }
-            if(col==2) send(Action.TIMER_DRAFT,"");
+        if((tool==Tool.FIXED || tool==Tool.ANGLE) && y>=VALUE_TOP && y<VALUE_TOP+VALUE_HEIGHT) {
+            if(x>=VALUE_LEFT && x<VALUE_LEFT+VALUE_BUTTON_WIDTH) adjust(-1);
+            if(x>=VALUE_RIGHT-VALUE_BUTTON_WIDTH && x<VALUE_RIGHT) adjust(1);
+            return true;
+        }
+        switch(controlColumn(x,y,EDIT_TOP)) {
+            case 0 -> { if(!undo.isEmpty()) { redo.push(ink); update(undo.pop()); } }
+            case 1 -> { if(!redo.isEmpty()) { undo.push(ink); update(redo.pop()); } }
+            case 2 -> showAux=!showAux;
+        }
+        switch(controlColumn(x,y,REVIEW_TOP)) {
+            case 0 -> { if(!sheet.hints().isEmpty()) { hint=(hint+1)%sheet.hints().size(); feedback=""; } }
+            case 1 -> { checked=true; send(Action.CHECK_DRAFT,""); }
+            case 2 -> send(Action.TIMER_DRAFT,"");
         }
         return true;
+    }
+    private static int controlColumn(int x,int y,int top) {
+        int offset=x-LEFT;
+        if(y<top || y>=top+BUTTON_HEIGHT || offset<0 || offset>=COLUMNS*COLUMN_STEP
+            || offset%COLUMN_STEP>=BUTTON_WIDTH) return -1;
+        return offset/COLUMN_STEP;
     }
     private int px(double x) { return CX+(int)Math.round(x*scale()); }
     private int py(double y) { return CY+(int)Math.round(y*scale()); }
@@ -229,14 +252,44 @@ public final class DraftingDeskPanel extends DeskMinigamePanel {
             g.fill(x+xx,y+yy,x+xx+1,y+yy+1,tint);
         }
     }
-    private void label(GuiGraphics g,int x,int y,int row,int col,String text,boolean selected) {
-        int xx=x+LEFT+col*60, yy=y+20+row*ROW;
-        g.fill(xx,yy,xx+58,yy+12,selected?0xff245966:0xffd7cbb5);
-        g.drawString(getFont(),text,xx+(58-getFont().width(text))/2,yy+2,selected?0xffffffff:0xff393026,false);
+    private void centeredText(GuiGraphics g,String text,int x,int y,int width,int color) {
+        g.drawString(getFont(),text,x+(width-getFont().width(text))/2,y,color,false);
+    }
+    private void drawTool(GuiGraphics g,int x,int y,Tool entry) {
+        int column=entry.ordinal()%COLUMNS;
+        int top=TOOL_TOP+entry.ordinal()/COLUMNS*TOOL_ROW_STEP;
+        int left=x+LEFT+column*COLUMN_STEP;
+        boolean selected=entry==tool;
+        boolean hovered=controlColumn((int)getMouseX(),(int)getMouseY(),top)==column;
+        int background=selected?0xff245966:hovered?0xffe5d8be:0xffd7cbb5;
+        g.fill(left,y+top,left+BUTTON_WIDTH,y+top+BUTTON_HEIGHT,background);
+        g.fill(left,y+top+BUTTON_HEIGHT-1,left+BUTTON_WIDTH,y+top+BUTTON_HEIGHT,selected?0xff73a7ae:0xffa99b81);
+        centeredText(g,tr(entry.name().toLowerCase(Locale.ROOT)),left,y+top+2,BUTTON_WIDTH,selected?0xffffffff:0xff393026);
+    }
+    private void drawValueControl(GuiGraphics g,int x,int y) {
+        int left=x+VALUE_LEFT, right=x+VALUE_RIGHT, top=y+VALUE_TOP;
+        g.fill(left,top,right,top+VALUE_HEIGHT,0xfff4eddb);
+        g.fill(left+1,top+1,left+VALUE_BUTTON_WIDTH,top+VALUE_HEIGHT-1,0xffd5c09b);
+        g.fill(right-VALUE_BUTTON_WIDTH,top+1,right-1,top+VALUE_HEIGHT-1,0xffd5c09b);
+        g.renderOutline(left,top,right-left,VALUE_HEIGHT,0xff8a785b);
+        g.vLine(left+VALUE_BUTTON_WIDTH,top+1,top+VALUE_HEIGHT-2,0xffad9b7d);
+        g.vLine(right-VALUE_BUTTON_WIDTH-1,top+1,top+VALUE_HEIGHT-2,0xffad9b7d);
+        String value=tool==Tool.ANGLE?String.format(Locale.ROOT,"%.1f°",degrees):String.format(Locale.ROOT,"R%.1f",radius);
+        centeredText(g,"−",left,top+3,VALUE_BUTTON_WIDTH,0xff393026);
+        centeredText(g,value,left,top+3,right-left,0xff393026);
+        centeredText(g,"+",right-VALUE_BUTTON_WIDTH,top+3,VALUE_BUTTON_WIDTH,0xff393026);
+    }
+    private void drawAction(GuiGraphics g,int x,int y,int top,int column,String text,boolean active) {
+        int left=x+LEFT+column*COLUMN_STEP;
+        boolean hovered=controlColumn((int)getMouseX(),(int)getMouseY(),top)==column;
+        int background=hovered?0xffebddc2:active?0xffd8e3d4:0xffdbcdb2;
+        g.fill(left,y+top,left+BUTTON_WIDTH,y+top+BUTTON_HEIGHT,background);
+        g.renderOutline(left,y+top,BUTTON_WIDTH,BUTTON_HEIGHT,active?0xff477577:0xff928062);
+        centeredText(g,text,left,y+top+2,BUTTON_WIDTH,active?0xff234f54:0xff49382b);
     }
     @Override public void render(GuiGraphics g,int x,int y,int w,int h,RenderingHint rh) {
         DrawDeskIcons.DIALOG.draw(g,x,y,w,h);
-        label(g,x,y,11,2,tr("back"),false);
+        drawAction(g,x,y,BACK_TOP,2,tr("back"),false);
         if(sheet==null) { g.drawString(getFont(),feedback,x+9,y+8,0xff453a31,false); return; }
         g.drawString(getFont(),Component.translatable(sheet.title()),x+14,y+7,0xff342d27,false);
         g.drawString(getFont(),sheet.dimensions(),x+LEFT,y+7,0xff493c30,false);
@@ -268,18 +321,19 @@ public final class DraftingDeskPanel extends DeskMinigamePanel {
         }
     }
     private void drawControls(GuiGraphics g,int x,int y) {
-        for(Tool t:Tool.values()) label(g,x,y,t.ordinal()/3,t.ordinal()%3,tr(t.name().toLowerCase(Locale.ROOT)),t==tool);
-        if (tool==Tool.FIXED || tool==Tool.ANGLE) {
-            label(g,x,y,4,0,"−",false); label(g,x,y,4,1,String.format(Locale.ROOT,tool==Tool.ANGLE?"%.1f°":"R%.1f",tool==Tool.ANGLE?degrees:radius),false);
-            label(g,x,y,4,2,"+",false);
-        }
-        label(g,x,y,5,0,tr("undo"),false); label(g,x,y,5,1,tr("redo"),false);
-        label(g,x,y,5,2,tr("aux"),showAux); label(g,x,y,6,0,tr("hint"),hint>=0);
-        label(g,x,y,6,1,tr("check"),checked); label(g,x,y,6,2,remaining>=0?tr("cancel")+(remaining+19)/20:tr("auto")+sheet.seconds()+"s",remaining>=0);
+        for(Tool entry:TOOLS) drawTool(g,x,y,entry);
+        if(tool==Tool.FIXED || tool==Tool.ANGLE) drawValueControl(g,x,y);
+        g.fill(x+LEFT,y+EDIT_TOP-3,x+LEFT+2*COLUMN_STEP+BUTTON_WIDTH,y+EDIT_TOP-2,0xffa89a80);
+        drawAction(g,x,y,EDIT_TOP,0,tr("undo"),false);
+        drawAction(g,x,y,EDIT_TOP,1,tr("redo"),false);
+        drawAction(g,x,y,EDIT_TOP,2,tr("aux"),showAux);
+        drawAction(g,x,y,REVIEW_TOP,0,tr("hint"),hint>=0);
+        drawAction(g,x,y,REVIEW_TOP,1,tr("check"),checked);
+        drawAction(g,x,y,REVIEW_TOP,2,remaining>=0?tr("cancel")+(remaining+19)/20:tr("auto")+sheet.seconds()+"s",remaining>=0);
         String note=done?tr("won"):!feedback.isEmpty()?feedback:checked && !gaps.isEmpty()?tr("gaps"):
             tool==Tool.CIRCLE && !anchors.isEmpty()?tr("rim"):
             hint>=0?Component.translatable(sheet.hints().get(hint).text()).getString():tr("controls");
-        g.drawWordWrap(getFont(),Component.literal(note),x+LEFT,y+123,178,0xff514332);
+        g.drawWordWrap(getFont(),Component.literal(note),x+LEFT,y+NOTE_TOP,2*COLUMN_STEP+BUTTON_WIDTH,0xff514332);
     }
     private void mark(GuiGraphics g,int x,int y,P p,int color) {
         int xx=x+px(p.x()),yy=y+py(p.y());

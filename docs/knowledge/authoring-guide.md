@@ -140,6 +140,8 @@ IdeaAcquisitionService.emit(player,
 
 阶段任务使用 `"type": "minigame"` 和 `"game": "<命名空间>:drafting/<图名>"`。服务端从数据包的 `data/<命名空间>/drafting/<图名>.json` 读取图纸，并在打开绘图台时发送给客户端。示例为 [四叶螺旋桨泵](../../src/main/resources/data/frostedresearch/drafting/four_blade_pump.json)。同一份几何定义用于底图、分段着色、橡皮和服务端校验。
 
+`DraftingDeskPanel` 在图纸右侧呈现带选中状态的工具按钮。选择定径圆规或量角器时，工具区下方会显示带「−」「+」的数值框，也可用滚轮调值。撤销、重做、辅助线、提示、校验和代绘位于下方有描边的动作区。
+
 | 字段 | 作者填写的内容 |
 | --- | --- |
 | `title`、`dimensions` | 图名或翻译键、显示在纸面上的尺寸标注 |
