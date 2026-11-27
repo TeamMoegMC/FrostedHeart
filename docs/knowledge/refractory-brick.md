@@ -7,9 +7,9 @@
 
 ## 开始与试烧
 
-高岭土、铝土矿各自按材料类别接受替代：原料、碎矿、粉末、矿块和冻土块的物品观察均可。类别内任取一种即可；同时掌握同类多个形态也只算一项前置/一次减时。标签分别为 `the_winter_rescue:research/kaolin_materials`、`bauxite_materials`，聚合 `forge:raw_materials/<矿物>`、`crushed_raw_materials/<矿物>`、`dusts/<矿物>`、`forge:<矿物>` 和对应 `*_permafrost`。物品获得触发也接受这两组形态；既有原料观察仍有效。
+高岭土、铝土矿各自按材料类别接受替代：原料、碎矿、粉末、矿块和冻土块的物品观察均可。类别内任取一种即可；同时掌握同类多个形态也只提供一项联络辅助。标签分别为 `the_winter_rescue:research/kaolin_materials`、`bauxite_materials`，聚合 `forge:raw_materials/<矿物>`、`crushed_raw_materials/<矿物>`、`dusts/<矿物>`、`forge:<矿物>` 和对应 `*_permafrost`。物品获得触发也接受这两组形态；既有原料观察仍有效。
 
-获取高岭土、铝土矿或耐火黏土球，观察普通/高耐火砖物品或方块，或观察直接配方含砖的制品，都可触发构想。主动联络则先观察砂砖单砖或砂砖方块物品，学会后把这份记录放到桌面，进入绘图台通用连连看页面。高岭土、铝土矿、黏土球观察是联络辅助，每缺一项增加一级难度；全缺3级、齐全0级。辅助只需学会，不必放到桌面，放入也能正常联络，通关立即获得想法。构想正常自动入档，开始项目仍需构想、砂砖及三项原料观察全部掌握。砂砖通过 research/sandy_bricks 物品标签接受 charcoal_pit:sandy_brick_item 或 charcoal_pit:sandy_brick 任一种。现成耐火砖观察既是行为构想入口，也能提供后续参考，但获取构想和开始项目都不要求先有这项观察。
+获取高岭土、铝土矿或耐火黏土球，观察普通/高耐火砖物品或方块，或观察直接配方含砖的制品，都可触发构想。主动联络则先观察砂砖单砖或砂砖方块物品，学会后把这份记录放到桌面，进入绘图台通用连连看页面。高岭土、铝土矿、黏土球观察是联络辅助，每缺一项增加一级难度；全缺3级、齐全0级。辅助只需学会，不必放到桌面，放入也能正常联络，通关立即获得想法。构想正常自动入档，队伍掌握构想后即可开题。砂砖通过 research/sandy_bricks 物品标签接受 charcoal_pit:sandy_brick_item 或 charcoal_pit:sandy_brick 任一种。现成耐火砖观察既是行为构想入口，也能提供后续参考，但获取构想和开始项目都不要求先有这项观察。
 
 准备阶段没有必需任务。准备好材料后手动进入烧制阶段，温度提示在进入时冻结：没有参考砖观察，提示从1100°C开始试验；有普通/高耐火砖 item 或 block 观察，提示精确1050–1150°C。进入后再补参考知识不改变本阶段提示；两条路径材料、时长与最终成果相同，均可第一次成功。
 
@@ -27,6 +27,6 @@
 
 ## 数据和集成边界
 
-正式知识资源在 TWR kubejs/data/the_winter_rescue/frostedresearch/knowledge/。三项原料观察分别出现在 acquisition.optional、联络 optional_knowledge 与 access.start_all；联络 required_knowledge=[]，inputs 与项目 start_all 另要求砂砖物品观察。参考砖只在 firing.variants 的 knowledge_all，按 item、block、默认顺序选首个成立路径。直接含砖制品事件是 frostedresearch:refractory_component_observed；索引只算一跳，特殊机器可通过 research/refractory_products_extra 的 item/block 标签补充，目前两标签为空。refractory_bricks 标签含普通/高耐火砖和可选存在的 II 炉砖，只用于触发/提示，不能改变控温炉产物。
+正式知识资源在 TWR kubejs/data/the_winter_rescue/frostedresearch/knowledge/。三项原料观察用于 `acquisition.optional` 和联络的 `optional_knowledge`。联络的 `required_knowledge` 为空，`inputs` 要求砂砖物品观察。项目的 `access.start_all` 只引用 `idea`。参考砖只在 firing.variants 的 knowledge_all，按 item、block、默认顺序选首个成立路径。直接含砖制品事件是 frostedresearch:refractory_component_observed；索引只算一跳，特殊机器可通过 research/refractory_products_extra 的 item/block 标签补充，目前两标签为空。refractory_bricks 标签含普通/高耐火砖和可选存在的 II 炉砖，只用于触发/提示，不能改变控温炉产物。
 
 耐火砖配方类型为 `frostedresearch:controlled_firing`。炉体和耐火黏土球手混配方公开。历史验证记录保存在[旧版客户端记录](../../diary/2026-11-12_20-12-00_research-m5-m6-client-validation.md)。

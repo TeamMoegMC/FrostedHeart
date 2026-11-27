@@ -1,13 +1,13 @@
 # 阴燃利用
 
 - Status: `Current`
-- Last verified: `2026-11-20`
+- Last verified: `2026-11-28`（开题条件按正式包数据核对）
 - Scope: 铜制手炉的构想、实验台制作、工作台配方和旧档接续。
 - Code anchors: `PlayerTemperatureUpdate.regulateTemperature`、`KnowledgeBehaviorBridge.coldAfterCopper`、`ResearchStages.enter`、`ExperimentTableBlockEntity`、`LegacyResearchBridge`、`CoalHandStove`。
 
 ## 发现与开启
 
-在低于 0°C 的地点检视煤炭、木炭或焦炭，再检视铜锭。把两份已学会的物品观察放到绘图台联络，取得「阴燃利用」构想。已学会的干草块观察降低联络难度。开题条件为构想、铜锭和同一寒冷条件下的炭类观察。记录保存检视完成时的现场环境温度，缺温度的旧炭记录需要重新采样。
+在低于 0°C 的地点检视煤炭、木炭或焦炭，再检视铜锭。把两份已学会的物品观察放到绘图台联络，取得「阴燃利用」构想。已学会的干草块观察降低联络难度。掌握「阴燃利用」构想后即可开题。记录保存检视完成时的现场环境温度，用缺温度的旧炭记录联络时需要重新采样。
 
 玩家完成 `create:copper` 进度后也可能在受冷时想到这个构想。服务端在该玩家手部低于 36°C 或核心体温低于 36.5°C 时，每隔 200 游戏刻发出一次 `frostedheart:cold_after_copper` 判定。手部沿用挖掘惩罚的分界，核心体温沿用失温蓝条的分界。蓝条使用平滑后的客户端读数。抽取的基础概率约为每次 0.9955%，按 20 TPS 等效于每秒约 1/1000。队伍已学会的铜锭、黏土、炭类、干草块观察各加 1 个百分点，炭类加成接受任意记录温度。
 
