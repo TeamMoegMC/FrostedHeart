@@ -21,13 +21,22 @@ import java.util.*;
 
 /** Loaded ticks only; one durable batch owns either refundable input or a finished output, never both. */
 public final class ControlledFurnaceBlockEntity extends CBlockEntity implements CTickableBlockEntity,MenuProvider {
+    public static final int MAX_TIMER_SECONDS = 24 * 60 * 60;
+    private static final int TICKS_PER_SECOND = 20;
+    private static final int CONTINUOUS = -1;
+
     private final ItemStackHandler inventory=new ItemStackHandler(3){
-        @Override protected void onContentsChanged(int slot){setChanged();}
+        @Override protected void onContentsChanged(int slot){
+            retryDelay = 0;
+            setChanged();
+        }
         @Override public boolean isItemValid(int slot,ItemStack stack){return slot!=2;}
     };
     private UUID team;
     private boolean trial=true;
     private int temperature=1000,lockedTemperature=1000,remaining,duration;
+    // Zero marks a stopped run. An unfinished batch can also exist on its own in older saves.
+    private int timerTicks, retryDelay;
     private ItemStack refund=ItemStack.EMPTY,planned=ItemStack.EMPTY,pending=ItemStack.EMPTY;
     private ResearchSampleBinding binding,selectedTarget;
     private Component targetTitle=Component.empty();
@@ -45,7 +54,9 @@ public final class ControlledFurnaceBlockEntity extends CBlockEntity implements 
     public int remaining(){return remaining;}
     public int duration(){return duration;}
     public String message(){return message;}
-    public boolean busy(){return !refund.isEmpty() || !pending.isEmpty();}
+    public boolean activeRun(){return timerTicks != 0;}
+    public int timerSeconds(){return (timerTicks + TICKS_PER_SECOND - 1) / TICKS_PER_SECOND;}
+    public boolean busy(){return activeRun() || !refund.isEmpty() || !pending.isEmpty();}
     public Optional<ResearchSampleBinding> binding(){return Optional.ofNullable(binding);}
     public Optional<ResearchSampleBinding> selectedTarget(){return Optional.ofNullable(selectedTarget);}
     public Component targetTitle(){return targetTitle;}
@@ -53,7 +64,9 @@ public final class ControlledFurnaceBlockEntity extends CBlockEntity implements 
     /** Recompute on knowledge/definition/recipe changes, not on each menu broadcast. */
     public void refreshTargets(ServerPlayer player){
         if(!claim(player) || level==null || level.isClientSide)return;
-        var service=KnowledgeService.forPlayer(player);
+        refreshTargets(KnowledgeService.forPlayer(player));
+    }
+    private void refreshTargets(KnowledgeService service){
         long revision=service.state().mutationRevision(),definitions=KnowledgeDefinitions.current().revision();
         Object recipes=level.getRecipeManager();
         if(targetsRevision==revision && targetsDefinitions==definitions && targetsRecipes==recipes)return;
@@ -61,7 +74,7 @@ public final class ControlledFurnaceBlockEntity extends CBlockEntity implements 
         java.util.Set<net.minecraft.resources.ResourceLocation> experiments=new HashSet<>();
         level.getRecipeManager().getAllRecipesFor(FRContents.Recipes.CONTROLLED_FIRING.get()).forEach(r -> r.experiment().ifPresent(experiments::add));
         targetOptions=service.observationTargets(experiments);targetCount=targetOptions.size();
-        if((selectedTarget==null || !targetOptions.contains(selectedTarget)) && targetCount==1)selectedTarget=targetOptions.get(0);
+        if(!activeRun() && (selectedTarget==null || !targetOptions.contains(selectedTarget)) && targetCount==1)selectedTarget=targetOptions.get(0);
         targetTitle=selectedTarget!=null && (targetOptions.contains(selectedTarget) || busy()) ? service.targetLabel(selectedTarget) : Component.empty();
         changed();
     }
@@ -85,65 +98,136 @@ public final class ControlledFurnaceBlockEntity extends CBlockEntity implements 
         return level==null ? List.of() : level.getRecipeManager().getAllRecipesFor(FRContents.Recipes.CONTROLLED_FIRING.get()).stream()
             .filter(r -> r.experiment().isPresent()==trial).sorted(Comparator.comparing(r -> r.id().toString())).toList();
     }
+    /** Starts a single batch for callers that do not request a run. */
     public String start(ServerPlayer player){
+        return startRun(player, 0);
+    }
+    public String start(ServerPlayer player, int seconds){
+        if (seconds < 0 || seconds > MAX_TIMER_SECONDS) return "invalid_timer";
+        return startRun(player, seconds == 0 ? CONTINUOUS : seconds * TICKS_PER_SECOND);
+    }
+    private String startRun(ServerPlayer player, int runTicks){
         if(!claim(player))return say("not_owned");
         if(busy())return say("busy");
         if(!inventory.getStackInSlot(2).isEmpty())return say("output_full");
         refreshTargets(player);
-        var service=KnowledgeService.forPlayer(player);
         if(trial && targetCount>1 && (selectedTarget==null || !targetOptions.contains(selectedTarget)))return say("choose_target");
+        String status = startBatch();
+        if (status.equals("running")) timerTicks = runTicks;
+        return say(status);
+    }
+
+    private String startBatch(){
+        if (trial && (selectedTarget == null || !targetOptions.contains(selectedTarget))) return "no_trial";
         boolean eligible=false;
         for(var recipe:recipes()){
-            ResearchSampleBinding target=null;
-            if(trial){
-                if(selectedTarget==null || !targetOptions.contains(selectedTarget) || !recipe.experiment().orElseThrow().equals(selectedTarget.experiment()))continue;
-                target=selectedTarget;
-            }
-            else if(!managed(recipe) || !ResearchHooks.canUseRecipe(team,recipe))continue;
+            if (trial && !recipe.experiment().orElseThrow().equals(selectedTarget.experiment())) continue;
+            if (!trial && (!managed(recipe) || !ResearchHooks.canUseRecipe(team,recipe))) continue;
             eligible=true;
             if(!recipe.matches(inventory.getStackInSlot(0),inventory.getStackInSlot(1)))continue;
-            refund=inventory.extractItem(0,recipe.input().getCount(),false);
-            inventory.extractItem(1,recipe.fuel().getCount(),false);
-            lockedTemperature=temperature;outcome=temperature<recipe.temperatureMin()?"underfired":temperature>recipe.temperatureMax()?"overfired":"complete";remaining=duration=recipe.duration();planned=recipe.outcome(lockedTemperature);binding=target;
-            if(binding!=null && outcome.equals("complete"))binding.write(planned);
-            return say("running");
+            String batchOutcome = temperature < recipe.temperatureMin() ? "underfired"
+                : temperature > recipe.temperatureMax() ? "overfired" : "complete";
+            ItemStack product = recipe.outcome(temperature);
+            ResearchSampleBinding target = trial ? selectedTarget : null;
+            if (target != null && batchOutcome.equals("complete")) target.write(product);
+            if (!canOutput(product)) return "output_full";
+
+            refund = inventory.extractItem(0, recipe.input().getCount(), false);
+            inventory.extractItem(1, recipe.fuel().getCount(), false);
+            lockedTemperature = temperature;
+            outcome = batchOutcome;
+            remaining = duration = recipe.duration();
+            planned = product;
+            binding = target;
+            return "running";
         }
-        return say(eligible ? "materials" : trial ? "no_trial" : "need_design");
+        return eligible ? "materials" : trial ? "no_trial" : "need_design";
     }
+
+    private boolean canOutput(ItemStack product){
+        ItemStack output = inventory.getStackInSlot(2);
+        return output.isEmpty() || ItemStack.isSameItemSameTags(output, product)
+            && output.getCount() + product.getCount() <= output.getMaxStackSize();
+    }
+
     private String say(String value){message=value;changed();return value;}
     private void changed(){setChanged();if(level!=null && !level.isClientSide)syncData();}
     public void cancel(){
-        if(refund.isEmpty()){if(!pending.isEmpty())say("output_full");return;}
+        if (!activeRun() && refund.isEmpty()) {
+            if (!pending.isEmpty()) say("output_full");
+            return;
+        }
+        stopRun(false);
+    }
+    private void stopRun(boolean expired){
+        timerTicks = 0;
+        targetsRevision = -1;
+        if (!refund.isEmpty()) {
+            refundBatch();
+            say(expired ? "timer_interrupted" : "cancelled");
+        } else {
+            say(!pending.isEmpty() ? "output_full" : expired ? "timer_finished" : "stopped");
+        }
+    }
+    private void refundBatch(){
         ItemStack rest=inventory.insertItem(0,refund,false);
         if(!rest.isEmpty() && level!=null)net.minecraft.world.level.block.Block.popResource(level,worldPosition,rest);
-        refund=ItemStack.EMPTY;planned=ItemStack.EMPTY;remaining=0;binding=null;say("cancelled");
+        refund=ItemStack.EMPTY;planned=ItemStack.EMPTY;remaining=0;duration=0;binding=null;
     }
     @Override public void tick(){
         if(level==null || level.isClientSide || !busy())return;
-        if(!refund.isEmpty()){
-            if(remaining>0)remaining--;
-            if(remaining==0){pending=planned;planned=ItemStack.EMPTY;refund=ItemStack.EMPTY;message="output_full";}
-            setChanged();if(remaining%20==0)syncData();
+        boolean countingDown = timerTicks > 0;
+        if (countingDown) {
+            timerTicks--;
+            setChanged();
         }
-        if(!pending.isEmpty()){
-            ItemStack output=inventory.getStackInSlot(2);
-            if(output.isEmpty() || ItemStack.isSameItemSameTags(output,pending) && output.getCount()+pending.getCount()<=output.getMaxStackSize()){
-                ItemStack merged=pending.copy();merged.grow(output.getCount());inventory.setStackInSlot(2,merged);
-                pending=ItemStack.EMPTY;binding=null;say(outcome);
+        if (!refund.isEmpty()) {
+            if (remaining > 0) remaining--;
+            if (remaining == 0) {
+                pending = planned;
+                planned = refund = ItemStack.EMPTY;
+                message = "output_full";
+                if (!canOutput(pending)) syncData();
             }
+            setChanged();
         }
+        if (!pending.isEmpty() && canOutput(pending)) {
+            ItemStack merged = pending.copy();
+            merged.grow(inventory.getStackInSlot(2).getCount());
+            inventory.setStackInSlot(2, merged);
+            pending = ItemStack.EMPTY;
+            binding = null;
+            say(outcome);
+        }
+        if (countingDown && timerTicks == 0) {
+            stopRun(true);
+            return;
+        }
+        if (activeRun() && refund.isEmpty() && pending.isEmpty() && retryDelay-- <= 0) {
+            if (trial && team != null) {
+                var owner = CTeamDataManager.INSTANCE.get(team);
+                if (owner != null) refreshTargets(KnowledgeService.forTeam(owner, level.getGameTime()));
+                else targetOptions = List.of();
+            }
+            String status = startBatch();
+            retryDelay = TICKS_PER_SECOND - 1;
+            if (!message.equals(status)) say(status);
+        }
+        if (countingDown ? timerTicks % TICKS_PER_SECOND == 0
+            : remaining > 0 && remaining % TICKS_PER_SECOND == 0) syncData();
     }
     /** Called once by real block removal. Clearing before drops makes repeated settlement harmless. */
     public List<ItemStack> settle(){
         List<ItemStack> drops=new ArrayList<>();
         for(int i=0;i<3;i++){var s=inventory.getStackInSlot(i);if(!s.isEmpty())drops.add(s.copy());inventory.setStackInSlot(i,ItemStack.EMPTY);}
         if(!pending.isEmpty())drops.add(pending.copy());else if(!refund.isEmpty())drops.add(refund.copy());
-        pending=refund=planned=ItemStack.EMPTY;binding=null;remaining=0;setChanged();return drops;
+        pending=refund=planned=ItemStack.EMPTY;binding=null;remaining=0;timerTicks=0;setChanged();return drops;
     }
     @Override public void writeCustomNBT(CompoundTag n,boolean desc){
         if(!desc)n.put("inventory",inventory.serializeNBT());
         if(team!=null)n.putUUID("team",team);n.putBoolean("trial",trial);n.putInt("temperature",temperature);n.putInt("locked_temperature",lockedTemperature);
         n.putString("outcome",outcome);n.putInt("remaining",remaining);n.putInt("duration",duration);n.putString("message",message);
+        n.putInt("timer_ticks",timerTicks);
         if(!desc){n.put("refund",refund.save(new CompoundTag()));n.put("planned",planned.save(new CompoundTag()));n.put("pending",pending.save(new CompoundTag()));
             if(binding!=null)n.put("binding",ResearchSampleBinding.CODEC.encodeStart(net.minecraft.nbt.NbtOps.INSTANCE,binding).result().orElseThrow());}
         if(selectedTarget!=null)n.put("selected_target",ResearchSampleBinding.CODEC.encodeStart(net.minecraft.nbt.NbtOps.INSTANCE,selectedTarget).result().orElseThrow());
@@ -160,6 +244,7 @@ public final class ControlledFurnaceBlockEntity extends CBlockEntity implements 
         team=n.hasUUID("team")?n.getUUID("team"):null;trial=!n.contains("trial") || n.getBoolean("trial");
         temperature=n.contains("temperature")?Math.max(600,Math.min(1400,n.getInt("temperature"))):1000;
         outcome=n.contains("outcome")?n.getString("outcome"):"complete";lockedTemperature=n.getInt("locked_temperature");remaining=n.getInt("remaining");duration=n.getInt("duration");message=n.getString("message");clientBusy=n.getBoolean("busy");
+        timerTicks = n.getInt("timer_ticks");
     }
     public boolean displayedBusy(){return level!=null && level.isClientSide ? clientBusy : busy();}
     @Override public AbstractContainerMenu createMenu(int id,Inventory inv,Player p){return new ControlledFurnaceMenu(id,inv,this);}

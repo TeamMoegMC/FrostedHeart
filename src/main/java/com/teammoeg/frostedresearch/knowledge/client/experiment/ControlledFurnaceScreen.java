@@ -2,16 +2,19 @@ package com.teammoeg.frostedresearch.knowledge.client.experiment;
 
 import com.teammoeg.frostedresearch.FRNetwork;
 import com.teammoeg.frostedresearch.knowledge.experiment.ResearchSampleBinding;
+import com.teammoeg.frostedresearch.knowledge.furnace.ControlledFurnaceBlockEntity;
 import com.teammoeg.frostedresearch.knowledge.furnace.ControlledFurnaceMenu;
 import com.teammoeg.frostedresearch.knowledge.furnace.ControlledFurnaceStartPacket;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.locale.Language;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
+import org.lwjgl.glfw.GLFW;
 
 import java.util.List;
 import java.util.Optional;
@@ -21,6 +24,7 @@ public final class ControlledFurnaceScreen extends AbstractContainerScreen<Contr
     private static final ResourceLocation PANEL = new ResourceLocation("minecraft", "textures/gui/demo_background.png");
     private static final ResourceLocation FURNACE = new ResourceLocation("minecraft", "textures/gui/container/furnace.png");
     private Button mode, target, start, cancel;
+    private EditBox timerInput;
     private boolean displayedTrial;
     private Optional<ResearchSampleBinding> displayedTarget = Optional.empty();
 
@@ -53,11 +57,34 @@ public final class ControlledFurnaceScreen extends AbstractContainerScreen<Contr
         target = button(109, 21, 159, Component.empty(), () -> action(5));
         button(216, 43, 24, Component.literal("−"), () -> action(0)).setTooltip(Tooltip.create(t("minus")));
         button(244, 43, 24, Component.literal("+"), () -> action(1)).setTooltip(Tooltip.create(t("plus")));
-        start = button(8, 112, 68, t("start"), () -> FRNetwork.INSTANCE.sendToServer(
-                new ControlledFurnaceStartPacket(menu.containerId, menu.getBlock().getBlockPos(), displayedTrial, displayedTarget)));
-        cancel = button(80, 112, 68, t("cancel"), () -> action(4));
+        String timerDraft = timerInput == null ? "" : timerInput.getValue();
+        timerInput = addRenderableWidget(new EditBox(font, leftPos + 93, topPos + 59, 64, 16, t("timer")));
+        timerInput.setMaxLength(5);
+        timerInput.setFilter(text -> text.isEmpty() || text.length() <= 5
+                && text.chars().allMatch(c -> c >= '0' && c <= '9')
+                && Integer.parseInt(text) <= ControlledFurnaceBlockEntity.MAX_TIMER_SECONDS);
+        timerInput.setValue(timerDraft);
+        timerInput.setTooltip(Tooltip.create(t("timer_help", ControlledFurnaceBlockEntity.MAX_TIMER_SECONDS)));
+        start = button(8, 112, 68, t("start"), this::startFiring);
+        cancel = button(80, 112, 68, t("stop"), () -> action(4));
         cancel.setTooltip(Tooltip.create(t("cancel_help")));
         updateControls();
+    }
+
+    private void startFiring() {
+        String timerText = timerInput.getValue();
+        int seconds = timerText.isEmpty() ? 0 : Integer.parseInt(timerText);
+        FRNetwork.INSTANCE.sendToServer(new ControlledFurnaceStartPacket(
+                menu.containerId, menu.getBlock().getBlockPos(), displayedTrial, displayedTarget, seconds));
+    }
+
+    @Override
+    public boolean keyPressed(int key, int scanCode, int modifiers) {
+        if (timerInput.isFocused() && key != GLFW.GLFW_KEY_ESCAPE && key != GLFW.GLFW_KEY_TAB) {
+            timerInput.keyPressed(key, scanCode, modifiers);
+            return true;
+        }
+        return super.keyPressed(key, scanCode, modifiers);
     }
 
     private void updateControls() {
@@ -74,7 +101,10 @@ public final class ControlledFurnaceScreen extends AbstractContainerScreen<Contr
         }
         target.active = displayedTrial && furnace.targetCount() > 1 && !furnace.displayedBusy();
         start.active = !furnace.displayedBusy();
-        cancel.active = furnace.displayedBusy() && furnace.remaining() > 0;
+        cancel.active = furnace.activeRun() || furnace.remaining() > 0;
+        timerInput.setVisible(!furnace.displayedBusy());
+        timerInput.active = !furnace.displayedBusy();
+        if (!timerInput.isVisible() && getFocused() == timerInput) setFocused(null);
     }
 
     @Override
@@ -104,8 +134,16 @@ public final class ControlledFurnaceScreen extends AbstractContainerScreen<Contr
     protected void renderLabels(GuiGraphics graphics, int mouseX, int mouseY) {
         super.renderLabels(graphics, mouseX, mouseY);
         var furnace = menu.getBlock();
-        line(graphics, t("next", furnace.temperature()), 8, 47, 200, 0x404040);
-        line(graphics, t("process", furnace.lockedTemperature()), 8, 61, 260, 0x666666);
+        line(graphics, t("next", furnace.temperature()), 8, 47, 102, 0x404040);
+        if (furnace.remaining() > 0)
+            line(graphics, t("process", furnace.lockedTemperature()), 115, 47, 96, 0x666666);
+        if (furnace.activeRun()) {
+            int seconds = furnace.timerSeconds();
+            line(graphics, seconds > 0 ? t("time_left", seconds) : t("continuous"), 8, 63, 260, 0x404040);
+        } else if (!furnace.displayedBusy()) {
+            line(graphics, t("timer"), 8, 63, 82, 0x404040);
+            line(graphics, t("timer_blank"), 163, 63, 105, 0x666666);
+        }
         String[] labels = {"input", "fuel", "output"};
         for (int i = 0; i < labels.length; i++) {
             Component text = t(labels[i]);

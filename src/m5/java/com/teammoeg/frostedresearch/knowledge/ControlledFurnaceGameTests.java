@@ -139,6 +139,71 @@ public final class ControlledFurnaceGameTests {
     static void temp(ControlledFurnaceBlockEntity f,int temp){while(f.temperature()!=temp)f.adjust(Integer.compare(temp,f.temperature()));}
     static void ticks(ControlledFurnaceBlockEntity f,int n){for(int i=0;i<n;i++)f.tick();}
     static void guard(Scope scope,Runnable r){try{r.run();}catch(RuntimeException|Error e){scope.close();throw e;}}
+
+    @GameTest(batch="m5_furnace_timer",template="trial_kiln_empty",timeoutTicks=80)
+    public static void timedAndContinuousRunsThroughMenu(GameTestHelper h){
+        try (var scope = new Scope()) {
+            install();
+            var actor = scope.actor(h);
+            firing(actor);
+            var furnace = furnace(h, new BlockPos(1, 1, 1));
+            furnace.claim(actor.player);
+            furnace.refreshTargets(actor.player);
+            temp(furnace, 1100);
+            fill(furnace, 3, 3);
+            var menu = new ControlledFurnaceMenu(1, actor.player.getInventory(), furnace);
+            actor.player.containerMenu = menu;
+            var packet = new ControlledFurnaceStartPacket(menu.containerId, furnace.getBlockPos(), true, furnace.selectedTarget(), 25);
+            var buffer = new net.minecraft.network.FriendlyByteBuf(io.netty.buffer.Unpooled.buffer());
+            try {
+                packet.encode(buffer);
+                new ControlledFurnaceStartPacket(buffer).apply(actor.player);
+            } finally {
+                buffer.release();
+            }
+            h.assertTrue(furnace.activeRun() && furnace.timerSeconds() == 25, "the menu start packet starts the requested countdown");
+            ticks(furnace, 400);
+            var output = furnace.inventory().getStackInSlot(2);
+            h.assertTrue(output.getCount() == 1 && ResearchSampleBinding.read(output).isPresent()
+                && furnace.timerSeconds() == 5 && furnace.remaining() == 400, "the next batch starts immediately with the same trial");
+
+            var restored = new ControlledFurnaceBlockEntity(furnace.getBlockPos(), furnace.getBlockState());
+            restored.load(furnace.saveWithFullMetadata());
+            restored.setLevel(h.getLevel());
+            ticks(restored, 99);
+            h.assertTrue(restored.activeRun() && restored.timerSeconds() == 1, "the saved countdown resumes without rounding away the last second");
+            ticks(restored, 1);
+            h.assertTrue(!restored.busy() && restored.inventory().getStackInSlot(2).getCount() == 1
+                && restored.inventory().getStackInSlot(0).getCount() == 2 && restored.inventory().getStackInSlot(1).getCount() == 1,
+                "timeout preserves finished output and refunds only the unfinished batch's input");
+
+            furnace.cancel();
+            furnace.inventory().setStackInSlot(2, ItemStack.EMPTY);
+            fill(furnace, 3, 3);
+            h.assertTrue(menu.startSeen(actor.player, true, furnace.selectedTarget(), 40), "menu accepts an exact two-batch timer");
+            ticks(furnace, 800);
+            h.assertTrue(!furnace.busy() && furnace.inventory().getStackInSlot(2).getCount() == 2
+                && furnace.inventory().getStackInSlot(0).getCount() == 1 && furnace.inventory().getStackInSlot(1).getCount() == 1,
+                "a batch finishing on the deadline is delivered without starting a third batch");
+
+            furnace.inventory().setStackInSlot(2, ItemStack.EMPTY);
+            fill(furnace, 1, 1);
+            menu.clickMenuButton(actor.player, 3);
+            ticks(furnace, 800);
+            h.assertTrue(furnace.activeRun() && furnace.timerSeconds() == 0 && furnace.remaining() == 0, "no timer stays active while waiting for supplies");
+            fill(furnace, 1, 1);
+            furnace.inventory().setStackInSlot(2, new ItemStack(Items.STONE));
+            ticks(furnace, 20);
+            h.assertTrue(furnace.remaining() == 0 && furnace.inventory().getStackInSlot(1).getCount() == 1, "blocked output does not spend fuel");
+            furnace.inventory().setStackInSlot(2, ItemStack.EMPTY);
+            ticks(furnace, 401);
+            h.assertTrue(furnace.inventory().getStackInSlot(2).getCount() == 1, "continuous firing resumes after the output is cleared");
+            menu.clickMenuButton(actor.player, 4);
+            h.assertTrue(!furnace.busy(), "the stop button also stops a run that is waiting");
+            h.succeed();
+        }
+    }
+
     @GameTest(batch="m5_formal_branches",template="trial_kiln_empty",timeoutTicks=80)
     public static void formalAccessAndReferenceFreeze(GameTestHelper h){
         try(var scope=new Scope()){

@@ -1,8 +1,8 @@
 # 控温实验炉
 
-- Status: `Current`（11月13日16项服务端回归通过，含第二种材料/实验和同台交错操作；Playtest实际打开原生GUI、调温和切换生产模式通过；此前完整客户端试烧/批量证据仍为旧CUI）
-- Last verified: `2026-11-14`（本轮正式砂砖前置与服务端回归；11月13日原生GUI实际显示和按钮检查、通用物料服务端回归；详见[当轮记录](../../diary/2026-11-13_23-12-00_research-root-journal-and-general-furnace-gui.md)）
-- Scope: 通用控温加工设备、按配方指定的试验/生产批次、队伍本次试验样；另记录既有耐火制品观察索引。整合包当前耐火砖路线由 [refractory-brick.md](refractory-brick.md) 维护。
+- Status: `Current`
+- Last verified: `2026-11-27`（控温炉和多人设备共 19 项服务端 GameTest 通过。原生界面和通用物料的历史验收见[当轮记录](../../diary/2026-11-13_23-12-00_research-root-journal-and-general-furnace-gui.md)）
+- Scope: 通用控温加工设备、整次运行倒计时、试验和生产批次、队伍本次试验样、耐火制品观察索引。整合包当前耐火砖路线由 [refractory-brick.md](refractory-brick.md) 维护。
 - Code anchors: `ControlledFiringRecipe`、`ControlledFurnaceBlockEntity`、`ControlledFurnaceMenu`、`ControlledFurnaceScreen`、`ControlledFiringCategory`、`RefractoryObservationIndex`、`ObservationSessions`。
 
 ## 模式和权限
@@ -10,7 +10,7 @@
 方块/物品/方块实体/menu ID 为 `frostedresearch:controlled_furnace`，配方 type/serializer 为 `frostedresearch:controlled_firing`。它是通用试验/生产设备，不绑定某个研究或材料；现有耐火砖配方只是一个用途。
 炉首次由玩家打开或启动时归属当前队伍；同队成员可以投取物品、调温和启动。三个槽依次为原料、燃料、产物；产物槽禁止手动放入，无自动化物品 capability。
 
-每炉手动启动。有 `experiment` 的配方属于试验模式：启动必须存在 `KnowledgeService.observationTargets(experiment)` 中的当前有效任务。样品绑定复用 `ResearchSampleBinding(team,run,requirement,experiment)`，没有个人 owner。同一模式多个合格配方按 ID 排序，选择首条材料匹配且资格有效的配方；任务按创建时间、UUID稳定排序。只有一个合格目标时自动选用；多个目标且没有有效已选绑定时，启动返回 choose_target、不扣料，界面提供目标切换。仍有效的选择不会被新合入记录或下一次启动覆盖。
+玩家手动启动整次运行，炉子可以接续烧制多批。有 `experiment` 的配方属于试验模式，开批时必须存在 `KnowledgeService.observationTargets(experiment)` 中的当前有效任务。样品绑定复用 `ResearchSampleBinding(team,run,requirement,experiment)`，没有个人 owner。同一模式多个合格配方按 ID 排序，选择首条材料匹配且资格有效的配方。任务按创建时间和 UUID 稳定排序。只有一个合格目标时自动选用，多个目标且没有有效已选绑定时，启动返回 `choose_target` 并等待玩家选择。连续运行期间沿用同一个试验目标，每批开工前确认目标仍有效。
 
 没有 `experiment` 的配方属于生产模式：启动同时要求当前 enabled `ResearchResult.Design` 声明该配方，以及 `ResearchHooks.canUseRecipe(team,recipe)`。Design 定义缺席时不会通过 unmanaged 默认权限公开批量生产；已投料批次可以继续结算。来件区的成果不授权限。完成研究时沿现有 `produce` 正常学习，理解条件尚未满足时才保留来件；没有增加二次学习规则。
 
@@ -20,7 +20,7 @@
 
 `ControlledFurnaceScreen` 使用原生 `AbstractContainerScreen`，由 `MenuScreens.register` 注册，不再套札记CUI。界面尺寸276×232 GUI像素，复用原版 `demo_background.png` 灰色面板和 `container/furnace.png` 的槽位/加工箭头、原版按钮；没有新增位图。玩家背包为三行九列加九格快捷栏，既有物品栏索引和三个工艺槽索引不变。
 
-顶部选择试验/生产模式及对应研究任务，调整下一批温度；中部是原料、燃料、产物槽、加工箭头与开始/取消按钮。状态文本过长时悬停阅读；加工箭头悬停显示进度和通用操作说明。具体物料、时长、成功温窗和产物在JEI中查询。文字不再要求所有实验都观察耐火砖。
+顶部选择试验或生产模式及对应研究任务，调整下一批温度。点击开始前可输入倒计时秒数，运行时同一行显示剩余秒数或「连续烧制」。中部是原料、燃料、产物槽、加工箭头与开始、停止按钮。状态文本过长时悬停阅读，加工箭头悬停显示批次进度。具体物料、时长、成功温窗和产物在 JEI 中查询。
 
 ## 小配方格式和温度
 
@@ -30,11 +30,13 @@ TWR 当前耐火砖试验为1坯料+1木炭、400tick，生产为16坯料+2木�
 
 炉设定 600–1400°C，每次 50°C，默认 1000°C。这是炉内工艺参数，没有升温曲线或世界热网模型。启动时锁定 `locked_temperature` 和完整批次成品；运行中改变 `temperature` 只作用于下一炉，欠烧/过烧结论也随本炉保存。
 
-## 批次、取消与持久化
+## 倒计时、批次与持久化
 
-开始要求输出槽为空，一次扣除材料及燃料。批次在 BE 中保存 `refund`（内部未结算坯料）、`planned`（锁定未来产物）、`remaining`/`duration`、`binding`、`outcome`；完成时原子地清 `refund`/`planned` 并生成 `pending`。只有已加载的服务器 tick 减少 remaining，卸载、离线无补时。
+倒计时可设 1–86400 秒，留空或填 0 即连续运行。倒计时限制整次运行，单批时长仍取配方的 `duration`。材料、燃料、研究资格和出料空间都满足时自动开下一批。缺料或产物放不下时等待，定时运行在等待期间继续计时。到点刚好完成的批次照常交付。到点时仍未完成的一批按停止规则退回原料，其燃料已经消耗。
 
-输出受阻时 pending 等待，不能自动再烧或重复扣料；清空输出后交付一次。运行中取消只退内部坯料，燃料不退；若输入槽无法容纳，余料掉在炉旁。已完成 pending 不可取消成坯料。拆除掉原炉、未消耗槽内物品，运行批次退坯料或完成批次掉 pending 成品，二者互斥；`settle()` 清空状态后返回掉落，重复调用为空。
+开始要求输出槽为空，每批开工时一次扣除材料及燃料。后续批次可与输出槽里已有的同类、同数据成品合并，但须留够整批空间。批次在 BE 中保存 `refund`（内部未结算坯料）、`planned`（锁定未来产物）、`remaining`/`duration`、`binding`、`outcome`。完成时原子地清 `refund`/`planned` 并生成 `pending`。整次运行由 `timer_ticks` 保存，正值为剩余 tick，`-1` 表示连续运行，`0` 或旧档中缺省表示未开启连续运行。批次与倒计时都只按区块加载期间的服务器 tick 推进。
+
+输出受阻时 `pending` 等待，空间足够后交付一次。停止时若输入槽放不下退回的坯料，余料掉在炉旁，已完成的待交付成品继续保留。拆除掉原炉、未消耗槽内物品，以及尚未烧完的坯料或待交付的成品。`settle()` 清空状态后返回掉落，重复调用为空。
 
 上述字段属于炉BE，不改变 `KnowledgeState` schema 5。保存不复制整份BE到观察或样品。成功试验产物仅写四字段binding；生产和失败产物无样品绑定。试验任务已完成/放弃/结束后不能再启动旧run；已投料批次仍可交付，但旧样品不能完成新run。
 
@@ -63,4 +65,4 @@ BE可选字段 `selected_target` 保存四字段绑定，`target_title`/`target_
 同项目真实完成且全部成果有效已学时，备用目标暂不列入候选、不再启动试验，但选择字段保留。遗忘后原目标仍有效则继续使用。已投料批次继续按M5一次性交付；暂停期间样品不推进备用任务，恢复后新鲜观察仍可使用其正确绑定。来源队伍的旧样品不会因merge被改绑。
 
 
-同台多人操作时，原生GUI开始按钮仍用 `ControlledFurnaceStartPacket(containerId,pos,trial,target)`，携带当前显示的模式/绑定；`ControlledFurnaceMenu.startSeen` 对比台面选择，不一致只同步界面，不扣料或启动另一份记录。原 `start(player)` 和button 0–4保持API兼容，button 5切目标；没有额外持久序号。已锁定批次不被旧点击换绑。
+同台多人操作时，开始按钮通过 `ControlledFurnaceStartPacket(containerId,pos,trial,target,seconds)` 发送当时显示的模式、绑定和玩家输入的时间。`ControlledFurnaceMenu.startSeen` 对比台面的模式和目标，只有匹配时才启动。设备内部的 `start(player)` 仍可单独启动一批。客户端和服务器需使用支持炉子倒计时的同一网络协议。

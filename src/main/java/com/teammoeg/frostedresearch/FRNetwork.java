@@ -40,6 +40,11 @@ public class FRNetwork extends CBaseNetwork {
 		super(FRMain.MODID);
 	}
 
+    @Override
+    protected String protocolVersion(String modVersion) {
+        return modVersion + ":furnace-timer-1";
+    }
+
 	@Override
 	public void registerMessages() {
 

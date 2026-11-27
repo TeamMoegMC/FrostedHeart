@@ -23,18 +23,18 @@ public final class ControlledFurnaceMenu extends CBlockEntityMenu<ControlledFurn
         if(operator instanceof net.minecraft.server.level.ServerPlayer player)getBlock().refreshTargets(player);
         super.broadcastChanges();
     }
-    /** The ordinary container screen submits the mode and target displayed with its start button. */
-    public boolean startSeen(net.minecraft.server.level.ServerPlayer player,boolean trial,java.util.Optional<com.teammoeg.frostedresearch.knowledge.experiment.ResearchSampleBinding> target){
+    /** The ordinary container screen submits its displayed mode and target with the requested duration. */
+    public boolean startSeen(net.minecraft.server.level.ServerPlayer player,boolean trial,java.util.Optional<com.teammoeg.frostedresearch.knowledge.experiment.ResearchSampleBinding> target,int seconds){
         if(!stillValid(player) || !getBlock().claim(player))return false;
         getBlock().refreshTargets(player);
         if(getBlock().trial()!=trial || trial && !getBlock().selectedTarget().equals(target)) {
             getBlock().syncData();return false;
         }
-        getBlock().start(player);return true;
+        getBlock().start(player,seconds);return true;
     }
     @Override public boolean clickMenuButton(net.minecraft.world.entity.player.Player p,int id){
         if(!(p instanceof net.minecraft.server.level.ServerPlayer player) || !stillValid(p) || !getBlock().claim(player))return false;
-        switch(id){case 0->getBlock().adjust(-1);case 1->getBlock().adjust(1);case 2->getBlock().mode();case 3->getBlock().start(player);case 4->getBlock().cancel();case 5->getBlock().cycleTarget(player);default->{return false;}}
+        switch(id){case 0->getBlock().adjust(-1);case 1->getBlock().adjust(1);case 2->getBlock().mode();case 3->getBlock().start(player,0);case 4->getBlock().cancel();case 5->getBlock().cycleTarget(player);default->{return false;}}
         return true;
     }
 }
