@@ -1,5 +1,9 @@
 package com.teammoeg.frostedheart.content.agriculture.tree;
 
+import com.teammoeg.frostedheart.content.climate.network.SoilThermometerUpdatePacket;
+import java.util.Locale;
+import net.minecraft.nbt.Tag;
+
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.content.agriculture.FertilizedDirt;
@@ -111,7 +115,7 @@ public final class CultivatedOakBlockEntity extends BlockEntity {
     int accumulatedYieldCredit() { return Math.max(0, yieldCredit); }
 
     /** Authoritative thermometer fields, including cold protection from this sapling's own soil. */
-    public com.teammoeg.frostedheart.content.climate.network.SoilThermometerUpdatePacket.TreeInfo thermometerInfo() {
+    public SoilThermometerUpdatePacket.TreeInfo thermometerInfo() {
         var profile = CultivatedOakProfile.get(((CultivatedOakBlock)getBlockState().getBlock()).profileId());
         if (profile == null) return null;
         float min = profile.minTemp();
@@ -120,7 +124,7 @@ public final class CultivatedOakBlockEntity extends BlockEntity {
             if (soil.is(FHBlocks.FERTILIZED_DIRT.get()) && soil.getValue(FertilizedDirt.FERTILIZER) == FertilizerType.PRESERVED)
                 min -= profile.preservedDegrees() * soil.getValue(FertilizedDirt.GRADE).preserve;
         }
-        return new com.teammoeg.frostedheart.content.climate.network.SoilThermometerUpdatePacket.TreeInfo(
+        return new SoilThermometerUpdatePacket.TreeInfo(
                 getBlockState().getValue(CultivatedOakBlock.AGE), progress / (float)SCALE,
                 profile.progressPerStage() * 4, waiting, min, profile.maxTemp(), profile.idealMin(), profile.idealMax(), profile.minLight());
     }
@@ -128,7 +132,7 @@ public final class CultivatedOakBlockEntity extends BlockEntity {
     public Component status() {
         return Component.translatable("message.frostedheart.cultivated_oak.status",
                 getBlockState().getValue(CultivatedOakBlock.AGE),
-                String.format(java.util.Locale.ROOT, "%.2f", progress / (double)SCALE),
+                String.format(Locale.ROOT, "%.2f", progress / (double)SCALE),
                 Component.translatable("message.frostedheart.cultivated_oak." + waiting));
     }
     @Override protected void saveAdditional(CompoundTag tag) {
@@ -138,8 +142,8 @@ public final class CultivatedOakBlockEntity extends BlockEntity {
     }
     @Override public void load(CompoundTag tag) {
         super.load(tag);
-        progress = tag.contains("p", net.minecraft.nbt.Tag.TAG_SHORT) ? tag.getShort("p") : compact(tag.getDouble("Progress"));
-        yieldCredit = tag.contains("v", net.minecraft.nbt.Tag.TAG_SHORT) ? tag.getShort("v") : compact(tag.getDouble("YieldCredit"));
+        progress = tag.contains("p", Tag.TAG_SHORT) ? tag.getShort("p") : compact(tag.getDouble("Progress"));
+        yieldCredit = tag.contains("v", Tag.TAG_SHORT) ? tag.getShort("v") : compact(tag.getDouble("YieldCredit"));
     }
     /** Migrates the original double ledger to nonnegative 1/16 units. */
     private static short compact(double value) {

@@ -1,5 +1,15 @@
 package com.teammoeg.frostedheart.content.agriculture.tree;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Set;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.level.levelgen.feature.featuresize.TwoLayersFeatureSize;
+
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.Gson;
@@ -23,7 +33,7 @@ import java.util.Map;
 public final class CultivatedOakProfile extends SimpleJsonResourceReloadListener {
     public static final ResourceLocation ID = new ResourceLocation(FHMain.MODID, "oak");
     private static CultivatedOakProfile instance;
-    private final java.util.Map<ResourceLocation, Profile> profiles = new java.util.HashMap<>();
+    private final Map<ResourceLocation, Profile> profiles = new HashMap<>();
 
     private CultivatedOakProfile() { super(new Gson(), "cultivated_trees"); }
 
@@ -58,20 +68,20 @@ public final class CultivatedOakProfile extends SimpleJsonResourceReloadListener
             throw new IllegalArgumentException("Prototype supports straight trunks, blob foliage and no decorators");
         JsonObject g = json.getAsJsonObject("growth"), y = json.getAsJsonObject("yield"), t = json.getAsJsonObject("temperature");
         String species = vanilla == null ? "oak" : vanilla.getPath();
-        java.util.List<ResourceLocation> giants;
+        List<ResourceLocation> giants;
         int vanillaMax;
         if (vanilla != null && !vanilla.getNamespace().equals("minecraft"))
             throw new IllegalArgumentException("Expected a supported vanilla tree configuration");
         switch (species) {
-            case "oak" -> { giants = java.util.List.of(); vanillaMax = 6; }
-            case "spruce" -> { giants = java.util.List.of(new ResourceLocation("minecraft:mega_spruce"),
+            case "oak" -> { giants = List.of(); vanillaMax = 6; }
+            case "spruce" -> { giants = List.of(new ResourceLocation("minecraft:mega_spruce"),
                     new ResourceLocation("minecraft:mega_pine")); vanillaMax = 8; }
-            case "jungle_tree_no_vine" -> { giants = java.util.List.of(new ResourceLocation("minecraft:mega_jungle_tree")); vanillaMax = 12; }
-            case "dark_oak" -> { giants = java.util.List.of(new ResourceLocation("minecraft:dark_oak")); vanillaMax = 9; }
-            case "birch" -> { giants = java.util.List.of(); vanillaMax = 7; }
-            case "acacia" -> { giants = java.util.List.of(); vanillaMax = 9; }
-            case "mangrove" -> { giants = java.util.List.of(); vanillaMax = 12; }
-            case "cherry" -> { giants = java.util.List.of(); vanillaMax = 8; }
+            case "jungle_tree_no_vine" -> { giants = List.of(new ResourceLocation("minecraft:mega_jungle_tree")); vanillaMax = 12; }
+            case "dark_oak" -> { giants = List.of(new ResourceLocation("minecraft:dark_oak")); vanillaMax = 9; }
+            case "birch" -> { giants = List.of(); vanillaMax = 7; }
+            case "acacia" -> { giants = List.of(); vanillaMax = 9; }
+            case "mangrove" -> { giants = List.of(); vanillaMax = 12; }
+            case "cherry" -> { giants = List.of(); vanillaMax = 8; }
             default -> throw new IllegalArgumentException("Unsupported cultivated tree " + vanilla);
         }
         Profile result = new Profile(tree, vanilla, giants, species.equals("oak"), species.equals("dark_oak"),
@@ -100,7 +110,7 @@ public final class CultivatedOakProfile extends SimpleJsonResourceReloadListener
     }
 
     /** The earned-height value is now a per-sapling wood expectation, not a physical trunk height. */
-    public record Profile(TreeConfiguration tree, ResourceLocation vanillaTree, java.util.List<ResourceLocation> giantTrees,
+    public record Profile(TreeConfiguration tree, ResourceLocation vanillaTree, List<ResourceLocation> giantTrees,
             boolean branches, boolean giantOnly, int progressPerStage, int minLight, float branchProbability, int vanillaMaxHeight,
             float baseLogs, float logsPerHeight, float fixedLogs, int minHeight, int maxHeight,
             float minTemp, float idealMin, float idealMax, float maxTemp, float minimumYieldFactor, float preservedDegrees,
@@ -134,13 +144,13 @@ public final class CultivatedOakProfile extends SimpleJsonResourceReloadListener
                     ? (int)Math.ceil(CultivatedTreeYield.minimumLogs("cherry")) : 1;
         }
         /** Converts a per-sapling wood budget to a complete native tree configuration. */
-        public TreeConfiguration atHeight(net.minecraft.server.level.ServerLevel level, net.minecraft.util.RandomSource random,
+        public TreeConfiguration atHeight(ServerLevel level, RandomSource random,
                 int budget, boolean giant) {
             return atHeight(level, random, budget, giant, null);
         }
         /** Origin permits the native flower-dependent bee variants without querying unloaded positions. */
-        public TreeConfiguration atHeight(net.minecraft.server.level.ServerLevel level, net.minecraft.util.RandomSource random,
-                int budget, boolean giant, net.minecraft.core.BlockPos origin) {
+        public TreeConfiguration atHeight(ServerLevel level, RandomSource random,
+                int budget, boolean giant, BlockPos origin) {
             if (budget < minimumBudget() && !giant || budget < 1 || !giant && giantOnly || giant && giantTrees.isEmpty()) return null;
             String shape = vanillaTree == null ? "oak" : vanillaTree.getPath();
             ResourceLocation id = vanillaTree;
@@ -155,11 +165,11 @@ public final class CultivatedOakProfile extends SimpleJsonResourceReloadListener
                 shape = "tall_mangrove";
                 id = new ResourceLocation("minecraft", shape);
             }
-            if (!giant && origin != null && java.util.Set.of("oak", "fancy_oak", "birch", "cherry").contains(shape)
+            if (!giant && origin != null && Set.of("oak", "fancy_oak", "birch", "cherry").contains(shape)
                     && flowersNearby(level, origin)) id = new ResourceLocation("minecraft", shape + "_bees_005");
             TreeConfiguration source = tree;
             if (id != null && !(tree != null && id.equals(new ResourceLocation("minecraft:oak")))) {
-                var feature = level.registryAccess().registryOrThrow(net.minecraft.core.registries.Registries.CONFIGURED_FEATURE).get(id);
+                var feature = level.registryAccess().registryOrThrow(Registries.CONFIGURED_FEATURE).get(id);
                 if (feature == null || !(feature.config() instanceof TreeConfiguration configuration)) return null;
                 source = configuration;
             }
@@ -170,15 +180,15 @@ public final class CultivatedOakProfile extends SimpleJsonResourceReloadListener
             var builder = new TreeConfiguration.TreeConfigurationBuilder(source.trunkProvider,
                     new CultivatedNativeTrunkPlacer(trunk, height, giant), source.foliageProvider,
                     source.foliagePlacer, source.rootPlacer,
-                    new net.minecraft.world.level.levelgen.feature.featuresize.TwoLayersFeatureSize(0, 0, 0))
+                    new TwoLayersFeatureSize(0, 0, 0))
                     .dirt(source.dirtProvider).decorators(source.decorators);
             if (source.ignoreVines) builder.ignoreVines();
             if (source.forceDirt) builder.forceDirt();
             return builder.build();
         }
-        private static boolean flowersNearby(net.minecraft.server.level.ServerLevel level, net.minecraft.core.BlockPos origin) {
-            for (var pos : net.minecraft.core.BlockPos.betweenClosed(origin.offset(-2, -1, -2), origin.offset(2, 1, 2)))
-                if (level.hasChunkAt(pos) && level.getBlockState(pos).is(net.minecraft.tags.BlockTags.FLOWERS)) return true;
+        private static boolean flowersNearby(ServerLevel level, BlockPos origin) {
+            for (var pos : BlockPos.betweenClosed(origin.offset(-2, -1, -2), origin.offset(2, 1, 2)))
+                if (level.hasChunkAt(pos) && level.getBlockState(pos).is(BlockTags.FLOWERS)) return true;
             return false;
         }
     }

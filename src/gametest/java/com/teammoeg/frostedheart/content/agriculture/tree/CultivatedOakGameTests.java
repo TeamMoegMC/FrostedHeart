@@ -1,5 +1,15 @@
 package com.teammoeg.frostedheart.content.agriculture.tree;
 
+import com.teammoeg.frostedheart.content.climate.network.SoilThermometerUpdatePacket;
+import io.netty.buffer.Unpooled;
+import java.util.List;
+import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.contents.TranslatableContents;
+import net.minecraft.world.level.block.SaplingBlock;
+
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.content.agriculture.FertilizedDirt;
 import com.teammoeg.frostedheart.content.agriculture.Fertilizer.FertilizerType;
@@ -36,27 +46,27 @@ public class CultivatedOakGameTests {
         var level = helper.getLevel();BlockPos pos = plant(helper);
         level.setBlock(pos.below(), fertilizer(FertilizerType.PRESERVED)
                 .setValue(FertilizedDirt.GRADE, FertilizerGrade.ADVANCED), 3);
-        var packet = com.teammoeg.frostedheart.content.climate.network.SoilThermometerUpdatePacket.sample(level, pos);
+        var packet = SoilThermometerUpdatePacket.sample(level, pos);
         helper.assertTrue(packet.treeInfo() != null && packet.treeInfo().minTemperature() == -5
                 && packet.treeInfo().idealMin() == 15 && packet.treeInfo().idealMax() == 25
                 && packet.treeInfo().requiredProgress() == 16, "server supplies protected range and actual growth scale");
         level.setBlock(pos, Blocks.STONE.defaultBlockState(), 3);
-        var empty = com.teammoeg.frostedheart.content.climate.network.SoilThermometerUpdatePacket.sample(level, pos);
-        var buffer = new net.minecraft.network.FriendlyByteBuf(io.netty.buffer.Unpooled.buffer());
+        var empty = SoilThermometerUpdatePacket.sample(level, pos);
+        var buffer = new FriendlyByteBuf(Unpooled.buffer());
         try {
             empty.encode(buffer);
-            var decoded = new com.teammoeg.frostedheart.content.climate.network.SoilThermometerUpdatePacket(buffer);
+            var decoded = new SoilThermometerUpdatePacket(buffer);
             helper.assertTrue(decoded.treeInfo() == null && decoded.plantInfo() == null
                     && !decoded.exposedToBadWeather() && Float.isNaN(decoded.temperature()),
                     "non-tree response clears both snapshot fields after switching target");
         } finally { buffer.release(); }
         level.setBlock(pos.below(), Blocks.FARMLAND.defaultBlockState(), 3);
         level.setBlock(pos, Blocks.WHEAT.defaultBlockState(), 3);
-        var crop = com.teammoeg.frostedheart.content.climate.network.SoilThermometerUpdatePacket.sample(level, pos);
-        buffer = new net.minecraft.network.FriendlyByteBuf(io.netty.buffer.Unpooled.buffer());
+        var crop = SoilThermometerUpdatePacket.sample(level, pos);
+        buffer = new FriendlyByteBuf(Unpooled.buffer());
         try {
             crop.encode(buffer);
-            var decoded = new com.teammoeg.frostedheart.content.climate.network.SoilThermometerUpdatePacket(buffer);
+            var decoded = new SoilThermometerUpdatePacket(buffer);
             helper.assertTrue(decoded.pos().equals(pos) && decoded.temperature() == crop.temperature()
                     && decoded.exposedToBadWeather() == crop.exposedToBadWeather()
                     && decoded.treeInfo() == null && decoded.plantInfo() == null,
@@ -151,7 +161,7 @@ public class CultivatedOakGameTests {
             for (int i = 0; i < 32; i++) if (level.getBlockState(pos.above(i)).is(Blocks.OAK_LOG)) count++;
             helper.assertTrue(count >= 3 && count <= 10, "native Fancy trunk shares the expected yield with complete branches, actual=" + count);
             helper.assertTrue(level.getBlockState(pos.below()).getValue(FertilizedDirt.STORAGE) == 4, "successful generation settles the legacy four-unit fertilizer cost");
-            helper.assertTrue(Blocks.OAK_SAPLING.defaultBlockState().hasProperty(net.minecraft.world.level.block.SaplingBlock.STAGE),
+            helper.assertTrue(Blocks.OAK_SAPLING.defaultBlockState().hasProperty(SaplingBlock.STAGE),
                     "vanilla sapling retains original stage property");
             helper.succeed();
         });
@@ -188,7 +198,7 @@ public class CultivatedOakGameTests {
             int count = 0;
             for (int i = 0; i < 32; i++) if (level.getBlockState(pos.above(i)).is(Blocks.OAK_LOG)) count++;
             int branchLogs = 0;
-            for (int y = 0; y < 36; y++) for (var direction : net.minecraft.core.Direction.Plane.HORIZONTAL)
+            for (int y = 0; y < 36; y++) for (var direction : Direction.Plane.HORIZONTAL)
                 if (level.getBlockState(pos.above(y).relative(direction)).is(Blocks.OAK_LOG)) branchLogs++;
             int allLogs = 0;
             for (int y = 0; y < 30; y++) for (int x = -8; x <= 8; x++) for (int z = -8; z <= 8; z++)
@@ -248,24 +258,24 @@ public class CultivatedOakGameTests {
         helper.startSequence().thenWaitUntil(() -> helper.assertTrue(
                 level.getMaxLocalRawBrightness(pos.above()) >= 9, "fixture light must propagate before growth checks"))
                 .thenExecute(() -> {
-            var legacy = new net.minecraft.nbt.CompoundTag();
+            var legacy = new CompoundTag();
             legacy.putDouble("Progress", 4.25); legacy.putDouble("YieldCredit", 6.125);
             legacy.putInt("TargetHeight", 12); legacy.putLong("TreeSeed", 42);
             sapling(level, pos).load(legacy);
             var saved = sapling(level, pos).saveWithFullMetadata();
-            helper.assertTrue(saved.contains("p", net.minecraft.nbt.Tag.TAG_SHORT)
-                    && saved.contains("v", net.minecraft.nbt.Tag.TAG_SHORT), "both ledgers must be short tags: " + saved);
+            helper.assertTrue(saved.contains("p", Tag.TAG_SHORT)
+                    && saved.contains("v", Tag.TAG_SHORT), "both ledgers must be short tags: " + saved);
             helper.assertTrue(saved.getShort("p") == 68 && saved.getShort("v") == 98, "legacy fractions survive fixed-point migration");
-            for (String key : java.util.List.of("Progress", "YieldCredit", "TargetHeight", "TargetLogs", "TreeSeed"))
+            for (String key : List.of("Progress", "YieldCredit", "TargetHeight", "TargetLogs", "TreeSeed"))
                 helper.assertTrue(!saved.contains(key), "obsolete ledger/target fields must not be saved: " + key);
-            var status = (net.minecraft.network.chat.contents.TranslatableContents)sapling(level, pos).status().getContents();
+            var status = (TranslatableContents)sapling(level, pos).status().getContents();
             helper.assertTrue(status.getArgs().length == 3, "thermometer reports only age, progress and waiting reason");
             helper.assertTrue(saved.getInt("y") == pos.getY(), "short ledger must not overwrite the reserved y coordinate");
-            var packet = com.teammoeg.frostedheart.content.climate.network.SoilThermometerUpdatePacket.sample(level, pos);
-            var buffer = new net.minecraft.network.FriendlyByteBuf(io.netty.buffer.Unpooled.buffer());
+            var packet = SoilThermometerUpdatePacket.sample(level, pos);
+            var buffer = new FriendlyByteBuf(Unpooled.buffer());
             try {
                 packet.encode(buffer);
-                var decoded = new com.teammoeg.frostedheart.content.climate.network.SoilThermometerUpdatePacket(buffer);
+                var decoded = new SoilThermometerUpdatePacket(buffer);
                 helper.assertTrue(decoded.pos().equals(pos) && decoded.plantInfo().getString().equals(sapling(level, pos).status().getString()),
                         "thermometer packet round-trip carries the server's matching sapling status");
                 helper.assertTrue(decoded.treeInfo().equals(sapling(level, pos).thermometerInfo()),

@@ -1,4 +1,10 @@
 {
+  "block.frostedheart.cultivated_acacia_sapling": "栽培金合欢树苗",
+  "block.frostedheart.cultivated_birch_sapling": "栽培白桦树苗",
+  "block.frostedheart.cultivated_cherry_sapling": "栽培樱花树苗",
+  "block.frostedheart.cultivated_dark_oak_sapling": "栽培深色橡木树苗",
+  "block.frostedheart.cultivated_jungle_sapling": "栽培丛林树苗",
+  "block.frostedheart.cultivated_mangrove_sapling": "栽培红树林树苗",
   "block.frostedheart.cultivated_oak_sapling": "栽培橡树苗",
   "message.frostedheart.cultivated_oak.status": "阶段 %s/4，进度 %s；%s",
   "message.frostedheart.cultivated_oak.growing": "生长中",
@@ -15,5 +21,6 @@
   "message.frostedheart.cultivated_oak.stage.1": "幼苗",
   "message.frostedheart.cultivated_oak.stage.2": "生长",
   "message.frostedheart.cultivated_oak.stage.3": "壮苗",
-  "message.frostedheart.cultivated_oak.stage.4": "等待成树"
+  "message.frostedheart.cultivated_oak.stage.4": "等待成树",
+  "block.frostedheart.cultivated_spruce_sapling": "栽培云杉树苗"
 }

@@ -1,5 +1,16 @@
 package com.teammoeg.frostedheart.content.agriculture.tree;
 
+import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
+import java.io.IOException;
+import java.lang.reflect.Proxy;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.stream.IntStream;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.levelgen.feature.treedecorators.BeehiveDecorator;
+import net.minecraft.world.level.levelgen.feature.trunkplacers.TrunkPlacer;
+
 import java.util.*;
 import java.util.function.Predicate;
 import net.minecraft.core.BlockPos;
@@ -34,8 +45,8 @@ public class CultivatedNativeShapeGameTests {
         public <T extends BlockEntity> Optional<T> getBlockEntity(BlockPos pos, BlockEntityType<T> type) { return Optional.empty(); }
         public BlockPos getHeightmapPos(Heightmap.Types type, BlockPos pos) { return new BlockPos(pos.getX(), 0, pos.getZ()); }
         LevelSimulatedReader reader() {
-            return (LevelSimulatedReader)java.lang.reflect.Proxy.newProxyInstance(getClass().getClassLoader(),
-                    new Class<?>[]{net.minecraft.world.level.LevelReader.class, LevelSimulatedReader.class}, (proxy, method, args) -> {
+            return (LevelSimulatedReader)Proxy.newProxyInstance(getClass().getClassLoader(),
+                    new Class<?>[]{LevelReader.class, LevelSimulatedReader.class}, (proxy, method, args) -> {
                         return switch (method.getName()) {
                             case "getBlockState" -> state((BlockPos)args[0]);
                             case "getFluidState" -> state((BlockPos)args[0]).getFluidState();
@@ -59,8 +70,8 @@ public class CultivatedNativeShapeGameTests {
         for (String name : List.of("oak", "fancy_oak", "spruce", "mega_spruce", "birch", "jungle_tree_no_vine",
                 "mega_jungle_tree", "acacia", "dark_oak", "mangrove", "tall_mangrove", "cherry")) {
             var tree = nativeTree(helper, name);
-            for (int height : java.util.stream.IntStream.concat(java.util.stream.IntStream.rangeClosed(1, 32),
-                    java.util.stream.IntStream.of(48, 64, 96)).toArray()) {
+            for (int height : IntStream.concat(IntStream.rangeClosed(1, 32),
+                    IntStream.of(48, 64, 96)).toArray()) {
                 int sum = 0, min = Integer.MAX_VALUE, max = 0;
                 for (int seed = 0; seed < 128; seed++) {
                     var scene = new Scene();
@@ -72,8 +83,8 @@ public class CultivatedNativeShapeGameTests {
                         .append(min).append(',').append(max).append('\n');
             }
         }
-        try { java.nio.file.Files.writeString(java.nio.file.Path.of("native-tree-yield-samples.csv"), csv); }
-        catch (java.io.IOException ex) { throw new IllegalStateException("Cannot write native yield samples", ex); }
+        try { Files.writeString(Path.of("native-tree-yield-samples.csv"), csv); }
+        catch (IOException ex) { throw new IllegalStateException("Cannot write native yield samples", ex); }
         helper.succeed();
     }
     @GameTest(template = "phase0a_empty", timeoutTicks = 600)
@@ -137,15 +148,15 @@ public class CultivatedNativeShapeGameTests {
                 }
             }
         }
-        try { java.nio.file.Files.writeString(java.nio.file.Path.of("native-tree-yield-validation.csv"), rows); }
-        catch (java.io.IOException ex) { throw new IllegalStateException(ex); }
+        try { Files.writeString(Path.of("native-tree-yield-validation.csv"), rows); }
+        catch (IOException ex) { throw new IllegalStateException(ex); }
         helper.assertTrue(errors.isEmpty(), "native wood expectation calibration: " + errors);
         helper.succeed();
     }
 
     @GameTest(template = "phase0a_empty", timeoutTicks = 600)
     public static void nativeCanopiesRootsDecoratorsAndBeeVariantsSurvive(GameTestHelper helper) {
-        var sources = new IdentityHashMap<net.minecraft.world.level.levelgen.feature.trunkplacers.TrunkPlacer, TreeConfiguration>();
+        var sources = new IdentityHashMap<TrunkPlacer, TreeConfiguration>();
         for (String name : List.of("oak", "fancy_oak", "oak_bees_005", "fancy_oak_bees_005", "spruce",
                 "mega_spruce", "mega_pine", "birch", "birch_bees_005", "jungle_tree_no_vine", "mega_jungle_tree",
                 "acacia", "dark_oak", "mangrove", "tall_mangrove", "cherry", "cherry_bees_005")) {
@@ -173,7 +184,7 @@ public class CultivatedNativeShapeGameTests {
             var profile = CultivatedOakProfile.get(new ResourceLocation("frostedheart", species));
             var tree = profile.atHeight(helper.getLevel(), RandomSource.create(17), 20, false, origin);
             helper.assertTrue(tree.decorators.stream().anyMatch(d -> d instanceof
-                    net.minecraft.world.level.levelgen.feature.treedecorators.BeehiveDecorator),
+                    BeehiveDecorator),
                     "flowers enable the species' vanilla bee variant: " + species);
         }
         helper.succeed();
@@ -184,9 +195,9 @@ public class CultivatedNativeShapeGameTests {
         var level = helper.getLevel();
         BlockPos origin = CultivatedTestEnvironment.origin(helper).below(96);
         level.setBlock(origin.below(), Blocks.DIRT.defaultBlockState(), 3);
-        level.setBlock(origin, com.teammoeg.frostedheart.bootstrap.common.FHBlocks.CULTIVATED_SPRUCE.getDefaultState()
+        level.setBlock(origin, FHBlocks.CULTIVATED_SPRUCE.getDefaultState()
                 .setValue(CultivatedOakBlock.AGE, 4), 3);
-        var tag = new net.minecraft.nbt.CompoundTag();tag.putShort("p", (short)256);tag.putShort("v", (short)1072);
+        var tag = new CompoundTag();tag.putShort("p", (short)256);tag.putShort("v", (short)1072);
         level.getBlockEntity(origin).load(tag);
         helper.startSequence().thenWaitUntil(() -> helper.assertTrue(level.getMaxLocalRawBrightness(origin.above()) >= 9,
                 "tall-tree scene light ready")).thenExecute(() -> {
@@ -203,9 +214,9 @@ public class CultivatedNativeShapeGameTests {
         var level = helper.getLevel();BlockPos origin = CultivatedTestEnvironment.origin(helper);
         for (int x = -8; x <= 8; x++) for (int z = -8; z <= 8; z++)
             level.setBlock(origin.offset(x, -1, z), Blocks.DIRT.defaultBlockState(), 3);
-        level.setBlock(origin, com.teammoeg.frostedheart.bootstrap.common.FHBlocks.CULTIVATED_CHERRY.getDefaultState()
+        level.setBlock(origin, FHBlocks.CULTIVATED_CHERRY.getDefaultState()
                 .setValue(CultivatedOakBlock.AGE, 4), 3);
-        var tag = new net.minecraft.nbt.CompoundTag();tag.putShort("p", (short)256);tag.putShort("v", (short)128);
+        var tag = new CompoundTag();tag.putShort("p", (short)256);tag.putShort("v", (short)128);
         level.getBlockEntity(origin).load(tag);
         helper.startSequence().thenWaitUntil(() -> helper.assertTrue(level.getMaxLocalRawBrightness(origin.above()) >= 9,
                 "cherry scene light ready")).thenExecute(() -> {

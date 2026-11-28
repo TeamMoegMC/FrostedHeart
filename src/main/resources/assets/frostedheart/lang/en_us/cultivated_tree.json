@@ -1,4 +1,10 @@
 {
+  "block.frostedheart.cultivated_acacia_sapling": "Cultivated Acacia Sapling",
+  "block.frostedheart.cultivated_birch_sapling": "Cultivated Birch Sapling",
+  "block.frostedheart.cultivated_cherry_sapling": "Cultivated Cherry Sapling",
+  "block.frostedheart.cultivated_dark_oak_sapling": "Cultivated Dark Oak Sapling",
+  "block.frostedheart.cultivated_jungle_sapling": "Cultivated Jungle Sapling",
+  "block.frostedheart.cultivated_mangrove_sapling": "Cultivated Mangrove Sapling",
   "block.frostedheart.cultivated_oak_sapling": "Cultivated Oak Sapling",
   "message.frostedheart.cultivated_oak.status": "Stage %s/4, progress %s; %s",
   "message.frostedheart.cultivated_oak.growing": "Growing",
@@ -15,5 +21,6 @@
   "message.frostedheart.cultivated_oak.stage.1": "Seedling",
   "message.frostedheart.cultivated_oak.stage.2": "Growing",
   "message.frostedheart.cultivated_oak.stage.3": "Established",
-  "message.frostedheart.cultivated_oak.stage.4": "Awaiting tree growth"
+  "message.frostedheart.cultivated_oak.stage.4": "Awaiting tree growth",
+  "block.frostedheart.cultivated_spruce_sapling": "Cultivated Spruce Sapling"
 }

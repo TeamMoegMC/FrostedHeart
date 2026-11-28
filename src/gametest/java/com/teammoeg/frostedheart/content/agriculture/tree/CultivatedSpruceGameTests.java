@@ -1,5 +1,9 @@
 package com.teammoeg.frostedheart.content.agriculture.tree;
 
+import net.minecraft.world.level.levelgen.feature.foliageplacers.MegaPineFoliagePlacer;
+import net.minecraft.world.level.levelgen.feature.trunkplacers.GiantTrunkPlacer;
+import net.minecraft.world.level.levelgen.feature.trunkplacers.StraightTrunkPlacer;
+
 import java.util.List;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.content.agriculture.FertilizedDirt;
@@ -40,10 +44,10 @@ public class CultivatedSpruceGameTests {
                 "spruce exposes its own two vanilla giant variants, not oak branches");
         helper.assertTrue(CultivatedOakProfile.get().giantTrees().isEmpty(), "oak has no 2x2 giant variant");
         helper.assertTrue(p.atHeight(helper.getLevel(), RandomSource.create(1), 16, false).trunkPlacer
-                instanceof net.minecraft.world.level.levelgen.feature.trunkplacers.StraightTrunkPlacer, "single spruce trunk");
+                instanceof StraightTrunkPlacer, "single spruce trunk");
         var giant = p.atHeight(helper.getLevel(), RandomSource.create(1), 16, true);
-        helper.assertTrue(((CultivatedNativeTrunkPlacer)giant.trunkPlacer).nativeTrunk() instanceof net.minecraft.world.level.levelgen.feature.trunkplacers.GiantTrunkPlacer
-                && giant.foliagePlacer instanceof net.minecraft.world.level.levelgen.feature.foliageplacers.MegaPineFoliagePlacer,
+        helper.assertTrue(((CultivatedNativeTrunkPlacer)giant.trunkPlacer).nativeTrunk() instanceof GiantTrunkPlacer
+                && giant.foliagePlacer instanceof MegaPineFoliagePlacer,
                 "giant preserves native conifer canopy and 2x2 trunk");
         helper.assertTrue(CultivatedGiantTree.height(new CultivatedGiantTree.Group(BlockPos.ZERO,
                 square(BlockPos.ZERO), 0), p) == 0, "giant bonus never creates yield from zero credit");
