@@ -31,7 +31,7 @@ public final class ControlledFurnaceBlockEntity extends CBlockEntity implements 
     public static final int SAMPLE_SLOTS = 6;
     public static final int FUEL_SLOT = SAMPLE_SLOTS;
     public static final int SLOT_COUNT = SAMPLE_SLOTS + 1;
-    public static final int MIN_TEMPERATURE = 600;
+    public static final int MIN_TEMPERATURE = 400;
     public static final int MAX_TEMPERATURE = 1400;
     public static final int MAX_TIMER_SECONDS = 24 * 60 * 60;
     private static final int TICKS_PER_SECOND = 20;

@@ -429,7 +429,7 @@ public final class ControlledFurnaceGameTests {
                 var buffer=new net.minecraft.network.FriendlyByteBuf(io.netty.buffer.Unpooled.buffer());
                 try{
                     var serializer=new ControlledFiringRecipe.Serializer();serializer.toNetwork(buffer,recipe);var restored=serializer.fromNetwork(recipe.id(),buffer);
-                    h.assertTrue(restored.input().is(recipe.input().getItem()) && restored.duration()==recipe.duration()
+                    h.assertTrue(restored.matches(new ItemStack(item("frostedheart:fire_clay_ball"))) && restored.duration()==recipe.duration()
                         && restored.temperatureMin()==recipe.temperatureMin() && restored.durationMax() == 0,
                         "custom recipe retains sample item, temperature and uncapped duration");
                     var capped = (ControlledFiringRecipe) manager.byKey(new ResourceLocation("m5_test", "capped_firing")).orElseThrow();

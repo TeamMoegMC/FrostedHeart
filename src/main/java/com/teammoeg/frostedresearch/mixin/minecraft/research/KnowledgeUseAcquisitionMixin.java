@@ -6,11 +6,14 @@ import com.teammoeg.frostedresearch.knowledge.item.ItemRetrieval;
 import com.teammoeg.frostedresearch.knowledge.model.KnowledgeElement;
 import com.teammoeg.frostedresearch.knowledge.observation.ObservationSampling;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.*;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.*;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.common.util.FakePlayer;
 import net.minecraft.world.phys.BlockHitResult;
@@ -25,14 +28,18 @@ import java.util.*;
 public abstract class KnowledgeUseAcquisitionMixin {
     @Shadow @Final protected ServerPlayer player;
     @Unique private static final ResourceLocation frostedresearch$oreMined = new ResourceLocation("frostedheart", "ore_mined_after_copper");
+    @Unique private static final ResourceLocation frostedresearch$charcoalPitHarvest = new ResourceLocation("frostedresearch", "charcoal_pit_harvest");
+    @Unique private static final TagKey<Block> frostedresearch$finishedPitPiles = TagKey.create(Registries.BLOCK, frostedresearch$charcoalPitHarvest);
     @Unique private static final ResourceLocation frostedresearch$copper = new ResourceLocation("create", "copper");
     @Unique private ItemStack frostedresearch$used = ItemStack.EMPTY;
 
     // Forge adds this method to ServerPlayerGameMode and retains its name in production.
     @Inject(method = "removeBlock", at = @At("RETURN"), locals = LocalCapture.CAPTURE_FAILHARD, remap = false)
     private void frostedresearch$mined(BlockPos pos, boolean canHarvest, CallbackInfoReturnable<Boolean> cir, BlockState original) {
-        if (!cir.getReturnValue() || player instanceof FakePlayer || !original.is(FHTags.Blocks.ORES.tag)
-                || !KnowledgeBehaviorBridge.interested(frostedresearch$oreMined)) return;
+        if (!cir.getReturnValue() || player instanceof FakePlayer) return;
+        if (original.is(frostedresearch$finishedPitPiles) && KnowledgeBehaviorBridge.interested(frostedresearch$charcoalPitHarvest))
+            IdeaAcquisitionService.emit(player, frostedresearch$charcoalPitHarvest, Optional.empty());
+        if (!original.is(FHTags.Blocks.ORES.tag) || !KnowledgeBehaviorBridge.interested(frostedresearch$oreMined)) return;
         var advancement = player.server.getAdvancements().getAdvancement(frostedresearch$copper);
         if (advancement != null && player.getAdvancements().getOrStartProgress(advancement).isDone())
             IdeaAcquisitionService.emit(player, frostedresearch$oreMined, Optional.empty());

@@ -1,0 +1,7 @@
+{
+  "replace": false,
+  "values": [
+    { "id": "charcoal_pit:wood_ash", "required": false },
+    { "id": "charcoal_pit:coal_ash", "required": false }
+  ]
+}

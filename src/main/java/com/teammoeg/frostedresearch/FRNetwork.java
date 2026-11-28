@@ -42,7 +42,7 @@ public class FRNetwork extends CBaseNetwork {
 
     @Override
     protected String protocolVersion(String modVersion) {
-        return modVersion + ":furnace-specimens-3";
+        return modVersion + ":furnace-specimens-4";
     }
 
 	@Override
