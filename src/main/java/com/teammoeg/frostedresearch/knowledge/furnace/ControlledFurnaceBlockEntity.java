@@ -14,14 +14,17 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.Containers;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraftforge.common.ForgeHooks;
 import net.minecraftforge.items.ItemStackHandler;
 
 public final class ControlledFurnaceBlockEntity extends CBlockEntity implements CTickableBlockEntity, MenuProvider {
@@ -42,10 +45,10 @@ public final class ControlledFurnaceBlockEntity extends CBlockEntity implements 
     private final ItemStackHandler inventory = new ItemStackHandler(SLOT_COUNT) {
         @Override public int getSlotLimit(int slot) { return slot == FUEL_SLOT ? 64 : 1; }
         @Override public boolean isItemValid(int slot, ItemStack stack) {
-            return !running && (slot != FUEL_SLOT || stack.is(Items.CHARCOAL));
+            return slot == FUEL_SLOT ? isFuel(stack) : !running;
         }
         @Override public ItemStack extractItem(int slot, int amount, boolean simulate) {
-            return running ? ItemStack.EMPTY : super.extractItem(slot, amount, simulate);
+            return running && slot < SAMPLE_SLOTS ? ItemStack.EMPTY : super.extractItem(slot, amount, simulate);
         }
         @Override protected void onContentsChanged(int slot) { setChanged(); }
     };
@@ -56,6 +59,8 @@ public final class ControlledFurnaceBlockEntity extends CBlockEntity implements 
     private int temperature = 1000;
     private long elapsedTicks;
     private int limitTicks;
+    private int fuelTicks;
+    private int fuelDuration;
     private String message = "idle";
 
     public ControlledFurnaceBlockEntity(BlockPos pos, BlockState state) {
@@ -70,6 +75,32 @@ public final class ControlledFurnaceBlockEntity extends CBlockEntity implements 
     public boolean timed() { return limitTicks > 0; }
     public int timerSeconds() { return (int) Math.max(0, (limitTicks - elapsedTicks + TICKS_PER_SECOND - 1) / TICKS_PER_SECOND); }
     public String message() { return message; }
+    public int fuelTicks() { return fuelTicks; }
+    public int fuelDuration() { return fuelDuration; }
+    public int fuelSeconds() { return (int) ((fuelTicks + TICKS_PER_SECOND - 1L) / TICKS_PER_SECOND); }
+
+    public static boolean isFuel(ItemStack stack) {
+        return burnTime(stack) > 0;
+    }
+
+    private static int burnTime(ItemStack stack) {
+        return stack.isEmpty() ? 0 : ForgeHooks.getBurnTime(stack, RecipeType.SMELTING);
+    }
+
+    private boolean igniteFuel() {
+        int duration = burnTime(inventory.getStackInSlot(FUEL_SLOT));
+        if (duration <= 0) return false;
+
+        ItemStack consumed = inventory.extractItem(FUEL_SLOT, 1, false);
+        ItemStack remainder = consumed.getCraftingRemainingItem();
+        if (!remainder.isEmpty()) {
+            if (inventory.getStackInSlot(FUEL_SLOT).isEmpty()) inventory.setStackInSlot(FUEL_SLOT, remainder);
+            else Containers.dropItemStack(level, worldPosition.getX() + 0.5, worldPosition.getY() + 0.5,
+                    worldPosition.getZ() + 0.5, remainder);
+        }
+        fuelTicks = fuelDuration = duration;
+        return true;
+    }
 
     public boolean claim(ServerPlayer player) {
         UUID current = CTeamDataManager.get(player).getId();
@@ -102,11 +133,10 @@ public final class ControlledFurnaceBlockEntity extends CBlockEntity implements 
             update("need_samples");
             return;
         }
-        if (!inventory.getStackInSlot(FUEL_SLOT).is(Items.CHARCOAL)) {
+        if (fuelTicks == 0 && !igniteFuel()) {
             update("need_fuel");
             return;
         }
-        inventory.extractItem(FUEL_SLOT, 1, false);
         firing = results;
         elapsedTicks = 0;
         limitTicks = seconds * TICKS_PER_SECOND;
@@ -115,6 +145,10 @@ public final class ControlledFurnaceBlockEntity extends CBlockEntity implements 
     }
 
     public void stop() {
+        stop("stopped");
+    }
+
+    private void stop(String status) {
         if (!running) return;
         // A specimen is replaced at most once, by the first recipe that matches.
         boolean[] settled = new boolean[SAMPLE_SLOTS];
@@ -126,15 +160,33 @@ public final class ControlledFurnaceBlockEntity extends CBlockEntity implements 
         }
         firing = List.of();
         running = false;
-        update("stopped");
+        update(status);
     }
 
     @Override public void tick() {
-        if (!running || level == null || level.isClientSide) return;
-        elapsedTicks++;
+        if (level == null) return;
+        if (level.isClientSide) {
+            if (fuelTicks > 0) fuelTicks--;
+            return;
+        }
+        if (running && fuelTicks == 0 && !igniteFuel()) {
+            stop("out_of_fuel");
+            return;
+        }
+        if (fuelTicks == 0) return;
+        fuelTicks--;
         setChanged();
+        if (!running) {
+            if (fuelTicks == 0) syncData();
+            return;
+        }
+
+        elapsedTicks++;
         if (timed() && elapsedTicks >= limitTicks) stop();
-        else if (elapsedTicks % TICKS_PER_SECOND == 0) syncData();
+        else if (fuelTicks == 0) {
+            if (igniteFuel()) syncData();
+            else stop("out_of_fuel");
+        } else if (elapsedTicks % TICKS_PER_SECOND == 0) syncData();
     }
 
     private void update(String status) {
@@ -170,6 +222,8 @@ public final class ControlledFurnaceBlockEntity extends CBlockEntity implements 
         data.putBoolean("running", running);
         data.putLong("elapsed_ticks", elapsedTicks);
         data.putInt("limit_ticks", limitTicks);
+        data.putInt("fuel_ticks", fuelTicks);
+        data.putInt("fuel_duration", fuelDuration);
         data.putString("message", message);
         if (description) return;
         data.put("specimen_inventory", inventory.serializeNBT());
@@ -195,6 +249,13 @@ public final class ControlledFurnaceBlockEntity extends CBlockEntity implements 
         running = data.getBoolean("running");
         elapsedTicks = data.getLong("elapsed_ticks");
         limitTicks = data.getInt("limit_ticks");
+        fuelDuration = Math.max(0, data.getInt("fuel_duration"));
+        fuelTicks = Math.max(0, Math.min(fuelDuration, data.getInt("fuel_ticks")));
+        if (!description && running && data.contains("specimen_inventory") && !data.contains("fuel_ticks")) {
+            // Runs saved before fuel timing had already consumed one charcoal at startup.
+            fuelDuration = Math.max(0, burnTime(new ItemStack(Items.CHARCOAL)));
+            fuelTicks = (int) Math.max(0, fuelDuration - elapsedTicks);
+        }
         message = data.contains("message") ? data.getString("message") : "idle";
         if (description) return;
         firing = new ArrayList<>();
@@ -225,7 +286,7 @@ public final class ControlledFurnaceBlockEntity extends CBlockEntity implements 
         ItemStackHandler old = new ItemStackHandler(3);
         if (data.contains("inventory")) old.deserializeNBT(data.getCompound("inventory"));
         ItemStack fuel = old.getStackInSlot(1);
-        if (fuel.is(Items.CHARCOAL)) inventory.setStackInSlot(FUEL_SLOT, fuel);
+        if (isFuel(fuel)) inventory.setStackInSlot(FUEL_SLOT, fuel);
         else if (!fuel.isEmpty()) migratedItems.add(fuel);
         int slot = 0;
         for (ItemStack stack : List.of(old.getStackInSlot(2), ItemStack.of(data.getCompound("pending")),

@@ -119,9 +119,58 @@ public final class ControlledFurnaceGameTests {
                     "each sample becomes its unbound result in the original slot");
             }
             h.assertTrue(menu.getSlot(5).getItem().is(Items.STONE), "unrecognized samples remain in place");
-            h.assertTrue(menu.getSlot(ControlledFurnaceBlockEntity.FUEL_SLOT).getItem().getCount() == 2, "one charcoal per run");
+            h.assertTrue(menu.getSlot(ControlledFurnaceBlockEntity.FUEL_SLOT).getItem().getCount() == 3
+                    && furnace.fuelTicks() == furnace.fuelDuration() - 880,
+                    "the next run uses the rest of the already lit fuel");
             h.succeed();
         }
+    }
+
+    @GameTest(batch="m5_furnace_fuel", template="trial_kiln_empty", timeoutTicks=80)
+    public static void furnaceFuelRefillsAndStopsOnExhaustion(GameTestHelper h) {
+        try (var scope = new Scope()) {
+            var actor = scope.actor(h);
+            var furnace = furnace(h, new BlockPos(1, 1, 1));
+            furnace.claim(actor.player);
+            fill(furnace, 1, 0);
+            var menu = new ControlledFurnaceMenu(1, actor.player.getInventory(), furnace);
+            var fuel = menu.getSlot(ControlledFurnaceBlockEntity.FUEL_SLOT);
+            h.assertTrue(!fuel.mayPlace(new ItemStack(Items.STONE)), "reject non-fuels");
+            h.assertTrue(menu.quickMoveIn(new ItemStack(Items.STICK)), "shift-click places furnace fuels in the fuel slot");
+            menu.start(actor.player, 1100, 0);
+            h.assertTrue(furnace.running() && furnace.fuelTicks() == 100 && !fuel.hasItem(), "lighting consumes one stick");
+            ticks(furnace, 99);
+            h.assertTrue(furnace.fuelTicks() == 1 && fuel.mayPickup(actor.player)
+                    && menu.quickMoveIn(new ItemStack(Items.OAK_PLANKS, 2)), "burning fuel counts down and can be replenished");
+            ticks(furnace, 1);
+            h.assertTrue(furnace.running() && furnace.fuelTicks() == 300 && fuel.getItem().getCount() == 1,
+                    "the next fuel ignites without interrupting the firing");
+            ticks(furnace, 600);
+            h.assertTrue(!furnace.running() && furnace.fuelTicks() == 0 && furnace.elapsedSeconds() == 35
+                    && furnace.message().equals("out_of_fuel"), "firing stops after exactly its heated ticks");
+            h.assertTrue(menu.getSlot(0).getItem().is(item("frostedheart:refractory_brick")), "fuel exhaustion settles specimens");
+
+            fuseWithLava(h, furnace);
+            h.succeed();
+        }
+    }
+
+    private static void fuseWithLava(GameTestHelper h, ControlledFurnaceBlockEntity furnace) {
+        fill(furnace, 1, 0);
+        furnace.inventory().setStackInSlot(ControlledFurnaceBlockEntity.FUEL_SLOT, new ItemStack(Items.LAVA_BUCKET));
+        furnace.start(1100, 1);
+        ticks(furnace, 20);
+        h.assertTrue(!furnace.running() && furnace.fuelDuration() == 20000 && furnace.fuelTicks() == 19980
+                && furnace.inventory().getStackInSlot(ControlledFurnaceBlockEntity.FUEL_SLOT).is(Items.BUCKET),
+                "lava uses its furnace duration and leaves a bucket, even if the timer stops first");
+        var saved = new CompoundTag();
+        furnace.writeCustomNBT(saved, false);
+        var restored = new ControlledFurnaceBlockEntity(furnace.getBlockPos(), furnace.getBlockState());
+        restored.setLevel(h.getLevel());
+        restored.readCustomNBT(saved, false);
+        ticks(restored, 1);
+        h.assertTrue(restored.fuelTicks() == 19979 && restored.fuelDuration() == 20000 && !restored.running(),
+                "the remaining flame survives a save and burns down after firing stops");
     }
 
     @GameTest(batch="m5_firing_ranges", template="trial_kiln_empty", timeoutTicks=80)
@@ -177,6 +226,8 @@ public final class ControlledFurnaceGameTests {
         old.put("product", new ItemStack(Items.GLASS).save(new CompoundTag()));
         old.put("overfire_result", new ItemStack(Items.FLINT).save(new CompoundTag()));
         candidates.add(old);
+        saved.remove("fuel_ticks");
+        saved.remove("fuel_duration");
         restored.readCustomNBT(saved, false);
         ticks(restored, 390);
         h.assertTrue(restored.inventory().getStackInSlot(1).is(Items.FLINT),

@@ -8,7 +8,6 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.items.SlotItemHandler;
 
@@ -24,12 +23,12 @@ public final class ControlledFurnaceMenu extends CBlockEntityMenu<ControlledFurn
             boolean fuel = slot == ControlledFurnaceBlockEntity.FUEL_SLOT;
             addSlot(new SlotItemHandler(furnace.inventory(), slot, fuel ? FUEL_X : SAMPLE_X + slot * 18, fuel ? FUEL_Y : SAMPLE_Y) {
                 @Override public boolean mayPlace(ItemStack stack) {
-                    return !furnace.running() && furnace.inventory().isItemValid(getSlotIndex(), stack);
+                    return furnace.inventory().isItemValid(getSlotIndex(), stack);
                 }
                 @Override public int getMaxStackSize(ItemStack stack) {
                     return Math.min(getMaxStackSize(), stack.getMaxStackSize());
                 }
-                @Override public boolean mayPickup(Player player) { return !furnace.running(); }
+                @Override public boolean mayPickup(Player player) { return fuel || !furnace.running(); }
             });
         }
         for (int i = 0; i < 36; i++)
@@ -53,9 +52,9 @@ public final class ControlledFurnaceMenu extends CBlockEntityMenu<ControlledFurn
     }
 
     @Override public boolean quickMoveIn(ItemStack stack) {
-        if (getBlock().running()) return false;
-        if (stack.is(Items.CHARCOAL))
+        if (ControlledFurnaceBlockEntity.isFuel(stack))
             return moveItemStackTo(stack, ControlledFurnaceBlockEntity.FUEL_SLOT, ControlledFurnaceBlockEntity.SLOT_COUNT, false);
+        if (getBlock().running()) return false;
         boolean moved = false;
         for (int slot = 0; slot < ControlledFurnaceBlockEntity.SAMPLE_SLOTS && !stack.isEmpty(); slot++)
             moved |= moveItemStackTo(stack, slot, slot + 1, false);
@@ -63,7 +62,7 @@ public final class ControlledFurnaceMenu extends CBlockEntityMenu<ControlledFurn
     }
 
     @Override public ItemStack quickMoveStack(Player player, int index) {
-        if (index < ControlledFurnaceBlockEntity.SLOT_COUNT && getBlock().running()) return ItemStack.EMPTY;
+        if (index < ControlledFurnaceBlockEntity.SAMPLE_SLOTS && getBlock().running()) return ItemStack.EMPTY;
         return super.quickMoveStack(player, index);
     }
 }
