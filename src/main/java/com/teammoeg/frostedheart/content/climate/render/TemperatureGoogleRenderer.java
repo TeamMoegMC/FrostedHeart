@@ -25,12 +25,9 @@ import java.util.Map;
 
 import blusunrize.immersiveengineering.api.multiblocks.blocks.logic.IMultiblockBE;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.logic.IMultiblockState;
-import com.mojang.blaze3d.platform.Window;
-import com.mojang.blaze3d.vertex.PoseStack;
 import com.simibubi.create.AllBlocks;
 import com.simibubi.create.AllItems;
 import com.simibubi.create.CreateClient;
-import com.simibubi.create.compat.Mods;
 import com.simibubi.create.content.contraptions.IDisplayAssemblyExceptions;
 import com.simibubi.create.content.contraptions.piston.MechanicalPistonBlock;
 import com.simibubi.create.content.contraptions.piston.PistonExtensionPoleBlock;
@@ -40,17 +37,11 @@ import com.simibubi.create.content.equipment.goggles.IHaveHoveringInformation;
 import com.simibubi.create.content.equipment.goggles.IProxyHoveringInformation;
 import com.simibubi.create.content.trains.entity.TrainRelocator;
 import com.simibubi.create.foundation.blockEntity.behaviour.ValueBox;
-import com.simibubi.create.foundation.gui.RemovedGuiUtils;
-import com.simibubi.create.foundation.gui.Theme;
-import com.simibubi.create.foundation.mixin.accessor.MouseHandlerAccessor;
 import com.simibubi.create.foundation.outliner.Outline;
 import com.simibubi.create.foundation.outliner.Outliner;
-import com.simibubi.create.foundation.utility.Color;
 import com.simibubi.create.foundation.utility.Components;
 import com.simibubi.create.foundation.utility.Iterate;
 import com.simibubi.create.foundation.utility.Lang;
-import com.simibubi.create.infrastructure.config.AllConfigs;
-import com.simibubi.create.infrastructure.config.CClient;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 import com.teammoeg.frostedheart.content.agriculture.tree.CultivatedOakBlock;
@@ -64,14 +55,11 @@ import com.teammoeg.frostedheart.content.utility.SoilThermometer;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.MouseHandler;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.FormattedText;
-import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.Level;
@@ -89,11 +77,49 @@ import static net.minecraft.ChatFormatting.GRAY;
  * Adapted from @link{com.simibubi.create.content.equipment.goggles.GoggleOverlayRenderer}
  * <p>
  * Add temperature info to goggles overlay
- * <p>
- * TODO: Remove Create's Google Renderer
  */
 public class TemperatureGoogleRenderer {
-    public static final IGuiOverlay OVERLAY = TemperatureGoogleRenderer::renderOverlay;
+    /** CUI lifecycle adapter; information gathering remains independent of presentation. */
+    public static final IGuiOverlay OVERLAY = new com.teammoeg.chorda.client.cui.screenadapter.CUIOverlay(
+            new com.teammoeg.chorda.client.cui.base.PrimaryLayer() {
+                private float overlayPartialTick;
+
+                @Override
+                public void updateRenderInfo(int x, int y, double mouseX, double mouseY, float partialTick) {
+                    super.updateRenderInfo(x, y, mouseX, mouseY, partialTick);
+                    // UIElement retains its previous value for zero; this HUD needs the exact current frame.
+                    overlayPartialTick = partialTick;
+                }
+
+                @Override
+                public boolean shouldRenderGradient() { return false; }
+                @Override
+                public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h,
+                        com.teammoeg.chorda.client.RenderingHint hint) {
+                    renderOverlay(null, graphics, overlayPartialTick,
+                            Minecraft.getInstance().getWindow().getGuiScaledWidth(),
+                            Minecraft.getInstance().getWindow().getGuiScaledHeight());
+                }
+            });
+
+    /** Presentation contract for alternate overlay styles. */
+    @FunctionalInterface
+    public interface OverlayStyle {
+        void render(GuiGraphics graphics, List<Component> tooltip, float partialTicks, int width, int height);
+    }
+
+    private static OverlayStyle overlayStyle = new TemperatureTooltipStyle();
+    private static final List<java.util.function.BiConsumer<BlockPos, List<Component>>> informationProviders = new ArrayList<>();
+
+    /** Selects the presentation used by subsequent frames. Call on the client thread. */
+    public static void setOverlayStyle(OverlayStyle style) {
+        overlayStyle = java.util.Objects.requireNonNull(style);
+    }
+
+    /** Appends information after built-in providers. Register on the client thread. */
+    public static void registerInformationProvider(java.util.function.BiConsumer<BlockPos, List<Component>> provider) {
+        informationProviders.add(java.util.Objects.requireNonNull(provider));
+    }
 
     private static final Map<Object, Outliner.OutlineEntry> outlines = CreateClient.OUTLINER.getOutlines();
 
@@ -326,94 +352,14 @@ public class TemperatureGoogleRenderer {
                     .forGoggles(tooltip);
         }
 
+        for (var provider : informationProviders) provider.accept(pos, tooltip);
+
         if (tooltip.isEmpty()) {
             hoverTicks = 0;
             return;
         }
 
-        PoseStack poseStack = graphics.pose();
-        poseStack.pushPose();
-
-        // Text formatting
-        int tooltipTextWidth = 0;
-        for (FormattedText textLine : tooltip) {
-            int textLineWidth = mc.font.width(textLine);
-            if (textLineWidth > tooltipTextWidth)
-                tooltipTextWidth = textLineWidth;
-        }
-
-        int tooltipHeight = 8;
-        if (tooltip.size() > 1) {
-            tooltipHeight += 2; // gap between title lines and next lines
-            tooltipHeight += (tooltip.size() - 1) * 10;
-        }
-
-        CClient cfg = AllConfigs.client();
-        int posX = width / 2 + cfg.overlayOffsetX.get();
-        int posY = height / 2 + cfg.overlayOffsetY.get();
-
-        posX = Math.min(posX, width - tooltipTextWidth - 20);
-        posY = Math.min(posY, height - tooltipHeight - 20);
-
-        float fade = Mth.clamp((hoverTicks + partialTicks) / 24f, 0, 1);
-        Boolean useCustom = cfg.overlayCustomColor.get();
-        Color colorBackground = useCustom ? new Color(cfg.overlayBackgroundColor.get())
-                : Theme.c(Theme.Key.VANILLA_TOOLTIP_BACKGROUND)
-                .scaleAlpha(.75f);
-        Color colorBorderTop = useCustom ? new Color(cfg.overlayBorderColorTop.get())
-                : Theme.c(Theme.Key.VANILLA_TOOLTIP_BORDER, true)
-                .copy();
-        Color colorBorderBot = useCustom ? new Color(cfg.overlayBorderColorBot.get())
-                : Theme.c(Theme.Key.VANILLA_TOOLTIP_BORDER, false)
-                .copy();
-
-        if (fade < 1) {
-            poseStack.translate(Math.pow(1 - fade, 3) * Math.signum(cfg.overlayOffsetX.get() + .5f) * 8, 0, 0);
-            colorBackground.scaleAlpha(fade);
-            colorBorderTop.scaleAlpha(fade);
-            colorBorderBot.scaleAlpha(fade);
-        }
-
-        // Render google item
-//        GuiGameElement.of(item)
-//                .at(posX + 10, posY - 16, 450)
-//                .render(graphics);
-
-        // Render hovering text
-        if (!Mods.MODERNUI.isLoaded()) {
-            // default tooltip rendering when modernUI is not loaded
-            RemovedGuiUtils.drawHoveringText(graphics, tooltip, posX, posY, width, height, -1, colorBackground.getRGB(),
-                    colorBorderTop.getRGB(), colorBorderBot.getRGB(), mc.font);
-
-            poseStack.popPose();
-
-            return;
-        }
-
-        /*
-         * special handling for modernUI
-         *
-         * their tooltip handler causes the overlay to jiggle each frame,
-         * if the mouse is moving, guiScale is anything but 1 and exactPositioning is enabled
-         *
-         * this is a workaround to fix this behavior
-         */
-        MouseHandler mouseHandler = Minecraft.getInstance().mouseHandler;
-        Window window = Minecraft.getInstance().getWindow();
-        double guiScale = window.getGuiScale();
-        double cursorX = mouseHandler.xpos();
-        double cursorY = mouseHandler.ypos();
-        ((MouseHandlerAccessor) mouseHandler).create$setXPos(Math.round(cursorX / guiScale) * guiScale);
-        ((MouseHandlerAccessor) mouseHandler).create$setYPos(Math.round(cursorY / guiScale) * guiScale);
-
-        RemovedGuiUtils.drawHoveringText(graphics, tooltip, posX, posY, width, height, -1, colorBackground.getRGB(),
-                colorBorderTop.getRGB(), colorBorderBot.getRGB(), mc.font);
-
-        ((MouseHandlerAccessor) mouseHandler).create$setXPos(cursorX);
-        ((MouseHandlerAccessor) mouseHandler).create$setYPos(cursorY);
-
-        poseStack.popPose();
-
+        overlayStyle.render(graphics, tooltip, partialTicks, width, height);
     }
 
     public static BlockPos proxiedOverlayPosition(Level level, BlockPos pos) {

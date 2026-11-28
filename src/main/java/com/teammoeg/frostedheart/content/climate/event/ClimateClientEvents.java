@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart.content.climate.event;
 
+import com.simibubi.create.content.equipment.goggles.GoggleOverlayRenderer;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.reference.FHParticleTypes;
@@ -32,14 +33,25 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RegisterGuiOverlaysEvent;
+import net.minecraftforge.client.event.RenderGuiOverlayEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.level.LevelEvent;
+import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.fml.common.Mod;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
 public class ClimateClientEvents {
+
+    /** Suppresses Create's original goggles HUD, which is replaced by the temperature CUI overlay. */
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
+    public static void suppressCreateGoggleOverlay(RenderGuiOverlayEvent.Pre event) {
+        if (event.getOverlay().overlay() == GoggleOverlayRenderer.OVERLAY) {
+            event.setCanceled(true);
+        }
+    }
+
 
     /**
      * Simulate breath particles when the player is in a cold environment
