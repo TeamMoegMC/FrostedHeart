@@ -49,6 +49,7 @@ public class MineBaseBlockEntity extends AbstractTownBuildingBlockEntity<MineBas
         if (room == null) {
             return StructureScanResult.DATA_UNAVAILABLE;
         }
+        building.setRoadEntrances(room.doors);
         if (room.doors.isEmpty()) {
             room = room.withValidity(false);
         }

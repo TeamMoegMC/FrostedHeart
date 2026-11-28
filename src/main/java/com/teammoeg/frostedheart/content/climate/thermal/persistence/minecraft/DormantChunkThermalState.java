@@ -63,7 +63,7 @@ public final class DormantChunkThermalState {
     }
 
     private static final String ROOT_TAG = "FrostedHeartThermal";
-    private static final int FORMAT_VERSION = 6;
+    private static final int FORMAT_VERSION = 7;
     private static final int BRICKS = ThermalPageHandle.BASE_BRICK_COUNT;
     // Air stores signed temperature excess in sixteenths of a degree, relative to savedNaturalC.
     // All short values are valid here, including MIN_VALUE (unlike infrared's missing marker).
@@ -259,14 +259,15 @@ public final class DormantChunkThermalState {
             MaterialSample out,
             BlockPos.MutableBlockPos naturalPosition) {
         long tick = level.getGameTime();
-        double natural =
-                naturalTemperature(
-                        level,
-                        position.getX() >> 4,
-                        position.getY() >> 4,
-                        position.getZ() >> 4,
-                        tick,
-                        naturalPosition);
+        // The Section value keeps the material revision current; the body relaxes toward its own block's natural.
+        naturalTemperature(
+                level,
+                position.getX() >> 4,
+                position.getY() >> 4,
+                position.getZ() >> 4,
+                tick,
+                naturalPosition);
+        double natural = WorldTemperature.naturalAir(level, naturalPosition.set(position));
         DormantThermalCooling.project(
                 out,
                 tick,
@@ -388,7 +389,9 @@ public final class DormantChunkThermalState {
             int brick = (bx & 15) >>> 2 | ((bz & 15) >>> 2) << 2 | ((by & 15) >>> 2) << 4;
             return sample(sectionY, brick, gameTick, halfLifeSeconds, level, bx >> 4, bz >> 4, naturalPosition);
         }
-        double natural = naturalTemperature(level, bx >> 4, sectionY, bz >> 4, gameTick, naturalPosition);
+        // Stored air relaxes toward the natural temperature of its own block, not one value for the whole Section.
+        naturalTemperature(level, bx >> 4, sectionY, bz >> 4, gameTick, naturalPosition);
+        double natural = WorldTemperature.naturalAir(level, naturalPosition.set(bx, by, bz));
         return entry.spatialAir.sampleC(x, y, z, natural, gameTick, DormantThermalCooling.rate(halfLifeSeconds), entry.savedGameTick);
     }
 
@@ -397,12 +400,18 @@ public final class DormantChunkThermalState {
             long gameTick,
             double halfLifeSeconds,
             double currentNaturalTemperatureC) {
+        return admissionCut(sectionY, gameTick, halfLifeSeconds, currentNaturalTemperatureC, local -> currentNaturalTemperatureC);
+    }
+
+    /** Select restartable Air cells against the same spatial background used when restoring them. */
+    public ThermalInputBatch.DormantAirCut admissionCut(int sectionY, long gameTick, double halfLifeSeconds,
+            double currentNaturalTemperatureC, java.util.function.IntToDoubleFunction naturalAt) {
         int index = sectionY - minimumSectionY;
         if (index < 0 || index >= entries.length || entries[index] == null) {
             return null;
         }
         SectionEntry entry = entries[index];
-        entry = entry.retain(-1L, currentNaturalTemperatureC, gameTick, DormantThermalCooling.rate(halfLifeSeconds));
+        entry = entry.retain(-1L, currentNaturalTemperatureC, gameTick, DormantThermalCooling.rate(halfLifeSeconds), naturalAt);
         if (entry == null) return null;
         return new ThermalInputBatch.DormantAirCut(
                 entry,
@@ -611,10 +620,11 @@ public final class DormantChunkThermalState {
 
         public AirFieldCheckpoint spatialAir() { return spatialAir; }
 
-        public SectionEntry retain(long eligibleBricks, double naturalC, long tick, double rate) {
+        public SectionEntry retain(long eligibleBricks, double naturalC, long tick, double rate,
+                java.util.function.IntToDoubleFunction naturalAt) {
             if ((eligibleBricks & brickMask) == 0) return this;
             if (spatialAir != null) {
-                var retained = spatialAir.retain(eligibleBricks, naturalC, tick, rate, savedGameTick);
+                var retained = spatialAir.retain(eligibleBricks, naturalAt, tick, rate, savedGameTick);
                 return retained == spatialAir ? this : retained == null ? null
                         : new SectionEntry(savedGameTick, savedNaturalC, retained);
             }

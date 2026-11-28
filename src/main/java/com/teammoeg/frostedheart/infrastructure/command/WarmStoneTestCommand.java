@@ -52,6 +52,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.function.Supplier;
 
+import static com.teammoeg.frostedheart.content.climate.WorldTemperature.BlockTemperatureUse.SURROUNDINGS;
 import static com.teammoeg.frostedheart.infrastructure.command.CommandHelper.literal;
 import static com.teammoeg.frostedheart.infrastructure.command.CommandHelper.registerCommand;
 
@@ -120,8 +121,9 @@ public final class WarmStoneTestCommand {
             TestPreset preset
     ) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
         ServerPlayer player = context.getSource().getPlayerOrException();
-        double environmentTemperatureC = WorldTemperature.naturalAir(
-                player.serverLevel(), player.blockPosition());
+        // Match the local air used for inventory heat exchange.
+        double environmentTemperatureC = WorldTemperature.getTempAtBlock(
+                player.serverLevel(), player.blockPosition(), SURROUNDINGS);
         ItemStack stack = createTestStack(item, preset, environmentTemperatureC);
         TestTemperatures temperatures = preset.temperaturesAt(environmentTemperatureC);
         if (!player.getInventory().add(stack)) {

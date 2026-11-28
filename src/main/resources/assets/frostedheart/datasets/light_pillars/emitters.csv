@@ -1,0 +1,10 @@
+block,red,green,blue,intensity
+frostedheart:generator_t1,1.000,0.697,0.299,1.0
+frostedheart:generator_t2,1.000,0.697,0.299,1.0
+frostedheart:radiator,1.000,0.731,0.320,1.0
+minecraft:campfire,1.000,0.680,0.224,1.0
+minecraft:soul_campfire,0.378,0.974,1.000,1.0
+minecraft:furnace,1.000,0.697,0.299,1.0
+minecraft:blast_furnace,1.000,0.575,0.426,1.0
+minecraft:smoker,1.000,0.541,0.184,1.0
+#minecraft:candles,1.000,0.483,0.077,1.0

@@ -1,0 +1,7 @@
+{
+  "tooltip.frostedheart.charger.dock_supply": "停放在充气机中自动补充蒸汽。",
+  "tooltip.frostedheart.charger.dock_occupied": "蒸汽装备已停放，空主手右键取回。",
+  "tooltip.frostedheart.charger.dock_ready": "蒸汽装备已充满，空主手右键取回。",
+  "message.frostedheart.charger.dock_inserted": "蒸汽装备已停放，有热量时自动补充。空主手右键取回。",
+  "message.frostedheart.charger.dock_busy": "充气机已有装备，空主手右键取回。"
+}

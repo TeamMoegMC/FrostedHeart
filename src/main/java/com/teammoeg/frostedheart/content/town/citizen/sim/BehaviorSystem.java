@@ -114,6 +114,8 @@ public final class BehaviorSystem {
 
 	void tickOne(CitizenContainer container, CitizenSim sim, ServerLevel level, int i,
 			boolean night, boolean workTime, long dayTime, long gameTime) {
+        var roads = container.roadNavigation();
+        boolean arrived = roads == null ? isArrived(sim, i) : roads.arrived(sim, i);
 		switch (sim.state[i]) {
 		case CitizenState.IDLE:
 			if (night) {
@@ -131,13 +133,13 @@ public final class BehaviorSystem {
 				startReturnHome(container, sim, i, gameTime);
 			} else if (workTime && sim.wx[i] != -1) {
 				startMove(sim, i, sim.wx[i] << 10, sim.wz[i] << 10, CitizenState.WORK, gameTime);
-			} else if (isArrived(sim, i)) {
+			} else if (arrived) {
 				// 已到达闲逛目标（移动系统停下了单位）
 				sim.state[i] = CitizenState.IDLE;
 			}
 			break;
 		case CitizenState.RETURN_HOME:
-			if (isArrived(sim, i)) {
+			if (arrived) {
 				if (night) {
 					enterSleep(container, sim, i);
 				} else if (workTime && sim.wx[i] != -1) {
@@ -161,7 +163,7 @@ public final class BehaviorSystem {
 			// 下班（夜晚或工作时段结束）优先于一切，直接回家
 			if (night || !workTime) {
 				startReturnHome(container, sim, i, gameTime);
-			} else if (isArrived(sim, i)) {
+			} else if (arrived) {
 				// 已到岗：原地站岗；小概率在岗位 ±3 格内踱步（原地踱步，不离开岗位）
 				int r = CitizenState.nextRand(sim.id[i], gameTime) & 0xFF;
 				if (r < WORK_PACE_CHANCE) {

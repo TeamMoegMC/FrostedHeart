@@ -62,13 +62,14 @@ public class ConnectorNetworkRevalidator<T extends BlockEntity&NetworkConnector>
 	}
 
 	/**
-	 * Tick.
+	 * Recheck a connected pipe every ten valid ticks; face changes still reconnect immediately.
 	 */
 	public void tick() {
 		if(network!=null) {
 			if(!network.isValid()) {
 				setNetwork(null);
 			}else if(++revalidateTick>=10) {
+				revalidateTick = 0;
 				network.refreshConnectedEndpoints(current.getBlockPos());
 				network.startConnectionFromBlock(current);
 			}

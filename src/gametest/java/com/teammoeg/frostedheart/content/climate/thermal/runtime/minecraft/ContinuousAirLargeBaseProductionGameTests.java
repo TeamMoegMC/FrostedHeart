@@ -67,7 +67,7 @@ public final class ContinuousAirLargeBaseProductionGameTests {
                 boolean ageViolation = false, overdueGeometry = false;
                 for (int index = 0; index < probes.length; index++) {
                     BlockPos probe = probes[index];
-                    MinecraftThermalInput.gameplayPlacedReservoirEnvironment(level, probe,
+                    MinecraftThermalInput.samplePlacedReservoirAirAndRadiation(level, probe,
                             WorldTemperature.naturalAir(level, probe), air);
                     boolean live = air.airAvailable() && air.airSampleTick() >= 0 && air.airBasisTerms() >= 8;
                     boolean fresh = live && level.getGameTime() - air.airSampleTick() <= 40;
@@ -105,7 +105,7 @@ public final class ContinuousAirLargeBaseProductionGameTests {
                     BlockPos near = fires[index % fires.length];
                     player.setPos(near.getX() + .5 + .15 * Math.sin(elapsed * .02 + index),
                             near.getY(), near.getZ() + .5);
-                    MinecraftThermalInput.gameplayPlayerEnvironment(player, WorldTemperature.naturalAir(level, near), receiverSample);
+                    MinecraftThermalInput.samplePlayerAirTemperature(player, WorldTemperature.naturalAir(level, near), receiverSample);
                     receiverQueries[0]++;
                     boolean receiverExpired = monitoring[0] && (!receiverSample.airAvailable()
                             || receiverSample.airSampleTick() < 0
@@ -120,9 +120,9 @@ public final class ContinuousAirLargeBaseProductionGameTests {
                 if (elapsed % 200 == 0) {
                     for (int probe = 0; probe < probes.length; probe++) for (int distance = 0; distance <= 2; distance += 2) {
                         BlockPos point = probes[probe].east(distance);
-                        MinecraftThermalInput.gameplayPlacedReservoirEnvironment(level, point,
+                        MinecraftThermalInput.samplePlacedReservoirAirAndRadiation(level, point,
                                 WorldTemperature.naturalAir(level, point), air);
-                        MinecraftThermalInput.sampleMaterial(level, point.below(2), material);
+                        MinecraftThermalInput.sampleMaterialTemperature(level, point.below(2), material);
                         FHMain.LOGGER.info("THERMAL_LONG_SCALE_POINT,elapsedTicks={},probe={},distance={},sampleTick={},naturalC={},airC={},materialH={},branch={},current={}",
                                 elapsed, probe, distance, air.airSampleTick(), WorldTemperature.naturalAir(level, point),
                                 air.airTemperatureC(), material.enthalpyJ(), material.branch(), MinecraftThermalInput.describeAirRead(level, point));
@@ -131,7 +131,7 @@ public final class ContinuousAirLargeBaseProductionGameTests {
                             elapsed, ageViolationTicks[0], overdueGeometryTicks[0], receiverAgeViolationReads[0]);
                     int liveMaterials = 0;
                     for (BlockPos probe : probes)
-                        if (MinecraftThermalInput.sampleMaterial(level, probe.below(2), material)
+                        if (MinecraftThermalInput.sampleMaterialTemperature(level, probe.below(2), material)
                                 && material.source() == MaterialSample.Source.LIVE) liveMaterials++;
                     FHMain.LOGGER.info("THERMAL_LARGEBASE_STATE,elapsedTicks={},currentTicks={},liveMaterials={},workLimited={},rootChargedBytes={},worker={}",
                             elapsed, currentTicks[0], liveMaterials,

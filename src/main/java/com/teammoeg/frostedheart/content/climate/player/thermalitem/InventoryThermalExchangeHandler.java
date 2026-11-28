@@ -19,10 +19,11 @@
 
 package com.teammoeg.frostedheart.content.climate.player.thermalitem;
 
+import static com.teammoeg.frostedheart.content.climate.WorldTemperature.BlockTemperatureUse.SURROUNDINGS;
+
 import com.teammoeg.chorda.CompatModule;
 import com.teammoeg.frostedheart.compat.curios.CuriosCompat;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
-import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 
@@ -96,13 +97,8 @@ public final class InventoryThermalExchangeHandler {
             return Status.EQUIPPED;
         }
 
-        double environmentTemperatureC = MinecraftThermalInput
-                .gameplayPassiveEnvironment(
-                        player.level(),
-                        player.blockPosition(),
-                        WorldTemperature.naturalAir(
-                                player.level(), player.blockPosition())
-                );
+        double environmentTemperatureC = WorldTemperature.getTempAtBlock(
+                player.level(), player.blockPosition(), SURROUNDINGS);
         return exchangeClaimedInto(
                 stack,
                 stack.getItem() instanceof WearableThermalReservoir reservoir

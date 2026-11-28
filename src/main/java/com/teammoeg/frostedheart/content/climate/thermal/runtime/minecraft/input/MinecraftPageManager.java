@@ -467,12 +467,12 @@ public final class MinecraftPageManager implements AutoCloseable {
     public void onChunkLoad(LevelChunk chunk) {
         requireMainThread();
         for (int index = 0; index < chunk.getSections().length; index++) {
-            ensureSectionOwner(chunk, index, chunk.getSections()[index]);
-            invalidateHaloConsumers(
-                    SectionPos.asLong(
-                            chunk.getPos().x,
-                            chunk.getSectionYFromSectionIndex(index),
-                            chunk.getPos().z), HaloCause.CHUNK_LOAD);
+            long section = SectionPos.asLong(
+                    chunk.getPos().x, chunk.getSectionYFromSectionIndex(index), chunk.getPos().z);
+            if (pages.containsKey(section) || haloConsumers.containsKey(section)) {
+                ensureSectionOwner(chunk, index, chunk.getSections()[index]);
+            }
+            invalidateHaloConsumers(section, HaloCause.CHUNK_LOAD);
         }
         LongOpenHashSet indexed = pagesByChunk.get(chunk.getPos().toLong());
         if (indexed != null) {
@@ -521,15 +521,15 @@ public final class MinecraftPageManager implements AutoCloseable {
             LevelChunkSection replacement) {
         requireMainThread();
         SectionOwner old = attachment(previous).frostedheart$getThermalInputOwner();
-        if (old != null && old.manager == this && old.chunk == chunk) {
-            detachSection(old);
-        }
-        attachSection(chunk, sectionIndex, replacement);
         long key =
                 SectionPos.asLong(
                         chunk.getPos().x,
                         chunk.getSectionYFromSectionIndex(sectionIndex),
                         chunk.getPos().z);
+        boolean watched = old != null && old.manager == this && old.chunk == chunk;
+        if (watched) detachSection(old);
+        if (!watched && !pages.containsKey(key) && !haloConsumers.containsKey(key)) return;
+        attachSection(chunk, sectionIndex, replacement);
         SectionOwner next = ownersBySection.get(key);
         if (next != null) {
             next.recordFullResync(ThermalPageHandle.GeometryResyncReason.SECTION_REPLACED);
@@ -848,7 +848,9 @@ public final class MinecraftPageManager implements AutoCloseable {
                     if (deferredGeometry) {
                         owner.invalidatePage(mutationScratch.physicalRelevant);
                     }
-                    environment.markSkyColumn(worldX, worldZ);
+                    if (pagesByChunk.containsKey(chunkKey(owner.sectionKey))) {
+                        environment.markSkyColumn(worldX, worldZ);
+                    }
                     if (!fullResync) collectCenter(owner, index, gameTick);
                     geometryChanged = true;
                     remaining &= remaining - 1L;
@@ -908,10 +910,14 @@ public final class MinecraftPageManager implements AutoCloseable {
                 }
             }
         }
-        for (long section : page.haloSections)
+        for (long section : page.haloSections) {
             haloConsumers
                     .computeIfAbsent(section, ignored -> new LongOpenHashSet())
                     .add(page.sectionKey);
+            // Only actual captured dependencies need a mutation owner. Missing
+            // Chunks attach it from the same halo index when they later load.
+            loadedSectionOrAttach(section);
+        }
         if (haloScratch.isEmpty()) return page.capturedHalo = GeometryHalo.EMPTY;
         long[] positions = haloScratch.keySet().toLongArray();
         Arrays.sort(positions);
@@ -1016,6 +1022,7 @@ public final class MinecraftPageManager implements AutoCloseable {
             removeEntry(page);
             return;
         }
+        loadedSectionOrAttach(page.sectionKey);
         long missing = page.requestedMask() & ~page.capturedBrickMask;
         if (missing != 0L || page.handle == null) {
             enqueue(page);
@@ -1090,6 +1097,11 @@ public final class MinecraftPageManager implements AutoCloseable {
 
     public boolean hasTrackedChunk(long chunkKey) {
         return pagesByChunk.containsKey(chunkKey) || accumulator.hasPendingRetirementInChunk(chunkKey);
+    }
+
+    /** The Chunk test drainMutations applies before an edit may mark a Page sky column. */
+    public boolean hasPageInChunk(long chunkKey) {
+        return pagesByChunk.containsKey(chunkKey);
     }
 
     public boolean hasLiveChunk(long chunkKey) {
@@ -1457,7 +1469,7 @@ public final class MinecraftPageManager implements AutoCloseable {
         }
 
         public MaterialSectionState projectMaterialCheckpoint(
-                MaterialSectionState snapshot, long revision, double naturalTemperatureC) {
+                MaterialSectionState snapshot, long revision) {
             if (materialResetRevision > revision) return null;
             if (snapshot == null
                     || checkpointMaterialChanges == null
@@ -1465,6 +1477,8 @@ public final class MinecraftPageManager implements AutoCloseable {
                     || checkpointMaterialRevisions.getLong(checkpointMaterialRevisions.size() - 1)
                             <= revision) return snapshot;
             var editor = new MaterialSectionState.Editor(snapshot);
+            var naturalAt = com.teammoeg.frostedheart.content.climate.WorldTemperature.sectionBackground(
+                    manager.level, sectionKey, new BlockPos.MutableBlockPos());
             for (int index = 0;
                     !editor.isEmpty() && index < checkpointMaterialRevisions.size();
                     index++) {
@@ -1473,8 +1487,11 @@ public final class MinecraftPageManager implements AutoCloseable {
                 int stateId = checkpointMaterialChanges.getInt(base + CHECKPOINT_STATE_OFFSET);
                 BlockState state = Block.BLOCK_STATE_REGISTRY.byId(stateId);
                 var law = state == null ? null : MinecraftThermalProfiles.materialLaw(state);
+                int local = checkpointMaterialChanges.getInt(base);
+                if (editor.find(local) < 0) continue;
+                double naturalTemperatureC = naturalAt.applyAsDouble(local);
                 editor.applyChange(
-                        checkpointMaterialChanges.getInt(base),
+                        local,
                         stateId,
                         law,
                         (byte) checkpointMaterialChanges.getInt(base + CHECKPOINT_CAUSE_OFFSET),

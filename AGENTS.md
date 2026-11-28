@@ -4,6 +4,9 @@
 
 最小复杂度下的最佳性能实现。
 
+- 相似功能优先复用或扩展已有实现。
+- 确需新建时说明原因和职责边界。
+
 ## Project Knowledge
 
 Project knowledge is separated by purpose and authority:
@@ -42,6 +45,7 @@ Keep answers local. Link to the file that owns a rule or detail instead of repea
 - Put unsettled ideas in `discussion/` and actionable pre-implementation work in `plans/`. Do not present either as implemented behavior.
 - When a change affects documented behavior, update the relevant living document in the same development work. Record the documentation impact in the diary entry, including when no update was needed.
 - When introducing a major game system, add or update its entry in `docs/README.md` and provide a system README when more than one document exists.
+- Write proper javadocs.
 
 ## Plans And Discussions
 

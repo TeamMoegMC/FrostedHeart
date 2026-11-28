@@ -19,6 +19,8 @@
 
 package com.teammoeg.frostedheart.content.town;
 
+import com.teammoeg.frostedheart.content.town.block.blockscanner.TownConnectivity;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -153,9 +155,10 @@ import java.util.Collections;
  * Everything permanent should be saved in this class.
  */
 public class TeamTownData implements com.teammoeg.chorda.dataholders.PersistentComponent {
-    public static final MapCodec<TeamTownData> MAP_CODEC = createMapCodec(BuildingRecordsCodec.DISK);
-    public static final Codec<TeamTownData> MANAGEMENT_CODEC = createMapCodec(BuildingRecordsCodec.MANAGEMENT).codec();
-    private static MapCodec<TeamTownData> createMapCodec(MapCodec<TownBuildingStore> buildingFields) {
+    public static final MapCodec<TeamTownData> MAP_CODEC = createMapCodec(BuildingRecordsCodec.DISK, true);
+    public static final Codec<TeamTownData> MANAGEMENT_CODEC = createMapCodec(BuildingRecordsCodec.MANAGEMENT, false).codec();
+    /** {@code withRoads}: the save keeps the road view; clients get links with each building and ask for routes apart. */
+    private static MapCodec<TeamTownData> createMapCodec(MapCodec<TownBuildingStore> buildingFields, boolean withRoads) {
         return CodecUtil.mapCodec(t->t
     	.add(CodecUtil.wrap(CodecUtil.defaultSupply(Codec.STRING, () -> "Default Town")
     	    .fieldOf("name").forGetter(o -> o.name)))
@@ -191,6 +194,11 @@ public class TeamTownData implements com.teammoeg.chorda.dataholders.PersistentC
     	    .fieldOf("lastRefugeeSpawnDay").forGetter(o -> o.lastRefugeeSpawnDay)))
         .add(CodecUtil.wrap(AutoSettlementState.CODEC.optionalFieldOf("autoSettlement", AutoSettlementState.pendingLegacy())
             .forGetter(TeamTownData::getAutoSettlement)))
+        // Older saves have no road view: their links come back with the first scan, as before.
+        .add(CodecUtil.wrap((withRoads
+                ? CodecUtil.defaultSupply(CodecUtil.catchingCodec(TownConnectivity.RESULT_CODEC), () -> TownConnectivity.EMPTY).fieldOf("roads")
+                : MapCodec.unit(TownConnectivity.EMPTY))
+            .forGetter(o -> o.connectivity.view())))
         .apply(TeamTownData::new));
     }
 
@@ -240,8 +248,8 @@ public class TeamTownData implements com.teammoeg.chorda.dataholders.PersistentC
 
     /**
      * 玩家编辑的工作建筑队列与保障人数。列表顺序是完整优先关系；保障人数是
-     * 第一轮优先补足的目标而非硬上限。通过 {@link #getStaffingPlan()} 读取时会与
-     * 当前建筑表对齐，以清理已拆除建筑并补入新建筑。
+     * 第一轮优先补足的目标而非硬上限。建筑注册变化时由
+     * {@link #prepareAssignments()} 与当前建筑表对齐，并同步权威计划。
      */
     private TownStaffingPlan staffingPlan = TownStaffingPlan.EMPTY;
 
@@ -450,7 +458,7 @@ public class TeamTownData implements com.teammoeg.chorda.dataholders.PersistentC
      * @param lastRefugeeSpawnDay 最近一次难民自然刷新所用的稳定世界日
      */
     public TeamTownData(String name, TeamTownResourceHolder resources, Map<BlockPos, ITownBuilding> buildings, Map<UUID, Resident> residents, Map<TerrainResourceType, TerrainResourceData> terrainResource, List<TownHistoryEntry> history, long townDay, TownStaffingPlan staffingPlan, TownHousingPlan housingPlan, TownPolicyState policyState, TownTransportState transportState, P2PBindingState p2pBindingState, P2PFilterSummaryState p2pFilterSummaryState, long lastRefugeeSpawnDay, AutoSettlementState autoSettlement) {
-        this(name, resources, storeOf(buildings), residents, terrainResource, history, townDay, staffingPlan, housingPlan, policyState, transportState, p2pBindingState, p2pFilterSummaryState, lastRefugeeSpawnDay, autoSettlement);
+        this(name, resources, storeOf(buildings), residents, terrainResource, history, townDay, staffingPlan, housingPlan, policyState, transportState, p2pBindingState, p2pFilterSummaryState, lastRefugeeSpawnDay, autoSettlement, TownConnectivity.EMPTY);
     }
     private static TownBuildingStore storeOf(Map<BlockPos, ITownBuilding> input) {
         TownBuildingStore result = new TownBuildingStore();
@@ -458,7 +466,7 @@ public class TeamTownData implements com.teammoeg.chorda.dataholders.PersistentC
         return result;
     }
 
-    public TeamTownData(String name, TeamTownResourceHolder resources, TownBuildingStore decodedBuildings, Map<UUID, Resident> residents, Map<TerrainResourceType, TerrainResourceData> terrainResource, List<TownHistoryEntry> history, long townDay, TownStaffingPlan staffingPlan, TownHousingPlan housingPlan, TownPolicyState policyState, TownTransportState transportState, P2PBindingState p2pBindingState, P2PFilterSummaryState p2pFilterSummaryState, long lastRefugeeSpawnDay, AutoSettlementState autoSettlement) {
+    public TeamTownData(String name, TeamTownResourceHolder resources, TownBuildingStore decodedBuildings, Map<UUID, Resident> residents, Map<TerrainResourceType, TerrainResourceData> terrainResource, List<TownHistoryEntry> history, long townDay, TownStaffingPlan staffingPlan, TownHousingPlan housingPlan, TownPolicyState policyState, TownTransportState transportState, P2PBindingState p2pBindingState, P2PFilterSummaryState p2pFilterSummaryState, long lastRefugeeSpawnDay, AutoSettlementState autoSettlement, TownConnectivity.Result roads) {
         super();
         this.history = new ArrayList<>(history);
         this.townDay = townDay >= 0L ? townDay : history.size();
@@ -478,6 +486,15 @@ public class TeamTownData implements com.teammoeg.chorda.dataholders.PersistentC
                 ? P2PFilterSummaryState.EMPTY : p2pFilterSummaryState;
         this.lastRefugeeSpawnDay = lastRefugeeSpawnDay;
         this.autoSettlement = autoSettlement;
+        if (!roads.equals(TownConnectivity.EMPTY)) {
+            // Links as last saved: where nobody is near, they stand until a scan can see the terrain again.
+            connectivity.restore(roads);
+            buildings.forEach((pos, building) -> {
+                if (roads.connected().contains(pos)) building.setConnectedToTower(true);
+                if (roads.working().contains(pos)) building.setConnectivityWorkable(true);
+            });
+        }
+        roadVersion = connectivity.version();
         initializeChangeTracking();
     }
 
@@ -532,7 +549,11 @@ public class TeamTownData implements com.teammoeg.chorda.dataholders.PersistentC
 
     private void normalizeHousingPlan() {
         TownHousingPlan normalized = housingPlan.normalize(buildings, buildingStore::preservesReference);
-        if (!normalized.equals(housingPlan)) { housingPlan = normalized; persistentChanged(); }
+        if (!normalized.equals(housingPlan)) {
+            housingPlan = normalized;
+            dataSyncCache.housingPlanChanged |= serverTracking;
+            persistentChanged();
+        }
     }
 
     public boolean setHousingGuarantee(BlockPos building, int target) {
@@ -626,6 +647,8 @@ public class TeamTownData implements com.teammoeg.chorda.dataholders.PersistentC
     }
 
     public TownBuildingStore getBuildingStore() { return buildingStore; }
+    public java.util.UUID roadOwnerId() { return buildingOwner == null ? null : buildingOwner.getId(); }
+
     TeamDataHolder buildingOwner() { return buildingOwner; }
     void removeBuildingPlans(BlockPos pos) {
         staffingPlan = staffingPlan.withoutBuilding(pos);
@@ -640,13 +663,31 @@ public class TeamTownData implements com.teammoeg.chorda.dataholders.PersistentC
         }
         buildingStore.reportInitialChanges();
     }
+    /**
+     * 城镇运行的世界：建筑所在的维度，还没有建筑时用能量塔的维度。能量塔在不在、在哪个维度，都不影响城镇的更新与结算。
+     * <p>
+     * The world the town runs in: its buildings' dimension, or the tower's while it has none. Whether a tower exists,
+     * and where, never stops the town from updating or settling; a player may dismantle the tower at any time.
+     */
     public static ServerLevel executionLevel(TeamDataHolder owner) {
         CTeamDataManager teams = CTeamDataManager.INSTANCE;
         if (owner == null || teams == null || teams.findByHolderId(owner.getId()) != owner) return null;
-        var generator = owner.getOptional(FHSpecialDataTypes.GENERATOR_DATA).orElse(null);
         ResourceKey<Level> dimension = resolveTownDimension(owner);
-        if (generator == null || dimension == null || !dimension.equals(generator.dimension)) return null;
-        return teams.server().getLevel(dimension);
+        return dimension == null ? null : teams.server().getLevel(dimension);
+    }
+
+    /**
+     * 为这个城镇服务的能量塔数据：只认城镇所在维度里的塔，塔在别的维度时对这个城镇等于没有塔。塔拆掉以后数据还在，
+     * 但 {@code actualPos} 为空，调用方照旧检查。
+     * <p>
+     * The tower data that serves this town: only a tower in the town's own dimension counts, so one elsewhere is no
+     * tower at all here. A dismantled tower keeps its data with a null {@code actualPos}, which callers still check.
+     */
+    public static Optional<GeneratorData> townGenerator(TeamDataHolder owner) {
+        if (owner == null) return Optional.empty();
+        ResourceKey<Level> dimension = resolveTownDimension(owner);
+        return owner.getOptional(FHSpecialDataTypes.GENERATOR_DATA)
+                .filter(generator -> dimension != null && dimension.equals(generator.dimension));
     }
 
     boolean isCurrentExecutionContext(ServerLevel level, TeamDataHolder owner) {
@@ -830,9 +871,8 @@ public class TeamTownData implements com.teammoeg.chorda.dataholders.PersistentC
     /**
      * 返回与当前建筑集合一致的权威岗位计划。
      * <p>
-     * 读取前会执行轻量规范化：移除已拆除或不再属于工作建筑的条目，并把尚未进入
-     * 计划的新工作建筑追加到队尾。旧存档中的空计划也在这里完成惰性迁移。因此调用方
-     * 不应缓存旧的计划对象，而应在需要显示或编辑时重新读取。
+     * 加载与建筑注册变化通过 {@link #prepareAssignments()} 对齐计划；读取不修改
+     * 状态。客户端使用服务端下发的队列与保障人数，不从本日名册推断玩家目标。
      *
      * @return 当前规范化后的不可变岗位计划
      */
@@ -847,7 +887,11 @@ public class TeamTownData implements com.teammoeg.chorda.dataholders.PersistentC
      */
     private void normalizeStaffingPlan() {
         TownStaffingPlan normalized = staffingPlan.normalize(buildings, buildingStore::preservesReference);
-        if (!normalized.equals(staffingPlan)) { staffingPlan = normalized; persistentChanged(); }
+        if (!normalized.equals(staffingPlan)) {
+            staffingPlan = normalized;
+            dataSyncCache.staffingPlanChanged |= serverTracking;
+            persistentChanged();
+        }
     }
 
     /**
@@ -929,6 +973,8 @@ public class TeamTownData implements com.teammoeg.chorda.dataholders.PersistentC
     }
 
     void prepareView(ServerLevel level, TeamDataHolder teamData) {
+        // Directions follow only a tower in the town's own dimension.
+        followTower(townGenerator(teamData).map(generator -> generator.actualPos).orElse(null));
         prepareBuildingGeometry();
         TeamTown town = new TeamTown(this);
         town.prepareWarehouseTopology(executionDimension(teamData));
@@ -944,7 +990,29 @@ public class TeamTownData implements com.teammoeg.chorda.dataholders.PersistentC
         }
     }
 
-    public void tick(ServerLevel level, TeamDataHolder teamData) { TownSync.tick(this, level, teamData); }
+    private final transient com.teammoeg.frostedheart.content.town.block.blockscanner.TownConnectivity connectivity =
+            new com.teammoeg.frostedheart.content.town.block.blockscanner.TownConnectivity();
+
+    public com.teammoeg.frostedheart.content.town.block.blockscanner.TownConnectivity connectivityView() { return connectivity; }
+    /** The road view version last seen by {@link #tick}; null only for a brand-new town before its first tick. */
+    private transient UUID roadVersion;
+
+    public void tick(ServerLevel level, TeamDataHolder teamData) {
+        connectivity.tick(level, townGenerator(teamData).map(g -> g.actualPos).orElse(null), buildings);
+        // The road view is saved: a new one makes the town worth saving.
+        if (!connectivity.version().equals(roadVersion)) {
+            boolean first = roadVersion == null;
+            roadVersion = connectivity.version();
+            if (!first) persistentChanged();
+        }
+        int dispatchWorkers = buildings.values().stream()
+                .filter(com.teammoeg.frostedheart.content.town.buildings.dispatch.LaborDispatchBuilding.class::isInstance)
+                .map(com.teammoeg.frostedheart.content.town.buildings.dispatch.LaborDispatchBuilding.class::cast)
+                .mapToInt(building -> building.availableWorkers(createTeamTown())).sum();
+        teamData.getData(FHSpecialDataTypes.LABOUR_DATA).setExtraProviderValue(
+                com.teammoeg.frostedheart.content.robotics.LaborTypes.WORKER, dispatchWorkers);
+        TownSync.tick(this, level, teamData);
+    }
 
     private void flushChanges(ServerLevel level, TeamDataHolder teamData) { TownSync.flushChanges(this, level, teamData); }
 
@@ -956,7 +1024,8 @@ public class TeamTownData implements com.teammoeg.chorda.dataholders.PersistentC
      */
     public void tickSecond(ServerLevel world, TeamDataHolder teamData) {
         //if (!FHConfig.SERVER.TOWN.enableTownTick.get()) return;
-        Optional<GeneratorData> genDataOpt = teamData.getOptional(FHSpecialDataTypes.GENERATOR_DATA);
+        // A tower in another dimension is not this town's tower, so it is neither driven nor watched from here.
+        Optional<GeneratorData> genDataOpt = townGenerator(teamData);
         if (genDataOpt.isPresent()) {
             GeneratorData genData = genDataOpt.get();
             if (genData.actualPos != null) {
@@ -966,6 +1035,12 @@ public class TeamTownData implements com.teammoeg.chorda.dataholders.PersistentC
             // the last active flag from before the multiblock was broken.
             queueTowerServiceCrossing(world, genData.actualPos != null && genData.isActive);
         }
+    }
+
+    /** Queues a generator threshold warning through the existing tower popup channel. */
+    public void queueTowerOverdriveWarning(TownSignalEvent.Type type) {
+        pendingTowerTipSignals.add(new TownSignalNotice(
+                type, TownSignalEventModel.defaultSeverity(type), 1));
     }
 
     private void queueTowerServiceCrossing(ServerLevel world, boolean active) {
@@ -988,6 +1063,8 @@ public class TeamTownData implements com.teammoeg.chorda.dataholders.PersistentC
     private void flushTownTipNotifications(TeamDataHolder teamData) { TownSync.flushTownTipNotifications(this, teamData); }
 
     public TownSettlement.Result tickMorning(ServerLevel world, TeamDataHolder teamData) {
+        // Buildings from saves made before numbers were kept get theirs at the first morning.
+        com.teammoeg.frostedheart.content.town.building.TownBuildingNumbers.assignMissing(buildings);
         return TownSettlement.advanceOneDay(this, world, teamData, java.util.OptionalLong.empty());
     }
 
@@ -1018,7 +1095,7 @@ public class TeamTownData implements com.teammoeg.chorda.dataholders.PersistentC
     PreparedDayCommit prepareDayCommit(ServerLevel world, TeamDataHolder teamData) {
 
         long day = TownHistoryModel.nextSettlementDay(history, WorldClimate.getWorldDay(world));
-        Optional<GeneratorData> generator = teamData.getOptional(FHSpecialDataTypes.GENERATOR_DATA);
+        Optional<GeneratorData> generator = townGenerator(teamData);
         BlockPos fallback = generator.filter(value -> value.actualPos != null)
                 .map(value -> value.actualPos)
                 .orElseGet(() -> buildings.keySet().stream().findFirst().orElse(BlockPos.ZERO));
@@ -1620,6 +1697,41 @@ public class TeamTownData implements com.teammoeg.chorda.dataholders.PersistentC
     /** Client-side authoritative town-name update. */
     public void applyNameUpdate(String updatedName) {
         this.name = updatedName;
+        com.teammoeg.frostedheart.content.town.client.TownClientUpdates.nameUpdated();
+    }
+
+    /**
+     * 能量塔的位置，只用来给建筑标方位。服务端每刻从队伍的能量塔数据抄一份，变了就同步给成员；不存盘。
+     * <p>
+     * Where the energy tower stands, used only to tell which part of town a building is in. The server copies it from
+     * the team's tower data every tick and sends changes to members; it is not saved.
+     */
+    @javax.annotation.Nullable
+    private BlockPos towerPos;
+    private boolean towerChanged;
+
+    @javax.annotation.Nullable
+    public BlockPos getTowerPos() {
+        return towerPos;
+    }
+
+    /** Server side: follows the team's tower; a change goes out with the next flush. */
+    void followTower(@javax.annotation.Nullable BlockPos pos) {
+        BlockPos next = pos == null ? null : pos.immutable();
+        if (Objects.equals(next, towerPos)) return;
+        towerPos = next;
+        towerChanged = true;
+    }
+
+    boolean drainTowerChange() {
+        boolean changed = towerChanged;
+        towerChanged = false;
+        return changed;
+    }
+
+    /** Client-side tower position from the server. */
+    public void applyTowerUpdate(@javax.annotation.Nullable BlockPos pos) {
+        this.towerPos = pos;
     }
 
     /** Client-side idempotent history merge; retransmitted entries replace by town day. */
@@ -1657,6 +1769,8 @@ public class TeamTownData implements com.teammoeg.chorda.dataholders.PersistentC
         Set<BlockPos> changedBuildingPos = new HashSet<>();
         Set<BlockPos> changedBuildingZonePos = new HashSet<>();
         boolean transportStateChanged;
+        boolean staffingPlanChanged;
+        boolean housingPlanChanged;
 
         /**
          * 上次已通过增量包同步给客户端的资源值快照（仅服务端维护）。
@@ -1791,7 +1905,8 @@ public class TeamTownData implements com.teammoeg.chorda.dataholders.PersistentC
          */
         public boolean hasChanges() {
             return !changedBuildingPos.isEmpty() || !changedResidentUUID.isEmpty()
-                    || !changedResourceKey.isEmpty() || transportStateChanged;
+                    || !changedResourceKey.isEmpty() || transportStateChanged
+                    || staffingPlanChanged || housingPlanChanged;
         }
 
         /**
@@ -1802,6 +1917,8 @@ public class TeamTownData implements com.teammoeg.chorda.dataholders.PersistentC
             changedResidentUUID.clear();
             changedResourceKey.clear();
             transportStateChanged = false;
+            staffingPlanChanged = false;
+            housingPlanChanged = false;
         }
 
 

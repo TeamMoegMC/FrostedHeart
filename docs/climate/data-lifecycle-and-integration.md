@@ -1,11 +1,11 @@
 # Climate Data And Lifecycle
 
 - Status: `Transitional; material lifecycle integration is under validation`
-- Last verified: `2026-11-07` for infrared bandwidth, overlapping windows and display-cache lifecycle; `2026-11-06` for completed-enthalpy phase submission, infrared request completion and topology retirement invalidation; `2026-11-05` for body packet v2 and the orb's separate display conversion; `2026-10-29` for current runtime selection and gameplay entry call-chain review; `2026-10-22` for inactive player simulator removal; `2026-10-18` for phase-temperature and icicle receipt integration. Other sections retain their earlier verification scope.
+- Last verified: `2026-11-08` for infrared receipt-driven streaming, progressive GPU uploads and five real-client WAN scenarios; `2026-11-07` for infrared bandwidth, overlapping windows and display-cache lifecycle; `2026-11-06` for completed-enthalpy phase submission, infrared request completion and topology retirement invalidation; `2026-11-05` for body packet v2 and the orb's separate display conversion; `2026-10-29` for current runtime selection and gameplay entry call-chain review; `2026-10-22` for inactive player simulator removal; `2026-10-18` for phase-temperature and icicle receipt integration. Other sections retain their earlier verification scope.
 - Scope: recipe/configuration ownership, capabilities, server lifecycle, thermal runtime integration, and network boundaries
-- Primary code anchors: `FHRecipeCachingReloadListener`, `WorldTemperature`, `MinecraftThermalEvents`, `MinecraftThermalInput`, `MinecraftPhaseController.temperature`, `ThermalWorkerPool`, `LevelChunkSectionMixin_ThermalInput`, `FHCapabilities`, `FHNetwork`
+- Primary code anchors: `FHRecipeCachingReloadListener`, `WorldTemperature.getTempAtBlock/samplePlayerAirTemperature`, `MinecraftThermalEvents`, `MinecraftThermalInput`, `MinecraftPhaseController.tryAtRandomTick`, `ThermalWorkerPool`, `LevelChunkSectionMixin_ThermalInput`, `FHCapabilities`, `FHNetwork`
 
-源码、已加载数据包和服务端配置是最终权威；本文只记录接入顺序。当前Page、source、solver和query合同见[运行时控制](thermal-runtime-control.md)。2026-10-29只读核对确认玩家更新/同步、篝火及三类供热设备、作物通用环境、蓄热物品、材料相变和Forge保存生命周期都有实际调用者；城镇房屋/狩猎建筑通过BlockScanner.sampleTemperature调用gameplayPassiveEnvironment。本次未逐项重跑这些玩法，也不将代码接入等同于百人整包资格。
+源码、已加载数据包和服务端配置是最终权威；本文只记录接入顺序。当前Page、source、solver和query合同见[运行时控制](thermal-runtime-control.md)。2026-10-29只读核对确认玩家更新/同步、篝火及三类供热设备、作物通用环境、蓄热物品、材料相变和Forge保存生命周期都有实际调用者；城镇房屋和狩猎建筑的 `BlockScanner.sampleTemperature` 通过 `WorldTemperature.getTempAtBlock` 读取室内环境。本次未逐项重跑这些玩法，也不将代码接入等同于百人整包资格。
 
 ## Data Ownership
 
@@ -132,7 +132,7 @@ physical inputs only. Every item query composes the current world-owned
 `MinecraftGameplayFields` at its exact receiver position, including when the
 physical runtime is absent; runtime close does not discard generator floors.
 
-Player environment sampling uses `MinecraftThermalInput.gameplayPlayerEnvironment`.
+Player environment sampling uses `WorldTemperature.samplePlayerAirTemperature`.
 The historical `TemperatureThreadingPool`, `SurroundingTemperatureSimulator`,
 `CachedBlockTempInfo`, and `BlockInfoCachePolicy` remain in source separately
 from the shared-grid thermal runtime. Active player sampling does not dispatch
@@ -293,10 +293,7 @@ replacement/mass changes whose target still has material; removal does not query
 SavedData；警告时间使用 vanilla scheduled block ticks，外观/预警/材料更新标记使用
 BlockState，坠落使用 vanilla falling-block NBT。规则与验证入口见 [icicle.md](icicle.md)。
 
-`SoilThermometer`的方块测量读取`WorldTemperature.material`，不可用时显示明确提示。
-`SoilThermometerRequestPacket`仍读取`WorldTemperature.block`，因为这条网络路径服务于
-作物生长环境HUD；它不是材料温度计读数。红外仍使用材料基础值与既有解析场显示合成，
-本轮未修改shader、色标、0.43融合或蓝色缺值占位。
+土壤温度计右键通过 `WorldTemperature.getTempAtBlock(level, pos, materialSample)` 先读材料温度，读不到时显示「此处环境气温」。数值经 `FHTemperatureDisplayPacket` 交给客户端按玩家单位设置显示。作物悬浮提示以同一顺序读取作物位置的生长温度，换目标立即请求，持续瞄准时每 20 tick 刷新一次，按返回坐标匹配。红外以材料值合成解析场，屋檐与露天列使用本列覆盖厚度。
 
 红外也可读取同一个休眠容器中的`MaterialSectionState`；活动材料优先，保存记录只补充
 未驻留Brick。请求和响应增加`storedEpoch`，用于变化、删除和Chunk替换后的增量刷新；
@@ -309,11 +306,11 @@ BlockState，坠落使用 vanilla falling-block NBT。规则与验证入口见 [
 选一列，以MOTION_BLOCKING高度图定位，只让命中的表面水调用同一入口；冻结不要求降水。
 `StateTransitionData.hasRandomTransitions`使水不增加方块随机资格，也不在其他方块
 开启的Section中进入通用相变抽样；重载资格变化比较使用同一判断。独立水温/目标算法没有恢复。
-地表积雪/降水与岩浆原生点火继续执行。无记录相变使用编译边做环境平衡近似。
+地表积雪/降水与岩浆原生点火继续执行。无记录相变按当地环境初始化焓，把未完成的潜热进度存回已有区块附件。
 无H记录的自然冻结继续检查 `world_conditions.fluid_boundary_tag`；在线/休眠的完成相变
 按已完成H兑现，不再因这项启动几何约束等待岸边。休眠入口检查完成度，世界转换沿原
 `THERMAL_TRANSITION` 交接原H；其他明确世界限制保留，见[相变提交](thermal-residual-lifecycle.md#自然冻结启动与已完成相变提交)。
-薄冰热裂与裂纹修复通过 `MinecraftPhaseController.temperature` 读取相同的材料温度：
+薄冰热裂与裂纹修复共同使用 `WorldTemperature.getTempAtBlock(level, pos, PHASE_CHANGE)`。
 活动/休眠本体优先，确实无记录时共用原位环境回退；归属未发布或记录不匹配时等待。
 其每级 1/4 相变预算与部分进度见 [thin-ice.md](thin-ice.md)。
 `DEFERRED`只拦截旧温度转换，保留非相变随机行为；`CHANGED`才终止旧状态的后续回调。
@@ -345,8 +342,10 @@ server component instead of using this packet.
 
 `FHRequestInfraredViewDataSyncPacket` carries requestId, forceFull, committed
 display generation/center, material epoch, material presence, known readability,
-previous field footprint, dormant revision/sample tick and `knownDisplayRequestId`.
-The latter is the last data transaction committed at LAST; an ACK does not advance it.
+previous field footprint, dormant revision/sample tick, `knownDisplayRequestId` and
+`knownNaturalRevision`. `knownDisplayRequestId` is the last data transaction committed at LAST; an ACK does not
+advance it. `knownNaturalRevision` is the `InfraredNaturalClimate` content hash the client holds (0 for none,
+`UNTRACKED` for callers that never resend for it); a different value makes an otherwise empty reply non-empty.
 Masks use one-byte empty, dense twelve-long, or ascending sparse Page-index delta
 encoding, selecting sparse only when smaller. An omitted response presence differs
 from a transmitted empty mask: the former preserves presence, the latter clears it.
@@ -363,9 +362,11 @@ recipe invalidation cancel the pending identity and allow a fresh request.
 material epoch and FULL/FIRST/LAST/ACK/READABLE flags, optional changed/full material
 presence, the complete current field footprint, and final display Brick records.
 Empty field footprint explicitly clears its baseline. Only LAST carries presence,
-field footprint and dormant revision/sample tick; intermediate parts carry their
+field footprint and dormant revision/sample tick; only FIRST carries the optional `InfraredNaturalClimate` (covered
+climate per cover for each window chunk, superflat flag, lower clamp) from which the client computes the natural
+temperature of blocks without a value; intermediate parts carry their
 identity, center, generation, material epoch, flags and Brick payload. READABLE describes physical input availability; a field-only or empty
-full is a valid display transaction. There is no background key/grid or separate
+full is a valid display transaction. There is no background value grid or separate
 material-update/control transaction. Matching packet implementations are required
 on both endpoints. If capture returns null because nothing changed or a coherent
 snapshot is temporarily unavailable, the server sends an ACK through the same
@@ -391,15 +392,15 @@ until their last observer releases them. A cache miss, eviction or unknown token
 resends actual values. It is acceleration data, never a physical temperature
 authority or a second full mirror per player. Logout, dimension change, actual
 Level unload and server close release the corresponding entries. The production
-entry point is `MinecraftThermalInput.gameplayInfraredSnapshot(ServerPlayer,
+entry point is `MinecraftThermalInput.captureInfraredSnapshot(ServerPlayer,
 FHRequestInfraredViewDataSyncPacket)`; the raw-baseline overload does not use this cache.
 
 `InfraredWindow` remaps presence and the old field footprint by absolute Section.
 When all center offsets are below nine Sections, overlapping windows use delta:
 existing samples are retained and entering/changed regions are sent. At FIRST the
 client shifts its existing CPU mirror in place and fills entering space INVALID;
-at LAST it uploads the moved mirror and commits the new origin. GPU data remains
-at its old origin until that commit. A non-overlapping jump, generation change or
+the moved mirror is uploaded at FIRST and subsequent changed Pages are uploaded
+per part. LAST commits the complete delta baseline. A non-overlapping jump, generation change or
 invalid baseline uses full. Moving still performs a full local texture upload;
 this change saves network data, not that upload.
 Local geometry mutation keeps unchanged bodies readable from the last Page publication;
@@ -407,9 +408,9 @@ the existing material journal excludes replacements and sends affected Brick del
 `QueryPublication.installRegions` invalidates the removed regions' old Page/Brick footprint
 as well as the added footprint. A shrinking or retired region therefore sends explicit
 INVALID records for missing materials even when another region keeps Page presence true.
-Concurrent publication/slot mismatches retry the entire snapshot twice, then send
-nothing rather than a false removal; the client retains its committed texture and
-requests again on its normal schedule. A stably invalid or over-age physical input
+Concurrent publication/slot mismatches retry the entire snapshot twice, then
+return null for a compact ACK rather than a false removal; the client retains its
+display and requests again on its normal schedule. A stably invalid or over-age physical input
 transitions to a field-only full. An unchanged
 unreadable state can continue delta. Readability recovery and generation changes
 force full. No field can be hidden solely because physical presence is empty.
@@ -417,11 +418,20 @@ force full. No field can be hidden solely because physical presence is empty.
 `InfraredBrickCodec` uses 0.25°C final quantization and INVALID/UNIFORM/INDEXED/RAW.
 Full can omit INVALID after clearing the mirror; all deltas use explicit INVALID
 for removal, including Page replacement. The client never erases field display
-based on material-presence changes. Parts split at Page boundaries within 960 KiB
-including 2,048 reserved header bytes. TCP supplies order, requestId identity.
-FIRST validates/starts CPU staging; LAST commits origin, both masks, material
-epoch/readability and generation, then uploads. Previous GPU data remains at its
-old origin until commit. A field-only full establishes the display baseline;
+based on material-presence changes. Parts split at Page boundaries within 32 KiB
+for the first response and 128 KiB thereafter, including 2,048 reserved header bytes. Nearby Sections encode first. TCP supplies
+order and requestId supplies identity. `InfraredTransfers` initially sends one
+part; `FHContinueInfraredViewPacket` receipts each received part before the next
+can enter the connection. LAST also has a final receipt that releases the reply.
+FIRST validates/starts CPU staging, selects its display origin and uploads the
+received data (INVALID for missing cells); subsequent parts upload dirty Pages.
+LAST commits both masks, material epoch/readability, generation and the complete
+display token. A partial GPU display cannot become a delta baseline. The stream
+retains physical infrared change tracking once per game second until its final
+receipt, without starting a runtime. Cancellation, replacement, logout, dimension
+change, Level unload and stop clear retained replies. A missing continuation
+state sends ACK so the client can recover with full. The network protocol suffix
+is `:infrared-stream-1`. A field-only full establishes the display baseline;
 materialReadable=false does not trigger perpetual full retries or disable shader
 sampling. There is still only one 144³ mirror and one temperature texture, with
 an 8 KiB scratch for partial Page uploads.
@@ -431,7 +441,7 @@ full, while retaining the visible GPU image until replacement. World reset clear
 request/field state and detaches existing GPU handles before deletion. No background
 resources exist. Missing data uses the original blue placeholder and keeps the
 scan complete. Closed clients stop polling; material comparisons stop after the
-last request's 80-tick activity window. Unchanged windows send compact ACKs;
+last request/transfer's 80-tick activity window. Unchanged windows send compact ACKs;
 field composition still scans its refreshed Page area, while traffic follows
 changed final encoded Bricks and metadata. Shader scope
 and approximations are in [world temperature](world-climate-and-temperature.md).

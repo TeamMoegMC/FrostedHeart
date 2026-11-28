@@ -111,11 +111,12 @@ public class ResearchHooks {
 			}
 		}
 		if (i.getItem() instanceof RubbingTool) {
-			if (!RubbingTool.hasResearch(i)) {
-				return current != null;
+			if (RubbingTool.getTeam(i) == null) {
+				return current != null && RubbingTool.getPoint(i) <= 0;
 			}
 			Research bound = FHResearch.getResearch(RubbingTool.getResearch(i));
-			return bound != null && RubbingTool.getPoint(i) > 0
+			return ClientResearchDataAPI.getData().team().getId().equals(RubbingTool.getTeam(i))
+					&& bound != null && RubbingTool.getPoint(i) > 0
 					&& data.getData(bound).canResearch() && !data.getData(bound).isCompleted();
 		}
 		for (InspireRecipe ir : CUtils.filterRecipes(null, InspireRecipe.TYPE)) {
@@ -329,6 +330,17 @@ public class ResearchHooks {
 
 	public static ItemStack submitItem(ServerPlayer s, ItemStack i) {
 		TeamDataClosure<TeamResearchData> trd = ResearchDataAPI.getData(s);
+        if (i.getItem() instanceof RubbingTool) {
+            var boundTeam = RubbingTool.getTeam(i);
+            if (boundTeam == null) {
+                Research current = trd.get().getCurrentResearchValue();
+                if (RubbingTool.getPoint(i) <= 0 && current != null
+                        && trd.get().getData(current).canResearch() && !trd.get().getData(current).isCompleted())
+                    RubbingTool.bind(i, current.getId(), trd.team().getId());
+                return i;
+            }
+            if (!trd.team().getId().equals(boundTeam)) return i;
+        }
 		Supplier<Research> curr = trd.get().getCurrentResearch();
 		Research rs=curr.get();
 		if (rs!=null)
@@ -349,7 +361,7 @@ public class ResearchHooks {
 					return i;
 				}
 				if(rs!=null) {
-					RubbingTool.setResearch(i, rs.getId());
+					RubbingTool.bind(i, rs.getId(), trd.team().getId());
 					return i;
 				}
 			}

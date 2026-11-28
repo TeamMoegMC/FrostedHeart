@@ -1,0 +1,513 @@
+{
+  "status": "verified; actual eating works for tested foods; static-food maintenance deficit remains",
+  "date": "2026-11-09",
+  "author": "Codex; OpenAI GPT-6; investigation collaborator",
+  "environment": {
+    "minecraft": "1.20.1",
+    "forge": "47.3.0",
+    "java": 17,
+    "cauponaArtifact": "curse.maven:caupona-656147:6406685",
+    "gainRate": 0.12,
+    "consumptionRate": 0.03,
+    "beneficialSoupModifier": 1.2
+  },
+  "validation": {
+    "requiredGameTestsPassed": 1,
+    "realItemUseCases": 11,
+    "realHungerAndMealCycles": 1,
+    "namespace": "frostedheart_nutrition_eating"
+  },
+  "results": [
+    {
+      "case": "beef-last-item",
+      "profile": {
+        "fat": 0.0,
+        "carbohydrate": 0.0,
+        "protein": 60.0,
+        "vegetable": 0.0
+      },
+      "foodPropertiesHunger": 8,
+      "hungerBefore": 12,
+      "hungerAfter": 20,
+      "before": {
+        "fat": 15.0,
+        "carbohydrate": 15.0,
+        "protein": 15.0,
+        "vegetable": 15.0
+      },
+      "after": {
+        "fat": 15.0,
+        "carbohydrate": 15.0,
+        "protein": 15.576,
+        "vegetable": 15.0
+      },
+      "expected": {
+        "fat": 15.0,
+        "carbohydrate": 15.0,
+        "protein": 15.576,
+        "vegetable": 15.0
+      },
+      "maxHealthAfter": 10.0,
+      "menuProteinEncoded": 1557,
+      "menuVegetableEncoded": 1500,
+      "menuVegetableDisplayed": "15.0%",
+      "remainingHandStack": "0 air",
+      "elapsedPlayerTicks": 32
+    },
+    {
+      "case": "beef-two-items",
+      "profile": {
+        "fat": 0.0,
+        "carbohydrate": 0.0,
+        "protein": 60.0,
+        "vegetable": 0.0
+      },
+      "foodPropertiesHunger": 8,
+      "hungerBefore": 12,
+      "hungerAfter": 20,
+      "before": {
+        "fat": 15.0,
+        "carbohydrate": 15.0,
+        "protein": 15.0,
+        "vegetable": 15.0
+      },
+      "after": {
+        "fat": 15.0,
+        "carbohydrate": 15.0,
+        "protein": 15.576,
+        "vegetable": 15.0
+      },
+      "expected": {
+        "fat": 15.0,
+        "carbohydrate": 15.0,
+        "protein": 15.576,
+        "vegetable": 15.0
+      },
+      "maxHealthAfter": 10.0,
+      "menuProteinEncoded": 1557,
+      "menuVegetableEncoded": 1500,
+      "menuVegetableDisplayed": "15.0%",
+      "remainingHandStack": "1 cooked_beef",
+      "elapsedPlayerTicks": 32
+    },
+    {
+      "case": "beef-one-missing-hunger",
+      "profile": {
+        "fat": 0.0,
+        "carbohydrate": 0.0,
+        "protein": 60.0,
+        "vegetable": 0.0
+      },
+      "foodPropertiesHunger": 8,
+      "hungerBefore": 19,
+      "hungerAfter": 20,
+      "before": {
+        "fat": 15.0,
+        "carbohydrate": 15.0,
+        "protein": 15.0,
+        "vegetable": 15.0
+      },
+      "after": {
+        "fat": 15.0,
+        "carbohydrate": 15.0,
+        "protein": 15.072,
+        "vegetable": 15.0
+      },
+      "expected": {
+        "fat": 15.0,
+        "carbohydrate": 15.0,
+        "protein": 15.072,
+        "vegetable": 15.0
+      },
+      "maxHealthAfter": 10.0,
+      "menuProteinEncoded": 1507,
+      "menuVegetableEncoded": 1500,
+      "menuVegetableDisplayed": "15.0%",
+      "remainingHandStack": "0 air",
+      "elapsedPlayerTicks": 32
+    },
+    {
+      "case": "carrot-one-missing-hunger",
+      "profile": {
+        "fat": 0.0,
+        "carbohydrate": 0.0,
+        "protein": 0.0,
+        "vegetable": 60.0
+      },
+      "foodPropertiesHunger": 3,
+      "hungerBefore": 19,
+      "hungerAfter": 20,
+      "before": {
+        "fat": 15.0,
+        "carbohydrate": 15.0,
+        "protein": 15.0,
+        "vegetable": 15.0
+      },
+      "after": {
+        "fat": 15.0,
+        "carbohydrate": 15.0,
+        "protein": 15.0,
+        "vegetable": 15.072
+      },
+      "expected": {
+        "fat": 15.0,
+        "carbohydrate": 15.0,
+        "protein": 15.0,
+        "vegetable": 15.072
+      },
+      "maxHealthAfter": 10.0,
+      "menuProteinEncoded": 1500,
+      "menuVegetableEncoded": 1507,
+      "menuVegetableDisplayed": "15.1%",
+      "remainingHandStack": "0 air",
+      "elapsedPlayerTicks": 32
+    },
+    {
+      "case": "bread",
+      "profile": {
+        "fat": 0.0,
+        "carbohydrate": 50.0,
+        "protein": 0.0,
+        "vegetable": 0.0
+      },
+      "foodPropertiesHunger": 5,
+      "hungerBefore": 12,
+      "hungerAfter": 17,
+      "before": {
+        "fat": 15.0,
+        "carbohydrate": 15.0,
+        "protein": 15.0,
+        "vegetable": 15.0
+      },
+      "after": {
+        "fat": 15.0,
+        "carbohydrate": 15.3,
+        "protein": 15.0,
+        "vegetable": 15.0
+      },
+      "expected": {
+        "fat": 15.0,
+        "carbohydrate": 15.3,
+        "protein": 15.0,
+        "vegetable": 15.0
+      },
+      "maxHealthAfter": 10.0,
+      "menuProteinEncoded": 1500,
+      "menuVegetableEncoded": 1500,
+      "menuVegetableDisplayed": "15.0%",
+      "remainingHandStack": "0 air",
+      "elapsedPlayerTicks": 32
+    },
+    {
+      "case": "apple",
+      "profile": {
+        "fat": 0.0,
+        "carbohydrate": 0.0,
+        "protein": 0.0,
+        "vegetable": 60.0
+      },
+      "foodPropertiesHunger": 4,
+      "hungerBefore": 12,
+      "hungerAfter": 16,
+      "before": {
+        "fat": 15.0,
+        "carbohydrate": 15.0,
+        "protein": 15.0,
+        "vegetable": 15.0
+      },
+      "after": {
+        "fat": 15.0,
+        "carbohydrate": 15.0,
+        "protein": 15.0,
+        "vegetable": 15.288
+      },
+      "expected": {
+        "fat": 15.0,
+        "carbohydrate": 15.0,
+        "protein": 15.0,
+        "vegetable": 15.288
+      },
+      "maxHealthAfter": 10.0,
+      "menuProteinEncoded": 1500,
+      "menuVegetableEncoded": 1528,
+      "menuVegetableDisplayed": "15.3%",
+      "remainingHandStack": "0 air",
+      "elapsedPlayerTicks": 32
+    },
+    {
+      "case": "baked-potato",
+      "profile": {
+        "fat": 0.0,
+        "carbohydrate": 40.0,
+        "protein": 0.0,
+        "vegetable": 20.0
+      },
+      "foodPropertiesHunger": 5,
+      "hungerBefore": 12,
+      "hungerAfter": 17,
+      "before": {
+        "fat": 15.0,
+        "carbohydrate": 15.0,
+        "protein": 15.0,
+        "vegetable": 15.0
+      },
+      "after": {
+        "fat": 15.0,
+        "carbohydrate": 15.24,
+        "protein": 15.0,
+        "vegetable": 15.12
+      },
+      "expected": {
+        "fat": 15.0,
+        "carbohydrate": 15.24,
+        "protein": 15.0,
+        "vegetable": 15.12
+      },
+      "maxHealthAfter": 10.0,
+      "menuProteinEncoded": 1500,
+      "menuVegetableEncoded": 1512,
+      "menuVegetableDisplayed": "15.1%",
+      "remainingHandStack": "0 air",
+      "elapsedPlayerTicks": 32
+    },
+    {
+      "case": "golden-apple-full-hunger",
+      "profile": {
+        "fat": 0.0,
+        "carbohydrate": 0.0,
+        "protein": 0.0,
+        "vegetable": 60.0
+      },
+      "foodPropertiesHunger": 4,
+      "hungerBefore": 20,
+      "hungerAfter": 20,
+      "before": {
+        "fat": 15.0,
+        "carbohydrate": 15.0,
+        "protein": 15.0,
+        "vegetable": 15.0
+      },
+      "after": {
+        "fat": 15.0,
+        "carbohydrate": 15.0,
+        "protein": 15.0,
+        "vegetable": 15.0
+      },
+      "expected": {
+        "fat": 15.0,
+        "carbohydrate": 15.0,
+        "protein": 15.0,
+        "vegetable": 15.0
+      },
+      "maxHealthAfter": 10.0,
+      "menuProteinEncoded": 1500,
+      "menuVegetableEncoded": 1500,
+      "menuVegetableDisplayed": "15.0%",
+      "remainingHandStack": "0 air",
+      "elapsedPlayerTicks": 32
+    },
+    {
+      "case": "beef-at-zero-reserves",
+      "profile": {
+        "fat": 0.0,
+        "carbohydrate": 0.0,
+        "protein": 60.0,
+        "vegetable": 0.0
+      },
+      "foodPropertiesHunger": 8,
+      "hungerBefore": 12,
+      "hungerAfter": 20,
+      "before": {
+        "fat": 0.0,
+        "carbohydrate": 0.0,
+        "protein": 0.0,
+        "vegetable": 0.0
+      },
+      "after": {
+        "fat": 0.0,
+        "carbohydrate": 0.0,
+        "protein": 0.576,
+        "vegetable": 0.0
+      },
+      "expected": {
+        "fat": 0.0,
+        "carbohydrate": 0.0,
+        "protein": 0.576,
+        "vegetable": 0.0
+      },
+      "maxHealthAfter": 1.0,
+      "menuProteinEncoded": 57,
+      "menuVegetableEncoded": 0,
+      "menuVegetableDisplayed": "0.0%",
+      "remainingHandStack": "0 air",
+      "elapsedPlayerTicks": 32
+    },
+    {
+      "case": "dynamic-meat-soup-bowl",
+      "profile": {
+        "fat": 0.0,
+        "carbohydrate": 0.0,
+        "protein": 72.0,
+        "vegetable": 0.0
+      },
+      "foodPropertiesHunger": 8,
+      "hungerBefore": 12,
+      "hungerAfter": 20,
+      "before": {
+        "fat": 15.0,
+        "carbohydrate": 15.0,
+        "protein": 15.0,
+        "vegetable": 15.0
+      },
+      "after": {
+        "fat": 15.0,
+        "carbohydrate": 15.0,
+        "protein": 15.6912,
+        "vegetable": 15.0
+      },
+      "expected": {
+        "fat": 15.0,
+        "carbohydrate": 15.0,
+        "protein": 15.6912,
+        "vegetable": 15.0
+      },
+      "maxHealthAfter": 10.0,
+      "menuProteinEncoded": 1569,
+      "menuVegetableEncoded": 1500,
+      "menuVegetableDisplayed": "15.0%",
+      "remainingHandStack": "1 bowl",
+      "elapsedPlayerTicks": 16
+    },
+    {
+      "case": "dynamic-meat-soup-last-thermos-serving",
+      "profile": {
+        "fat": 0.0,
+        "carbohydrate": 0.0,
+        "protein": 72.0,
+        "vegetable": 0.0
+      },
+      "foodPropertiesHunger": 8,
+      "hungerBefore": 12,
+      "hungerAfter": 20,
+      "before": {
+        "fat": 15.0,
+        "carbohydrate": 15.0,
+        "protein": 15.0,
+        "vegetable": 15.0
+      },
+      "after": {
+        "fat": 15.0,
+        "carbohydrate": 15.0,
+        "protein": 15.6912,
+        "vegetable": 15.0
+      },
+      "expected": {
+        "fat": 15.0,
+        "carbohydrate": 15.0,
+        "protein": 15.6912,
+        "vegetable": 15.0
+      },
+      "maxHealthAfter": 10.0,
+      "menuProteinEncoded": 1569,
+      "menuVegetableEncoded": 1500,
+      "menuVegetableDisplayed": "15.0%",
+      "remainingHandStack": "1 thermos",
+      "elapsedPlayerTicks": 32
+    },
+    {
+      "before": {
+        "fat": 70.0,
+        "carbohydrate": 70.0,
+        "protein": 70.0,
+        "vegetable": 70.0
+      },
+      "case": "real-eight-hunger-beef-cycle",
+      "afterMeal": {
+        "fat": 69.76001,
+        "carbohydrate": 69.76001,
+        "protein": 70.336006,
+        "vegetable": 69.76001
+      },
+      "afterHungerLoss": {
+        "fat": 69.76001,
+        "carbohydrate": 69.76001,
+        "protein": 69.76001,
+        "vegetable": 69.76001
+      },
+      "expected": {
+        "fat": 69.76,
+        "carbohydrate": 69.76,
+        "protein": 70.336,
+        "vegetable": 69.76
+      }
+    }
+  ],
+  "staticFoodAnalysis": {
+    "dataDirectory": "src/generated/resources/data/frostedheart/recipes/diet_value",
+    "profiles": 110,
+    "totalBelow100": 107,
+    "totalAt100": [
+      {
+        "item": "minecraft:cake",
+        "profile": {
+          "carbohydrate": 50.0,
+          "fat": 0,
+          "protein": 50.0,
+          "vegetable": 0
+        },
+        "total": 100.0
+      },
+      {
+        "item": "stone_age:cooked_fat",
+        "profile": {
+          "carbohydrate": 0,
+          "fat": 100,
+          "protein": 0,
+          "vegetable": 0
+        },
+        "total": 100
+      },
+      {
+        "item": "supplementaries:pancake",
+        "profile": {
+          "carbohydrate": 100,
+          "fat": 0,
+          "protein": 0,
+          "vegetable": 0
+        },
+        "total": 100
+      }
+    ],
+    "totalAbove100": 0,
+    "totalHistogram": {
+      "10": 21,
+      "20": 4,
+      "30": 22,
+      "40": 13,
+      "50": 16,
+      "55": 1,
+      "60": 23,
+      "70": 6,
+      "80": 1,
+      "100": 3
+    }
+  },
+  "maintenance": {
+    "perHungerTotalLossAcrossFourChannels": 0.12,
+    "perHungerTotalGainFormula": "gainRate * profile.total / 100",
+    "necessaryProfileTotalForNonnegativeAggregateBalance": 100,
+    "condition": "same hunger lost and restored; before bounds/clamping; necessary, not sufficient for each of four channels",
+    "scope": "the current 110 generated static profiles; dynamic soup/dish contents and external datapacks can differ"
+  },
+  "observedLowReserveCase": "All channels 0; one real cooked beef restores hunger 12 -> 20 and protein 0 -> 0.576; explicit recalculation still yields max health 1.",
+  "productionChangesThisInvestigation": false,
+  "limits": [
+    "The source and pack-defaults were verified in an isolated real Forge server; no live player save or deployed server config was available.",
+    "Soup fixture uses real Caupona NBT/API with one cooked-beef ingredient and healing 8; it does not represent every cooking recipe.",
+    "UI data-slot encoding and the same decimal formatting were observed; no physical-client rendering was performed.",
+    "This does not claim all foods in all modpacks have nutrition data or that the nutrition economy is balanced.",
+    "The user previously required current gameplay values to be preserved; no food data, rates, consequences, or formulas were retuned."
+  ],
+  "source": "src/gametest/java/com/teammoeg/frostedheart/content/health/NutritionEatingGameTests.java",
+  "rawLog": "build/nutrition-investigation/eating-runtime.log"
+}

@@ -57,7 +57,7 @@ ID。
 | `year`, `month`, `day`, `hour` | 由采样时的 `WorldClimate.getSec()` 建立 `WorldClockSource` 时间快照，再用 `getGameCalendar()` 获取显示日期；月份为 1–12 |
 | `biome`                        | 目标采样方块坐标的生物群系注册 ID                                                                              |
 | `climate`                      | `WorldClimate.getClimate(new ChunkPos(target))`，包含目标附近白幕影响；明确无事件为 `none`                        |
-| `temperature`                  | `WorldTemperature.block(world, targetBlockPos)`，摄氏度；仅有限采样值有效                                    |
+| `temperature`                  | `WorldTemperature.getTempAtBlock(world, targetBlockPos)`，有效读数为有限的摄氏度数值                                    |
 | `temperature_type`             | 与数值温度同一次采样；分类阈值见下文                                                                              |
 | `time_period`                  | 同一 `WorldClockSource` 小时的时段分类                                                                   |
 | `block_state.<property>`       | 仅方块观察，完成时实际 `BlockState` 每个属性的名称和值                                                              |

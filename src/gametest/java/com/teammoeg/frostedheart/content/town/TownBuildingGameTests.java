@@ -1,13 +1,17 @@
 package com.teammoeg.frostedheart.content.town;
 
+import static com.teammoeg.frostedheart.content.climate.WorldTemperature.BlockTemperatureUse.SURROUNDINGS;
+
 import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
+import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.town.block.AbstractTownBuildingBlockEntity;
 import com.teammoeg.frostedheart.content.town.block.OccupiedZoneInfo;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.BlockScanner;
+import com.teammoeg.frostedheart.content.town.block.blockscanner.SectionSnapshotCache;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.RoomPathfinder.OccupiedCell;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
 import com.teammoeg.frostedheart.content.town.building.BuildingRecordsCodec;
@@ -18,6 +22,7 @@ import com.teammoeg.frostedheart.content.town.buildings.hunting.HuntingBaseBlock
 import com.teammoeg.frostedheart.content.town.buildings.hunting.HuntingBaseBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBlockEntity;
+import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseBlockEntity;
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseBuilding;
 import com.teammoeg.frostedheart.content.town.citizen.sim.CitizenSimScheduler;
 import com.teammoeg.frostedheart.content.town.provider.TeamTownProvider;
@@ -187,6 +192,9 @@ public final class TownBuildingGameTests {
         raw.getList("blocks", Tag.TAG_COMPOUND).getCompound(0).getCompound("building")
                 .putString("dailyReport", "unreadable display data");
         TeamTownData repaired = replaceTown(fixture.holder(), raw);
+        // Road links are runtime state that a save never carries; link the reloaded house as the road scan would,
+        // so this checks what the repaired record itself restores.
+        repaired.buildings.get(home).setConnectivityWorkable(true);
         helper.assertTrue(repaired.buildings.get(home).isBuildingWorkable(),
                 "repairing a display report must preserve a habitable house");
         CompoundTag brokenContainer = encodedTown(repaired);
@@ -227,6 +235,7 @@ public final class TownBuildingGameTests {
         HouseBuilding alternate = alternateCore.getBuilding().orElseThrow();
         alternate.setInitialized(true);
         alternate.setIsStructureValid(true);
+        alternate.setConnectivityWorkable(true); // about rosters, not roads: link it as the road scan would
         alternate.setArea(64);
         alternate.setVolume(256);
         alternate.setTemperature(20);
@@ -368,7 +377,7 @@ public final class TownBuildingGameTests {
     }
 
     @GameTest(template = "phase0a_empty", timeoutTicks = 200)
-    public static void dimensionMismatchSurvivesPeriodicRegistryAndCoreQueries(GameTestHelper helper) {
+    public static void towerInAnotherDimensionLeavesTheTownRunning(GameTestHelper helper) {
         var fixture = TeamTownPersistenceGameTests.populatedTown(helper, "building-dimension-mismatch");
         var generator = fixture.holder().getData(FHSpecialDataTypes.GENERATOR_DATA);
         long townDay = fixture.town().getTownDay();
@@ -383,29 +392,39 @@ public final class TownBuildingGameTests {
         fixture.town().debugSpawnRefugeeBatch(wrongLevel, fixture.holder());
         helper.assertTrue(wrongLevel.getChunkSource().getLoadedChunksCount() == wrongWorldChunks,
                 "the debug entry must reject another world before querying terrain or climate");
-        generator.actualPos = null;
+        // The tower now stands in the Nether: it no longer serves the town, but the town keeps running where its
+        // buildings are, because a player may move or dismantle the tower at any time.
         generator.dimension = Level.NETHER;
         fixture.holder().setData(FHSpecialDataTypes.GENERATOR_DATA, generator);
         helper.runAfterDelay(25, () -> {
             CitizenSimScheduler.get(helper.getLevel()).refreshRegistryNow(helper.getLevel());
-            helper.assertTrue(TeamTownData.executionLevel(fixture.holder()) == null && !fixture.sim().isAdopted(),
-                    "periodic registry refresh must not reactivate a town in its tower's wrong dimension");
-            helper.assertTrue(!fixture.town().buildings.isEmpty(), "paused execution must retain building facts");
-            helper.assertTrue(fixture.town().tickMorning(helper.getLevel(), fixture.holder()) == TownSettlement.Result.SKIPPED
-                            && fixture.town().getTownDay() == townDay,
-                    "a mismatched tower must also pause direct manual settlement");
+            helper.assertTrue(TeamTownData.executionLevel(fixture.holder()) == helper.getLevel() && fixture.sim().isAdopted(),
+                    "a tower in another dimension must not stop the town in its buildings' world");
+            helper.assertTrue(TeamTownData.townGenerator(fixture.holder()).isEmpty(),
+                    "a tower in another dimension does not serve the town");
+            fixture.town().prepareView(helper.getLevel(), fixture.holder());
+            helper.assertTrue(fixture.town().getTowerPos() == null, "directions ignore a tower in another dimension");
+            // The fixture's house has no core block, so the morning may drop it; only the day itself is checked.
+            var settled = fixture.town().tickMorning(helper.getLevel(), fixture.holder());
+            helper.assertTrue(settled == TownSettlement.Result.COMMITTED,
+                    "the town keeps settling without a tower in its dimension, got " + settled);
+            helper.assertTrue(fixture.town().getTownDay() == townDay + 1,
+                    "the settlement without a tower in its dimension advances the day");
             generator.dimension = helper.getLevel().dimension();
             fixture.holder().setData(FHSpecialDataTypes.GENERATOR_DATA, generator);
             TownRuntimeManager.current().install(fixture.holder());
-            helper.assertTrue(fixture.sim().isAdopted(), "matching tower context must reconnect the original simulation");
+            fixture.town().prepareView(helper.getLevel(), fixture.holder());
+            helper.assertTrue(fixture.sim().isAdopted() && generator.actualPos.equals(fixture.town().getTowerPos()),
+                    "a tower back in the town's dimension serves it again, with the original simulation");
+            generator.actualPos = null; // no multiblock stands there; leave the fixture's tower dismantled
             helper.succeed();
         });
     }
 
-    @GameTest(template = "phase0a_empty", timeoutTicks = 200)
-    public static void realRoomScanTracksDoorBedAndStableRepeat(GameTestHelper helper) throws Exception {
-        TeamDataHolder holder = newTeam(helper, "real-room-scan");
-        BlockPos origin = helper.absolutePos(new BlockPos(2, 2, 2));
+    /**
+     * Builds a 5x3x5 stone room at origin+(1,1,1)..(5,3,5) with an oak door at origin+(3,1,0).
+     */
+    static BlockPos buildEnclosedRoom(GameTestHelper helper, BlockPos origin) {
         for (int x = 0; x <= 6; x++) {
             for (int y = 0; y <= 4; y++) {
                 for (int z = 0; z <= 6; z++) {
@@ -420,6 +439,40 @@ public final class TownBuildingGameTests {
                 Blocks.OAK_DOOR.defaultBlockState().setValue(DoorBlock.HALF, DoubleBlockHalf.LOWER));
         helper.getLevel().setBlockAndUpdate(door.above(),
                 Blocks.OAK_DOOR.defaultBlockState().setValue(DoorBlock.HALF, DoubleBlockHalf.UPPER));
+        return door;
+    }
+
+    @GameTest(template = "phase0a_empty", timeoutTicks = 200)
+    public static void warehouseCountsStorageRacksPlacedInTheRoom(GameTestHelper helper) {
+        TeamDataHolder holder = newTeam(helper, "warehouse-racks");
+        BlockPos origin = helper.absolutePos(new BlockPos(2, 2, 2));
+        buildEnclosedRoom(helper, origin);
+        var core = (WarehouseBlockEntity) placeCore(helper, holder, origin.offset(3, 0, 3), FHBlocks.WAREHOUSE.get());
+        WarehouseBuilding warehouse = core.getBuilding().orElseThrow();
+        core.refresh_safe(warehouse);
+        double emptyCapacity = warehouse.getCapacity();
+        helper.assertTrue(warehouse.isStructureValid() && warehouse.getDecorationAmount() == 0 && emptyCapacity > 0,
+                "an empty enclosed warehouse must be valid with only its room capacity");
+
+        var rack = FHBlocks.WAREHOUSE_STORAGE_RACK.get().defaultBlockState();
+        helper.getLevel().setBlockAndUpdate(origin.offset(2, 1, 4), rack); // free-standing on the floor
+        helper.getLevel().setBlockAndUpdate(origin.offset(1, 1, 1), rack); // in a corner, against two walls
+        helper.getLevel().setBlockAndUpdate(origin.offset(5, 1, 5), rack); // two-high stack in a corner
+        helper.getLevel().setBlockAndUpdate(origin.offset(5, 2, 5), rack);
+        core.refresh_safe(warehouse);
+        helper.assertTrue(warehouse.isStructureValid() && warehouse.getDecorationAmount() == 4,
+                "every rack residents can reach must count, got " + warehouse.getDecorationAmount());
+        helper.assertTrue(warehouse.getCapacity() > emptyCapacity + 3 * 512,
+                "four racks must outweigh the floor space they take, got " + warehouse.getCapacity()
+                        + " from " + emptyCapacity);
+        helper.succeed();
+    }
+
+    @GameTest(template = "phase0a_empty", timeoutTicks = 200)
+    public static void realRoomScanTracksDoorBedAndStableRepeat(GameTestHelper helper) throws Exception {
+        TeamDataHolder holder = newTeam(helper, "real-room-scan");
+        BlockPos origin = helper.absolutePos(new BlockPos(2, 2, 2));
+        BlockPos door = buildEnclosedRoom(helper, origin);
         BlockPos bed = origin.offset(2, 1, 3);
         helper.getLevel().setBlockAndUpdate(bed,
                 Blocks.RED_BED.defaultBlockState().setValue(BedBlock.FACING, Direction.SOUTH).setValue(BedBlock.PART, BedPart.FOOT));
@@ -428,9 +481,15 @@ public final class TownBuildingGameTests {
         var core = (HouseBlockEntity) placeCore(helper, holder, origin.offset(3, 0, 3), FHBlocks.HOUSE.get());
         HouseBuilding house = core.getBuilding().orElseThrow();
         core.refresh_safe(house);
+        house.setConnectivityWorkable(true); // about the room scan, not roads: link it as the road scan would
         holder.getData(FHSpecialDataTypes.TOWN_DATA).prepareView(helper.getLevel(), holder);
+        // The test world is too cold for a house, so habitability is judged at a controlled 20 C. The sampled value
+        // goes back afterwards, so the repeated scan below finds the room unchanged.
+        double sampled = house.getTemperature();
+        house.setTemperature(20);
         helper.assertTrue(house.isBuildingWorkable() && house.getBedCount() == 1 && house.hasEntrance(),
                 "a real enclosed room must yield a habitable house with bed and entrance layout");
+        house.setTemperature(sampled);
         saveTown(helper, holder);
         long encodings = holder.getData(FHSpecialDataTypes.TOWN_DATA).getBuildingStore().codecCalls();
         core.refresh_safe(house);
@@ -477,7 +536,7 @@ public final class TownBuildingGameTests {
         helper.assertTrue(nether != null, "the real server must provide the Nether fixture dimension");
         BlockPos samplePos = new BlockPos(8, 64, 8);
         nether.getChunkAt(samplePos);
-        float expected = com.teammoeg.frostedheart.content.climate.WorldTemperature.block(nether, samplePos);
+        float expected = (float) WorldTemperature.getTempAtBlock(nether, samplePos, SURROUNDINGS);
         var oneSample = new OccupiedZoneInfo(Set.of(new OccupiedCell(samplePos, 1, 1)));
         float sampled = BlockScanner.sampleTemperature(nether, oneSample);
         helper.assertTrue(Float.isFinite(sampled) && Math.abs(sampled - expected) < 0.0001F,
@@ -566,8 +625,141 @@ public final class TownBuildingGameTests {
             FHMain.LOGGER.info("TOWN_BUILDING_WORKLOAD buildings={} coldCaptureMs={} cachedCaptureMs={} oneChangedCaptureMs={} forcedSaveMs={} compressedFileBytes={}",
                     buildingCount, coldNanos / 1_000_000.0, cachedNanos / 1_000_000.0,
                     changedNanos / 1_000_000.0, saveNanos / 1_000_000.0, fileBytes);
+            // Measured: drop the town before its first tick, so later tests do not carry these far-off houses.
+            holder.removeData(FHSpecialDataTypes.TOWN_DATA);
         }
         helper.succeed();
+    }
+
+    private static Set<BlockPos> roadWorking(TeamDataHolder holder) {
+        return holder.getOptional(FHSpecialDataTypes.TOWN_DATA)
+                .map(data -> data.connectivityView().view().working()).orElse(Set.of());
+    }
+
+    /**
+     * Two far towns of 150 houses each link over a stone floor, lose their chunks and then change. While their
+     * terrain is not loaded they keep their links, and a one-building town built meanwhile gets its first road scan
+     * without waiting behind theirs.
+     */
+    @GameTest(template = "phase0a_empty", batch = "town_scan_unloaded", timeoutTicks = 1200)
+    public static void unloadedTownsKeepTheirLinksAndLeaveTheScanThreadsFree(GameTestHelper helper) {
+        var level = helper.getLevel();
+        List<TeamDataHolder> far = new java.util.ArrayList<>();
+        List<Set<BlockPos>> farHouses = new java.util.ArrayList<>();
+        Set<net.minecraft.world.level.ChunkPos> chunks = new java.util.HashSet<>();
+        for (int town = 0; town < 2; town++) {
+            TeamDataHolder holder = newTeam(helper, "unloaded-town-" + town);
+            BlockPos origin = new BlockPos(8000 + town * 512, 65, 8000);
+            // The test world has real terrain here: lay the floor and clear the space above it.
+            for (int x = -2; x <= 31; x++) {
+                for (int z = -2; z <= 21; z++) {
+                    BlockPos floor = origin.offset(x, -1, z);
+                    var chunk = new net.minecraft.world.level.ChunkPos(floor);
+                    if (chunks.add(chunk)) level.setChunkForced(chunk.x, chunk.z, true);
+                    level.setBlockAndUpdate(floor, Blocks.STONE.defaultBlockState());
+                    for (int y = 0; y <= 3; y++) level.setBlockAndUpdate(origin.offset(x, y, z), Blocks.AIR.defaultBlockState());
+                }
+            }
+            for (int index = 0; index < 150; index++) {
+                placeCore(helper, holder, origin.offset(index % 15 * 2, 0, index / 15 * 2), FHBlocks.HOUSE.get());
+            }
+            far.add(holder);
+            farHouses.add(Set.copyOf(holder.getData(FHSpecialDataTypes.TOWN_DATA).buildings.keySet()));
+        }
+        TeamDataHolder[] near = {null};
+        BlockPos nearHouse = helper.absolutePos(new BlockPos(2, 2, 2));
+        Runnable cleanup = () -> {
+            chunks.forEach(chunk -> level.setChunkForced(chunk.x, chunk.z, false));
+            far.forEach(holder -> holder.removeData(FHSpecialDataTypes.TOWN_DATA));
+            if (near[0] != null) near[0].removeData(FHSpecialDataTypes.TOWN_DATA);
+        };
+        helper.startSequence()
+                .thenWaitUntil(() -> {
+                    for (int town = 0; town < far.size(); town++) {
+                        helper.assertTrue(roadWorking(far.get(town)).containsAll(farHouses.get(town)),
+                                "wait for the far towns' first road scans, while their chunks are loaded");
+                    }
+                })
+                .thenExecute(() -> chunks.forEach(chunk -> level.setChunkForced(chunk.x, chunk.z, false)))
+                .thenWaitUntil(() -> helper.assertTrue(chunks.stream()
+                                .allMatch(chunk -> level.getChunkSource().getChunkNow(chunk.x, chunk.z) == null),
+                        "wait for the far towns' chunks to unload"))
+                .thenExecute(() -> {
+                    // A new record makes each far town due for a rescan while none of its terrain is loaded.
+                    for (int town = 0; town < far.size(); town++) {
+                        far.get(town).getData(FHSpecialDataTypes.TOWN_DATA).getBuildingStore()
+                                .install(new HouseBuilding(new BlockPos(8000 + town * 512, 65, 8040)));
+                    }
+                })
+                .thenIdle(5)
+                .thenExecute(() -> {
+                    near[0] = newTeam(helper, "loaded-town");
+                    placeCore(helper, near[0], nearHouse, FHBlocks.HOUSE.get());
+                    helper.runAfterDelay(40, () -> {
+                        if (!roadWorking(near[0]).contains(nearHouse)) {
+                            cleanup.run();
+                            helper.fail("a one-building town waited over 40 ticks behind unloaded towns' scans");
+                        }
+                    });
+                })
+                .thenWaitUntil(() -> helper.assertTrue(roadWorking(near[0]).contains(nearHouse),
+                        "wait for the near town's first road scan"))
+                .thenExecute(() -> {
+                    try {
+                        for (int town = 0; town < far.size(); town++) {
+                            var data = far.get(town).getData(FHSpecialDataTypes.TOWN_DATA);
+                            helper.assertTrue(farHouses.get(town).stream()
+                                            .allMatch(pos -> data.buildings.get(pos).isConnectivityWorkable()),
+                                    "a town nobody is near keeps the links its last scan found");
+                        }
+                        helper.succeed();
+                    } finally {
+                        cleanup.run();
+                    }
+                });
+    }
+
+    /**
+     * Three houses stand beside a stone path and a fourth stands far off, its chunks never loaded. Breaking the path
+     * to the third house unlinks it, although part of the town is out of range.
+     */
+    @GameTest(template = "phase0a_empty", batch = "town_scan_out_of_range", timeoutTicks = 400)
+    public static void brokenRoadUnlinksAlthoughPartOfTheTownIsOutOfRange(GameTestHelper helper) {
+        var level = helper.getLevel();
+        TeamDataHolder holder = newTeam(helper, "out-of-range-town");
+        TeamTownData data = holder.getData(FHSpecialDataTypes.TOWN_DATA);
+        for (int x = 1; x <= 14; x++) {
+            level.setBlockAndUpdate(helper.absolutePos(new BlockPos(x, 1, 3)), Blocks.STONE.defaultBlockState());
+        }
+        BlockPos first = helper.absolutePos(new BlockPos(2, 2, 4));
+        BlockPos second = helper.absolutePos(new BlockPos(6, 2, 4));
+        BlockPos third = helper.absolutePos(new BlockPos(12, 2, 4));
+        for (BlockPos pos : List.of(first, second, third)) placeCore(helper, holder, pos, FHBlocks.HOUSE.get());
+        BlockPos far = new BlockPos(12000, 65, 12000);
+        data.getBuildingStore().install(new HouseBuilding(far));
+        helper.startSequence()
+                .thenWaitUntil(() -> helper.assertTrue(roadWorking(holder).containsAll(List.of(first, second, third)),
+                        "wait for the path to link the three houses"))
+                .thenExecute(() -> {
+                    for (int x = 8; x <= 10; x++) {
+                        level.setBlockAndUpdate(helper.absolutePos(new BlockPos(x, 1, 3)), Blocks.AIR.defaultBlockState());
+                    }
+                })
+                // Scans read section copies that may lag a block change by DIRTY_TTL_TICKS plus GRACE_TICKS.
+                .thenIdle(SectionSnapshotCache.DIRTY_TTL_TICKS + SectionSnapshotCache.GRACE_TICKS + 20)
+                .thenExecute(() -> {
+                    // Terrain alone waits for the periodic rescan; a building change starts one now.
+                    data.getBuildingStore().install(new HouseBuilding(far.offset(0, 0, 64)));
+                })
+                .thenWaitUntil(() -> helper.assertTrue(!roadWorking(holder).contains(third)
+                                && !data.buildings.get(third).isConnectivityWorkable(),
+                        "the house cut off from the path stops working, although part of the town is out of range"))
+                .thenExecute(() -> {
+                    helper.assertTrue(roadWorking(holder).containsAll(List.of(first, second)),
+                            "the houses still on the path keep working");
+                    holder.removeData(FHSpecialDataTypes.TOWN_DATA);
+                    helper.succeed();
+                });
     }
 
     @GameTest(template = "phase0a_empty", batch = "townReload", timeoutTicks = 400)

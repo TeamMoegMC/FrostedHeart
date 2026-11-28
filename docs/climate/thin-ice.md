@@ -3,7 +3,7 @@
 - Status: `Partial`（此前 110 项回归通过；最新踩踏目标修正后的 8 项薄冰专项通过；客户端日志检查与裂纹资源校验通过，调浅观感、音效试听与性能实测待完成）
 - Last verified: `2026-10-21`（本轮核对跑步参数；测试结果沿用下文各次记录）
 - Scope: `frostedheart:thin_ice`、`frostedheart:layered_thin_ice` 的踩踏、冲击、温度裂纹与堆叠
-- Primary code anchors: `ThinIceBlock`、`LayeredThinIceBlock`、`ThinIceEvents`、`ThinIcePhaseData`、`MinecraftPhaseController.temperature`、`EntityMixin_ThinIceLanding`、`FHBlockStateGen.thinIce`、`ThinIceGameTests`
+- Primary code anchors: `ThinIceBlock`、`LayeredThinIceBlock`、`ThinIceEvents`、`ThinIcePhaseData`、`WorldTemperature.getTempAtBlock`、`EntityMixin_ThinIceLanding`、`FHBlockStateGen.thinIce`、`ThinIceGameTests`
 
 ## 阶段与踩踏
 
@@ -26,7 +26,7 @@
 
 `LivingJumpEvent` 起跳按高度 1 格冲击，落地用 `fallOn` 的实际坠落距离 h（格）；单层低表面通过 `EntityMixin_ThinIceLanding` 更正 `Entity.checkFallDamage` 中 `Block.fallOn` 的目标，补齐 legacy 采样落到下面方块的情况。此补丁在摔落伤害判断之前执行，创造模式免伤仍可产生冲击；它只更正单层采样错位，并且只调用一次 `fallOn`，不把同一次冲击传给下方的冰。h<1 没有冲击；否则推进 `floor(h/2)` 级，小数部分再作为概率推进一次。最多计算 4 级，足以破坏任何厚度。冲击绕过已有冷却；有效冲击后，只要冰仍存在，就重新开始 24 ticks 冷却，包括概率未造成裂纹的冲击。后续冲击仍能绕过。普通摔落伤害继续交给父类。
 
-两种方块机械破碎均无掉落，并检查六面相邻的实际 `minecraft:water` 方块（含水源、流水，含上下，不含含水方块）：有水则原位变水源，否则变空气。检查不主动加载邻区块。不传播裂纹。破碎粒子和声音使用 level event 2001；阶段声音仅在成功改变裂纹时播放，1/2 级音量 0.15，3 级 0.9，音调均为 1.0，音源 `FHSoundEvents.ICE_CRACKING`。一次冲击跨级仅播放结果阶段的声音。
+两种方块机械破碎均无掉落。完整薄冰检查六面相邻的实际 `minecraft:water` 方块（含水源、流水，含上下，不含含水方块）：有水则原位变水源，否则变空气。分层薄冰无论是否邻水，均按自身层数生成非水源流水：1～7 层对应流水 amount 1～7，8 层封顶为 amount 7，绝不直接生成水源。后续水流传播和水源再生仍遵循原版流体规则。检查不主动加载邻区块。不传播裂纹。破碎粒子和声音使用 level event 2001；阶段声音仅在成功改变裂纹时播放，1/2 级音量 0.15，3 级 0.9，音调均为 1.0，音源 `FHSoundEvents.ICE_CRACKING`。一次冲击跨级仅播放结果阶段的声音。
 
 分层可继续堆叠至 8 层。`LayeredThinIceBlock.inheritedCrack` 以
 `newCrack=ceil(oldCrack * newTotalStages / oldTotalStages)` 继承损伤比例；完好仍为完好，同一承受次数档位不改变损伤。已有冷却保持到期时间。
@@ -37,7 +37,7 @@
 
 - 热裂预算 Qh：完整薄冰 9°C 加热到水的端点能量差 /4；当前数据为 95000 J。
 - 修复预算 Qc：水源 -5°C 冷却到完整薄冰的端点能量差 /4；当前数据为 90800 J。
-- 相变温度 T：`MinecraftPhaseController.temperature(level, pos)`，读取薄冰自身位置。优先读取 `MinecraftThermalInput.sampleMaterial` 的活动材料或按现有相变规则投影的休眠材料温度；只有该位置确实没有材料热状态时，才使用与原材料随机相变共用的 `environmentTemperature`（原位 `naturalBlock + gameplayPassiveEnvironment`）回退。材料归属尚未发布或存档状态不匹配时暂停，保留进度等待后续随机刻，不改用空气温度。`WorldTemperature.block` 仍是环境接口，不能代替材料读取。
+- `WorldTemperature.getTempAtBlock(level, pos, PHASE_CHANGE)` 读取薄冰自身位置的相变温度 T。优先读取活动或按相变规则投影的休眠材料温度。确实没有材料热状态时按当地环境估算。材料归属尚未发布或存档状态不匹配时保留进度，等待后续随机刻。
 - 温暖上限：0<T<3°C 最多热裂 1 级，3≤T<6°C 最多 2 级，6≤T<9°C 最多 3 级；上限不超过该厚度的破碎所需次数，因此薄层可在 9°C 以下热裂破碎。已有更高机械损伤不会因上限较低而被修复。
 - T≥9°C 停止此裂纹预算推进，原有材料相变负责融化。完整薄冰原有目标为水，分层薄冰原有目标为空气；本次不改原有融化配方。
 - 修复仅在 T<-5°C、六面邻水且冰面没有可触发踩裂的活体时推进，一次预算恢复一级。-5°C 正好相等时没有净冷却功率。已有 -20°C 完整薄冰变普通冰的相变仍存在。

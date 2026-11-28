@@ -1,0 +1,17 @@
+{
+  "values": [
+    "minecraft:lectern",
+    "minecraft:cartography_table",
+    "minecraft:brewing_stand",
+    "minecraft:enchanting_table",
+    "minecraft:lantern",
+    "minecraft:soul_lantern",
+    "minecraft:decorated_pot",
+    "minecraft:chiseled_bookshelf",
+    "minecraft:jukebox",
+    "frostedresearch:experiment_table",
+    "#minecraft:flower_pots",
+    "#minecraft:candles",
+    "#minecraft:banners"
+  ]
+}

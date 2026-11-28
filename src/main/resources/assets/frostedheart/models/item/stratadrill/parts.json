@@ -1,0 +1,148 @@
+{
+  "loader": "forge:composite",
+  "textures": {
+    "particle": "frostedheart:item/stratadrill/cast_iron"
+  },
+  "item_render_order": [],
+  "children": {
+    "steam_fixed": {
+      "loader": "forge:obj",
+      "model": "frostedheart:models/item/stratadrill/steam.obj",
+      "automatic_culling": false,
+      "flip_v": true,
+      "emissive_ambient": false,
+      "render_type": "minecraft:solid",
+      "textures": {
+        "particle": "frostedheart:item/stratadrill/cast_iron"
+      },
+      "visibility": {
+        "steam_fixed": true,
+        "steam_crank": false,
+        "steam_rod": false,
+        "steam_piston": false
+      }
+    },
+    "steam_crank": {
+      "loader": "forge:obj",
+      "model": "frostedheart:models/item/stratadrill/steam.obj",
+      "automatic_culling": false,
+      "flip_v": true,
+      "emissive_ambient": false,
+      "render_type": "minecraft:solid",
+      "textures": {
+        "particle": "frostedheart:item/stratadrill/cast_iron"
+      },
+      "visibility": {
+        "steam_fixed": false,
+        "steam_crank": true,
+        "steam_rod": false,
+        "steam_piston": false
+      }
+    },
+    "steam_rod": {
+      "loader": "forge:obj",
+      "model": "frostedheart:models/item/stratadrill/steam.obj",
+      "automatic_culling": false,
+      "flip_v": true,
+      "emissive_ambient": false,
+      "render_type": "minecraft:solid",
+      "textures": {
+        "particle": "frostedheart:item/stratadrill/cast_iron"
+      },
+      "visibility": {
+        "steam_fixed": false,
+        "steam_crank": false,
+        "steam_rod": true,
+        "steam_piston": false
+      }
+    },
+    "steam_piston": {
+      "loader": "forge:obj",
+      "model": "frostedheart:models/item/stratadrill/steam.obj",
+      "automatic_culling": false,
+      "flip_v": true,
+      "emissive_ambient": false,
+      "render_type": "minecraft:solid",
+      "textures": {
+        "particle": "frostedheart:item/stratadrill/cast_iron"
+      },
+      "visibility": {
+        "steam_fixed": false,
+        "steam_crank": false,
+        "steam_rod": false,
+        "steam_piston": true
+      }
+    },
+    "diesel_fixed": {
+      "loader": "forge:obj",
+      "model": "frostedheart:models/item/stratadrill/diesel.obj",
+      "automatic_culling": false,
+      "flip_v": true,
+      "emissive_ambient": false,
+      "render_type": "minecraft:solid",
+      "textures": {
+        "particle": "frostedheart:item/stratadrill/cast_iron"
+      },
+      "visibility": {
+        "diesel_fixed": true,
+        "diesel_flywheel": false
+      }
+    },
+    "diesel_flywheel": {
+      "loader": "forge:obj",
+      "model": "frostedheart:models/item/stratadrill/diesel.obj",
+      "automatic_culling": false,
+      "flip_v": true,
+      "emissive_ambient": false,
+      "render_type": "minecraft:solid",
+      "textures": {
+        "particle": "frostedheart:item/stratadrill/cast_iron"
+      },
+      "visibility": {
+        "diesel_fixed": false,
+        "diesel_flywheel": true
+      }
+    },
+    "spiral": {
+      "loader": "forge:obj",
+      "model": "frostedheart:models/item/stratadrill/spiral.obj",
+      "automatic_culling": false,
+      "flip_v": true,
+      "emissive_ambient": false,
+      "render_type": "minecraft:solid",
+      "textures": {
+        "particle": "frostedheart:item/stratadrill/cast_iron"
+      }
+    },
+    "wheel_fixed": {
+      "loader": "forge:obj",
+      "model": "frostedheart:models/item/stratadrill/wheel.obj",
+      "automatic_culling": false,
+      "flip_v": true,
+      "emissive_ambient": false,
+      "render_type": "minecraft:solid",
+      "textures": {
+        "particle": "frostedheart:item/stratadrill/cast_iron"
+      },
+      "visibility": {
+        "wheel_fixed": true,
+        "wheel_rotor": false
+      }
+    },
+    "wheel_rotor": {
+      "loader": "forge:obj",
+      "model": "frostedheart:models/item/stratadrill/wheel.obj",
+      "automatic_culling": false,
+      "flip_v": true,
+      "emissive_ambient": false,
+      "render_type": "minecraft:solid",
+      "textures": {
+        "particle": "frostedheart:item/stratadrill/cast_iron"
+      },
+      "visibility": {
+        "wheel_fixed": false,
+        "wheel_rotor": true
+      }
+    }
+  }
+}

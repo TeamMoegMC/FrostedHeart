@@ -26,7 +26,6 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.util.Mth;
 import net.minecraft.util.SimpleBitStorage;
 
-import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -34,7 +33,8 @@ import java.util.Arrays;
 public final class InfraredBrickCodec {
     public static final int BLOCKS_PER_BRICK = 64;
     public static final int MAX_LOCAL_BRICKS = 729 * 64;
-    public static final int MAX_PACKET_BYTES = 960 * 1024;
+    public static final int FIRST_PACKET_BYTES = 32 * 1024;
+    public static final int MAX_PACKET_BYTES = 128 * 1024;
     // Reserve the complete display header and both Page masks on every part.
     public static final int MAX_PAYLOAD_BYTES = MAX_PACKET_BYTES - 2048;
     public static final short INVALID_TEMPERATURE = Short.MIN_VALUE;
@@ -72,7 +72,8 @@ public final class InfraredBrickCodec {
 
         /** A Page and its rollback point always remain in one bounded buffer. */
         public void beginPage() {
-            if (output.writerIndex() > MAX_PAYLOAD_BYTES - MAX_PAGE_BYTES) flushPart();
+            int budget=parts.isEmpty()?FIRST_PACKET_BYTES-2048:MAX_PAYLOAD_BYTES;
+            if (output.writerIndex() > budget - MAX_PAGE_BYTES) flushPart();
         }
 
         public int pageStart() { return output.writerIndex(); }

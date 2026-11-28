@@ -1,0 +1,385 @@
+{
+  "status": "Default physical scene passed with natural-base expectations; --cooling-only and --analytic-stress-only not rerun",
+  "date": "2026-11-15",
+  "base": "claude/cover-climate-isolation at 47d2c7c3e plus the E2E changes of this entry",
+  "runtime": {
+    "os": "macOS 15.0.1 arm64",
+    "gpu": "Apple M3 Max, OpenGL 4.1 Metal",
+    "java": "17.0.20 (Homebrew)",
+    "minecraft": "1.20.1",
+    "forge": "47.3.0",
+    "embeddium": "0.3.31-beta.53+mc1.20.1",
+    "oculus": "1.7.0",
+    "shaderpack": null,
+    "configs": "source defaults (the worktree has no run/config copies)",
+    "server": "real dedicated server",
+    "clients": "two real hidden GLFW rendering clients"
+  },
+  "profile": {
+    "round": 0,
+    "name": "physical-campfires-3s-rtt-16KiBps",
+    "oneWayMs": 1500,
+    "bytesPerSecond": 16384,
+    "bulk": false,
+    "physical": true
+  },
+  "passed": true,
+  "wallClock": "about 2 min 43 s including launch export",
+  "expectations": [
+    "GPU equals the wire value of the last committed display where it has one, otherwise the client natural value (InfraredViewRenderer.naturalAt); INVALID only where both are missing.",
+    "Client natural value is the server's WorldTemperature.naturalAir of the same block within one 0.25 C step.",
+    "removed: air has no natural value, so INVALID; restored: natural value or a fresh material value no warmer than baseline + 0.5 C."
+  ],
+  "points": {
+    "warm": "-4,67,0 iron, live material",
+    "cold": "4,67,0 iron, no material record (natural base)"
+  },
+  "roles": {
+    "fast": {
+      "clientPassed": true,
+      "link": "direct pass-through proxy",
+      "stages": {
+        "heated": {
+          "elapsedMs": 39034.4,
+          "display": 21,
+          "gpuWarmQ": -38,
+          "gpuColdQ": -40,
+          "wire": {
+            "warm": -38,
+            "cold": -32768
+          },
+          "clientNaturalWarmQ": -40,
+          "clientNaturalColdQ": -40,
+          "serverNaturalWarmQ": -40,
+          "serverNaturalColdQ": -40,
+          "backend": {
+            "tick": 1920,
+            "materialC": -9.49736679151831,
+            "materialSource": "LIVE",
+            "baselineC": -10.009244610953452,
+            "baselineQ": -40,
+            "airNearC": 6.42787205759965,
+            "airFarC": -4.2394014671243525,
+            "airBasisTerms": 8,
+            "airCooled": false,
+            "naturalC": -10.018
+          },
+          "frameRgb": [
+            103,
+            178,
+            213
+          ],
+          "baselineRgb": [
+            181,
+            181,
+            181
+          ],
+          "expectedColorError": 0.447,
+          "untintedError": 113.0
+        },
+        "cooled": {
+          "elapsedMs": 47888.2,
+          "display": 25,
+          "gpuWarmQ": -37,
+          "gpuColdQ": -40,
+          "wire": {
+            "warm": -37,
+            "cold": -32768
+          },
+          "clientNaturalWarmQ": -40,
+          "clientNaturalColdQ": -40,
+          "serverNaturalWarmQ": -40,
+          "serverNaturalColdQ": -40,
+          "backend": {
+            "tick": 2100,
+            "materialC": -9.29705850407971,
+            "materialSource": "LIVE",
+            "baselineC": -10.009244610953452,
+            "baselineQ": -40,
+            "airNearC": 5.12899745389587,
+            "airFarC": -2.902118586264595,
+            "airBasisTerms": 8,
+            "airCooled": true,
+            "naturalC": -10.018
+          },
+          "frameRgb": [
+            103,
+            179,
+            213
+          ],
+          "baselineRgb": [
+            181,
+            181,
+            181
+          ]
+        },
+        "removed": {
+          "elapsedMs": 54132.0,
+          "display": 28,
+          "gpuWarmQ": -32768,
+          "gpuColdQ": -40,
+          "wire": {
+            "warm": -32768,
+            "cold": -32768
+          },
+          "clientNaturalWarmQ": -32768,
+          "clientNaturalColdQ": -40,
+          "serverNaturalWarmQ": -40,
+          "serverNaturalColdQ": -40,
+          "backend": {
+            "tick": 2220,
+            "materialC": "NaN",
+            "materialSource": "UNAVAILABLE",
+            "baselineC": -10.009244610953452,
+            "baselineQ": -40,
+            "airNearC": 0.7694615532671509,
+            "airFarC": -2.6405357115758115,
+            "airBasisTerms": 8,
+            "airCooled": true,
+            "naturalC": -10.018
+          },
+          "frameRgb": [
+            56,
+            129,
+            166
+          ],
+          "baselineRgb": [
+            181,
+            181,
+            181
+          ]
+        },
+        "restored": {
+          "elapsedMs": 61913.7,
+          "display": 32,
+          "gpuWarmQ": -40,
+          "gpuColdQ": -40,
+          "wire": {
+            "warm": -32768,
+            "cold": -32768
+          },
+          "clientNaturalWarmQ": -40,
+          "clientNaturalColdQ": -40,
+          "serverNaturalWarmQ": -40,
+          "serverNaturalColdQ": -40,
+          "backend": {
+            "tick": 2380,
+            "materialC": "NaN",
+            "materialSource": "UNAVAILABLE",
+            "baselineC": -10.009244610953452,
+            "baselineQ": -40,
+            "airNearC": -0.6883736657661679,
+            "airFarC": -2.4274604142376486,
+            "airBasisTerms": 8,
+            "airCooled": true,
+            "naturalC": -10.018
+          },
+          "frameRgb": [
+            103,
+            176,
+            213
+          ],
+          "baselineRgb": [
+            181,
+            181,
+            181
+          ],
+          "expectedColorError": 0.62,
+          "untintedError": 115.0
+        }
+      },
+      "infraredWire": {
+        "frames": 34,
+        "acks": 3,
+        "maxBodyBytes": 963,
+        "maxWireFrameBytes": 580,
+        "sumWireFrameBytes": 8362,
+        "naturalClimateBytesPerFirstPart": [
+          165
+        ],
+        "repliesCarryingNaturalClimate": 31,
+        "parseErrors": []
+      }
+    },
+    "slow": {
+      "clientPassed": true,
+      "link": "ordered proxy, 1500 ms one way, 16384 B/s",
+      "stages": {
+        "heated": {
+          "elapsedMs": 40074.2,
+          "display": 9,
+          "gpuWarmQ": -38,
+          "gpuColdQ": -40,
+          "wire": {
+            "warm": -38,
+            "cold": -32768
+          },
+          "clientNaturalWarmQ": -40,
+          "clientNaturalColdQ": -40,
+          "serverNaturalWarmQ": -40,
+          "serverNaturalColdQ": -40,
+          "backend": {
+            "tick": 1960,
+            "materialC": -9.452319818533082,
+            "materialSource": "LIVE",
+            "baselineC": -10.009244610953452,
+            "baselineQ": -40,
+            "airNearC": 6.908009991428347,
+            "airFarC": -3.7848020957431165,
+            "airBasisTerms": 8,
+            "airCooled": false,
+            "naturalC": -10.018
+          },
+          "frameRgb": [
+            103,
+            178,
+            213
+          ],
+          "baselineRgb": [
+            181,
+            181,
+            181
+          ],
+          "expectedColorError": 0.447,
+          "untintedError": 113.0
+        },
+        "cooled": {
+          "elapsedMs": 48404.6,
+          "display": 11,
+          "gpuWarmQ": -37,
+          "gpuColdQ": -40,
+          "wire": {
+            "warm": -37,
+            "cold": -32768
+          },
+          "clientNaturalWarmQ": -40,
+          "clientNaturalColdQ": -40,
+          "serverNaturalWarmQ": -40,
+          "serverNaturalColdQ": -40,
+          "backend": {
+            "tick": 2120,
+            "materialC": -9.278226471069294,
+            "materialSource": "LIVE",
+            "baselineC": -10.009244610953452,
+            "baselineQ": -40,
+            "airNearC": 4.631178685525027,
+            "airFarC": -2.8544899332355076,
+            "airBasisTerms": 8,
+            "airCooled": true,
+            "naturalC": -10.018
+          },
+          "frameRgb": [
+            103,
+            179,
+            213
+          ],
+          "baselineRgb": [
+            181,
+            181,
+            181
+          ]
+        },
+        "removed": {
+          "elapsedMs": 57259.0,
+          "display": 13,
+          "gpuWarmQ": -32768,
+          "gpuColdQ": -40,
+          "wire": {
+            "warm": -32768,
+            "cold": -32768
+          },
+          "clientNaturalWarmQ": -32768,
+          "clientNaturalColdQ": -40,
+          "serverNaturalWarmQ": -40,
+          "serverNaturalColdQ": -40,
+          "backend": {
+            "tick": 2300,
+            "materialC": "NaN",
+            "materialSource": "UNAVAILABLE",
+            "baselineC": -10.009244610953452,
+            "baselineQ": -40,
+            "airNearC": -0.04988818745148116,
+            "airFarC": -2.5092556187900845,
+            "airBasisTerms": 8,
+            "airCooled": true,
+            "naturalC": -10.018
+          },
+          "frameRgb": [
+            56,
+            129,
+            166
+          ],
+          "baselineRgb": [
+            181,
+            181,
+            181
+          ]
+        },
+        "restored": {
+          "elapsedMs": 62460.8,
+          "display": 14,
+          "gpuWarmQ": -40,
+          "gpuColdQ": -40,
+          "wire": {
+            "warm": -32768,
+            "cold": -32768
+          },
+          "clientNaturalWarmQ": -40,
+          "clientNaturalColdQ": -40,
+          "serverNaturalWarmQ": -40,
+          "serverNaturalColdQ": -40,
+          "backend": {
+            "tick": 2400,
+            "materialC": -10.000071468866508,
+            "materialSource": "LIVE",
+            "baselineC": -10.009244610953452,
+            "baselineQ": -40,
+            "airNearC": -0.19443414311347063,
+            "airFarC": -2.414180800851155,
+            "airBasisTerms": 8,
+            "airCooled": true,
+            "naturalC": -10.018
+          },
+          "frameRgb": [
+            103,
+            176,
+            213
+          ],
+          "baselineRgb": [
+            181,
+            181,
+            181
+          ],
+          "expectedColorError": 0.62,
+          "untintedError": 115.0
+        }
+      },
+      "infraredWire": {
+        "frames": 15,
+        "acks": 0,
+        "maxBodyBytes": 921,
+        "maxWireFrameBytes": 543,
+        "sumWireFrameBytes": 4752,
+        "naturalClimateBytesPerFirstPart": [
+          165
+        ],
+        "repliesCarryingNaturalClimate": 15,
+        "parseErrors": []
+      }
+    }
+  },
+  "slowProxy": {
+    "bytes": {
+      "up": 6043,
+      "down": 642959
+    },
+    "connections": 1
+  },
+  "serverTimedOut": false,
+  "limits": [
+    "Only the default physical scene ran; natural cooling (--cooling-only) and the analytic transport rounds (--analytic-stress-only) were not rerun with the new expectations.",
+    "The daylight cycle is off in the E2E world, so the climate clock and the natural revision stay fixed; a climate change during a round is not covered.",
+    "Development launch on one machine; not a full modpack, remote GPU or real WAN route."
+  ],
+  "logs": "build/infrared-network-e2e (worktree-local, not committed)"
+}

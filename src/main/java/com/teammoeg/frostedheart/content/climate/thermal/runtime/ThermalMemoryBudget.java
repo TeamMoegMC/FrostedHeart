@@ -136,6 +136,14 @@ public final class ThermalMemoryBudget {
         }
     }
 
+    /** A cheap preflight for optional preparation; it neither reserves nor records a refusal. */
+    public boolean canReserve(long bytes) {
+        if (bytes <= 0L) throw new IllegalArgumentException("bytes must be positive");
+        synchronized (lock) {
+            return canAdmitHere(bytes) && (parent == null || parent.canAdmitHere(bytes));
+        }
+    }
+
     private boolean canAdmitHere(long bytes) {
         return bytes <= Math.max(0L, limitBytes() - usedBytes);
     }

@@ -123,42 +123,35 @@ public class T2GeneratorLogic extends GeneratorLogic<T2GeneratorLogic, T2Generat
         return active;
     }
 
-    private void tickLiquid(IMultiblockContext<T2GeneratorState> ctx,boolean active) {
-        Optional<GeneratorData> data = getData(ctx);
-    	data.ifPresent(t -> t.steamLevel = ctx.getState().steamLevel/100f);
-        if (ctx.getState().noliquidtick > 0) {
-            ctx.getState().noliquidtick--;
-        }else {
-        	
-	        if (ctx.getState().steamLevel<100) {
-	        	if(active) {
-		        	int drain=FHConfig.SERVER.CLIMATE.generatorSteamSpeed.get();
-		            FluidStack fs = ctx.getState().tank.drain(drain, FluidAction.SIMULATE);
-		            if (fs.getAmount() >= drain) {
-		                final FluidStack fs2 = ctx.getState().tank.drain(drain, FluidAction.EXECUTE);
-		                ctx.getState().liquidtick++;
-		                if(ctx.getState().liquidtick>=FHConfig.SERVER.CLIMATE.generatorSteamCost.get()) {
-		                	ctx.getState().liquidtick=0;
-		                	ctx.getState().steamLevel++;
-		                }
-		                return;
-		            }else {
-		            	ctx.getState().tank.setFluid(FluidStack.EMPTY);
-		                ctx.getState().noliquidtick = 40;
-		            }
-	        	}
-	        }else return;
-        	
+    private void tickLiquid(IMultiblockContext<T2GeneratorState> ctx, boolean active) {
+        T2GeneratorState state = ctx.getState();
+        getData(ctx).ifPresent(data -> data.steamLevel = state.steamLevel / 100F);
+
+        if (state.noliquidtick > 0) {
+            state.noliquidtick--;
+        } else {
+            if (state.steamLevel >= 100) return;
+            if (active) {
+                int dose = FHConfig.SERVER.CLIMATE.generatorSteamSpeed.get();
+                if (state.tank.getFluidAmount() >= dose) {
+                    state.tank.drain(dose, FluidAction.EXECUTE);
+                    if (++state.liquidtick >= FHConfig.SERVER.CLIMATE.generatorSteamCost.get()) {
+                        state.liquidtick = 0;
+                        state.steamLevel++;
+                    }
+                    return;
+                }
+                state.tank.setFluid(FluidStack.EMPTY);
+                state.noliquidtick = 40;
+            }
         }
-        if(ctx.getState().liquidtick<=0&&ctx.getState().steamLevel>0) {
-        	ctx.getState().steamLevel--;
-        	ctx.getState().liquidtick=FHConfig.SERVER.CLIMATE.generatorSteamCost.get();
+
+        // Without a full dose, run the existing cooldown toward one less percentage point.
+        if (state.liquidtick <= 0 && state.steamLevel > 0) {
+            state.steamLevel--;
+            state.liquidtick = FHConfig.SERVER.CLIMATE.generatorSteamCost.get();
         }
-        //reduce process if steam not enough
-        if(ctx.getState().liquidtick>0) {
-        	ctx.getState().liquidtick--;
-        }
-        
+        if (state.liquidtick > 0) state.liquidtick--;
     }
 
     @Override

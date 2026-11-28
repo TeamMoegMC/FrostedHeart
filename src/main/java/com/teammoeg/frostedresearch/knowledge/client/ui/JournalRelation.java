@@ -89,7 +89,7 @@ public final class JournalRelation extends UIElement {
     }
 
     private void add(KnowledgeKey key, int x, int y, int w, int h) {
-        nodes.add(new Node(key, x, y, w, h, Language.getInstance().getVisualOrder(getFont().substrByWidth(data.title(key), Math.max(1, w - 12)))));
+        nodes.add(new Node(key, x, y, w, h, Language.getInstance().getVisualOrder(Clip.fit(getFont(), data.title(key), Math.max(1, w - 12)))));
     }
 
     @Override

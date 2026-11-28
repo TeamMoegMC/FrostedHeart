@@ -112,6 +112,12 @@ public class FHTags {
 		TOWN_DECORATIONS("town/decorations"),
 		TOWN_WALLS("town/walls"),
 		TOWN_FURNITURE("town/furniture"),
+		/** Bookshelves that give a research institute's team knowledge capacity. */
+		INSTITUTE_BOOKSHELVES("town/institute_bookshelves"),
+		/** Desks that each seat one institute researcher; two-block drawing desks count once. */
+		RESEARCH_DESKS("town/research_desks"),
+		/** Blocks that raise a research institute's decoration rating. */
+		INSTITUTE_DECORATIONS("town/institute_decorations"),
 		CONDENSED_ORES,
 		SLUDGE,
 		PERMAFROST,

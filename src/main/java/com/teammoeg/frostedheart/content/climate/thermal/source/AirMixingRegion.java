@@ -28,6 +28,8 @@ import net.minecraft.core.BlockPos;
 public final class AirMixingRegion {
     public static final int RADIUS = 4;
     public static final int MULTIPLIER = 4;
+    private static final int PORT_SPAN = 4 + 2 * RADIUS;
+    private static final long[] CELL_MASKS = buildCellMasks();
     private final LongArrayList ports = new LongArrayList();
     private int minX, minY, minZ;
 
@@ -49,6 +51,34 @@ public final class AirMixingRegion {
         if (x >= minX && x <= maxX() && y >= minY && y <= maxY() && z >= minZ && z <= maxZ()) {
             ports.add(BlockPos.asLong(x, y, z));
         }
+    }
+
+    /** Union of the source spheres at the 64 cell centers, in local Brick block order. */
+    public long cellMask() {
+        long covered = 0;
+        for (int i = 0; i < ports.size() && covered != -1L; i++) {
+            long port = ports.getLong(i);
+            int x = BlockPos.getX(port) - minX, y = BlockPos.getY(port) - minY, z = BlockPos.getZ(port) - minZ;
+            covered |= CELL_MASKS[x + PORT_SPAN * (z + PORT_SPAN * y)];
+        }
+        return covered;
+    }
+
+    /** One immutable Brick mask for each possible outlet offset admitted by {@link #include}. */
+    private static long[] buildCellMasks() {
+        long[] masks = new long[PORT_SPAN * PORT_SPAN * PORT_SPAN];
+        for (int index = 0; index < masks.length; index++) {
+            int x = index % PORT_SPAN - RADIUS;
+            int z = index / PORT_SPAN % PORT_SPAN - RADIUS;
+            int y = index / (PORT_SPAN * PORT_SPAN) - RADIUS;
+            long mask = 0;
+            for (int block = 0; block < 64; block++) {
+                int dx = (block & 3) - x, dz = (block >> 2 & 3) - z, dy = (block >> 4) - y;
+                if (dx * dx + dy * dy + dz * dz <= RADIUS * RADIUS) mask |= 1L << block;
+            }
+            masks[index] = mask;
+        }
+        return masks;
     }
 
     /** Piecewise volume coefficient for the continuous field, with the same radius and union. */

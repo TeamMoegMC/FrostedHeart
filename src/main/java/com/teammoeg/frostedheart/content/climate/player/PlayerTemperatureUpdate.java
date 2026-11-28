@@ -59,74 +59,65 @@ public class PlayerTemperatureUpdate {
         try {
             if (event.side == LogicalSide.SERVER && event.phase == Phase.END && event.player instanceof ServerPlayer player) {
 
-                // Fetch the player temperature data
-                PlayerTemperatureData.getCapability(player).ifPresent((data) -> {
-                    if (player.isCreative() || player.isSpectator() || player.isInvulnerable()) {
-                        return;
-                    }
+                if (player.isCreative() || player.isSpectator() || player.isInvulnerable()) return;
+                int temperatureUpdateIntervalTicks = FHConfig.SERVER.CLIMATE.temperatureUpdateIntervalTicks.get();
+                boolean updateTemperature = shouldUpdatePlayer(player, temperatureUpdateIntervalTicks);
+                boolean checkColdResearch = shouldUpdatePlayer(player, COLD_RESEARCH_INTERVAL_TICKS);
+                if (!updateTemperature && !checkColdResearch) return;
 
-                    if (shouldUpdatePlayer(player, COLD_RESEARCH_INTERVAL_TICKS)
-                            && (data.getCoreBodyTemp() < COLD_HUD_THRESHOLD_C
-                            || severity(-data.getBodyTempByPart(BodyPart.HANDS)) >= 0)) {
-                        KnowledgeBehaviorBridge.coldAfterCopper(player);
-                    }
+                var data = PlayerTemperatureData.getCapability(player).orElse(null);
+                if (data == null) return;
+                if (checkColdResearch && (data.getCoreBodyTemp() < COLD_HUD_THRESHOLD_C
+                        || severity(-data.getBodyTempByPart(BodyPart.HANDS)) >= 0)) {
+                    KnowledgeBehaviorBridge.coldAfterCopper(player);
+                }
+                if (!updateTemperature) return;
 
-                    // ConfigValue.get() 为 spec 值表查询：同一 tick 内配置恒定，hoist 到局部变量
-                    int temperatureUpdateIntervalTicks = FHConfig.SERVER.CLIMATE.temperatureUpdateIntervalTicks.get();
-                    if (!shouldUpdatePlayer(
-                            player, temperatureUpdateIntervalTicks)) {
-                        return;
-                    }
-
-                    // Rest of update logic is handled every second.
-
-                    // Soaked in water wetness
-                    if (isSoaked(player)) {
-                        // Check if an armor piece is on
-                        boolean hasArmor = false;
-                        for (ItemStack is : player.getArmorSlots()) {
-                            if (!is.isEmpty()) {
-                                hasArmor = true;
-                                break;
-                            }
-                        }
-                        // Check the current Wet Effect
-                        MobEffectInstance current = player.getEffect(FHMobEffects.WET.get());
-                        int wetEffectDuration = FHConfig.SERVER.CLIMATE.wetEffectDuration.get();
-                        int wetClothesDurationMultiplier = FHConfig.SERVER.CLIMATE.wetClothesDurationMultiplier.get();
-                        // If armor is on, player gets a longer wet effect
-                        if (hasArmor) {
-                            player.addEffect(new MobEffectInstance(FHMobEffects.WET.get(),
-                                    wetEffectDuration * wetClothesDurationMultiplier,
-                                    0, false, false));// punish for wet clothes
-                        }
-                        // Otherwise, if there is no wet effect now, add normal wet effect
-                        else if (current == null || current.getDuration() < wetEffectDuration) {
-                            player.addEffect(new MobEffectInstance(FHMobEffects.WET.get(),
-                                    wetEffectDuration, 0, false, false));
+                // Soaked in water wetness
+                if (isSoaked(player)) {
+                    // Check if an armor piece is on
+                    boolean hasArmor = false;
+                    for (ItemStack is : player.getArmorSlots()) {
+                        if (!is.isEmpty()) {
+                            hasArmor = true;
+                            break;
                         }
                     }
-
-                    double torso = data.getBodyTempByPart(BodyPart.TORSO);
-                    updateBodyEffect(player, FHMobEffects.HYPERTHERMIA.get(),
-                            torso > 1.0D ? severity(torso) : -1);
-                    updateBodyEffect(player, FHMobEffects.HYPOTHERMIA.get(),
-                            torso < -1.0D ? severity(-torso) : -1);
-
-                    applyPartSymptom(player, MobEffects.CONFUSION,
-                            Math.abs(data.getBodyTempByPart(BodyPart.HEAD)));
-                    applyPartSymptom(player, MobEffects.MOVEMENT_SLOWDOWN,
-                            Math.max(Math.abs(data.getBodyTempByPart(BodyPart.FEET)),
-                                    Math.abs(data.getBodyTempByPart(BodyPart.LEGS))));
-                    applyPartSymptom(player, MobEffects.DIG_SLOWDOWN,
-                            Math.abs(data.getBodyTempByPart(BodyPart.HANDS)));
-
-                    // Severe actual medium exposure is separate from accumulated body illness.
-                    if (!player.hasEffect(FHMobEffects.INSULATION.get())) {
-                        PlayerThermalInjury.apply(player, data, temperatureUpdateIntervalTicks / 20.0D);
+                    // Check the current Wet Effect
+                    MobEffectInstance current = player.getEffect(FHMobEffects.WET.get());
+                    int wetEffectDuration = FHConfig.SERVER.CLIMATE.wetEffectDuration.get();
+                    int wetClothesDurationMultiplier = FHConfig.SERVER.CLIMATE.wetClothesDurationMultiplier.get();
+                    // If armor is on, player gets a longer wet effect
+                    if (hasArmor) {
+                        player.addEffect(new MobEffectInstance(FHMobEffects.WET.get(),
+                                wetEffectDuration * wetClothesDurationMultiplier,
+                                0, false, false));// punish for wet clothes
                     }
+                    // Otherwise, if there is no wet effect now, add normal wet effect
+                    else if (current == null || current.getDuration() < wetEffectDuration) {
+                        player.addEffect(new MobEffectInstance(FHMobEffects.WET.get(),
+                                wetEffectDuration, 0, false, false));
+                    }
+                }
 
-                });
+                double torso = data.getBodyTempByPart(BodyPart.TORSO);
+                updateBodyEffect(player, FHMobEffects.HYPERTHERMIA.get(),
+                        torso > 1.0D ? severity(torso) : -1);
+                updateBodyEffect(player, FHMobEffects.HYPOTHERMIA.get(),
+                        torso < -1.0D ? severity(-torso) : -1);
+
+                applyPartSymptom(player, MobEffects.CONFUSION,
+                        Math.abs(data.getBodyTempByPart(BodyPart.HEAD)));
+                applyPartSymptom(player, MobEffects.MOVEMENT_SLOWDOWN,
+                        Math.max(Math.abs(data.getBodyTempByPart(BodyPart.FEET)),
+                                Math.abs(data.getBodyTempByPart(BodyPart.LEGS))));
+                applyPartSymptom(player, MobEffects.DIG_SLOWDOWN,
+                        Math.abs(data.getBodyTempByPart(BodyPart.HANDS)));
+
+                // Severe actual medium exposure is separate from accumulated body illness.
+                if (!player.hasEffect(FHMobEffects.INSULATION.get())) {
+                    PlayerThermalInjury.apply(player, data, temperatureUpdateIntervalTicks / 20.0D);
+                }
             }
         } finally { if (observeStage) stageObserver.stage("player_thermal_regulation", false); }
 
@@ -147,12 +138,11 @@ public class PlayerTemperatureUpdate {
             if (event.side == LogicalSide.SERVER
                     && event.phase == Phase.START
                     && event.player instanceof ServerPlayer player) {
-                PlayerTemperatureData data = PlayerTemperatureData
-                        .getCapability(player).orElse(null);
-                if (data == null) return;
                 int intervalTicks = FHConfig.SERVER.CLIMATE
                         .temperatureUpdateIntervalTicks.get();
                 if (!shouldUpdatePlayer(player, intervalTicks)) return;
+                var data = PlayerTemperatureData.getCapability(player).orElse(null);
+                if (data == null) return;
 
                 PlayerTemperatureComputation.updatePlayer(
                         player, data, intervalTicks);

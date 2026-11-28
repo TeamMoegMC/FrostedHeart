@@ -45,11 +45,45 @@ public class TownMathFunctions {
     }
 
     /**
-     * Calculate temperature rating based on temperature difference from comfortable temperature.
-     * Uses sigmoid function to map temperature difference to rating between 0 and 1.
-     * 
-     * @param temperature the actual temperature
-     * @return temperature rating between 0 and 1
+     * Maps Celsius temperature onto an asymmetric plateau curve, then scales it.
+     * The normalized score is zero at and below -15 and at and above 45,
+     * and one throughout [18, 28]. The cold side permits a slope change at 18;
+     * the hot side uses quintic smoothstep for a flat departure at 28.
+     *
+     * @param temperature temperature in degrees Celsius
+     * @param minimumRating score at either extreme
+     * @param maximumRating score on the comfortable plateau
+     * @return scaled temperature rating
+     */
+    public static double calculateTemperatureRating(
+            double temperature, double minimumRating, double maximumRating
+    ) {
+        double score;
+        if (temperature <= -15.0 || temperature >= 45.0) {
+            score = 0.0;
+        } else if (temperature < 18.0) {
+            double u = (temperature + 15.0) / 33.0;
+            score = u * u * (2.0 - u);
+        } else if (temperature <= 28.0) {
+            score = 1.0;
+        } else {
+            double v = (temperature - 28.0) / 17.0;
+            score = 1.0 - v * v * v * (v * (6.0 * v - 15.0) + 10.0);
+        }
+        return minimumRating + (maximumRating - minimumRating) * score;
+    }
+
+    /**
+     * Compatibility entry point for existing building, UI and simulation callers.
+     * The former comfort center, sigmoid slope and midpoint arguments are ignored;
+     * the configured floor is retained and the maximum rating is exactly one.
+     *
+     * @param temperature temperature in degrees Celsius
+     * @param comfortableTemperature legacy comfort center (ignored)
+     * @param minimumRating configured minimum score
+     * @param sigmoidSlopePerCelsius legacy sigmoid slope (ignored)
+     * @param halfPointTemperatureDifferenceCelsius legacy midpoint (ignored)
+     * @return temperature rating between the configured floor and one
      */
     public static double calculateTemperatureRating(
             double temperature,
@@ -58,9 +92,7 @@ public class TownMathFunctions {
             double sigmoidSlopePerCelsius,
             double halfPointTemperatureDifferenceCelsius
     ) {
-        double tempDiff = Math.abs(comfortableTemperature - temperature);
-        return minimumRating + 1 / (1 + Math.exp(sigmoidSlopePerCelsius
-                * (tempDiff - halfPointTemperatureDifferenceCelsius)));
+        return calculateTemperatureRating(temperature, minimumRating, 1.0);
     }
 
     /**

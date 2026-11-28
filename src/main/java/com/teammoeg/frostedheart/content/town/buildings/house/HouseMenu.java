@@ -27,6 +27,7 @@ import com.teammoeg.chorda.menu.CBlockEntityMenu;
 import com.teammoeg.frostedheart.bootstrap.common.FHMenuTypes;
 import com.teammoeg.frostedheart.content.town.ITownWithBuildings;
 import com.teammoeg.frostedheart.content.town.ITownWithResidents;
+import com.teammoeg.frostedheart.content.town.TeamTown;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 
 import net.minecraft.world.entity.player.Inventory;
@@ -40,11 +41,15 @@ public class HouseMenu extends CBlockEntityMenu<HouseBlockEntity> {
 
     public HouseMenu(int id, Inventory playerInventory, HouseBlockEntity blockEntity) {
         super(FHMenuTypes.HOUSE.get(), blockEntity, id, playerInventory.player, 0);
-        addPlayerInventory(playerInventory, 8, 140, 197);
     }
 
     public Optional<HouseBuilding> getHouse() {
         return blockEntity.getBuilding();
+    }
+
+    public Optional<TeamTown> getTown() {
+        ITownWithBuildings town = blockEntity.getTown();
+        return town instanceof TeamTown teamTown ? Optional.of(teamTown) : Optional.empty();
     }
 
     public List<Resident> getResidents() {

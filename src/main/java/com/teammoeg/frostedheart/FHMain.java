@@ -47,6 +47,7 @@ import com.teammoeg.frostedheart.compat.create.CreateCompat;
 import com.teammoeg.frostedheart.compat.curios.CuriosCompat;
 import com.teammoeg.frostedheart.compat.ftbq.FHRewardTypes;
 import com.teammoeg.frostedheart.content.robotics.MachineTypes;
+import com.teammoeg.frostedheart.content.stratadrill.TetraStrataDrillItem;
 import com.teammoeg.frostedheart.content.town.provider.ITownProviderSerializable;
 import com.teammoeg.frostedheart.infrastructure.gen.FHRegistrate;
 import com.teammoeg.frostedheart.restarter.TssapProtocolHandler;
@@ -118,7 +119,6 @@ public class FHMain {
 				.andThen(new FoodTempStats(item))
 				.andThen(TooltipModifier.mapNull(FoodNutritionStats.create(item)))
 				.andThen(TooltipModifier.mapNull(PlantTempStats.create(item)))
-				.andThen(TooltipModifier.mapNull(BlockTempStats.create(item)))
 				.andThen(TooltipModifier.mapNull(EquipmentTempStats.create(item)))
 				.andThen(TooltipModifier.mapNull(KineticStats.create(item)));
 		});
@@ -231,6 +231,7 @@ public class FHMain {
 	 * @param event The event
 	 */
 	private void setup(final FMLCommonSetupEvent event) {
+		if (CompatModule.isTetraLoaded()) event.enqueueWork(TetraStrataDrillItem::registerHeadModule);
 
         event.enqueueWork(() -> com.teammoeg.chorda.dataholders.team.CTeamDataManager.registerExtension(
                 com.teammoeg.frostedheart.content.town.persistence.TownPersistenceAdapter::new));
@@ -242,6 +243,8 @@ public class FHMain {
 
 		//town stuff
 		ITownProviderSerializable.registerAll();
+		// Research institutes grant their teams knowledge capacity.
+		com.teammoeg.frostedheart.content.town.buildings.institute.InstituteKnowledgeCapacity.register();
 
 		// stupid vanilla
 		ComposterBlock.COMPOSTABLES.putIfAbsent(FHBlocks.RYE_BLOCK.asItem(), 0.3f);

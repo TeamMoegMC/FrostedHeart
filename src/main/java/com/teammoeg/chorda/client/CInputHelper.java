@@ -113,6 +113,14 @@ public class CInputHelper {
 	public static void playClickSound() {
 		ClientUtils.getMc().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK.value(), 1));
 	}
+
+	/**
+	 * 播放界面音效（不受位置影响），例如翻纸、盖章。
+	 * Plays an interface sound that does not depend on the player's position, such as a page turn or a stamp.
+	 */
+	public static void playUISound(net.minecraft.sounds.SoundEvent sound, float pitch) {
+		ClientUtils.getMc().getSoundManager().play(SimpleSoundInstance.forUI(sound, pitch));
+	}
 	public static boolean isMouseLeftDown() {
 		return GLFW.glfwGetMouseButton(Minecraft.getInstance().getWindow().getWindow(), GLFW.GLFW_MOUSE_BUTTON_LEFT) == GLFW.GLFW_PRESS;
 	}

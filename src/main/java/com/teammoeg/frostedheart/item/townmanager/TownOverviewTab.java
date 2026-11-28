@@ -74,7 +74,7 @@ public class TownOverviewTab extends TownManagerTab {
         layer.add(new TownDayLabel(layer, screen::getTownData));
     }
 
-    private List<TownInfoPanel.Row> collectRows() {
+    List<TownInfoPanel.Row> collectRows() {
         List<TownInfoPanel.Row> rows = new ArrayList<>();
         TeamTown town = screen.getTown();
         TeamTownData data = screen.getTownData();

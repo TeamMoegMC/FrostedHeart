@@ -152,7 +152,7 @@ public final class ThermalTransitionDataGameTests {
     }
 
     @GameTest(template = "phase0a_empty", batch = "thermal_transition_fluid_boundary", timeoutTicks = 100)
-    public static void waterInteriorWaitsForAnEdge(GameTestHelper helper) throws Exception {
+    public static void waterBoundaryStartsFreezingAndFundedInteriorCanFinish(GameTestHelper helper) throws Exception {
         var level = helper.getLevel();
         MinecraftThermalInput.closeActiveLevel(level);
         BlockPos pos = helper.absolutePos(new BlockPos(2, 2, 2));
@@ -183,11 +183,11 @@ public final class ThermalTransitionDataGameTests {
             MinecraftThermalProfiles.invalidate();
             level.getGameRules().getRule(GameRules.RULE_RANDOMTICKING).set(3, level.getServer());
             for (BlockPos block : originals.keySet()) level.setBlock(block, water, 2);
-            helper.assertTrue(!MinecraftPhaseController.applyDormantTransition(level, pos, water, edge, edge.targetEnthalpyJ(), level.getGameTime()),
-                    "interior water retains its completed energy while boundary is blocked");
-            level.setBlock(pos.west(), Blocks.STONE.defaultBlockState(), 2);
+            helper.assertTrue(!MinecraftPhaseController.applyDormantTransition(level, pos, water, edge,
+                    (edge.sourceEnthalpyJ() + edge.targetEnthalpyJ()) / 2, level.getGameTime()),
+                    "enclosed water still needs to finish its latent interval");
             helper.assertTrue(MinecraftPhaseController.applyDormantTransition(level, pos, water, edge, edge.targetEnthalpyJ(), level.getGameTime()),
-                    "opening a horizontal boundary allows the same completed transition; loaded="
+                    "funded interior freezes without a second shore check; loaded="
                             + level.isAreaLoaded(pos, 1) + ", biome=" + level.getBiome(pos).unwrapKey()
                             + ", floor=" + MinecraftGameplayFields.guaranteedFloor(level, pos)
                             + ", state=" + level.getBlockState(pos));

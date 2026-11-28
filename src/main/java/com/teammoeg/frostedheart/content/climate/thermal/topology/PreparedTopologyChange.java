@@ -259,6 +259,16 @@ public final class PreparedTopologyChange {
         final short[] skyColumns;
         final byte[] firstExposedLocalY;
 
+        public PageSignatures signatures() { return signatures; }
+        public long capturedBricks() { return residentBrickMask & resolvedBrickMask; }
+        public double naturalTemperatureC() { return naturalTemperatureChanged ? naturalTemperatureC : page.naturalTemperatureC; }
+        public long changedBricks() {
+            long mask = 0;
+            for (int brick : brickIndexes) mask |= 1L << brick;
+            return mask;
+        }
+        public boolean replacesLifecycle() { return replacedPage != null; }
+
         private PageWrite(
                 WorkerPageStore.PageState page,
                 WorkerPageStore.PageState replacedPage,

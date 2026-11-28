@@ -48,7 +48,14 @@ public final class TownTransportShortageTipPresentation {
                 TownTransportShortageTipPresentationModel.create(notices);
         List<Component> contents = new ArrayList<>();
         contents.add(Component.translatable(presentation.titleKey()));
+        // Players read only the gap in whole units; the exact figures and the device rate are for detailed mode.
+        boolean detailed = com.teammoeg.frostedheart.content.town.client.TownUiModeClient.detailed();
         for (TownTransportShortageNotice notice : presentation.visibleNotices()) {
+            if (!detailed) {
+                contents.add(Component.translatable(presentation.plainKey(),
+                        TownTransportShortageTipPresentationModel.roundedShortfall(notice.shortfall())));
+                continue;
+            }
             contents.add(Component.translatable(
                     presentation.detailKey(),
                     TownTransportShortageTipPresentationModel.formatCapacity(notice.totalCapacity()),

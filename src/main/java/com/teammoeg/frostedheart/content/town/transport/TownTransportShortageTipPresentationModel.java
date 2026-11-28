@@ -27,6 +27,8 @@ public final class TownTransportShortageTipPresentationModel {
     public static final String TITLE_KEY = "tips.frostedheart.town.transport_shortage.title";
     public static final String DETAIL_KEY = "tips.frostedheart.town.transport_shortage.detail";
     public static final String OVERFLOW_KEY = "tips.frostedheart.town.transport_shortage.overflow";
+    /** The players' line: only how much transport is missing, in whole units. */
+    public static final String PLAIN_KEY = "tips.frostedheart.town.transport_shortage.plain";
     public static final int MAX_VISIBLE_NOTICES = 3;
 
     private TownTransportShortageTipPresentationModel() {
@@ -40,7 +42,13 @@ public final class TownTransportShortageTipPresentationModel {
                 safe.size() - visibleCount,
                 TITLE_KEY,
                 DETAIL_KEY,
-                OVERFLOW_KEY);
+                OVERFLOW_KEY,
+                PLAIN_KEY);
+    }
+
+    /** The gap rounded up, so a shortage never reads as zero. */
+    public static long roundedShortfall(double shortfall) {
+        return Double.isFinite(shortfall) ? Math.max(1L, (long) Math.ceil(shortfall - 1e-9)) : 1L;
     }
 
     public static String formatCapacity(double value) {
@@ -56,7 +64,8 @@ public final class TownTransportShortageTipPresentationModel {
             int overflowCount,
             String titleKey,
             String detailKey,
-            String overflowKey
+            String overflowKey,
+            String plainKey
     ) {
         public Presentation {
             visibleNotices = List.copyOf(visibleNotices);

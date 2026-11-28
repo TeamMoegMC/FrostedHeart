@@ -1,0 +1,9 @@
+{
+  "type": "frostedheart:armor_temp",
+  "factor": 100.0,
+  "heat_proof": 0.7,
+  "item": "minecraft:netherite_helmet",
+  "slot": "head",
+  "weight": 1.1368421,
+  "wind_proof": 1.0
+}

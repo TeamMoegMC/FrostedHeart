@@ -51,8 +51,8 @@ public class FRConfig {
         Server(ForgeConfigSpec.Builder builder) {
             knowledgeBehaviorChance = builder.defineInRange("knowledgeBehaviorChance", 0.15, 0, 1);
             knowledgeBehaviorOptionalBonus = builder.defineInRange("knowledgeBehaviorOptionalBonus", 0.1, 0, 1);
-            knowledgeArchiveObservations = builder.comment("Maximum archived observation records per team; existing records are retained when lowered.").defineInRange("knowledgeArchiveObservations", 4096, 0, Integer.MAX_VALUE);
-            knowledgeInboxObservations = builder.comment("Maximum inbox observation records per team.").defineInRange("knowledgeInboxObservations", 512, 0, Integer.MAX_VALUE);
+            knowledgeArchiveObservations = builder.comment("Base archived observation records per team, before capacity granted by other systems such as town research institute bookshelves; existing records are retained when the limit drops.").defineInRange("knowledgeArchiveObservations", 128, 0, Integer.MAX_VALUE);
+            knowledgeInboxObservations = builder.comment("Base inbox observation records per team, before capacity granted by other systems such as town research institute bookshelves.").defineInRange("knowledgeInboxObservations", 64, 0, Integer.MAX_VALUE);
             rangeInsight = builder.comment("Range Radius for each insight visitable rings")
                     .defineInRange("insightAreaRange", 128, 1, Integer.MAX_VALUE);
         }

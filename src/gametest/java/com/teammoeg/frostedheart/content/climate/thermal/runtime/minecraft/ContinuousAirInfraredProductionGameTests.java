@@ -1,7 +1,6 @@
 /* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft;
 
-import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.network.InfraredBrickCodec;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialSample;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput.InfraredSnapshot;
@@ -47,8 +46,8 @@ public final class ContinuousAirInfraredProductionGameTests {
             if (level.getGameTime() % 200 == 0) com.teammoeg.frostedheart.FHMain.LOGGER.info(
                     "THERMAL_ARCHITECTURE_IR,tick={},readable={},nearEncoded={},nearC={},farEncoded={},farC={},worker={}",
                     level.getGameTime(), snapshot != null && snapshot.readable(),
-                    snapshot == null ? null : infraredTemperature(snapshot, nearWall), WorldTemperature.material(level, nearWall),
-                    snapshot == null ? null : infraredTemperature(snapshot, farWall), WorldTemperature.material(level, farWall),
+                    snapshot == null ? null : infraredTemperature(snapshot, nearWall), MinecraftThermalInput.materialTemperature(level, nearWall),
+                    snapshot == null ? null : infraredTemperature(snapshot, farWall), MinecraftThermalInput.materialTemperature(level, farWall),
                     MinecraftThermalInput.describeWorkerProgress(level));
             helper.assertTrue(snapshot != null && snapshot.readable()
                             && matchesMaterial(snapshot, level, nearWall)
@@ -57,7 +56,7 @@ public final class ContinuousAirInfraredProductionGameTests {
         }).thenExecute(() -> level.setBlockAndUpdate(nearWall, Blocks.OAK_PLANKS.defaultBlockState()))
                 .thenIdle(80).thenWaitUntil(() -> {
             if (level.getGameTime() % 200 == 0) {
-                boolean available = MinecraftThermalInput.sampleMaterial(level, nearWall, material);
+                boolean available = MinecraftThermalInput.sampleMaterialTemperature(level, nearWall, material);
                 com.teammoeg.frostedheart.FHMain.LOGGER.info(
                         "THERMAL_ARCHITECTURE_IR_REPLACEMENT,tick={},near={},available={},source={},nearChunkLoaded={},farChunkLoaded={},worker={},geometry={}",
                         level.getGameTime(), nearWall, available, material.source(),
@@ -65,7 +64,7 @@ public final class ContinuousAirInfraredProductionGameTests {
                         level.getChunkSource().getChunkNow(farWall.getX() >> 4, farWall.getZ() >> 4) != null,
                         MinecraftThermalInput.describeWorkerProgress(level), MinecraftThermalInput.describeGeometryInvalidations(level));
             }
-            helper.assertTrue(MinecraftThermalInput.sampleMaterial(level, nearWall, material)
+            helper.assertTrue(MinecraftThermalInput.sampleMaterialTemperature(level, nearWall, material)
                             && material.source() == MaterialSample.Source.LIVE,
                     "replacement material must reach the live worker publication");
             InfraredSnapshot snapshot = snapshot(player);
@@ -87,14 +86,14 @@ public final class ContinuousAirInfraredProductionGameTests {
     }
 
     private static InfraredSnapshot snapshot(ServerPlayer player) {
-        return MinecraftThermalInput.gameplayInfraredSnapshot(
+        return MinecraftThermalInput.captureInfraredSnapshot(
                 player, true, 0, 0, 0, new long[12], false, new long[0], 0, 0);
     }
 
     private static boolean matchesMaterial(InfraredSnapshot snapshot, net.minecraft.server.level.ServerLevel level,
                                            BlockPos position) {
         Short encoded = infraredTemperature(snapshot, position);
-        double materialC = WorldTemperature.material(level, position);
+        double materialC = MinecraftThermalInput.materialTemperature(level, position);
         return encoded != null && encoded != InfraredBrickCodec.INVALID_TEMPERATURE
                 && Double.isFinite(materialC) && Math.abs(encoded * .25D - materialC) <= .3D;
     }

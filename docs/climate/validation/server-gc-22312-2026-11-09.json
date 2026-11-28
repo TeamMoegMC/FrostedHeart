@@ -1,0 +1,81 @@
+{
+  "date": "2026-11-09",
+  "source": "User supplied real-server GC logs, separate from local synthetic tests",
+  "processId": 22312,
+  "processStartedAt": "2026-11-09T16:31:45+08:00",
+  "lastLoggedAt": "2026-11-09T21:05:01.181+08:00",
+  "retainedLogCoverage": {
+    "start": "2026-11-09T20:16:10.834+08:00",
+    "end": "2026-11-09T21:05:01.181+08:00"
+  },
+  "userReportsRestartedAndLatestFhAfterExit": true,
+  "newProcessLogsIncluded": false,
+  "postRestartFhJarHashAvailable": false,
+  "postGcHeapMiB": {
+    "around2030": 1231,
+    "firstFullAt205043": 5299,
+    "minimumDuring2100": 6023,
+    "capacityDuringLateRun": 6144
+  },
+  "minute2100": {
+    "count": 212,
+    "full": 104,
+    "pauseMs": 55117.496,
+    "afterMinMiB": 6023,
+    "afterMaxMiB": 6091,
+    "maxPauseMs": 640.716
+  },
+  "fullGcSummaryEventsInProvidedWindow": 709,
+  "largestPauseMs": 1056.453,
+  "oomExceptionInGcFiles": false,
+  "diagnosis": "Severe persistent heap pressure and GC thrashing are established; 104 Full GCs and55.117496seconds of STW GC during21:00. GC logs do not identify the retaining object owner.",
+  "limitations": [
+    "The retained files omit most earlier runtime because of log rotation.",
+    "The restarted process must be identified separately; these files cannot validate post-restart deployment.",
+    "D:/MC/latest.log is dated2025-03-25 and was excluded from2026 conclusions.",
+    "No incident heap dump was supplied; attribution to the known thermal callback defect remains unproven."
+  ],
+  "analysisJson": "build/server-gc-22312-20261109-analysis.json",
+  "chart": "build/server-gc-22312-20261109.png",
+  "collector": "Scripts/collect-server-memory.ps1",
+  "files": [
+    {
+      "path": "D:\\MC\\gc-27480-2026-11-09_16-29-45.log",
+      "sha256": "e3ed94f6112217d1fac4617b960c7b18f4b45320addd4279906c01798862f760"
+    },
+    {
+      "path": "D:\\MC\\gc-22312-2026-11-09_16-31-45.log.1",
+      "sha256": "c2340a8d3bdd18d12f92a150dc4cca3d20214106f7d2252354ff1e6a09b6e172"
+    },
+    {
+      "path": "D:\\MC\\gc-22312-2026-11-09_16-31-45.log.2",
+      "sha256": "46e5073ed9260e2294d7f3c02e98080e45a1e481a2550296415db8961848a68c"
+    },
+    {
+      "path": "D:\\MC\\gc-22312-2026-11-09_16-31-45.log.0",
+      "sha256": "a99d71184aa79f8caf70dfafe81e4e794a2c1f48ee6adb8437f6d676568177e1"
+    },
+    {
+      "path": "D:\\MC\\gc-22312-2026-11-09_16-31-45.log",
+      "sha256": "1b9af7d393901746bb95c49d0f82a83a1f9ee8a962ee92013ea275ecc95230c0"
+    }
+  ],
+  "userRequestedExistingEvidenceOnly": true,
+  "collectorScriptModificationCancelled": true,
+  "confirmedLocalCodeLevelRetentionEvidence": {
+    "scope": "Previously captured local pre-fix mod heap; not an incident-server heap",
+    "summary": {
+      "builders": 38,
+      "closedWithReleasedCredit": 38,
+      "largestIndividuallyRetainedBytes": 15752904,
+      "liveRegionsCapturingClosedBuilder": 1748,
+      "uniqueCapturedBuilderObjects": 38
+    },
+    "referenceChain": "installed ThermalRegion -> RegionPending.retentionChanged -> lambda arg$1 RebuildPreparation -> old regions and geometry",
+    "keyFinding": "All38 retained completed builders had their accounting reservation released, yet1748 installed regions still captured them.",
+    "evidence": "build/thermal-retention-chain-evidence-20261109.json",
+    "sourceFixAlreadyValidated": true,
+    "incidentServerEntire6GiBOwnerProven": false
+  },
+  "confirmedBudgetCoverageGap": "tryReserve enforces128MiB target; reserveCompletion and completeResize do not. Source registration and structural completion also use the latter paths, so the target is not a hard total-memory ceiling."
+}

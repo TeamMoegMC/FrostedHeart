@@ -264,7 +264,7 @@ public class RoomPathfinder {
     /**
      * 生成某个可达脚底位置的相邻可达脚底位置
      */
-    private static List<BlockPos> getNeighbors(AbstractWorld world, BlockPos start, BlockPos foot) {
+    public static List<BlockPos> getNeighbors(AbstractWorld world, BlockPos start, BlockPos foot) {
         LinkedHashSet<BlockPos> result = new LinkedHashSet<>();
         BlockPos.MutableBlockPos mbp=new MutableBlockPos();
         // 水平移动（含高度差 -1, 0, +1）

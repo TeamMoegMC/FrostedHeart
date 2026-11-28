@@ -65,6 +65,7 @@ public class TownCommonEvents {
     public static void syncTownDataOnLogin(PlayerEvent.PlayerLoggedInEvent event) {
         if (event.getEntity() instanceof ServerPlayer player) {
             com.teammoeg.frostedheart.content.town.TownSync.requestFull(player, "login");
+            com.teammoeg.frostedheart.content.town.ui.TownUiMode.onLogin(player);
         }
     }
 

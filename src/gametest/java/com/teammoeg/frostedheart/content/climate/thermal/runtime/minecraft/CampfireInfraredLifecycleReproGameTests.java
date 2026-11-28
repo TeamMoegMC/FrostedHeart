@@ -2,7 +2,6 @@
 package com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft;
 
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.network.InfraredBrickCodec;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialSample;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput.InfraredSnapshot;
@@ -222,7 +221,7 @@ public final class CampfireInfraredLifecycleReproGameTests {
         }
 
         private void capture(ServerPlayer player, String stage, int elapsed) {
-            boolean materialAvailable = MinecraftThermalInput.sampleMaterial(
+            boolean materialAvailable = MinecraftThermalInput.sampleMaterialTemperature(
                     player.serverLevel(), positions[0], material);
             MaterialSample.Source source = materialAvailable ? material.source() : MaterialSample.Source.UNAVAILABLE;
             if (source == MaterialSample.Source.STORED) everStored = true;
@@ -231,7 +230,7 @@ public final class CampfireInfraredLifecycleReproGameTests {
                         cadence, elapsed, stage, source, displayed[0]);
                 lastMaterialSource = source;
             }
-            InfraredSnapshot snapshot = MinecraftThermalInput.gameplayInfraredSnapshot(
+            InfraredSnapshot snapshot = MinecraftThermalInput.captureInfraredSnapshot(
                     player, !initialized, generation, center, epoch, presence, readable,
                     fields, storedEpoch, storedSampleTick);
             if (snapshot == null) return;
@@ -281,7 +280,7 @@ public final class CampfireInfraredLifecycleReproGameTests {
                         "INFRARED_REPRO_SAMPLE,cadence={},elapsed={},tick={},stage={},full={},readable={},epoch={},wallPagePresent={},wallEncoded={},floorEncoded={},otherPageEncoded={},wallMaterialC={},wallMaterialSource={},lost={},recovered={}",
                         cadence, elapsed, level.getGameTime(), stage, snapshot.full(), snapshot.readable(),
                         snapshot.infraredEpoch(), pagePresent, displayed[0], displayed[1], displayed[2],
-                        WorldTemperature.material(level, positions[0]), source,
+                        MinecraftThermalInput.materialTemperature(level, positions[0]), source,
                         lostWall, recoveredWall);
             }
         }

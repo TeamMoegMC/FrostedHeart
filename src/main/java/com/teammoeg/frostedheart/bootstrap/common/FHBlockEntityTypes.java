@@ -19,6 +19,9 @@
 
 package com.teammoeg.frostedheart.bootstrap.common;
 
+import com.teammoeg.frostedheart.content.climate.block.sensor.*;
+
+import com.teammoeg.frostedheart.content.town.buildings.dispatch.*;
 import com.google.common.collect.ImmutableSet;
 import com.simibubi.create.content.kinetics.base.HalfShaftInstance;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntityRenderer;
@@ -44,6 +47,7 @@ import com.teammoeg.frostedheart.content.steamenergy.steamcore.SteamCoreTileEnti
 import com.teammoeg.frostedheart.content.town.buildings.house.HouseBlockEntity;
 import com.teammoeg.frostedheart.content.town.buildings.hunting.HuntingBaseBlockEntity;
 import com.teammoeg.frostedheart.content.town.buildings.logistics.TransportStationBlockEntity;
+import com.teammoeg.frostedheart.content.town.buildings.institute.ResearchInstituteBlockEntity;
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBaseBlockEntity;
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBlockEntity;
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseBlockEntity;
@@ -78,6 +82,11 @@ public class FHBlockEntityTypes {
 
     public static final DeferredRegister<BlockEntityType<?>> REGISTER = DeferredRegister.create(
             ForgeRegistries.BLOCK_ENTITY_TYPES, FHMain.MODID);
+    public static final RegistryObject<BlockEntityType<com.teammoeg.frostedheart.content.agriculture.tree.CultivatedOakBlockEntity>> CULTIVATED_OAK = REGISTER.register(
+            "cultivated_oak_sapling", makeType(com.teammoeg.frostedheart.content.agriculture.tree.CultivatedOakBlockEntity::new,
+                    FHBlocks.CULTIVATED_OAK::get, FHBlocks.CULTIVATED_SPRUCE::get, FHBlocks.CULTIVATED_BIRCH::get,
+                    FHBlocks.CULTIVATED_JUNGLE::get, FHBlocks.CULTIVATED_ACACIA::get, FHBlocks.CULTIVATED_DARK_OAK::get,
+                    FHBlocks.CULTIVATED_MANGROVE::get, FHBlocks.CULTIVATED_CHERRY::get));
     public static final RegistryObject<BlockEntityType<ThermalReservoirBlockEntity>> THERMAL_RESERVOIR = REGISTER.register(
             "thermal_reservoir", makeType(ThermalReservoirBlockEntity::new,
                     FHBlocks.WARM_STONE::get, FHBlocks.HOT_WATER_BAG::get)
@@ -149,6 +158,8 @@ public class FHBlockEntityTypes {
     public static final RegistryObject<BlockEntityType<WarehouseInterfaceBlockEntity>> WAREHOUSE_INTERFACE = REGISTER.register(
             "warehouse_interface", makeType(WarehouseInterfaceBlockEntity::new, FHBlocks.WAREHOUSE_INTERFACE::get)
     );
+    public static final RegistryObject<BlockEntityType<TemperatureSensorBlockEntity>> TEMPERATURE_SENSOR = REGISTER.register(
+            "temperature_sensor", makeType(TemperatureSensorBlockEntity::new, FHBlocks.TEMPERATURE_SENSOR::get));
     public static final RegistryObject<BlockEntityType<WarehouseLevelEmitterBlockEntity>> WAREHOUSE_LEVEL_EMITTER = REGISTER.register(
             "warehouse_level_emitter", makeType(WarehouseLevelEmitterBlockEntity::new, FHBlocks.WAREHOUSE_LEVEL_EMITTER::get)
     );
@@ -167,8 +178,15 @@ public class FHBlockEntityTypes {
     public static final RegistryObject<BlockEntityType<HuntingBaseBlockEntity>> HUNTING_BASE = REGISTER.register(
             "hunting_base", makeType(HuntingBaseBlockEntity::new, FHBlocks.HUNTING_BASE::get)
     );
+    public static final RegistryObject<BlockEntityType<LaborDispatchBlockEntity>> LABOR_DISPATCH = REGISTER.register(
+            "labor_dispatch", makeType(LaborDispatchBlockEntity::new, FHBlocks.LABOR_DISPATCH::get)
+    );
+
     public static final RegistryObject<BlockEntityType<TransportStationBlockEntity>> TRANSPORT_STATION = REGISTER.register(
             "transport_station", makeType(TransportStationBlockEntity::new, FHBlocks.TRANSPORT_STATION::get)
+    );
+    public static final RegistryObject<BlockEntityType<ResearchInstituteBlockEntity>> RESEARCH_INSTITUTE = REGISTER.register(
+            "research_institute", makeType(ResearchInstituteBlockEntity::new, FHBlocks.RESEARCH_INSTITUTE::get)
     );
 
     public static final RegistryObject<BlockEntityType<WardrobeBlockEntity>> WARDROBE = REGISTER.register(

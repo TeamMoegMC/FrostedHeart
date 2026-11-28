@@ -2,7 +2,7 @@
 
 - Status: Partial — 当前同步已通过36项统一Forge回归及住宅/狩猎站/矿场真实渲染；独立进程seed/migrate/read保留原资格，远程多客户端与长时负载未完整验证。
 - Last verified: 2026-11-08（日报初始化路径）；2026-11-07（同步与GUI）；2026-10-23（独立进程迁移/重开）
-- Scope: 玩家队伍的六类逻辑建筑、持久化、名册关联、核心生命周期、结构与环境刷新、管理视图。
+- Scope: 玩家队伍的七类逻辑建筑、持久化、名册关联、核心生命周期、结构与环境刷新、管理视图。
 - Code anchors: `TownBuildingStore`, `BuildingRecordsCodec`, `TownBuildingTypes`, `TownBuildingChangeEvent`, `AbstractTownBuilding`, `TeamTown`, `TownAssignments`, `AbstractTownBuildingBlockEntity`, `LoadedTownWorld`, `BlockScanner`, `SchedulerQueue`。
 
 ## 数据归属
@@ -23,7 +23,7 @@
 | `buildingDimension` | 可选的建筑归属维度 ID |
 | `retainedBuildingData` | 保留原文列表，区分 `pending` 和 `archive` |
 
-`TownBuildingTypes.VERSION` 为 `1`。缺少 `version` 是旧版本 `0`；旧整数映射固定为 `0=house`、`1=huntingBase`、`2=mine`、`3=mineBase`、`4=warehouse`、`5=transportStation`。这个映射不依赖今后的注册顺序。每类 `MAP_CODEC` 声明拥有的顶层字段，`CODEC` 从它派生；类型表通过延迟 supplier 避免父类与子类静态初始化循环。
+`TownBuildingTypes.VERSION` 为 `1`。缺少 `version` 是旧版本 `0`；旧整数映射固定为 `0=house`、`1=huntingBase`、`2=mine`、`3=mineBase`、`4=warehouse`、`5=transportStation`。这个映射不依赖今后的注册顺序。2026-11-09 新增的研究所只有字符串键 `researchInstitute`，没有旧整数。每类 `MAP_CODEC` 声明拥有的顶层字段，`CODEC` 从它派生；类型表通过延迟 supplier 避免父类与子类静态初始化循环。
 
 读取逐项进行。外层合法 `pos` 是位置权威，覆盖解码候选中的内部镜像；冲突或损坏的原位置进入字段 archive。只有内部位置合法时可以恢复外层位置。两个位置都无法解释的条目只归档，不生成原点建筑。同坐标选择第一条完整可解析记录，其余归档；没有健康候选时，第一条可定位记录成为 pending。
 
@@ -82,7 +82,9 @@ store 以 `changeVersion` 与 `encodedVersion` 判断单栋缓存是否过期。
 
 经营或绑定占用当前 town 操作边界时，核心请求进入 `TownRuntimeManager` 的按 holder/位置合并队列，在操作结束后核对当前组件并执行。晚到的旧核心移除不能删掉新核心。捕获和发送完整管理视图不会执行实际住房或就业分配。
 
-`buildingDimension` 表示存储归属；`TeamTownData.executionLevel(holder)` 表示当前执行世界，并要求 holder 仍是当前队伍注册表中的实例。旧档在完整 holder 安装后从 generator 恢复归属。已有记录不随 tower 换维度而自动迁移。generator 缺失、维度不匹配或 Level 不存在时，执行连接不可用，建筑事实仍保留。模拟注册表、运输设备、管理视图准备、`/town tick` 与 `/town spawn_refugees` 使用同一执行上下文。
+`buildingDimension` 表示存储归属；`TeamTownData.executionLevel(holder)` 表示当前执行世界，并要求 holder 仍是当前队伍注册表中的实例。执行世界就是建筑归属的维度，还没有建筑归属时才用 generator 的维度；能量塔在不在、在哪个维度都不影响执行，因为玩家随时可能拆塔。只有两者都缺失或 Level 不存在时执行连接才不可用，建筑事实仍保留。旧档在完整 holder 安装后从 generator 恢复归属。已有记录不随 tower 换维度而自动迁移。模拟注册表、运输设备、管理视图准备、`/town tick` 与 `/town spawn_refugees` 使用同一执行上下文。
+
+能量塔只在与城镇同一维度时为城镇服务（`TeamTownData.townGenerator`）：塔的城镇 tick、方位、结算日报位置、塔状态和难民都只认这座塔；塔在别的维度时对这个城镇等于没有塔。没有塔时结算照常进行，屋子只有自然温度，也不会来难民。
 
 `TownSettlement.advanceOneDay` 与调试难民入口还调用 `isCurrentExecutionContext`，在读取世界前核对当前 town 组件和传入的实际 `ServerLevel`。错误世界、已替换组件和已退休 holder 不推进经营；重入仍优先返回 `IN_PROGRESS`。
 
@@ -106,7 +108,7 @@ store 以 `changeVersion` 与 `encodedVersion` 判断单栋缓存是否过期。
 
 ## 管理视图与验证入口
 
-`TeamTownData.MANAGEMENT_CODEC` 导出可解释建筑及 `buildingLoadIssues` 摘要，不发送 `retainedBuildingData` 原文。磁盘继续使用 `TeamTownData.CODEC`。FH 协议版本包含 `:town-view-1:building-data-1`，两端须一起更新。居民页显示待恢复住房与岗位；建筑页显示恢复摘要。
+`TeamTownData.MANAGEMENT_CODEC` 导出可解释建筑及 `buildingLoadIssues` 摘要，不发送 `retainedBuildingData` 原文。磁盘继续使用 `TeamTownData.CODEC`。FH 协议版本包含 `:town-view-1:building-data-2`（加入研究所时由 `-1` 升级，旧客户端无法解码新建筑类型），两端须一起更新。居民页显示待恢复住房与岗位；建筑页显示恢复摘要。
 
 `TownBuildingGameTests` 覆盖真实核心、原版保存入口、混合损坏记录、恢复关联、布局扫描、非加载查询、操作边界及编码失败。`TeamTownPersistenceRestartGameTests` 使用独立 `seed/migrate/read` 进程读取同一个测试世界，seed 由真实保存结果生成旧格式，读取阶段不重建预期数据。
 
@@ -123,3 +125,142 @@ store 以 `changeVersion` 与 `encodedVersion` 判断单栋缓存是否过期。
 | 500 | 6.6326 | 0.9681 | 1.0730 |
 
 这些数据比较同一实现的冷缓存与热缓存；不是旧架构基准，也不是完整 tick 的百分位。原版强制保存覆盖其他队伍和世界区块，不能把日志中的 `forcedSaveMs` 当成单镇独占 I/O。缓存内存峰值、长时扫描延迟分布、图形客户端及多客户端操作仍需对应工作负载验证。整体保存边界见 [persistence-and-runtime.md](persistence-and-runtime.md)。
+
+
+## 道路连接与能量塔（2026-11-13）
+
+状态：已实现，编译及 18 项连通性、10 项居民道路 GameTest 通过；2026-11-15 起重扫保留资格、沿用记下的路线、道路视图随存档保存，
+另由 `rescanKeepsTheLinkedWarehouseWorking`、`unloadedTownsKeepTheirLinksAndLeaveTheScanThreadsFree`、
+`brokenRoadUnlinksAlthoughPartOfTheTownIsOutOfRange`、`savedTownKeepsItsRoadLinks`、`rememberedRoutesHoldOnlyWhereTerrainIsUnknown`
+覆盖，并在真实客户端中验证过拆路、离开城镇与重启（见 2026-11-15 日记）；尚未在多队伍服务器上验收。代码锚点：`TownConnectivity`、
+`RoomPathfinder.getNeighbors`、`AbstractTownBuilding.isBuildingWorkable`、`TeamTownData.tick`。
+
+先计算建筑之间的连通集群，再选择可工作集群。只以当前队伍在城镇所在维度的能量塔作为塔端点，
+其他队伍的塔不会授予工作资格。如果存在连到本队塔的集群，仅这些集群具备正常工作条件；
+若没有任何集群连到本队塔（包括无塔、塔不可达），仅建筑数量最多的集群具备工作条件。
+数量相同时，选择包含按 `BlockPos.compareTo` 排序首个控制方块的集群，避免随机切换。
+集群资格不替代建筑原有的结构、温度、光照等工作条件。
+连接端点优先取结构扫描得到的全部门入口，同建筑全部入口默认互通；尚无入口数据时回退到控制方块水平相邻、上下各一格范围内可站立的位置。
+能量塔端点同样先取控制方块旁的可站立格；成型的一、二级能量塔都是 3×3 底座、控制方块在中心柱，被塔身包住，旁边没有
+可站立格，此时改用控制方块水平切比雪夫距离 2（紧贴底座外侧一圈）、下两格到上一格之间的可站立格
+（`TownConnectivity.towerEntrances`），候选筛选的塔端偏移上限相应取 6。2026-11-15 之前没有这一回退：真实成型的塔从来不可达，
+所有城镇实际都在走最大集群回退，青色道路不会出现。
+矿井不参与道路连通（`MineBuilding.requiresRoad()` 为 false）：`TownConnectivity.onRoads` 在扫描前把它们排除，
+它们不当端点也不接力，`isConnectivityWorkable()` 对它们恒为真；矿井能否开采只看接管它的矿工之家，而矿工之家本身要接上道路。
+原因：矿工之家接管 1024 格内的矿井、矿井常放在地下生物群系，而道路每段只有 60 步、只能经建筑接力、未加载区块算不通，
+要求矿井自己连路实际做不到。视图不给矿井画连通方块，布告板不给矿井出道路原因。通行判定复用房间的
+碰撞分类、两格身高、一步台阶与梯子规则。城镇连接快照中的所有 `DoorBlock`（含木门、铁门、上下半部）
+均视为空气，不受开关状态影响；房间密闭性扫描仍使用原始碰撞分类，不改变房间边界。
+每段路径最多 60 次相邻移动；它是路径步数，不是直线距离。建筑之间通过并查集合并，
+同一集群共享到塔的连接，可通过多座建筑中继超过 60 格的总距离。
+
+`TownConnectivity` 使用共享双线程池计算。后台按需请求 section；同一 ServerLevel 的全部城镇通过
+`TownSectionSnapshots` 共享缓存，主线程每个维度每 tick 最多分类两个 section（每个 4096 格），
+仅访问已加载区块；缺失区块视为不可通行，不强载。后台只读取不可变字节分类快照，不读取世界或方块实体。
+每个起点保留短期 section 租约索引，在脏期限缩短、刷新、过期或淘汰后重新查询共享缓存。
+快照分 tick 取得，并非整个世界同一时刻的原子快照；道路变化会在后续轮次重新检测。
+一批完成并在主线程应用后等待 1200 tick（正常 20 TPS 下 60 秒），再启动下一批。
+建筑集合、入口、维度或塔位置变化使旧批作废，并立即安排重算（已有批次先结束）；同一城镇不会重叠启动两批。
+重算完成前各建筑保留原有资格：已拆除的建筑从视图中去掉，以它或旧塔为端点的路线一并去掉；新建筑在被检测到之前没有资格。
+只有维度变化会先清除全部资格。无塔也进行建筑间寻路。从未检测过、也没有存档视图的城镇默认无资格；普通道路变化在下一批完成时生效。
+
+记下的路线与未加载地形（2026-11-15）。区块只有加载时才会变化，未加载的地形保持卸载前的样子。所以每一批都把上一次的路线
+（视图里的 `routes`）当作已知连接先检查（`TownConnectivity.calculateView` 的 `known`、`intact`）：路线经过已加载地形的每一步按实时地形复查，
+包括入口和相邻移动，有一步不通就作废；经过未加载地形的步骤保持原样。然后对仍未连上的建筑照常寻路，未加载地形当作墙。
+所有道路建筑（`onRoads`）与塔都参与，每一批都按完整规则应用，既能连上也能断开；看不见的部分靠记下的路线保持原来的连接。
+城镇的建筑核心（周围 5×5 格）与入口所在区块一个都没加载时不启动检测，`UNLOADED_RETRY_TICKS`（100 tick）后再看：
+此时既无变化可查，也不必占用共享线程。已知缺口：只记得当时用到的那条路线；若它在已加载地形中断开，而另一条备用路线要穿过未加载地形，
+会暂时判为断开，直到那边加载后再次检测。在区块卸载前不到一个检测间隔内拆掉的路，要等下次加载后才生效。
+
+道路视图随存档保存（`TeamTownData` 的 `roads` 字段，`TownConnectivity.RESULT_CODEC`：连到塔与可工作的位置、各路线的步骤）。
+读档时恢复视图和各建筑的两项资格，重启后没人在附近的城镇也保持原有连接，随后的检测从这些路线开始。
+视图发生变化（`TownConnectivity.version`）时 `TeamTownData.tick` 标记存档需要写入。旧存档没有该字段，资格由首次检测得出。
+客户端管理视图（`MANAGEMENT_CODEC`）不带路线，资格随各建筑记录同步；路线仍按需通过 `TownRoadViewPacket` 获取。
+
+连接状态变更发送建筑可用性事件，并通过 `ITownBuilding.CODEC` 同步给客户端。
+`connectedToTower` 只表示真实连到本队塔，`connectivityWorkable` 表示通过连通集群规则获准工作；
+两者分别同步到客户端，并随道路视图写入存档。正常工作判定和非住宅每日工作入口要求
+`connectivityWorkable`；住宅原有独立日结维护流程保留。
+后台请求在 30 秒未被服务时终止并记录失败，后续按正常间隔重试；被作废的批次不记录失败。
+
+### Section 快照 TTL 与宽限刷新
+
+代码锚点：`SectionSnapshotCache`、`TownSectionSnapshots`、`LevelChunkMixin_TownSectionCache`。
+以下为源码默认值，按游戏 tick 计时，括号中的秒数仅适用于正常 20 TPS：
+
+| 常量 | 默认值 | 含义 |
+|---|---:|---|
+| `TTL_TICKS` | 100（5 秒） | 成功分类后的基础有效期；命中不续期 |
+| `DIRTY_TTL_TICKS` | 20（1 秒） | 方块写入后，将原到期时间缩短到不晚于“写入 tick + 20” |
+| `GRACE_TICKS` | 40（2 秒） | 到期后仍可立即读取旧快照的宽限期 |
+| `MAX_SECTIONS` | 1024 | 每维度 LRU 上限，分类字节数组约 4 MiB，另有索引开销 |
+
+- 有效期内命中直接返回，不排刷新；脏标记仅缩短 deadline，不立即复制。
+- 到期且仍在宽限期内，立即返回旧快照，首次访问将刷新任务追加 FIFO 队尾。同一 section 只有一个待处理任务；
+  再访问不重复排队、不把已有任务挪回队尾，也不延长到期/宽限时间。
+- 宽限结束时主动从缓存移除，废弃不再需要的旧刷新任务。此后访问是冷请求，等主线程产生新快照；同 section 的冷请求共享一个 future。
+- 刷新成功用新的只读快照替换旧对象，重新获得基础 TTL；旧租约标为失效，已发出的数组不原地修改。
+- 未访问的过期项不会自行刷新，但照样在宽限结束时移除。容量淘汰可能早于 TTL；被淘汰后按冷请求重取。
+- 真实 `LevelChunk.setBlockState` 成功写入触发脏标记，包括玩家操作、命令、流体和邻居状态更新；section 边缘同时缩短邻接 section 的期限，覆盖边界碰撞依赖。
+- 区块卸载立即退役该区块已有快照；未加载区块只返回短期不可通行掩码，不存入共享缓存，避免加载后沿用旧掩码。
+  同一批道路检测内，已判定未加载的 section 记在批次里，各起点不再重新排队请求（`TownConnectivity.Batch.missing`）。
+  区块加载/卸载还会标脏邻近缓存；数据包重载缩短所有现有缓存期限。
+- 维度卸载、服务器停止清空缓存并释放等待者；游戏时钟回退也废弃旧期限。缓存和队列不持久化。
+
+主线程在城镇 tick 之前按维度统一服务队列，即使当前没有寻路批次也会处理已请求的宽限刷新和过期清理。
+相同维度同一个 tick 重复调用服务不会突破 2 section 预算。TTL 只控制快照新鲜度，不会让每次脏标记都启动新的城镇寻路批次；
+集群重算仍使用原有 1200 tick 间隔，居民下一步行走的实时方块检查继续读取当前世界。
+
+
+虚拟地形边界测试：`TownConnectivityGameTests` 使用生产 `calculate` 实现，测试 60/61 步、
+建筑中继、头部净空、墙壁、60 级连续台阶、梯子、悬空、空城镇及取消；真实方块分类测试覆盖
+木门/铁门、上下半部和开关状态。水平台阶移动一步可改变两个坐标，因此候选筛选的曼哈顿距离上限
+为 `2 * MAX_DISTANCE + 两端入口到控制方块的最大曼哈顿偏移`（回退端点每端偏移上限 2）；最终仍由 BFS 步数限制决定是否连通。
+执行：`./gradlew --offline runGameTestServer -PgameTestNamespaces=frostedheart_town_connectivity
+-PgameTestDirectory=build/town-connectivity-gametest`（写为一行）。
+
+
+### 道路连接高亮视图
+
+`TownRoadRenderer` 跟随现有区域视图按键（默认 J，`FHKeyMappings.key_zoneView` / `RoomZoneRenderer.visible`）。
+开启时保留房间高亮，并叠加青色连到本队塔的道路、绿色最大集群回退道路、橙色其余集群道路；
+建筑控制方块以青色/绿色/红色标识连塔/最大集群回退工作/未获准工作。
+仅绘制相机 96 格内的路线与建筑。道路是用于证明集群连接的生成森林，不是全部可走地面，也不显示失败搜索范围。
+
+客户端仅在区域视图开启期间每 40 tick 发 `TownRoadViewRequestPacket`，携带已知版本 UUID；
+服务端解析发送者所属城镇，只返回同维度且版本变化的 `TownRoadViewPacket`。
+连接结果及路线变化才更新版本。关闭视图后，若仍有居民则继续为居民站位请求数据；无居民且视图关闭时停止请求。断线、切换维度、切换城镇或安装全量城镇快照时清理旧缓存。
+返回包携带所属城镇、维度和版本，客户端在当前连接及城镇一致时应用。
+
+每次合并集群只保留一条 BFS 最短见证路径，因此最多保存“节点数减集群数”条边。
+一条路径最多 61 个站立点；首点写绝对坐标，后续相邻移动用一字节编码三轴增量。
+同目标加入集群后，不再搜索它的其他入口。客户端只在收到新版本时合并重复路径格，避免每帧重建几何索引。
+测试 `forestWitnessesAndPoweredFlags`、`isolatedClusterHasUnpoweredWitness` 及
+`compactRoadPacketRoundTrip` 覆盖森林路径、两种资格集合、状态着色数据和负坐标/台阶/梯子增量编解码。
+`TownConnectivityGameTests` 另覆盖无塔最大集群、本队塔不可达回退、较小连塔集群优先、
+同规模集群稳定选择，以及真实队伍数据的能量塔归属解析。`formedT1TowerReachableAtItsBase` 与
+`formedT2TowerReachableAtItsBase` 在 GameTest 世界里真实成型两级能量塔，确认入口全部落在底座外一圈的地面、
+5 格外开阔地上的建筑能连到塔，且用两格高的墙围住底座后不可达、孤立建筑按最大集群工作。
+
+### 玩家可见的说明（2026-11-15）
+
+起因：玩家反馈建筑界面和任务书都没讲路网规则，按键视图里的道路颜色也没有说明。原先建筑布告板的停工原因只看房间、温度、
+光照，断路的建筑页头仍显示“运转”。
+
+- 布告板：`BoardPresenters.road` 按客户端同步的 `connectivityWorkable`、`connectedToTower` 区分四种处境，
+  各建筑 presenter 把 `roadReasons` 加进停工原因（页头印章悬停、镇长印章建筑卡片的首条原因都随之显示），并在房间便签之后
+  追加“得修”的道路便签 `roadNote`，动作里用 `Component.keybind` 显示当前绑定的视图键。每次检查完成后总有一片获准工作，
+  所以“全镇没有任何建筑获准”即视为检查结果尚未出来（首次检测、建筑集合或塔位置变化后），只显示“正在检查道路”、不出便签，
+  避免把尚未更新说成断路。改路后的结果最迟在下一批（约一分钟）生效，便签写明“约一分钟内生效”。
+- 条件栏：住宅、仓库、猎人之家、矿工之家、货运站、研究所的条件栏在房间那一项后面加道路标签（`BoardPresenters.addRoadChip`）：
+  接上为绿色“道路通”，没接上为红色“没接上道路”，检查结果未到为灰色“正在查道路”；悬停说明是连塔那片还是最大那片，并给出视图键。
+  这样其他条件都满足、只差道路时，条件栏和“不宜居/停工”印章说的是一回事。矿井不需要道路，没有这一项。
+  住宅条件栏的标题由“屋里条件”改为“房屋条件”，因为道路不是屋里的条件。
+- 详细模式与劳务派遣所的信息面板复用同一句原因（`MineBaseScreen.appendCommonFailures`）；劳务派遣所原先不显示能否工作，现补上。
+- 视图图例：区域视图开启时左上角绘制 `TownViewLegendOverlay`，色块直接取 `RoomZoneRenderer` / `TownRoadRenderer`
+  的颜色常量，七行、几个色块同排，GUI 缩放 5 时约占屏宽四分之一；检查结果未到时（`TownRoadRenderer.checking`）
+  把“只画连通的一条路”换成“正在检查道路，红色暂不作数”。
+  F3、隐藏界面或打开任何界面时不画。注视城镇建筑方块时按键提示列出该视图键（`KeyHintRegistrate`）。
+- 任务书（整合包仓库 `twr_quests` 语言文件与 `building_town_expansion.snbt`）：“城镇建筑的基本规则”新增四段——
+  什么算路（两格高、每步上下一格、梯子和门可过，不需特定方块）、从门口算起每段 60 步并可由建筑接力、矿井不用连路、
+  连塔优先与无塔取最大片、J 视图的颜色；“城镇如何运转”补一句需要道路相连。

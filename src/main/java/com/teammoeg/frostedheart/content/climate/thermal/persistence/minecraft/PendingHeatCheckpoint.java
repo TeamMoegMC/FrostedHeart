@@ -91,10 +91,15 @@ public final class PendingHeatCheckpoint {
     public record Restored(SpatialHeatInput heat, double originalJ, double coolingLossJ, double unacceptedJ) { }
     /** One restore fragment fits the existing intake slice; offline production is never invented. */
     public Restored restore(int start, int end, long tick, double halfLifeSeconds, long minimumPageGeneration) {
+        return restore(start, end, ignored -> tick, halfLifeSeconds, minimumPageGeneration);
+    }
+    public Restored restore(int start, int end, java.util.function.LongUnaryOperator recipientTick,
+            double halfLifeSeconds, long minimumPageGeneration) {
         var builder = new SpatialHeatInput.Builder(); builder.reserve(end - start);
         double original = 0, loss = 0, unaccepted = 0;
         double rate = DormantThermalCooling.rate(halfLifeSeconds);
         for (int index = start; index < end; index++) {
+            long tick = recipientTick.applyAsLong(input.position(index));
             double joules = input.energyJ(index); original += joules;
             long middle = input.fromTick(index) + (input.toTick(index) - input.fromTick(index)) / 2;
             double remaining = joules * DormantThermalCooling.factor(Math.min(middle, referenceTick), tick, rate); loss += joules - remaining;

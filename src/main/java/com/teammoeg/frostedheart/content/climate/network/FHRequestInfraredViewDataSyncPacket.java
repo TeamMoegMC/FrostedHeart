@@ -21,17 +21,19 @@
 package com.teammoeg.frostedheart.content.climate.network;
 
 import com.teammoeg.chorda.network.CMessage;
-import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 import java.util.function.Supplier;
 
-/** Client-carried display baseline and previous analytic-field footprint. */
+/**
+ * Client-carried display baseline and previous analytic-field footprint. {@code knownNaturalRevision} is the
+ * {@link InfraredNaturalClimate#revision()} the client holds, 0 for none, or {@link InfraredNaturalClimate#UNTRACKED}.
+ */
 public record FHRequestInfraredViewDataSyncPacket(
         int requestId, boolean forceFull, long knownGeneration, long knownCenter, int lastEpoch,
         long[] knownPresence, boolean knownReadable, long[] knownFieldPages, long knownStoredEpoch,
-        long knownStoredSampleTick, int knownDisplayRequestId) implements CMessage {
+        long knownStoredSampleTick, int knownDisplayRequestId, long knownNaturalRevision) implements CMessage {
     public static final int PRESENCE_WORDS = 12;
 
     public FHRequestInfraredViewDataSyncPacket {
@@ -42,12 +44,21 @@ public record FHRequestInfraredViewDataSyncPacket(
             int lastEpoch, long[] knownPresence, boolean knownReadable, long[] knownFieldPages, long knownStoredEpoch,
             long knownStoredSampleTick) {
         this(requestId, forceFull, knownGeneration, knownCenter, lastEpoch, knownPresence, knownReadable,
-                knownFieldPages, knownStoredEpoch, knownStoredSampleTick, -1);
+                knownFieldPages, knownStoredEpoch, knownStoredSampleTick, -1, InfraredNaturalClimate.UNTRACKED);
+    }
+
+    public FHRequestInfraredViewDataSyncPacket(int requestId, boolean forceFull, long knownGeneration, long knownCenter,
+            int lastEpoch, long[] knownPresence, boolean knownReadable, long[] knownFieldPages, long knownStoredEpoch,
+            long knownStoredSampleTick, int knownDisplayRequestId) {
+        this(requestId, forceFull, knownGeneration, knownCenter, lastEpoch, knownPresence, knownReadable,
+                knownFieldPages, knownStoredEpoch, knownStoredSampleTick, knownDisplayRequestId,
+                InfraredNaturalClimate.UNTRACKED);
     }
 
     public FHRequestInfraredViewDataSyncPacket(FriendlyByteBuf b) {
         this(b.readVarInt(), b.readBoolean(), b.readVarLong(), b.readLong(), b.readVarInt(),
-                readPresence(b), b.readBoolean(), readFieldPages(b), b.readVarLong(), b.readLong(), b.readVarInt());
+                readPresence(b), b.readBoolean(), readFieldPages(b), b.readVarLong(), b.readLong(), b.readVarInt(),
+                b.readLong());
     }
 
     static long[] readPresence(FriendlyByteBuf b) {
@@ -118,20 +129,17 @@ public record FHRequestInfraredViewDataSyncPacket(
         b.writeVarLong(knownStoredEpoch);
         b.writeLong(knownStoredSampleTick);
         b.writeVarInt(knownDisplayRequestId);
+        b.writeLong(knownNaturalRevision);
     }
 
     @Override public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
             var player = context.get().getSender();
             if (player == null) return;
-            var snapshot = MinecraftThermalInput.gameplayInfraredSnapshot(player, this);
-            if (snapshot != null) {
-                int count = Math.max(1, snapshot.brickRecords().length);
-                for (int part = 0; part < count; part++)
-                    FHNetwork.INSTANCE.sendPlayer(player, new FHResponseInfraredViewDataSyncPacket(requestId, snapshot, part));
-            } else {
-                FHNetwork.INSTANCE.sendPlayer(player, FHResponseInfraredViewDataSyncPacket.acknowledge(this));
-            }
+            InfraredDiagnostics.request(player,this);
+            var snapshot = MinecraftThermalInput.captureInfraredSnapshot(player, this);
+            InfraredDiagnostics.response(player,requestId,snapshot);
+            InfraredTransfers.start(player,requestId,snapshot);
         });
         context.get().setPacketHandled(true);
     }

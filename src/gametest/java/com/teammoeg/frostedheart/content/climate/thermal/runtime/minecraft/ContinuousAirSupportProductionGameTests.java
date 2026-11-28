@@ -33,9 +33,9 @@ public final class ContinuousAirSupportProductionGameTests {
             helper.runAfterDelay(300L * (stage + 1), () -> {
                 var nearAir = new ThermalEnvironmentSample();
                 var beyondAir = new ThermalEnvironmentSample();
-                MinecraftThermalInput.gameplayPlacedReservoirEnvironment(level, near,
+                MinecraftThermalInput.samplePlacedReservoirAirAndRadiation(level, near,
                         WorldTemperature.naturalAir(level, near), nearAir);
-                MinecraftThermalInput.gameplayPlacedReservoirEnvironment(level, beyond,
+                MinecraftThermalInput.samplePlacedReservoirAirAndRadiation(level, beyond,
                         WorldTemperature.naturalAir(level, beyond), beyondAir);
                 boolean open = (observedStage & 1) != 0;
                 FHMain.LOGGER.info("THERMAL_SUPPORT_WALL,stage={},open={},nearTerms={},beyondTerms={},nearRead={},beyondRead={},worker={}",

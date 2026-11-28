@@ -45,11 +45,16 @@ public final class FHResponseInfraredViewDataSyncPacket implements CMessage {
         snapshot = new InfraredSnapshot(source.centerChunkX(), source.centerChunkZ(), source.centerSectionY(),
                 source.generation(), source.infraredEpoch(), source.readable(), source.full(), source.presence(),
                 source.fieldPages(), source.brickRecords().length == 0 ? InfraredBrickCodec.NO_PARTS
-                        : new byte[][] {source.brickRecords()[part]}, source.storedEpoch(), source.storedSampleTick());
+                        : new byte[][] {source.brickRecords()[part]}, source.storedEpoch(), source.storedSampleTick(),
+                firstPart ? source.natural() : null);
     }
 
     public static FHResponseInfraredViewDataSyncPacket acknowledge(FHRequestInfraredViewDataSyncPacket request) {
         return new FHResponseInfraredViewDataSyncPacket(request.requestId());
+    }
+
+    public static FHResponseInfraredViewDataSyncPacket acknowledge(int requestId) {
+        return new FHResponseInfraredViewDataSyncPacket(requestId);
     }
 
     private FHResponseInfraredViewDataSyncPacket(int requestId) {
@@ -72,6 +77,7 @@ public final class FHResponseInfraredViewDataSyncPacket implements CMessage {
         long[] presence = new long[0];
         long[] fields = new long[0];
         long storedEpoch = 0, storedSampleTick = 0;
+        InfraredNaturalClimate natural = firstPart && b.readBoolean() ? InfraredNaturalClimate.read(b) : null;
         if (lastPart) {
             if (b.readBoolean()) presence = FHRequestInfraredViewDataSyncPacket.readPresence(b);
             fields = FHRequestInfraredViewDataSyncPacket.readFieldPages(b);
@@ -80,7 +86,8 @@ public final class FHResponseInfraredViewDataSyncPacket implements CMessage {
         }
         byte[][] records = {b.readByteArray(InfraredBrickCodec.MAX_PAYLOAD_BYTES)};
         snapshot = new InfraredSnapshot(x, z, y, generation, epoch,
-                (flags & READABLE) != 0, (flags & FULL) != 0, presence, fields, records, storedEpoch, storedSampleTick);
+                (flags & READABLE) != 0, (flags & FULL) != 0, presence, fields, records, storedEpoch, storedSampleTick,
+                natural);
     }
     public InfraredSnapshot snapshot() { return snapshot; }
     public int requestId() { return requestId; }
@@ -97,6 +104,10 @@ public final class FHResponseInfraredViewDataSyncPacket implements CMessage {
         if (acknowledgement) return;
         b.writeInt(snapshot.centerChunkX()); b.writeInt(snapshot.centerChunkZ()); b.writeInt(snapshot.centerSectionY());
         b.writeVarLong(snapshot.generation()); b.writeVarInt(snapshot.infraredEpoch());
+        if (firstPart) {
+            b.writeBoolean(snapshot.natural() != null);
+            if (snapshot.natural() != null) snapshot.natural().write(b);
+        }
         if (lastPart) {
             b.writeBoolean(snapshot.presence().length != 0);
             if (snapshot.presence().length != 0) FHRequestInfraredViewDataSyncPacket.writeFieldPages(b, snapshot.presence());

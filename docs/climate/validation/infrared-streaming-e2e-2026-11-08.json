@@ -1,0 +1,1220 @@
+{
+  "status": "Local physical-backend and transport verification completed; identity with reported overseas failure remains unconfirmed",
+  "date": "2026-11-08",
+  "modVersion": "0.7.11",
+  "artifact": "build/infrared-refresh-20261105/libs/frostedheart-1.20.1-0.7.11.jar",
+  "artifactBytes": 14629486,
+  "runtime": {
+    "minecraft": "1.20.1",
+    "forge": "47.3.0",
+    "embeddium": "0.3.31-beta.53+mc1.20.1",
+    "oculus": "1.7.0",
+    "shaderpack": null,
+    "java": "17.0.12",
+    "gpu": "NVIDIA GeForce RTX 4070 Laptop GPU",
+    "server": "real dedicated server",
+    "clients": "two real hidden GLFW rendering clients"
+  },
+  "physicalBackend": {
+    "purpose": "Actual campfire -> continuous Air -> material -> real TCP -> GPU -> framebuffer; no analytic fields",
+    "analyticFields": 0,
+    "campfires": 5,
+    "worldActions": "Coal capability insertion, flint and steel ignition, iron shovel extinction, actual material removal and replacement; no writes to thermal numerical state",
+    "profile": {
+      "round": 0,
+      "name": "physical-campfires-3s-rtt-16KiBps",
+      "oneWayMs": 1500,
+      "bytesPerSecond": 16384,
+      "bulk": false,
+      "physical": true
+    },
+    "roles": {
+      "fast": {
+        "stages": {
+          "heated": {
+            "phase": "heated",
+            "elapsedMs": 27576.3948,
+            "status": "IR_CLIENT open=true pending=false waitMs=0 request=13 sent=13 dataParts=10 acks=3 commits=10 display=13 ignored=0 staging=false baseline=true validMirrorSamples=320 minC=-11.0 maxC=-10.5 materialReadable=true texture=true renderedFrames=819 terrainDepth=true center=0,4,0",
+            "gpuWarmQ": -42,
+            "gpuColdQ": -32768,
+            "wire": {
+              "warm": -42,
+              "cold": -32768
+            },
+            "backend": {
+              "phase": 1,
+              "tick": 4900,
+              "elapsedTicks": 572,
+              "analyticFields": 0,
+              "materialC": -10.340886685937056,
+              "materialSource": "LIVE",
+              "materialQ": -41,
+              "baselineC": -10.899999618530273,
+              "baselineQ": -44,
+              "airNearC": 9.842791683484169,
+              "airFarC": -1.352843324166679,
+              "airSampleTick": 4900,
+              "airBasisTerms": 8,
+              "airHeated": true,
+              "materialHeated": true,
+              "airCooled": false,
+              "airAtStopC": "NaN",
+              "peakAirC": 9.842791683484169,
+              "naturalC": -10.4
+            },
+            "frameRgb": [
+              180,
+              140,
+              132
+            ],
+            "baselineRgb": [
+              178,
+              178,
+              178
+            ],
+            "expectedColorError": 1.4873863636363467,
+            "bluePlaceholderError": 196.19
+          },
+          "cooled": {
+            "phase": "cooled",
+            "elapsedMs": 33610.7719,
+            "status": "IR_CLIENT open=true pending=false waitMs=0 request=16 sent=16 dataParts=13 acks=3 commits=13 display=16 ignored=0 staging=false baseline=true validMirrorSamples=320 minC=-11.0 maxC=-10.25 materialReadable=true texture=true renderedFrames=999 terrainDepth=true center=0,4,0",
+            "gpuWarmQ": -41,
+            "gpuColdQ": -32768,
+            "wire": {
+              "warm": -41,
+              "cold": -32768
+            },
+            "backend": {
+              "phase": 2,
+              "tick": 5020,
+              "elapsedTicks": 692,
+              "analyticFields": 0,
+              "materialC": -10.165965062136962,
+              "materialSource": "LIVE",
+              "materialQ": -41,
+              "baselineC": -10.899999618530273,
+              "baselineQ": -44,
+              "airNearC": 7.206732089413897,
+              "airFarC": -0.7343049279320548,
+              "airSampleTick": 5020,
+              "airBasisTerms": 8,
+              "airHeated": true,
+              "materialHeated": true,
+              "airCooled": true,
+              "airAtStopC": 10.098470099026823,
+              "peakAirC": 10.353714893419152,
+              "naturalC": -10.4
+            },
+            "frameRgb": [
+              182,
+              141,
+              130
+            ],
+            "baselineRgb": [
+              178,
+              178,
+              178
+            ]
+          },
+          "removed": {
+            "phase": "removed",
+            "elapsedMs": 37192.5847,
+            "status": "IR_CLIENT open=true pending=false waitMs=0 request=18 sent=18 dataParts=15 acks=3 commits=15 display=18 ignored=0 staging=false baseline=true validMirrorSamples=319 minC=-11.0 maxC=-10.0 materialReadable=true texture=true renderedFrames=1106 terrainDepth=true center=0,4,0",
+            "gpuWarmQ": -32768,
+            "gpuColdQ": -32768,
+            "wire": {
+              "warm": -32768,
+              "cold": -32768
+            },
+            "backend": {
+              "phase": 3,
+              "tick": 5080,
+              "elapsedTicks": 752,
+              "analyticFields": 0,
+              "materialC": "NaN",
+              "materialSource": "UNAVAILABLE",
+              "materialQ": -32768,
+              "baselineC": -10.899999618530273,
+              "baselineQ": -44,
+              "airNearC": 6.055804568319738,
+              "airFarC": -0.668819743657634,
+              "airSampleTick": 5060,
+              "airBasisTerms": 8,
+              "airHeated": true,
+              "materialHeated": false,
+              "airCooled": true,
+              "airAtStopC": 10.098470099026823,
+              "peakAirC": 10.353714893419152,
+              "naturalC": -10.4
+            },
+            "frameRgb": [
+              134,
+              95,
+              89
+            ],
+            "baselineRgb": [
+              178,
+              178,
+              178
+            ]
+          },
+          "restored": {
+            "phase": "restored",
+            "elapsedMs": 42720.8642,
+            "status": "IR_CLIENT open=true pending=false waitMs=0 request=21 sent=21 dataParts=18 acks=3 commits=18 display=21 ignored=0 staging=false baseline=true validMirrorSamples=319 minC=-11.0 maxC=-10.0 materialReadable=true texture=true renderedFrames=1271 terrainDepth=true center=0,4,0",
+            "gpuWarmQ": -32768,
+            "gpuColdQ": -32768,
+            "wire": {
+              "warm": -32768,
+              "cold": -32768
+            },
+            "backend": {
+              "phase": 4,
+              "tick": 5200,
+              "elapsedTicks": 872,
+              "analyticFields": 0,
+              "materialC": "NaN",
+              "materialSource": "UNAVAILABLE",
+              "materialQ": -32768,
+              "baselineC": -10.899999618530273,
+              "baselineQ": -44,
+              "airNearC": 1.7082463760290416,
+              "airFarC": -0.5325917689372609,
+              "airSampleTick": 5180,
+              "airBasisTerms": 8,
+              "airHeated": true,
+              "materialHeated": false,
+              "airCooled": true,
+              "airAtStopC": 10.098470099026823,
+              "peakAirC": 10.353714893419152,
+              "naturalC": -10.4
+            },
+            "frameRgb": [
+              101,
+              101,
+              211
+            ],
+            "baselineRgb": [
+              178,
+              178,
+              178
+            ],
+            "expectedColorError": 1.0299999999999727,
+            "bluePlaceholderError": 1.0299999999999727
+          }
+        },
+        "wire": {
+          "dataPackets": 20,
+          "largestResponseBodyBytes": 828,
+          "largestCompressedMinecraftFrameBytes": 548,
+          "totalInfraredS2cFrameBytes": 6362,
+          "scope": "Real observed infrared responses and ACKs including Forge/Minecraft headers, threshold-256 compression and frame lengths; excludes other game packets, C2S, TCP/IP headers and retransmissions.",
+          "frames": [
+            {
+              "requestId": 1,
+              "first": true,
+              "last": true,
+              "full": false,
+              "ack": true,
+              "bodyBytes": 2,
+              "wireFrameBytes": 27,
+              "decodedPacketBytes": 25
+            },
+            {
+              "requestId": 2,
+              "first": true,
+              "last": true,
+              "full": false,
+              "ack": true,
+              "bodyBytes": 2,
+              "wireFrameBytes": 27,
+              "decodedPacketBytes": 25
+            },
+            {
+              "requestId": 3,
+              "first": true,
+              "last": true,
+              "full": false,
+              "ack": true,
+              "bodyBytes": 2,
+              "wireFrameBytes": 27,
+              "decodedPacketBytes": 25
+            },
+            {
+              "requestId": 4,
+              "first": true,
+              "last": true,
+              "full": true,
+              "ack": false,
+              "bodyBytes": 164,
+              "wireFrameBytes": 190,
+              "decodedPacketBytes": 187
+            },
+            {
+              "requestId": 5,
+              "first": true,
+              "last": true,
+              "full": false,
+              "ack": false,
+              "bodyBytes": 828,
+              "wireFrameBytes": 548,
+              "decodedPacketBytes": 851
+            },
+            {
+              "requestId": 6,
+              "first": true,
+              "last": true,
+              "full": false,
+              "ack": false,
+              "bodyBytes": 321,
+              "wireFrameBytes": 202,
+              "decodedPacketBytes": 344
+            },
+            {
+              "requestId": 7,
+              "first": true,
+              "last": true,
+              "full": false,
+              "ack": false,
+              "bodyBytes": 331,
+              "wireFrameBytes": 207,
+              "decodedPacketBytes": 354
+            },
+            {
+              "requestId": 8,
+              "first": true,
+              "last": true,
+              "full": false,
+              "ack": false,
+              "bodyBytes": 331,
+              "wireFrameBytes": 209,
+              "decodedPacketBytes": 354
+            },
+            {
+              "requestId": 9,
+              "first": true,
+              "last": true,
+              "full": false,
+              "ack": false,
+              "bodyBytes": 331,
+              "wireFrameBytes": 210,
+              "decodedPacketBytes": 354
+            },
+            {
+              "requestId": 10,
+              "first": true,
+              "last": true,
+              "full": false,
+              "ack": false,
+              "bodyBytes": 511,
+              "wireFrameBytes": 351,
+              "decodedPacketBytes": 534
+            },
+            {
+              "requestId": 11,
+              "first": true,
+              "last": true,
+              "full": false,
+              "ack": false,
+              "bodyBytes": 373,
+              "wireFrameBytes": 259,
+              "decodedPacketBytes": 396
+            },
+            {
+              "requestId": 12,
+              "first": true,
+              "last": true,
+              "full": false,
+              "ack": false,
+              "bodyBytes": 393,
+              "wireFrameBytes": 251,
+              "decodedPacketBytes": 416
+            },
+            {
+              "requestId": 13,
+              "first": true,
+              "last": true,
+              "full": false,
+              "ack": false,
+              "bodyBytes": 393,
+              "wireFrameBytes": 253,
+              "decodedPacketBytes": 416
+            },
+            {
+              "requestId": 14,
+              "first": true,
+              "last": true,
+              "full": false,
+              "ack": false,
+              "bodyBytes": 397,
+              "wireFrameBytes": 262,
+              "decodedPacketBytes": 420
+            },
+            {
+              "requestId": 15,
+              "first": true,
+              "last": true,
+              "full": false,
+              "ack": false,
+              "bodyBytes": 772,
+              "wireFrameBytes": 534,
+              "decodedPacketBytes": 795
+            },
+            {
+              "requestId": 16,
+              "first": true,
+              "last": true,
+              "full": false,
+              "ack": false,
+              "bodyBytes": 602,
+              "wireFrameBytes": 406,
+              "decodedPacketBytes": 625
+            },
+            {
+              "requestId": 17,
+              "first": true,
+              "last": true,
+              "full": false,
+              "ack": false,
+              "bodyBytes": 407,
+              "wireFrameBytes": 257,
+              "decodedPacketBytes": 430
+            },
+            {
+              "requestId": 18,
+              "first": true,
+              "last": true,
+              "full": false,
+              "ack": false,
+              "bodyBytes": 584,
+              "wireFrameBytes": 393,
+              "decodedPacketBytes": 607
+            },
+            {
+              "requestId": 19,
+              "first": true,
+              "last": true,
+              "full": false,
+              "ack": false,
+              "bodyBytes": 407,
+              "wireFrameBytes": 258,
+              "decodedPacketBytes": 430
+            },
+            {
+              "requestId": 20,
+              "first": true,
+              "last": true,
+              "full": false,
+              "ack": false,
+              "bodyBytes": 770,
+              "wireFrameBytes": 515,
+              "decodedPacketBytes": 793
+            },
+            {
+              "requestId": 21,
+              "first": true,
+              "last": true,
+              "full": false,
+              "ack": false,
+              "bodyBytes": 427,
+              "wireFrameBytes": 275,
+              "decodedPacketBytes": 450
+            },
+            {
+              "requestId": 22,
+              "first": true,
+              "last": true,
+              "full": false,
+              "ack": false,
+              "bodyBytes": 604,
+              "wireFrameBytes": 407,
+              "decodedPacketBytes": 627
+            },
+            {
+              "requestId": 23,
+              "first": true,
+              "last": true,
+              "full": false,
+              "ack": false,
+              "bodyBytes": 445,
+              "wireFrameBytes": 294,
+              "decodedPacketBytes": 468
+            }
+          ]
+        }
+      },
+      "slow": {
+        "stages": {
+          "heated": {
+            "phase": "heated",
+            "elapsedMs": 26133.1482,
+            "status": "IR_CLIENT open=true pending=true waitMs=3 request=8 sent=8 dataParts=5 acks=2 commits=5 display=7 ignored=0 staging=false baseline=true validMirrorSamples=320 minC=-11.0 maxC=-10.5 materialReadable=true texture=true renderedFrames=776 terrainDepth=true center=0,4,0",
+            "gpuWarmQ": -42,
+            "gpuColdQ": -32768,
+            "wire": {
+              "warm": -42,
+              "cold": -32768
+            },
+            "backend": {
+              "phase": 1,
+              "tick": 4900,
+              "elapsedTicks": 572,
+              "analyticFields": 0,
+              "materialC": -10.340886685937056,
+              "materialSource": "LIVE",
+              "materialQ": -41,
+              "baselineC": -10.899999618530273,
+              "baselineQ": -44,
+              "airNearC": 9.842791683484169,
+              "airFarC": -1.352843324166679,
+              "airSampleTick": 4900,
+              "airBasisTerms": 8,
+              "airHeated": true,
+              "materialHeated": true,
+              "airCooled": false,
+              "airAtStopC": "NaN",
+              "peakAirC": 9.842791683484169,
+              "naturalC": -10.4
+            },
+            "frameRgb": [
+              180,
+              140,
+              132
+            ],
+            "baselineRgb": [
+              178,
+              178,
+              178
+            ],
+            "expectedColorError": 1.4873863636363467,
+            "bluePlaceholderError": 196.19
+          },
+          "cooled": {
+            "phase": "cooled",
+            "elapsedMs": 32304.2952,
+            "status": "IR_CLIENT open=true pending=true waitMs=2281 request=9 sent=9 dataParts=6 acks=2 commits=6 display=8 ignored=0 staging=false baseline=true validMirrorSamples=320 minC=-11.0 maxC=-10.25 materialReadable=true texture=true renderedFrames=959 terrainDepth=true center=0,4,0",
+            "gpuWarmQ": -41,
+            "gpuColdQ": -32768,
+            "wire": {
+              "warm": -41,
+              "cold": -32768
+            },
+            "backend": {
+              "phase": 2,
+              "tick": 5020,
+              "elapsedTicks": 692,
+              "analyticFields": 0,
+              "materialC": -10.165965062136962,
+              "materialSource": "LIVE",
+              "materialQ": -41,
+              "baselineC": -10.899999618530273,
+              "baselineQ": -44,
+              "airNearC": 7.206732089413897,
+              "airFarC": -0.7343049279320548,
+              "airSampleTick": 5020,
+              "airBasisTerms": 8,
+              "airHeated": true,
+              "materialHeated": true,
+              "airCooled": true,
+              "airAtStopC": 10.098470099026823,
+              "peakAirC": 10.353714893419152,
+              "naturalC": -10.4
+            },
+            "frameRgb": [
+              182,
+              141,
+              130
+            ],
+            "baselineRgb": [
+              178,
+              178,
+              178
+            ]
+          },
+          "removed": {
+            "phase": "removed",
+            "elapsedMs": 38421.8026,
+            "status": "IR_CLIENT open=true pending=true waitMs=305 request=11 sent=11 dataParts=8 acks=2 commits=8 display=10 ignored=0 staging=false baseline=true validMirrorSamples=319 minC=-11.0 maxC=-10.0 materialReadable=true texture=true renderedFrames=1141 terrainDepth=true center=0,4,0",
+            "gpuWarmQ": -32768,
+            "gpuColdQ": -32768,
+            "wire": {
+              "warm": -32768,
+              "cold": -32768
+            },
+            "backend": {
+              "phase": 3,
+              "tick": 5140,
+              "elapsedTicks": 812,
+              "analyticFields": 0,
+              "materialC": "NaN",
+              "materialSource": "UNAVAILABLE",
+              "materialQ": -32768,
+              "baselineC": -10.899999618530273,
+              "baselineQ": -44,
+              "airNearC": 2.268380282065543,
+              "airFarC": -0.5681047306966985,
+              "airSampleTick": 5140,
+              "airBasisTerms": 8,
+              "airHeated": true,
+              "materialHeated": false,
+              "airCooled": true,
+              "airAtStopC": 10.098470099026823,
+              "peakAirC": 10.353714893419152,
+              "naturalC": -10.4
+            },
+            "frameRgb": [
+              134,
+              95,
+              89
+            ],
+            "baselineRgb": [
+              178,
+              178,
+              178
+            ]
+          },
+          "restored": {
+            "phase": "restored",
+            "elapsedMs": 42972.2367,
+            "status": "IR_CLIENT open=true pending=true waitMs=843 request=12 sent=12 dataParts=9 acks=2 commits=9 display=11 ignored=0 staging=false baseline=true validMirrorSamples=319 minC=-11.0 maxC=-10.0 materialReadable=true texture=true renderedFrames=1277 terrainDepth=true center=0,4,0",
+            "gpuWarmQ": -32768,
+            "gpuColdQ": -32768,
+            "wire": {
+              "warm": -32768,
+              "cold": -32768
+            },
+            "backend": {
+              "phase": 4,
+              "tick": 5220,
+              "elapsedTicks": 892,
+              "analyticFields": 0,
+              "materialC": -10.878210359972094,
+              "materialSource": "LIVE",
+              "materialQ": -44,
+              "baselineC": -10.899999618530273,
+              "baselineQ": -44,
+              "airNearC": 1.4688658355885948,
+              "airFarC": -0.5054558463864767,
+              "airSampleTick": 5220,
+              "airBasisTerms": 8,
+              "airHeated": true,
+              "materialHeated": false,
+              "airCooled": true,
+              "airAtStopC": 10.098470099026823,
+              "peakAirC": 10.353714893419152,
+              "naturalC": -10.4
+            },
+            "frameRgb": [
+              101,
+              101,
+              211
+            ],
+            "baselineRgb": [
+              178,
+              178,
+              178
+            ],
+            "expectedColorError": 1.0299999999999727,
+            "bluePlaceholderError": 1.0299999999999727
+          }
+        },
+        "wire": {
+          "dataPackets": 10,
+          "largestResponseBodyBytes": 770,
+          "largestCompressedMinecraftFrameBytes": 515,
+          "totalInfraredS2cFrameBytes": 3352,
+          "scope": "Real observed infrared responses and ACKs including Forge/Minecraft headers, threshold-256 compression and frame lengths; excludes other game packets, C2S, TCP/IP headers and retransmissions.",
+          "frames": [
+            {
+              "requestId": 1,
+              "first": true,
+              "last": true,
+              "full": false,
+              "ack": true,
+              "bodyBytes": 2,
+              "wireFrameBytes": 27,
+              "decodedPacketBytes": 25
+            },
+            {
+              "requestId": 2,
+              "first": true,
+              "last": true,
+              "full": false,
+              "ack": true,
+              "bodyBytes": 2,
+              "wireFrameBytes": 27,
+              "decodedPacketBytes": 25
+            },
+            {
+              "requestId": 3,
+              "first": true,
+              "last": true,
+              "full": true,
+              "ack": false,
+              "bodyBytes": 261,
+              "wireFrameBytes": 160,
+              "decodedPacketBytes": 284
+            },
+            {
+              "requestId": 4,
+              "first": true,
+              "last": true,
+              "full": false,
+              "ack": false,
+              "bodyBytes": 331,
+              "wireFrameBytes": 206,
+              "decodedPacketBytes": 354
+            },
+            {
+              "requestId": 5,
+              "first": true,
+              "last": true,
+              "full": false,
+              "ack": false,
+              "bodyBytes": 331,
+              "wireFrameBytes": 209,
+              "decodedPacketBytes": 354
+            },
+            {
+              "requestId": 6,
+              "first": true,
+              "last": true,
+              "full": false,
+              "ack": false,
+              "bodyBytes": 521,
+              "wireFrameBytes": 364,
+              "decodedPacketBytes": 544
+            },
+            {
+              "requestId": 7,
+              "first": true,
+              "last": true,
+              "full": false,
+              "ack": false,
+              "bodyBytes": 393,
+              "wireFrameBytes": 252,
+              "decodedPacketBytes": 416
+            },
+            {
+              "requestId": 8,
+              "first": true,
+              "last": true,
+              "full": false,
+              "ack": false,
+              "bodyBytes": 417,
+              "wireFrameBytes": 277,
+              "decodedPacketBytes": 440
+            },
+            {
+              "requestId": 9,
+              "first": true,
+              "last": true,
+              "full": false,
+              "ack": false,
+              "bodyBytes": 752,
+              "wireFrameBytes": 495,
+              "decodedPacketBytes": 775
+            },
+            {
+              "requestId": 10,
+              "first": true,
+              "last": true,
+              "full": false,
+              "ack": false,
+              "bodyBytes": 584,
+              "wireFrameBytes": 396,
+              "decodedPacketBytes": 607
+            },
+            {
+              "requestId": 11,
+              "first": true,
+              "last": true,
+              "full": false,
+              "ack": false,
+              "bodyBytes": 770,
+              "wireFrameBytes": 515,
+              "decodedPacketBytes": 793
+            },
+            {
+              "requestId": 12,
+              "first": true,
+              "last": true,
+              "full": false,
+              "ack": false,
+              "bodyBytes": 622,
+              "wireFrameBytes": 424,
+              "decodedPacketBytes": 645
+            }
+          ]
+        }
+      }
+    },
+    "temperatureComparison": "GPU values are compared exactly to independently decoded actual wire for the last committed display ID. The live server observation is from a later tick and may be warmer under WAN latency.",
+    "coolingScope": "Published Air cools after extinguishing; material retains thermal inertia and can continue warming. Removal clears its voxel. Replacement is checked after a one-second mesh rebuild grace and must not inherit its old heat; this is not a claim of instantaneous material cooling.",
+    "logs": "build/infrared-physical-e2e-20261108",
+    "launchAndRunLog": "build/infrared-physical-e2e-20261108.log"
+  },
+  "analyticTransport": {
+    "purpose": "Artificial analytic references and transport stress only; not continuous Air workload or ordinary campfire traffic",
+    "construction": "192 local spherical ADD_DELTA regions with independent keys, plus a zero-delta coverage cube; partial geometric overlap, not 192 physical solvers or 192 whole-window fields",
+    "beforeStreaming": {
+      "profile": "3s RTT / 16KiB per second",
+      "serverReplyRawBytes": 1987907,
+      "serverReplyParts": 3,
+      "serverResponseTime": "2026-11-08 17:08:48 +08:00",
+      "disconnectTime": "2026-11-08 17:09:05 +08:00",
+      "disconnectReason": "Timed out",
+      "fastClientWarmQ": 160,
+      "slowClientReceivedInitialParts": 0,
+      "reportedOverseasCaseConfirmed": false
+    },
+    "initial128KiBFirstPart": "A previous iteration showed heat at 8.671 s and committed at 131.798 s; the first-part budget was then reduced to 32 KiB after user questioned this latency.",
+    "finalProfiles": [
+      {
+        "profile": {
+          "round": 0,
+          "name": "300ms-rtt",
+          "oneWayMs": 150,
+          "bytesPerSecond": 131072,
+          "bulk": false
+        },
+        "clients": {
+          "fast": {
+            "warm": {
+              "phase": "warm",
+              "status": "IR_CLIENT open=true pending=false waitMs=0 request=2 sent=2 dataParts=1 acks=1 commits=1 ignored=0 staging=false baseline=true validMirrorSamples=171 minC=-40.0 maxC=40.0 materialReadable=true texture=true renderedFrames=46 terrainDepth=true center=0,4,0",
+              "warm": 160,
+              "cold": -160,
+              "elapsedMs": 1730.7398,
+              "redPixels": 28986,
+              "bluePixels": 126030,
+              "baselineRed": 349,
+              "baselineBlue": 48964
+            },
+            "updated": {
+              "phase": "updated",
+              "status": "IR_CLIENT open=true pending=false waitMs=0 request=3 sent=3 dataParts=2 acks=1 commits=2 ignored=0 staging=false baseline=true validMirrorSamples=171 minC=-40.0 maxC=60.0 materialReadable=true texture=true renderedFrames=101 terrainDepth=true center=0,4,0",
+              "warm": 240,
+              "cold": -160,
+              "elapsedMs": 3611.4263,
+              "redPixels": 29095,
+              "bluePixels": 126218,
+              "baselineRed": 349,
+              "baselineBlue": 48964
+            },
+            "removed": {
+              "phase": "removed",
+              "status": "IR_CLIENT open=true pending=false waitMs=0 request=4 sent=4 dataParts=3 acks=1 commits=3 ignored=0 staging=false baseline=true validMirrorSamples=148 minC=-40.0 maxC=-9.5 materialReadable=true texture=true renderedFrames=148 terrainDepth=true center=0,4,0",
+              "warm": -44,
+              "cold": -160,
+              "elapsedMs": 5990.7273,
+              "redPixels": 480,
+              "bluePixels": 146229,
+              "baselineRed": 349,
+              "baselineBlue": 48964
+            }
+          },
+          "slow": {
+            "warm": {
+              "phase": "warm",
+              "status": "IR_CLIENT open=true pending=true waitMs=206 request=2 sent=2 dataParts=1 acks=0 commits=1 ignored=0 staging=false baseline=true validMirrorSamples=171 minC=-40.0 maxC=40.0 materialReadable=true texture=true renderedFrames=46 terrainDepth=true center=0,4,0",
+              "warm": 160,
+              "cold": -160,
+              "elapsedMs": 1744.2922,
+              "redPixels": 28984,
+              "bluePixels": 126505,
+              "baselineRed": 399,
+              "baselineBlue": 50053
+            },
+            "updated": {
+              "phase": "updated",
+              "status": "IR_CLIENT open=true pending=false waitMs=0 request=3 sent=3 dataParts=2 acks=1 commits=2 ignored=0 staging=false baseline=true validMirrorSamples=171 minC=-40.0 maxC=60.0 materialReadable=true texture=true renderedFrames=110 terrainDepth=true center=0,4,0",
+              "warm": 240,
+              "cold": -160,
+              "elapsedMs": 4105.8539,
+              "redPixels": 29022,
+              "bluePixels": 126045,
+              "baselineRed": 399,
+              "baselineBlue": 50053
+            },
+            "removed": {
+              "phase": "removed",
+              "status": "IR_CLIENT open=true pending=false waitMs=0 request=4 sent=4 dataParts=3 acks=1 commits=3 ignored=0 staging=false baseline=true validMirrorSamples=148 minC=-40.0 maxC=-9.5 materialReadable=true texture=true renderedFrames=202 terrainDepth=true center=0,4,0",
+              "warm": -44,
+              "cold": -160,
+              "elapsedMs": 8004.6698,
+              "redPixels": 409,
+              "bluePixels": 147619,
+              "baselineRed": 399,
+              "baselineBlue": 50053
+            }
+          }
+        }
+      },
+      {
+        "profile": {
+          "round": 1,
+          "name": "3s-rtt",
+          "oneWayMs": 1500,
+          "bytesPerSecond": 65536,
+          "bulk": false
+        },
+        "clients": {
+          "fast": {
+            "warm": {
+              "phase": "warm",
+              "status": "IR_CLIENT open=true pending=true waitMs=4 request=7 sent=2 dataParts=1 acks=0 commits=1 ignored=0 staging=false baseline=true validMirrorSamples=171 minC=-40.0 maxC=40.0 materialReadable=true texture=true renderedFrames=47 terrainDepth=true center=0,4,0",
+              "warm": 160,
+              "cold": -160,
+              "elapsedMs": 1579.8112,
+              "redPixels": 29051,
+              "bluePixels": 126553,
+              "baselineRed": 297,
+              "baselineBlue": 49007
+            },
+            "updated": {
+              "phase": "updated",
+              "status": "IR_CLIENT open=true pending=false waitMs=0 request=9 sent=4 dataParts=3 acks=1 commits=3 ignored=0 staging=false baseline=true validMirrorSamples=171 minC=-40.0 maxC=60.0 materialReadable=true texture=true renderedFrames=166 terrainDepth=true center=0,4,0",
+              "warm": 240,
+              "cold": -160,
+              "elapsedMs": 5621.7576,
+              "redPixels": 29055,
+              "bluePixels": 127388,
+              "baselineRed": 297,
+              "baselineBlue": 49007
+            },
+            "removed": {
+              "phase": "removed",
+              "status": "IR_CLIENT open=true pending=false waitMs=0 request=12 sent=7 dataParts=6 acks=1 commits=6 ignored=0 staging=false baseline=true validMirrorSamples=148 minC=-40.0 maxC=-9.5 materialReadable=true texture=true renderedFrames=348 terrainDepth=true center=0,4,0",
+              "warm": -44,
+              "cold": -160,
+              "elapsedMs": 11733.9989,
+              "redPixels": 331,
+              "bluePixels": 145697,
+              "baselineRed": 297,
+              "baselineBlue": 49007
+            }
+          },
+          "slow": {
+            "warm": {
+              "phase": "warm",
+              "status": "IR_CLIENT open=true pending=false waitMs=0 request=5 sent=1 dataParts=1 acks=0 commits=1 ignored=0 staging=false baseline=true validMirrorSamples=171 minC=-40.0 maxC=40.0 materialReadable=true texture=true renderedFrames=92 terrainDepth=true center=0,4,0",
+              "warm": 160,
+              "cold": -160,
+              "elapsedMs": 3116.105,
+              "redPixels": 28949,
+              "bluePixels": 126174,
+              "baselineRed": 294,
+              "baselineBlue": 49225
+            },
+            "updated": {
+              "phase": "updated",
+              "status": "IR_CLIENT open=true pending=false waitMs=0 request=6 sent=2 dataParts=2 acks=0 commits=2 ignored=0 staging=false baseline=true validMirrorSamples=171 minC=-40.0 maxC=60.0 materialReadable=true texture=true renderedFrames=242 terrainDepth=true center=0,4,0",
+              "warm": 240,
+              "cold": -160,
+              "elapsedMs": 8173.5472,
+              "redPixels": 28903,
+              "bluePixels": 126422,
+              "baselineRed": 294,
+              "baselineBlue": 49225
+            },
+            "removed": {
+              "phase": "removed",
+              "status": "IR_CLIENT open=true pending=false waitMs=0 request=7 sent=3 dataParts=3 acks=0 commits=3 ignored=0 staging=false baseline=true validMirrorSamples=148 minC=-40.0 maxC=-9.5 materialReadable=true texture=true renderedFrames=363 terrainDepth=true center=0,4,0",
+              "warm": -44,
+              "cold": -160,
+              "elapsedMs": 12253.1176,
+              "redPixels": 402,
+              "bluePixels": 146795,
+              "baselineRed": 294,
+              "baselineBlue": 49225
+            }
+          }
+        }
+      },
+      {
+        "profile": {
+          "round": 2,
+          "name": "3s-rtt-16KiBps-bulk",
+          "oneWayMs": 1500,
+          "bytesPerSecond": 16384,
+          "bulk": true
+        },
+        "clients": {
+          "fast": {
+            "warm": {
+              "phase": "warm",
+              "status": "IR_CLIENT open=true pending=false waitMs=0 request=14 sent=1 dataParts=6 acks=0 commits=1 ignored=0 staging=false baseline=true validMirrorSamples=2985984 minC=-40.0 maxC=40.0 materialReadable=true texture=true renderedFrames=47 terrainDepth=true center=0,4,0",
+              "warm": 160,
+              "cold": -160,
+              "elapsedMs": 1611.4769,
+              "redPixels": 28946,
+              "bluePixels": 78766,
+              "baselineRed": 271,
+              "baselineBlue": 49826
+            },
+            "updated": {
+              "phase": "updated",
+              "status": "IR_CLIENT open=true pending=false waitMs=0 request=27 sent=14 dataParts=15 acks=4 commits=10 ignored=0 staging=false baseline=true validMirrorSamples=2985984 minC=-40.0 maxC=60.0 materialReadable=true texture=true renderedFrames=785 terrainDepth=true center=0,4,0",
+              "warm": 240,
+              "cold": -160,
+              "elapsedMs": 26360.0733,
+              "redPixels": 29030,
+              "bluePixels": 79053,
+              "baselineRed": 271,
+              "baselineBlue": 49826
+            },
+            "removed": {
+              "phase": "removed",
+              "status": "IR_CLIENT open=true pending=false waitMs=0 request=29 sent=16 dataParts=17 acks=4 commits=12 ignored=0 staging=false baseline=true validMirrorSamples=2985984 minC=-40.0 maxC=-9.5 materialReadable=true texture=true renderedFrames=905 terrainDepth=true center=0,4,0",
+              "warm": -44,
+              "cold": -160,
+              "elapsedMs": 30410.5702,
+              "redPixels": 368,
+              "bluePixels": 79121,
+              "baselineRed": 271,
+              "baselineBlue": 49826
+            }
+          },
+          "slow": {
+            "warm": {
+              "phase": "warm",
+              "status": "IR_CLIENT open=true pending=false waitMs=0 request=9 sent=1 dataParts=7 acks=0 commits=1 ignored=1 staging=false baseline=true validMirrorSamples=2985984 minC=-40.0 maxC=40.0 materialReadable=true texture=true renderedFrames=663 terrainDepth=true center=0,4,0",
+              "warm": 160,
+              "cold": -160,
+              "elapsedMs": 22854.6433,
+              "redPixels": 28698,
+              "bluePixels": 78685,
+              "baselineRed": 385,
+              "baselineBlue": 48405
+            },
+            "updated": {
+              "phase": "updated",
+              "status": "IR_CLIENT open=true pending=false waitMs=0 request=10 sent=2 dataParts=8 acks=0 commits=2 ignored=1 staging=false baseline=true validMirrorSamples=2985984 minC=-40.0 maxC=60.0 materialReadable=true texture=true renderedFrames=783 terrainDepth=true center=0,4,0",
+              "warm": 240,
+              "cold": -160,
+              "elapsedMs": 26871.6688,
+              "redPixels": 28965,
+              "bluePixels": 79228,
+              "baselineRed": 385,
+              "baselineBlue": 48405
+            },
+            "removed": {
+              "phase": "removed",
+              "status": "IR_CLIENT open=true pending=false waitMs=0 request=11 sent=3 dataParts=9 acks=0 commits=3 ignored=1 staging=false baseline=true validMirrorSamples=2985984 minC=-40.0 maxC=-9.5 materialReadable=true texture=true renderedFrames=964 terrainDepth=true center=0,4,0",
+              "warm": -44,
+              "cold": -160,
+              "elapsedMs": 32927.2733,
+              "redPixels": 526,
+              "bluePixels": 79184,
+              "baselineRed": 385,
+              "baselineBlue": 48405
+            },
+            "preview": {
+              "phase": "warm",
+              "status": "IR_CLIENT open=true pending=true waitMs=3523 request=9 sent=1 dataParts=2 acks=0 commits=0 ignored=1 staging=true baseline=false validMirrorSamples=106496 minC=-40.0 maxC=40.0 materialReadable=false texture=true renderedFrames=105 terrainDepth=true center=0,4,0",
+              "warm": 160,
+              "cold": -160,
+              "elapsedMs": 3589.2761,
+              "redPixels": 29046,
+              "bluePixels": 79735,
+              "baselineRed": 385,
+              "baselineBlue": 48405
+            }
+          }
+        }
+      },
+      {
+        "profile": {
+          "round": 3,
+          "name": "3s-rtt-16KiBps-multipart",
+          "oneWayMs": 1500,
+          "bytesPerSecond": 16384,
+          "bulk": true,
+          "stressFields": true
+        },
+        "clients": {
+          "fast": {
+            "warm": {
+              "phase": "warm",
+              "status": "IR_CLIENT open=true pending=false waitMs=0 request=32 sent=1 dataParts=18 acks=0 commits=1 ignored=0 staging=false baseline=true validMirrorSamples=2985984 minC=-153.25 maxC=94.0 materialReadable=true texture=true renderedFrames=72 terrainDepth=true center=0,4,0",
+              "warm": 160,
+              "cold": -160,
+              "elapsedMs": 2869.3667,
+              "redPixels": 29040,
+              "bluePixels": 80042,
+              "baselineRed": 252,
+              "baselineBlue": 48911
+            },
+            "updated": {
+              "phase": "updated",
+              "status": "IR_CLIENT open=true pending=false waitMs=0 request=99 sent=68 dataParts=31 acks=54 commits=14 ignored=0 staging=false baseline=true validMirrorSamples=2985984 minC=-153.25 maxC=94.0 materialReadable=true texture=true renderedFrames=4053 terrainDepth=true center=0,4,0",
+              "warm": 240,
+              "cold": -160,
+              "elapsedMs": 136294.6658,
+              "redPixels": 29037,
+              "bluePixels": 79455,
+              "baselineRed": 252,
+              "baselineBlue": 48911
+            },
+            "removed": {
+              "phase": "removed",
+              "status": "IR_CLIENT open=true pending=false waitMs=0 request=102 sent=71 dataParts=33 acks=55 commits=16 ignored=0 staging=false baseline=true validMirrorSamples=2985984 minC=-153.25 maxC=94.0 materialReadable=true texture=true renderedFrames=4235 terrainDepth=true center=0,4,0",
+              "warm": -43,
+              "cold": -160,
+              "elapsedMs": 142394.2497,
+              "redPixels": 134,
+              "bluePixels": 79046,
+              "baselineRed": 252,
+              "baselineBlue": 48911
+            },
+            "preview": {
+              "phase": "warm",
+              "status": "IR_CLIENT open=true pending=true waitMs=1578 request=32 sent=1 dataParts=14 acks=0 commits=0 ignored=0 staging=true baseline=false validMirrorSamples=2265088 minC=-153.25 maxC=94.0 materialReadable=false texture=true renderedFrames=48 terrainDepth=true center=0,4,0",
+              "warm": 160,
+              "cold": -160,
+              "elapsedMs": 1645.3543,
+              "redPixels": 28815,
+              "bluePixels": 79289,
+              "baselineRed": 252,
+              "baselineBlue": 48911
+            }
+          },
+          "slow": {
+            "warm": {
+              "phase": "warm",
+              "status": "IR_CLIENT open=true pending=false waitMs=0 request=12 sent=1 dataParts=18 acks=0 commits=1 ignored=0 staging=false baseline=true validMirrorSamples=2985984 minC=-153.25 maxC=94.0 materialReadable=true texture=true renderedFrames=3928 terrainDepth=true center=0,4,0",
+              "warm": 160,
+              "cold": -160,
+              "elapsedMs": 133848.2609,
+              "redPixels": 28929,
+              "bluePixels": 78380,
+              "baselineRed": 340,
+              "baselineBlue": 48941
+            },
+            "updated": {
+              "phase": "updated",
+              "status": "IR_CLIENT open=true pending=false waitMs=0 request=13 sent=2 dataParts=19 acks=0 commits=2 ignored=0 staging=false baseline=true validMirrorSamples=2985984 minC=-153.25 maxC=94.0 materialReadable=true texture=true renderedFrames=4075 terrainDepth=true center=0,4,0",
+              "warm": 240,
+              "cold": -160,
+              "elapsedMs": 138881.5409,
+              "redPixels": 29066,
+              "bluePixels": 79257,
+              "baselineRed": 340,
+              "baselineBlue": 48941
+            },
+            "removed": {
+              "phase": "removed",
+              "status": "IR_CLIENT open=true pending=false waitMs=0 request=14 sent=3 dataParts=20 acks=0 commits=3 ignored=0 staging=false baseline=true validMirrorSamples=2985984 minC=-153.25 maxC=94.0 materialReadable=true texture=true renderedFrames=4257 terrainDepth=true center=0,4,0",
+              "warm": -43,
+              "cold": -160,
+              "elapsedMs": 144977.6239,
+              "redPixels": 459,
+              "bluePixels": 78810,
+              "baselineRed": 340,
+              "baselineBlue": 48941
+            },
+            "preview": {
+              "phase": "warm",
+              "status": "IR_CLIENT open=true pending=true waitMs=3485 request=12 sent=1 dataParts=1 acks=0 commits=0 ignored=0 staging=true baseline=false validMirrorSamples=45056 minC=-82.25 maxC=48.25 materialReadable=false texture=true renderedFrames=105 terrainDepth=true center=0,4,0",
+              "warm": 160,
+              "cold": -160,
+              "elapsedMs": 3543.4953,
+              "redPixels": 29073,
+              "bluePixels": 78943,
+              "baselineRed": 340,
+              "baselineBlue": 48941
+            }
+          }
+        }
+      },
+      {
+        "profile": {
+          "round": 4,
+          "name": "3s-rtt-16KiBps-single-observer",
+          "oneWayMs": 1500,
+          "bytesPerSecond": 16384,
+          "bulk": true,
+          "onlySlow": true
+        },
+        "clients": {
+          "slow": {
+            "warm": {
+              "phase": "warm",
+              "status": "IR_CLIENT open=true pending=false waitMs=0 request=16 sent=1 dataParts=7 acks=0 commits=1 ignored=1 staging=false baseline=true validMirrorSamples=2985984 minC=-40.0 maxC=40.0 materialReadable=true texture=true renderedFrames=667 terrainDepth=true center=0,4,0",
+              "warm": 160,
+              "cold": -160,
+              "elapsedMs": 22944.688,
+              "redPixels": 29151,
+              "bluePixels": 79889,
+              "baselineRed": 287,
+              "baselineBlue": 48900
+            },
+            "updated": {
+              "phase": "updated",
+              "status": "IR_CLIENT open=true pending=false waitMs=0 request=17 sent=2 dataParts=8 acks=0 commits=2 ignored=1 staging=false baseline=true validMirrorSamples=2985984 minC=-40.0 maxC=60.0 materialReadable=true texture=true renderedFrames=773 terrainDepth=true center=0,4,0",
+              "warm": 240,
+              "cold": -160,
+              "elapsedMs": 26501.2757,
+              "redPixels": 28995,
+              "bluePixels": 78509,
+              "baselineRed": 287,
+              "baselineBlue": 48900
+            },
+            "removed": {
+              "phase": "removed",
+              "status": "IR_CLIENT open=true pending=false waitMs=0 request=18 sent=3 dataParts=9 acks=0 commits=3 ignored=1 staging=false baseline=true validMirrorSamples=2985984 minC=-40.0 maxC=-9.25 materialReadable=true texture=true renderedFrames=954 terrainDepth=true center=0,4,0",
+              "warm": -43,
+              "cold": -160,
+              "elapsedMs": 32591.0524,
+              "redPixels": 536,
+              "bluePixels": 79807,
+              "baselineRed": 287,
+              "baselineBlue": 48900
+            },
+            "preview": {
+              "phase": "warm",
+              "status": "IR_CLIENT open=true pending=true waitMs=3554 request=16 sent=1 dataParts=2 acks=0 commits=0 ignored=1 staging=true baseline=false validMirrorSamples=106496 minC=-40.0 maxC=40.0 materialReadable=false texture=true renderedFrames=107 terrainDepth=true center=0,4,0",
+              "warm": 160,
+              "cold": -160,
+              "elapsedMs": 3580.7949,
+              "redPixels": 29040,
+              "bluePixels": 80073,
+              "baselineRed": 287,
+              "baselineBlue": 48900
+            }
+          }
+        }
+      }
+    ],
+    "logs": "build/infrared-first32-e2e-20261108.log"
+  },
+  "implementation": {
+    "firstPacketBudgetBytes": 32768,
+    "subsequentPacketBudgetBytes": 131072,
+    "reservedHeaderBytes": 2048,
+    "displayQuantizationC": 0.25,
+    "delivery": "One received-part credit at a time, nearby Pages first, progressive GPU uploads; LAST alone confirms the complete delta baseline, followed by final receipt; close/lifecycle events release retained replies.",
+    "wireProtocolSuffix": ":infrared-stream-1",
+    "solverChanged": false
+  },
+  "gameTests": {
+    "requiredPassed": 24,
+    "validationLog": "build/infrared-first32-validation-20261108.log",
+    "packageLog": "build/infrared-final-package-20261108.log"
+  },
+  "reproduction": {
+    "entry": "Scripts/run-infrared-network-e2e.py",
+    "defaultScene": "physical backend",
+    "analyticSceneFlag": "--analytic-stress-only",
+    "localExtraBuildInit": "build/infrared-refresh.init.gradle excludes unrelated unfinished deposit GameTest fixtures and uses available compatible build tools; current workspace was compiled directly"
+  },
+  "limits": [
+    "No exact overseas machine, actual server logs or WAN route was accessed.",
+    "Ordered proxy delay/rate shaping does not inject loss or emulate TCP retransmissions.",
+    "Development graphics dependencies differ from the supplied pack stable Embeddium 0.3.31 / Oculus 1.8.0.",
+    "Local queue timeout was reproduced and fixed; no assertion that it is the only cause of the reported overseas blue view.",
+    "No mathematical bandwidth optimum claimed; dense analytic coverage can still generate large final-scalar windows."
+  ]
+}

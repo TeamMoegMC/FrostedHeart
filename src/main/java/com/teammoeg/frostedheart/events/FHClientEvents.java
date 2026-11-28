@@ -433,6 +433,12 @@ public class FHClientEvents {
     }
 
     @SubscribeEvent
+    public static void loadClientChunk(net.minecraftforge.event.level.ChunkEvent.Load event) {
+        if (event.getLevel().isClientSide())
+            InfraredViewRenderer.onClientChunkLoaded(event.getChunk().getPos().x, event.getChunk().getPos().z);
+    }
+
+    @SubscribeEvent
     public static void unloadWorld(LevelEvent.Unload event) {
         ClientUtils.DoApplyGammaValue = false;
         MouseCaptureUtil.stopMouseCapture();
@@ -447,7 +453,9 @@ public class FHClientEvents {
 
     @SubscribeEvent
     public static void renderSpatialWeather(RenderLevelStageEvent event) {
-        if (event.getStage() == RenderLevelStageEvent.Stage.AFTER_WEATHER) {
+        if (event.getStage() == RenderLevelStageEvent.Stage.AFTER_BLOCK_ENTITIES) {
+            SpatialWeatherRenderer.INSTANCE.renderExtinction(event);
+        } else if (event.getStage() == RenderLevelStageEvent.Stage.AFTER_WEATHER) {
             SpatialWeatherRenderer.INSTANCE.render(event);
         }
     }

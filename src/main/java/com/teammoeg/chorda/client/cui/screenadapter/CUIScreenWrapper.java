@@ -81,6 +81,7 @@ public class CUIScreenWrapper extends Screen implements CUIScreen {
 	@Override
 	public boolean mouseClicked(double x, double y, int button) {
 		primaryLayer.updateGui(this.x,this.y,x, y, -1);
+		primaryLayer.updateMouseOver();
 
 		if (button == GLFW.GLFW_MOUSE_BUTTON_4) {
 			primaryLayer.back();
@@ -94,17 +95,24 @@ public class CUIScreenWrapper extends Screen implements CUIScreen {
 	@Override
 	public boolean mouseReleased(double x, double y, int button) {
 		primaryLayer.updateGui(this.x,this.y,x, y, -1);
+		primaryLayer.updateMouseOver();
 		primaryLayer.onMouseReleased(MouseButton.of(button));
 		return super.mouseReleased(x, y, button);
 	}
 
 	@Override
 	public boolean mouseScrolled(double x, double y, double delta) {
+		// The wheel, too, reads the pointer where it is now.
+		primaryLayer.updateGui(this.x,this.y,x, y, -1);
+		primaryLayer.updateMouseOver();
 		return primaryLayer.onMouseScrolled(delta) || super.mouseScrolled(x-this.x, y-this.y, delta);
 	}
 
 	@Override
 	public boolean mouseDragged(double x, double y, int button, double dragX, double dragY) {
+		// Like clicks and releases, a drag reads the pointer where it is now, not where the last frame drew it.
+		primaryLayer.updateGui(this.x,this.y,x, y, -1);
+		primaryLayer.updateMouseOver();
 		return primaryLayer.onMouseDragged(MouseButton.of(button), dragX, dragY) || super.mouseDragged(x, y, button, dragX, dragY);
 	}
 

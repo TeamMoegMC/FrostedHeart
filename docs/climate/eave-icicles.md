@@ -17,7 +17,7 @@
 
 供水满足其一：屋顶有积雪，或当前实际接收降水。天气来源复用既有地表更新的 FH snowy/blizzard 轨道；没有 FH 气候时用原版降水及群系降水能力。干燥时不记忆旧降水、不移除已有冰溜子。自然创建时记录所有符合条件的外缘，允许相邻排列；手动放置只要求顶部支撑，不检查天气、温度或露天。
 
-生长读取屋顶材料 `MinecraftPhaseController.temperature`，T≤0°C 时倍率 `min(2,1-0.1*T)`，T 的单位 °C。基准为等效普通随机刻的 0.5%，低温最高 1%。不把所有建筑方块改成随机刻方块：复用既有每 chunk 的地表列抽样，在间隔 I ticks、randomTickSpeed=S 时，单次抽样的基准概率为：
+生长通过 `WorldTemperature.getTempAtBlock(level, roof, PHASE_CHANGE)` 读取屋顶材料温度。T≤0°C 时倍率为 `min(2,1-0.1*T)`，T 的单位 °C。基准为等效普通随机刻的 0.5%，低温最高 1%。不把所有建筑方块改成随机刻方块：复用既有每 chunk 的地表列抽样，在间隔 I ticks、randomTickSpeed=S 时，单次抽样的基准概率为：
 
 ```text
 p_surface = min(0.5, 0.005*S*I/16)

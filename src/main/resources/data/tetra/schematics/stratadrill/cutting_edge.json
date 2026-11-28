@@ -1,0 +1,23 @@
+{
+  "slots": [
+    "stratadrill/head"
+  ],
+  "materialSlotCount": 1,
+  "displayType": "improvement",
+  "glyph": {
+    "textureX": 176,
+    "textureY": 0
+  },
+  "requirement": {
+    "type": "tetra:module",
+    "module": "stratadrill/head"
+  },
+  "outcomes": [
+    {
+      "materials": [ "tetra:stratadrill/cutters/" ],
+      "improvements": {
+        "stratadrill/cutting_edge/": 0
+      }
+    }
+  ]
+}

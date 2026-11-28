@@ -98,9 +98,18 @@ public final class ThermalSourceLedger implements AutoCloseable {
         ensureStorageForAdditional(1); reserveTable(1);
     }
 
+    /** Synchronous transfer into the original Store; the receiver must copy only scalar world identity. */
+    @FunctionalInterface public interface HeatConsumer {
+        void accept(SourceInputWindow window, long target, int generation, long fromTick, long toTick, double joules);
+    }
+
     /** Bind an already accepted prefix. This operation never records its energy a second time. */
     public void bindSpatialPrefix(SourceInputWindow window, long through,
-            BindingUpdates bindings, CutLoadBuffer output) {
+            BindingUpdates bindings, HeatConsumer output) {
+        bindSpatialPrefix(window, through, bindings, output, true);
+    }
+    public void bindSpatialPrefix(SourceInputWindow window, long through,
+            BindingUpdates bindings, HeatConsumer output, boolean applyControl) {
         requireOpen();
         if (!window.canBind(through) || through > window.toTick)
             throw new IllegalArgumentException("Invalid source prefix");
@@ -118,7 +127,6 @@ public final class ThermalSourceLedger implements AutoCloseable {
                 || window.through() != boundThroughTicks[source]) {
             throw new IllegalStateException("Source prefix skipped or repeated its predecessor");
         }
-        output.sourceContext(descriptor.sourceId(), descriptor.generation());
         for (int index = 0; index < window.size; index++) {
             var span = window.span(index);
             long from = Math.max(window.through(), span.fromTick()), to = Math.min(through, span.toTick());
@@ -127,11 +135,11 @@ public final class ThermalSourceLedger implements AutoCloseable {
                     || span.fromTick() == window.through() && !window.first() : to <= from) continue;
             if (span.port() >= 0) {
                 int port = requirePortOffset(source, span.port());
-                bindSpatialEnergy(port, from, to, window.take(index, port - portBase(source), from, to), output);
+                bindSpatialEnergy(window, index, source, port, from, to, output);
             } else {
                 int base = portBase(source), count = portCounts[source];
                 for (int port = 0; port < count; port++)
-                    bindSpatialEnergy(base + port, from, to, window.take(index, port, from, to), output);
+                    bindSpatialEnergy(window, index, source, base + port, from, to, output);
             }
         }
         // Membership at a fence describes that fence, never the future end of
@@ -139,6 +147,7 @@ public final class ThermalSourceLedger implements AutoCloseable {
         double power = window.declaredPowerAt(through);
         boolean active = window.enabledAt(through);
         boundThroughTicks[source] = through;
+        if (!applyControl) { window.boundThrough(through, false); return; }
         if (declaredPowerW[source] != power) {
             cursorTick = through; setPower(descriptor.sourceId(), power, through);
             bindings.emissionChanged(descriptor, this);
@@ -154,13 +163,16 @@ public final class ThermalSourceLedger implements AutoCloseable {
         window.boundThrough(through);
     }
 
-    private void bindSpatialEnergy(int port, long from, long to, double joules, CutLoadBuffer output) {
-        if (joules == 0) return;
-        if (isThermalTarget(port)) {
-            if (from == to) output.impulse(accumulatorTargetId(port), portBindingGenerations[port], to, joules);
-            else output.span(accumulatorTargetId(port), portBindingGenerations[port], from, to, joules * 20.0 / (to - from));
-        } else if (portBindingKinds[port] == SourceBinding.Kind.DECLARED_LOSS.ordinal()) declaredLossEnergyJ += joules;
-        else degradedLossEnergyJ += joules;
+    private void bindSpatialEnergy(SourceInputWindow window, int record, int source, int port,
+            long from, long to, HeatConsumer output) {
+        int localPort = port - portBase(source);
+        double joules = window.energyJ(record, localPort, from, to);
+        if (joules != 0) {
+            if (isThermalTarget(port)) output.accept(window, accumulatorTargetId(port), portBindingGenerations[port], from, to, joules);
+            else if (portBindingKinds[port] == SourceBinding.Kind.DECLARED_LOSS.ordinal()) declaredLossEnergyJ += joules;
+            else degradedLossEnergyJ += joules;
+        }
+        window.take(record, localPort, from, to);
     }
 
     public long spatialBoundThrough(long sourceId, int generation) {

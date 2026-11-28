@@ -4,7 +4,6 @@ package com.teammoeg.frostedheart.content.climate.thermal.source;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.AirBackingMeter;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalCellArena;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.ThermalMemoryBudget;
-import com.teammoeg.frostedheart.content.climate.thermal.solver.RegionalAirRuntime;
 import com.teammoeg.frostedheart.content.climate.thermal.source.minecraft.WorkerPhysicalSourceBindings;
 import com.teammoeg.frostedheart.content.climate.thermal.topology.RegionalContinuationBoundary;
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
@@ -13,6 +12,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.function.Predicate;
 import java.util.function.ToLongFunction;
 
@@ -21,7 +21,16 @@ import java.util.function.ToLongFunction;
  * producer windows and scheduling references; all accepted J belongs to the store.
  * A Page's geometry, receipt or retirement never owns one of these queues.
  */
-public final class SpatialSourceIngress implements AutoCloseable {
+public final class SpatialSourceIngress implements AutoCloseable, ThermalSourceLedger.HeatConsumer {
+    /** The accepted-J owner, independent of the numerical layout used to consume it. */
+    public interface InputOwner {
+        SpatialHeatStore inputStore();
+        void prepareSourceWindow(SpatialSourceTimeline.Window window, SpatialHeatInput.Target[] origins);
+        void prepareSpatialInput(int maximumRecords);
+        void receiveSpatialHeat(SpatialHeatInput.Target target, long fromTick, long toTick, double joules);
+        void sourceBound(long sourceId, LongSet sections);
+        default boolean sourceControlReady(SpatialSourceTimeline.Descriptor source, long tick) { return true; }
+    }
     public record Progress(int generation, long tick, long sequence, int ordinal) { }
     private record Offered(SpatialSourceTimeline.Window window, long sequence, int ordinal) { }
     @FunctionalInterface public interface Controls {
@@ -41,39 +50,65 @@ public final class SpatialSourceIngress implements AutoCloseable {
         final ArrayDeque<SourceInputWindow> accepted = new ArrayDeque<>();
         Progress acceptedThrough, boundThrough;
         long bindingWait = -1;
-        boolean terminal, queued;
+        long frozenRevision = Long.MIN_VALUE;
+        SpatialSourceTimeline.Descriptor frozenDescriptor;
+        boolean frozenValue;
+        boolean terminal, queued, processing;
         long boundaryVisit;
         int indexedGeneration = -1;
         SpatialSourceTimeline.Descriptor producer;
         SpatialSourceTimeline.ControlTail controlTail;
         final it.unimi.dsi.fastutil.longs.LongOpenHashSet indexedSections = new it.unimi.dsi.fastutil.longs.LongOpenHashSet();
+        long firstPendingTick() {
+            long first = accepted.isEmpty() ? Long.MAX_VALUE : accepted.peekFirst().through();
+            if (!offered.isEmpty()) first = Math.min(first, offered.peekFirst().window.fromTick);
+            return controlTail == null ? first : Math.min(first, controlTail.firstTick());
+        }
         Source(long id, ThermalMemoryBudget.Reservation metadata) { this.id = id; this.metadata = metadata; }
     }
 
     private final Object transport = new Object();
     private final Long2ObjectLinkedOpenHashMap<Source> sources = new Long2ObjectLinkedOpenHashMap<>();
     private final ArrayDeque<Source> scheduled = new ArrayDeque<>();
-    private final it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap<java.util.Set<Source>> bySection =
+    private final it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap<ArrayList<Source>> bySection =
             new it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap<>();
     private final ThermalSourceLedger ledger;
     private final SpatialHeatStore store;
     private final WorkerPhysicalSourceBindings bindings;
-    private final RegionalAirRuntime regions;
+    private final InputOwner inputOwner;
     private final ThermalCellArena arena;
     private final AirLoadTable airLoads;
-    private final CutLoadBuffer output = new CutLoadBuffer();
+    private final it.unimi.dsi.fastutil.longs.LongOpenHashSet boundSections = new it.unimi.dsi.fastutil.longs.LongOpenHashSet(Integer.SIZE);
     private final ToLongFunction<SpatialSourceTimeline.Descriptor> bindingLimit;
     private final Predicate<SpatialSourceTimeline.Descriptor> frozen;
+    private final java.util.function.LongSupplier freezeRevision;
     private final Controls controls;
     private long revision, controlRevision, dependencyRevision, boundaryVisit;
 
     public SpatialSourceIngress(ThermalSourceLedger ledger,
-            WorkerPhysicalSourceBindings bindings, RegionalAirRuntime regions, ThermalCellArena arena,
+            WorkerPhysicalSourceBindings bindings, InputOwner inputOwner, ThermalCellArena arena,
             AirLoadTable airLoads, ToLongFunction<SpatialSourceTimeline.Descriptor> bindingLimit,
             Predicate<SpatialSourceTimeline.Descriptor> frozen, Controls controls) {
-        this.ledger = ledger; this.bindings = bindings; this.regions = regions;
-        this.store = regions.inputStore(); this.arena = arena; this.airLoads = airLoads;
+        this(ledger, bindings, inputOwner, arena, airLoads, bindingLimit, frozen, null, controls);
+    }
+    public SpatialSourceIngress(ThermalSourceLedger ledger,
+            WorkerPhysicalSourceBindings bindings, InputOwner inputOwner, ThermalCellArena arena,
+            AirLoadTable airLoads, ToLongFunction<SpatialSourceTimeline.Descriptor> bindingLimit,
+            Predicate<SpatialSourceTimeline.Descriptor> frozen, java.util.function.LongSupplier freezeRevision, Controls controls) {
+        this.ledger = ledger; this.bindings = bindings; this.inputOwner = inputOwner;
+        this.store = inputOwner.inputStore(); this.arena = arena; this.airLoads = airLoads;
         this.bindingLimit = bindingLimit; this.frozen = frozen; this.controls = controls;
+        this.freezeRevision = freezeRevision;
+    }
+
+    /** Snapshot membership changes with geometry or the snapshot, not every readiness visit. */
+    private boolean blockedBySnapshot(Source source, SpatialSourceTimeline.Descriptor descriptor) {
+        if (freezeRevision == null) return frozen.test(descriptor);
+        long current = freezeRevision.getAsLong();
+        if (source.frozenRevision != current || source.frozenDescriptor != descriptor) {
+            source.frozenValue = frozen.test(descriptor); source.frozenDescriptor = descriptor; source.frozenRevision = current;
+        }
+        return source.frozenValue;
     }
 
     /** Main transfers a prepaid reference. No binding or numerical work runs under this lock. */
@@ -93,12 +128,12 @@ public final class SpatialSourceIngress implements AutoCloseable {
                 index(source, window.descriptor.section());
                 for (int port = 0; port < window.descriptor.ports().length; port++) {
                     var origin = bindings.originalPort(window.descriptor, port);
-                    if (origin != null) {
-                        index(source, section(origin.position()));
-                        var face = com.teammoeg.frostedheart.content.climate.thermal.mesh.BlockFace.fromOrdinal(origin.face() - 6);
-                        index(source, section(BlockPos.asLong(BlockPos.getX(origin.position()) + face.stepX(),
-                                BlockPos.getY(origin.position()) + face.stepY(), BlockPos.getZ(origin.position()) + face.stepZ())));
-                    }
+                    if (origin == null) continue;
+                    index(source, section(origin.position()));
+                    if (origin.face() == SpatialHeatInput.MATERIAL) continue;
+                    var face = com.teammoeg.frostedheart.content.climate.thermal.mesh.BlockFace.fromOrdinal(origin.face() - 6);
+                    index(source, section(BlockPos.asLong(BlockPos.getX(origin.position()) + face.stepX(),
+                            BlockPos.getY(origin.position()) + face.stepY(), BlockPos.getZ(origin.position()) + face.stepZ())));
                 }
             }
             if (!source.queued) { source.queued = true; scheduled.addLast(source); }
@@ -109,7 +144,7 @@ public final class SpatialSourceIngress implements AutoCloseable {
     }
     private void index(Source source, long section) {
         if (source.indexedSections.add(section)) bySection.computeIfAbsent(section,
-                ignored -> new java.util.LinkedHashSet<>()).add(source);
+                ignored -> new ArrayList<>()).add(source);
     }
     private void retire(Source source) {
         sources.remove(source.id); source.metadata.close();
@@ -122,6 +157,18 @@ public final class SpatialSourceIngress implements AutoCloseable {
     public void dependenciesChanged() { revision++; dependencyRevision++; }
     public long revision() { return revision; }
     public long controlRevision() { return controlRevision; }
+    /** Original source/receiver index, including bound outlets; no second dependency directory. */
+    public void forEachIndexedSource(LongSet sections, java.util.function.LongConsumer visitor) {
+        synchronized (transport) {
+            long visit = ++boundaryVisit;
+            for (long section : sections) {
+                var indexed = bySection.get(section); if (indexed == null) continue;
+                for (var source : indexed) if (source.boundaryVisit != visit) {
+                    source.boundaryVisit = visit; visitor.accept(source.id);
+                }
+            }
+        }
+    }
     /** Control visibility does not depend on acceptance capacity, binding, or old-generation retirement. */
     public void forEachPendingControl(PendingControl visitor) {
         synchronized (transport) {
@@ -143,11 +190,11 @@ public final class SpatialSourceIngress implements AutoCloseable {
     private boolean acceptanceReady(Source source) {
         var next = source.offered.peekFirst();
         return next != null && source.accepted.size() < SourceInputWindow.MAXIMUM_OWNED_WINDOWS
-                && !frozen.test(next.window.descriptor);
+                && !blockedBySnapshot(source, next.window.descriptor);
     }
     private boolean bindingReady(Source source) {
         var next = source.accepted.peekFirst();
-        return next != null && source.bindingWait != dependencyRevision && !frozen.test(next.descriptor);
+        return next != null && source.bindingWait != dependencyRevision && !blockedBySnapshot(source, next.descriptor);
     }
     private boolean ready(Source source) {
         return acceptanceReady(source) || bindingReady(source);
@@ -167,7 +214,7 @@ public final class SpatialSourceIngress implements AutoCloseable {
                 int count = scheduled.size();
                 while (count-- > 0) {
                     var next = scheduled.removeFirst();
-                    if (ready(next)) { source = next; break; }
+                    if (ready(next)) { source = next; source.processing = true; break; }
                     scheduled.addLast(next);
                 }
             }
@@ -176,6 +223,7 @@ public final class SpatialSourceIngress implements AutoCloseable {
             if (bindingReady(source)) bind(source);
             else accept(source);
             synchronized (transport) {
+                source.processing = false;
                 if (source.offered.isEmpty() && source.accepted.isEmpty()) {
                     source.queued = false;
                     if (source.terminal) retire(source);
@@ -191,8 +239,12 @@ public final class SpatialSourceIngress implements AutoCloseable {
         var producer = offered.window;
         var origins = new SpatialHeatInput.Target[producer.descriptor.ports().length];
         for (int port = 0; port < origins.length; port++) origins[port] = bindings.originalPort(producer.descriptor, port);
-        regions.prepareSourceWindow(producer, origins);
-        var owned = store.acceptSourceWindow(producer, offered.sequence, offered.ordinal, origins, ledger);
+        inputOwner.prepareSourceWindow(producer, origins);
+        SourceInputWindow owned;
+        synchronized (store) {
+            // Producer totals and the original Store payload change owners together.
+            owned = store.acceptSourceWindow(producer, offered.sequence, offered.ordinal, origins, ledger);
+        }
         synchronized (transport) { source.offered.removeFirst(); source.accepted.addLast(owned); }
         source.acceptedThrough = new Progress(owned.descriptor.generation(), owned.toTick, owned.sequence, owned.ordinal);
         source.bindingWait = -1; source.terminal = false;
@@ -206,17 +258,24 @@ public final class SpatialSourceIngress implements AutoCloseable {
         long through = Math.min(window.toTick, bindingLimit.applyAsLong(window.descriptor));
         // A membership fence publishes its mixing control before binding the later suffix.
         through = Math.min(through, window.nextControlTick());
+        boolean applyControl = window.pendingControlTick() > through
+                || inputOwner.sourceControlReady(window.descriptor, through);
+        if (!applyControl && (window.first() && window.registration || window.awaitingControl())) {
+            source.bindingWait = dependencyRevision; observe(source, false); return;
+        }
         if (!window.canBind(through)) { source.bindingWait = dependencyRevision; observe(source, false); return; }
         int records = Math.multiplyExact(window.size + 1, window.portCount());
-        regions.prepareSpatialInput(records);
-        output.clear(); output.reserve(records); ledger.prepareSourcePrefix(window);
+        inputOwner.prepareSpatialInput(records);
+        boundSections.clear(); ledger.prepareSourcePrefix(window);
         long mixing = bindings.mixingRevision();
-        store.bindSourcePrefix(window, through, ledger, bindings, output);
+        synchronized (store) {
+            // Saving must see either the original outlet or the resolved streams,
+            // including when binding removes the last J from a source window.
+            store.bindSourcePrefix(window, through, ledger, bindings, this, applyControl);
+        }
         if (previousControl != window.pendingControlTick()) controlRevision++;
-        var heat = SpatialHeatInput.takeWorldIdentity(output.freeze(airLoads, arena));
-        synchronized (transport) { for (int index = 0; index < heat.size(); index++) index(source, section(heat.target(index).position())); }
-        regions.receiveSpatialHeat(heat);
-        synchronized (transport) { regions.sourceBound(source.id, source.indexedSections); }
+        synchronized (transport) { for (long section : boundSections) index(source, section); }
+        synchronized (transport) { inputOwner.sourceBound(source.id, source.indexedSections); }
         source.boundThrough = new Progress(window.descriptor.generation(), through, window.sequence, window.ordinal);
         var changes = bindings.mixingChangesAfter(mixing);
         if (!changes.isEmpty()) controls.changed(window, changes);
@@ -228,6 +287,24 @@ public final class SpatialSourceIngress implements AutoCloseable {
         source.bindingWait = -1;
         revision++;
         observe(source, false);
+    }
+
+    /** The binding is still live here; pending input retains no table, slot allocation or source window. */
+    @Override public void accept(SourceInputWindow window, long binding, int generation, long from, long to, double joules) {
+        SpatialHeatInput.Target target;
+        var source = window.descriptor;
+        if (SourceBinding.isAirTarget(binding)) {
+            var air = airLoads.get(SourceBinding.targetIndex(binding), generation);
+            target = new SpatialHeatInput.Target(air.block(), (byte) air.face().ordinal(), -1, air.pageGeneration(), 0, 0,
+                    source.sourceId(), source.generation());
+        } else {
+            int slot = SourceBinding.targetIndex(binding);
+            long block = BlockPos.asLong(arena.minimum(slot, 0), arena.minimum(slot, 1), arena.minimum(slot, 2));
+            target = new SpatialHeatInput.Target(block, SpatialHeatInput.MATERIAL, slot, generation,
+                    arena.materialProfileId(slot), arena.materialIncarnation(slot), source.sourceId(), source.generation());
+        }
+        inputOwner.receiveSpatialHeat(target, from, to, joules);
+        boundSections.add(section(target.position()));
     }
 
     private void observe(Source source, boolean accepted) {
@@ -249,6 +326,50 @@ public final class SpatialSourceIngress implements AutoCloseable {
             return tick;
         }
     }
+
+    /** Earliest undelivered prefix that can affect an already captured fixed Section. */
+    public long firstPendingTick(java.util.function.LongPredicate capturedSection) {
+        synchronized (transport) {
+            long first = Long.MAX_VALUE;
+            for (var source : sources.values()) {
+                long pending = source.firstPendingTick();
+                if (pending >= first) continue;
+                if (source.producer != null && blockedBySnapshot(source, source.producer)) continue;
+                for (long section : source.indexedSections) if (capturedSection.test(section)) { first = pending; break; }
+            }
+            return first;
+        }
+    }
+    /** Returns the original interval end limited by unfrozen source inputs touching captured recipient sections. */
+    public long limitNumericalThrough(LongSet sections, java.util.function.LongPredicate capturedSection,
+            long from, long through) {
+        if (through <= from) return from;
+        synchronized (transport) {
+            long visit = ++boundaryVisit;
+            var keys = sections.iterator();
+            while (keys.hasNext()) {
+                long section = keys.nextLong();
+                var indexed = bySection.get(section);
+                if (indexed == null || !capturedSection.test(section)) continue;
+                for (int i = 0; i < indexed.size(); i++) {
+                    var source = indexed.get(i);
+                    if (source.boundaryVisit == visit) continue;
+                    source.boundaryVisit = visit;
+                    long pending = source.firstPendingTick();
+                    if (pending >= through) continue;
+                    if (source.producer != null && blockedBySnapshot(source, source.producer)) continue;
+                    if (pending <= from) return from;
+                    through = pending;
+                }
+            }
+            return through;
+        }
+    }
+
+    /** Earliest pending time across the given domain, without a caller-supplied interval. */
+    public long firstPendingTick(LongSet sections, java.util.function.LongPredicate capturedSection) {
+        return limitNumericalThrough(sections, capturedSection, Long.MIN_VALUE, Long.MAX_VALUE);
+    }
     /** New identities can feed an existing region before their first binding creates its source index. */
     public long pendingFor(LongSet sections, java.util.function.LongPredicate knownSource,
             java.util.function.LongPredicate ownsTarget) {
@@ -263,8 +384,7 @@ public final class SpatialSourceIngress implements AutoCloseable {
                     var descriptor = owned != null ? owned.descriptor : offered == null ? null : offered.window.descriptor;
                     if (descriptor == null) continue;
                     for (int port = 0; port < descriptor.ports().length; port++) {
-                        var destination = bindings.checkpointTarget(descriptor, port).target();
-                        if (destination != null && ownsTarget.test(destination.position())) {
+                        if (bindings.portTargets(descriptor, port, ownsTarget)) {
                             through = Math.min(through, pendingThrough(source.id)); break;
                         }
                     }
@@ -334,13 +454,14 @@ public final class SpatialSourceIngress implements AutoCloseable {
             for (var entry : bySection.long2ObjectEntrySet()) {
                 long section = entry.getLongKey();
                 if (net.minecraft.world.level.ChunkPos.asLong(SectionPos.x(section), SectionPos.z(section)) != chunk) continue;
-                for (var source : entry.getValue()) if (!source.offered.isEmpty()) return true;
+                for (var source : entry.getValue()) if (source.processing || !source.offered.isEmpty()) return true;
             }
             return false;
         }
     }
     public void recordBacking(AirBackingMeter meter) {
-        output.recordBacking(meter);
+        meter.container(boundSections, boundSections.size(), 8);
+        airLoads.recordBacking(meter);
         synchronized (transport) { meter.container(sources, sources.size(), 32); meter.container(scheduled, scheduled.size(), 8); }
     }
     @Override public void close() {
@@ -349,7 +470,7 @@ public final class SpatialSourceIngress implements AutoCloseable {
                 for (var offered : source.offered) offered.window.close();
                 source.metadata.close(); source.offered.clear(); source.accepted.clear();
             }
-            sources.clear(); scheduled.clear(); bySection.clear();
+            sources.clear(); scheduled.clear(); bySection.clear(); boundSections.clear();
         }
     }
 }

@@ -59,6 +59,32 @@ public final class PageSignatures {
         return valueAt(bricks[brick], indexWithinBrick(blockIndex));
     }
 
+    /** Copies selected Bricks to their Section-local cell indexes. Other cells in the reusable destination keep their values. */
+    public void copyBricksTo(long mask, int[] destination) {
+        while (mask != 0) {
+            int brick = Long.numberOfTrailingZeros(mask);
+            mask &= mask - 1;
+            Object payload = bricks[brick];
+            for (int cell = 0; cell < ENTRIES_PER_BRICK; cell++) {
+                destination[BlockBrickLayout.pageBlock(brick, cell)] = valueAt(payload, cell);
+            }
+        }
+    }
+
+    /** Route discovery seeds in local x + 4*z + 16*y order. A homogeneous Brick needs one signature check. */
+    public long ventilatedMaterialMask(int brick, ThermalSignatureTable signatures) {
+        Object payload = brickPayload(brick);
+        if (payload instanceof Integer id) {
+            return signatures.materialProfileId(id) != 0 && signatures.ventilation(id) != 0 ? -1L : 0L;
+        }
+        long mask = 0;
+        for (int block = 0; block < ENTRIES_PER_BRICK; block++) {
+            int id = valueAt(payload, block);
+            if (signatures.materialProfileId(id) != 0 && signatures.ventilation(id) != 0) mask |= 1L << block;
+        }
+        return mask;
+    }
+
     public PageSignatures withBricks(
             ThermalSignatureTable signatures,
             int[] baseBrickIndexes,
@@ -85,6 +111,15 @@ public final class PageSignatures {
     }
 
     /** Immutable internal payload shared with worker and Page publication. */
+    public PageSignatures withBricksFrom(PageSignatures source, long mask) {
+        Object[] next = bricks.clone();
+        while (mask != 0) {
+            int brick = Long.numberOfTrailingZeros(mask); mask &= mask - 1;
+            next[brick] = source.bricks[brick];
+        }
+        return new PageSignatures(next);
+    }
+
     public Object brickPayload(int baseBrickIndex) {
         requireBrickIndex(baseBrickIndex);
         return bricks[baseBrickIndex];

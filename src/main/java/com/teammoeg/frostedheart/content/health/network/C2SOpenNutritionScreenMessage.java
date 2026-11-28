@@ -21,13 +21,11 @@ package com.teammoeg.frostedheart.content.health.network;
 
 import java.util.function.Supplier;
 
-import com.teammoeg.chorda.menu.DummyMenuProvider;
 import com.teammoeg.chorda.network.CMessage;
-import com.teammoeg.frostedheart.content.health.screen.HealthStatMenu;
+import com.teammoeg.frostedheart.content.health.handler.HealthScreenHandler;
 
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent.Context;
-import net.minecraftforge.network.NetworkHooks;
 
 public record C2SOpenNutritionScreenMessage() implements CMessage {
 	public C2SOpenNutritionScreenMessage(FriendlyByteBuf buffer) {
@@ -40,7 +38,7 @@ public record C2SOpenNutritionScreenMessage() implements CMessage {
 	@Override
 	public void handle(Supplier<Context> context) {
 		context.get().enqueueWork(()->{
-			NetworkHooks.openScreen(context.get().getSender(), new DummyMenuProvider((id,inv,player)->new HealthStatMenu(id,inv)));
+			HealthScreenHandler.open(context.get().getSender());
 		});
 		context.get().setPacketHandled(true);
 	}

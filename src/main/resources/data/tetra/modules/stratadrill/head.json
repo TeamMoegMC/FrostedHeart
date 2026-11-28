@@ -1,0 +1,25 @@
+{
+  "type": "frostedheart:stratadrill_head",
+  "slots": [
+    "stratadrill/head"
+  ],
+  "improvements": [
+    "tetra:stratadrill/cutting_edge"
+  ],
+  "variants": [
+    {
+      "key": "stratadrill/spiral",
+      "glyph": {
+        "textureX": 176,
+        "textureY": 0
+      }
+    },
+    {
+      "key": "stratadrill/wheel",
+      "glyph": {
+        "textureX": 176,
+        "textureY": 0
+      }
+    }
+  ]
+}

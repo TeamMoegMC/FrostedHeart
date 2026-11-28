@@ -27,6 +27,7 @@ import com.teammoeg.frostedheart.content.climate.thermal.source.EmissionPort;
 import com.teammoeg.frostedheart.content.climate.thermal.source.minecraft.MinecraftPhysicalSourceProfile.Port;
 import com.teammoeg.frostedheart.content.climate.thermal.source.minecraft.MinecraftPhysicalSourceProfile.PortKind;
 import com.teammoeg.frostedheart.content.climate.thermal.source.ThermalSourceMode;
+import com.teammoeg.frostedheart.content.climate.thermal.source.SpatialSourceTimeline;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
@@ -56,7 +57,8 @@ import java.util.Iterator;
 public final class PhysicalSourceSpatialIndex
         implements AutoCloseable, RadiationService.SourceIndex {
     private static final int NO_SLOT = -1;
-    private static final int MAX_PORTS = 3;
+    /** Maximum distinct thermal-port target Bricks retained by one source. */
+    private static final int MAX_TARGET_BRICKS = 4;
     private static final byte PRESENT = 1;
     private static final byte REGISTERED = 1 << 1;
     private static final byte REGISTRATION_STALE = 1 << 2;
@@ -69,6 +71,8 @@ public final class PhysicalSourceSpatialIndex
             (byte) MinecraftPhysicalSourceProfile.CAMPFIRE.profileId();
     private static final byte GENERATOR_PROFILE_ID =
             (byte) MinecraftPhysicalSourceProfile.GENERATOR.profileId();
+    private static final byte GENERATOR_T2_PROFILE_ID =
+            (byte) MinecraftPhysicalSourceProfile.GENERATOR_T2.profileId();
 
     private DimensionInputAccumulator accumulator;
     private final ServerLevel level;
@@ -98,6 +102,7 @@ public final class PhysicalSourceSpatialIndex
     private byte[] targetCount;
     private long[] targetSections;
     private byte[] targetBricks;
+    private SpatialSourceTimeline.Registration[] registrations;
     private int highWaterMark;
     private int freeHead = NO_SLOT;
     private int nextLifecycleGeneration;
@@ -248,6 +253,7 @@ public final class PhysicalSourceSpatialIndex
     }
 
     public void replaceAccumulator(DimensionInputAccumulator next) {
+        for (int slot = 0; slot < highWaterMark; slot++) releaseRegistration(slot);
         accumulator = next;
     }
 
@@ -268,7 +274,7 @@ public final class PhysicalSourceSpatialIndex
         for (int index = 0; index < dirtyOrder.size(); index++) {
             int slot = dirtyOrder.getInt(index);
             if (isLive(slot) && flag(slot, PRESENT) && !flag(slot, REGISTERED)
-                    && flag(slot, TARGETS_CHANGED)) {
+                    && flag(slot, TARGETS_CHANGED) && prepareRegistration(slot)) {
                 refreshTargets(slot);
                 sourceFlags[slot] &= ~TARGETS_CHANGED;
             }
@@ -315,6 +321,11 @@ public final class PhysicalSourceSpatialIndex
                 setFlag(slot, REGISTRATION_STALE, false);
                 lifecycleGenerations[slot] = nextGeneration();
             }
+            if (!flag(slot, REGISTERED) && !prepareRegistration(slot)) {
+                setFlag(slot, DIRTY_QUEUED, true);
+                dirtyOrder.set(deferred++, slot);
+                continue;
+            }
             if (flag(slot, TARGETS_CHANGED)) {
                 refreshTargets(slot);
                 sourceFlags[slot] &= ~TARGETS_CHANGED;
@@ -335,7 +346,8 @@ public final class PhysicalSourceSpatialIndex
                         anchorY[slot],
                         anchorZ[slot],
                         profile.profileId(),
-                        ports);
+                        ports, registrations[slot]);
+                registrations[slot] = null;
                 if (!admitted) {
                     if (!flag(slot, DIRTY_QUEUED)) {
                         setFlag(slot, DIRTY_QUEUED, true);
@@ -407,7 +419,8 @@ public final class PhysicalSourceSpatialIndex
                         if (!isLive(slot) || !flag(slot, PRESENT)
                                 || !flag(slot, DESIRED_ENABLED)
                                 || desiredPowerW[slot] <= 0.0D
-                                || profileIds[slot] != GENERATOR_PROFILE_ID) {
+                                || profileIds[slot] != GENERATOR_PROFILE_ID
+                                        && profileIds[slot] != GENERATOR_T2_PROFILE_ID) {
                             continue;
                         }
                         double dx = BlockPos.getX(sourceIds[slot]) - position.getX();
@@ -482,10 +495,15 @@ public final class PhysicalSourceSpatialIndex
         int slot = slotsById.get(sourceId);
         boolean radiationChanged = false;
         if (slot == NO_SLOT) {
+            if (freeHead == NO_SLOT && highWaterMark >= maximumSources) return false;
+            var registration = accumulator.prepareSourceRegistration(profile.portCount());
+            if (registration == null) return false;
             slot = allocateSlot();
             if (slot == NO_SLOT) {
+                registration.close();
                 return false;
             }
+            registrations[slot] = registration;
             sourceIds[slot] = sourceId;
             lifecycleGenerations[slot] = nextGeneration();
             anchorX[slot] = targetX;
@@ -501,6 +519,7 @@ public final class PhysicalSourceSpatialIndex
                 || anchorX[slot] != targetX
                 || anchorY[slot] != targetY
                 || anchorZ[slot] != targetZ) {
+            releaseRegistration(slot);
             releaseTargets(slot);
             profileIds[slot] = (byte) profile.profileId();
             anchorX[slot] = targetX;
@@ -575,45 +594,36 @@ public final class PhysicalSourceSpatialIndex
         int write = 0;
         for (int index = 0; index < profile.portCount(); index++) {
             Port port = profile.port(index);
-            if (port.kind() != PortKind.AIR_FACE || port.powerShare() <= 0.0D) {
+            if (port.kind() == PortKind.RADIATION_LOSS || port.powerShare() <= 0.0D) {
                 continue;
             }
             int targetX = anchorX[slot] + port.offsetX();
             int targetY = anchorY[slot] + port.offsetY();
             int targetZ = anchorZ[slot] + port.offsetZ();
-            long sectionKey = SectionPos.asLong(
-                    SectionPos.blockToSectionCoord(
-                            targetX),
-                    SectionPos.blockToSectionCoord(
-                            targetY),
-                    SectionPos.blockToSectionCoord(
-                            targetZ));
-            int brick = SectionPos.sectionRelative(targetX) >>> 2
-                    | (SectionPos.sectionRelative(targetZ) >>> 2) << 2
-                    | (SectionPos.sectionRelative(targetY) >>> 2) << 4;
-            boolean duplicate = false;
-            for (int existing = 0; existing < write; existing++) {
-                duplicate |= targetSections[slot * MAX_PORTS + existing]
-                        == sectionKey
-                        && Byte.toUnsignedInt(
-                                targetBricks[slot * MAX_PORTS + existing])
-                        == brick;
-            }
-            if (duplicate) {
-                continue;
-            }
-            int targetIndex = slot * MAX_PORTS + write++;
-            targetSections[targetIndex] = sectionKey;
-            targetBricks[targetIndex] = (byte) brick;
-            pages.updateSourceBrick(sectionKey, brick, true);
-            sourcesByTargetSection.computeIfAbsent(
-                    sectionKey, ignored -> new IntOpenHashSet()).add(slot);
+            write = retainTargetBrick(slot, write, targetX, targetY, targetZ);
+
         }
         targetCount[slot] = (byte) write;
     }
 
+    /** Retain each directly supplied Brick once across all thermal ports. */
+    private int retainTargetBrick(int slot, int count, int x, int y, int z) {
+        if (level.isOutsideBuildHeight(y)) return count;
+        long sectionKey = SectionPos.asLong(x >> 4, y >> 4, z >> 4);
+        int brick = (x & 15) >>> 2 | (z & 12) | (y & 12) << 2;
+        int first = slot * MAX_TARGET_BRICKS;
+        for (int index = first; index < first + count; index++) {
+            if (targetSections[index] == sectionKey && targetBricks[index] == brick) return count;
+        }
+        targetSections[first + count] = sectionKey;
+        targetBricks[first + count] = (byte) brick;
+        pages.updateSourceBrick(sectionKey, brick, true);
+        sourcesByTargetSection.computeIfAbsent(sectionKey, ignored -> new IntOpenHashSet()).add(slot);
+        return count + 1;
+    }
+
     private void releaseTargets(int slot) {
-        int first = slot * MAX_PORTS;
+        int first = slot * MAX_TARGET_BRICKS;
         for (int index = 0;
              index < Byte.toUnsignedInt(targetCount[slot]);
              index++) {
@@ -636,12 +646,16 @@ public final class PhysicalSourceSpatialIndex
     }
 
     private void indexOrigin(int slot) {
+        long section = originSection(slot);
         sourcesByOriginSection.computeIfAbsent(
-                originSection(slot),
+                section,
                 ignored -> new IntOpenHashSet()).add(slot);
         sourcesByOriginChunk.computeIfAbsent(
                 originChunk(slot),
                 ignored -> new IntOpenHashSet()).add(slot);
+        // Raw container replacement must invalidate a newly registered source
+        // even before its first target geometry has been captured.
+        pages.loadedSectionOrAttach(section);
     }
 
     private void unlinkOrigin(int slot) {
@@ -697,6 +711,7 @@ public final class PhysicalSourceSpatialIndex
     }
 
     private void recycle(int slot) {
+        releaseRegistration(slot);
         sourceFlags[slot] = 0;
         sourceIds[slot] = 0L;
         lifecycleGenerations[slot] = 0;
@@ -709,6 +724,18 @@ public final class PhysicalSourceSpatialIndex
     private boolean isLive(int slot) {
         return slot >= 0 && slot < highWaterMark
                 && lifecycleGenerations[slot] != 0;
+    }
+
+    private boolean prepareRegistration(int slot) {
+        if (registrations[slot] == null)
+            registrations[slot] = accumulator.prepareSourceRegistration(profile(slot).portCount());
+        return registrations[slot] != null;
+    }
+
+    private void releaseRegistration(int slot) {
+        if (registrations[slot] != null) {
+            registrations[slot].close(); registrations[slot] = null;
+        }
     }
 
     private int nextGeneration() {
@@ -729,8 +756,9 @@ public final class PhysicalSourceSpatialIndex
         sourceFlags = new byte[capacity];
         nextFree = new int[capacity];
         targetCount = new byte[capacity];
-        targetSections = new long[capacity * MAX_PORTS];
-        targetBricks = new byte[capacity * MAX_PORTS];
+        targetSections = new long[capacity * MAX_TARGET_BRICKS];
+        targetBricks = new byte[capacity * MAX_TARGET_BRICKS];
+        registrations = new SpatialSourceTimeline.Registration[capacity];
         Arrays.fill(nextFree, NO_SLOT);
     }
 
@@ -758,9 +786,10 @@ public final class PhysicalSourceSpatialIndex
         Arrays.fill(nextFree, old, capacity, NO_SLOT);
         targetCount = Arrays.copyOf(targetCount, capacity);
         targetSections = Arrays.copyOf(
-                targetSections, capacity * MAX_PORTS);
+                targetSections, capacity * MAX_TARGET_BRICKS);
         targetBricks = Arrays.copyOf(
-                targetBricks, capacity * MAX_PORTS);
+                targetBricks, capacity * MAX_TARGET_BRICKS);
+        registrations = Arrays.copyOf(registrations, capacity);
     }
 
     private static boolean isCampfire(BlockState state) {
@@ -777,6 +806,7 @@ public final class PhysicalSourceSpatialIndex
         if (closed) return;
         closed = true;
         for (int slot = 0; slot < highWaterMark; slot++) {
+            releaseRegistration(slot);
             if (isLive(slot)) {
                 releaseTargets(slot);
             }

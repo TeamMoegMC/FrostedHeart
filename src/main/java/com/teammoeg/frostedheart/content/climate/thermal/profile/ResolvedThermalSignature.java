@@ -22,7 +22,32 @@ package com.teammoeg.frostedheart.content.climate.thermal.profile;
 
 /** Whole-block transport property and ordinary/phase material identity. */
 public record ResolvedThermalSignature(int ventilation, int materialProfileId,
-        int materialStateId, int fullContactFaces, boolean airMatter, int materialTypeId) {
+        int materialStateId, int fullContactFaces, boolean airMatter, int materialTypeId, int contactPatches) {
+    public ResolvedThermalSignature(int ventilation, int materialProfileId, int stateId, int faces,
+            boolean airMatter, int typeId) {
+        this(ventilation, materialProfileId, stateId, faces, airMatter, typeId, patchesForFullFaces(faces));
+    }
+
+    /** Four aligned quadrants per face, packed in X, Y, Z opposing face order. */
+    public static int patchesForFullFaces(int faces) {
+        int patches = 0;
+        for (int face = 0; face < 6; face++) if ((faces & (1 << face)) != 0) patches |= 15 << (4 * face);
+        return patches;
+    }
+
+    /** Exact boundary of a union of half-block octants (slabs and straight/corner stairs). */
+    public static int patchesForOctants(int octants) {
+        int patches = 0;
+        for (int octant = 0; octant < 8; octant++) {
+            if ((octants & 1 << octant) == 0) continue;
+            int x = octant & 1, y = (octant >> 1) & 1, z = octant >> 2;
+            patches |= 1 << (4 * x + 2 * z + y);
+            patches |= 1 << (4 * (2 + y) + 2 * z + x);
+            patches |= 1 << (4 * (4 + z) + 2 * y + x);
+        }
+        return patches;
+    }
+
     public ResolvedThermalSignature(int ventilation, int materialProfileId, int materialStateId,
             int fullContactFaces, boolean airMatter) {
         this(ventilation, materialProfileId, materialStateId, fullContactFaces, airMatter, -1);

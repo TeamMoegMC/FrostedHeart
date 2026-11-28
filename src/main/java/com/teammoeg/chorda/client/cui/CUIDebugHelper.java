@@ -126,6 +126,7 @@ public class CUIDebugHelper {
 			}
 			list.add(title);
 		}
+		list.add(Component.literal("Selector: " + ele.getUniqueSelector()).withStyle(ChatFormatting.GRAY));
 		// 类名
 		String clazz = ele.getClass().getSimpleName();
 		clazz = clazz.isBlank() ? "extends " + ele.getClass().getSuperclass().getSimpleName() : clazz;

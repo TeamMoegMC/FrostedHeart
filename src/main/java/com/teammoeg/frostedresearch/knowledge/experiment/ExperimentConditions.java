@@ -83,7 +83,7 @@ public final class ExperimentConditions {
         var min = space.minTemperature();
         var max = space.maxTemperature();
         if (min.isEmpty() && max.isEmpty()) return Optional.empty();
-        float measured = WorldTemperature.block(level, table);
+        float measured = WorldTemperature.getTempAtBlock(level, table);
         boolean ok = Float.isFinite(measured) && min.map(m -> measured >= m).orElse(true) && max.map(m -> measured <= m).orElse(true);
         String range = min.isPresent() && max.isPresent() ? format(min.get()) + "–" + format(max.get())
                 : min.isPresent() ? "≥ " + format(min.get()) : "≤ " + format(max.get());

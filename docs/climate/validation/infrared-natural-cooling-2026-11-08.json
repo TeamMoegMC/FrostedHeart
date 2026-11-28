@@ -1,0 +1,3744 @@
+{
+  "status": "Both live natural-cooling client runs passed; reported persistent freeze not reproduced; no new production fix claimed",
+  "date": "2026-11-08",
+  "scope": "Actual fueled outdoor campfire, continuous Air and unchanged iron block, natural cooling and automatic retirement, real dedicated server and two rendering clients",
+  "confirmedReport": {
+    "version": "Both endpoints use 0.7.11",
+    "rejoinObservation": "Only the immediate state after joining was observed; no independent server material-temperature reading was supplied"
+  },
+  "controls": {
+    "analyticFields": 0,
+    "campfires": 1,
+    "rttMs": 3000,
+    "bytesPerSecond": 16384,
+    "infraredAlwaysOpen": true,
+    "targetBlockRemoved": false,
+    "targetBlockReplaced": false,
+    "clientReconnects": 0,
+    "manualResync": false,
+    "firstClearWasDelta": true,
+    "readonlyFullProbeAfterDelta": true
+  },
+  "runs": [
+    {
+      "name": "developer-graphics",
+      "runtimeDirectory": "build/infrared-cooling-open-e2e-20261108",
+      "result": {
+        "passed": true,
+        "failure": null,
+        "profiles": [
+          {
+            "round": 0,
+            "name": "natural-cooling-3s-rtt-16KiBps",
+            "oneWayMs": 1500,
+            "bytesPerSecond": 16384,
+            "bulk": false,
+            "physical": true,
+            "coolingOnly": true
+          }
+        ],
+        "proxyBytes": {
+          "up": 9604,
+          "down": 644330
+        }
+      },
+      "graphics": {
+        "embeddium": "0.3.31-beta.53+mc1.20.1",
+        "oculus": "1.7.0",
+        "shaderpack": null
+      },
+      "scene": {
+        "physical": true,
+        "campfires": 1,
+        "warmPoint": "-4,67,0",
+        "analyticFields": 0,
+        "outdoor": true
+      },
+      "sourceOffTick": 3120,
+      "firstStableMissingTick": 4180,
+      "secondsFromSourceOffToMissing": 53.0,
+      "proxyConnections": 1,
+      "fullProbe": {
+        "summary": {
+          "state": "TEMPERATURE_DATA",
+          "readable": true,
+          "materialPages": 1,
+          "fieldPages": 0,
+          "parts": 1,
+          "records": 1,
+          "validSamples": 2,
+          "payloadBytes": 16,
+          "minC": -10.75,
+          "maxC": -10.75
+        },
+        "warmQ": -32768,
+        "tick": 4280
+      },
+      "fullProbeFileTime": "2026-11-08T21:40:55.251120",
+      "roles": {
+        "fast": {
+          "stages": {
+            "heated": {
+              "phase": "heated",
+              "elapsedMs": 75969.4045,
+              "status": "IR_CLIENT open=true pending=false waitMs=0 request=38 sent=38 dataParts=35 acks=3 commits=35 display=38 ignored=0 staging=false baseline=true validMirrorSamples=65 minC=-11.0 maxC=-10.5 materialReadable=true texture=true renderedFrames=2266 terrainDepth=true center=0,4,0",
+              "gpuWarmQ": -42,
+              "gpuColdQ": -32768,
+              "wire": {
+                "warm": -42,
+                "cold": -32768
+              },
+              "backend": {
+                "phase": 1,
+                "tick": 3080,
+                "elapsedTicks": 1546,
+                "analyticFields": 0,
+                "materialC": -10.390240373235457,
+                "materialSource": "LIVE",
+                "materialQ": -42,
+                "baselineC": -10.893578614966113,
+                "baselineQ": -44,
+                "airNearC": -9.102200829999166,
+                "airFarC": -10.577104294844684,
+                "airSampleTick": 3080,
+                "airBasisTerms": 8,
+                "airHeated": true,
+                "materialHeated": true,
+                "airCooled": false,
+                "airAtStopC": "NaN",
+                "peakAirC": -7.929459381733713,
+                "coolingOnly": true,
+                "peakMaterialC": -10.390240373235457,
+                "peakMaterialQ": -42,
+                "materialCooled": false,
+                "missingTicks": 0,
+                "naturalCleared": false,
+                "naturalC": -10.4
+              },
+              "frameRgb": [
+                180,
+                140,
+                132
+              ],
+              "baselineRgb": [
+                178,
+                178,
+                178
+              ],
+              "expectedColorError": 1.4873863636363467,
+              "bluePlaceholderError": 196.19
+            },
+            "cooled": {
+              "phase": "cooled",
+              "elapsedMs": 131295.4017,
+              "status": "IR_CLIENT open=true pending=false waitMs=0 request=65 sent=65 dataParts=62 acks=3 commits=62 display=65 ignored=0 staging=false baseline=true validMirrorSamples=37 minC=-11.0 maxC=-10.5 materialReadable=true texture=true renderedFrames=3919 terrainDepth=true center=0,4,0",
+              "gpuWarmQ": -42,
+              "gpuColdQ": -32768,
+              "wire": {
+                "warm": -42,
+                "cold": -32768
+              },
+              "backend": {
+                "phase": 2,
+                "tick": 4180,
+                "elapsedTicks": 2646,
+                "analyticFields": 0,
+                "materialC": "NaN",
+                "materialSource": "UNAVAILABLE",
+                "materialQ": -32768,
+                "baselineC": -10.893578614966113,
+                "baselineQ": -44,
+                "airNearC": -10.746847793518452,
+                "airFarC": -10.750295258294807,
+                "airSampleTick": 4180,
+                "airBasisTerms": 8,
+                "airHeated": false,
+                "materialHeated": false,
+                "airCooled": true,
+                "airAtStopC": -9.099673141014854,
+                "peakAirC": -7.929459381733713,
+                "coolingOnly": true,
+                "peakMaterialC": -10.358201063505104,
+                "peakMaterialQ": -41,
+                "materialCooled": true,
+                "missingTicks": 0,
+                "naturalCleared": false,
+                "naturalC": -10.4
+              },
+              "frameRgb": [
+                180,
+                140,
+                132
+              ],
+              "baselineRgb": [
+                178,
+                178,
+                178
+              ]
+            },
+            "natural-cleared": {
+              "phase": "natural-cleared",
+              "elapsedMs": 136407.5217,
+              "status": "IR_CLIENT open=true pending=false waitMs=0 request=68 sent=68 dataParts=65 acks=3 commits=65 display=68 ignored=0 staging=false baseline=true validMirrorSamples=2 minC=-10.75 maxC=-10.75 materialReadable=true texture=true renderedFrames=4071 terrainDepth=true center=0,4,0",
+              "gpuWarmQ": -32768,
+              "gpuColdQ": -32768,
+              "wire": {
+                "warm": -32768,
+                "cold": -32768
+              },
+              "backend": {
+                "phase": 3,
+                "tick": 4280,
+                "elapsedTicks": 2746,
+                "analyticFields": 0,
+                "materialC": "NaN",
+                "materialSource": "UNAVAILABLE",
+                "materialQ": -32768,
+                "baselineC": -10.893578614966113,
+                "baselineQ": -44,
+                "airNearC": -10.762802953468478,
+                "airFarC": -10.757916057896374,
+                "airSampleTick": 4280,
+                "airBasisTerms": 8,
+                "airHeated": false,
+                "materialHeated": false,
+                "airCooled": true,
+                "airAtStopC": -9.099673141014854,
+                "peakAirC": -7.929459381733713,
+                "coolingOnly": true,
+                "peakMaterialC": -10.358201063505104,
+                "peakMaterialQ": -41,
+                "materialCooled": true,
+                "missingTicks": 100,
+                "naturalCleared": true,
+                "naturalC": -10.4
+              },
+              "frameRgb": [
+                101,
+                101,
+                211
+              ],
+              "baselineRgb": [
+                178,
+                178,
+                178
+              ],
+              "expectedColorError": 1.0299999999999727,
+              "bluePlaceholderError": 1.0299999999999727
+            }
+          },
+          "wireValueChanges": [
+            {
+              "requestId": 4,
+              "q": -44,
+              "temperatureC": -11.0
+            },
+            {
+              "requestId": 7,
+              "q": -43,
+              "temperatureC": -10.75
+            },
+            {
+              "requestId": 22,
+              "q": -42,
+              "temperatureC": -10.5
+            },
+            {
+              "requestId": 40,
+              "q": -41,
+              "temperatureC": -10.25
+            },
+            {
+              "requestId": 52,
+              "q": -42,
+              "temperatureC": -10.5
+            },
+            {
+              "requestId": 66,
+              "q": -32768,
+              "temperatureC": null
+            }
+          ],
+          "firstClearRequestId": 66,
+          "clearPacket": {
+            "requestId": 66,
+            "first": true,
+            "last": true,
+            "full": false,
+            "ack": false,
+            "bodyBytes": 247,
+            "wireFrameBytes": 210,
+            "decodedPacketBytes": 270
+          },
+          "clearServerLog": "[21:40:50] [Server thread/INFO] [Frosted Heart (The Winter Rescue)/]: IR_SERVER_RESPONSE player=IRFast id=66 Summary[state=TEMPERATURE_DATA, readable=true, materialPages=1, fieldPages=0, parts=1, records=66, validSamples=2, payloadBytes=211, minC=-10.75, maxC=-10.75]"
+        },
+        "slow": {
+          "stages": {
+            "heated": {
+              "phase": "heated",
+              "elapsedMs": 75291.5537,
+              "status": "IR_CLIENT open=true pending=true waitMs=1547 request=20 sent=20 dataParts=17 acks=2 commits=17 display=19 ignored=0 staging=false baseline=true validMirrorSamples=65 minC=-11.0 maxC=-10.5 materialReadable=true texture=true renderedFrames=2243 terrainDepth=true center=0,4,0",
+              "gpuWarmQ": -42,
+              "gpuColdQ": -32768,
+              "wire": {
+                "warm": -42,
+                "cold": -32768
+              },
+              "backend": {
+                "phase": 1,
+                "tick": 3080,
+                "elapsedTicks": 1546,
+                "analyticFields": 0,
+                "materialC": -10.390240373235457,
+                "materialSource": "LIVE",
+                "materialQ": -42,
+                "baselineC": -10.893578614966113,
+                "baselineQ": -44,
+                "airNearC": -9.102200829999166,
+                "airFarC": -10.577104294844684,
+                "airSampleTick": 3080,
+                "airBasisTerms": 8,
+                "airHeated": true,
+                "materialHeated": true,
+                "airCooled": false,
+                "airAtStopC": "NaN",
+                "peakAirC": -7.929459381733713,
+                "coolingOnly": true,
+                "peakMaterialC": -10.390240373235457,
+                "peakMaterialQ": -42,
+                "materialCooled": false,
+                "missingTicks": 0,
+                "naturalCleared": false,
+                "naturalC": -10.4
+              },
+              "frameRgb": [
+                180,
+                140,
+                132
+              ],
+              "baselineRgb": [
+                178,
+                178,
+                178
+              ],
+              "expectedColorError": 1.4873863636363467,
+              "bluePlaceholderError": 196.19
+            },
+            "cooled": {
+              "phase": "cooled",
+              "elapsedMs": 130176.3146,
+              "status": "IR_CLIENT open=true pending=true waitMs=438 request=34 sent=34 dataParts=31 acks=2 commits=31 display=33 ignored=0 staging=false baseline=true validMirrorSamples=37 minC=-11.0 maxC=-10.5 materialReadable=true texture=true renderedFrames=3882 terrainDepth=true center=0,4,0",
+              "gpuWarmQ": -42,
+              "gpuColdQ": -32768,
+              "wire": {
+                "warm": -42,
+                "cold": -32768
+              },
+              "backend": {
+                "phase": 2,
+                "tick": 4180,
+                "elapsedTicks": 2646,
+                "analyticFields": 0,
+                "materialC": "NaN",
+                "materialSource": "UNAVAILABLE",
+                "materialQ": -32768,
+                "baselineC": -10.893578614966113,
+                "baselineQ": -44,
+                "airNearC": -10.746847793518452,
+                "airFarC": -10.750295258294807,
+                "airSampleTick": 4180,
+                "airBasisTerms": 8,
+                "airHeated": false,
+                "materialHeated": false,
+                "airCooled": true,
+                "airAtStopC": -9.099673141014854,
+                "peakAirC": -7.929459381733713,
+                "coolingOnly": true,
+                "peakMaterialC": -10.358201063505104,
+                "peakMaterialQ": -41,
+                "materialCooled": true,
+                "missingTicks": 0,
+                "naturalCleared": false,
+                "naturalC": -10.4
+              },
+              "frameRgb": [
+                180,
+                140,
+                132
+              ],
+              "baselineRgb": [
+                178,
+                178,
+                178
+              ]
+            },
+            "natural-cleared": {
+              "phase": "natural-cleared",
+              "elapsedMs": 135292.9974,
+              "status": "IR_CLIENT open=true pending=true waitMs=1548 request=35 sent=35 dataParts=32 acks=2 commits=32 display=34 ignored=0 staging=false baseline=true validMirrorSamples=2 minC=-10.75 maxC=-10.75 materialReadable=true texture=true renderedFrames=4034 terrainDepth=true center=0,4,0",
+              "gpuWarmQ": -32768,
+              "gpuColdQ": -32768,
+              "wire": {
+                "warm": -32768,
+                "cold": -32768
+              },
+              "backend": {
+                "phase": 3,
+                "tick": 4280,
+                "elapsedTicks": 2746,
+                "analyticFields": 0,
+                "materialC": "NaN",
+                "materialSource": "UNAVAILABLE",
+                "materialQ": -32768,
+                "baselineC": -10.893578614966113,
+                "baselineQ": -44,
+                "airNearC": -10.762802953468478,
+                "airFarC": -10.757916057896374,
+                "airSampleTick": 4280,
+                "airBasisTerms": 8,
+                "airHeated": false,
+                "materialHeated": false,
+                "airCooled": true,
+                "airAtStopC": -9.099673141014854,
+                "peakAirC": -7.929459381733713,
+                "coolingOnly": true,
+                "peakMaterialC": -10.358201063505104,
+                "peakMaterialQ": -41,
+                "materialCooled": true,
+                "missingTicks": 100,
+                "naturalCleared": true,
+                "naturalC": -10.4
+              },
+              "frameRgb": [
+                101,
+                101,
+                211
+              ],
+              "baselineRgb": [
+                178,
+                178,
+                178
+              ],
+              "expectedColorError": 1.0299999999999727,
+              "bluePlaceholderError": 1.0299999999999727
+            }
+          },
+          "wireValueChanges": [
+            {
+              "requestId": 3,
+              "q": -44,
+              "temperatureC": -11.0
+            },
+            {
+              "requestId": 4,
+              "q": -43,
+              "temperatureC": -10.75
+            },
+            {
+              "requestId": 12,
+              "q": -42,
+              "temperatureC": -10.5
+            },
+            {
+              "requestId": 21,
+              "q": -41,
+              "temperatureC": -10.25
+            },
+            {
+              "requestId": 27,
+              "q": -42,
+              "temperatureC": -10.5
+            },
+            {
+              "requestId": 34,
+              "q": -32768,
+              "temperatureC": null
+            }
+          ],
+          "firstClearRequestId": 34,
+          "clearPacket": {
+            "requestId": 34,
+            "first": true,
+            "last": true,
+            "full": false,
+            "ack": false,
+            "bodyBytes": 247,
+            "wireFrameBytes": 208,
+            "decodedPacketBytes": 270
+          },
+          "clearServerLog": "[21:40:51] [Server thread/INFO] [Frosted Heart (The Winter Rescue)/]: IR_SERVER_RESPONSE player=IRSlow id=34 Summary[state=TEMPERATURE_DATA, readable=true, materialPages=1, fieldPages=0, parts=1, records=66, validSamples=2, payloadBytes=211, minC=-10.75, maxC=-10.75]"
+        }
+      },
+      "history": [
+        {
+          "tick": 1540,
+          "elapsedS": 0.3,
+          "phase": 0,
+          "materialC": null,
+          "materialQ": -32768,
+          "source": "UNAVAILABLE",
+          "airNearC": null,
+          "missingTicks": 0
+        },
+        {
+          "tick": 1560,
+          "elapsedS": 1.3,
+          "phase": 0,
+          "materialC": null,
+          "materialQ": -32768,
+          "source": "UNAVAILABLE",
+          "airNearC": null,
+          "missingTicks": 0
+        },
+        {
+          "tick": 1580,
+          "elapsedS": 2.3,
+          "phase": 0,
+          "materialC": null,
+          "materialQ": -32768,
+          "source": "UNAVAILABLE",
+          "airNearC": null,
+          "missingTicks": 0
+        },
+        {
+          "tick": 1600,
+          "elapsedS": 3.3,
+          "phase": 0,
+          "materialC": null,
+          "materialQ": -32768,
+          "source": "UNAVAILABLE",
+          "airNearC": null,
+          "missingTicks": 0
+        },
+        {
+          "tick": 1620,
+          "elapsedS": 4.3,
+          "phase": 0,
+          "materialC": null,
+          "materialQ": -32768,
+          "source": "UNAVAILABLE",
+          "airNearC": null,
+          "missingTicks": 0
+        },
+        {
+          "tick": 1640,
+          "elapsedS": 5.3,
+          "phase": 0,
+          "materialC": null,
+          "materialQ": -32768,
+          "source": "UNAVAILABLE",
+          "airNearC": null,
+          "missingTicks": 0
+        },
+        {
+          "tick": 1660,
+          "elapsedS": 6.3,
+          "phase": 1,
+          "materialC": null,
+          "materialQ": -32768,
+          "source": "UNAVAILABLE",
+          "airNearC": null,
+          "missingTicks": 0
+        },
+        {
+          "tick": 1680,
+          "elapsedS": 7.3,
+          "phase": 1,
+          "materialC": null,
+          "materialQ": -32768,
+          "source": "UNAVAILABLE",
+          "airNearC": null,
+          "missingTicks": 0
+        },
+        {
+          "tick": 1700,
+          "elapsedS": 8.3,
+          "phase": 1,
+          "materialC": null,
+          "materialQ": -32768,
+          "source": "UNAVAILABLE",
+          "airNearC": -9.011571435891634,
+          "missingTicks": 0
+        },
+        {
+          "tick": 1720,
+          "elapsedS": 9.3,
+          "phase": 1,
+          "materialC": null,
+          "materialQ": -32768,
+          "source": "UNAVAILABLE",
+          "airNearC": -7.929459381733713,
+          "missingTicks": 0
+        },
+        {
+          "tick": 1740,
+          "elapsedS": 10.3,
+          "phase": 1,
+          "materialC": -10.893578614966113,
+          "materialQ": -44,
+          "source": "LIVE",
+          "airNearC": -9.397634918439179,
+          "missingTicks": 0
+        },
+        {
+          "tick": 1760,
+          "elapsedS": 11.3,
+          "phase": 1,
+          "materialC": -10.886381491198144,
+          "materialQ": -44,
+          "source": "LIVE",
+          "airNearC": -9.52959039894654,
+          "missingTicks": 0
+        },
+        {
+          "tick": 1780,
+          "elapsedS": 12.3,
+          "phase": 1,
+          "materialC": -10.878830356221554,
+          "materialQ": -44,
+          "source": "LIVE",
+          "airNearC": -9.488153240525461,
+          "missingTicks": 0
+        },
+        {
+          "tick": 1800,
+          "elapsedS": 13.3,
+          "phase": 1,
+          "materialC": -10.871050313743309,
+          "materialQ": -43,
+          "source": "LIVE",
+          "airNearC": -9.450491752336887,
+          "missingTicks": 0
+        },
+        {
+          "tick": 1820,
+          "elapsedS": 14.3,
+          "phase": 1,
+          "materialC": -10.863113740775418,
+          "materialQ": -43,
+          "source": "LIVE",
+          "airNearC": -9.419107088142788,
+          "missingTicks": 0
+        },
+        {
+          "tick": 1840,
+          "elapsedS": 15.3,
+          "phase": 1,
+          "materialC": -10.855068823664457,
+          "materialQ": -43,
+          "source": "LIVE",
+          "airNearC": -9.393265159573025,
+          "missingTicks": 0
+        },
+        {
+          "tick": 1860,
+          "elapsedS": 16.3,
+          "phase": 1,
+          "materialC": -10.846949178247401,
+          "materialQ": -43,
+          "source": "LIVE",
+          "airNearC": -9.371783320460098,
+          "missingTicks": 0
+        },
+        {
+          "tick": 1880,
+          "elapsedS": 17.3,
+          "phase": 1,
+          "materialC": -10.838778810131961,
+          "materialQ": -43,
+          "source": "LIVE",
+          "airNearC": -9.371783320460098,
+          "missingTicks": 0
+        },
+        {
+          "tick": 1900,
+          "elapsedS": 18.3,
+          "phase": 1,
+          "materialC": -10.830575190629714,
+          "materialQ": -43,
+          "source": "LIVE",
+          "airNearC": -9.338017636786152,
+          "missingTicks": 0
+        },
+        {
+          "tick": 1920,
+          "elapsedS": 19.3,
+          "phase": 1,
+          "materialC": -10.8223512747369,
+          "materialQ": -43,
+          "source": "LIVE",
+          "airNearC": -9.338017636786152,
+          "missingTicks": 0
+        },
+        {
+          "tick": 1940,
+          "elapsedS": 20.3,
+          "phase": 1,
+          "materialC": -10.81411685195663,
+          "materialQ": -43,
+          "source": "LIVE",
+          "airNearC": -9.312223166459185,
+          "missingTicks": 0
+        },
+        {
+          "tick": 1960,
+          "elapsedS": 21.3,
+          "phase": 1,
+          "materialC": -10.81411685195663,
+          "materialQ": -43,
+          "source": "LIVE",
+          "airNearC": -9.312223166459185,
+          "missingTicks": 0
+        },
+        {
+          "tick": 1980,
+          "elapsedS": 22.3,
+          "phase": 1,
+          "materialC": -10.79764502004092,
+          "materialQ": -43,
+          "source": "LIVE",
+          "airNearC": -9.301300780581856,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2000,
+          "elapsedS": 23.3,
+          "phase": 1,
+          "materialC": -10.789418254839429,
+          "materialQ": -43,
+          "source": "LIVE",
+          "airNearC": -9.29135841511512,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2020,
+          "elapsedS": 24.3,
+          "phase": 1,
+          "materialC": -10.789418254839429,
+          "materialQ": -43,
+          "source": "LIVE",
+          "airNearC": -9.282222588362727,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2040,
+          "elapsedS": 25.3,
+          "phase": 1,
+          "materialC": -10.773002459440546,
+          "materialQ": -43,
+          "source": "LIVE",
+          "airNearC": -9.265875089067249,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2060,
+          "elapsedS": 26.3,
+          "phase": 1,
+          "materialC": -10.764819266749704,
+          "materialQ": -43,
+          "source": "LIVE",
+          "airNearC": -9.258483524928542,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2080,
+          "elapsedS": 27.3,
+          "phase": 1,
+          "materialC": -10.756655693330401,
+          "materialQ": -43,
+          "source": "LIVE",
+          "airNearC": -9.251524722240067,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2100,
+          "elapsedS": 28.3,
+          "phase": 1,
+          "materialC": -10.74851368384675,
+          "materialQ": -43,
+          "source": "LIVE",
+          "airNearC": -9.244948532508783,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2120,
+          "elapsedS": 29.3,
+          "phase": 1,
+          "materialC": -10.740394927843104,
+          "materialQ": -43,
+          "source": "LIVE",
+          "airNearC": -9.238714089017076,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2140,
+          "elapsedS": 30.3,
+          "phase": 1,
+          "materialC": -10.732300906747344,
+          "materialQ": -43,
+          "source": "LIVE",
+          "airNearC": -9.23278763536019,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2160,
+          "elapsedS": 31.3,
+          "phase": 1,
+          "materialC": -10.724232929941802,
+          "materialQ": -43,
+          "source": "LIVE",
+          "airNearC": -9.227140931296871,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2180,
+          "elapsedS": 32.3,
+          "phase": 1,
+          "materialC": -10.71619216281661,
+          "materialQ": -43,
+          "source": "LIVE",
+          "airNearC": -9.227140931296871,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2200,
+          "elapsedS": 33.3,
+          "phase": 1,
+          "materialC": -10.71619216281661,
+          "materialQ": -43,
+          "source": "LIVE",
+          "airNearC": -9.221750070181182,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2220,
+          "elapsedS": 34.3,
+          "phase": 1,
+          "materialC": -10.700196327355227,
+          "materialQ": -43,
+          "source": "LIVE",
+          "airNearC": -9.211656811956852,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2240,
+          "elapsedS": 35.3,
+          "phase": 1,
+          "materialC": -10.692243047486818,
+          "materialQ": -43,
+          "source": "LIVE",
+          "airNearC": -9.20692130304751,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2260,
+          "elapsedS": 36.3,
+          "phase": 1,
+          "materialC": -10.684320580085988,
+          "materialQ": -43,
+          "source": "LIVE",
+          "airNearC": -9.20692130304751,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2280,
+          "elapsedS": 37.3,
+          "phase": 1,
+          "materialC": -10.676429627146714,
+          "materialQ": -43,
+          "source": "LIVE",
+          "airNearC": -9.19800437599386,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2300,
+          "elapsedS": 38.3,
+          "phase": 1,
+          "materialC": -10.66857082981286,
+          "materialQ": -43,
+          "source": "LIVE",
+          "airNearC": -9.193800212322998,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2320,
+          "elapsedS": 39.3,
+          "phase": 1,
+          "materialC": -10.660744775073614,
+          "materialQ": -43,
+          "source": "LIVE",
+          "airNearC": -9.189752381599511,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2340,
+          "elapsedS": 40.3,
+          "phase": 1,
+          "materialC": -10.65295200142953,
+          "materialQ": -43,
+          "source": "LIVE",
+          "airNearC": -9.189752381599511,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2360,
+          "elapsedS": 41.3,
+          "phase": 1,
+          "materialC": -10.645193003722149,
+          "materialQ": -43,
+          "source": "LIVE",
+          "airNearC": -9.182091772858733,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2380,
+          "elapsedS": 42.3,
+          "phase": 1,
+          "materialC": -10.637468237277833,
+          "materialQ": -43,
+          "source": "LIVE",
+          "airNearC": -9.17846392878653,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2400,
+          "elapsedS": 43.3,
+          "phase": 1,
+          "materialC": -10.629778121484724,
+          "materialQ": -43,
+          "source": "LIVE",
+          "airNearC": -9.17846392878653,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2420,
+          "elapsedS": 44.3,
+          "phase": 1,
+          "materialC": -10.622123042897766,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.17158020472404,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2440,
+          "elapsedS": 45.3,
+          "phase": 1,
+          "materialC": -10.614503357948086,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.168312706392339,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2460,
+          "elapsedS": 46.3,
+          "phase": 1,
+          "materialC": -10.606919395318764,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.165154432786988,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2480,
+          "elapsedS": 47.3,
+          "phase": 1,
+          "materialC": -10.599371458037709,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.162100593484979,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2500,
+          "elapsedS": 48.3,
+          "phase": 1,
+          "materialC": -10.59185982532954,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.162100593484979,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2520,
+          "elapsedS": 49.3,
+          "phase": 1,
+          "materialC": -10.584384754261142,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.15628866987485,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2540,
+          "elapsedS": 50.3,
+          "phase": 1,
+          "materialC": -10.576946481210003,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.15628866987485,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2560,
+          "elapsedS": 51.3,
+          "phase": 1,
+          "materialC": -10.569545223179592,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.150844620783193,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2580,
+          "elapsedS": 52.3,
+          "phase": 1,
+          "materialC": -10.562181178982442,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.14825152838094,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2600,
+          "elapsedS": 53.3,
+          "phase": 1,
+          "materialC": -10.554854530308253,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.14573999961889,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2620,
+          "elapsedS": 54.3,
+          "phase": 1,
+          "materialC": -10.547565442691923,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.143306971057445,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2640,
+          "elapsedS": 55.3,
+          "phase": 1,
+          "materialC": -10.547565442691923,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.143306971057445,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2660,
+          "elapsedS": 56.3,
+          "phase": 1,
+          "materialC": -10.54031406639408,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.140949544308981,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2680,
+          "elapsedS": 57.3,
+          "phase": 1,
+          "materialC": -10.525924656916182,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.136440965039942,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2700,
+          "elapsedS": 58.3,
+          "phase": 1,
+          "materialC": -10.518786471486756,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.134278280714359,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2720,
+          "elapsedS": 59.3,
+          "phase": 1,
+          "materialC": -10.511685806190885,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.132171626593774,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2740,
+          "elapsedS": 60.3,
+          "phase": 1,
+          "materialC": -10.504622554627584,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.13011805523325,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2760,
+          "elapsedS": 61.3,
+          "phase": 1,
+          "materialC": -10.49759663303163,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.13011805523325,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2780,
+          "elapsedS": 62.3,
+          "phase": 1,
+          "materialC": -10.490607980098943,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.126162253652833,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2800,
+          "elapsedS": 63.3,
+          "phase": 1,
+          "materialC": -10.483656553933912,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.124257388306088,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2820,
+          "elapsedS": 64.3,
+          "phase": 1,
+          "materialC": -10.476742328157489,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.122399944519659,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2840,
+          "elapsedS": 65.3,
+          "phase": 1,
+          "materialC": -10.469865288050327,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.1205891343629,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2860,
+          "elapsedS": 66.3,
+          "phase": 1,
+          "materialC": -10.463025427080646,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.118824205008194,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2880,
+          "elapsedS": 67.3,
+          "phase": 1,
+          "materialC": -10.456222743929274,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.117104397638721,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2900,
+          "elapsedS": 68.3,
+          "phase": 1,
+          "materialC": -10.449457240017582,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.115428927021366,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2920,
+          "elapsedS": 69.3,
+          "phase": 1,
+          "materialC": -10.44272891749823,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.11379697393076,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2940,
+          "elapsedS": 70.3,
+          "phase": 1,
+          "materialC": -10.436037777651181,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.112207685101476,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2960,
+          "elapsedS": 71.3,
+          "phase": 1,
+          "materialC": -10.429383819624672,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.11066017724802,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2980,
+          "elapsedS": 72.3,
+          "phase": 1,
+          "materialC": -10.422767039463656,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.109153542989578,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3000,
+          "elapsedS": 73.3,
+          "phase": 1,
+          "materialC": -10.416187429374725,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.107686857380848,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3020,
+          "elapsedS": 74.3,
+          "phase": 1,
+          "materialC": -10.409644977183387,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.10625918430835,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3040,
+          "elapsedS": 75.3,
+          "phase": 1,
+          "materialC": -10.403139665946368,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.104869582362047,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3060,
+          "elapsedS": 76.3,
+          "phase": 1,
+          "materialC": -10.396671473688043,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.103517110006113,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3080,
+          "elapsedS": 77.3,
+          "phase": 1,
+          "materialC": -10.390240373235457,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.102200829999166,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3100,
+          "elapsedS": 78.3,
+          "phase": 1,
+          "materialC": -10.383846332131197,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.100919813085389,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3120,
+          "elapsedS": 79.3,
+          "phase": 2,
+          "materialC": -10.377489312607214,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.099673141014854,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3140,
+          "elapsedS": 80.3,
+          "phase": 2,
+          "materialC": -10.377489312607214,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.099673141014854,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3160,
+          "elapsedS": 81.3,
+          "phase": 2,
+          "materialC": -10.367650484702747,
+          "materialQ": -41,
+          "source": "LIVE",
+          "airNearC": -9.668488914759926,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3180,
+          "elapsedS": 82.3,
+          "phase": 2,
+          "materialC": -10.36449000583113,
+          "materialQ": -41,
+          "source": "LIVE",
+          "airNearC": -9.8547289679224,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3200,
+          "elapsedS": 83.3,
+          "phase": 2,
+          "materialC": -10.36215798914076,
+          "materialQ": -41,
+          "source": "LIVE",
+          "airNearC": -9.99677909062921,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3220,
+          "elapsedS": 84.3,
+          "phase": 2,
+          "materialC": -10.360482110149333,
+          "materialQ": -41,
+          "source": "LIVE",
+          "airNearC": -10.107073853372095,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3240,
+          "elapsedS": 85.3,
+          "phase": 2,
+          "materialC": -10.359334508735133,
+          "materialQ": -41,
+          "source": "LIVE",
+          "airNearC": -10.194202321909204,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3260,
+          "elapsedS": 86.3,
+          "phase": 2,
+          "materialC": -10.358618588913682,
+          "materialQ": -41,
+          "source": "LIVE",
+          "airNearC": -10.26415160342462,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3280,
+          "elapsedS": 87.3,
+          "phase": 2,
+          "materialC": -10.358260103936995,
+          "materialQ": -41,
+          "source": "LIVE",
+          "airNearC": -10.321150983886273,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3300,
+          "elapsedS": 88.3,
+          "phase": 2,
+          "materialC": -10.358201063505104,
+          "materialQ": -41,
+          "source": "LIVE",
+          "airNearC": -10.368233972620379,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3320,
+          "elapsedS": 89.3,
+          "phase": 2,
+          "materialC": -10.358395506629131,
+          "materialQ": -41,
+          "source": "LIVE",
+          "airNearC": -10.407611097898126,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3340,
+          "elapsedS": 90.3,
+          "phase": 2,
+          "materialC": -10.358806520021295,
+          "materialQ": -41,
+          "source": "LIVE",
+          "airNearC": -10.440918412286935,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3360,
+          "elapsedS": 91.3,
+          "phase": 2,
+          "materialC": -10.35940409932916,
+          "materialQ": -41,
+          "source": "LIVE",
+          "airNearC": -10.46938483311489,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3380,
+          "elapsedS": 92.3,
+          "phase": 2,
+          "materialC": -10.360163589655468,
+          "materialQ": -41,
+          "source": "LIVE",
+          "airNearC": -10.493946305280522,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3400,
+          "elapsedS": 93.3,
+          "phase": 2,
+          "materialC": -10.361064530777917,
+          "materialQ": -41,
+          "source": "LIVE",
+          "airNearC": -10.515324818219204,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3420,
+          "elapsedS": 94.3,
+          "phase": 2,
+          "materialC": -10.362089789731375,
+          "materialQ": -41,
+          "source": "LIVE",
+          "airNearC": -10.53408391556819,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3440,
+          "elapsedS": 95.3,
+          "phase": 2,
+          "materialC": -10.363224900641072,
+          "materialQ": -41,
+          "source": "LIVE",
+          "airNearC": -10.55066826528505,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3460,
+          "elapsedS": 96.3,
+          "phase": 2,
+          "materialC": -10.364457556227643,
+          "materialQ": -41,
+          "source": "LIVE",
+          "airNearC": -10.565432264766338,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3480,
+          "elapsedS": 97.3,
+          "phase": 2,
+          "materialC": -10.365777211816662,
+          "materialQ": -41,
+          "source": "LIVE",
+          "airNearC": -10.578660993367716,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3500,
+          "elapsedS": 98.3,
+          "phase": 2,
+          "materialC": -10.367174773838382,
+          "materialQ": -41,
+          "source": "LIVE",
+          "airNearC": -10.590585748854757,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3520,
+          "elapsedS": 99.3,
+          "phase": 2,
+          "materialC": -10.368642352501515,
+          "materialQ": -41,
+          "source": "LIVE",
+          "airNearC": -10.601395699458383,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3540,
+          "elapsedS": 100.3,
+          "phase": 2,
+          "materialC": -10.370173063719307,
+          "materialQ": -41,
+          "source": "LIVE",
+          "airNearC": -10.61124671521863,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3560,
+          "elapsedS": 101.3,
+          "phase": 2,
+          "materialC": -10.371760869199392,
+          "materialQ": -41,
+          "source": "LIVE",
+          "airNearC": -10.62026812723735,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3580,
+          "elapsedS": 102.3,
+          "phase": 2,
+          "materialC": -10.373400446369649,
+          "materialQ": -41,
+          "source": "LIVE",
+          "airNearC": -10.628567948397503,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3600,
+          "elapsedS": 103.3,
+          "phase": 2,
+          "materialC": -10.375087081823338,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -10.636236940320714,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3620,
+          "elapsedS": 104.3,
+          "phase": 2,
+          "materialC": -10.376816583449221,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -10.643351807079902,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3640,
+          "elapsedS": 105.3,
+          "phase": 2,
+          "materialC": -10.378585207515153,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -10.649977722252327,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3660,
+          "elapsedS": 106.3,
+          "phase": 2,
+          "materialC": -10.380389597802258,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -10.656170342884046,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3680,
+          "elapsedS": 107.3,
+          "phase": 2,
+          "materialC": -10.382226734514335,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -10.661977425527326,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3700,
+          "elapsedS": 108.3,
+          "phase": 2,
+          "materialC": -10.384093891166708,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -10.66744013141753,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3720,
+          "elapsedS": 109.3,
+          "phase": 2,
+          "materialC": -10.385988598027255,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -10.672594087122574,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3740,
+          "elapsedS": 110.3,
+          "phase": 2,
+          "materialC": -10.387908610968395,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -10.677470251570652,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3760,
+          "elapsedS": 111.3,
+          "phase": 2,
+          "materialC": -10.389851884811543,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -10.6820956287931,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3780,
+          "elapsedS": 112.3,
+          "phase": 2,
+          "materialC": -10.391816550420677,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -10.68649385698117,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3800,
+          "elapsedS": 113.3,
+          "phase": 2,
+          "materialC": -10.393800894939895,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -10.68649385698117,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3820,
+          "elapsedS": 114.3,
+          "phase": 2,
+          "materialC": -10.393800894939895,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -10.690685697809082,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3840,
+          "elapsedS": 115.3,
+          "phase": 2,
+          "materialC": -10.397822450244607,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -10.698521266291861,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3860,
+          "elapsedS": 116.3,
+          "phase": 2,
+          "materialC": -10.399856873565364,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -10.70219549307007,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3880,
+          "elapsedS": 117.3,
+          "phase": 2,
+          "materialC": -10.401905376555654,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -10.705724863268285,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3900,
+          "elapsedS": 118.3,
+          "phase": 2,
+          "materialC": -10.403966811160204,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -10.709120729152577,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3920,
+          "elapsedS": 119.3,
+          "phase": 2,
+          "materialC": -10.406040110598251,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -10.712393233843336,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3940,
+          "elapsedS": 120.3,
+          "phase": 2,
+          "materialC": -10.40812428163786,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -10.71555146241758,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3960,
+          "elapsedS": 121.3,
+          "phase": 2,
+          "materialC": -10.410218397761861,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -10.71860357161071,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3980,
+          "elapsedS": 122.3,
+          "phase": 2,
+          "materialC": -10.412321593107377,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -10.721556901509445,
+          "missingTicks": 0
+        },
+        {
+          "tick": 4000,
+          "elapsedS": 123.3,
+          "phase": 2,
+          "materialC": -10.41443305707854,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -10.724418072032636,
+          "missingTicks": 0
+        },
+        {
+          "tick": 4020,
+          "elapsedS": 124.3,
+          "phase": 2,
+          "materialC": -10.41655202954648,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -10.72719306651593,
+          "missingTicks": 0
+        },
+        {
+          "tick": 4040,
+          "elapsedS": 125.3,
+          "phase": 2,
+          "materialC": -10.418677796563161,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -10.729887304325707,
+          "missingTicks": 0
+        },
+        {
+          "tick": 4060,
+          "elapsedS": 126.3,
+          "phase": 2,
+          "materialC": -10.420809686525825,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -10.732505704109638,
+          "missingTicks": 0
+        },
+        {
+          "tick": 4080,
+          "elapsedS": 127.3,
+          "phase": 2,
+          "materialC": -10.42294706673752,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -10.735052739030452,
+          "missingTicks": 0
+        },
+        {
+          "tick": 4100,
+          "elapsedS": 128.3,
+          "phase": 2,
+          "materialC": -10.425089340316703,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -10.737532485115288,
+          "missingTicks": 0
+        },
+        {
+          "tick": 4120,
+          "elapsedS": 129.3,
+          "phase": 2,
+          "materialC": -10.427235943415011,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -10.739948663676113,
+          "missingTicks": 0
+        },
+        {
+          "tick": 4140,
+          "elapsedS": 130.3,
+          "phase": 2,
+          "materialC": -10.429386342451796,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -10.74230466745847,
+          "missingTicks": 0
+        },
+        {
+          "tick": 4160,
+          "elapsedS": 131.3,
+          "phase": 2,
+          "materialC": -10.431540029936967,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -10.744603454579025,
+          "missingTicks": 0
+        },
+        {
+          "tick": 4180,
+          "elapsedS": 132.3,
+          "phase": 2,
+          "materialC": null,
+          "materialQ": -32768,
+          "source": "UNAVAILABLE",
+          "airNearC": -10.746847793518452,
+          "missingTicks": 0
+        },
+        {
+          "tick": 4200,
+          "elapsedS": 133.3,
+          "phase": 2,
+          "materialC": null,
+          "materialQ": -32768,
+          "source": "UNAVAILABLE",
+          "airNearC": -10.751169241182826,
+          "missingTicks": 20
+        },
+        {
+          "tick": 4220,
+          "elapsedS": 134.3,
+          "phase": 3,
+          "materialC": null,
+          "materialQ": -32768,
+          "source": "UNAVAILABLE",
+          "airNearC": -10.754752693468241,
+          "missingTicks": 40
+        },
+        {
+          "tick": 4240,
+          "elapsedS": 135.3,
+          "phase": 3,
+          "materialC": null,
+          "materialQ": -32768,
+          "source": "UNAVAILABLE",
+          "airNearC": -10.757797610239857,
+          "missingTicks": 60
+        },
+        {
+          "tick": 4260,
+          "elapsedS": 136.3,
+          "phase": 3,
+          "materialC": null,
+          "materialQ": -32768,
+          "source": "UNAVAILABLE",
+          "airNearC": -10.76044705785376,
+          "missingTicks": 80
+        },
+        {
+          "tick": 4280,
+          "elapsedS": 137.3,
+          "phase": 3,
+          "materialC": null,
+          "materialQ": -32768,
+          "source": "UNAVAILABLE",
+          "airNearC": -10.762802953468478,
+          "missingTicks": 100
+        },
+        {
+          "tick": 4300,
+          "elapsedS": 138.3,
+          "phase": 3,
+          "materialC": null,
+          "materialQ": -32768,
+          "source": "UNAVAILABLE",
+          "airNearC": -10.767225734024603,
+          "missingTicks": 120
+        },
+        {
+          "tick": 4320,
+          "elapsedS": 139.3,
+          "phase": 5,
+          "materialC": null,
+          "materialQ": -32768,
+          "source": "UNAVAILABLE",
+          "airNearC": -10.771013567260294,
+          "missingTicks": 140
+        }
+      ]
+    },
+    {
+      "name": "pack-graphics",
+      "runtimeDirectory": "build/infrared-cooling-packgraphics-20261108",
+      "result": {
+        "passed": true,
+        "failure": null,
+        "profiles": [
+          {
+            "round": 0,
+            "name": "natural-cooling-3s-rtt-16KiBps",
+            "oneWayMs": 1500,
+            "bytesPerSecond": 16384,
+            "bulk": false,
+            "physical": true,
+            "coolingOnly": true
+          }
+        ],
+        "proxyBytes": {
+          "up": 9604,
+          "down": 652579
+        }
+      },
+      "graphics": {
+        "embeddium": "0.3.31+mc1.20.1",
+        "oculus": "1.8.0",
+        "shaderpack": null
+      },
+      "scene": {
+        "outdoor": true,
+        "analyticFields": 0,
+        "warmPoint": "-4,67,0",
+        "campfires": 1,
+        "physical": true
+      },
+      "sourceOffTick": 3120,
+      "firstStableMissingTick": 4180,
+      "secondsFromSourceOffToMissing": 53.0,
+      "proxyConnections": 1,
+      "fullProbe": {
+        "warmQ": -32768,
+        "summary": {
+          "state": "TEMPERATURE_DATA",
+          "readable": true,
+          "materialPages": 1,
+          "fieldPages": 0,
+          "parts": 1,
+          "records": 1,
+          "validSamples": 2,
+          "payloadBytes": 16,
+          "minC": -10.75,
+          "maxC": -10.75
+        },
+        "tick": 4280
+      },
+      "fullProbeFileTime": "2026-11-08T21:51:09.995583",
+      "roles": {
+        "fast": {
+          "stages": {
+            "heated": {
+              "phase": "heated",
+              "elapsedMs": 76085.1833,
+              "status": "IR_CLIENT open=true pending=false waitMs=0 request=38 sent=38 dataParts=35 acks=3 commits=35 display=38 ignored=0 staging=false baseline=true validMirrorSamples=65 minC=-11.0 maxC=-10.5 materialReadable=true texture=true renderedFrames=2270 terrainDepth=true center=0,4,0",
+              "gpuWarmQ": -42,
+              "gpuColdQ": -32768,
+              "wire": {
+                "warm": -42,
+                "cold": -32768
+              },
+              "backend": {
+                "phase": 1,
+                "tick": 3080,
+                "elapsedTicks": 1549,
+                "analyticFields": 0,
+                "materialC": -10.390240373235457,
+                "materialSource": "LIVE",
+                "materialQ": -42,
+                "baselineC": -10.893578614966113,
+                "baselineQ": -44,
+                "airNearC": -9.102200829999166,
+                "airFarC": -10.577104294844684,
+                "airSampleTick": 3080,
+                "airBasisTerms": 8,
+                "airHeated": true,
+                "materialHeated": true,
+                "airCooled": false,
+                "airAtStopC": "NaN",
+                "peakAirC": -7.929459381733713,
+                "coolingOnly": true,
+                "peakMaterialC": -10.390240373235457,
+                "peakMaterialQ": -42,
+                "materialCooled": false,
+                "missingTicks": 0,
+                "naturalCleared": false,
+                "naturalC": -10.4
+              },
+              "frameRgb": [
+                180,
+                140,
+                132
+              ],
+              "baselineRgb": [
+                178,
+                178,
+                178
+              ],
+              "expectedColorError": 1.4873863636363467,
+              "bluePlaceholderError": 196.19
+            },
+            "cooled": {
+              "phase": "cooled",
+              "elapsedMs": 131369.7726,
+              "status": "IR_CLIENT open=true pending=false waitMs=0 request=65 sent=65 dataParts=62 acks=3 commits=62 display=65 ignored=0 staging=false baseline=true validMirrorSamples=37 minC=-11.0 maxC=-10.5 materialReadable=true texture=true renderedFrames=3921 terrainDepth=true center=0,4,0",
+              "gpuWarmQ": -42,
+              "gpuColdQ": -32768,
+              "wire": {
+                "warm": -42,
+                "cold": -32768
+              },
+              "backend": {
+                "phase": 2,
+                "tick": 4180,
+                "elapsedTicks": 2649,
+                "analyticFields": 0,
+                "materialC": "NaN",
+                "materialSource": "UNAVAILABLE",
+                "materialQ": -32768,
+                "baselineC": -10.893578614966113,
+                "baselineQ": -44,
+                "airNearC": -10.744603454579025,
+                "airFarC": -10.748726994656522,
+                "airSampleTick": 4160,
+                "airBasisTerms": 8,
+                "airHeated": false,
+                "materialHeated": false,
+                "airCooled": true,
+                "airAtStopC": -9.099673141014854,
+                "peakAirC": -7.929459381733713,
+                "coolingOnly": true,
+                "peakMaterialC": -10.358201063505104,
+                "peakMaterialQ": -41,
+                "materialCooled": true,
+                "missingTicks": 0,
+                "naturalCleared": false,
+                "naturalC": -10.4
+              },
+              "frameRgb": [
+                180,
+                140,
+                132
+              ],
+              "baselineRgb": [
+                178,
+                178,
+                178
+              ]
+            },
+            "natural-cleared": {
+              "phase": "natural-cleared",
+              "elapsedMs": 136405.07,
+              "status": "IR_CLIENT open=true pending=false waitMs=0 request=68 sent=68 dataParts=65 acks=3 commits=65 display=68 ignored=0 staging=false baseline=true validMirrorSamples=2 minC=-10.75 maxC=-10.75 materialReadable=true texture=true renderedFrames=4071 terrainDepth=true center=0,4,0",
+              "gpuWarmQ": -32768,
+              "gpuColdQ": -32768,
+              "wire": {
+                "warm": -32768,
+                "cold": -32768
+              },
+              "backend": {
+                "phase": 3,
+                "tick": 4280,
+                "elapsedTicks": 2749,
+                "analyticFields": 0,
+                "materialC": "NaN",
+                "materialSource": "UNAVAILABLE",
+                "materialQ": -32768,
+                "baselineC": -10.893578614966113,
+                "baselineQ": -44,
+                "airNearC": -10.762802953468478,
+                "airFarC": -10.757916057896374,
+                "airSampleTick": 4280,
+                "airBasisTerms": 8,
+                "airHeated": false,
+                "materialHeated": false,
+                "airCooled": true,
+                "airAtStopC": -9.099673141014854,
+                "peakAirC": -7.929459381733713,
+                "coolingOnly": true,
+                "peakMaterialC": -10.358201063505104,
+                "peakMaterialQ": -41,
+                "materialCooled": true,
+                "missingTicks": 100,
+                "naturalCleared": true,
+                "naturalC": -10.4
+              },
+              "frameRgb": [
+                101,
+                101,
+                211
+              ],
+              "baselineRgb": [
+                178,
+                178,
+                178
+              ],
+              "expectedColorError": 1.0299999999999727,
+              "bluePlaceholderError": 1.0299999999999727
+            }
+          },
+          "wireValueChanges": [
+            {
+              "requestId": 4,
+              "q": -44,
+              "temperatureC": -11.0
+            },
+            {
+              "requestId": 7,
+              "q": -43,
+              "temperatureC": -10.75
+            },
+            {
+              "requestId": 22,
+              "q": -42,
+              "temperatureC": -10.5
+            },
+            {
+              "requestId": 40,
+              "q": -41,
+              "temperatureC": -10.25
+            },
+            {
+              "requestId": 52,
+              "q": -42,
+              "temperatureC": -10.5
+            },
+            {
+              "requestId": 66,
+              "q": -32768,
+              "temperatureC": null
+            }
+          ],
+          "firstClearRequestId": 66,
+          "clearPacket": {
+            "requestId": 66,
+            "first": true,
+            "last": true,
+            "full": false,
+            "ack": false,
+            "bodyBytes": 247,
+            "wireFrameBytes": 209,
+            "decodedPacketBytes": 270
+          },
+          "clearServerLog": "[21:51:05] [Server thread/INFO] [Frosted Heart (The Winter Rescue)/]: IR_SERVER_RESPONSE player=IRFast id=66 Summary[state=TEMPERATURE_DATA, readable=true, materialPages=1, fieldPages=0, parts=1, records=66, validSamples=2, payloadBytes=211, minC=-10.75, maxC=-10.75]"
+        },
+        "slow": {
+          "stages": {
+            "heated": {
+              "phase": "heated",
+              "elapsedMs": 75188.3451,
+              "status": "IR_CLIENT open=true pending=true waitMs=1375 request=20 sent=20 dataParts=17 acks=2 commits=17 display=19 ignored=0 staging=false baseline=true validMirrorSamples=65 minC=-11.0 maxC=-10.5 materialReadable=true texture=true renderedFrames=2240 terrainDepth=true center=0,4,0",
+              "gpuWarmQ": -42,
+              "gpuColdQ": -32768,
+              "wire": {
+                "warm": -42,
+                "cold": -32768
+              },
+              "backend": {
+                "phase": 1,
+                "tick": 3080,
+                "elapsedTicks": 1549,
+                "analyticFields": 0,
+                "materialC": -10.390240373235457,
+                "materialSource": "LIVE",
+                "materialQ": -42,
+                "baselineC": -10.893578614966113,
+                "baselineQ": -44,
+                "airNearC": -9.102200829999166,
+                "airFarC": -10.577104294844684,
+                "airSampleTick": 3080,
+                "airBasisTerms": 8,
+                "airHeated": true,
+                "materialHeated": true,
+                "airCooled": false,
+                "airAtStopC": "NaN",
+                "peakAirC": -7.929459381733713,
+                "coolingOnly": true,
+                "peakMaterialC": -10.390240373235457,
+                "peakMaterialQ": -42,
+                "materialCooled": false,
+                "missingTicks": 0,
+                "naturalCleared": false,
+                "naturalC": -10.4
+              },
+              "frameRgb": [
+                180,
+                140,
+                132
+              ],
+              "baselineRgb": [
+                178,
+                178,
+                178
+              ],
+              "expectedColorError": 1.4873863636363467,
+              "bluePlaceholderError": 196.19
+            },
+            "cooled": {
+              "phase": "cooled",
+              "elapsedMs": 130426.9633,
+              "status": "IR_CLIENT open=true pending=true waitMs=607 request=34 sent=34 dataParts=31 acks=2 commits=31 display=33 ignored=0 staging=false baseline=true validMirrorSamples=37 minC=-11.0 maxC=-10.5 materialReadable=true texture=true renderedFrames=3889 terrainDepth=true center=0,4,0",
+              "gpuWarmQ": -42,
+              "gpuColdQ": -32768,
+              "wire": {
+                "warm": -42,
+                "cold": -32768
+              },
+              "backend": {
+                "phase": 2,
+                "tick": 4180,
+                "elapsedTicks": 2649,
+                "analyticFields": 0,
+                "materialC": "NaN",
+                "materialSource": "UNAVAILABLE",
+                "materialQ": -32768,
+                "baselineC": -10.893578614966113,
+                "baselineQ": -44,
+                "airNearC": -10.744603454579025,
+                "airFarC": -10.748726994656522,
+                "airSampleTick": 4160,
+                "airBasisTerms": 8,
+                "airHeated": false,
+                "materialHeated": false,
+                "airCooled": true,
+                "airAtStopC": -9.099673141014854,
+                "peakAirC": -7.929459381733713,
+                "coolingOnly": true,
+                "peakMaterialC": -10.358201063505104,
+                "peakMaterialQ": -41,
+                "materialCooled": true,
+                "missingTicks": 0,
+                "naturalCleared": false,
+                "naturalC": -10.4
+              },
+              "frameRgb": [
+                180,
+                140,
+                132
+              ],
+              "baselineRgb": [
+                178,
+                178,
+                178
+              ]
+            },
+            "natural-cleared": {
+              "phase": "natural-cleared",
+              "elapsedMs": 135454.6238,
+              "status": "IR_CLIENT open=true pending=true waitMs=1642 request=35 sent=35 dataParts=32 acks=2 commits=32 display=34 ignored=0 staging=false baseline=true validMirrorSamples=2 minC=-10.75 maxC=-10.75 materialReadable=true texture=true renderedFrames=4039 terrainDepth=true center=0,4,0",
+              "gpuWarmQ": -32768,
+              "gpuColdQ": -32768,
+              "wire": {
+                "warm": -32768,
+                "cold": -32768
+              },
+              "backend": {
+                "phase": 3,
+                "tick": 4280,
+                "elapsedTicks": 2749,
+                "analyticFields": 0,
+                "materialC": "NaN",
+                "materialSource": "UNAVAILABLE",
+                "materialQ": -32768,
+                "baselineC": -10.893578614966113,
+                "baselineQ": -44,
+                "airNearC": -10.762802953468478,
+                "airFarC": -10.757916057896374,
+                "airSampleTick": 4280,
+                "airBasisTerms": 8,
+                "airHeated": false,
+                "materialHeated": false,
+                "airCooled": true,
+                "airAtStopC": -9.099673141014854,
+                "peakAirC": -7.929459381733713,
+                "coolingOnly": true,
+                "peakMaterialC": -10.358201063505104,
+                "peakMaterialQ": -41,
+                "materialCooled": true,
+                "missingTicks": 100,
+                "naturalCleared": true,
+                "naturalC": -10.4
+              },
+              "frameRgb": [
+                101,
+                101,
+                211
+              ],
+              "baselineRgb": [
+                178,
+                178,
+                178
+              ],
+              "expectedColorError": 1.0299999999999727,
+              "bluePlaceholderError": 1.0299999999999727
+            }
+          },
+          "wireValueChanges": [
+            {
+              "requestId": 3,
+              "q": -44,
+              "temperatureC": -11.0
+            },
+            {
+              "requestId": 4,
+              "q": -43,
+              "temperatureC": -10.75
+            },
+            {
+              "requestId": 12,
+              "q": -42,
+              "temperatureC": -10.5
+            },
+            {
+              "requestId": 21,
+              "q": -41,
+              "temperatureC": -10.25
+            },
+            {
+              "requestId": 27,
+              "q": -42,
+              "temperatureC": -10.5
+            },
+            {
+              "requestId": 34,
+              "q": -32768,
+              "temperatureC": null
+            }
+          ],
+          "firstClearRequestId": 34,
+          "clearPacket": {
+            "requestId": 34,
+            "first": true,
+            "last": true,
+            "full": false,
+            "ack": false,
+            "bodyBytes": 247,
+            "wireFrameBytes": 210,
+            "decodedPacketBytes": 270
+          },
+          "clearServerLog": "[21:51:06] [Server thread/INFO] [Frosted Heart (The Winter Rescue)/]: IR_SERVER_RESPONSE player=IRSlow id=34 Summary[state=TEMPERATURE_DATA, readable=true, materialPages=1, fieldPages=0, parts=1, records=66, validSamples=2, payloadBytes=211, minC=-10.75, maxC=-10.75]"
+        }
+      },
+      "history": [
+        {
+          "tick": 1540,
+          "elapsedS": 0.45,
+          "phase": 0,
+          "materialC": null,
+          "materialQ": -32768,
+          "source": "UNAVAILABLE",
+          "airNearC": null,
+          "missingTicks": 0
+        },
+        {
+          "tick": 1560,
+          "elapsedS": 1.45,
+          "phase": 0,
+          "materialC": null,
+          "materialQ": -32768,
+          "source": "UNAVAILABLE",
+          "airNearC": null,
+          "missingTicks": 0
+        },
+        {
+          "tick": 1580,
+          "elapsedS": 2.45,
+          "phase": 0,
+          "materialC": null,
+          "materialQ": -32768,
+          "source": "UNAVAILABLE",
+          "airNearC": null,
+          "missingTicks": 0
+        },
+        {
+          "tick": 1600,
+          "elapsedS": 3.45,
+          "phase": 0,
+          "materialC": null,
+          "materialQ": -32768,
+          "source": "UNAVAILABLE",
+          "airNearC": null,
+          "missingTicks": 0
+        },
+        {
+          "tick": 1620,
+          "elapsedS": 4.45,
+          "phase": 0,
+          "materialC": null,
+          "materialQ": -32768,
+          "source": "UNAVAILABLE",
+          "airNearC": null,
+          "missingTicks": 0
+        },
+        {
+          "tick": 1640,
+          "elapsedS": 5.45,
+          "phase": 0,
+          "materialC": null,
+          "materialQ": -32768,
+          "source": "UNAVAILABLE",
+          "airNearC": null,
+          "missingTicks": 0
+        },
+        {
+          "tick": 1660,
+          "elapsedS": 6.45,
+          "phase": 1,
+          "materialC": null,
+          "materialQ": -32768,
+          "source": "UNAVAILABLE",
+          "airNearC": null,
+          "missingTicks": 0
+        },
+        {
+          "tick": 1680,
+          "elapsedS": 7.45,
+          "phase": 1,
+          "materialC": null,
+          "materialQ": -32768,
+          "source": "UNAVAILABLE",
+          "airNearC": null,
+          "missingTicks": 0
+        },
+        {
+          "tick": 1700,
+          "elapsedS": 8.45,
+          "phase": 1,
+          "materialC": null,
+          "materialQ": -32768,
+          "source": "UNAVAILABLE",
+          "airNearC": -9.011571435891634,
+          "missingTicks": 0
+        },
+        {
+          "tick": 1720,
+          "elapsedS": 9.45,
+          "phase": 1,
+          "materialC": null,
+          "materialQ": -32768,
+          "source": "UNAVAILABLE",
+          "airNearC": -7.929459381733713,
+          "missingTicks": 0
+        },
+        {
+          "tick": 1740,
+          "elapsedS": 10.45,
+          "phase": 1,
+          "materialC": -10.893578614966113,
+          "materialQ": -44,
+          "source": "LIVE",
+          "airNearC": -9.397634918439179,
+          "missingTicks": 0
+        },
+        {
+          "tick": 1760,
+          "elapsedS": 11.45,
+          "phase": 1,
+          "materialC": -10.886381491198144,
+          "materialQ": -44,
+          "source": "LIVE",
+          "airNearC": -9.55554912883895,
+          "missingTicks": 0
+        },
+        {
+          "tick": 1780,
+          "elapsedS": 12.45,
+          "phase": 1,
+          "materialC": -10.878830356221554,
+          "materialQ": -44,
+          "source": "LIVE",
+          "airNearC": -9.488153240525461,
+          "missingTicks": 0
+        },
+        {
+          "tick": 1800,
+          "elapsedS": 13.45,
+          "phase": 1,
+          "materialC": -10.878830356221554,
+          "materialQ": -44,
+          "source": "LIVE",
+          "airNearC": -9.488153240525461,
+          "missingTicks": 0
+        },
+        {
+          "tick": 1820,
+          "elapsedS": 14.45,
+          "phase": 1,
+          "materialC": -10.863113740775418,
+          "materialQ": -43,
+          "source": "LIVE",
+          "airNearC": -9.450491752336887,
+          "missingTicks": 0
+        },
+        {
+          "tick": 1840,
+          "elapsedS": 15.45,
+          "phase": 1,
+          "materialC": -10.855068823664457,
+          "materialQ": -43,
+          "source": "LIVE",
+          "airNearC": -9.393265159573025,
+          "missingTicks": 0
+        },
+        {
+          "tick": 1860,
+          "elapsedS": 16.45,
+          "phase": 1,
+          "materialC": -10.846949178247401,
+          "materialQ": -43,
+          "source": "LIVE",
+          "airNearC": -9.371783320460098,
+          "missingTicks": 0
+        },
+        {
+          "tick": 1880,
+          "elapsedS": 17.45,
+          "phase": 1,
+          "materialC": -10.838778810131961,
+          "materialQ": -43,
+          "source": "LIVE",
+          "airNearC": -9.353631296501735,
+          "missingTicks": 0
+        },
+        {
+          "tick": 1900,
+          "elapsedS": 18.45,
+          "phase": 1,
+          "materialC": -10.830575190629714,
+          "materialQ": -43,
+          "source": "LIVE",
+          "airNearC": -9.338017636786152,
+          "missingTicks": 0
+        },
+        {
+          "tick": 1920,
+          "elapsedS": 19.45,
+          "phase": 1,
+          "materialC": -10.8223512747369,
+          "materialQ": -43,
+          "source": "LIVE",
+          "airNearC": -9.32435754035636,
+          "missingTicks": 0
+        },
+        {
+          "tick": 1940,
+          "elapsedS": 20.45,
+          "phase": 1,
+          "materialC": -10.81411685195663,
+          "materialQ": -43,
+          "source": "LIVE",
+          "airNearC": -9.312223166459185,
+          "missingTicks": 0
+        },
+        {
+          "tick": 1960,
+          "elapsedS": 21.45,
+          "phase": 1,
+          "materialC": -10.805879461632014,
+          "materialQ": -43,
+          "source": "LIVE",
+          "airNearC": -9.312223166459185,
+          "missingTicks": 0
+        },
+        {
+          "tick": 1980,
+          "elapsedS": 22.45,
+          "phase": 1,
+          "materialC": -10.79764502004092,
+          "materialQ": -43,
+          "source": "LIVE",
+          "airNearC": -9.29135841511512,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2000,
+          "elapsedS": 23.45,
+          "phase": 1,
+          "materialC": -10.789418254839429,
+          "materialQ": -43,
+          "source": "LIVE",
+          "airNearC": -9.282222588362727,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2020,
+          "elapsedS": 24.45,
+          "phase": 1,
+          "materialC": -10.781203009535114,
+          "materialQ": -43,
+          "source": "LIVE",
+          "airNearC": -9.27376183217303,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2040,
+          "elapsedS": 25.45,
+          "phase": 1,
+          "materialC": -10.773002459440546,
+          "materialQ": -43,
+          "source": "LIVE",
+          "airNearC": -9.265875089067249,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2060,
+          "elapsedS": 26.45,
+          "phase": 1,
+          "materialC": -10.764819266749704,
+          "materialQ": -43,
+          "source": "LIVE",
+          "airNearC": -9.265875089067249,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2080,
+          "elapsedS": 27.45,
+          "phase": 1,
+          "materialC": -10.756655693330401,
+          "materialQ": -43,
+          "source": "LIVE",
+          "airNearC": -9.251524722240067,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2100,
+          "elapsedS": 28.45,
+          "phase": 1,
+          "materialC": -10.74851368384675,
+          "materialQ": -43,
+          "source": "LIVE",
+          "airNearC": -9.244948532508783,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2120,
+          "elapsedS": 29.45,
+          "phase": 1,
+          "materialC": -10.740394927843104,
+          "materialQ": -43,
+          "source": "LIVE",
+          "airNearC": -9.238714089017076,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2140,
+          "elapsedS": 30.45,
+          "phase": 1,
+          "materialC": -10.732300906747344,
+          "materialQ": -43,
+          "source": "LIVE",
+          "airNearC": -9.238714089017076,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2160,
+          "elapsedS": 31.45,
+          "phase": 1,
+          "materialC": -10.732300906747344,
+          "materialQ": -43,
+          "source": "LIVE",
+          "airNearC": -9.23278763536019,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2180,
+          "elapsedS": 32.45,
+          "phase": 1,
+          "materialC": -10.71619216281661,
+          "materialQ": -43,
+          "source": "LIVE",
+          "airNearC": -9.221750070181182,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2200,
+          "elapsedS": 33.45,
+          "phase": 1,
+          "materialC": -10.708179648872774,
+          "materialQ": -43,
+          "source": "LIVE",
+          "airNearC": -9.221750070181182,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2220,
+          "elapsedS": 34.45,
+          "phase": 1,
+          "materialC": -10.700196327355227,
+          "materialQ": -43,
+          "source": "LIVE",
+          "airNearC": -9.211656811956852,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2240,
+          "elapsedS": 35.45,
+          "phase": 1,
+          "materialC": -10.692243047486818,
+          "materialQ": -43,
+          "source": "LIVE",
+          "airNearC": -9.211656811956852,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2260,
+          "elapsedS": 36.45,
+          "phase": 1,
+          "materialC": -10.684320580085988,
+          "materialQ": -43,
+          "source": "LIVE",
+          "airNearC": -9.202374498213667,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2280,
+          "elapsedS": 37.45,
+          "phase": 1,
+          "materialC": -10.676429627146714,
+          "materialQ": -43,
+          "source": "LIVE",
+          "airNearC": -9.19800437599386,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2300,
+          "elapsedS": 38.45,
+          "phase": 1,
+          "materialC": -10.66857082981286,
+          "materialQ": -43,
+          "source": "LIVE",
+          "airNearC": -9.193800212322998,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2320,
+          "elapsedS": 39.45,
+          "phase": 1,
+          "materialC": -10.660744775073614,
+          "materialQ": -43,
+          "source": "LIVE",
+          "airNearC": -9.189752381599511,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2340,
+          "elapsedS": 40.45,
+          "phase": 1,
+          "materialC": -10.65295200142953,
+          "materialQ": -43,
+          "source": "LIVE",
+          "airNearC": -9.189752381599511,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2360,
+          "elapsedS": 41.45,
+          "phase": 1,
+          "materialC": -10.645193003722149,
+          "materialQ": -43,
+          "source": "LIVE",
+          "airNearC": -9.182091772858733,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2380,
+          "elapsedS": 42.45,
+          "phase": 1,
+          "materialC": -10.637468237277833,
+          "materialQ": -43,
+          "source": "LIVE",
+          "airNearC": -9.17846392878653,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2400,
+          "elapsedS": 43.45,
+          "phase": 1,
+          "materialC": -10.629778121484724,
+          "materialQ": -43,
+          "source": "LIVE",
+          "airNearC": -9.174962087304653,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2420,
+          "elapsedS": 44.45,
+          "phase": 1,
+          "materialC": -10.622123042897766,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.17158020472404,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2440,
+          "elapsedS": 45.45,
+          "phase": 1,
+          "materialC": -10.614503357948086,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.168312706392339,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2460,
+          "elapsedS": 46.45,
+          "phase": 1,
+          "materialC": -10.606919395318764,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.165154432786988,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2480,
+          "elapsedS": 47.45,
+          "phase": 1,
+          "materialC": -10.599371458037709,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.162100593484979,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2500,
+          "elapsedS": 48.45,
+          "phase": 1,
+          "materialC": -10.59185982532954,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.159146727640188,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2520,
+          "elapsedS": 49.45,
+          "phase": 1,
+          "materialC": -10.584384754261142,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.15628866987485,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2540,
+          "elapsedS": 50.45,
+          "phase": 1,
+          "materialC": -10.576946481210003,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.153522520704684,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2560,
+          "elapsedS": 51.45,
+          "phase": 1,
+          "materialC": -10.569545223179592,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.150844620783193,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2580,
+          "elapsedS": 52.45,
+          "phase": 1,
+          "materialC": -10.562181178982442,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.14825152838094,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2600,
+          "elapsedS": 53.45,
+          "phase": 1,
+          "materialC": -10.554854530308253,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.14573999961889,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2620,
+          "elapsedS": 54.45,
+          "phase": 1,
+          "materialC": -10.547565442691923,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.143306971057445,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2640,
+          "elapsedS": 55.45,
+          "phase": 1,
+          "materialC": -10.54031406639408,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.140949544308981,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2660,
+          "elapsedS": 56.45,
+          "phase": 1,
+          "materialC": -10.533100484121137,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.140949544308981,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2680,
+          "elapsedS": 57.45,
+          "phase": 1,
+          "materialC": -10.525924656916182,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.136440965039942,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2700,
+          "elapsedS": 58.45,
+          "phase": 1,
+          "materialC": -10.518786471486756,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.134278280714359,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2720,
+          "elapsedS": 59.45,
+          "phase": 1,
+          "materialC": -10.511685806190885,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.132171626593774,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2740,
+          "elapsedS": 60.45,
+          "phase": 1,
+          "materialC": -10.504622554627584,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.13011805523325,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2760,
+          "elapsedS": 61.45,
+          "phase": 1,
+          "materialC": -10.49759663303163,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.128115436052699,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2780,
+          "elapsedS": 62.45,
+          "phase": 1,
+          "materialC": -10.49759663303163,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.128115436052699,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2800,
+          "elapsedS": 63.45,
+          "phase": 1,
+          "materialC": -10.483656553933912,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.124257388306088,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2820,
+          "elapsedS": 64.45,
+          "phase": 1,
+          "materialC": -10.476742328157489,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.122399944519659,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2840,
+          "elapsedS": 65.45,
+          "phase": 1,
+          "materialC": -10.469865288050327,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.1205891343629,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2860,
+          "elapsedS": 66.45,
+          "phase": 1,
+          "materialC": -10.469865288050327,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.1205891343629,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2880,
+          "elapsedS": 67.45,
+          "phase": 1,
+          "materialC": -10.456222743929274,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.117104397638721,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2900,
+          "elapsedS": 68.45,
+          "phase": 1,
+          "materialC": -10.449457240017582,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.115428927021366,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2920,
+          "elapsedS": 69.45,
+          "phase": 1,
+          "materialC": -10.44272891749823,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.11379697393076,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2940,
+          "elapsedS": 70.45,
+          "phase": 1,
+          "materialC": -10.436037777651181,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.112207685101476,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2960,
+          "elapsedS": 71.45,
+          "phase": 1,
+          "materialC": -10.429383819624672,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.11066017724802,
+          "missingTicks": 0
+        },
+        {
+          "tick": 2980,
+          "elapsedS": 72.45,
+          "phase": 1,
+          "materialC": -10.422767039463656,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.109153542989578,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3000,
+          "elapsedS": 73.45,
+          "phase": 1,
+          "materialC": -10.416187429374725,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.107686857380848,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3020,
+          "elapsedS": 74.45,
+          "phase": 1,
+          "materialC": -10.409644977183387,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.10625918430835,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3040,
+          "elapsedS": 75.45,
+          "phase": 1,
+          "materialC": -10.403139665946368,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.104869582362047,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3060,
+          "elapsedS": 76.45,
+          "phase": 1,
+          "materialC": -10.396671473688043,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.103517110006113,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3080,
+          "elapsedS": 77.45,
+          "phase": 1,
+          "materialC": -10.390240373235457,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.102200829999166,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3100,
+          "elapsedS": 78.45,
+          "phase": 1,
+          "materialC": -10.383846332131197,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.100919813085389,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3120,
+          "elapsedS": 79.45,
+          "phase": 2,
+          "materialC": -10.377489312607214,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.099673141014854,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3140,
+          "elapsedS": 80.45,
+          "phase": 2,
+          "materialC": -10.377489312607214,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -9.099673141014854,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3160,
+          "elapsedS": 81.45,
+          "phase": 2,
+          "materialC": -10.367650484702747,
+          "materialQ": -41,
+          "source": "LIVE",
+          "airNearC": -9.668488914759926,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3180,
+          "elapsedS": 82.45,
+          "phase": 2,
+          "materialC": -10.36449000583113,
+          "materialQ": -41,
+          "source": "LIVE",
+          "airNearC": -9.8547289679224,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3200,
+          "elapsedS": 83.45,
+          "phase": 2,
+          "materialC": -10.36215798914076,
+          "materialQ": -41,
+          "source": "LIVE",
+          "airNearC": -9.99677909062921,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3220,
+          "elapsedS": 84.45,
+          "phase": 2,
+          "materialC": -10.360482110149333,
+          "materialQ": -41,
+          "source": "LIVE",
+          "airNearC": -10.107073853372095,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3240,
+          "elapsedS": 85.45,
+          "phase": 2,
+          "materialC": -10.359334508735133,
+          "materialQ": -41,
+          "source": "LIVE",
+          "airNearC": -10.194202321909204,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3260,
+          "elapsedS": 86.45,
+          "phase": 2,
+          "materialC": -10.358618588913682,
+          "materialQ": -41,
+          "source": "LIVE",
+          "airNearC": -10.26415160342462,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3280,
+          "elapsedS": 87.45,
+          "phase": 2,
+          "materialC": -10.358260103936995,
+          "materialQ": -41,
+          "source": "LIVE",
+          "airNearC": -10.321150983886273,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3300,
+          "elapsedS": 88.45,
+          "phase": 2,
+          "materialC": -10.358201063505104,
+          "materialQ": -41,
+          "source": "LIVE",
+          "airNearC": -10.368233972620379,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3320,
+          "elapsedS": 89.45,
+          "phase": 2,
+          "materialC": -10.358395506629131,
+          "materialQ": -41,
+          "source": "LIVE",
+          "airNearC": -10.407611097898126,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3340,
+          "elapsedS": 90.45,
+          "phase": 2,
+          "materialC": -10.358806520021295,
+          "materialQ": -41,
+          "source": "LIVE",
+          "airNearC": -10.440918412286935,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3360,
+          "elapsedS": 91.45,
+          "phase": 2,
+          "materialC": -10.35940409932916,
+          "materialQ": -41,
+          "source": "LIVE",
+          "airNearC": -10.46938483311489,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3380,
+          "elapsedS": 92.45,
+          "phase": 2,
+          "materialC": -10.360163589655468,
+          "materialQ": -41,
+          "source": "LIVE",
+          "airNearC": -10.493946305280522,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3400,
+          "elapsedS": 93.45,
+          "phase": 2,
+          "materialC": -10.361064530777917,
+          "materialQ": -41,
+          "source": "LIVE",
+          "airNearC": -10.515324818219204,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3420,
+          "elapsedS": 94.45,
+          "phase": 2,
+          "materialC": -10.362089789731375,
+          "materialQ": -41,
+          "source": "LIVE",
+          "airNearC": -10.53408391556819,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3440,
+          "elapsedS": 95.45,
+          "phase": 2,
+          "materialC": -10.363224900641072,
+          "materialQ": -41,
+          "source": "LIVE",
+          "airNearC": -10.55066826528505,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3460,
+          "elapsedS": 96.45,
+          "phase": 2,
+          "materialC": -10.364457556227643,
+          "materialQ": -41,
+          "source": "LIVE",
+          "airNearC": -10.565432264766338,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3480,
+          "elapsedS": 97.45,
+          "phase": 2,
+          "materialC": -10.365777211816662,
+          "materialQ": -41,
+          "source": "LIVE",
+          "airNearC": -10.578660993367716,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3500,
+          "elapsedS": 98.45,
+          "phase": 2,
+          "materialC": -10.367174773838382,
+          "materialQ": -41,
+          "source": "LIVE",
+          "airNearC": -10.590585748854757,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3520,
+          "elapsedS": 99.45,
+          "phase": 2,
+          "materialC": -10.368642352501515,
+          "materialQ": -41,
+          "source": "LIVE",
+          "airNearC": -10.601395699458383,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3540,
+          "elapsedS": 100.45,
+          "phase": 2,
+          "materialC": -10.370173063719307,
+          "materialQ": -41,
+          "source": "LIVE",
+          "airNearC": -10.61124671521863,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3560,
+          "elapsedS": 101.45,
+          "phase": 2,
+          "materialC": -10.371760869199392,
+          "materialQ": -41,
+          "source": "LIVE",
+          "airNearC": -10.62026812723735,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3580,
+          "elapsedS": 102.45,
+          "phase": 2,
+          "materialC": -10.373400446369649,
+          "materialQ": -41,
+          "source": "LIVE",
+          "airNearC": -10.628567948397503,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3600,
+          "elapsedS": 103.45,
+          "phase": 2,
+          "materialC": -10.375087081823338,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -10.636236940320714,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3620,
+          "elapsedS": 104.45,
+          "phase": 2,
+          "materialC": -10.376816583449221,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -10.643351807079902,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3640,
+          "elapsedS": 105.45,
+          "phase": 2,
+          "materialC": -10.378585207515153,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -10.649977722252327,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3660,
+          "elapsedS": 106.45,
+          "phase": 2,
+          "materialC": -10.380389597802258,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -10.656170342884046,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3680,
+          "elapsedS": 107.45,
+          "phase": 2,
+          "materialC": -10.382226734514335,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -10.661977425527326,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3700,
+          "elapsedS": 108.45,
+          "phase": 2,
+          "materialC": -10.384093891166708,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -10.66744013141753,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3720,
+          "elapsedS": 109.45,
+          "phase": 2,
+          "materialC": -10.385988598027255,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -10.672594087122574,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3740,
+          "elapsedS": 110.45,
+          "phase": 2,
+          "materialC": -10.387908610968395,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -10.677470251570652,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3760,
+          "elapsedS": 111.45,
+          "phase": 2,
+          "materialC": -10.389851884811543,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -10.6820956287931,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3780,
+          "elapsedS": 112.45,
+          "phase": 2,
+          "materialC": -10.391816550420677,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -10.68649385698117,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3800,
+          "elapsedS": 113.45,
+          "phase": 2,
+          "materialC": -10.393800894939895,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -10.690685697809082,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3820,
+          "elapsedS": 114.45,
+          "phase": 2,
+          "materialC": -10.39580334467969,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -10.694689444887555,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3840,
+          "elapsedS": 115.45,
+          "phase": 2,
+          "materialC": -10.397822450244607,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -10.698521266291861,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3860,
+          "elapsedS": 116.45,
+          "phase": 2,
+          "materialC": -10.399856873565364,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -10.70219549307007,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3880,
+          "elapsedS": 117.45,
+          "phase": 2,
+          "materialC": -10.401905376555654,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -10.70219549307007,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3900,
+          "elapsedS": 118.45,
+          "phase": 2,
+          "materialC": -10.403966811160204,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -10.709120729152577,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3920,
+          "elapsedS": 119.45,
+          "phase": 2,
+          "materialC": -10.406040110598251,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -10.712393233843336,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3940,
+          "elapsedS": 120.45,
+          "phase": 2,
+          "materialC": -10.40812428163786,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -10.71555146241758,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3960,
+          "elapsedS": 121.45,
+          "phase": 2,
+          "materialC": -10.410218397761861,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -10.71860357161071,
+          "missingTicks": 0
+        },
+        {
+          "tick": 3980,
+          "elapsedS": 122.45,
+          "phase": 2,
+          "materialC": -10.412321593107377,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -10.721556901509445,
+          "missingTicks": 0
+        },
+        {
+          "tick": 4000,
+          "elapsedS": 123.45,
+          "phase": 2,
+          "materialC": -10.41443305707854,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -10.724418072032636,
+          "missingTicks": 0
+        },
+        {
+          "tick": 4020,
+          "elapsedS": 124.45,
+          "phase": 2,
+          "materialC": -10.41655202954648,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -10.72719306651593,
+          "missingTicks": 0
+        },
+        {
+          "tick": 4040,
+          "elapsedS": 125.45,
+          "phase": 2,
+          "materialC": -10.418677796563161,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -10.729887304325707,
+          "missingTicks": 0
+        },
+        {
+          "tick": 4060,
+          "elapsedS": 126.45,
+          "phase": 2,
+          "materialC": -10.420809686525825,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -10.732505704109638,
+          "missingTicks": 0
+        },
+        {
+          "tick": 4080,
+          "elapsedS": 127.45,
+          "phase": 2,
+          "materialC": -10.42294706673752,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -10.735052739030452,
+          "missingTicks": 0
+        },
+        {
+          "tick": 4100,
+          "elapsedS": 128.45,
+          "phase": 2,
+          "materialC": -10.425089340316703,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -10.737532485115288,
+          "missingTicks": 0
+        },
+        {
+          "tick": 4120,
+          "elapsedS": 129.45,
+          "phase": 2,
+          "materialC": -10.427235943415011,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -10.739948663676113,
+          "missingTicks": 0
+        },
+        {
+          "tick": 4140,
+          "elapsedS": 130.45,
+          "phase": 2,
+          "materialC": -10.429386342451796,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -10.74230466745847,
+          "missingTicks": 0
+        },
+        {
+          "tick": 4160,
+          "elapsedS": 131.45,
+          "phase": 2,
+          "materialC": -10.431540029936967,
+          "materialQ": -42,
+          "source": "LIVE",
+          "airNearC": -10.744603454579025,
+          "missingTicks": 0
+        },
+        {
+          "tick": 4180,
+          "elapsedS": 132.45,
+          "phase": 2,
+          "materialC": null,
+          "materialQ": -32768,
+          "source": "UNAVAILABLE",
+          "airNearC": -10.744603454579025,
+          "missingTicks": 0
+        },
+        {
+          "tick": 4200,
+          "elapsedS": 133.45,
+          "phase": 2,
+          "materialC": null,
+          "materialQ": -32768,
+          "source": "UNAVAILABLE",
+          "airNearC": -10.751169241182826,
+          "missingTicks": 20
+        },
+        {
+          "tick": 4220,
+          "elapsedS": 134.45,
+          "phase": 3,
+          "materialC": null,
+          "materialQ": -32768,
+          "source": "UNAVAILABLE",
+          "airNearC": -10.754752693468241,
+          "missingTicks": 40
+        },
+        {
+          "tick": 4240,
+          "elapsedS": 135.45,
+          "phase": 3,
+          "materialC": null,
+          "materialQ": -32768,
+          "source": "UNAVAILABLE",
+          "airNearC": -10.757797610239857,
+          "missingTicks": 60
+        },
+        {
+          "tick": 4260,
+          "elapsedS": 136.45,
+          "phase": 3,
+          "materialC": null,
+          "materialQ": -32768,
+          "source": "UNAVAILABLE",
+          "airNearC": -10.76044705785376,
+          "missingTicks": 80
+        },
+        {
+          "tick": 4280,
+          "elapsedS": 137.45,
+          "phase": 3,
+          "materialC": null,
+          "materialQ": -32768,
+          "source": "UNAVAILABLE",
+          "airNearC": -10.762802953468478,
+          "missingTicks": 100
+        },
+        {
+          "tick": 4300,
+          "elapsedS": 138.45,
+          "phase": 3,
+          "materialC": null,
+          "materialQ": -32768,
+          "source": "UNAVAILABLE",
+          "airNearC": -10.767225734024603,
+          "missingTicks": 120
+        },
+        {
+          "tick": 4320,
+          "elapsedS": 139.45,
+          "phase": 5,
+          "materialC": null,
+          "materialQ": -32768,
+          "source": "UNAVAILABLE",
+          "airNearC": -10.771013567260294,
+          "missingTicks": 140
+        }
+      ]
+    }
+  ],
+  "interruptedClosedRoom": {
+    "directory": "build/infrared-cooling-e2e-20261108",
+    "result": "Test fixture JSON replacement/read race after roughly 10 minutes; not a thermal failure",
+    "lastMaterialC": -9.481973814681249,
+    "lastGpuQ": -38,
+    "serverAndGpuQuantizationAgreed": true,
+    "fixtureCorrection": "Atomic file replacement and retry on transient absent fixture files"
+  },
+  "codeChanges": "Test drivers and recording only; production synchronization logic unchanged in this investigation",
+  "limits": [
+    "Current workspace is launched through Forge userdev, not the remote test server.",
+    "The second run matches Embeddium/Oculus versions, not every mod or the pack Forge 47.1.106; runtime Forge is 47.3.0.",
+    "No loss/retransmission injection or exact overseas hardware/router reproduction.",
+    "No claim that all possible worlds or session histories are covered."
+  ],
+  "interpretation": "Blue/zero immediately after joining is also the INVALID empty-cache state before the first reply; it is not proof of a measured cold server material."
+}

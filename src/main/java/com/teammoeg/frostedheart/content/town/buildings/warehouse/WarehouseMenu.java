@@ -25,12 +25,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 import com.teammoeg.chorda.menu.CBlockEntityMenu;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.bootstrap.common.FHMenuTypes;
+import com.teammoeg.frostedheart.content.town.ITownWithBuildings;
 import com.teammoeg.frostedheart.content.town.TeamTown;
 import com.teammoeg.frostedheart.content.town.network.WarehouseUpdatePacket;
 import com.teammoeg.frostedheart.content.town.resource.action.IActionExecutorHandler;
@@ -45,6 +47,11 @@ import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 
 public class WarehouseMenu extends CBlockEntityMenu<WarehouseBlockEntity> {
+	/**
+	 * Where the player's pack sits in the screen layer. The notice board draws its pack card around these cells:
+	 * the content layer starts at (39, 9), the pack card at content (0, 28) with its first cell at (8, 20).
+	 */
+	public static final int PACK_X = 39 + 8, PACK_Y = 9 + 28 + 20, HOTBAR_Y = PACK_Y + 3 * 18 + 4;
 	private final Supplier<Map<SimpleItemKey, Long>> serverSource;
 	private Map<SimpleItemKey, Long> previousAvailableStacks = Collections.emptyMap();
 	public final List<VirtualItemStack> clientItemList = new ArrayList<>();
@@ -74,7 +81,7 @@ public class WarehouseMenu extends CBlockEntityMenu<WarehouseBlockEntity> {
 		} else {
 			this.serverSource = Collections::emptyMap;
 		}
-		super.addPlayerInventory(inventoryPlayer, 8, 140, 197);
+		super.addPlayerInventory(inventoryPlayer, PACK_X, PACK_Y, HOTBAR_Y);
 	}
 	@Override
 	public void broadcastChanges() {
@@ -224,7 +231,7 @@ public class WarehouseMenu extends CBlockEntityMenu<WarehouseBlockEntity> {
 
 	@Override
 	public ItemStack quickMoveStack(Player player, int index) {
-		if (!canAccessWarehouse()) {
+		if (!canUseStock()) {
 			return ItemStack.EMPTY;
 		}
 		ItemStack originalStack = ItemStack.EMPTY;
@@ -265,6 +272,20 @@ public class WarehouseMenu extends CBlockEntityMenu<WarehouseBlockEntity> {
 		return blockEntity.getBuilding().isPresent();
 	}
 
+	public Optional<WarehouseBuilding> getBuilding() {
+		return blockEntity.getBuilding();
+	}
+
+	public Optional<TeamTown> getTown() {
+		ITownWithBuildings town = blockEntity.getTown();
+		return town instanceof TeamTown teamTown ? Optional.of(teamTown) : Optional.empty();
+	}
+
+	/** Every stored item on the client, unfiltered. */
+	public List<VirtualItemStack> getAllResources() {
+		return Collections.unmodifiableList(clientItemList);
+	}
+
 	/**
 	 * Server-authoritative access guard for every warehouse inventory path.
 	 * A stale menu may outlive its removed block entity for part of a tick, but
@@ -272,6 +293,16 @@ public class WarehouseMenu extends CBlockEntityMenu<WarehouseBlockEntity> {
 	 */
 	public boolean canAccessWarehouse() {
 		return !blockEntity.isRemoved() && hasBuilding();
+	}
+
+	/**
+	 * 存取要求房间合格：房间不合格的仓库能打开看，但不能存也不能取，和以前打不开时一样。
+	 * <p>
+	 * Storing and taking need a sound room: a warehouse whose room fails can be opened and read, but nothing goes in or
+	 * out, just as when it could not be opened at all.
+	 */
+	public boolean canUseStock() {
+		return canAccessWarehouse() && isStructureValid();
 	}
 
 	public boolean isWorkable() {

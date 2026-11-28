@@ -23,7 +23,6 @@ package com.teammoeg.frostedheart.content.climate.player.thermalitem;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.thermal.query.ThermalEnvironmentSample;
-import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
@@ -67,10 +66,9 @@ public class ThermalReservoirBlockEntity extends BlockEntity {
             reservoir.storedStack = new ItemStack(state.getBlock());
         }
         if (!(reservoir.storedStack.getItem() instanceof WearableThermalReservoir thermal)) return;
-        double natural = WorldTemperature.naturalAir(server, pos);
-        MinecraftThermalInput.gameplayPlacedReservoirEnvironment(server, pos, natural, ENVIRONMENT);
+        double temperature = WorldTemperature.samplePlacedReservoirAirTemperature(server, pos, ENVIRONMENT);
         DroppedReservoirExchangeHandler.Status status = EXCHANGE.exchangeInto(reservoir.storedStack, thermal,
-                ENVIRONMENT.airAvailable() ? ENVIRONMENT.airTemperatureC() : natural,
+                temperature,
                 ENVIRONMENT.radiantFluxWPerM2(), DroppedReservoirExchangeHandler.ELAPSED_SECONDS);
         if (status.stackWriteCount() > 0) reservoir.syncChanged();
     }

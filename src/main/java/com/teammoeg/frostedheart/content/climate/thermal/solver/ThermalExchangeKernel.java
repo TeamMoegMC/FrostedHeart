@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.content.climate.thermal.solver;
 
 import java.util.Objects;
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialThermalLaw;
 
 /** Stable finite-capacity pair and fixed-temperature boundary operators. */
 public final class ThermalExchangeKernel {
@@ -70,6 +71,75 @@ public final class ThermalExchangeKernel {
 
     }
 
+    /** Caller-owned result for a pair that can cross sensible/latent branches. */
+    public static final class MutableMaterialPairResult {
+        private double firstJ, secondJ;
+        private byte firstBranch, secondBranch;
+        private boolean firstWaiting, secondWaiting;
+        private int updates;
+        public double firstJ() { return firstJ; }
+        public double secondJ() { return secondJ; }
+        public byte firstBranch() { return firstBranch; }
+        public byte secondBranch() { return secondBranch; }
+        public boolean firstWaiting() { return firstWaiting; }
+        public boolean secondWaiting() { return secondWaiting; }
+        public int updates() { return updates; }
+    }
+
+    /** Shared enthalpy integration for regional and fixed-tile material contacts. */
+    public static void exchangeMaterialsInto(MaterialThermalLaw first, double firstJ, byte firstBranch,
+            boolean firstWaiting, MaterialThermalLaw second, double secondJ, byte secondBranch,
+            boolean secondWaiting, double conductance, double duration, MutableMaterialPairResult out) {
+        exchangeMaterialsInto(first, firstJ, firstBranch, firstWaiting, second, secondJ, secondBranch, secondWaiting,
+                conductance, duration, 0, out);
+    }
+
+    /**
+     * Material exchange driven by the difference of each side's departure from its own natural temperature:
+     * {@code backgroundOffsetC} is the first side's natural minus the second's, so two bodies at their natural
+     * temperatures exchange nothing. Plateaus still follow absolute temperature.
+     */
+    public static void exchangeMaterialsInto(MaterialThermalLaw first, double firstJ, byte firstBranch,
+            boolean firstWaiting, MaterialThermalLaw second, double secondJ, byte secondBranch,
+            boolean secondWaiting, double conductance, double duration, double backgroundOffsetC,
+            MutableMaterialPairResult out) {
+        int updates = 0;
+        if (conductance != 0 && !firstWaiting && !secondWaiting) {
+            double remaining = duration;
+            for (int segment = 0; segment < 6 && remaining > 0; segment++) {
+                double delta = first.temperatureC(firstJ, firstBranch) - second.temperatureC(secondJ, secondBranch)
+                        - backgroundOffsetC;
+                if (delta == 0) break;
+                double direction = Math.signum(delta);
+                firstBranch = first.selectBranch(firstJ, firstBranch, -direction);
+                secondBranch = second.selectBranch(secondJ, secondBranch, direction);
+                double limit = Math.min(first.energyLimitJ(firstJ, firstBranch, -direction),
+                        second.energyLimitJ(secondJ, secondBranch, direction));
+                if (limit == 0) break;
+                delta = first.temperatureC(firstJ, firstBranch) - second.temperatureC(secondJ, secondBranch)
+                        - backgroundOffsetC;
+                if (delta == 0 || Math.signum(delta) != direction) break;
+                double slope = first.slopeKPerJ(firstJ, firstBranch) + second.slopeKPerJ(secondJ, secondBranch);
+                double requested = slope == 0 ? Math.abs(delta) * conductance * remaining
+                        : Math.abs(delta) / slope * -Math.expm1(-conductance * slope * remaining);
+                double transferred = Math.min(requested, limit);
+                if (transferred == 0) break;
+                firstJ -= direction * transferred; secondJ += direction * transferred; updates++;
+                var a = first.transition(firstBranch);
+                var b = second.transition(secondBranch);
+                firstWaiting |= a != null && a.complete(firstJ);
+                secondWaiting |= b != null && b.complete(secondJ);
+                if (transferred == requested || firstWaiting || secondWaiting) break;
+                double elapsed = slope == 0 ? transferred / (conductance * Math.abs(delta))
+                        : -Math.log1p(-transferred * slope / Math.abs(delta)) / (conductance * slope);
+                remaining = Math.max(0, remaining - elapsed);
+            }
+        }
+        out.firstJ = firstJ; out.secondJ = secondJ;
+        out.firstBranch = firstBranch; out.secondBranch = secondBranch;
+        out.firstWaiting = firstWaiting; out.secondWaiting = secondWaiting; out.updates = updates;
+    }
+
     /** Generic pair path using arena-owned inverse capacities. */
     public static Status exchangePairWithInverseInto(
             double enthalpyAJ,
@@ -109,9 +179,21 @@ public final class ThermalExchangeKernel {
                         * (inverseCapacityAKPerJ + inverseCapacityBKPerJ)
                         * dtSeconds);
         double reducedCapacity = reducedCapacity(capacityAJPerK, capacityBJPerK);
-        double energyFromAToB = reducedCapacity
-                * approach
-                * (temperatureOffsetA - temperatureOffsetB);
+        return applyPairWeight(enthalpyAJ, enthalpyBJ, temperatureOffsetA, temperatureOffsetB,
+                reducedCapacity * approach, result);
+    }
+
+    /** Transfer weight in J/K for two cells of equal, finite positive heat capacity during one interval. */
+    static double equalCapacityPairWeight(double capacity, double inverseCapacity, double conductance, double duration) {
+        if (!positiveFinite(inverseCapacity) || !nonNegativeFinite(conductance) || !nonNegativeFinite(duration))
+            return Double.NaN;
+        return (capacity / 2) * approachFraction(conductance * (inverseCapacity + inverseCapacity) * duration);
+    }
+
+    /** Apply a precomputed J/K weight to the current temperature offsets, preserving the pair's energy. */
+    static Status applyPairWeight(double enthalpyAJ, double enthalpyBJ, double temperatureOffsetA,
+            double temperatureOffsetB, double weight, MutablePairResult result) {
+        double energyFromAToB = weight * (temperatureOffsetA - temperatureOffsetB);
         if (!finite(energyFromAToB)) {
             return degradedPair(enthalpyAJ, enthalpyBJ, result);
         }

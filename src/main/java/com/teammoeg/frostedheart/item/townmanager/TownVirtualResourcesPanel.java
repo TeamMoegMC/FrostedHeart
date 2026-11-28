@@ -29,6 +29,8 @@ import com.teammoeg.frostedheart.content.town.TeamTown;
 import com.teammoeg.frostedheart.content.town.resource.TeamTownResourceHolder;
 import com.teammoeg.frostedheart.content.town.resource.VirtualResourceType;
 import com.teammoeg.frostedheart.content.town.tabs.TownInfoPanel;
+import com.teammoeg.frostedheart.content.town.client.board.NoticeBoardIcons;
+import com.teammoeg.frostedheart.content.town.client.board.NoticeBoardTheme;
 import com.teammoeg.frostedheart.content.town.tabs.TownTextLayout;
 import com.teammoeg.frostedheart.content.town.transport.TownTransportSnapshot;
 import com.teammoeg.frostedheart.content.town.transport.TownTransportSummary;
@@ -54,16 +56,20 @@ import java.util.Locale;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-/** Selector and specialized detail pages for every {@link VirtualResourceType}. */
+/**
+ * 城镇服务：左边一列纸签选服务，右边一张纸写它的详情（仓库容量、运力、研究人手）。放在布告板上，尺寸随板子。
+ * <p>
+ * The town's services: paper tags on the left pick a service, a paper sheet on the right details it (storage,
+ * transport capacity, research hands). Lives on the notice board and takes its size.
+ */
 public final class TownVirtualResourcesPanel extends UILayer {
-    private static final int WIDTH = TownManagerScreen.CONTENT_WIDTH;
-    private static final int HEIGHT = TownManagerScreen.CONTENT_HEIGHT;
-    private static final int LIST_WIDTH = 100;
+    private static final int LIST_WIDTH = 112;
     private static final int LIST_TOP = 22;
-    private static final int ROW_HEIGHT = 20;
-    private static final int VISIBLE_ROWS = (HEIGHT - LIST_TOP - 4) / ROW_HEIGHT;
-    private static final int DETAIL_LEFT = LIST_WIDTH + 4;
-    private static final int DETAIL_TOP = 24;
+    private static final int ROW_HEIGHT = 22;
+    private static final int DETAIL_LEFT = LIST_WIDTH + 10;
+    private static final int DETAIL_TOP = 22;
+    /** The summary note above the ledger: a big figure, a paper bar and a one-line verdict. */
+    private static final int SUMMARY_H = 50, SUMMARY_GAP = 8;
     private static final int MIN_THUMB_HEIGHT = 10;
 
     private final Supplier<TeamTown> townSource;
@@ -82,20 +88,31 @@ public final class TownVirtualResourcesPanel extends UILayer {
             UIElement parent, int x, int y, Supplier<TeamTown> townSource,
             @Nullable VirtualResourceType initialType
     ) {
+        this(parent, x, y, TownManagerScreen.CONTENT_WIDTH, TownManagerScreen.CONTENT_HEIGHT, townSource, initialType);
+    }
+
+    public TownVirtualResourcesPanel(
+            UIElement parent, int x, int y, int width, int height, Supplier<TeamTown> townSource,
+            @Nullable VirtualResourceType initialType
+    ) {
         super(parent);
         this.townSource = townSource;
         this.selectedType = initialType;
         setPos(x, y);
-        setSize(WIDTH, HEIGHT);
+        setSize(width, height);
         setScissorEnabled(false);
         detailPanel = new TownInfoPanel(
                 this,
                 DETAIL_LEFT,
-                DETAIL_TOP,
-                WIDTH - DETAIL_LEFT,
-                HEIGHT - DETAIL_TOP,
+                DETAIL_TOP + SUMMARY_H + SUMMARY_GAP,
+                width - DETAIL_LEFT,
+                height - DETAIL_TOP - SUMMARY_H - SUMMARY_GAP,
                 this::detailRows,
-                false);
+                true).paper();
+    }
+
+    private int visibleRows() {
+        return Math.max(1, (getHeight() - LIST_TOP - 4) / ROW_HEIGHT);
     }
 
     @Override
@@ -115,31 +132,105 @@ public final class TownVirtualResourcesPanel extends UILayer {
         Font font = Minecraft.getInstance().font;
         List<VirtualResourceType> types = resourceTypes();
         normalizeSelection(types);
-        drawPanel(graphics, x, y, width, height);
-        graphics.fill(x + LIST_WIDTH, y + 1, x + LIST_WIDTH + 1, y + height - 1,
-                0xFF777777);
-        graphics.drawString(
-                font,
+        com.teammoeg.frostedheart.content.town.client.board.BoardDraw.textOnWood(graphics,
                 TownTextLayout.ellipsize(
                         font,
                         Component.translatable(
                                 "gui.frostedheart.town_manager.virtual_resources").getString(),
                         LIST_WIDTH - 8),
                 x + 4,
-                y + 7,
-                0xFFFFAA00,
-                true);
+                y + 6,
+                NoticeBoardTheme.ON_WOOD);
         renderList(graphics, font, x, y, types);
         renderDetailHeader(graphics, font, x, y);
+        renderSummary(graphics, x + DETAIL_LEFT, y + DETAIL_TOP, getWidth() - DETAIL_LEFT);
+    }
+
+    /**
+     * 一张钉在明细上面的便签：这项服务现在怎样，一个大数、一道纸槽和一句话说清楚；下面的明细是账本。
+     * A note pinned above the ledger: how this service stands now, as a big figure, a paper bar and one line; the rows
+     * below are the ledger.
+     */
+    private record Summary(Component title, Component figure, float fill, int fillColor, Component verdict, int verdictColor) {
+    }
+
+    private void renderSummary(GuiGraphics g, int x, int y, int w) {
+        TeamTown town = townSource.get();
+        Summary summary = town == null || selectedType == null ? null : summary(town, selectedType);
+        if (summary == null) return;
+        int h = SUMMARY_H;
+        g.fill(x + 1, y + 2, x + w + 1, y + h + 1, 0x30000000);
+        NoticeBoardIcons.PAPER.draw(g, x, y, w, h);
+        com.teammoeg.frostedheart.content.town.client.board.BoardDraw.pin(g, NoticeBoardIcons.PIN_BRASS, x + w / 2, y + 1);
+        com.teammoeg.frostedheart.content.town.client.board.BoardDraw.text(g, summary.title(), x + 8, y + 6, w - 16, NoticeBoardTheme.MUTED);
+        com.teammoeg.frostedheart.content.town.client.board.BoardDraw.big(g, summary.figure(), x + 8, y + 16, NoticeBoardTheme.INK);
+        int barX = x + 8 + com.teammoeg.frostedheart.content.town.client.board.BoardDraw.bigWidth(summary.figure()) + 10, barW = x + w - 8 - barX;
+        if (summary.fill() >= 0 && barW >= 30)
+            NoticeBoardTheme.INSTANCE.drawProgressBar(g, barX, y + 23, barW, 6, Math.min(1f, summary.fill()), summary.fillColor());
+        com.teammoeg.frostedheart.content.town.client.board.BoardDraw.text(g, summary.verdict(), x + 8, y + h - 12, w - 16, summary.verdictColor());
+    }
+
+    private static Summary summary(TeamTown town, VirtualResourceType type) {
+        return switch (type) {
+            case MAX_CAPACITY -> {
+                TownVirtualResourceMetrics.CapacityBreakdown capacity = TownVirtualResourceMetrics.capacity(
+                        town.getResourceHolder().get(VirtualResourceType.MAX_CAPACITY), town.getResourceHolder().getOccupiedCapacity());
+                long used = (long) Math.ceil(capacity.used() - 1e-9), total = (long) Math.floor(capacity.total() + 1e-9);
+                float fill = capacity.total() <= TeamTownResourceHolder.DELTA ? -1 : (float) (capacity.used() / capacity.total());
+                if (capacity.overcommitted())
+                    yield new Summary(s("warehouse.title"), Component.literal(count(used) + " / " + count(total)), fill, NoticeBoardTheme.RED,
+                            s("warehouse.over", count((long) Math.ceil(capacity.shortfall() - 1e-9))), NoticeBoardTheme.RED);
+                if (total <= 0)
+                    yield new Summary(s("warehouse.title"), Component.literal("0"), -1, 0, s("warehouse.none"), NoticeBoardTheme.AMBER);
+                // What is left is what the two shown figures leave, so the three numbers always add up.
+                long left = Math.max(0, total - used);
+                boolean nearlyFull = capacity.available() <= capacity.total() * 0.1;
+                yield new Summary(s("warehouse.title"), Component.literal(count(used) + " / " + count(total)), fill,
+                        nearlyFull ? NoticeBoardTheme.AMBER : NoticeBoardTheme.GREEN_FILL,
+                        s(nearlyFull ? "warehouse.nearly_full" : "warehouse.room", count(left)), nearlyFull ? NoticeBoardTheme.AMBER : NoticeBoardTheme.GREEN);
+            }
+            case TRANSPORT_CAPACITY -> {
+                TownTransportSummary transport = town.getTransportSnapshot().summary();
+                long reserved = (long) Math.ceil(transport.reservedCapacity() - 1e-9), total = (long) Math.floor(transport.totalCapacity() + 1e-9);
+                boolean shortage = TransportReservationModel.meaningfullyGreater(transport.reservedCapacity(), transport.totalCapacity());
+                if (total <= 0 && !shortage)
+                    yield new Summary(s("transport.title"), Component.literal("0"), -1, 0, s("transport.none"), NoticeBoardTheme.AMBER);
+                float fill = transport.totalCapacity() <= TeamTownResourceHolder.DELTA ? 1 : (float) (transport.reservedCapacity() / transport.totalCapacity());
+                if (shortage)
+                    yield new Summary(s("transport.title"), Component.literal(count(reserved) + " / " + count(total)), fill, NoticeBoardTheme.RED,
+                            s("transport.short", count((long) Math.ceil(transport.shortfall() - 1e-9))), NoticeBoardTheme.RED);
+                yield new Summary(s("transport.title"), Component.literal(count(reserved) + " / " + count(total)), fill, NoticeBoardTheme.BLUE,
+                        s(reserved == 0 ? "transport.idle" : "transport.room", count((long) Math.floor(transport.remainingRegistrableCapacity() + 1e-9))),
+                        NoticeBoardTheme.MUTED);
+            }
+            case RESEARCH_LABOR -> {
+                double total = 0;
+                for (int level = 0; level <= VirtualResourceType.RESEARCH_LABOR.getMaxLevel(); level++)
+                    total += town.getResourceHolder().get(VirtualResourceType.RESEARCH_LABOR.generateAttribute(level));
+                long hands = (long) Math.floor(total + 1e-9);
+                yield new Summary(s("research.title"), Component.literal(count(hands)), -1, 0,
+                        total <= TeamTownResourceHolder.DELTA ? s("research.none") : hands < 1 ? s("research.under_one") : s("research.some"),
+                        total <= TeamTownResourceHolder.DELTA ? NoticeBoardTheme.AMBER : NoticeBoardTheme.MUTED);
+            }
+            default -> null;
+        };
+    }
+
+    private static Component s(String key, Object... args) {
+        return Component.translatable("gui.frostedheart.board.town.services." + key, args);
+    }
+
+    private static String count(long value) {
+        return com.teammoeg.frostedheart.content.town.ui.TownFormat.count(Math.max(0, value));
     }
 
     private void renderList(
             GuiGraphics graphics, Font font, int x, int y,
             List<VirtualResourceType> types
     ) {
-        int maxScroll = Math.max(0, types.size() - VISIBLE_ROWS);
+        int maxScroll = Math.max(0, types.size() - visibleRows());
         listScroll = Mth.clamp(listScroll, 0, maxScroll);
-        for (int row = 0; row < VISIBLE_ROWS; row++) {
+        for (int row = 0; row < visibleRows(); row++) {
             int index = listScroll + row;
             if (index >= types.size()) break;
             VirtualResourceType type = types.get(index);
@@ -147,47 +238,40 @@ public final class TownVirtualResourcesPanel extends UILayer {
             boolean hovered = getMouseX() >= 2 && getMouseX() < LIST_WIDTH - 3
                     && getMouseY() >= LIST_TOP + row * ROW_HEIGHT
                     && getMouseY() < LIST_TOP + (row + 1) * ROW_HEIGHT;
-            if (type == selectedType) {
-                graphics.fill(x + 2, rowY, x + LIST_WIDTH - 3, rowY + ROW_HEIGHT - 1,
-                        0xA0446688);
-            } else if (hovered) {
-                graphics.fill(x + 2, rowY, x + LIST_WIDTH - 3, rowY + ROW_HEIGHT - 1,
-                        0x60444444);
-            }
-            CIcons.getIcon(icon(type)).draw(graphics, x + 4, rowY + 2, 16, 16);
+            // Each service is a paper tag; the chosen one sticks out a little.
+            int indent = type == selectedType ? 4 : 0;
+            (type == selectedType || hovered ? NoticeBoardIcons.TAG_HOVER : NoticeBoardIcons.TAG)
+                    .draw(graphics, x + 2 + indent, rowY, LIST_WIDTH - 8, ROW_HEIGHT - 3);
+            CIcons.getIcon(icon(type)).draw(graphics, x + 5 + indent, rowY + 1, 16, 16);
             graphics.drawString(
                     font,
-                    TownTextLayout.ellipsize(font, resourceName(type).getString(), LIST_WIDTH - 27),
-                    x + 22,
-                    rowY + 6,
-                    0xFFFFFFFF,
-                    true);
+                    TownTextLayout.ellipsize(font, resourceName(type).getString(), LIST_WIDTH - 34),
+                    x + 24 + indent,
+                    rowY + 5,
+                    type == selectedType ? NoticeBoardTheme.NOTE_INK : NoticeBoardTheme.INK,
+                    false);
         }
         if (maxScroll > 0) {
             int trackY = y + LIST_TOP;
-            int trackHeight = VISIBLE_ROWS * ROW_HEIGHT;
+            int trackHeight = visibleRows() * ROW_HEIGHT;
             int thumbHeight = Math.max(
-                    MIN_THUMB_HEIGHT, trackHeight * VISIBLE_ROWS / types.size());
+                    MIN_THUMB_HEIGHT, trackHeight * visibleRows() / types.size());
             int thumbY = trackY + (trackHeight - thumbHeight) * listScroll / maxScroll;
-            graphics.fill(x + LIST_WIDTH - 3, trackY, x + LIST_WIDTH - 1,
-                    trackY + trackHeight, 0xFF222222);
-            graphics.fill(x + LIST_WIDTH - 3, thumbY, x + LIST_WIDTH - 1,
-                    thumbY + thumbHeight, 0xFFAAAAAA);
+            NoticeBoardTheme.INSTANCE.drawSliderBackground(graphics, x + LIST_WIDTH - 4, trackY, 6, trackHeight, false);
+            NoticeBoardTheme.INSTANCE.drawSliderBar(graphics, x + LIST_WIDTH - 4, thumbY, 6, thumbHeight, false);
         }
     }
 
     private void renderDetailHeader(GuiGraphics graphics, Font font, int x, int y) {
         VirtualResourceType type = selectedType;
         if (type == null) return;
-        CIcons.getIcon(icon(type)).draw(graphics, x + DETAIL_LEFT + 2, y + 3, 16, 16);
-        graphics.drawString(
-                font,
+        CIcons.getIcon(icon(type)).draw(graphics, x + DETAIL_LEFT + 2, y + 2, 16, 16);
+        com.teammoeg.frostedheart.content.town.client.board.BoardDraw.textOnWood(graphics,
                 TownTextLayout.ellipsize(
-                        font, resourceName(type).getString(), WIDTH - DETAIL_LEFT - 24),
+                        font, resourceName(type).getString(), getWidth() - DETAIL_LEFT - 24),
                 x + DETAIL_LEFT + 21,
-                y + 7,
-                0xFFFFAA00,
-                true);
+                y + 6,
+                NoticeBoardTheme.ON_WOOD);
     }
 
     private List<TownInfoPanel.Row> detailRows() {
@@ -200,8 +284,33 @@ public final class TownVirtualResourcesPanel extends UILayer {
         return switch (selectedType) {
             case MAX_CAPACITY -> warehouseRows(town.getResourceHolder());
             case TRANSPORT_CAPACITY -> transportRows(town);
+            case RESEARCH_LABOR -> researchLaborRows(town.getResourceHolder());
             default -> genericRows(town.getResourceHolder(), selectedType);
         };
+    }
+
+    /**
+     * Today's research labor by education level, shown in whole standard researchers as the institutes do.
+     */
+    private static List<TownInfoPanel.Row> researchLaborRows(TeamTownResourceHolder resources) {
+        List<TownInfoPanel.Row> rows = new ArrayList<>();
+        double total = 0;
+        for (int level = 0; level <= VirtualResourceType.RESEARCH_LABOR.getMaxLevel(); level++)
+            total += resources.get(VirtualResourceType.RESEARCH_LABOR.generateAttribute(level));
+        rows.add(total <= TeamTownResourceHolder.DELTA ? status("no_research_labor", 0xFFFFAA00) : status("available", 0xFF55FF55));
+        rows.add(TownInfoPanel.Row.text(Component.translatable(
+                "gui.frostedheart.town_manager.virtual_resource.research_labor_total", (long) Math.floor(total + 1e-9))));
+        for (int level = 0; level <= VirtualResourceType.RESEARCH_LABOR.getMaxLevel(); level++) {
+            double value = resources.get(VirtualResourceType.RESEARCH_LABOR.generateAttribute(level));
+            if (value <= TeamTownResourceHolder.DELTA) continue;
+            rows.add(TownInfoPanel.Row.text(Component.translatable(
+                    "gui.frostedheart.town_manager.virtual_resource.research_labor_level",
+                    Component.translatable("gui.frostedheart.town_manager.education_level." + level),
+                    (long) Math.floor(value + 1e-9))));
+        }
+        rows.add(TownInfoPanel.Row.colored(Component.translatable(
+                "gui.frostedheart.town_manager.virtual_resource.research_labor_explain"), 0xFFAAAAAA));
+        return rows;
     }
 
     private static List<TownInfoPanel.Row> genericRows(
@@ -247,14 +356,19 @@ public final class TownVirtualResourcesPanel extends UILayer {
         } else {
             rows.add(status("available", 0xFF55FF55));
         }
-        rows.add(amount("warehouse_total", capacity.total(), 0xFFFFFFFF));
+        // The player view rounds as the summary note does: used up, total down, and what is left is their difference.
+        boolean detailed = com.teammoeg.frostedheart.content.town.client.TownUiModeClient.detailed();
+        double total = detailed ? capacity.total() : Math.floor(capacity.total() + 1e-9);
+        double used = detailed ? capacity.used() : Math.ceil(capacity.used() - 1e-9);
+        double available = detailed ? capacity.available() : Math.max(0, total - used);
+        rows.add(amount("warehouse_total", total, 0xFFFFFFFF));
         rows.add(amount(
                 "warehouse_occupied",
-                capacity.used(),
+                used,
                 capacity.overcommitted() ? 0xFFFF5555 : 0xFFFFFFFF));
         rows.add(amount(
                 "warehouse_available",
-                capacity.available(),
+                available,
                 capacity.available() <= capacity.total() * 0.1
                         ? 0xFFFFAA00 : 0xFF55FF55));
         if (capacity.overcommitted()) {
@@ -459,7 +573,7 @@ public final class TownVirtualResourcesPanel extends UILayer {
         if (super.onMousePressed(button)) return true;
         if (getMouseX() >= LIST_WIDTH || getMouseY() < LIST_TOP) return false;
         int row = (int) ((getMouseY() - LIST_TOP) / ROW_HEIGHT);
-        if (row < 0 || row >= VISIBLE_ROWS) return false;
+        if (row < 0 || row >= visibleRows()) return false;
         List<VirtualResourceType> types = resourceTypes();
         int index = listScroll + row;
         if (index >= types.size()) return false;
@@ -472,7 +586,7 @@ public final class TownVirtualResourcesPanel extends UILayer {
     public boolean onMouseScrolled(double scroll) {
         if (!isMouseOver()) return false;
         if (getMouseX() >= LIST_WIDTH) return super.onMouseScrolled(scroll);
-        int maxScroll = Math.max(0, resourceTypes().size() - VISIBLE_ROWS);
+        int maxScroll = Math.max(0, resourceTypes().size() - visibleRows());
         if (maxScroll == 0) return false;
         listScroll = Mth.clamp(
                 listScroll - (int) Math.signum(scroll), 0, maxScroll);
@@ -484,7 +598,7 @@ public final class TownVirtualResourcesPanel extends UILayer {
         super.getTooltip(tooltip);
         if (!isMouseOver() || getMouseX() >= LIST_WIDTH || getMouseY() < LIST_TOP) return;
         int row = (int) ((getMouseY() - LIST_TOP) / ROW_HEIGHT);
-        if (row < 0 || row >= VISIBLE_ROWS) return;
+        if (row < 0 || row >= visibleRows()) return;
         List<VirtualResourceType> types = resourceTypes();
         int index = listScroll + row;
         if (index < types.size()) tooltip.accept(resourceName(types.get(index)));
@@ -529,6 +643,7 @@ public final class TownVirtualResourcesPanel extends UILayer {
         return switch (type) {
             case MAX_CAPACITY -> Items.CHEST;
             case TRANSPORT_CAPACITY -> Items.MINECART;
+            case RESEARCH_LABOR -> Items.WRITABLE_BOOK;
             default -> Items.PAPER;
         };
     }
@@ -537,16 +652,9 @@ public final class TownVirtualResourcesPanel extends UILayer {
         if (value == Math.floor(value) && Math.abs(value) < 1.0e9) {
             return String.valueOf((long) value);
         }
+        // The player view shows whole numbers; the detailed mode keeps one decimal for checking.
+        if (!com.teammoeg.frostedheart.content.town.client.TownUiModeClient.detailed()) return String.valueOf((long) Math.floor(value + 1e-9));
         return String.format(Locale.ROOT, "%.1f", value);
     }
 
-    private static void drawPanel(
-            GuiGraphics graphics, int x, int y, int width, int height
-    ) {
-        graphics.fill(x, y, x + width, y + height, 0xE0101010);
-        graphics.fill(x, y, x + width, y + 1, 0xFF373737);
-        graphics.fill(x, y, x + 1, y + height, 0xFF373737);
-        graphics.fill(x, y + height - 1, x + width, y + height, 0xFF8B8B8B);
-        graphics.fill(x + width - 1, y, x + width, y + height, 0xFF8B8B8B);
-    }
 }

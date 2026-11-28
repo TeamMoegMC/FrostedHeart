@@ -28,6 +28,7 @@ import java.util.EnumSet;
 import com.teammoeg.frostedheart.content.town.render.ITownSpaceOccupiedBuilding;
 
 import com.mojang.serialization.Codec;
+import javax.annotation.Nullable;
 import lombok.Getter;
 import lombok.AccessLevel;
 import net.minecraft.core.BlockPos;
@@ -54,6 +55,43 @@ public abstract class AbstractTownBuilding implements ITownBuilding,ITownSpaceOc
      * 建筑最初创建时，默认状态为未初始化，检查能否工作时应优先检查此项，或许可以避免意外的空指针？
      */
     private boolean initialized = false;
+
+    // Runtime topology is rebuilt after loading, never persisted.
+    private transient boolean connectedToTower;
+    private transient java.util.List<BlockPos> roadEntrances = java.util.List.of();
+    public void setRoadEntrances(java.util.List<BlockPos> entrances) {
+        roadEntrances = entrances.stream().map(BlockPos::immutable).distinct().sorted().toList();
+    }
+    private transient boolean connectivityWorkable;
+
+    /**
+     * 这类建筑是否要用道路连进城镇才能工作。远处的采集点（矿井）由接管它的建筑负责，不参与道路连通。
+     * <p>
+     * Whether this kind of building must be linked into the town by road to work. Remote sites such as mines are
+     * served by the building that takes them over and stay out of the road network.
+     */
+    public boolean requiresRoad() {
+        return true;
+    }
+
+    /** Whether the roads let this building work: as the last road check found, and always when it needs no road. */
+    public boolean isConnectivityWorkable() {
+        return connectivityWorkable || !requiresRoad();
+    }
+
+    public void setConnectivityWorkable(boolean value) {
+        if (connectivityWorkable != value) {
+            connectivityWorkable = value;
+            fireAvailabilityChange();
+        }
+    }
+
+    public void setConnectedToTower(boolean value) {
+        if (connectedToTower != value) {
+            connectedToTower = value;
+            fireAvailabilityChange();
+        }
+    }
 
     private boolean isStructureValid = false;
 
@@ -82,6 +120,53 @@ public abstract class AbstractTownBuilding implements ITownBuilding,ITownSpaceOc
     private int updateDepth;
     @Getter(AccessLevel.NONE)
     private final EnumSet<ChangeKind> pendingChanges = EnumSet.noneOf(ChangeKind.class);
+
+    /** A name the players gave this building; null keeps the numbered default. */
+    @Nullable
+    private String customName;
+    /** This building's number among its type, kept once given; 0 until the town assigns one. */
+    private int number;
+
+    @Nullable
+    public String getCustomName() {
+        return customName;
+    }
+
+    public void setCustomName(@Nullable String name) {
+        String next = name == null || name.isBlank() ? null : name;
+        if (java.util.Objects.equals(customName, next)) return;
+        customName = next;
+        fireChange();
+    }
+
+    public int getNumber() {
+        return number;
+    }
+
+    public void setNumber(int value) {
+        int next = Math.max(0, value);
+        if (number == next) return;
+        number = next;
+        fireChange();
+    }
+
+    /**
+     * 给建筑的编解码器加上玩家起的名字和固定编号两项；各建筑的 {@code MAP_CODEC} 都经过这里，存盘与同步都带上它们。
+     * Adds the player-given name and the kept number to a building codec. Every building's {@code MAP_CODEC} goes
+     * through here, so saves and client sync both carry them.
+     */
+    public static <T extends AbstractTownBuilding> com.mojang.serialization.MapCodec<T> named(com.mojang.serialization.MapCodec<T> base) {
+        return com.mojang.serialization.codecs.RecordCodecBuilder.mapCodec(t -> t.group(
+                base.forGetter(java.util.function.Function.identity()),
+                Codec.STRING.optionalFieldOf("customName").forGetter(b -> java.util.Optional.ofNullable(((AbstractTownBuilding) b).customName)),
+                Codec.INT.optionalFieldOf("number", 0).forGetter(b -> ((AbstractTownBuilding) b).number)
+        ).apply(t, (building, name, number) -> {
+            AbstractTownBuilding self = building;
+            self.customName = name.filter(n -> !n.isBlank()).orElse(null);
+            self.number = Math.max(0, number);
+            return building;
+        }));
+    }
 
     protected void fireChange() {
         recordChange(ChangeKind.DATA);
@@ -166,7 +251,7 @@ public abstract class AbstractTownBuilding implements ITownBuilding,ITownSpaceOc
 
     @Override
     public boolean isBuildingWorkable(){
-        return initialized && !occupiedVolume.isOverlapped() && isStructureValid;
+        return isConnectivityWorkable() && initialized && !occupiedVolume.isOverlapped() && isStructureValid;
     }
 
     @Override

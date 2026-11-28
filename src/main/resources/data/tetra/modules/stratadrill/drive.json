@@ -1,0 +1,22 @@
+{
+  "type": "frostedheart:stratadrill_drive",
+  "slots": [
+    "stratadrill/drive"
+  ],
+  "variants": [
+    {
+      "key": "stratadrill/steam",
+      "glyph": {
+        "textureX": 176,
+        "textureY": 32
+      }
+    },
+    {
+      "key": "stratadrill/diesel",
+      "glyph": {
+        "textureX": 176,
+        "textureY": 32
+      }
+    }
+  ]
+}

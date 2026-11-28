@@ -77,7 +77,7 @@ public class TemperatureProbe extends Item {
             BlockHitResult brtr = getPlayerPOVHitResult(worldIn, playerIn, ClipContext.Fluid.ANY);
             if (brtr.getType() != HitResult.Type.MISS) {
 
-                playerIn.sendSystemMessage(Lang.translateMessage("info.air_temperature", toTemperatureFloatString(WorldTemperature.air(playerIn.level(), brtr.getBlockPos()))));
+                playerIn.sendSystemMessage(Lang.translateMessage("info.block_temperature", toTemperatureFloatString(WorldTemperature.getTempAtBlock(playerIn.level(), brtr.getBlockPos()))));
             }
 
         }
@@ -91,7 +91,7 @@ public class TemperatureProbe extends Item {
         if (entityplayer instanceof ServerPlayer) {
             BlockHitResult brtr = getPlayerPOVHitResult(worldIn, entityplayer, ClipContext.Fluid.ANY);
             if (brtr.getType() == HitResult.Type.MISS) return stack;
-            entityplayer.sendSystemMessage(Lang.translateMessage("info.air_temperature", toTemperatureFloatString(WorldTemperature.air(entityplayer.level(), brtr.getBlockPos()))));
+            entityplayer.sendSystemMessage(Lang.translateMessage("info.block_temperature", toTemperatureFloatString(WorldTemperature.getTempAtBlock(entityplayer.level(), brtr.getBlockPos()))));
         }
         return stack;
     }

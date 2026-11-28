@@ -55,7 +55,7 @@ public class TownEventsTab extends TownManagerTab {
                 TownManagerScreen.CONTENT_WIDTH, TownManagerScreen.CONTENT_HEIGHT, this::rows));
     }
 
-    private List<TownInfoPanel.Row> rows() {
+    List<TownInfoPanel.Row> rows() {
         List<TownInfoPanel.Row> rows = new ArrayList<>();
         rows.add(TownInfoPanel.Row.colored(Component.translatable(
                 "gui.frostedheart.town_manager.active_warnings").withStyle(ChatFormatting.BOLD),

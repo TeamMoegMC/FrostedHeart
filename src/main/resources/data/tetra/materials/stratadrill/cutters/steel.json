@@ -1,0 +1,12 @@
+{
+  "key": "steel",
+  "category": "metal",
+  "hidden": true,
+  "primary": 0,
+  "secondary": 0,
+  "tertiary": 0,
+  "material": {
+    "tag": "forge:ingots/steel",
+    "count": 2
+  }
+}

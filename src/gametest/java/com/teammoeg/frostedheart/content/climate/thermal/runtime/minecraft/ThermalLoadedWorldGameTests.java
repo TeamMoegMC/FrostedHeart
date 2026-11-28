@@ -40,7 +40,6 @@ import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
 import com.teammoeg.frostedheart.bootstrap.common.FHMultiblocks;
-import com.teammoeg.frostedheart.content.climate.BlockTemperatureModel;
 import com.teammoeg.frostedheart.content.climate.FHTemperatureDifficulty;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorState;
@@ -102,33 +101,6 @@ import net.minecraftforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 public final class ThermalLoadedWorldGameTests {
     private static final String TEMPLATE = "phase0a_empty";
-
-    @GameTest(template = TEMPLATE, batch = "thermal_natural_formula_equivalence", timeoutTicks = 100)
-    public static void naturalWorldQueriesRetainTheirTemperatureResults(GameTestHelper helper) {
-        ServerLevel level = helper.getLevel();
-        BlockPos origin = helper.absolutePos(new BlockPos(2, 2, 2));
-        var config = FHConfig.SERVER.CLIMATE;
-        float minimum = config.absoluteZeroCelsius.get().floatValue();
-        for (int y : new int[]{-64, -55, -1, 0, 1, 63, 64, 240, 241, 319}) {
-            BlockPos pos = new BlockPos(origin.getX(), y, origin.getZ());
-            float dimension = WorldTemperature.dimension(level);
-            float biome = WorldTemperature.biome(level, pos);
-            float altitude = WorldTemperature.altitude(level, pos);
-            for (float climate : new float[]{-10000, -40, 0, 40}) {
-                float previous = BlockTemperatureModel.blockTemperature(y,
-                        config.climateStoneInterfaceLevel.get(), config.climateSeaLevel.get(),
-                        config.blockMaximumClimateAffection.get().floatValue(), dimension, biome, altitude, climate,
-                        0, config.blockHeatApplicationMultiplier.get().floatValue(), minimum);
-                helper.assertTrue(WorldTemperature.naturalBlock(level, pos, climate) == previous,
-                        "natural block query must preserve zero-heat behavior at y=" + y + ", climate=" + climate);
-            }
-            if (y <= WorldTemperature.STONE_INTERFACE_LEVEL) {
-                helper.assertTrue(WorldTemperature.naturalAir(level, pos) == Math.max(minimum, dimension + biome + altitude),
-                        "underground air must retain dimension, biome, altitude and lower clamp at y=" + y);
-            }
-        }
-        helper.succeed();
-    }
 
     @GameTest(template = TEMPLATE, batch = "thermal_stable_environment_attribute", timeoutTicks = 100)
     public static void stablePlayerEnvironmentReusesItsModifierAndObservesChanges(GameTestHelper helper) {
@@ -324,7 +296,7 @@ public final class ThermalLoadedWorldGameTests {
         });
     }
 
-    @GameTest(template = TEMPLATE, batch = "thermal_complete_tag_reload", timeoutTicks = 300)
+    @GameTest(template = TEMPLATE, batch = "thermal_complete_tag_reload", timeoutTicks = 900)
     public static void completeReloadRebuildsMaterialProfilesAfterTagsBind(GameTestHelper helper) throws IOException {
         ServerLevel level = helper.getLevel();
         MinecraftServer server = level.getServer();
@@ -353,28 +325,45 @@ public final class ThermalLoadedWorldGameTests {
             server.reloadResources(withFixture).join();
             helper.assertTrue(Blocks.STONE.defaultBlockState().is(net.minecraft.tags.BlockTags.WOOL),
                     "the complete server reload must bind the new wool tag");
-            helper.assertTrue(owner(level, fire) != null && owner(level, fire).input() != original,
-                    "the loaded campfire must recover without a player query after tags bind");
-            var after = MinecraftThermalProfiles.prepare();
-            helper.assertTrue(after.signatures().materialProfileId(after.states().signatureId(Blocks.STONE.defaultBlockState()))
-                            == woolMaterial,
-                    "the restarted runtime must use the newly bound material tag, not the previous snapshot");
-        } finally {
-            try {
-                server.reloadResources(selected).join();
-            } finally {
-                level.setBlockAndUpdate(fire, Blocks.AIR.defaultBlockState());
-                MinecraftThermalInput.closeActiveLevel(level);
-                try (var paths = Files.walk(pack)) {
-                    for (Path path : paths.sorted(Comparator.reverseOrder()).toList()) Files.delete(path);
+            // Other loaded chunks can win startup. Wait for this particular heat source's discovery slot.
+            helper.startSequence().thenWaitUntil(() -> {
+                java.util.Map<ServerLevel, MinecraftThermalInput> active = read(MinecraftThermalInput.class, "ACTIVE");
+                MinecraftThermalInput now = active.get(level);
+                helper.assertTrue(now != null && now != original && present(now, fire),
+                        "reload discovers the existing lit fire after tags bind: runtime=" + (now != null)
+                                + ", fire=" + level.getBlockState(fire) + ", discovery=" + MinecraftThermalInput.sourceDiscoveryStats(level));
+            }).thenExecute(() -> {
+                try {
+                    var after = MinecraftThermalProfiles.prepare();
+                    helper.assertTrue(after.signatures().materialProfileId(after.states().signatureId(Blocks.STONE.defaultBlockState()))
+                            == woolMaterial, "the restarted runtime uses the newly bound material tag");
+                } finally {
+                    restoreMaterialTestPack(level, fire, selected, pack);
                 }
-                server.getPackRepository().reload();
-            }
+                var restored = MinecraftThermalProfiles.prepare();
+                helper.assertTrue(restored.signatures().materialProfileId(restored.states().signatureId(Blocks.STONE.defaultBlockState()))
+                                == stoneMaterial, "removing the test pack restores the original material table");
+            }).thenSucceed();
+        } catch (IOException | RuntimeException | Error failure) {
+            restoreMaterialTestPack(level, fire, selected, pack);
+            throw failure;
         }
-        var restored = MinecraftThermalProfiles.prepare();
-        helper.assertTrue(restored.signatures().materialProfileId(restored.states().signatureId(Blocks.STONE.defaultBlockState()))
-                        == stoneMaterial, "removing the test pack must restore the original material table");
-        helper.succeed();
+    }
+
+    private static void restoreMaterialTestPack(ServerLevel level, BlockPos fire, java.util.List<String> selected, Path pack) {
+        var server = level.getServer();
+        try {
+            server.reloadResources(selected).join();
+        } finally {
+            level.setBlockAndUpdate(fire, Blocks.AIR.defaultBlockState());
+            MinecraftThermalInput.closeActiveLevel(level);
+            try (var paths = Files.walk(pack)) {
+                for (Path path : paths.sorted(Comparator.reverseOrder()).toList()) Files.delete(path);
+            } catch (IOException e) {
+                throw new java.io.UncheckedIOException(e);
+            }
+            server.getPackRepository().reload();
+        }
     }
 
     @GameTest(template = TEMPLATE, batch = "thermal_recipe_temperature_reload", timeoutTicks = 100)
@@ -495,20 +484,20 @@ public final class ThermalLoadedWorldGameTests {
             helper.assertTrue(present(first, fire) && !present(first, later),
                     "startup must discover the existing lit fire without retaining the unlit fire");
             level.getServer().reloadResources(level.getServer().getPackRepository().getSelectedIds()).join();
-            helper.assertTrue(owner(level, fire) != null, "reload must rediscover loaded lit sources without players");
-            MinecraftThermalInput second = owner(level, fire).input();
-            helper.assertTrue(second != first && owner(level, fire) != firstOwner,
-                    "full reload must attach fresh owners to already loaded sections");
-            first.close();
-            helper.assertTrue(owner(level, fire).input() == second,
-                    "old close must not detach the new runtime");
             helper.startSequence().thenWaitUntil(() -> {
+                var recovered = owner(level, fire);
+                helper.assertTrue(recovered != null && recovered != firstOwner && recovered.input() != first,
+                        "source discovery attaches a fresh owner after reload");
+                MinecraftThermalInput second = recovered.input();
                 var loaded = level.getChunkSource().getChunkNow(fire.getX() >> 4, fire.getZ() >> 4);
                 Long2ObjectLinkedOpenHashMap<LevelChunk> pending = read(second, "pendingSourceChunks");
                 helper.assertTrue(present(second, fire), "unchanged lit fire must recover after reload: chunk="
                         + (loaded == null ? "unloaded" : loaded.getBlockState(fire))
                         + ", pending=" + pending.size() + ", runtimeClosed=" + read(second, "closed"));
             }).thenExecute(() -> {
+                MinecraftThermalInput second = owner(level, fire).input();
+                first.close();
+                helper.assertTrue(owner(level, fire).input() == second, "old close preserves the new owner");
                 MinecraftPageManager.SectionOwner before = owner(level, later);
                 campfire(level, later, true);
                 MinecraftThermalInput.onChunkLoad(level, level.getChunkAt(later));
@@ -636,8 +625,11 @@ public final class ThermalLoadedWorldGameTests {
 
     private static void generator(GameTestHelper helper, TemplateMultiblock structure) {
         ServerLevel level = helper.getLevel();
+        double expectedOutletPowerW = structure == FHMultiblocks.GENERATOR_T2 ? 8_000 : 6_000;
         MinecraftThermalInput.closeActiveLevel(level);
-        BlockPos origin = helper.absolutePos(new BlockPos(1, 2, 1));
+        BlockPos anchor = helper.absolutePos(new BlockPos(1, 2, 1));
+        // The bottom center lies at a Chunk corner so east/south outlets cross it.
+        BlockPos origin = new BlockPos((anchor.getX() & ~15) + 14, anchor.getY(), (anchor.getZ() & ~15) + 14);
         BlockPos master = form(helper, structure, origin);
         GeneratorState state = (GeneratorState) CMultiblockHelper.getBEHelper(level, master).getState();
         var player = FakePlayerFactory.getMinecraft(level);
@@ -653,59 +645,128 @@ public final class ThermalLoadedWorldGameTests {
         data.RLevel = 1;
         data.heated = 1_000;
         data.process = 10_000;
-        data.townProcessedTicks = 1_000;
+        data.baseAccountedThrough = level.getGameTime() + 1_000;
         BlockPos source = master.below(structure.getMasterFromOriginOffset().getY());
+        for (Direction direction : Direction.Plane.HORIZONTAL) {
+            BlockPos outlet = source.above(2).relative(direction, 2);
+            level.setBlockAndUpdate(outlet, Blocks.AIR.defaultBlockState());
+        }
         helper.runAfterDelay(10, () -> {
-            helper.assertTrue(data.townProcessedTicks < 1_000 && state.getTempLevel() == 10,
+            helper.assertTrue(data.baseAccountedThrough - level.getGameTime() < 1_000 && data.process == 10_000 && state.getTempLevel() == 10,
                     "formed machine must tick through the town-processed branch");
             BlockPos query = source.east(5);
-            double natural = WorldTemperature.naturalBlock(level, query);
-            double floor = natural + data.getTempMod();
+            double natural = WorldTemperature.naturalAir(level, query);
+            var field = MinecraftThermalInput.analyticFieldsAt(level, query).get(0);
+            double floor = natural + field.temperatureCAt(query.getX() + .5, query.getY() + .5, query.getZ() + .5);
             helper.assertTrue(owner(level, source) != null,
                     "active generator production must start runtime without a player query");
-            helper.assertTrue(Math.abs(WorldTemperature.block(level, query) - floor) < 0.001,
+            helper.assertTrue(Math.abs(WorldTemperature.getTempAtBlock(level, query) - floor) < 0.001,
                     "formed generator must supply its gameplay temperature floor");
             TownThermalProjection projection = new TownThermalProjection();
             projection.include(query);
-            helper.assertTrue(Math.abs(MinecraftThermalInput.gameplayTownEnvironment(level, projection, natural)
+            helper.assertTrue(Math.abs(MinecraftThermalInput.sampleWeightedAirTemperature(level, projection, natural)
                     - floor) < 0.001, "town queries must receive the same regional floor");
-            var field = MinecraftThermalInput.gameplayAnalyticFieldsAt(level, query).get(0);
             int fuel = data.process;
             MinecraftThermalInput input = owner(level, source).input();
             helper.assertTrue(data.process == fuel, "bootstrap must not consume generator fuel");
             helper.runAfterDelay(50, () -> {
                 helper.assertTrue(present(input, source), "normal generator tick must restore source");
-                helper.assertTrue(MinecraftThermalInput.gameplayAnalyticFieldsAt(level, query).contains(field),
+                assertGeneratorExhaustPower(helper, input, source, expectedOutletPowerW);
+                for (Direction direction : Direction.Plane.HORIZONTAL) {
+                    BlockPos outlet = source.above(2).relative(direction, 2);
+                    double naturalAir = WorldTemperature.naturalAir(level, outlet);
+                    double physicalAir = ThermalGameplayFieldGameTests.rawAir(input, outlet);
+                    helper.assertTrue(Double.isFinite(physicalAir) && physicalAir > naturalAir + .05,
+                            "real generator must heat every horizontal outlet, including across Chunk boundaries: "
+                                    + direction + ", physical=" + physicalAir + ", natural=" + naturalAir);
+                }
+                helper.assertTrue(MinecraftThermalInput.analyticFieldsAt(level, query).contains(field),
                         "unchanged reports must retain the same field definition");
+                BlockPos blockedOutlet = source.above(2).east(2);
+                level.setBlockAndUpdate(blockedOutlet, Blocks.STONE.defaultBlockState());
                 MinecraftThermalInput.invalidateGameplayProfilesForRecipeReload();
-                helper.assertTrue(MinecraftThermalInput.gameplayAnalyticFieldsAt(level, query).contains(field),
+                helper.assertTrue(MinecraftThermalInput.analyticFieldsAt(level, query).contains(field),
                         "profile reload must preserve the world-owned field");
                 helper.runAfterDelay(50, () -> {
                     helper.assertTrue(owner(level, source) != null, "generator tick must restart runtime after reload");
                     MinecraftThermalInput next = owner(level, source).input();
                     helper.assertTrue(present(next, source) && data.process == fuel,
                             "unchanged production must recover without duplicate fuel consumption");
+                    helper.assertTrue(!Double.isFinite(ThermalGameplayFieldGameTests.rawAir(next, blockedOutlet)),
+                            "a blocked outlet must not receive Air heat through the solid block");
+                    for (Direction direction : Direction.Plane.HORIZONTAL) {
+                        if (direction == Direction.EAST) continue;
+                        BlockPos outlet = source.above(2).relative(direction, 2);
+                        helper.assertTrue(Double.isFinite(ThermalGameplayFieldGameTests.rawAir(next, outlet)),
+                                "blocking one outlet must leave the other three available: " + direction);
+                    }
+                    level.setBlockAndUpdate(blockedOutlet, Blocks.AIR.defaultBlockState());
                     data.isActive = false;
                     helper.runAfterDelay(40, () -> {
                         helper.assertTrue(!present(next, source), "inactive generator must release its source");
-                        helper.assertTrue(WorldTemperature.block(level, query) >= floor - 0.001,
+                        helper.assertTrue(WorldTemperature.getTempAtBlock(level, query) >= floor - 0.001,
                                 "inactive power must retain positive-level gameplay afterheat");
                         data.isActive = true;
                         helper.runAfterDelay(40, () -> {
                             helper.assertTrue(present(next, source), "generator must register after restart");
-                            level.destroyBlock(master, false);
-                            helper.assertTrue(MinecraftThermalInput.gameplayAnalyticFieldsAt(level, query).isEmpty(),
-                                    "authoritative disassembly must immediately remove the floor");
-                            helper.runAfterDelay(40, () -> {
-                                helper.assertTrue(!present(next, source), "disassembly must remove the source ID");
-                                MinecraftThermalInput.closeActiveLevel(level);
-                                helper.succeed();
+                            for (Direction direction : Direction.Plane.HORIZONTAL) {
+                                BlockPos outlet = source.above(2).relative(direction, 2);
+                                double physicalAir = ThermalGameplayFieldGameTests.rawAir(next, outlet);
+                                helper.assertTrue(Double.isFinite(physicalAir)
+                                                && physicalAir > WorldTemperature.naturalAir(level, outlet) + .05,
+                                        "every outlet must heat again after reopening and restart: " + direction);
+                            }
+                            data.TLevel = 1;
+                            helper.runAfterDelay(10, () -> {
+                                helper.assertTrue(state.getTempLevel() == 1,
+                                        "the actual machine must observe the lower temperature level");
+                                assertGeneratorExhaustPower(helper, next, source, expectedOutletPowerW);
+                                level.destroyBlock(master, false);
+                                helper.assertTrue(MinecraftThermalInput.analyticFieldsAt(level, query).isEmpty(),
+                                        "authoritative disassembly must immediately remove the floor");
+                                helper.runAfterDelay(40, () -> {
+                                    helper.assertTrue(!present(next, source), "disassembly must remove the source ID");
+                                    MinecraftThermalInput.closeActiveLevel(level);
+                                    helper.succeed();
+                                });
                             });
                         });
                     });
                 });
             });
         });
+    }
+
+    private static void assertGeneratorExhaustPower(GameTestHelper helper, MinecraftThermalInput input,
+            BlockPos source, double expectedOutletPowerW) {
+        com.teammoeg.frostedheart.content.climate.thermal.source.minecraft.PhysicalSourceSpatialIndex index =
+                read(input, "physicalSources");
+        it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap slots = read(index, "slotsById");
+        int slot = slots.get(source.asLong());
+        helper.assertTrue(slot >= 0, "the actual generator source must be registered");
+        double[] offered = read(index, "offeredPowerW");
+        double expectedTotalW = 4 * expectedOutletPowerW + 2_000;
+        helper.assertTrue(Math.abs(offered[slot] - expectedTotalW) < .001,
+                "generator total power must remain fixed at every positive temperature level: expected="
+                        + expectedTotalW + ", actual=" + offered[slot]);
+        byte[] profiles = read(index, "profileIds");
+        var profile = com.teammoeg.frostedheart.content.climate.thermal.source.minecraft.MinecraftPhysicalSourceProfile
+                .byId(Byte.toUnsignedInt(profiles[slot]));
+        helper.assertTrue(Math.abs(profile.radiativePowerW(offered[slot]) - 2_000) < .001,
+                "both generator tiers must retain exactly 2,000 W of radiation");
+        helper.assertTrue(source.equals(index.nearestEnabledGenerator(source, 0)),
+                "both generator tier profiles must be discoverable by the existing generator query");
+        int airPorts = 0;
+        for (int port = 0; port < profile.portCount(); port++) {
+            var definition = profile.port(port);
+            if (definition.kind() != com.teammoeg.frostedheart.content.climate.thermal.source.minecraft.MinecraftPhysicalSourceProfile.PortKind.AIR_FACE)
+                continue;
+            airPorts++;
+            helper.assertTrue(Math.abs(offered[slot] * definition.powerShare() - expectedOutletPowerW) < .001,
+                    "every generator outlet must receive its tier's fixed power: port=" + definition.portId()
+                            + ", expected=" + expectedOutletPowerW);
+        }
+        helper.assertTrue(airPorts == 4, "the generator must retain four physical Air outlets");
     }
 
     @GameTest(template = TEMPLATE, batch = "thermal_machine_radiator", timeoutTicks = 200)
@@ -817,7 +878,7 @@ public final class ThermalLoadedWorldGameTests {
         var player = FakePlayerFactory.getMinecraft(level);
         player.setPos(center.getX() + 0.5, center.getY() + 1.0, center.getZ() + 0.5);
         long begin = System.nanoTime();
-        MinecraftThermalInput.gameplayPlayerEnvironment(player, WorldTemperature.naturalAir(level, center),
+        MinecraftThermalInput.samplePlayerAirTemperature(player, WorldTemperature.naturalAir(level, center),
                 new ThermalEnvironmentSample());
         FHMain.LOGGER.info("Thermal production test startup: {} ms", (System.nanoTime() - begin) / 1_000_000.0);
         return owner(level, center).input();

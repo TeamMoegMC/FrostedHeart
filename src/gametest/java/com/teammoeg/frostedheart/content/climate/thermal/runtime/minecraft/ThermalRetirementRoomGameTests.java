@@ -83,7 +83,7 @@ public final class ThermalRetirementRoomGameTests {
         firstEnergy.defaultReturnValue(Double.NaN);
         var soil = new com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialSample();
         helper.startSequence().thenWaitUntil(() -> helper.assertTrue(
-                        MinecraftThermalInput.sampleMaterial(level, origin.offset(2, 0, 2), soil)
+                        MinecraftThermalInput.sampleMaterialTemperature(level, origin.offset(2, 0, 2), soil)
                                 && soil.law().transition(soil.branch()) != null,
                         "The deliberately placed ground must enter an actual phase publication"))
                 .thenIdle(400).thenExecute(() -> ContinuousAirProductionGameTests.useItem(helper, fire, Items.IRON_SHOVEL))
@@ -103,7 +103,7 @@ public final class ThermalRetirementRoomGameTests {
                 if (chunk == null) continue;
                 for (int dy = -4; dy <= 1; dy++) for (int dz = 0; dz < 16; dz += 2) for (int dx = 0; dx < 16; dx += 2) {
                     BlockPos p = new BlockPos(x * 16 + dx, origin.getY() + dy, z * 16 + dz);
-                    if (!MinecraftThermalInput.sampleMaterial(level, p, sample)) continue;
+                    if (!MinecraftThermalInput.sampleMaterialTemperature(level, p, sample)) continue;
                     var edge = sample.law().transition(sample.branch());
                     if (edge == null || edge.heating() || edge.progress(sample.enthalpyJ()) <= 0) continue;
                     double initial = firstEnergy.get(p.asLong());

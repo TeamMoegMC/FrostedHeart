@@ -38,15 +38,13 @@ import com.teammoeg.frostedheart.content.climate.thermal.field.ThermalAnalyticFi
 import com.teammoeg.frostedheart.content.climate.thermal.field.ThermalFieldKey;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftGameplayFields;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
-import com.teammoeg.frostedheart.util.Lang;
+import com.teammoeg.frostedheart.content.town.observation.TownSignalEvent;
 import com.teammoeg.frostedresearch.FRSpecialDataTypes;
 import com.teammoeg.frostedresearch.data.ResearchVariant;
 
-import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
@@ -81,8 +79,8 @@ public class GeneratorData implements SpecialData {
                     .flag("isActive", o -> o.isActive)
                     .flag("isBroken", o -> o.isBroken).build(),
             Codec.FLOAT.fieldOf("steamLevel").forGetter(o -> o.steamLevel),
-            Codec.FLOAT.fieldOf("powerLevel").forGetter(o -> o.power),
-            Codec.FLOAT.optionalFieldOf("lastPowerLevel",0f).forGetter(o -> o.power),
+            Codec.FLOAT.optionalFieldOf("powerLevel", 0f).forGetter(o -> o.legacyOutletHeat),
+            Codec.LONG.optionalFieldOf("baseAccountedThrough", -1L).forGetter(o -> o.baseAccountedThrough),
             Codec.INT.optionalFieldOf("heated",0).forGetter(o -> o.heated),
             Codec.INT.optionalFieldOf("ranged",0).forGetter(o -> o.ranged),
             Codec.FLOAT.fieldOf("tempLevel").forGetter(o -> o.TLevel),
@@ -124,8 +122,12 @@ public class GeneratorData implements SpecialData {
     public int overdriveLevel = 0;
     public int heated, ranged;
     public float steamLevel;
-    public float lastPower;
-    public float power;
+    // Old saves stored the same offer twice. Only one copy can seed a legacy outlet.
+    private float legacyOutletHeat;
+    /** Last game tick covered by a town batch, including a failed batch. Kept across a reload. */
+    public long baseAccountedThrough = -1;
+    /** A live step only needs in-memory deduplication; idle ticks must not alter the team save. */
+    private transient long lastLiveBaseTick = -1;
     public boolean isWorking, isOverdrive, isActive, isBroken;
     public float TLevel, RLevel;
     public ItemStack currentItem = ItemStack.EMPTY;
@@ -133,7 +135,6 @@ public class GeneratorData implements SpecialData {
     public short masterYPosInMB;
 
     public ResourceKey<Level> dimension;
-    public transient int townProcessedTicks = 0;
 
     public GeneratorData(SpecialDataHolder teamData) {
     }
@@ -155,7 +156,7 @@ public class GeneratorData implements SpecialData {
         MinecraftGameplayFields.upsertSphere(level, gameplayFieldKey, 0,
                 ThermalAnalyticField.CombineMode.FLOOR_FROM_NATURAL,
                 actualPos.getX() + 0.5D, actualPos.getY() - masterYPosInMB + 0.5D,
-                actualPos.getZ() + 0.5D, radius, delta);
+                actualPos.getZ() + 0.5D, radius, delta, GeneratorHeatFieldModel.CENTER_BOOST_CELSIUS);
     }
 
     public void removeGameplayHeat(MinecraftServer server) {
@@ -177,7 +178,7 @@ public class GeneratorData implements SpecialData {
     }
 
 
-    public GeneratorData(int process, int processMax, int overdriveLevel, boolean[] flags, float steamLevel, float power,float lastPower, int heated, int ranged, float tLevel, float rLevel, CompoundTag inventory, ItemStack currentItem, Optional<BlockPos> actualPos,short masterYPosInMB, Optional<ResourceLocation> dimension) {
+    public GeneratorData(int process, int processMax, int overdriveLevel, boolean[] flags, float steamLevel, float legacyOutletHeat, long baseAccountedThrough, int heated, int ranged, float tLevel, float rLevel, CompoundTag inventory, ItemStack currentItem, Optional<BlockPos> actualPos,short masterYPosInMB, Optional<ResourceLocation> dimension) {
         super();
         this.process = process;
         this.processMax = processMax;
@@ -185,8 +186,8 @@ public class GeneratorData implements SpecialData {
         this.steamLevel = steamLevel;
         this.heated = heated;
         this.ranged = ranged;
-        this.power = power;
-        this.lastPower=lastPower;
+        this.legacyOutletHeat = legacyOutletHeat;
+        this.baseAccountedThrough = baseAccountedThrough;
         this.isWorking = flags[0];
         this.isOverdrive = flags[1];
         this.isActive = flags[2];
@@ -276,31 +277,30 @@ public class GeneratorData implements SpecialData {
         return 64;
     }
     
-    /**
-     * Core tick function for generator called in HeatingLogic#tickFuel
-     * It does the internal logic for fuel and heating.
-     * But does not update the heat adjust. That is done in HeatingLogic#serverTick
-     * @param w
-     */
-    public void tickBlock(Level w, SpecialDataHolder<?> teamData){
-        if (townProcessedTicks > 0) {
-            townProcessedTicks--;
-            return;
-        }
-        isActive = tickFuelProcess(w,teamData,1);
-        tickHeatedProcess(w,1);
+    /** Advances the base tower simulation only for a tick that was not already processed by the town. */
+    public void tickBlock(Level world, SpecialDataHolder<?> team) {
+        long tick = world.getGameTime();
+        if (tick <= baseAccountedThrough || tick <= lastLiveBaseTick) return;
+        settleBase(world, team, 1);
+        lastLiveBaseTick = tick;
     }
 
-    //来自城镇的tick
-    public void townTick(Level w, SpecialDataHolder<?> teamData) {
-        if (actualPos == null)
-            return;
+    /** At level START the overworld has yet to advance gameTime; derived levels already share the advanced clock. */
+    public void townTick(Level world, SpecialDataHolder<?> team) {
+        if (actualPos == null) return;
+        int interval = FHConfig.SERVER.TOWN.townUpdateIntervalGameTicks.get();
+        long first = world.getGameTime() + (world.dimension().equals(Level.OVERWORLD) ? 1L : 0L);
+        long end = first + interval - 1L;
+        long covered = Math.max(baseAccountedThrough, lastLiveBaseTick);
+        if (end <= covered) return;
+        int unsettled = (int) (end - Math.max(first - 1L, covered));
+        settleBase(world, team, unsettled);
+        baseAccountedThrough = end;
+    }
 
-        int townBatchTicks = FHConfig.SERVER.TOWN.townUpdateIntervalGameTicks.get();
-        lastPower = power;
-        isActive = tickFuelProcess(w,teamData,townBatchTicks);
-        tickHeatedProcess(w,townBatchTicks);
-        townProcessedTicks = townBatchTicks;
+    private void settleBase(Level world, SpecialDataHolder<?> team, int ticks) {
+        isActive = tickFuelProcess(world, team, ticks);
+        tickHeatedProcess(world, ticks);
     }
 
     public void tickHeatedProcess(Level world, int ticks) {
@@ -337,42 +337,29 @@ public class GeneratorData implements SpecialData {
     public boolean hasFuel() {
     	return process>0||!inventory.getStackInSlot(INPUT_SLOT).isEmpty();
     }
-    private static final Style WARN_STYLE=Style.EMPTY.withColor(ChatFormatting.RED).withBold(true);
     public boolean tickFuelProcess(Level w,SpecialDataHolder<?> teamData,int ticks) {
 
-        boolean hasFuel = true;
         int lastOverdrive=overdriveLevel;
         if (isBroken)
             return false;
         overdriveLevel -= 5 * ticks * (teamData.getData(FRSpecialDataTypes.RESEARCH_DATA).getVariantDouble(ResearchVariant.OVERDRIVE_RECOVER) + 1);
 
-        boolean isWorking=false;
+        boolean paidBase = false;
         
         if(this.isWorking) {
             FHConfig.Server.Town.GeneratorT1 config = FHConfig.SERVER.TOWN.GENERATOR_T1;
             int baseFuelCost = Math.multiplyExact(
                     ticks, config.baseProcessTicksPerGameTick.get());
 
-        	float maxPower=steamLevel*25;//calculate max steam heat
-        	float powerRemain=Math.max(0, maxPower-lastPower);//then calculate heat required to generate
-        	double efficiency=getHeatEfficiency(teamData);//get team heat efficiency
-
-            float actualPowerCost=(float) (powerRemain / efficiency/ 25f * 8f);//25 heat per 8 fuel tick
-            int extraCost = Mth.floor(actualPowerCost);
-
             if (isOverdrive) {
                 baseFuelCost = Math.addExact(baseFuelCost, Math.multiplyExact(
                         ticks, config.overdriveExtraProcessTicksPerGameTick.get()));
             }
 
-	        //System.out.println(baseFuelCost+","+extraCost);
-            while (GeneratorFuelModel.shouldLoadNextFuel(process, baseFuelCost + extraCost) && hasFuel) {
-                hasFuel = consumesFuel(w,teamData);
-            }
-           
+            loadFuelFor(w, teamData, baseFuelCost);
             if (process >= baseFuelCost) {
                 process -= baseFuelCost;
-                isWorking=true;
+                paidBase = true;
                 if(isOverdrive) {
                     overdriveLevel += 20 * ticks;
 	                if (overdriveLevel >= this.getMaxOverdrive()) {
@@ -380,24 +367,44 @@ public class GeneratorData implements SpecialData {
 	                }
                 }
             }
-            if(isWorking) {
-            	int actualCost=Math.min(extraCost, process);
-            	process-=actualCost;
-            	power=lastPower+(float)(efficiency*actualCost/8f*25);//refills power
-            	
-            }
-	        if(teamData instanceof TeamDataHolder team) {
+            if(teamData instanceof TeamDataHolder team) {
 	        	if(lastOverdrive<=getCriticalOverdriveValue()&&overdriveLevel>getCriticalOverdriveValue()) {
-		        	team.forEachOnline(t->t.sendSystemMessage(Lang.translateTooltip("generator.critical").withStyle(WARN_STYLE)));
+                    team.getData(FHSpecialDataTypes.TOWN_DATA).queueTowerOverdriveWarning(TownSignalEvent.Type.TOWER_OVERDRIVE_CRITICAL);
 		        }else
 		        if(lastOverdrive<=getWarningOverdriveValue()&&overdriveLevel>getWarningOverdriveValue()) {
-		        	team.forEachOnline(t->t.sendSystemMessage(Lang.translateTooltip("generator.warning").withStyle(WARN_STYLE)));
+                    team.getData(FHSpecialDataTypes.TOWN_DATA).queueTowerOverdriveWarning(TownSignalEvent.Type.TOWER_OVERDRIVE_WARNING);
 		        }
 	        }
         }
-        lastPower=0;
         overdriveLevel=Math.max(0, overdriveLevel);
-        return isWorking;
+        return paidBase;
+    }
+
+    private void loadFuelFor(Level world, SpecialDataHolder<?> team, int cost) {
+        while (GeneratorFuelModel.shouldLoadNextFuel(process, cost) && consumesFuel(world, team)) {
+            // Carry the previous item's unused process ticks across the refill.
+        }
+    }
+
+    /** Buys only missing pressure in a live T2 outlet, separately from its already settled base burn. */
+    public float buyOutletHeat(Level world, SpecialDataHolder<?> team, float remainingHeat) {
+        if (!isActive || !isWorking || isBroken) return 0;
+        float deficit = steamLevel * 25F - remainingHeat;
+        if (deficit <= 0) return 0;
+        double heatPerProcess = getHeatEfficiency(team) * 25D / 8D;
+        int requested = Mth.floor(deficit / heatPerProcess);
+        if (requested <= 0) return 0;
+        loadFuelFor(world, team, requested);
+        int paid = Math.min(process, requested);
+        process -= paid;
+        return (float) (paid * heatPerProcess);
+    }
+
+    /** Takes the old pending offer once; its duplicate legacy lastPowerLevel is deliberately ignored. */
+    public float takeLegacyOutletHeat() {
+        float saved = legacyOutletHeat;
+        legacyOutletHeat = 0;
+        return saved;
     }
 
     public void onPosChange() {
@@ -407,8 +414,9 @@ public class GeneratorData implements SpecialData {
         RLevel = 0;
         process = 0;
         processMax = 0;
-        power = 0;
-        lastPower=0;
+        legacyOutletHeat = 0;
+        baseAccountedThrough = -1;
+        lastLiveBaseTick = -1;
     }
 
     protected double getHeatEfficiency(SpecialDataHolder<?> teamData) {

@@ -21,6 +21,7 @@
   "gui.frostedheart.warehouse_interface.transport.rate_increase_rejected": "运力不足，无法上调",
   "gui.frostedheart.warehouse_interface.transport.invalid_request": "速率请求无效",
   "gui.frostedheart.warehouse_interface.transport.current_rate": "当前物品传输速率：%s 物品/秒",
+  "gui.frostedheart.warehouse_interface.transport.current_rate_minute": "实际速率：每分钟 %s 个",
   "gui.frostedheart.warehouse_interface.transport.reserved": "占用运力：%s",
   "gui.frostedheart.warehouse_interface.transport.town_capacity": "城镇运力：剩余 %s / 总量 %s",
   "message.frostedheart.warehouse_interface.transport.new_endpoint_rejected": "运力不足，无法新增；接口速率已设为 0"

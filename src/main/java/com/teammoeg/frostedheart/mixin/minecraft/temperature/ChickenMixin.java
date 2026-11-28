@@ -151,7 +151,7 @@ public abstract class ChickenMixin extends Animal implements IFeedStore {
                     this.hurt(FHDamageSources.blizzard(level()), 1);
                 }
             } else {
-                float temp = WorldTemperature.block(this.getCommandSenderWorld(), this.blockPosition());
+                float temp = WorldTemperature.getTempAtBlock(this.getCommandSenderWorld(), this.blockPosition());
                 if (temp < WorldTemperature.ANIMAL_ALIVE_TEMPERATURE
                         || temp > WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE_MAX) {
                     if (hxteTimer < 100) {

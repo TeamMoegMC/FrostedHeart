@@ -1,0 +1,38 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "PPP",
+    "TCT",
+    "IVI"
+  ],
+  "key": {
+    "P": [
+      {
+        "tag": "forge:plates/iron"
+      },
+      {
+        "tag": "forge:plates/steel"
+      }
+    ],
+    "T": {
+      "item": "minecraft:redstone_torch"
+    },
+    "C": {
+      "tag": "forge:plates/copper"
+    },
+    "I": [
+      {
+        "tag": "forge:ingots/iron"
+      },
+      {
+        "tag": "forge:ingots/steel"
+      }
+    ],
+    "V": {
+      "tag": "forge:plates/invar"
+    }
+  },
+  "result": {
+    "item": "frostedheart:temperature_sensor"
+  }
+}

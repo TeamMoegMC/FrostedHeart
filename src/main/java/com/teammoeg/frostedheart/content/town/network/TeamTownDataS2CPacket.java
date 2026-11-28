@@ -39,27 +39,32 @@ public final class TeamTownDataS2CPacket implements CMessage {
     private final UUID holderId;
     private final Object data;
     private final Object transport;
+    /** The energy tower's position travels beside the town data, which does not save it. */
+    @javax.annotation.Nullable
+    private final net.minecraft.core.BlockPos tower;
 
-    private TeamTownDataS2CPacket(State state, UUID holderId, Object data, Object transport) {
+    private TeamTownDataS2CPacket(State state, UUID holderId, Object data, Object transport,
+                                  @javax.annotation.Nullable net.minecraft.core.BlockPos tower) {
         this.state = state;
         this.holderId = holderId;
         this.data = data;
         this.transport = transport;
+        this.tower = tower;
     }
 
     public static TeamTownDataS2CPacket pending(UUID holderId) {
-        return new TeamTownDataS2CPacket(State.PENDING, holderId, null, null);
+        return new TeamTownDataS2CPacket(State.PENDING, holderId, null, null, null);
     }
 
     public static TeamTownDataS2CPacket absent(UUID holderId) {
-        return new TeamTownDataS2CPacket(State.ABSENT, holderId, null, null);
+        return new TeamTownDataS2CPacket(State.ABSENT, holderId, null, null, null);
     }
 
     public static TeamTownDataS2CPacket present(UUID holderId, TeamTownData town) throws Exception {
         Object data = CodecUtil.encodeOrThrow(TeamTownData.MANAGEMENT_CODEC.encodeStart(DataOps.COMPRESSED, town));
         Object transport = CodecUtil.encodeOrThrow(TownTransportSnapshot.CODEC.encodeStart(
                 DataOps.COMPRESSED, town.createTeamTown().getTransportSnapshot()));
-        return new TeamTownDataS2CPacket(State.PRESENT, java.util.Objects.requireNonNull(holderId), data, transport);
+        return new TeamTownDataS2CPacket(State.PRESENT, java.util.Objects.requireNonNull(holderId), data, transport, town.getTowerPos());
     }
 
     /** Compatibility for codec tests; production sends use TownSync and the real holder ID. */
@@ -68,7 +73,7 @@ public final class TeamTownDataS2CPacket implements CMessage {
     }
 
     private TeamTownDataS2CPacket(TeamTownDataS2CPacket captured) {
-        this(captured.state, captured.holderId, captured.data, captured.transport);
+        this(captured.state, captured.holderId, captured.data, captured.transport, captured.tower);
     }
 
     private static TeamTownDataS2CPacket captureForTest(TeamTownData town) {
@@ -81,6 +86,7 @@ public final class TeamTownDataS2CPacket implements CMessage {
         holderId = buffer.readBoolean() ? buffer.readUUID() : null;
         data = state == State.PRESENT ? ObjectWriter.readObject(buffer) : null;
         transport = state == State.PRESENT ? ObjectWriter.readObject(buffer) : null;
+        tower = state == State.PRESENT && buffer.readBoolean() ? buffer.readBlockPos() : null;
     }
 
     TeamTownData decodeTownData() throws Exception {
@@ -88,6 +94,7 @@ public final class TeamTownDataS2CPacket implements CMessage {
         TownTransportSnapshot snapshot = CodecUtil.decodeOrThrow(
                 TownTransportSnapshot.CODEC.decode(DataOps.COMPRESSED, transport));
         town.applyTransportSnapshot(snapshot);
+        town.applyTowerUpdate(tower);
         return town;
     }
 
@@ -114,6 +121,8 @@ public final class TeamTownDataS2CPacket implements CMessage {
         if (state == State.PRESENT) {
             ObjectWriter.writeObject(buffer, data);
             ObjectWriter.writeObject(buffer, transport);
+            buffer.writeBoolean(tower != null);
+            if (tower != null) buffer.writeBlockPos(tower);
         }
     }
 }

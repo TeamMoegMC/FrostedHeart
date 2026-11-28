@@ -92,8 +92,7 @@ public class GeneratorState extends HeatingState {
         	
             if(origin.equals(dat.actualPos) && level.dimension().equals(dat.dimension)) {
                 dat.tickBlock(level, teamData);
-        		dat.lastPower=endpoint.getHeat();
-        		endpoint.setHeat(dat.power);
+                updateOutlet(level, teamData, dat);
                 endpoint.setTempLevel(dat.TLevel);
                 this.setRangeLevel(dat.RLevel);
         		this.setTempLevel(dat.TLevel);
@@ -104,6 +103,10 @@ public class GeneratorState extends HeatingState {
         this.setRangeLevel(0);
     	this.setTempLevel(0);
     }
+    /** T1 has no steam outlet; T2 settles its real provider after network extraction. */
+    protected void updateOutlet(Level level, TeamDataHolder team, GeneratorData data) {
+    }
+
     /**
      * @param origin the origin to check
      * @return if the GeneratorData from the owned team with the given origin is present.

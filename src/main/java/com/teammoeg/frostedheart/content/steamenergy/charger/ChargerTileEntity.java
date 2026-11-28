@@ -21,8 +21,8 @@ package com.teammoeg.frostedheart.content.steamenergy.charger;
 
 import static net.minecraft.ChatFormatting.GRAY;
 
-import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
 import com.teammoeg.frostedheart.content.climate.render.TemperatureGoogleRenderer;
 import com.teammoeg.frostedheart.content.steamenergy.ClientHeatNetworkData;
@@ -35,30 +35,40 @@ import com.teammoeg.chorda.block.entity.CTickableBlockEntity;
 import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
+import com.teammoeg.frostedheart.bootstrap.reference.FHParticleTypes;
 import com.teammoeg.frostedheart.content.climate.recipe.CampfireDefrostRecipe;
 import com.teammoeg.frostedheart.content.steamenergy.HeatEndpoint;
 import com.teammoeg.frostedheart.content.steamenergy.HeatNetwork;
 import com.teammoeg.frostedheart.content.steamenergy.HeatNetworkProvider;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatStorageCapability;
+import com.teammoeg.frostedheart.content.stratadrill.StrataDrillAssembly;
+import com.teammoeg.frostedheart.content.stratadrill.StrataDrillPower;
 import com.teammoeg.frostedheart.util.Lang;
 import com.teammoeg.frostedheart.util.client.FHClientUtils;
 
-import blusunrize.immersiveengineering.common.blocks.IEBaseBlockEntity;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.AbstractCookingRecipe;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.item.crafting.SmokingRecipe;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.phys.AABB;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
 
@@ -66,6 +76,21 @@ public class ChargerTileEntity extends CBlockEntity implements CTickableBlockEnt
         IHaveGoggleInformation, HeatNetworkProvider {
     public static final int INPUT_SLOT = 0;
     public static final int OUTPUT_SLOT = 1;
+    private static final float CHARGER_POINTS_PER_HEAT = 1000F;
+    // Preserve the save key already used by docked S04 drills.
+    private static final String DOCKED_ITEM = "dockedDrill";
+    private static final String DOCK_STATE = "drillDockState";
+    private static final String DOCK_APPEARANCE = "drillDockAppearance";
+    private static final byte DOCK_EMPTY = 0, DOCK_OCCUPIED = 1, DOCK_FULL = 2;
+
+    // On clients the stack is a model-only projection, never the actual dock inventory.
+    private ItemStack dockedItem = ItemStack.EMPTY;
+    @Nullable private HeatStorageCapability dockedHeat;
+    @Nullable private CompoundTag dockAppearance;
+    @Nullable private AABB dockRenderBounds;
+    private boolean dockNeedsCharge;
+    private float lastUnaffordableDockBalance = Float.NaN;
+    private byte clientDockState;
 
     HeatEndpoint network =HeatEndpoint.consumer(-10, 5);
     float power;
@@ -100,12 +125,6 @@ public class ChargerTileEntity extends CBlockEntity implements CTickableBlockEnt
         return super.getCapability(cap, dir);
     }
 
-    public void drawEffect() {
-        if (level != null && level.isClientSide) {
-            FHClientUtils.spawnSteamParticles(level, this.getBlockPos());
-        }
-    }
-
     public Direction getDirection() {
         return this.getBlockState().getValue(BlockStateProperties.FACING);
     }
@@ -123,76 +142,197 @@ public class ChargerTileEntity extends CBlockEntity implements CTickableBlockEnt
         return null;
     }
 
-    public InteractionResult onClick(Player pe, ItemStack is) {
-        if (is != null) {
-            LazyOptional<HeatStorageCapability> cap=FHCapabilities.ITEM_HEAT.getCapability(is);
-            if (cap.isPresent()) {
-                float actual= cap.resolve().get().receiveEnergy(power, false);
-                power -=actual;
-                if(actual>0)
-                	drawEffect();
-                return InteractionResult.SUCCESS;
+    public InteractionResult onClick(Player player, InteractionHand hand) {
+        ItemStack held = player.getItemInHand(hand);
+        boolean client = level.isClientSide;
+        if (held.isEmpty()) {
+            // An empty offhand can also be tried when the player clicks with an unrelated main-hand item.
+            if (hand != InteractionHand.MAIN_HAND || (client ? clientDockState == DOCK_EMPTY : dockedItem.isEmpty())) {
+                return InteractionResult.PASS;
             }
-            ChargerRecipe cr = findRecipe(is);
-            if (cr != null) {
-                if (power >= cr.cost && is.getCount() >= cr.input.getCount()) {
-                    if (!level.isClientSide) {
-                        power -= cr.cost;
-                        is.setCount(is.getCount() - cr.input.getCount());
-                        ItemStack gain = cr.output.copy();
-                        CUtils.giveItem(pe, gain);
-                        setChanged();
-                        this.syncData();
-                    }
-                    drawEffect();
-                    return InteractionResult.SUCCESS;
-                }
+            if (!client) {
+                player.setItemInHand(hand, takeDockedItem());
+                syncClientState();
             }
+            return InteractionResult.sidedSuccess(client);
+        }
+        if (StrataDrillAssembly.isDrill(held)) {
+            if (!StrataDrillPower.canDockSteam(held)) return InteractionResult.PASS;
+            return putInDock(player, hand, held, true);
+        }
+        HeatStorageCapability heat = FHCapabilities.ITEM_HEAT.getCapability(held).orElse(null);
+        if (heat != null && heat.usesChargerDock()) return putInDock(player, hand, held, false);
+        return useExistingCharge(player, held, heat);
+    }
 
-            if (power >= 100) {
-                List<SmokingRecipe> irs = this.level.getRecipeManager().getAllRecipesFor(RecipeType.SMOKING);
-                for (SmokingRecipe sr : irs) {
-                    if (sr.getIngredients().iterator().next().test(is)) {
-                        if (!level.isClientSide) {
-                            power -= (float) sr.getCookingTime() / 20;
-                            splitAndSpawnExperience(pe.getCommandSenderWorld(), pe.blockPosition(), sr.getExperience());
-                            is.setCount(is.getCount() - 1);
-                            ItemStack gain = sr.assemble(null, this.level.registryAccess()).copy();
-                            CUtils.giveItem(pe, gain);
-                            setChanged();
-                            this.syncData();
-                        }
-                        drawEffect();
-                        return InteractionResult.SUCCESS;
-                    }
+    private InteractionResult putInDock(Player player, InteractionHand hand, ItemStack held, boolean steamDrill) {
+        boolean client = level.isClientSide;
+        if (!client) {
+            if (dockedItem.isEmpty()) {
+                setDockedItem(held.split(1), steamDrill);
+                if (held.isEmpty()) player.setItemInHand(hand, ItemStack.EMPTY);
+                if (!steamDrill) {
+                    player.displayClientMessage(Lang.translateMessage("charger.dock_inserted"), true);
                 }
-            }
-            {
-                Collection<CampfireDefrostRecipe> irs = CampfireDefrostRecipe.recipeList.values();
-                for (CampfireDefrostRecipe sr : irs) {
-                    if (sr.getIngredient().test(is)) {
-                        if (!level.isClientSide) {
-                            power -= (float) sr.getCookingTime() / 80;
-                            splitAndSpawnExperience(pe.getCommandSenderWorld(), pe.blockPosition(), sr.getExperience());
-                            is.setCount(is.getCount() - 1);
-                            ItemStack gain = sr.assemble(null, this.level.registryAccess()).copy();
-                            CUtils.giveItem(pe, gain);
-                            setChanged();
-                            this.syncData();
-                        }
-                        drawEffect();
-                        return InteractionResult.SUCCESS;
-                    }
-                }
+                syncClientState();
+            } else {
+                player.displayClientMessage(Lang.translateMessage("charger.dock_busy"), true);
             }
         }
-        return InteractionResult.PASS;
+        return InteractionResult.sidedSuccess(client);
+    }
+
+    /** Resolve the owned stack's charging method once on insertion or save load. */
+    private void setDockedItem(ItemStack stack, boolean steamDrill) {
+        dockedItem = stack;
+        HeatStorageCapability heat = steamDrill || stack.isEmpty() ? null
+                : FHCapabilities.ITEM_HEAT.getCapability(stack).orElse(null);
+        dockedHeat = heat != null && heat.usesChargerDock() ? heat : null;
+        dockNeedsCharge = (steamDrill || dockedHeat != null) && !dockFull();
+        lastUnaffordableDockBalance = Float.NaN;
+        dockAppearance = StrataDrillAssembly.dockAppearance(stack);
+        if (dockAppearance == null && dockedHeat != null) {
+            // The other dockable items use their stock model without any item NBT.
+            dockAppearance = new CompoundTag();
+            dockAppearance.putString("id", BuiltInRegistries.ITEM.getKey(stack.getItem()).toString());
+            dockAppearance.putByte("Count", (byte) 1);
+        }
+    }
+
+    /** Remove the original stack before handing it back or dropping it on block replacement. */
+    ItemStack takeDockedItem() {
+        ItemStack result = dockedItem;
+        dockedItem = ItemStack.EMPTY;
+        dockedHeat = null;
+        dockAppearance = null;
+        dockNeedsCharge = false;
+        return result;
+    }
+
+    /** The model inputs saved in the update tag, with no fuel or inventory state. */
+    public ItemStack getDockedDisplay() {
+        return level != null && level.isClientSide ? dockedItem : ItemStack.EMPTY;
+    }
+
+    @Override
+    public AABB getRenderBoundingBox() {
+        return dockRenderBounds == null ? super.getRenderBoundingBox() : dockRenderBounds;
+    }
+
+    private byte dockState() {
+        if (dockedItem.isEmpty()) return DOCK_EMPTY;
+        return dockFull() ? DOCK_FULL : DOCK_OCCUPIED;
+    }
+
+    private boolean dockFull() {
+        return dockedHeat != null ? dockedHeat.isFull()
+                : StrataDrillPower.steamStored(dockedItem) >= StrataDrillPower.STEAM_CAPACITY;
+    }
+
+    /** Save internal contents and synchronize the visible state without a comparator/neighbor scan. */
+    private void syncClientState() {
+        level.blockEntityChanged(worldPosition);
+        BlockState state = getBlockState();
+        level.sendBlockUpdated(worldPosition, state, state, Block.UPDATE_CLIENTS);
+    }
+
+    private InteractionResult useExistingCharge(Player player, ItemStack input, @Nullable HeatStorageCapability heat) {
+        boolean client = level.isClientSide;
+        if (heat != null) {
+            if (!client) {
+                float actual = heat.receiveEnergy(power, false);
+                if (actual > 0F) {
+                    power -= actual;
+                    finishLegacyCharge(player);
+                }
+            }
+            return InteractionResult.sidedSuccess(client);
+        }
+
+        // Partial dock updates are not sent every tick. Claim a matching input without predicting its
+        // affordability so vanilla does not also use the other hand or the item in the air.
+        boolean pendingDock = client ? clientDockState == DOCK_OCCUPIED : dockNeedsCharge;
+        boolean matched = false;
+        ChargerRecipe recipe = findRecipe(input);
+        if (recipe != null && recipe.cost >= 0F && input.getCount() >= recipe.input.getCount()) {
+            if (client && pendingDock) return InteractionResult.CONSUME;
+            if (power >= recipe.cost) {
+                if (!client) {
+                    power -= recipe.cost;
+                    input.shrink(recipe.input.getCount());
+                    CUtils.giveItem(player, recipe.output.copy());
+                    finishLegacyCharge(player);
+                }
+                return InteractionResult.SUCCESS;
+            }
+            matched = true;
+        }
+
+        if (power >= 100F || pendingDock) {
+            for (SmokingRecipe smoking : level.getRecipeManager().getAllRecipesFor(RecipeType.SMOKING)) {
+                if (!smoking.getIngredients().get(0).test(input)) continue;
+                float cost = smoking.getCookingTime() / 20F;
+                if (cost >= 0F) {
+                    if (client && pendingDock) return InteractionResult.CONSUME;
+                    if (power >= 100F && power >= cost) return finishCooking(player, input, smoking, cost);
+                    matched = true;
+                }
+                break;
+            }
+        }
+        for (CampfireDefrostRecipe defrost : CampfireDefrostRecipe.recipeList.values()) {
+            if (defrost.getIngredient().test(input)) {
+                float cost = defrost.getCookingTime() / 80F;
+                if (cost >= 0F) {
+                    if (client && pendingDock) return InteractionResult.CONSUME;
+                    if (power >= cost) return finishCooking(player, input, defrost, cost);
+                    matched = true;
+                }
+                break;
+            }
+        }
+        return pendingDock && matched ? InteractionResult.CONSUME : InteractionResult.PASS;
+    }
+
+    private InteractionResult finishCooking(Player player, ItemStack input, AbstractCookingRecipe recipe, float cost) {
+        if (!level.isClientSide) {
+            power -= cost;
+            splitAndSpawnExperience(level, player.blockPosition(), recipe.getExperience());
+            input.shrink(1);
+            CUtils.giveItem(player, recipe.assemble(null, level.registryAccess()).copy());
+            finishLegacyCharge(player);
+        }
+        return InteractionResult.SUCCESS;
+    }
+
+    /** Successful legacy uses report one authoritative steam puff to the initiating player. */
+    private void finishLegacyCharge(Player player) {
+        syncClientState();
+        if (level instanceof ServerLevel server && player instanceof ServerPlayer viewer && viewer.connection != null) {
+            server.sendParticles(viewer, FHParticleTypes.STEAM.get(), false,
+                    worldPosition.getX() + 0.5D, worldPosition.getY() + 0.4D, worldPosition.getZ() + 0.5D,
+                    0, 0D, 0.05D, 0D, 1D);
+        }
     }
 
     @Override
     public void readCustomNBT(CompoundTag nbt, boolean descPacket) {
-        power = nbt.getFloat("power");
+        // Old unfunded cooking could leave a negative value, never usable as station credit.
+        power = Math.max(0F, nbt.getFloat("power"));
         network.load(nbt, descPacket);
+        if (descPacket) {
+            clientDockState = nbt.getByte(DOCK_STATE);
+            CompoundTag appearance = nbt.contains(DOCK_APPEARANCE, Tag.TAG_COMPOUND) ? nbt.getCompound(DOCK_APPEARANCE) : null;
+            if (!Objects.equals(dockAppearance, appearance)) {
+                dockAppearance = appearance;
+                dockedItem = appearance == null ? ItemStack.EMPTY : ItemStack.of(appearance);
+                dockRenderBounds = dockedItem.isEmpty() ? null : new AABB(worldPosition).inflate(0.2);
+            }
+        } else {
+            ItemStack stack = nbt.contains(DOCKED_ITEM, Tag.TAG_COMPOUND)
+                    ? ItemStack.of(nbt.getCompound(DOCKED_ITEM)) : ItemStack.EMPTY;
+            setDockedItem(stack, !stack.isEmpty() && StrataDrillPower.canDockSteam(stack));
+        }
     }
 
     @Override
@@ -201,17 +341,38 @@ public class ChargerTileEntity extends CBlockEntity implements CTickableBlockEnt
             return;
         }
         if (!level.isClientSide) {
+            boolean charging = dockNeedsCharge;
             float actual = 0;
             if (power < getMaxPower()) {
-                actual = network.drainHeat(network.getMaxIntake());
+                float requested = Math.min(network.getMaxIntake(),
+                        (getMaxPower() - power) / CHARGER_POINTS_PER_HEAT);
+                float storedHeat = network.getHeat();
+                actual = Math.min(storedHeat, requested);
+                if (actual > 0F) {
+                    // Endpoint load grace can replay a saved reading for active heating, not mint durable station points.
+                    network.setHeat(storedHeat - actual);
+                    power = Math.min(power + actual * CHARGER_POINTS_PER_HEAT, getMaxPower());
+                }
             }
-            if (actual > 0) {
-                power = Math.min(power + actual * 1000, getMaxPower());
-                this.setActive(true);
-                setChanged();
-                this.syncData();
-            } else
-                this.setActive(false);
+            float spent = 0F;
+            if (charging && power > 0F && power != lastUnaffordableDockBalance) {
+                spent = dockedHeat != null ? dockedHeat.chargeAtDock(power)
+                        : StrataDrillPower.chargeDockedSteam(dockedItem, power);
+                // Retry only when idle balance changes or the slot is installed/reloaded.
+                lastUnaffordableDockBalance = spent > 0F ? Float.NaN : power;
+            }
+            if (spent > 0F) {
+                power -= spent;
+                dockNeedsCharge = !dockFull();
+            }
+            setActive(actual > 0F || spent > 0F);
+            if (charging) {
+                // Persist live progress; no explicit progress packets for an occupied slot.
+                if (!dockNeedsCharge) syncClientState();
+                else if (actual > 0F || spent > 0F) level.blockEntityChanged(worldPosition);
+            } else if (actual > 0F) {
+                syncClientState();
+            }
         } else if (getIsActive()) {
             if (level.random.nextFloat() < 0.01F) {
                 FHClientUtils.spawnSteamParticles(level, worldPosition);
@@ -223,6 +384,12 @@ public class ChargerTileEntity extends CBlockEntity implements CTickableBlockEnt
     public void writeCustomNBT(CompoundTag nbt, boolean descPacket) {
         nbt.putFloat("power", power);
         network.save(nbt, descPacket);
+        if (descPacket) {
+            nbt.putByte(DOCK_STATE, dockState());
+            if (dockAppearance != null) nbt.put(DOCK_APPEARANCE, dockAppearance);
+        } else if (!dockedItem.isEmpty()) {
+            nbt.put(DOCKED_ITEM, dockedItem.save(new CompoundTag()));
+        }
     }
 	@Override
 	public void invalidateCaps() {
@@ -232,6 +399,10 @@ public class ChargerTileEntity extends CBlockEntity implements CTickableBlockEnt
 
     public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
         Lang.tooltip("heat_stats").forGoggles(tooltip);
+        if (clientDockState != DOCK_EMPTY) {
+            Lang.tooltip(clientDockState == DOCK_FULL ? "charger.dock_ready" : "charger.dock_occupied")
+                    .forGoggles(tooltip);
+        }
 
         if (TemperatureGoogleRenderer.hasHeatNetworkData()) {
             ClientHeatNetworkData data = TemperatureGoogleRenderer.getHeatNetworkData();

@@ -40,6 +40,9 @@ public final class AirLoadTable {
     private int faceHighWater, loadHighWater;
 
     public void recordBacking(AirBackingMeter meter) {
+        // Every regional solver shares this table. Deduplicate the traversal,
+        // as well as its arrays, within the existing inventory lifetime.
+        if (!meter.visit(this)) return;
         meter.container(faces, faceHighWater, 16);
         meter.container(loads, loadHighWater, 8);
         meter.container(unusedWorldBindings, loadHighWater, 8);

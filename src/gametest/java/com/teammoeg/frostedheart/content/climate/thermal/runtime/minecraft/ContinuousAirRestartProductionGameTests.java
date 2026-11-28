@@ -83,7 +83,7 @@ public final class ContinuousAirRestartProductionGameTests {
                         helper.assertTrue(ContinuousAirProductionTiming.sourceField(nearAir)
                                         && level.getGameTime() - nearAir.airSampleTick() <= 40,
                                 "First JVM must publish extinguished heat before saving");
-                        helper.assertTrue(MinecraftThermalInput.sampleMaterial(level, fire.below(), material)
+                        helper.assertTrue(MinecraftThermalInput.sampleMaterialTemperature(level, fire.below(), material)
                                         && material.source() == MaterialSample.Source.LIVE,
                                 "First JVM must publish the actual floor material");
                     }).thenExecute(() -> {
@@ -121,7 +121,7 @@ public final class ContinuousAirRestartProductionGameTests {
                             && nearAir.airTemperatureC() > farAir.airTemperatureC() + .01,
                     "Second JVM must restore the real near/far heat history: "
                             + nearAir.airTemperatureC() + "," + farAir.airTemperatureC());
-            helper.assertTrue(MinecraftThermalInput.sampleMaterial(level, fire.below(), material)
+            helper.assertTrue(MinecraftThermalInput.sampleMaterialTemperature(level, fire.below(), material)
                             && Math.abs(material.temperatureC() - saved.materialC) < .25
                             && material.branch() == saved.branch,
                     "Second JVM must restore the actual floor material and its branch");
@@ -149,7 +149,7 @@ public final class ContinuousAirRestartProductionGameTests {
     }
 
     private static void sample(GameTestHelper helper, BlockPos pos, ThermalEnvironmentSample out) {
-        MinecraftThermalInput.gameplayPlacedReservoirEnvironment(helper.getLevel(), pos,
+        MinecraftThermalInput.samplePlacedReservoirAirAndRadiation(helper.getLevel(), pos,
                 WorldTemperature.naturalAir(helper.getLevel(), pos), out);
     }
 

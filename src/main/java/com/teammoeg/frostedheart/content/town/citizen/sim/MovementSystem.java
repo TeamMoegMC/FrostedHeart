@@ -68,6 +68,7 @@ public final class MovementSystem {
 			CitizenSim sim = c.sim();
 			IntArrayList activeIds = sched.activeIds(containerIndex);
 			boolean persistedChanged = false;
+            var roads = c.roadNavigation();
 			for (int k = 0; k < activeIds.size();) {
 				int i = sim.indexOf(activeIds.getInt(k));
 				if (i < 0) {
@@ -94,6 +95,12 @@ public final class MovementSystem {
 			int oldTargetZ = sim.tz[i];
 			byte oldDir = sim.dir[i];
 
+            if (roads != null) {
+                roads.tick(sched, c, sim, level, i, gameTime);
+                persistedChanged |= oldX != sim.px[i] || oldY != sim.py[i] || oldZ != sim.pz[i]
+                        || oldTargetX != sim.tx[i] || oldTargetZ != sim.tz[i] || oldDir != sim.dir[i];
+                continue;
+            }
 			if (resolveBoundaryOverlap(sim, level, i))
 				conformHeight(sim, level, i);
 

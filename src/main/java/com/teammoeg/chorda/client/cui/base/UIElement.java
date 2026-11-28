@@ -42,6 +42,167 @@ import net.minecraft.network.chat.Component;
  * reference, forming a tree-based hierarchy.
  */
 public class UIElement {
+    /** Optional selector name, matched by {@code #name}. */
+    @Getter
+    @Setter
+    private String name;
+
+    /**
+     * Returns class names followed by directly declared interfaces at each level,
+     * from the runtime class to UIElement. Anonymous classes contribute no name.
+     */
+    public java.util.List<String> getSelectorClasses() {
+        java.util.List<String> classes = new java.util.ArrayList<>();
+        for (Class<?> type = getClass(); type != null && UIElement.class.isAssignableFrom(type);
+                type = type.getSuperclass()) {
+            if (!type.isAnonymousClass() && !type.getSimpleName().isEmpty())
+                classes.add(type.getSimpleName());
+            for (Class<?> iface : type.getInterfaces())
+                classes.add(iface.getSimpleName());
+        }
+        return java.util.Collections.unmodifiableList(classes);
+    }
+
+    /**
+     * Finds the first match in this subtree, including this element.
+     * Supports #name, .Class, *, compounds, descendant/child paths and [n].
+     * Empty or invalid selectors and missing elements return null.
+     */
+    public UIElement querySelector(String selector) {
+        if (selector == null || selector.isBlank()) return null;
+        String normalized = selector.trim().replaceAll("\\s*>\\s*", " > ");
+        String[] parts = normalized.split("\\s+");
+        if (parts[0].equals(">") || parts[parts.length - 1].equals(">")) return null;
+        return querySelector(parts, 0);
+    }
+
+    /** Delegates descendant paths recursively; > restricts the next match to direct children. */
+    protected UIElement querySelector(String[] parts, int index) {
+        return querySelector(parts, index, true);
+    }
+
+    private UIElement querySelector(String[] parts, int index, boolean searchDescendants) {
+        if (matchesSelector(parts[index])) {
+            if (index + 1 == parts.length) return this;
+            int next = index + 1;
+            boolean direct = parts[next].equals(">");
+            if (direct) next++;
+            if (next >= parts.length || parts[next].equals(">")) return null;
+            for (UIElement child : getSelectorChildren()) {
+                UIElement found = direct ? child.querySelector(parts, next, false)
+                        : child.querySelector(parts, next);
+                if (found != null) return found;
+            }
+        }
+        if (searchDescendants) {
+            for (UIElement child : getSelectorChildren()) {
+                UIElement found = child.querySelector(parts, index);
+                if (found != null) return found;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Finds all matches in this subtree (including this element) in tree order.
+     * Each element is visited once, even when several ancestor paths match it.
+     * Empty, invalid or unmatched selectors return an empty list.
+     */
+    public java.util.List<UIElement> querySelectorAll(String selector) {
+        if (selector == null || selector.isBlank()) return java.util.Collections.emptyList();
+        String[] parts = selector.trim().replaceAll("\\s*>\\s*", " > ").split("\\s+");
+        if (parts[0].equals(">") || parts[parts.length - 1].equals(">"))
+            return java.util.Collections.emptyList();
+        java.util.List<UIElement> matches = new java.util.ArrayList<>();
+        collectSelectorMatches(parts, this, matches);
+        return matches;
+    }
+
+    private void collectSelectorMatches(String[] parts, UIElement scope, java.util.List<UIElement> matches) {
+        if (matchesSelectorPath(parts, parts.length - 1, scope)) matches.add(this);
+        for (UIElement child : getSelectorChildren()) child.collectSelectorMatches(parts, scope, matches);
+    }
+
+    /** Matches ancestors backwards without crossing the query subtree root. */
+    private boolean matchesSelectorPath(String[] parts, int index, UIElement scope) {
+        if (!matchesSelector(parts[index])) return false;
+        if (index == 0) return true;
+        if (this == scope) return false;
+        int previous = index - 1;
+        boolean direct = parts[previous].equals(">");
+        if (direct) previous--;
+        if (previous < 0 || parts[previous].equals(">")) return false;
+        for (UIElement ancestor = parent; ancestor != null; ancestor = ancestor.parent) {
+            if (ancestor.matchesSelectorPath(parts, previous, scope)) return true;
+            if (direct || ancestor == scope) break;
+        }
+        return false;
+    }
+
+    /** Child traversal hook; leaf elements have no children. */
+    protected java.util.List<UIElement> getSelectorChildren() {
+        return java.util.Collections.emptyList();
+    }
+
+    private boolean matchesSelector(String selector) {
+        java.util.regex.Matcher matcher = java.util.regex.Pattern.compile(
+                "([.#])([\\p{javaJavaIdentifierPart}-]+)|([*])|\\[([1-9][0-9]*)\\]").matcher(selector);
+        int end = 0;
+        while (matcher.find()) {
+            if (matcher.start() != end) return false;
+            end = matcher.end();
+            if (matcher.group(1) != null) {
+                if (matcher.group(1).equals("#")) {
+                    if (!matcher.group(2).equals(name)) return false;
+                } else if (!getSelectorClasses().contains(matcher.group(2))) return false;
+            } else if (matcher.group(4) != null) {
+                if (parent == null) return false;
+                int position = parent.getSelectorChildren().indexOf(this) + 1;
+                if (!Integer.toString(position).equals(matcher.group(4))) return false;
+            }
+        }
+        return end > 0 && end == selector.length();
+    }
+
+    /**
+     * Returns a unique root-relative path, preferring a sibling-unique name, then
+     * the runtime class or its direct superclass, and finally a one-based index.
+     * Anonymous classes, interfaces and deeper superclasses are not candidates.
+     * Detached elements return null; names, types and child order must stay unchanged.
+     */
+    public String getUniqueSelector() {
+        java.util.List<UIElement> siblings = parent == null
+                ? java.util.Collections.singletonList(this) : parent.getSelectorChildren();
+        int position = siblings.indexOf(this) + 1;
+        if (position == 0) return null;
+        String segment = null;
+        if (name != null && name.matches("[\\p{javaJavaIdentifierPart}-]+")) {
+            String candidate = "#" + name;
+            if (isUniqueSelector(candidate, siblings)) segment = candidate;
+        }
+        if (segment == null) segment = uniqueClassSelector(getClass(), siblings);
+        if (segment == null) segment = uniqueClassSelector(getClass().getSuperclass(), siblings);
+        if (segment == null) segment = parent == null ? "*" : "*[" + position + "]";
+        if (parent == null) return segment;
+        String prefix = parent.getUniqueSelector();
+        return prefix == null ? null : prefix + " > " + segment;
+    }
+
+    private String uniqueClassSelector(Class<?> type, java.util.List<UIElement> siblings) {
+        if (type == null || !UIElement.class.isAssignableFrom(type)
+                || type.isAnonymousClass() || type.getSimpleName().isEmpty()) return null;
+        String candidate = "." + type.getSimpleName();
+        return isUniqueSelector(candidate, siblings) ? candidate : null;
+    }
+
+    private boolean isUniqueSelector(String selector, java.util.List<UIElement> siblings) {
+        if (!matchesSelector(selector)) return false;
+        for (UIElement sibling : siblings) {
+            if (sibling != this && sibling.matchesSelector(selector)) return false;
+        }
+        return true;
+    }
+
     /**
      * 获取当前元素的父节点，可能为 null（顶层元素）
      */

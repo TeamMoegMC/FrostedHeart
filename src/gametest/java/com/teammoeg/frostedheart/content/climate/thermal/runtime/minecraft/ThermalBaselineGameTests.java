@@ -98,7 +98,7 @@ public final class ThermalBaselineGameTests {
                         double natural = WorldTemperature.naturalAir(level, block);
                         ContinuousAirProductionGameTests.sampleAt(level, x, y, z, sample);
                         double air = sample.airAvailable() ? sample.airTemperatureC() :
-                                MinecraftThermalInput.gameplayPassiveEnvironment(level, block, natural);
+                                MinecraftThermalInput.sampleAirTemperature(level, block, natural);
                         FHMain.LOGGER.info("THERMAL_BASELINE_AIR,scene={},point={},elapsedTick={},worldTick={},sampleTick={},x={},y={},z={},airC={},naturalC={},radiantWPerM2={},available={},minimum={},wind={}",
                                 SCENES[scene], POINTS[point], elapsed, level.getGameTime(), sample.airSampleTick(), x, y, z,
                                 air, natural, sample.radiantFluxWPerM2(), sample.airAvailable(), sample.airMinimumQuality(), WorldClimate.getWind(level));
@@ -119,7 +119,7 @@ public final class ThermalBaselineGameTests {
                     BlockPos[] materials = {fire.below(), origins[scene].offset(4, 0, 3), origins[scene].offset(0, 2, 4)};
                     for (int point = 0; point < materials.length; point++) {
                         var block = materials[point]; material.clear();
-                        boolean available = MinecraftThermalInput.sampleMaterial(level, block, material);
+                        boolean available = MinecraftThermalInput.sampleMaterialTemperature(level, block, material);
                         FHMain.LOGGER.info("THERMAL_BASELINE_MATERIAL,scene={},point={},elapsedTick={},worldTick={},sampleTick={},x={},y={},z={},available={},temperatureC={},enthalpyJ={},branch={},source={}",
                                 SCENES[scene], point, elapsed, level.getGameTime(), material.sampleTick(), block.getX(), block.getY(), block.getZ(),
                                 available, material.temperatureC(), material.enthalpyJ(), material.branch(), material.source());

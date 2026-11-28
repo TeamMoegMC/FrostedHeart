@@ -29,8 +29,8 @@ import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.Containers;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
@@ -84,13 +84,21 @@ public class ChargerBlock extends CBlock implements CEntityBlock<ChargerTileEnti
         InteractionResult superResult = super.use(state, world, pos, player, hand, hit);
         if (superResult.consumesAction() || player.isShiftKeyDown())
             return superResult;
-        ItemStack item = player.getItemInHand(hand);
-
         BlockEntity te = Utils.getExistingTileEntity(world, pos);
         if (te instanceof ChargerTileEntity) {
-            return ((ChargerTileEntity) te).onClick(player, item);
+            return ((ChargerTileEntity) te).onClick(player, hand);
         }
         return superResult;
+    }
+
+    @Override
+    public void onRemove(BlockState state, Level level, BlockPos pos, BlockState replacement, boolean moving) {
+        // Unloading and lit-state changes are not removals. A destroyed/replaced dock drops its inventory once.
+        if (!level.isClientSide && !state.is(replacement.getBlock())
+                && level.getBlockEntity(pos) instanceof ChargerTileEntity charger) {
+            Containers.dropItemStack(level, pos.getX(), pos.getY(), pos.getZ(), charger.takeDockedItem());
+        }
+        super.onRemove(state, level, pos, replacement, moving);
     }
 
 

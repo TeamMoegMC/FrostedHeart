@@ -117,7 +117,7 @@ public abstract class VillagerMixin extends AbstractVillager implements Villager
                             playerIn.displayClientMessage(Lang.translateMessage("trade.no_home"), false);
                         }
                         else {
-                            float t = WorldTemperature.block(getThis().level(), getThis().blockPosition());
+                            float t = WorldTemperature.getTempAtBlock(getThis().level(), getThis().blockPosition());
                             if (t < TradeConstants.TOO_COLD_RECOVER_TEMP) {
                                 this.setUnhappy();
                                 playerIn.displayClientMessage(Lang.translateMessage("trade.low_temp"), false);

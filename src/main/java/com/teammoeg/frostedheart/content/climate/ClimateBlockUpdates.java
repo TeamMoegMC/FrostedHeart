@@ -1,6 +1,8 @@
 /* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedheart.content.climate;
 
+import static com.teammoeg.frostedheart.content.climate.WorldTemperature.BlockTemperatureUse.SURROUNDINGS;
+
 import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.content.climate.block.IcicleBlock;
@@ -47,20 +49,10 @@ public final class ClimateBlockUpdates {
         // ConfigValue.get() 为 spec 值表查询：同一 tick 内配置恒定，hoist 到局部变量
         int tempBlockstateUpdateIntervalTicks = FHConfig.SERVER.CLIMATE.tempBlockstateUpdateIntervalTicks.get();
 
-        float climateBase=0;
         WorldClimate wc = WorldClimate.get(level);
-        if (wc != null) {
-            climateBase = wc.getTemp(chunkpos);
-        }
 
         boolean updateTempBlock = (now + chunkpos.x + chunkpos.z)
                 % tempBlockstateUpdateIntervalTicks == 0;
-
-        boolean isRaining = level.isRaining();
-        if (wc != null)
-        {
-            isRaining = wc.getClimate(chunkpos).isSnowyOrBlizzard();
-        }
 
         int i = chunkpos.getMinBlockX();
         int j = chunkpos.getMinBlockZ();
@@ -77,6 +69,7 @@ public final class ClimateBlockUpdates {
                     ? blockpos1.below()
                     : blockpos1;
 
+            boolean isRaining = wc == null ? level.isRaining() : wc.getClimate(chunkpos).isSnowyOrBlizzard();
             BlockState surface = pChunk.getBlockState(blockpos2);
             com.teammoeg.frostedheart.content.climate.block.EaveIcicleBlock.randomRoofTick(
                     level, blockpos2, isRaining, pRandomTickSpeed, tempBlockstateUpdateIntervalTicks, level.random);
@@ -164,7 +157,7 @@ public final class ClimateBlockUpdates {
                             if (plantData != null)
                             {
                                 handled = updatePlantBasedOnTemperature(
-                                        level, blockpos3, plantData, climateBase);
+                                        level, blockpos3, plantData);
                             }
                         }
 
@@ -206,7 +199,7 @@ public final class ClimateBlockUpdates {
                 level.getBlockRandomPos(chunk.getPos().getMinBlockX(), 0, chunk.getPos().getMinBlockZ(), 15));
         BlockState state = level.getBlockState(position);
         if (!level.isRaining() || !level.getBiome(position).value().coldEnoughToSnow(position)
-                || !(WorldTemperature.block(level, position) <= WorldTemperature.SNOW_REACHES_GROUND)
+                || !((float) WorldTemperature.getTempAtBlock(level, position, SURROUNDINGS) <= WorldTemperature.SNOW_REACHES_GROUND)
                 || level.getBrightness(LightLayer.BLOCK, position) >= 10 || !state.is(Blocks.SNOW)) return;
         int layers = state.getValue(SnowLayerBlock.LAYERS);
         if (layers < 5)
@@ -231,7 +224,7 @@ public final class ClimateBlockUpdates {
     {
         if (pPos.getY() >= pLevel.getMinBuildHeight()
                 && pPos.getY() < pLevel.getMaxBuildHeight()
-                && WorldTemperature.air(pLevel, pPos) < WorldTemperature.SNOW_REACHES_GROUND)
+                && (float) WorldTemperature.getTempAtBlock(pLevel, pPos, SURROUNDINGS) < WorldTemperature.SNOW_REACHES_GROUND)
         {
             BlockState blockstate = pLevel.getBlockState(pPos);
             if ((blockstate.isAir() || blockstate.is(Blocks.SNOW))
@@ -245,20 +238,11 @@ public final class ClimateBlockUpdates {
     }
 
     // Plants should go separately
-    private static boolean updatePlantBasedOnTemperature(
-            ServerLevel level,
-            BlockPos pos,
-            PlantTempData selfData,
-            float climateBase
-    )
-    {
-        float t = (float) MinecraftThermalInput.gameplayCropEnvironment(
-                level,
-                pos,
-                WorldTemperature.naturalBlock(level, pos, climateBase));
-        var selfStatus = WorldTemperature.checkPlantStatus(level, pos, selfData, t);
+    private static boolean updatePlantBasedOnTemperature(ServerLevel level, BlockPos pos, PlantTempData selfData) {
         int heatCapacity = selfData.heatCapacity();
-        if (selfStatus.willDie() && heatCapacity > 0 && level.getRandom().nextInt(heatCapacity) == 0)
+        if (!selfData.willDie() || heatCapacity <= 0) return false;
+        var selfStatus = WorldTemperature.checkPlantStatus(level, pos, selfData);
+        if (selfStatus.willDie() && level.getRandom().nextInt(heatCapacity) == 0)
         {
             var dead = selfData.dead();
             BlockPos belowPos = pos.below();

@@ -34,7 +34,7 @@ public final class ContinuousAirOverloadProductionGameTests {
         var cursor = new QueryPublication.ReadCursor();
         var overloadedAir = new QueryPublication.MutableSample();
         helper.startSequence().thenIdle(240).thenWaitUntil(() -> {
-            MinecraftThermalInput.gameplayPlacedReservoirEnvironment(level, probe, WorldTemperature.naturalAir(level, probe), air);
+            MinecraftThermalInput.samplePlacedReservoirAirAndRadiation(level, probe, WorldTemperature.naturalAir(level, probe), air);
             helper.assertTrue(ContinuousAirProductionTiming.sourceField(air)
                     && MinecraftThermalInput.describeAirRead(level, probe).startsWith("geometry_current"), "Warm the real small base first");
             var publication = MinecraftThermalInput.queryPublicationForObservation(level);
@@ -82,7 +82,7 @@ public final class ContinuousAirOverloadProductionGameTests {
                                 fuel -> fuel.insertItem(0, new ItemStack(Items.COAL, 4), false));
                         ContinuousAirProductionGameTests.useItem(helper, fire, Items.FLINT_AND_STEEL);
                     }
-                    MinecraftThermalInput.gameplayPlacedReservoirEnvironment(level, probe, WorldTemperature.naturalAir(level, probe), air);
+                    MinecraftThermalInput.samplePlacedReservoirAirAndRadiation(level, probe, WorldTemperature.naturalAir(level, probe), air);
                     long age = air.airSampleTick() < 0 ? 9999 : level.getGameTime() - air.airSampleTick();
                     samples[0]++;
                     maximumAge[0] = Math.max(maximumAge[0], (int) age);

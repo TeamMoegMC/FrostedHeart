@@ -19,6 +19,9 @@
 
 package com.teammoeg.frostedheart.bootstrap.common;
 
+import com.teammoeg.frostedheart.content.climate.block.sensor.*;
+
+import com.teammoeg.frostedheart.content.town.buildings.dispatch.*;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.logic.IMultiblockState;
 import com.teammoeg.frostedheart.content.town.buildings.house.HouseBlockEntity;
 import com.teammoeg.frostedheart.content.town.buildings.house.HouseMenu;
@@ -26,6 +29,8 @@ import com.teammoeg.frostedheart.content.town.buildings.hunting.HuntingBaseBlock
 import com.teammoeg.frostedheart.content.town.buildings.hunting.HuntingBaseMenu;
 import com.teammoeg.frostedheart.content.town.buildings.logistics.TransportStationBlockEntity;
 import com.teammoeg.frostedheart.content.town.buildings.logistics.TransportStationMenu;
+import com.teammoeg.frostedheart.content.town.buildings.institute.ResearchInstituteBlockEntity;
+import com.teammoeg.frostedheart.content.town.buildings.institute.ResearchInstituteMenu;
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBaseBlockEntity;
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBaseMenu;
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBlockEntity;
@@ -121,8 +126,13 @@ public class FHMenuTypes {
 			register(MineBaseBlockEntity.class, "mine_base", MineBaseMenu::new);
 	public static final RegistryObject<MenuType<HuntingBaseMenu>> HUNTING_BASE =
 			register(HuntingBaseBlockEntity.class, "hunting_base", HuntingBaseMenu::new);
+	public static final RegistryObject<MenuType<LaborDispatchMenu>> LABOR_DISPATCH =
+			register(LaborDispatchBlockEntity.class, "labor_dispatch", LaborDispatchMenu::new);
+
 	public static final RegistryObject<MenuType<TransportStationMenu>> TRANSPORT_STATION =
 			register(TransportStationBlockEntity.class, "transport_station", TransportStationMenu::new);
+	public static final RegistryObject<MenuType<ResearchInstituteMenu>> RESEARCH_INSTITUTE =
+			register(ResearchInstituteBlockEntity.class, "research_institute", ResearchInstituteMenu::new);
 	public static final RegistryObject<MenuType<MineMenu>> MINE =
 			register(MineBlockEntity.class, "mine", MineMenu::new);
 	public static final RegistryObject<MenuType<WarehouseInterfaceMenu>> WAREHOUSE_INTERFACE =
@@ -131,6 +141,9 @@ public class FHMenuTypes {
 			register(WarehouseLevelEmitterBlockEntity.class, "warehouse_level_emitter", WarehouseLevelEmitterMenu::new);
 	public static final RegistryObject<MenuType<P2PTerminalMenu>> P2P_TERMINAL =
 			register(P2PTerminalBlockEntity.class, "p2p_terminal", P2PTerminalMenu::new);
+
+    public static final RegistryObject<MenuType<TemperatureSensorMenu>> TEMPERATURE_SENSOR =
+            register(TemperatureSensorBlockEntity.class, "temperature_sensor", TemperatureSensorMenu::new);
 
 	@SuppressWarnings("unchecked")
 	public static <T extends AbstractContainerMenu, BE extends BlockEntity> RegistryObject<MenuType<T>> register(Class<BE> BEClass, String name, BEMenuFactory<T, BE> factory) {

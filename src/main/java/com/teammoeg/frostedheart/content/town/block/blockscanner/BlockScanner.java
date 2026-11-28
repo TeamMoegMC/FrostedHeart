@@ -32,9 +32,6 @@ import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
-import com.teammoeg.frostedheart.content.climate.BlockTemperatureModel;
-import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput;
-import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.content.town.block.OccupiedVolume;
 import com.teammoeg.frostedheart.content.town.block.OccupiedZoneInfo;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.RoomPathfinder.OccupiedCell;
@@ -49,6 +46,7 @@ import net.minecraft.core.BlockPos.MutableBlockPos;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.block.DoorBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
@@ -188,8 +186,7 @@ public class BlockScanner {
                         || position.getY() >= world.getMaxBuildHeight()) {
                     return Float.NaN;
                 }
-                float natural = sampleNaturalTemperature(serverLevel, loadedWorld, position);
-                double temperature = MinecraftThermalInput.gameplayPassiveEnvironment(serverLevel, position, natural);
+                double temperature = WorldTemperature.getTempAtBlock(serverLevel, position, loadedWorld);
                 if (!loadedWorld.hasCompleteData() || !Double.isFinite(temperature)) {
                     return Float.NaN;
                 }
@@ -200,16 +197,29 @@ public class BlockScanner {
         return samples == 0 ? Float.NaN : (float) (total / samples);
     }
 
-    private static float sampleNaturalTemperature(ServerLevel level, LoadedTownWorld loadedWorld, BlockPos pos) {
-        // Keep the real dimension and climate while reading biome data without loading terrain.
-        float climateAffection = BlockTemperatureModel.climateBlockAffection(
-                pos.getY(), FHConfig.SERVER.CLIMATE.climateStoneInterfaceLevel.get(),
-                FHConfig.SERVER.CLIMATE.climateSeaLevel.get(),
-                FHConfig.SERVER.CLIMATE.blockMaximumClimateAffection.get().floatValue());
-        float natural = BlockTemperatureModel.naturalTemperature(
-                WorldTemperature.dimension(level), WorldTemperature.biome(loadedWorld, pos),
-                WorldTemperature.altitude(level, pos), WorldTemperature.climate(level, pos), climateAffection);
-        return Math.max(FHConfig.SERVER.CLIMATE.absoluteZeroCelsius.get().floatValue(), natural);
+    /**
+     * 房间内全部可站立位置的方块光平均值（0–15），只计灯光，不计天光；缺区块或没有位置时为 NaN。
+     * <p>
+     * Average block light (0–15) over every standing position of the room: lamps and torches count, daylight does not.
+     * NaN when a chunk is missing or there are no positions.
+     */
+    public static double sampleBlockLight(Level world, OccupiedZoneInfo geometry) {
+        if (!(world instanceof ServerLevel serverLevel)) {
+            return Double.NaN;
+        }
+        long samples = 0;
+        double total = 0.0;
+        for (OccupiedCell cell : geometry.getOccupiedCells()) {
+            for (BlockPos position : cell.reachableIterable()) {
+                if (!world.hasChunkAt(position) || position.getY() < world.getMinBuildHeight()
+                        || position.getY() >= world.getMaxBuildHeight()) {
+                    return Double.NaN;
+                }
+                total += serverLevel.getBrightness(LightLayer.BLOCK, position);
+                samples++;
+            }
+        }
+        return samples == 0 ? Double.NaN : total / samples;
     }
 
     @Nullable

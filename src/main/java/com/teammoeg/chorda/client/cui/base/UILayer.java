@@ -56,6 +56,12 @@ import net.minecraft.util.Mth;
  * Serves as the foundation for panels and containers in the CUI framework.
  */
 public abstract class UILayer extends UIElement {
+    /** Exposes this layer's ordered children for selector delegation. */
+    @Override
+    protected List<UIElement> getSelectorChildren() {
+        return elements;
+    }
+
 	
 	@Getter
 	protected final List<UIElement> elements;
@@ -146,6 +152,15 @@ public abstract class UILayer extends UIElement {
 		return true;
 	}
 
+
+    /** Removes a direct child, closes it and invalidates cached content bounds. */
+    public boolean remove(UIElement element) {
+        if (element == null || element.getParent() != this || !elements.remove(element)) return false;
+        if (attachedScrollbar == element) attachedScrollbar = null;
+        recalcContentSize();
+        element.onClosed();
+        return true;
+    }
 
 	public final int align(boolean isHorizontal) {
 		contentWidth = contentHeight = 0;
@@ -388,8 +403,9 @@ public abstract class UILayer extends UIElement {
 			return;
 		}
 		if(transform!=null) {
-    		float dx=x+width*transformOrigin.x;
-    		float dy=y+height*transformOrigin.y;
+			// x/y here are the parent's content origin; render() pivots on this layer's own screen position.
+    		float dx=x+getX()+width*transformOrigin.x;
+    		float dy=y+getY()+height*transformOrigin.y;
     		Matrix4f m4f=new Matrix4f();
     		m4f.translate(dx, dy, 0);
     		m4f.mul(transform);

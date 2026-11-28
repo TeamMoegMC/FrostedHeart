@@ -19,6 +19,9 @@
 
 package com.teammoeg.chorda.client.cui.widgets;
 
+import com.teammoeg.chorda.client.RenderingHint;
+import net.minecraft.client.gui.GuiGraphics;
+
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.base.UILayer;
 
@@ -30,6 +33,27 @@ import com.teammoeg.chorda.client.cui.base.UILayer;
  * intended for manually adding and managing child elements.
  */
 public class SimpleLayer extends UILayer {
+
+	private int backgroundColor = 0x00000000;
+
+	/** @return 背景颜色，格式为 ARGB，默认完全透明。 */
+	public int getBackgroundColor() {
+		return backgroundColor;
+	}
+
+	/** @param backgroundColor 背景颜色，格式为 ARGB；例如 0xFF202020 为不透明深灰色。 */
+	public void setBackgroundColor(int backgroundColor) {
+		this.backgroundColor = backgroundColor;
+	}
+
+	/** {@inheritDoc} */
+	@Override
+	public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
+		if ((backgroundColor >>> 24) != 0) {
+			graphics.fill(x, y, x + w, y + h, backgroundColor);
+		}
+	}
+
 
 	/**
 	 * 创建简单图层。

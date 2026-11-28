@@ -12,8 +12,10 @@ This directory explains implemented, player-facing game systems. Source, configu
 | Climate and temperature       | [climate/README.md](climate/README.md)                   | Transitional      |
 | Space station                 | [space/README.md](space/README.md)                       | Current      |
 | Natural deposit generation    | [world-generation.md](world-generation.md)              | Current      |
+| Scenario 剧情系统           | [scenario/README.md](scenario/README.md)                 | Partial      |
 | Scenario font rendering       | [scenario-font-rendering.md](scenario-font-rendering.md) | Current      |
 | Ice cave world generation     | [worldgen/README.md](worldgen/README.md)                   | Partial      |
+| S04 StrataDrill                | [stratadrill.md](stratadrill.md)                          | Partial      |
 
 `Current` means verified against implementation. `Partial` omits known areas. `Transitional` mixes verified material with legacy, experimental, or proposed content. [`deprecated/`](deprecated/) is historical only.
 
@@ -24,6 +26,7 @@ Reusable tests and fixtures live in [src/gametest/](../src/gametest/README.md), 
 ## Library Guides
 
 - [Chorda UI (CUI) 指南](chorda-cui.md): element tree, lifecycle, layout, input, themes, screen adapters, widgets, content panels, pan/zoom viewport, and editors.
+- [CUI 选择器与客户端调试工具](chorda-cui-tools.md)：启动、七条 CUI 命令、反射字段读写、动态子元素增删及完整示例。
 
 Read the system README, then follow its document and code anchors. When behavior, formulas, persistence, networking, configuration, data formats, commands, or cross-system contracts change, update the owning document and record the impact in [`diary/`](../diary/).
 

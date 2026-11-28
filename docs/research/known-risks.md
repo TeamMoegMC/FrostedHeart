@@ -45,7 +45,7 @@ The new binary packet format is intentionally incompatible with older clients. `
 
 | Resolved | Former risk | Current contract | Automated evidence |
 |---|---|---|---|
-| 2026-08-23 | calculator points could be redirected across teams and extraction ignored `max` | placement/first-real-interaction establishes persistent team owner; FakePlayer/cross-team access fails; bounded extraction retains the remainder | `ResearchGameTests` Forge GameTest |
+| 2026-08-23 | calculator points could be redirected across teams and extraction ignored `max` | placement/first-real-interaction establishes persistent team owner; real cross-team access fails; rubbing queries/extraction match the bound team UUID to machine owner independently of player identity, without extraction claims; bounded extraction retains the remainder | `ResearchGameTests` Forge GameTest |
 | 2026-08-23 | machine APIs could bypass ownership | `ComputeMachine` query/extraction requires `ServerPlayer`; click and rubbing use the same authorization | full and no-FTB/no-JEI GameTest runs |
 | 2026-08-23 | static Create owner leaked across executions | actual Create recipe execution is wrapped in nested, exception-safe `ThreadLocal` owner context | nested/exception/double-thread `ResearchHooksTest`; successful mixin startup |
 | 2026-08-23 | absent/fake/ownerless automation could pass locked content | player paths use current real-player team; machine paths use persisted owner; locked content fails closed without a valid authority | entry-point source audit and GameTest |

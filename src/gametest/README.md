@@ -10,6 +10,10 @@ Thermal tests retain input/source ownership, query and save lifecycle, quality r
 
 Use Java 17 and compile the test source set with `./gradlew compileGameTestJava` (`.\gradlew.bat compileGameTestJava` on Windows). For example, select the compact-storage checks with `./gradlew runGameTestServer -PgameTestNamespaces=frostedheart_compact_storage`. Runtime worlds, logs and profiling recordings are generated outputs and stay outside Git; test source and deliberate fixtures stay versioned.
 
+For town staffing and housing queues, use `-I Scripts/town-scheduling-validation.init.gradle` and namespace `frostedheart_town_scheduling`. The same init file provides `runTownSchedulingClient`, which creates a disposable world and checks the rendered Mayor's Seal with actual management packets and mouse events; its JSON result must pass for the task to succeed. The [town synchronization reference](../../docs/town/persistence-and-runtime.md#验证入口) owns the scenarios, evidence and controlled temperature.
+
+That client entry also calls `TownEditorClientChecks` for controlled component reply sequences. The returned `editorReplyChecks` list records completed checks; earlier result files without that field do not cover them. These added checks are prepared but unrun as of 2026-11-09, following the user's instruction not to build this change.
+
 Player heating equipment checks use namespace `frostedheart_equipment_heating`:
 real item capabilities, sustained body curves, stacked devices, fuel cadence and
 reload, vest demand, reservoir energy conservation and the actual player tick.
@@ -98,3 +102,61 @@ They play 256 seeds for each of the eight difficulties (2048 boards) through ord
 
 Idea-link puzzle checks use the existing `frostedresearch_m2` namespace. They now verify route-specific auxiliary groups, auxiliary tray selections (including inherited/overridden groups, tags and overlapping predicates), mandatory-only session witnesses, 0–7 number boards, ordinary win settlement, fixed difficulty and reset recalculation, no timer payload, cancellation/close/logout, required-knowledge changes and already-received outputs. Old timing claims in historical diaries describe the previous implementation.
 `LinkClientValidation` is opt-in through an instance-local `research-client-link-check.txt` output-root marker and the temporary `m3cValidationJar`. It creates a fresh flat fixture world and uses actual Screen events/C2S for a raw-copper + sand-auxiliary tray candidate, original 387×203 drawing desk and shared MainGamePanel, Esc cancellation, reset after auxiliary knowledge, normal final click, return to the journal and preservation of an already-running legacy board. Production JARs exclude this driver.
+
+The focused generator heating checks use `-PgameTestNamespaces=frostedheart_generator_heat`.
+They cover the smooth center boost, unchanged boundary, overlap, player/crop/town/phase queries,
+infrared updates, item caches, real T1/T2 production, four horizontal outlets across Chunk boundaries,
+blocked/reopened outlets, physical enclosure heating, phase acknowledgements and tower lifecycle.
+The real T1/T2 cases also check per-target power at temperature levels `10` and `1`,
+fixed `2,000 W` radiation and discovery of both generator profile IDs. The formed
+T2 warm-up check compares an exact steam dose with a short dose.
+The [temperature composition reference](../../docs/climate/world-climate-and-temperature.md#7-analytic-control-fields)
+owns the formula and units.
+
+The heat-network check uses `-PgameTestNamespaces=frostedheart_heat_pipe_revalidation,frostedheart_t2_pressure`.
+It covers fallback visits on real pipes, merge/removal/reconnect callbacks,
+an actual absent/reloaded adjacent chunk, and the independent T2 pressure ledger.
+
+For infrared transport and actual GL display, run [`Scripts/run-infrared-network-e2e.py`](../../Scripts/run-infrared-network-e2e.py) with Java 17. It starts an isolated dedicated server, two rendering clients and an ordered TCP delay/rate proxy; the [infrared reference](../../docs/climate/infrared-view.md) owns its scenarios, invocation and verification limits.
+
+The memory-lifecycle regressions use namespaces `frostedheart_preparation_retention`,
+`frostedheart_geometry_input_order`, `frostedheart_checkpoint_boundary`, and
+`frostedheart_persistence_overload`; `frostedheart_concurrent_save` covers accepted
+and unaccepted input during a running solve. Their separate GameTest batches permit a
+combined run without closing another test's live thermal runtime. They check
+collection of completed builders before closing a heated world, actual adjacent
+Page publication order when fair selection first visits the later input, incoming
+geometry holds during unload-job cleanup, connecting Pages that are announced but
+not yet installed, and a real flushed chunk save with every
+thermal worker paused. The last test also reads disk NBT to check pending heat and
+the changed block's material identity.
+
+These focused checks complement the ordinary dedicated-server source/chunk
+workload in [`Scripts/run-thermal-oom-repro.py`](../../Scripts/run-thermal-oom-repro.py).
+The [memory evidence reference](../../docs/climate/thermal-server-memory-evidence.md)
+records the confirmed reference defect, heap analysis, configuration differences,
+and limits on attributing the original remote OOM.
+
+
+Town connectivity and citizen road navigation checks use namespaces `frostedheart_town_connectivity,frostedheart_citizen_roads`:
+`./gradlew --offline runGameTestServer -PgameTestNamespaces=frostedheart_town_connectivity,frostedheart_citizen_roads -PgameTestDirectory=build/citizen-road-gametest`.
+The 28 cases cover component policy, entrance radii, building-port transfers, server-side vertical movement and dynamic obstacles,
+local support/headroom checks, ladders, stairs and packet metadata. With the opt-in agent client bridge, create a disposable empty
+singleplayer town and use `roads setup`, `roads populate`, `roads status` for a rendered fixture and observations.
+The [citizen rendering contract](../../docs/town/citizen-rendering-at-scale.md#客户端道路站位与攀爬2026-11-13) owns the behavior and validation limits.
+
+
+Section snapshot TTL checks use `frostedheart_section_cache`. Run it with the existing road suites:
+`./gradlew --offline runGameTestServer -PgameTestNamespaces=frostedheart_town_connectivity,frostedheart_citizen_roads,frostedheart_section_cache -PgameTestDirectory=build/town-section-cache-gametest`.
+The deterministic clock cases cover fresh/grace/hard-expiry boundaries, dirty deadlines, FIFO deduplication, coalesced cold readers,
+capacity eviction, invalidation, failure and rollback. Two real-level cases exercise the state-write mixin and section-edge dirty propagation.
+
+温度传感器验证使用命名空间 `frostedheart_temperature_sensor`，入口：
+`./gradlew --offline runGameTestServer -PgameTestNamespaces=frostedheart_temperature_sensor -PgameTestDirectory=build/temperature-sensor-gametest`。
+覆盖真实世界中的阈值等号、反转、六面强/弱输出、负小数配置 NBT 恢复和定时重算；GUI 需客户端验收。
+
+作物肥料验证使用命名空间 `frostedheart_fertilizer`：
+`./gradlew --offline runGameTestServer -PgameTestNamespaces=frostedheart_fertilizer -PgameTestDirectory=build/fertilizer-gametest`。
+覆盖生长增产记账、成熟后施肥、预览、NBT 恢复、重置清理、多层根部及 Create 公共破坏掉落路径。行为与验证边界见[作物肥料](../../docs/climate/crop-fertilization.md)。
+
+独立栽培橡树原型验证使用 `frostedheart_cultivated_oak` 命名空间；配置、试用方式和验证范围见[栽培橡树](../../docs/climate/cultivated-oak.md)。

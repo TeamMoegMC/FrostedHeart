@@ -20,6 +20,8 @@
 /* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.input;
 
+import static com.teammoeg.frostedheart.content.climate.WorldTemperature.BlockTemperatureUse.SURROUNDINGS;
+
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.block.IcicleBlock;
 import com.teammoeg.frostedheart.content.climate.data.StateTransitionData;
@@ -95,32 +97,6 @@ public final class MinecraftPhaseController {
 
     private static final ThreadLocal<Mutation> APPLYING = new ThreadLocal<>();
 
-    /**
-     * Temperature used by material phase gameplay. A live or dormant body wins over
-     * its environment. Only a genuinely missing body uses the random-phase fallback;
-     * an unpublished owner or a mismatched checkpoint waits for the next observation.
-     */
-    public static double temperature(ServerLevel level, BlockPos position) {
-        if (MinecraftThermalInput.sampleMaterial(level, position, MATERIAL_SAMPLE))
-            return MATERIAL_SAMPLE.temperatureC();
-        var chunk = level.getChunkSource().getChunkNow(position.getX() >> 4, position.getZ() >> 4);
-        if (chunk == null || level.isOutsideBuildHeight(position)) return Double.NaN;
-        var section = chunk.getSection(chunk.getSectionIndex(position.getY()));
-        int block = (position.getX() & 15) | (position.getZ() & 15) << 4 | (position.getY() & 15) << 8;
-        var owner = ((MinecraftThermalSectionAttachment) (Object) section).frostedheart$getThermalInputOwner();
-        if (owner != null && owner.ownsMaterialPosition(block)) return Double.NaN;
-        var stored = ((MinecraftThermalChunkAttachment) (Object) chunk).frostedheart$getDormantThermalState();
-        if (stored != null && stored.readMaterial(position.getY() >> 4, block,
-                Block.BLOCK_STATE_REGISTRY.getId(level.getBlockState(position)), MATERIAL_SAMPLE)
-                != DormantChunkThermalState.MaterialRead.MISSING) return Double.NaN;
-        return environmentTemperature(level, position);
-    }
-
-    private static double environmentTemperature(ServerLevel level, BlockPos position) {
-        return MinecraftThermalInput.gameplayPassiveEnvironment(
-                level, position, WorldTemperature.naturalBlock(level, position));
-    }
-
     /** Main-thread random updates share the same ownership and phase rules as worker commits. */
     public static PhaseAttempt tryAtRandomTick(
             ServerLevel level, LevelChunk chunk, BlockPos position, BlockState state) {
@@ -158,7 +134,7 @@ public final class MinecraftPhaseController {
                         : stored.readMaterial(
                                 sectionY, block, Block.BLOCK_STATE_REGISTRY.getId(state), sample);
         if (read == DormantChunkThermalState.MaterialRead.MISSING) {
-            double temperature = environmentTemperature(level, position);
+            double temperature = (float) WorldTemperature.getTempAtBlock(level, position, SURROUNDINGS);
             var edge =
                     law.heating() != null && temperature >= law.heating().transitionTemperatureC()
                             ? law.heating()
@@ -170,6 +146,15 @@ public final class MinecraftPhaseController {
             var definition = profiles.transitionData(profileId, edge.heating());
             if (!canTransition(level, position, state, edge, definition, true))
                 return PhaseAttempt.GAMEPLAY;
+            byte branch = law.initialBranch(temperature);
+            double energy = law.enthalpyAtTemperature(temperature);
+            boolean forcedHeat = edge.heating() && MinecraftGameplayFields.guaranteedFloor(level, position)
+                    >= edge.transitionTemperatureC();
+            if (!forcedHeat && !edge.complete(energy)) {
+                if (energy != edge.sourceEnthalpyJ())
+                    MinecraftThermalInput.startDormantPhase(chunk, position, state, law, energy, branch, level.getGameTime());
+                return PhaseAttempt.DEFERRED;
+            }
             boolean changed =
                     IcicleBlock.isIcicle(state) && edge.heating()
                             ? meltIcicle(level, position)
@@ -411,12 +396,9 @@ public final class MinecraftPhaseController {
                         publication.geometryRevision())) return false;
         var brick = publication.brickAt(x & 15, y & 15, z & 15);
         if (brick.firstSlot() < 0 || brick.blockLayout() == null) return false;
-        int nodeIndex = brick.blockLayout().nodeAt((x & 3) | (z & 3) << 2 | (y & 3) << 4);
-        if (nodeIndex < 0) return false;
         var sample = MATERIAL_SAMPLE;
         if (!queries.tryReadMaterial(
-                brick.firstSlot() + nodeIndex,
-                brick.arenaGeneration(),
+                publication, (x & 15) | (z & 15) << 4 | (y & 15) << 8,
                 profiles.signatures().materialStateId(brick.signatureAtBlock((x & 3) | (z & 3) << 2 | (y & 3) << 4)),
                 sample)) return false;
         if (sample.requestSequence() != request.requestSequence()

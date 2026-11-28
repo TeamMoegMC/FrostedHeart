@@ -444,3 +444,32 @@ Flywheel 实机预期：1024 moving/64 详细名额且测试网格全在 68 格�
 - 优先复用项目强制依赖的 Flywheel，通过单 backend owner 和自有接口隔离 0.6 API；不创建载体实体或千个 Flywheel `EntityInstance`。
 - AUTO 默认优先使用 Flywheel，并永久保留 CPU 批量渲染作为不支持实例化、Oculus 光影和 Flywheel backend 故障时的兼容回退。
 - 以 1000 视锥内居民的组件级 p95 预算验收，不以主观“看起来不卡”或单次 FPS 截图验收。
+
+
+## 客户端道路站位与攀爬（2026-11-13）
+
+状态：已实现；源码锚点 `CitizenRoadPresentation`、`RoadPresentation`、`ClientCitizen.presentationPos`、
+`TownRoadRenderer`、`FakeCitizenRenderer`、`FlywheelCitizenBackend.writeSnapshot`、`citizen.vert`。
+
+服务端居民位置保持道路中心导航语义，客户端不回写偏移。匹配 `roadTown` 的居民，在已加载道路周围
+1 格邻域内按稳定居民 id 选择最多 0.9 格的侧向偏好；检查支撑、两格左右的身体净空和偏移途中碰撞，
+窄桥无完整脚底支撑时缩小偏移，无候选则使用基础位置。候选缓存最多 4096 项，每 10 tick 刷新；
+不每帧随机、不为每个居民另做全局寻路。入口、台阶和半砖收回路线中心；脚底高度按当前楼层局部
+碰撞形状求得，不使用整列最高高度，避免桥下居民跳到桥上。
+
+梯子上取消居民侧向分散，沿梯面定位并朝向支撑面；保留原有三维上行/下行进度。
+详细玩家模型、CPU 盒体和 Flywheel shader 采用同一攀爬手臂/腿部姿态。
+睡眠使用既有床位表现，不应用道路站位。大距离建筑端口转接直接重置快照插值，避免沿长直线穿过建筑。
+
+表现位置每客户端 tick 更新一次，在两个表现采样之间平滑插值。`FakeCitizenManager`、CPU 绘制、
+准星选取和距离选择共用 `presentationPos`；Flywheel 使用相同表现端点、时钟和朝向更新 GPU 实例，
+表现模式关闭横向额外外推。静止且表现位置未变化时不重复改写表现快照；GPU 仅在表现时间或状态改变时写脏。
+`CitizenRenderCoordinator` 在换世界、退出及重载生命周期中清理站位缓存。
+
+居民存在时，即使未按 J 开启区域高亮，也会按道路视图版本请求共享数据；没有居民且视图关闭时停止请求。
+收到新道路版本才重建道路格索引；J 仅控制是否绘制高亮，不控制居民是否有道路表现。
+当前道路数据按玩家所属队伍获取；外队、AI 与未托管居民保留普通表现，避免错误吸附到本队道路。
+
+验证入口：`CitizenRoadGameTests`（`frostedheart_citizen_roads`），开发客户端桥的 `roads setup`、
+`roads populate`、`roads status` 仅位于 `src/gametest/.../devtools/`，不进入正式模组包。
+此功能的实际截图、测试数与性能验证范围以开发日志为准，不将旧的千人渲染验收当作本轮道路站位的性能结论。

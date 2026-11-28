@@ -1,10 +1,11 @@
 package com.teammoeg.frostedheart.content.climate.block;
 
+import static com.teammoeg.frostedheart.content.climate.WorldTemperature.BlockTemperatureUse.PHASE_CHANGE;
+
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.thermal.persistence.DormantThermalCooling;
 import com.teammoeg.frostedheart.content.climate.thermal.profile.minecraft.MinecraftThermalProfiles;
-import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.input.MinecraftPhaseController;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import net.minecraft.core.BlockPos;
@@ -76,7 +77,7 @@ public final class ThinIcePhaseData extends SavedData {
     }
 
     static double temperature(ServerLevel level, BlockPos pos) {
-        return MinecraftPhaseController.temperature(level, pos);
+        return WorldTemperature.getTempAtBlock(level, pos, PHASE_CHANGE);
     }
 
     public static int warmLimit(double temperature, int stages) {

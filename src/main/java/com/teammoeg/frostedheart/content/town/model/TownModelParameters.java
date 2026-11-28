@@ -433,11 +433,7 @@ public record TownModelParameters(
                         Defaults.CLIMATE_EVENT_NOISE_STANDARD_DEVIATION_CELSIUS,
                         Defaults.CLIMATE_WARM_NOISE_SCALE,
                         Defaults.CLIMATE_ABSOLUTE_ZERO_CELSIUS,
-                        Defaults.CLIMATE_OVERWORLD_BASELINE_CELSIUS,
-                        Defaults.CLIMATE_STONE_INTERFACE_LEVEL,
-                        Defaults.CLIMATE_SEA_LEVEL,
-                        Defaults.CLIMATE_BLOCK_MAXIMUM_AFFECTION,
-                        Defaults.CLIMATE_BLOCK_HEAT_APPLICATION_MULTIPLIER),
+                        Defaults.CLIMATE_OVERWORLD_BASELINE_CELSIUS),
                 new ObservationParameters(
                         Defaults.TOWN_OBSERVATION_HISTORY_DAYS,
                         Defaults.TOWN_OBSERVATION_RESERVE_WARNING_DAYS,
@@ -772,11 +768,7 @@ public record TownModelParameters(
             float eventNoiseStandardDeviationCelsius,
             float warmNoiseScale,
             float absoluteZeroCelsius,
-            float overworldBaselineCelsius,
-            int stoneInterfaceLevel,
-            int seaLevel,
-            float blockMaximumClimateAffection,
-            float blockHeatApplicationMultiplier
+            float overworldBaselineCelsius
     ) {
     }
 
@@ -873,7 +865,7 @@ public record TownModelParameters(
         public static final double HOUSING_MAXIMUM_MENTAL_RECOVERY_PER_RESIDENT_DAY = 1.5;
         public static final int HOUSING_MINIMUM_FLOOR_AREA_BLOCKS = 4;
         public static final int HOUSING_MINIMUM_INTERIOR_VOLUME_BLOCKS = 8;
-        public static final double HOUSING_MINIMUM_TEMPERATURE_CELSIUS = 0.0;
+        public static final double HOUSING_MINIMUM_TEMPERATURE_CELSIUS = -10.0;
         public static final double HOUSING_MAXIMUM_TEMPERATURE_CELSIUS = 40.0;
         public static final double HOUSING_TEMPERATURE_FULL_STRESS_DISTANCE_CELSIUS = 20.0;
         public static final double HOUSING_TEMPERATURE_STRESS_PENALTY_EXPONENT = 2.0;
@@ -1006,10 +998,6 @@ public record TownModelParameters(
         public static final float CLIMATE_WARM_NOISE_SCALE = 2.0F;
         public static final float CLIMATE_ABSOLUTE_ZERO_CELSIUS = -273.0F;
         public static final float CLIMATE_OVERWORLD_BASELINE_CELSIUS = -10.0F;
-        public static final int CLIMATE_STONE_INTERFACE_LEVEL = 0;
-        public static final int CLIMATE_SEA_LEVEL = 63;
-        public static final float CLIMATE_BLOCK_MAXIMUM_AFFECTION = 0.5F;
-        public static final float CLIMATE_BLOCK_HEAT_APPLICATION_MULTIPLIER = 2.0F;
 
         public static final double MINING_BASE_OUTPUT_PER_SWE_DAY = 3.5;
         public static final double MINING_PHYSICAL_ACTIVITY = 1.0;
@@ -1034,6 +1022,28 @@ public record TownModelParameters(
         public static final double TRANSPORT_STATION_BONUS_AT_MAXIMUM_PROFICIENCY = 0.8;
         public static final double TRANSPORT_STATION_MINIMUM_PRODUCTIVITY = 0.5;
         public static final double TRANSPORT_STATION_MAXIMUM_PRODUCTIVITY = 2.3;
+        public static final int RESEARCH_INSTITUTE_MINIMUM_FLOOR_AREA_BLOCKS = 9;
+        public static final int RESEARCH_INSTITUTE_MINIMUM_INTERIOR_VOLUME_BLOCKS = 18;
+        public static final double RESEARCH_INSTITUTE_FLOOR_BLOCKS_PER_RESEARCHER = 4.0;
+        public static final double RESEARCH_INSTITUTE_MINIMUM_WORKING_TEMPERATURE_CELSIUS = -10.0;
+        public static final double RESEARCH_INSTITUTE_MINIMUM_AVERAGE_BLOCK_LIGHT = 8.0;
+        public static final double RESEARCH_INSTITUTE_PHYSICAL_ACTIVITY = 0.1;
+        public static final double RESEARCH_INSTITUTE_LEARNING_ACTIVITY = 1.0;
+        public static final double RESEARCH_INSTITUTE_HEALTH_WEIGHT = 15.0;
+        public static final double RESEARCH_INSTITUTE_MENTAL_WEIGHT = 20.0;
+        public static final double RESEARCH_INSTITUTE_STRENGTH_WEIGHT = 5.0;
+        public static final double RESEARCH_INSTITUTE_INTELLIGENCE_WEIGHT = 60.0;
+        public static final double RESEARCH_INSTITUTE_PRODUCTIVITY_AT_ATTRIBUTE_ZERO = 0.5;
+        public static final double RESEARCH_INSTITUTE_PRODUCTIVITY_AT_ATTRIBUTE_HUNDRED = 1.5;
+        public static final double RESEARCH_INSTITUTE_MAXIMUM_PROFICIENCY = 100.0;
+        public static final double RESEARCH_INSTITUTE_BONUS_AT_MAXIMUM_PROFICIENCY = 0.5;
+        public static final double RESEARCH_INSTITUTE_MINIMUM_PRODUCTIVITY = 0.5;
+        public static final double RESEARCH_INSTITUTE_MAXIMUM_PRODUCTIVITY = 2.5;
+        public static final double RESEARCH_INSTITUTE_DECORATION_BONUS_AT_FULL_RATING = 0.3;
+        public static final int RESEARCH_INSTITUTE_ARCHIVE_OBSERVATIONS_PER_BOOKSHELF = 16;
+        public static final int RESEARCH_INSTITUTE_INBOX_OBSERVATIONS_PER_BOOKSHELF = 4;
+        public static final int RESEARCH_INSTITUTE_ASSOCIATION_MINIMUM_EDUCATION = 2;
+        public static final double RESEARCH_INSTITUTE_ASSOCIATION_RATE_PER_STANDARD_RESEARCHER_DAY = 0.15;
         public static final int TRANSPORT_CONSUMER_DEFAULT_RATE_ITEMS_PER_SECOND = 20;
         public static final int TRANSPORT_CONSUMER_MINIMUM_RATE_ITEMS_PER_SECOND = 1;
         public static final int TRANSPORT_CONSUMER_MAXIMUM_RATE_ITEMS_PER_SECOND = 1280;
@@ -1062,7 +1072,7 @@ public record TownModelParameters(
         public static final int HUNTING_MINIMUM_WORKER_SLOTS = 1;
         public static final int HUNTING_MINIMUM_FLOOR_AREA_BLOCKS = 4;
         public static final int HUNTING_MINIMUM_INTERIOR_VOLUME_BLOCKS = 8;
-        public static final double HUNTING_MINIMUM_WORKING_TEMPERATURE_CELSIUS = 0.0;
+        public static final double HUNTING_MINIMUM_WORKING_TEMPERATURE_CELSIUS = -10.0;
         public static final double HUNTING_HEALTH_WEIGHT = 25.0;
         public static final double HUNTING_MENTAL_WEIGHT = 20.0;
         public static final double HUNTING_STRENGTH_WEIGHT = 25.0;

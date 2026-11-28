@@ -50,13 +50,13 @@ public final class TownSignalTipPresentation {
         contents.add(Component.translatable(presentation.titleKey()));
         for (TownSignalNotice notice : presentation.visibleEvents()) {
             Component description = TownSignalTipPresentationModel.usesAffectedCount(notice.type())
-                    ? Component.translatable(TownSignalTipPresentationModel.eventKey(notice.type()),
+                    ? com.teammoeg.frostedheart.content.town.ui.TownFormat.counted(TownSignalTipPresentationModel.eventKey(notice.type()),
                             notice.affectedCount())
                     : Component.translatable(TownSignalTipPresentationModel.eventKey(notice.type()));
             contents.add(Component.literal("• ").append(description));
         }
         if (presentation.overflowCount() > 0) {
-            contents.add(Component.translatable("tips.frostedheart.town.overflow",
+            contents.add(com.teammoeg.frostedheart.content.town.ui.TownFormat.counted("tips.frostedheart.town.overflow",
                     presentation.overflowCount()));
         }
 

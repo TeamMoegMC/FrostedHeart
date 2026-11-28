@@ -1,0 +1,8 @@
+{
+  "block.frostedheart.labor_dispatch": "劳动力派遣机构",
+  "container.frostedheart.labor_dispatch": "劳动力派遣机构",
+  "gui.frostedheart.labor_dispatch.workers": "可用基础工人：%s",
+  "gui.frostedheart.labor_dispatch.slots": "工位：%s",
+  "gui.frostedheart.town_manager.building.LaborDispatchBuilding": "劳动力派遣机构",
+  "gui.frostedheart.board.doc_mark.LaborDispatchBuilding": "派"
+}

@@ -1,0 +1,12 @@
+{
+  "key": "iron",
+  "category": "metal",
+  "hidden": true,
+  "primary": 0,
+  "secondary": 0,
+  "tertiary": 0,
+  "material": {
+    "tag": "forge:ingots/iron",
+    "count": 1
+  }
+}

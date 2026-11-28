@@ -1,0 +1,34 @@
+{
+  "status": "diagnostic tooling verified; reported overseas failure not yet localized",
+  "date": "2026-11-08",
+  "wireChanged": false,
+  "reportedCase": {
+    "sameNewJarBothEndpoints": true,
+    "blueScanVisible": true,
+    "sameSourceVisibleToDomesticPlayer": true,
+    "rootCause": "Awaiting corresponding client and server request evidence; not classified as network latency or rendering failure."
+  },
+  "requiredTestsPassed": 13,
+  "tests": "summary reads actual encoded values; empty full vs no snapshot; INVALID vs real cold values; permission-zero own-position command; existing request/codec/retired-region regressions",
+  "validationLog": "build/infrared-diagnostics-validation-20261108.log",
+  "packageLog": "build/infrared-diagnostics-package-20261108.log",
+  "artifact": "build/infrared-refresh-20261105/libs/frostedheart-1.20.1-0.7.10.jar",
+  "artifactBytes": 14622983,
+  "commands": {
+    "client": [
+      "fh_ir status",
+      "fh_ir trace true|false",
+      "fh_ir resync"
+    ],
+    "server": [
+      "fh_ir_server status",
+      "fh_ir_server trace true|false"
+    ]
+  },
+  "limits": [
+    "No access to the overseas client or actual test-server logs.",
+    "Client command/render observations compiled but not independently exercised in a real client GL session.",
+    "Server full probe is read-only and distinct from evidence that the actual player response completed."
+  ],
+  "supersededForLocalClientValidationBy": "infrared-streaming-e2e-2026-11-08.json"
+}

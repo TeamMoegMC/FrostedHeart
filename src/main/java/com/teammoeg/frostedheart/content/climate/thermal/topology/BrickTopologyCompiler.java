@@ -47,23 +47,17 @@ public final class BrickTopologyCompiler {
     private final int[] signatureIds = new int[64];
     private final byte[] blockToNode = new byte[64];
     private final long[] nodeBlockMasks = new long[64];
-    private final PrimitiveTopologyScratch.LongPairDouble[] airPairs = {
-        new PrimitiveTopologyScratch.LongPairDouble(),
-        new PrimitiveTopologyScratch.LongPairDouble(),
-        new PrimitiveTopologyScratch.LongPairDouble()
-    };
+    private PrimitiveTopologyScratch.LongPairDouble[] airPairs;
     private final AirMixingRegion mixing = new AirMixingRegion();
     private final Consumer<AirMixingRegion> mixingSources;
     private final ThermalFragment.RoutedContacts.Builder routedContacts =
             new ThermalFragment.RoutedContacts.Builder();
-    private final PrimitiveTopologyScratch.LongPairDouble materialPairs =
-            new PrimitiveTopologyScratch.LongPairDouble();
+    private PrimitiveTopologyScratch.LongPairDouble materialPairs;
     private final it.unimi.dsi.fastutil.ints.IntArrayList farBoundaryCells = new it.unimi.dsi.fastutil.ints.IntArrayList();
     private boolean fragmentResolved;
     private final it.unimi.dsi.fastutil.ints.IntArrayList farPatchCells = new it.unimi.dsi.fastutil.ints.IntArrayList();
     private final it.unimi.dsi.fastutil.longs.LongArrayList farPatchBlocks = new it.unimi.dsi.fastutil.longs.LongArrayList();
     private final it.unimi.dsi.fastutil.doubles.DoubleArrayList farPatchConductances = new it.unimi.dsi.fastutil.doubles.DoubleArrayList();
-
 
     /** A yielded topology job must see its sealed emitter set, not later intake. */
     BrickTopologyCompiler forInput(Consumer<AirMixingRegion> capturedSources) {
@@ -246,8 +240,25 @@ public final class BrickTopologyCompiler {
     }
 
     CompiledFragment compileFragment(WorkerPageStore.PageState page, int brick, TopologyView view) {
-        for (var pairs : airPairs) pairs.reset();
-        materialPairs.reset();
+        return compileFragment(page, brick, view, true);
+    }
+
+    /** Fixed cells exchange local faces directly; only routes, sky and the resolved layout are shared. */
+    CompiledFragment compileTransport(WorkerPageStore.PageState page, int brick, TopologyView view) {
+        return compileFragment(page, brick, view, false);
+    }
+
+    private CompiledFragment compileFragment(WorkerPageStore.PageState page, int brick, TopologyView view, boolean localFaces) {
+        if (localFaces) {
+            if (airPairs == null) {
+                airPairs = new PrimitiveTopologyScratch.LongPairDouble[] {
+                        new PrimitiveTopologyScratch.LongPairDouble(), new PrimitiveTopologyScratch.LongPairDouble(),
+                        new PrimitiveTopologyScratch.LongPairDouble()};
+                materialPairs = new PrimitiveTopologyScratch.LongPairDouble();
+            }
+            for (var pairs : airPairs) pairs.reset();
+            materialPairs.reset();
+        }
         farBoundaryCells.clear();
         farPatchCells.clear();
         farPatchBlocks.clear();
@@ -257,10 +268,12 @@ public final class BrickTopologyCompiler {
         var owner = view.brick(page, brick);
         if (!owner.cellsResolved) return new CompiledFragment(ThermalFragment.EMPTY, false);
         int x = brickMinX(page, brick), y = brickMinY(page, brick), z = brickMinZ(page, brick);
-        mixing.reset(x, y, z);
-        mixingSources.accept(mixing);
+        if (localFaces) {
+            mixing.reset(x, y, z);
+            mixingSources.accept(mixing);
+        }
         PageSignatures cut = view.signatures(page);
-        if (owner.blockLayout != null) {
+        if (localFaces && owner.blockLayout != null) {
             for (int blockIndex = 0; blockIndex < 64; blockIndex++)
                 signatureIds[blockIndex] = cut.get(BlockBrickLayout.pageBlock(brick, blockIndex));
             for (int blockIndex = 0; blockIndex < 64; blockIndex++) {
@@ -326,6 +339,7 @@ public final class BrickTopologyCompiler {
                 fragmentResolved = false;
                 continue;
             }
+            if (!localFaces) continue;
             int plane = axis == 0 ? nx : axis == 1 ? ny : nz;
             if (owner.blockLayout == null
                     && neighbor.blockLayout == null
@@ -385,7 +399,6 @@ public final class BrickTopologyCompiler {
         view.airRoutes()
                 .appendEdges(origin, view, parameters.effectiveMixingWPerBlockK(), routedContacts);
         BlockBrickLayout routedLayout = view.airRoutes().publishRoutes(origin, owner.blockLayout);
-        long airContactBlocks = 0;
         if (routedLayout != null)
             for (int block = 0; block < 64; block++) {
                 int slot = owner.slotAt(block);
@@ -394,10 +407,10 @@ public final class BrickTopologyCompiler {
                         by = net.minecraft.core.BlockPos.getY(position),
                         bz = net.minecraft.core.BlockPos.getZ(position);
                 if (slot < 0 || arena.materialLaw(slot) == null) continue;
-                if (view.materialSurfaceAt(bx, by, bz, signatures)) airContactBlocks |= 1L << block;
-                if (!view.airRoutes().hasRegion(position)
-                        || view.hasDirectAir(bx, by, bz, signatures)) continue;
-                int air = view.airSlotAt(view.airRoutes().region(position));
+                boolean directAir = view.hasDirectAir(bx, by, bz, signatures);
+                boolean routedAir = (routedLayout.routedAirMask() & (1L << block)) != 0;
+                if (!routedAir || directAir) continue;
+                int air = view.airSlotAt(routedLayout.routedAirBlock(block));
                 if (air < 0) continue;
                 double surfaceG =
                         materials
@@ -411,12 +424,10 @@ public final class BrickTopologyCompiler {
                 routedContacts.add(slot, air, conductance, view.airRoutes().validity(position),
                         null, view.airRoutes().outletTrace(position));
             }
-        if (routedLayout != null)
-            routedLayout = routedLayout.withAirContactBlocks(airContactBlocks);
         return new CompiledFragment(
                 new ThermalFragment(
-                        freezeAirPairs(),
-                        freezeMaterialPairs(),
+                        localFaces ? freezeAirPairs() : ThermalFragment.AirPairs.EMPTY,
+                        localFaces ? freezeMaterialPairs() : ThermalFragment.MaterialContacts.EMPTY,
                         routedContacts.build(),
                         freezeFarBoundaries(page.pageSlot)),
                 fragmentResolved,
@@ -440,17 +451,8 @@ public final class BrickTopologyCompiler {
         boolean firstBody = arena.materialLaw(firstSlot) != null;
         boolean secondBody = arena.materialLaw(secondSlot) != null;
         if (firstBody && secondBody) {
-            int firstFace = axis * 2 + 1, secondFace = axis * 2;
-            if ((signatures.fullContactFaces(firstSignature) & 1 << firstFace) == 0
-                    || (signatures.fullContactFaces(secondSignature) & 1 << secondFace) == 0
-                    || !view.materialContactAllowed(
-                            arena.minimum(firstSlot, 0),
-                            arena.minimum(firstSlot, 1),
-                            arena.minimum(firstSlot, 2),
-                            arena.minimum(secondSlot, 0),
-                            arena.minimum(secondSlot, 1),
-                            arena.minimum(secondSlot, 2),
-                            signatures)) return;
+            double area = signatures.contactFraction(firstSignature, secondSignature, axis * 2 + 1);
+            if (area == 0) return;
             double firstG =
                     materials
                             .profileOrNull(arena.materialProfileId(firstSlot))
@@ -462,7 +464,7 @@ public final class BrickTopologyCompiler {
             materialPairs.add(
                     Math.min(firstSlot, secondSlot),
                     Math.max(firstSlot, secondSlot),
-                    2 * firstG * secondG / (firstG + secondG));
+                    area * 2 * firstG * secondG / (firstG + secondG));
             return;
         }
         if (firstBody || secondBody) {

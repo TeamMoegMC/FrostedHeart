@@ -31,7 +31,6 @@ import net.minecraft.world.entity.player.Inventory;
 public class MineMenu extends CBlockEntityMenu<MineBlockEntity> {
     public MineMenu(int id, Inventory inventory, MineBlockEntity blockEntity) {
         super(FHMenuTypes.MINE.get(), blockEntity, id, inventory.player, 0);
-        addPlayerInventory(inventory, 8, 140, 197);
     }
 
     public Optional<MineBuilding> getBuilding() {

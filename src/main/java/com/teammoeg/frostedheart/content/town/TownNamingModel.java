@@ -29,6 +29,13 @@ public final class TownNamingModel {
     private TownNamingModel() {
     }
 
+    public static final int MAX_BUILDING_NAME_LENGTH = 16;
+
+    /** A building's new name; blank resets it to the numbered default, so it is an empty string rather than absent. */
+    public static String normalizeBuildingName(String input) {
+        return normalizeOptional(input, MAX_BUILDING_NAME_LENGTH);
+    }
+
     public static Optional<String> normalizeTownName(String input) {
         return normalizeRequired(input, MAX_TOWN_NAME_LENGTH);
     }

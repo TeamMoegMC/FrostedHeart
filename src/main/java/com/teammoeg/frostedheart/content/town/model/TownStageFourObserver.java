@@ -175,7 +175,7 @@ final class TownStageFourObserver {
         addTwoWayCrossing(day, houseUnsafe, previousHouseUnsafe,
                 TownSignalEvent.Type.HOUSE_TEMPERATURE_UNSAFE,
                 TownSignalEvent.Type.HOUSE_TEMPERATURE_RECOVERED,
-                result.population(), episodeId, "house morning temperature outside 0-40 C");
+                result.population(), episodeId, "house morning temperature outside configured range");
         addTwoWayCrossing(day, huntingStopped, previousHuntingStopped,
                 TownSignalEvent.Type.HUNTING_TEMPERATURE_STOP,
                 TownSignalEvent.Type.HUNTING_TEMPERATURE_RECOVERED,

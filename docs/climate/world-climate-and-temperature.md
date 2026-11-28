@@ -1,9 +1,9 @@
 # 世界气候与环境温度
 
 - Status: `Current`
-- Last verified: `2026-11-07`（红外编码去重、窗口重叠与带宽验证；`2026-11-06`核对慢响应与区域退出；`2026-11-05`核对红外开启、预报栏当前气候温度和同步接线）
-- Scope: 逻辑气候时钟、长期事件、局部白幕、自然/mesh/analytic 温度合成、红外视野、方块状态消费者
-- Primary code anchors: `WorldClockSource`, `WorldClimate`, `ClimateEventModel`, `ClimateEventTrack`, `InterpolationClimateEvent`, `WhiteCurtainDescriptor`, `WhiteCurtainFieldModel`, `WhiteCurtainInfo`, `WorldTemperature`, `BlockTemperatureModel`, `ThermalAnalyticField`, `ThermalAnalyticFieldIndex`, `MinecraftThermalInput.gameplayPassiveEnvironment`, `MinecraftThermalInput.gameplayCropEnvironment`, `MinecraftThermalInput.gameplayInfraredSnapshot`, `BlockScanner.RoomData.calculateTemperature`, `TownThermalProjection`, `MinecraftThermalInput.gameplayTownEnvironment`, `InfraredViewRenderer`
+- Last verified: `2026-11-20`（第5、8节和温度传感器小节的取温接口），`2026-11-19`（统一背景、材料读数、固体接触与相变），`2026-11-17`（第7节：能量塔中心额外5°C、到边缘归零的平滑增温及消费者接线）；`2026-11-15`（第4–6节：连续海拔、覆盖层气候滞后、逐格热场背景；`2026-11-08`红外接收驱动分片、渐进GPU显示、真实双客户端限速与单慢观察者；`2026-11-07`核对编码去重与窗口重叠；`2026-11-06`核对区域退出；`2026-11-05`核对预报栏和同步接线）
+- Scope: 逻辑气候时钟、长期事件、局部白幕、覆盖层气候滞后、自然/mesh/analytic 温度合成、红外视野、方块状态消费者
+- Primary code anchors: `WorldClockSource`, `WorldClimate`, `CoveredClimateHistory`, `ClimateCover`, `ClimateCoverColumns`, `LevelChunkMixin_ClimateCover`, `NaturalProfile`, `MinecraftEnvironmentCapture.naturalProfile`, `ClimateEventModel`, `ClimateEventTrack`, `InterpolationClimateEvent`, `WhiteCurtainDescriptor`, `WhiteCurtainFieldModel`, `WhiteCurtainInfo`, `WorldTemperature.getTempAtBlock/naturalAir`, `ThermalAnalyticField`, `ThermalAnalyticFieldIndex`, `MinecraftThermalInput.sampleAirTemperature`, `MinecraftThermalInput.captureInfraredSnapshot`, `BlockScanner.RoomData.calculateTemperature`, `TownThermalProjection`, `MinecraftThermalInput.sampleWeightedAirTemperature`, `InfraredViewRenderer`
 
 本文只描述当前源码行为。所有温度若无特别说明均为摄氏度；“修正”表示摄氏度增量。
 
@@ -96,98 +96,138 @@ local climate temp = min(global temp, white-curtain temp)
 
 ## 4. 世界温度分层
 
-`WorldTemperature` 暴露四个基础来源：
+`WorldTemperature` 由以下来源组成：
 
 | Symbol | Source | Fallback/default |
 |---|---|---:|
 | `D` | `WorldTempData` recipe，按维度 ID | `overworldBaselineCelsius = -10` |
 | `B` | `BiomeTempData` recipe，按群系 ID | `0` |
-| `A(y)` | `WorldTemperature.altitude` 硬编码分段 | 见下式 |
-| `C(pos)` | `WorldClimate.getTemp` 当前小时/区块 | 无能力时 `0` |
+| `A(y)` | `WorldTemperature.altitude`，源码常量 | 见下式 |
+| `C(pos)` | `WorldClimate.getTemp` 当前小时/区块的露天气候 | 无能力时 `0` |
+| `c(pos)` | `ClimateCover.coverAbove`，上方的覆盖层厚度，见4.1节 | 不在服务端世界线程或区块未加载时 `0` |
+| `C_c(pos)` | `WorldTemperature.coveredClimate`：经覆盖层滞后的气候 | `c = 0` 时等于 `C` |
 
-海拔修正当前是只为主世界高度写死的分段函数：
-
-```text
-y > 240       : A = -2.0 * (clamp(y,240,320) - 240)
-63 < y <= 240 : A = -0.1 * (clamp(y,63,320) - 63)
-0 < y <= 63   : A = 0
--55 < y <= 0  : A = 0.1 * (0 - clamp(y,-55,0))
-y <= -55      : A = 20.0 * (-55 - clamp(y,-64,-55))
-outside [-64,320] : A = 0
-```
-
-这些分段在 `y=240/241` 和 `y=-54/-55` 附近并不连续；文档按源码保留这一事实，不将其平滑化。
-
-`WorldTemperature.base` 是未加局部热区的简单和：
+海拔修正是以 `WorldTemperature.ALTITUDE_REFERENCE_LEVEL = 64` 为折点的一条连续折线，取现实的长期梯度。
+斜率是源码常量 `TEMPERATURE_CHANGE_PER_BLOCK_ABOVE_REFERENCE = -0.006` 和
+`TEMPERATURE_CHANGE_PER_BLOCK_BELOW_REFERENCE = 0.03`（°C/格），不是配置：
 
 ```text
-T_base = D + B + A + C
+y > 64  : A = -0.006 * (y - 64)    // 每100格 -0.6°C；y = 320 处 -1.536°C
+y <= 64 : A =  0.03  * (64 - y)    // 每100格 +3°C；y = -64 处 +3.84°C
 ```
 
-## 5. 方块温度
+没有平流层段和岩浆层段，也不按建筑高度截断。两段在 `y = 64` 相接，整条线连续。地热因此很弱，
+地下真正的优势是4.1节的气候隔离。
 
-气候对方块的影响比例由 `BlockTemperatureModel.climateBlockAffection` 给出。默认 `stoneInterfaceLevel=0`、`seaLevel=63`、`blockMaximumClimateAffection=0.5`：
+**超平坦维度没有地下。** 维度的区块生成器是 `FlatLevelSource` 时（`WorldTemperature.hasNoUnderground`），
+`y <= 64` 一律 `A = 0`，`y > 64` 与普通地形相同。这是按维度判断的，所以超平坦存档里的下界和末地照常。
+覆盖层规则在超平坦里也一样。GameTest 服务端没有超平坦维度；这条规则用纯函数 `altitude(int, boolean)`
+和真实的 `FlatLevelSource` 来测（`ClimateCoverGameTests.superflatHasNoGeothermalHeat`）。
+`src/gametest/resources` 里的 `flat.json` 只影响用超平坦预设新建的世界，例如 bridge 的 `newworld`。
+
+
+### 4.1 覆盖层与气候滞后
+
+覆盖层 `c(pos)` 是同一列中、严格高于该位置的不透光满方块数（`BlockState.isSolidRender`），上限为
+`coverMaximumBlocks`。玻璃、树叶、冰、液体和空气都不算覆盖。`ClimateCoverColumns` 给每个区块的每一列
+记录自上而下至多上限个不透光满方块的高度：第一次查询时从 `Heightmap.Types.WORLD_SURFACE` 往下扫描，跳过
+全空气的 section。`LevelChunkMixin_ClimateCover` 在 `LevelChunk.setBlockState` 改变不透光性时丢弃该列，除非该列
+已记满上限而且改动位于最深一条记录之下（这种改动不改变任何位置的封顶覆盖）。`ClimateCover.coverAbove`
+只在服务端世界自身线程、区块已加载时计数，否则返回 `0`，按露天处理。
+
+被覆盖处的气候是露天气候的一阶低通（`CoveredClimateHistory`）。`WorldClimate.updateCache` 每进入一个新的
+气候小时，就把全局小时气候 `g(h)`（`dailyTempData` 中该小时的值，不含白幕）写入环形历史；历史长度取上限覆盖
+的窗口。查询时：
 
 ```text
-alpha_block(y) = 0                         , y <= stoneInterface
-               = alpha_max * (y-stone)/(sea-stone), stone < y <= sea
-               = alpha_max                 , y > sea
-
-T_natural = D + B + A + alpha_block * C
+τ(c)  = coverResponseDaysAtTenBlocks × 24 × (c/10)²     // 气候小时
+W(τ)  = ceil(4τ) + 1        // τ = 0 时为 1，最多 2^20；四个τ以外的权重不足2%
+k     = exp(-1/τ)
+n     = min(已记录的小时数, W(τ))
+C_c(h) = Σ_{a=0}^{n-1} k^a · ℓ(h-a)  /  Σ_{a=0}^{n-1} k^a
+ℓ(h)  = min(g(h), T_curtain(h, chunk))    // 此刻仍影响该区块的白幕在第h小时的温度
+ℓ(h)  = min(g(h), 0)                      // 没有白幕；与 getTemp 的 min(global, ClimateResult.EMPTY) 相同
 ```
 
-`WorldTemperature.naturalBlock` 返回上述自然值。`WorldTemperature.block` 随后调用
-`MinecraftThermalInput.gameplayPassiveEnvironment`：revision-valid mesh publication 命中时以 published
-air 替换局部自然值；当前稀疏 Page 尚未发布目标 Brick signature payload 时先读取该 Brick 的
-dormant checkpoint，已编译但目标点确实无 Air 时仍保留 natural backend；最后应用 analytic control fields。该 passive 查询不会
-创建 Page，也不会加载区块。`WorldTemperature.naturalBlock`直接使用
-`BlockTemperatureModel.climateBlockAffection`和`naturalTemperature`，再应用绝对零度下限；
-它不读取`blockHeatApplicationMultiplier`或执行零热量的旧加热公式。旧城镇模拟器仍使用`applyHeat`。
+权重在已记录的小时上归一，所以低通的稳态增益是 1：持续的气候原样到达，覆盖层只把比 τ 短的变化削弱并推迟，
+不改变长期平均。`c = 0` 时 `WorldTemperature.coveredClimate` 直接返回 `C`。默认
+`coverResponseDaysAtTenBlocks = 3.0`、`coverMaximumBlocks = 16`：
+
+| c | τ |
+|---:|---:|
+| 1 | 0.72 h |
+| 3 | 6.5 h |
+| 5 | 18 h |
+| 10 | 72 h（3天） |
+| 16 | 184 h（7.7天），更深不再增加 |
+
+结果按小时、覆盖厚度和白幕 generation 缓存：没有白幕的区块共用一张表，有白幕的区块各自一张。已被移除的白幕
+不再出现在过去的小时里。历史存于 `WorldClimate` 的NBT `coveredClimate`（`newestHour`、`hourlyCelsius`，
+float位），不进入网络包；`addInitTempEvent` 清空历史。没有历史的旧存档从当前小时开始记录，因为权重只在已记录的
+小时上归一，升级后最初几小时读到的就是当前气候。
+
+## 5. 方块位置与材料测量
+
+`WorldTemperature.getTempAtBlock(level, pos)` 是只凭方块位置取温的统一入口，返回 °C。服务端主线程优先返回可读的活动或休眠材料温度，由材料的焓和相变分支求得，再在方块中心合成解析热场。`materialTemperature` 和 `sampleMaterialTemperatureWithEstimate` 的数值返回遵循此规则；环境估算已合成场，不重复叠加。`sampleMaterialTemperature` 保留原始材料记录，红外批量路径自行合成一次，不回写材料焓。环境路径通过 `MinecraftThermalInput.sampleAirTemperature` 读取可用的空气温度（含区块的休眠余温），以 `WorldTemperature.naturalAir` 兜底，再在方块中心合成解析热场。客户端和非服务端主线程返回自然背景。
+
+土壤温度计、作物生长和悬浮提示、栽培橡树随机刻及蘑菇扩散温度判定都使用此顺序。旧版 `VanillaClimate.getTemperature` 也直接返回该位置读数。
+
+需要特定物理量或采样方式的调用使用对应入口。
+
+| 入口 | 用途与结果 |
+|---|---|
+| `getTempAtBlock(level, pos, SURROUNDINGS)` | 降雪和冰体热裂按当地空气判断。红石温度传感器用它控制环境气温，背包蓄热物品用它与空气换热。`SURROUNDINGS` 来自 `WorldTemperature.BlockTemperatureUse`。 |
+| `getTempAtBlock(level, pos, PHASE_CHANGE)` | 冰体相变、生长和滴水读取材料温度。确实没有记录的已加载材料采用位置环境估算，归属待发布或存档不匹配时返回 `NaN` 并等待下次采样。 |
+| `getTempAtBlock(level, pos, materialSample)` | 与两参数入口取同一个温度。土壤温度计用 `MaterialSample.Source` 标明读数来自材料记录（`LIVE` 或 `STORED`）还是当地环境气温（`UNAVAILABLE` 表示没有可读材料记录）。 |
+| `getTempAtBlock(serverLevel, pos, biomeView)` | 城镇按室内坐标取环境温度，通过 `LoadedTownWorld` 查询群系，服务端世界提供覆盖、海拔、维度与热场。 |
+
+`MinecraftThermalInput.sampleMaterialTemperature` 为已有的材料热记录填充 `MaterialSample`。`sampleMaterialTemperatureWithEstimate` 供相变规则在已加载材料缺少热记录时用位置环境温度初始化。玩家、掉落物及放置的蓄热块使用各自的空气与辐射采样。`WorldTemperature.naturalAir` 提供求解和回退的自然背景，天气预报读取气候轨道，红外读取批量热场快照。
 
 ## 6. 空气温度
 
-`WorldTemperature.air` 的 natural fallback 使用另一套公式：
-
 ```text
-alpha_air(y) = 0                              , y <= 0
-             = (y / 63)                       , 0 < y <= 63
-             = 1                              , y > 63
-
-T_natural_air_query = max(absoluteZero,
-                          D + B + A + alpha_air * C + gaussian(0,0.3))
+T_natural = max(absoluteZero, D + B + A + C_c)
 ```
 
-`WorldTemperature.naturalAir` 使用同一个 `alpha_air`，但明确排除 mesh、analytic fields
-和随机扰动：
+空气与材料共用自然背景。`C_c` 是覆盖层影响下到达该处的气候温差，单位 K。位置读数采用完整的 `C_c`。旧配置 `blockMaximumClimateAffection` 和 `blockHeatApplicationMultiplier` 已移除。空气探针与传感器使用同一无随机扰动的环境查询。
+
+**热场的自然背景。** 固定温场在每一格保存绝对焓，但只模拟相对自然背景的扰动：每个被捕获的方块
+（空气和材料都一样）都有自己的背景 `T_natural_air`，各种换热都按“与各自背景之差”计算，静止时每格停在
+自己的背景上，背景不同的相邻格之间没有热流。场的合同见[运行时控制](thermal-runtime-control.md#自然背景)。
+背景由主线程按 Section 发布为 `NaturalProfile`，由 `MinecraftEnvironmentCapture.naturalProfile` 在 Page
+capture 时生成：
 
 ```text
-T_natural_air = max(absoluteZero, D + B + A + alpha_air * C)
+brickBase[b]   = D + B(Brick b 中心)                          // 64个
+cover[block]   = c(block)                                     // 4096个
+climate[c]     = WorldClimate.getCoveredTemp(Section中心, c)，c = 0..coverMaximumBlocks
+NaturalProfile.at(block) = max(absoluteZero, brickBase[b] + A(y) + climate[min(cover, limit)])
 ```
 
-新热学 runtime 在 Page admission 时以 section 中心的 `T_natural_air` 初始化空气并作为
-FarField 外部温度。已 admission Page 按 section hash 错峰排入刷新队列，同一 Page 两次刷新
-至少间隔 `200` ticks，每 tick 最多出队处理 `16` 个到期项；已 withdraw 或 generation
-不匹配的 stale 项同样占用该预算；其Entry中的handle与天空列数组在出队时释放。
-每次实际采样后以当前gameTick加200安排下次刷新，不追赶历史截止时间。背景变化达到
-`0.25 degC` 才局部替换受影响 Brick 的 FarField boundary，几何、coverage slot、Air
-邻接和已有 cell enthalpy 都不重建。全维度风力仍每 `200` ticks
-采样一次，作为一个有界 FarField scale 输入交给 worker；不会遍历房间或全局连通集合。天空截面不做周期全
-Page 重采样：方块 mutation 在 heightmap 更新完成后于 tick-end 合并查询实际变化的 XZ 列，
+群系按 Brick 取样，覆盖气候按 Section 中心所在区块取样，海拔和覆盖按方块计算。
+
+已 admission Page 按 section hash 错峰排入刷新队列，同一 Page 两次刷新至少间隔 `200` ticks，每 tick
+最多出队处理 `16` 个到期项；已 withdraw 或 generation 不匹配的 stale 项同样占用该预算；其Entry中的handle
+与天空列数组在出队时释放。每次实际采样后以当前gameTick加200安排下次刷新，不追赶历史截止时间。每次刷新：
+
+- 任一覆盖厚度的 `climate[c]` 变化达到 `MinecraftEnvironmentCapture.CLIMATE_DELTA_C = 0.05 degC` 时，
+  发布换了气候表的新 profile（`NaturalProfile.withClimate`）；
+- Section 中心的 `T_natural_air` 变化达到 `0.25 degC` 时才交给 worker，作为 Tile 的 `ambientC`。
+  有 profile 的 Tile 只用它作诊断；没有 profile 的 Tile 用它作为所有格的背景；休眠存档也仍以它为编码基准。
+
+覆盖层变化不等刷新：`LevelChunkMixin_ClimateCover` 经 `MinecraftThermalInput.onClimateCoverChanged`
+调用 `MinecraftEnvironmentCapture.markCoverColumn`，每 tick 最多处理
+`MAX_COVER_COLUMNS_PER_TICK = 64` 列，复制并更新该列经过的已跟踪 Section 的 `cover` 数组
+（`NaturalProfile.withCover`），再发布。新 profile 经 `NaturalProfiles` 交给 worker，在下一个推进边界生效
+（`TiledThermalField.refreshNaturalProfiles`）：每格保留与背景之差，跟随新背景移动，移动所需能量记为外部能量。
+几何、coverage slot、Air 邻接都不重建。
+
+全维度风力仍每 `200` ticks采样一次，作为一个有界 FarField scale 输入交给 worker；不会遍历房间或全局连通集合。
+天空截面不做周期全 Page 重采样：方块 mutation 在 heightmap 更新完成后于 tick-end 合并查询实际变化的 XZ 列，
 每 tick 最多处理 `64` 列；积压列留到后续 tick，并只重编该列穿过的 Brick open fragment。
 
-空气公式有三个必须保留的当前差异：
-
-- `alpha_air` 使用 `WorldTemperature.SEA_LEVEL=63` 和 `STONE_INTERFACE_LEVEL=0` 硬编码常量，不读取对应服务端配置；
-- 气候最大影响为 `1.0`，而方块默认最大影响为 `0.5`；
-- `WorldTemperature.air` 的 fallback 有 `0.3degC` 高斯扰动，`naturalAir` 和 FarField 没有。
-
-自然空气在`y <= STONE_INTERFACE_LEVEL`时的气候系数为零，直接跳过气候查询；
-维度、群系、海拔贡献及绝对零度下限保持原公式。
-
-每次服务端空气温度查询还会从世界随机源加入标准差 `0.3` 的高斯扰动，所以相同位置连续查询不保证相同结果。
-
-当前 gameplay runtime 为各维度安装同一空气 open-space FarField 阻抗，维度只改变
-`T_natural_air`。Page capture 还封存每个 XZ 列首个天空暴露 local Y；拓扑编译只在当前 Brick
+当前 gameplay runtime 为各维度安装同一空气 open-space FarField 阻抗，FarField 的外部温度是暴露格自己的背景，
+维度只通过背景起作用。Page capture 还封存每个 XZ 列首个天空暴露 local Y；拓扑编译只在当前 Brick
 及其已 admission 的相邻 Brick 中生成 Air pair。真实天空暴露才会生成完整 FarField；开放方向
 数量不作为室外证明。物理source播种其出口Brick，worker根据热残差请求相邻驻留Brick；
 缺失的非天空邻居没有合成FarField散热项，也没有旧的一层continuation扫描。
@@ -200,7 +240,8 @@ Page 重采样：方块 mutation 在 heightmap 更新完成后于 tick-end 合�
 `ThermalAnalyticFieldIndex`；`MinecraftThermalInput` 缓存同一索引引用。命令和 Curiosity
 直接使用 `MinecraftGameplayFields.upsert/remove`，能量塔仍使用原 `upsertSphere/remove`。
 field 可为
-`CUBE`、`PILLAR` 或 `SPHERE`，范围内为常值，无衰减或遮挡；不会复制到覆盖区块、挂 capability、
+`CUBE`、`PILLAR` 或 `SPHERE`，默认范围内为常值；球形场可显式指定 `centerBoostC`，在原值上叠加平滑中心增温。
+能量塔使用中心增温，命令和 Curiosity 仍使用原有常值。场没有遮挡，不会复制到覆盖区块、挂 capability、
 创建 Page，也不参与 `H/C/P/G` 守恒账本。键为 `ThermalFieldKey(provider, ownerHigh, ownerLow, channel)`：
 generator 使用团队数据完整 UUID，Curiosity 使用实体完整 UUID，命令使用独立命名空间内的位置。
 更新 map 与有序列表引用同一 Entry；重复球形报告不创建定义，不排序；仅新增、删除、mode/priority
@@ -213,17 +254,27 @@ FLOOR_FROM_NATURAL -> OVERRIDE -> MAX_HEAT -> MIN_COOL -> ADD_DELTA
 ```
 
 同一 mode 内按 priority 和完整 key 排序。Generator 使用 `FLOOR_FROM_NATURAL`：令 N 为当前消费者
-在查询点的自然温度，P 为原有 live/dormant/natural 选择，D 为命中保底场的最大温差，先求
+在查询点的自然温度，P 为原有 live/dormant/natural 选择，D 为命中保底场在该点的最大有效温差，先求
 `max(P, N + D)`；没有保底场时保留 P。N/P 是摄氏温度，D 是摄氏温差。Curiosity 的负值
 `ADD_DELTA` 在后续扣减；`/heat_adjust` 创建 `OVERRIDE`，删除时只删除命令自己的场。
 保底适用于区域玩法，包括人物、作物和城镇，并不向物理网格注入能量。
 
 Generator 的半径/温差来自 `GeneratorData.getRadius/getTempMod` 和 `GeneratorHeatFieldModel`：
 默认半径为 `floor(16 * Lr)`（`0 < Lr <= 1`）或 `floor(16 + 8 * (Lr - 1))`（`Lr > 1`）个方块，
-默认温差为 `floor(10 * Lt)`。配置属于 `FHConfig.SERVER.TOWN.GENERATOR_T1` 的
+默认基础温差为 `floor(10 * Lt)`。配置属于 `FHConfig.SERVER.TOWN.GENERATOR_T1` 的
 `baseRadiusBlocks`、`additionalRadiusPerLevelBlocks`、`temperaturePerLevelCelsius`。
-例如 N=-40、D=30 时保底是 -10；室内物理温度只有超过 -10 后才进一步提高合成温度。
-这不是旧 `BlockTemperatureModel.applyHeat` 的 `min(N + 2H, H)` 曲线；该旧曲线不用于通用场。
+令 `R` 为该塔半径、`d` 为查询点到球心的三维欧氏距离，单位均为方块，`D0 = getTempMod()` 为基础温差，
+范围内的有效温差为 `D(d) = D0 + B * (1 - d²/R²)²`（`0 <= d <= R`）。
+`B = GeneratorHeatFieldModel.CENTER_BOOST_CELSIUS = 5°C` 是源码固定增益，不是运行时配置；球心沿用
+`(actualPos.x + 0.5, actualPos.y - masterYPosInMB + 0.5, actualPos.z + 0.5)`。
+T1、T2 共用 `GeneratorData.publishGameplayHeat`，均使用这一规则。
+中心额外5°C，半径一半处额外2.8125°C，边缘额外0°C；增益在中心和边缘的斜率均为零。
+`ThermalAnalyticField.temperatureCAt` 合并范围判断与增温取值，复用一次距离平方计算；半径平方的倒数
+在定义创建时预计算，查询无需除法或开平方，未变化的塔报告继续复用原定义。
+原半径和边缘基础温差保留，范围外不应用保底。多个塔按各自在查询点的 `D(d)` 取最大值，不相加。
+例如 N=-40、D0=30 时，中心保底是-5°C，半径一半处为-7.1875°C，边缘仍为-10°C；
+室内物理温度超过当地保底后可继续提高合成温度。
+城镇阶段四推演对建筑各格取相同的球内升温，再计算建筑均值。
 
 解析场不会触发物理 runtime 启动，物理关闭/配方重载不清场。实际世界卸载和服务器停止清理索引；
 服务器重启后 generator 从团队数据重建，Curiosity 从实体状态重建，命令场不持久化。
@@ -232,9 +283,9 @@ Generator 的半径/温差来自 `GeneratorData.getRadius/getTempMod` 和 `Gener
 无需额外距离平方、视角余弦或辐射求解。解析修正后的`displayTemperature`是玩法显示值，
 不能称为实测材料温度；它不回写材料H/C/T。现有节点六面共用，不代表六面独立或内部温度。
 
-`MinecraftThermalInput.gameplayInfraredSnapshot`通过`BlockBrickLayout.materialNodeMask`
+`MinecraftThermalInput.captureInfraredSnapshot`通过`BlockBrickLayout.materialNodeMask`
 读取材料本体节点的H→T，包括普通材料、相变平台与相变后的状态。楼梯本体不再与空气
-共用温度；实际Air和休眠Air均温不作为材料基础。材料本体H/分支/时间另存于format 6，
+共用温度；实际Air和休眠Air均温不作为材料基础。材料本体H/分支/时间另存于区块热格式 v7，
 不通过Air均温恢复。旧相变池和旧存档兼容读取已移除。
 
 活动Brick优先使用当前材料发布；未驻留的Brick可直接读取已加载Chunk中
@@ -244,12 +295,13 @@ Generator 的半径/温差来自 `GeneratorData.getRadius/getTempMod` 和 `Gener
 空气与普通材料共用源码默认30游戏秒温差半衰期，相变材料保留潜热平台；旧配置中的显式值仍优先。
 普通余温低于0.5°C后由捕获/有限维护释放，相变和未消费输入继续按其责任保留。
 具体退出、保存与红外删除合同见[余温生命周期](thermal-residual-lifecycle.md)。
-当前Section中心自然温度近似整个休眠区间；不回放天气历史，也不累计服务器停止的现实时间。
+休眠查询朝方块自己当前的自然温度（`WorldTemperature.naturalAir`，含覆盖层滞后）衰减，
+不回放休眠期间的背景变化，也不累计服务器停止的现实时间。
 
-局部几何变化不等于材料温度消失。红外和`sampleMaterial`读取`ThermalPageHandle.lastPublication()`
+局部几何变化不等于材料温度消失。红外和`sampleMaterialTemperature`读取`ThermalPageHandle.lastPublication()`
 这份既有材料发布，并继续检查slot generation及query cut一致性。材料变更日志只排除发布之后
 真正替换、物质量变化或转换的位置；未变化方块在同Brick/同Page重建期间仍可读。
-当Page发布先于查询缓冲完成切换时，`sampleMaterial`可从`previousPublication`读取未改变方块，
+当Page发布先于查询缓冲完成切换时，`sampleMaterialTemperature`可从`previousPublication`读取未改变方块，
 但必须同时匹配当前BlockState，并要求查询拓扑版本早于新Page；旧slot在新拓扑中复用后不能被误读。
 红外通过`collectMaterialChangesSince`一次展开到共用的64个long（512 bytes）临时位图，
 只重发受影响Brick，不为每Page/玩家保存额外物理温度状态。下述有界编码缓存仅用于显示去重。
@@ -265,16 +317,19 @@ Generator 的半径/温差来自 `GeneratorData.getRadius/getTempMod` 和 `Gener
 相同世界Page的编码由多个观察者共享；全服缓存计量上限8MiB、最多256个观察基准，
 淘汰仅导致重发，不影响温度权威。离线、换维度、Level卸载和停服释放相关引用。
 
-有材料且无场时显示材料温度；无材料且无场时发送`Short.MIN_VALUE`。客户端对缺失值
-使用`MIN_TEMP=-20`的蓝色**占位**，不把-20当实测值。`InfraredViewRenderer.toggleInfraredView()`
+有材料且无场时显示材料温度；无材料且无场时发送`Short.MIN_VALUE`。客户端用自己算出的
+逐块自然温度（空气公式，与热场背景相同）填这些方块，见[自然温度底色](infrared-view.md#自然温度底色)。
+现场判别与收包/提交状态见[红外视野架构与诊断](infrared-view.md)。仍没有值的位置
+（空气、未加载区块、尚未算到的Page）不着色，保持原画面。`InfraredViewRenderer.toggleInfraredView()`
 切换开关后，扫描半径仅由`open`推进或收回，不以材料或解析场Page覆盖作为开启条件；
 附近没有篝火、整个窗口没有温度覆盖或首个响应尚未到达时也能展开扫描。首次捕获前按需
 创建全INVALID显示纹理；重新进入世界时会清除复用mirror中的旧样本。后续材料/解析场响应
-直接更新已有显示，覆盖变空不关闭视野。真正不高于色标下限的有效温度仍按原色标呈蓝色。
-全窗口自然背景估计、729值背景包和第二张背景纹理已删除。
+直接更新已有显示，覆盖变空不关闭视野。真正不高于色标下限的有效温度同样呈紫色；色标见
+[红外色标](infrared-view.md#色标)。
+旧的全窗口自然背景估计、729值背景包和第二张背景纹理已删除；`2026-11-15`起改为上面的客户端逐块计算。
 
 命中场的块中心使用`ThermalAnalyticFieldIndex.Sample`合成。能量塔仍是
-`max(base, naturalAir + getTempMod())`保底；有冷材料也执行，较热材料不被降低。
+`max(base, naturalAir + maximumMatchingDeltaAtPosition)`保底，包含上述中心增温；有冷材料也执行，较热材料不被降低。
 没有材料而公式需要base时，仅在场范围内用`WorldTemperature.naturalAir`作原公式基准；
 OVERRIDE不需要这项读取。场合成后统一量化0.25°C，保留原priority/key排序及其他场模式。
 自然读取只在命中且需要时发生，复用精确同biome Brick按Y层计算；未加载的必要邻区不会
@@ -285,22 +340,28 @@ OVERRIDE不需要这项读取。场合成后统一量化0.25°C，保留原prior
 使关闭或缩小范围后恢复材料/蓝底。材料presence不会在客户端直接擦掉场热色。
 跨Section移动且窗口仍重叠时，`InfraredWindow`保留旧144³镜像的绝对位置重叠，
 只补进入区域和发生变化的记录；进入位置初始化为INVALID。无重叠远跳、失效或新generation
-仍使用full。移动后的本地GPU纹理在LAST一次完整上传，网络节省不等于省掉该上传。
+仍使用full。移动后的本地GPU镜像在FIRST按新origin完整上传，后续逐片上传变化Page；
+完整增量基准在LAST确认。网络节省不等于省掉移动时的本地完整上传。
 同一客户端最多一个未完成请求，慢响应和分片接收期间不换requestId，也不因跨Section移动
 取消该响应；完成后再请求当前窗口。服务端无变化或暂未取得一致快照时仍发送ACK，
 只结束等待而不改变既有热色。41..59tick是缺少完整基准时在完成回复后的重试节奏，
 不是丢弃慢响应的超时。ACK正文只有requestId与flags；掩码按空/稀疏/完整选择，
-分包的presence、场footprint和休眠版本只在LAST发送。两端都需要实现该回复合同，
+分包的presence、场footprint和休眠版本只在LAST发送。首片上限32KiB、后续128KiB，附近Section优先；
+客户端处理一片后通过`FHContinueInfraredViewPacket`继续取下一片，LAST也发送最终回执。
+传输期间保留变化跟踪，取消/离线/换维度时释放回复。两端都需要实现`:infrared-stream-1`合同，
 详见[网络合同](data-lifecycle-and-integration.md#network-and-consumers)与
 [带宽记录](validation/infrared-bandwidth-2026-11-07.json)。
 `QueryPublication.installRegions()`同时标记退出区域的旧Page/Brick范围与新区域范围；
 同Page仍有其他材料、区域完全退出或同一region缩小时，旧范围也进入下一次增量回包。
 已无材料与解析场的Brick发送显式INVALID，清除客户端旧热色，不依赖重新登录或整页presence改变。
-并发发布导致Page/slot/cursor不一致时，整份读取最多重试两次；仍未读到一致cut则不发送响应，
-客户端保留已提交的显示，下一次按原节奏请求，不把读竞争编码成材料删除。
+并发发布导致Page/slot/cursor不一致时，整份读取最多重试两次；仍未读到一致cut则返回null，
+请求处理器发送ACK，客户端保留显示并按原节奏请求，不把读竞争编码成材料删除。客户端没有可读材料基准
+（`knownReadable=false`）时没有可被误删的东西：此时一个尚未发布过的温场（`QueryPublication.beginRead`失败，
+例如新世界里运行时已启动、但还没有任何驻留）按“没有温场”抓取，窗口、休眠材料、解析场和自然温度气候照常送达。
 全局物理cut稳定invalid或超过40 ticks时
-返回field-only full，恢复后full重建。同一不可读状态可以继续delta。只有LAST才提交
-origin、epoch、generation与两个Page位图并上传。详见[网络合同](data-lifecycle-and-integration.md#network-and-consumers)。
+返回field-only full，恢复后full重建。同一不可读状态可以继续delta。FIRST切换显示origin，
+收到的Page立即上传；只有LAST才确认epoch、generation、两个Page位图及完整增量基准。
+真实慢网复现、修复与画面证据见[红外验证](infrared-view.md#验证边界)。
 
 `FHClientEvents.onRenderSurfaceInfrared`在`AFTER_LEVEL`直接混合到主颜色附件。
 `InfraredChunkRenderer`继承Embeddium原地形renderer，沿用原网格、可见性、排序和multiDraw。
@@ -328,7 +389,7 @@ Embeddium在同一solid调用中依次绘制SOLID/CUTOUT；自有renderer在CUTO
 
 实体等遮挡像素采用环境显示近似：从自己的可见表面位置重建camera-relative坐标，加
 `cameraToTemperatureOrigin`，直接读取既有144³显示纹理。已有能量塔等解析场显示可直接复用；
-没有有效值时仍采用蓝色基底。此路径不查询/同步真实空气温度，不取脚下块，不建立实体体温或逐实体缓存。
+取样点先沿屏幕空间法线退到表面后面0.05格（见[非地形像素](infrared-view.md#非地形像素读表面后面的方块)），没有有效值时不着色。此路径不查询/同步真实空气温度，不取脚下块，不建立实体体温或逐实体缓存。
 其目的仅是实体融入环境，不能称为实测空气温度或体温；方块本身仍通过精确owner取材料温度。
 不写深度的透明介质/粒子的独立遮挡与热成像尚未实现。
 
@@ -339,7 +400,7 @@ Embeddium在同一solid调用中依次绘制SOLID/CUTOUT；自有renderer在CUTO
 独立开发客户端已通过两种格式的真实接入、resize、资源重载、缩圈释放及重开；原图与红外图
 37,246个热表面像素对照RGB误差≤1色阶、alpha精确相同。Forge AFTER_LEVEL与地形入口的
 PoseStack不是同一个对象；最终显示使用已捕获camera pose和本帧主FBO/terrain访问标志。
-稳定圈内保留-20..20°C原色标和`mix(originalRGB,heatColor,0.43)`；最终RGB受原图影响，
+稳定圈内使用−50..50°C的紫→红色标（`2026-11-15`前为−20..20°C）和`mix(originalRGB,heatColor,0.43)`；最终RGB受原图影响，
 不是定量温度图。天空/圈外保留原图，前沿3 blocks保留原扫描动画。
 RGB使用预乘`ONE, ONE_MINUS_SRC_ALPHA`，alpha使用`ZERO, ONE`保留目标alpha。
 混合结束恢复进入前的GL program，保持`ShaderInstance`编号缓存与实际绑定一致；不调用
@@ -351,28 +412,26 @@ D24/D32F快照通常按4P bytes计，总预算6P bytes（P为屏幕像素数）�
 关闭并完成缩圈后释放屏幕附件；资源重载重建program，卸载时删除自有资源，不删除借用附件。
 本轮范围是固定Embeddium整合包且不启用光影；特殊BE和实体的独立热状态留待以后。
 Campfire、Generator 和蒸汽喷泉仍由 `PhysicalSourceSpatialIndex` 注册为显式功率 source。
+T1/T2 Generator 从底座中心偏移 `(±2, 2, 0)`、`(0, 2, ±2)` 的四个水平出口排热，
+T1每口固定6,000W、T2每口固定8,000W，两种塔的辐射功率均固定2,000W；
+具体功率分配、绑定与堵口行为见[热源说明](heat-production-and-network.md#generator-horizontal-exhaust)。
 Generator 另外提供上述解析保底；其物理功率和传播范围不受解析场半径裁剪。
 `ChunkHeatData`、`IHeatArea`、chunk capability、周期 revalidation 和旧失效包均已删除。
 
 ## 8. 主要消费者
 
-环境温度及同一 compositor 目前驱动：
+动物、蜂巢、村民交易、战利品条件、温度探针对准的方块和研究观察使用 `WorldTemperature.getTempAtBlock`。玩家体温通过 `WorldTemperature.samplePlayerAirTemperature` 读取眼部环境和辐射数据。当前仍使用 `BlockTempData` 配方。详见[玩家体温](player-temperature.md)。
 
-- `MinecraftPhaseController.tryAtRandomTick` 中无材料记录的环境平衡转换；有记录时由材料H和同一数据边决定相变；
-- `PlantTempData` 的施肥、生长、生存和死亡检查；
-- 动物、蜂巢、村民交易、战利品条件和温度探针；
-- 城镇住宅和狩猎建筑的内部体素温度扫描。`MineBlockScanner` 中的旧温度累积当前没有生产调用者，`MineBaseBlockScanner` 不计算温度。
+`MinecraftPhaseController.tryAtRandomTick` 用环境值初始化无记录材料的焓，达到相变阈值后根据潜热进度保留或转换材料。降雪和覆雪判定也直接读取环境温度。
 
-`WorldTemperature.air` 主要供被动环境查询、降雪判断及显示工具使用。玩家体温路径直接消费 sparse publication、analytic field 和物理辐射；旧玩家周围粒子模拟器及其专用缓存、配置已移除，`BlockTempData` 配方本身保留，见 [player-temperature.md](player-temperature.md)。
+`WorldTemperature.checkPlantStatus` 与 `SoilThermometerUpdatePacket.sample` 共用 `WorldTemperature.getTempAtBlock(level, pos)` 读取作物坐标的生长温度，先读材料记录，读不到时取当地环境气温。天气可单独决定植物状态，保温肥料调整作物配方的最低温度。玩家规则和默认小麦区间见[作物温度与肥料](crop-fertilization.md#生长温度)。
 
-`WorldTemperature.checkPlantStatus` 真正需要温度的路径调用 `MinecraftThermalInput.gameplayCropEnvironment`。已有 Air Mesh publication 命中时，返回的空气温度直接进入施肥、生长、生存和死亡阈值；无 active runtime、无 Page、无可解析 Air 点、stale 或超龄 publication 时使用 natural block temperature，再合成 analytic field。天气先行决定植物状态时不发起 thermal query。该 passive 路径不会创建 Page、Brick、Cell 或 Interest。
-
-`MinecraftThermalInput.gameplayItemEnvironment` 为掉落暖石和热水袋读取已有 live/last
+`WorldTemperature.sampleDroppedItemAirTemperature` 为掉落暖石和热水袋读取已有 live/last
 publication，未命中时使用已加载 chunk 的 dormant 温度，再回退 `WorldTemperature.naturalAir`。
-方块形态的 `gameplayPlacedReservoirEnvironment` 复用同一查询和预算，在方块相对坐标
-`(0.5, 0.3125, 0.5)`（模型上方）采样；两种形态使用相同的暴露换热速率。
+方块形态通过 `WorldTemperature.samplePlacedReservoirAirTemperature` 复用同一查询和预算，在方块相对坐标
+`(0.5, 0.3125, 0.5)`（模型上方）采样。两种形态使用相同的暴露换热速率。
 随后在接收点按当前 `MinecraftGameplayFields` 合成解析场：能量塔取
-`max(physicalOrFallback, naturalAir + maximumMatchingDelta)`，再执行命令和 Boss 控制。
+`max(physicalOrFallback, naturalAir + maximumMatchingDeltaAtPosition)`，包含上述中心增温，再执行命令和 Boss 控制。
 即使物理 runtime 不存在或刚关闭，世界拥有的解析场仍然生效；查询不会启动 runtime 或加载区块。
 有 runtime 时，同 tick 最多缓存 64 个四分之一方块位置的原始空气/直接辐射结果；解析场不缓存，
 每次按精确位置重新合成，保留同 tick 场更新、移除与边界变化。连续空气后端命中该缓存时仍按实际 xyz 重新读取空气场，避免四分之一方块位置合并丢失空间细节。缓存满后仍采样空气并合成解析场，
@@ -380,10 +439,9 @@ publication，未命中时使用已加载 chunk 的 dormant 温度，再回退 `
 
 城镇建筑调用关系（2026-10-18 局部复核）：`HouseBlockEntity.scanStructure` 与
 `HuntingBaseBlockEntity.scanStructure` 使用 `BlockScanner.RoomData.calculateTemperature`，
-逐个读取 `OccupiedCell.reachableIterable()` 中位置的 `WorldTemperature.block` 并取平均。
-这些查询通过 `gameplayPassiveEnvironment` 读取可用空气状态、自然温度回退和解析场，结果驱动评分与日结算。
-`TownThermalProjection` / `gameplayTownEnvironment` 的 weighted-group API 仍存在，但当前建筑扫描没有调用它；
-直接测试该 API 不能证明实际建筑扫描和日结算已通过集成验收。矿井基地当前没有温度工作条件。
+逐个用 `WorldTemperature.getTempAtBlock(serverLevel, position, loadedWorld)` 读取 `OccupiedCell.reachableIterable()` 中位置的环境温度并取平均，结果驱动评分与日结算。
+`MinecraftThermalInput.sampleWeightedAirTemperature` 按 `TownThermalProjection` 的代表点和体素权重计算气温。
+当前建筑使用上文的逐点采样。验证建筑扫描和日结算需覆盖实际调用链。`MineBlockScanner` 中的旧温度累积当前没有生产调用者。`MineBaseBlockScanner` 不计算温度，矿井基地当前没有温度工作条件。
 
 `MinecraftPhaseController` 对编译升温边检查显式解析下限：
 `L = compose(natural, -Infinity)`。被物理 phase 接管的方块，仅当解析下限自身达到对应阈值时，
@@ -392,6 +450,39 @@ publication，未命中时使用已加载 chunk 的 dormant 温度，再回退 `
 
 ## 9. 持久化与当前约束
 
-`WorldClimate.save` 当前保存 `WorldClockSource`、`dailyTempData`、`whitecurtains` 和 `isInitialEventAdded`。`ClimateEventTrack` 流本身没有写入该 NBT；载入后现有小时缓存先继续使用，轨道在需要生成更远日期时从当前时刻重新增长。预报帧不持久化，而是从缓存重建。
+`WorldClimate.save` 当前保存 `WorldClockSource`、`dailyTempData`、`whitecurtains` 和 `isInitialEventAdded`；存盘（不是网络包）还保存覆盖层气候历史 `coveredClimate`，见4.1节。`ClimateEventTrack` 流本身没有写入该 NBT；载入后现有小时缓存先继续使用，轨道在需要生成更远日期时从当前时刻重新增长。预报帧不持久化，而是从缓存重建。
 
 `WorldTemperature.worldCache` 和 `biomeCache` 分别按 `Level` 和 `Biome` 缓存数据配方结果。当前数据重载监听器会替换 `WorldTempData.cacheList`/`BiomeTempData.cacheList`，但源码中没有调用 `WorldTemperature.clear()`；已缓存的维度和群系值可能在 `/reload` 后继续沿用到进程或对应对象生命周期结束。
+
+## 温度传感器（2026-11-16）
+
+- Status: `Current`（实现已核对，验证结果见开发日记）
+- Last verified: `2026-11-20`（取温接口），`2026-11-16`（客户端界面与操作）
+- Scope: `frostedheart:temperature_sensor` 方块、菜单、保存、红石与配方。
+- Code anchors: `TemperatureSensorBlock`, `TemperatureSensorBlockEntity`, `TemperatureSensorMenu`, `TemperatureSensorScreen`, `WorldTemperature.getTempAtBlock`。
+
+传感器通过 `WorldTemperature.getTempAtBlock(level, worldPosition, SURROUNDINGS)` 在自身坐标读取环境气温，包含可用的空气数据、自然背景回退和局部解析热场。空气与外壳因热容或接触导热产生温差时，界面和红石输出以气温为准。摄氏目标温度默认为 `0`，支持负值和小数。主手右键（不潜行）打开 GUI，输入目标值后点击“应用”；模式按钮切换正常/反转。界面显示当前温度与输出强度。
+
+服务端首次 tick 和随后每 20 tick 采样一次，修改配置立即采样。正常模式 `T >= target` 输出 15，反转模式 `T < target` 输出 15，其余输出 0。六面均提供强、弱红石信号。输出变化和拆除会通知邻居。区块卸载期间不采样，重新加载后首次 tick 重算。此比较不设置回差。
+
+方块实体 NBT `TargetTemperature`（float，摄氏度）与 `Inverted`（boolean）保存配置；输出保存在方块状态 `powered`。非有限温度输入不改变配置。菜单通过 Chorda `CDataSlot<Float>` 将浮点位模式拆成两个 16 位菜单属性同步目标/当前温度，并同步模式和输出，配置消息在服务端应用。破坏掉落方块物品，重新放置使用默认配置。
+
+`src/main/resources/data/frostedheart/recipes/temperature_sensor.json` 为有序合成，形状 `PPP / TCT / IVI`：P 为 `forge:plates/iron` 或 `forge:plates/steel`，T 为红石火把，C 为 `forge:plates/copper`，I 为 `forge:ingots/iron` 或 `forge:ingots/steel`，V 为 `forge:plates/invar`。各格铁/钢可独立混用，产出 1 个。配方由模组提供；已检查配套 TheWinterRescue 的金属配方，未修改整合包仓库（其中未发现 AGENTS.md）。
+
+验证入口：`./gradlew --offline runGameTestServer -PgameTestNamespaces=frostedheart_temperature_sensor -PgameTestDirectory=build/temperature-sensor-gametest`。2026-11-16 已通过真实图形客户端创造世界验收：实际右键放置、打开 GUI、输入并应用 -12.5℃、切换反转、关闭重开后保留设置；默认外观和界面已截取原始 1280×720 游戏帧。详见 `diary/2026-11-16_15-07-00_temperature-sensor-client-acceptance.md`。
+
+### 传感器实现复用（2026-11-16）
+
+`TemperatureSensorBlock` 复用 `CGuiBlock` / `CEntityBlock` 的 GUI 打开、方块实体工厂与 tick 分发；实体使用 `CBlockEntity.readCustomNBT/writeCustomNBT` 和 `CTickableBlockEntity`，配置字段名和存档格式不变。菜单使用 `CBlockEntityMenu`、其 `buildValidator` 提供的实体存在/同维度/8 格距离检查、`CBaseMenu.getPlayer/sendMessage(int,float)`、`CCustomMenuSlot.SLOT_BOOL/SLOT_INT` 与 `MultipleDataSlotConverter`。没有新建网络通道或保存文件。
+
+温度读数的双 16 位属性转换仍是本方块的薄适配：现有 `CCustomMenuSlot.SLOT_FLOAT` 只占一个属性，当前 `ClientboundContainerSetDataPacket` 使用 `writeShort/readShort`，不能完整携带 IEEE float 位模式。界面继续复用 `AbstractContainerScreen`、`EditBox`、`Button`；CUI `RealBox` 需要 `UIElement`/CUI screen adapter，不能直接替换当前原版控件。注册沿用 `REGISTRATE`、`FHBlockEntityTypes.makeType`、`FHMenuTypes.register`、`MenuScreens.register`。红石六面输出和传播没有找到匹配的仓库通用基类：`WarehouseLevelEmitterBlock` 绑定仓库授权/城镇行为，`CBlockEntity.syncData` 只更新中心邻居，不包含强充能经实体方块传播所需的外围通知，因此保留传感器的简短方块状态输出实现。
+
+### 传感器原版风格界面（2026-11-16）
+
+`TemperatureSensorScreen` 使用 196×124 的紧凑布局，直接调用 Chorda `VanillaTheme.INSTANCE.drawUIBackground` 和主题文字配色/阴影设置，不改变 `AbstractContainerScreen`、菜单、数据槽或消息。`Theme` 绘制接口接受 `GuiGraphics` 与坐标，不依赖 `UIElement`，因此可用于原版容器屏幕；这是主题绘制层复用，不会接入 CUI 元素树或其自动主题继承。
+
+温度计物品图标表示当前温度；“目标温度”标注目标输入，`✓` 应用；模式按钮显示“红石反转：关/开”，悬停说明当前模式的输出温度条件、15级信号/无信号效果及点击切换动作；红石火把图标旁显示 `0 / 15` 或 `15 / 15`。说明文本保留在悬停提示，输入框和按钮仍复用原版控件。界面不新增纹理或图标文件，复用已有温度计物品与原版红石火把。
+
+`./gradlew --offline assemble` 构建通过；使用 `./gradlew --offline runClient -I Scripts/dev_client_bridge.init.gradle` 启动真实图形客户端，在已有创造测试世界右键打开界面、输入并应用目标值、切换模式，确认布局和图标正常。原始 1280×720 截图：`run/agent/screenshots/01794842807532683100-temperature-sensor-vanilla-final.png`。客户端通过 bridge `quit` 正常退出，Gradle 成功结束。
+
+2026-11-16 文案排版补充：目标标签改为“目标温度”，输入框右移并缩窄；反转开/关提示中的点击动作说明使用显式换行。已离线构建并在中文真实客户端悬停验收，截图 `run/agent/screenshots/01794843699030940000-temperature-sensor-target-label-tooltip-newline-zh.png`。

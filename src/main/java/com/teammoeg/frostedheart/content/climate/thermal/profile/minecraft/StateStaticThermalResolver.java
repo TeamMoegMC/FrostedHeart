@@ -33,6 +33,24 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 /** Startup-only coarse classification. Ventilation is not occupied volume. */
 public final class StateStaticThermalResolver {
     private StateStaticThermalResolver() {}
+    /** Occupied eighths for slab and stair shapes. Other bodies keep their configured reference amount. */
+    static int occupiedOctants(BlockState state) {
+        if (state.getBlock() instanceof net.minecraft.world.level.block.SlabBlock)
+            return switch (state.getValue(BlockStateProperties.SLAB_TYPE)) {
+                case BOTTOM -> 0x33;
+                case TOP -> 0xcc;
+                case DOUBLE -> 0xff;
+            };
+        if (!(state.getBlock() instanceof net.minecraft.world.level.block.StairBlock) || state.getBlock().hasDynamicShape()) return -1;
+        var boxes = state.getCollisionShape(EmptyBlockGetter.INSTANCE, BlockPos.ZERO).toAabbs();
+        int mask = 0;
+        for (int i = 0; i < 8; i++) {
+            double x = .25 + .5 * (i & 1), y = .25 + .5 * (i >> 1 & 1), z = .25 + .5 * (i >> 2);
+            for (var box : boxes) if (box.contains(x, y, z)) { mask |= 1 << i; break; }
+        }
+        return mask == 0 ? -1 : mask;
+    }
+
     /** Full material contact faces, in BlockFace's X/Y/Z paired order. */
     public static int fullContactFaces(BlockState state) {
         if (state.getBlock() instanceof net.minecraft.world.level.block.LiquidBlock) return 63;

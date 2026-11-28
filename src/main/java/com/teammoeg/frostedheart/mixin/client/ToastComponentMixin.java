@@ -38,4 +38,14 @@ public class ToastComponentMixin {
         }
     }
 
+    /**
+     * 铺满窗口的布告板开着时，右上角的弹窗不画：排队的还没开始计时，关上布告板后照常弹出。
+     * While a full-window board is open the corner toasts are not drawn; queued ones have not started their clocks yet,
+     * so they slide in as usual once the board closes.
+     */
+    @Inject(method = "render", at = @At(value = "HEAD"), cancellable = true)
+    public void fh$waitBehindBoards(net.minecraft.client.gui.GuiGraphics graphics, CallbackInfo ci) {
+        if (com.teammoeg.chorda.client.cui.base.HidesSidebarButtons.isOpen()) ci.cancel();
+    }
+
 }

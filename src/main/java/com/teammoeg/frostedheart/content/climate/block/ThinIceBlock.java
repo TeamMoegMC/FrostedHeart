@@ -114,10 +114,8 @@ public class ThinIceBlock extends IceBlock {
         if (!state.is(this)) return false;
         int crack = state.getValue(CRACK) + amount;
         if (crack >= fractureStages(state)) {
-            boolean water = hasAdjacentWater(level, pos);
             level.levelEvent(2001, pos, net.minecraft.world.level.block.Block.getId(state));
-            level.setBlockAndUpdate(pos, water ? net.minecraft.world.level.block.Blocks.WATER.defaultBlockState()
-                    : net.minecraft.world.level.block.Blocks.AIR.defaultBlockState());
+            level.setBlockAndUpdate(pos, fractureResult(level, pos, state));
             level.gameEvent(net.minecraft.world.level.gameevent.GameEvent.BLOCK_DESTROY, pos,
                     net.minecraft.world.level.gameevent.GameEvent.Context.of(state));
             return false;
@@ -126,6 +124,11 @@ public class ThinIceBlock extends IceBlock {
         float volume = crack == 3 ? 0.9F : 0.15F;
         level.playSound(null, pos, FHSoundEvents.ICE_CRACKING.get(), SoundSource.BLOCKS, volume, 1.0F);
         return true;
+    }
+
+    protected BlockState fractureResult(Level level, BlockPos pos, BlockState state) {
+        return hasAdjacentWater(level, pos) ? net.minecraft.world.level.block.Blocks.WATER.defaultBlockState()
+                : net.minecraft.world.level.block.Blocks.AIR.defaultBlockState();
     }
 
     public static boolean hasAdjacentWater(Level level, BlockPos pos) {

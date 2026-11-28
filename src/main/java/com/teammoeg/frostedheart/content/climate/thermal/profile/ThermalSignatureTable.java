@@ -32,7 +32,7 @@ public final class ThermalSignatureTable {
     private final int[] materials;
     private final int[] materialStates;
     private final int[] materialTypes;
-    private final byte[] fullContactFaces;
+    private final int[] contactPatches;
     private final boolean[] airMatter;
     private final Integer[] payloads;
 
@@ -41,7 +41,7 @@ public final class ThermalSignatureTable {
         materials = new int[values.size()];
         materialStates = new int[values.size()];
         materialTypes = new int[values.size()];
-        fullContactFaces = new byte[values.size()];
+        contactPatches = new int[values.size()];
         airMatter = new boolean[values.size()];
         payloads = new Integer[values.size()];
         for (int i = 0; i < values.size(); i++) {
@@ -49,7 +49,7 @@ public final class ThermalSignatureTable {
             materials[i] = values.get(i).materialProfileId();
             materialStates[i] = values.get(i).materialStateId();
             materialTypes[i] = values.get(i).materialTypeId();
-            fullContactFaces[i] = (byte) values.get(i).fullContactFaces();
+            contactPatches[i] = values.get(i).contactPatches();
             airMatter[i] = values.get(i).airMatter();
             payloads[i] = i;
         }
@@ -63,14 +63,20 @@ public final class ThermalSignatureTable {
     public boolean samePhysicalProperties(int first, int second) {
         return valid(first) && valid(second) && (first == second
                 || ventilation[first] == ventilation[second] && materials[first] == materials[second]
-                && materialTypes[first] == materialTypes[second] && fullContactFaces[first] == fullContactFaces[second]
+                && materialTypes[first] == materialTypes[second] && contactPatches[first] == contactPatches[second]
                 && airMatter[first] == airMatter[second]);
     }
     public boolean sameMaterialType(int first, int second) {
         return valid(first) && valid(second) && (materialTypes[first] < 0 || materialTypes[second] < 0
                 || materialTypes[first] == materialTypes[second]);
     }
-    public int fullContactFaces(int id) { return valid(id) ? fullContactFaces[id] : 0; }
+    /** Occupied quadrants on one face of the material cell. */
+    public int facePatches(int id, int face) { return valid(id) ? (contactPatches[id] >>> (4 * face)) & 15 : 0; }
+
+    /** Fraction of the shared face occupied by both adjacent bodies. */
+    public double contactFraction(int first, int second, int firstFace) {
+        return Integer.bitCount(facePatches(first, firstFace) & facePatches(second, firstFace ^ 1)) * .25;
+    }
     public boolean mergeable(int id) { return isAir(id) && ventilation(id) == 100 && materialProfileId(id) == 0; }
     public Integer uniformPayload(int id) { return id == UNRESOLVED ? UNRESOLVED : payloads[id]; }
     public static Builder builder() { return new Builder(); }

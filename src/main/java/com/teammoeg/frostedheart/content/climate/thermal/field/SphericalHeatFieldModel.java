@@ -24,6 +24,14 @@ public final class SphericalHeatFieldModel {
     private SphericalHeatFieldModel() {
     }
 
+    /** Sphere value in °C at a squared block distance. The center boost tapers to zero at the radius. */
+    public static double temperatureAt(double distanceSquared, double radiusSquared, double inverseRadiusSquared,
+            double baseC, double centerBoostC) {
+        if (!(distanceSquared <= radiusSquared)) return Double.NaN;
+        double weight = 1 - distanceSquared * inverseRadiusSquared;
+        return baseC + centerBoostC * weight * weight;
+    }
+
     public static boolean contains(
             int centerX,
             int centerY,

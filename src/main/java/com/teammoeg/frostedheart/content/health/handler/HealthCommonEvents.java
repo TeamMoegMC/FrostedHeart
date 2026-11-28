@@ -134,7 +134,7 @@ public class HealthCommonEvents {
 		Player player = event.player;
 		if (!(player instanceof ServerPlayer))
 			return;
-		if (player.isCreative() || player.isSpectator())
+		if (!player.isAlive() || player.isRemoved() || player.isCreative() || player.isSpectator())
 			return;
 
 		long gameTime = event.player.tickCount;

@@ -19,14 +19,16 @@
 
 package com.teammoeg.frostedheart.content.utility;
 
+import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.item.FHBaseItem;
 import com.teammoeg.frostedheart.util.Lang;
 import com.teammoeg.frostedheart.bootstrap.common.FHItems;
-import com.teammoeg.frostedheart.content.climate.WorldTemperature;
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialSample;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionResultHolder;
@@ -45,7 +47,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
 
-import static com.teammoeg.frostedheart.content.climate.TemperatureDisplayHelper.toTemperatureFloatString;
+import static com.teammoeg.frostedheart.content.climate.TemperatureDisplayHelper.sendTemperature;
 
 public class SoilThermometer extends FHBaseItem {
     private static final List<Predicate<Player>> IS_WEARING_PREDICATES = new ArrayList<>();
@@ -81,11 +83,11 @@ public class SoilThermometer extends FHBaseItem {
     public InteractionResultHolder<ItemStack> use(Level worldIn, Player playerIn, InteractionHand handIn) {
         playerIn.displayClientMessage(Lang.translateMessage("thermometer.testing"), true);
         playerIn.startUsingItem(handIn);
-        if (playerIn instanceof ServerPlayer && playerIn.getAbilities().instabuild) {
+        if (playerIn instanceof ServerPlayer server && server.getAbilities().instabuild) {
             BlockHitResult brtr = getPlayerPOVHitResult(worldIn, playerIn, Fluid.ANY);
             if (brtr.getType() != Type.MISS) {
 
-                reportMaterialTemperature(playerIn, brtr.getBlockPos());
+                reportTemperature(server, brtr.getBlockPos());
             }
 
         }
@@ -96,10 +98,10 @@ public class SoilThermometer extends FHBaseItem {
     public ItemStack finishUsingItem(ItemStack stack, Level worldIn, LivingEntity entityLiving) {
         if (worldIn.isClientSide) return stack;
         Player entityplayer = entityLiving instanceof Player ? (Player) entityLiving : null;
-        if (entityplayer instanceof ServerPlayer) {
+        if (entityplayer instanceof ServerPlayer server) {
             BlockHitResult brtr = getPlayerPOVHitResult(worldIn, entityplayer, Fluid.ANY);
             if (brtr.getType() == Type.MISS) return stack;
-            reportMaterialTemperature(entityplayer, brtr.getBlockPos());
+            reportTemperature(server, brtr.getBlockPos());
         }
         return stack;
     }
@@ -113,11 +115,16 @@ public class SoilThermometer extends FHBaseItem {
         return false;
     }
 
-    private static void reportMaterialTemperature(Player player, net.minecraft.core.BlockPos position) {
-        float temperature = WorldTemperature.material(player.level(), position);
-        player.sendSystemMessage(Float.isFinite(temperature)
-                ? Lang.translateMessage("info.soil_thermometerbody", toTemperatureFloatString(temperature))
-                : Lang.translateMessage("info.material_temperature_unavailable"));
+    private static void reportTemperature(ServerPlayer player, BlockPos position) {
+        var material = new MaterialSample();
+        float temperature = WorldTemperature.getTempAtBlock(player.serverLevel(), position, material);
+        if (Float.isFinite(temperature)) {
+            String key = material.source() == MaterialSample.Source.UNAVAILABLE
+                    ? "info.ambient_temperature" : "info.soil_thermometerbody";
+            sendTemperature(player, key, temperature);
+        } else {
+            player.sendSystemMessage(Lang.translateMessage("info.block_temperature_unavailable"));
+        }
     }
 
     public static void addIsWearingPredicate(Predicate<Player> predicate) {

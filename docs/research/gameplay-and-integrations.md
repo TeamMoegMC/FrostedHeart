@@ -153,7 +153,7 @@ When Create is loaded, `frostedresearch:mechanical_calculator` produces cached e
 
 Each server tick adds the integer absolute speed to `process`. When it reaches `6400`, the machine resets process and adds `20` cached points. Clicking transfers as many cached points as the current research accepts through `TeamResearchData#doResearch`, leaving any unused amount in the machine.
 
-The calculator records the placing real player's current team in the existing `IOwnerTile` NBT. A legacy ownerless calculator is claimed by the first direct or rubbing interaction from a real `ServerPlayer`. Fake players never claim or extract, and another team cannot replace the owner, redirect direct-click progress, inspect the extractable balance, or remove cached points.
+The calculator records the placing real player's current team in the existing `IOwnerTile` NBT. A legacy ownerless calculator is claimed by the first direct or rubbing interaction from a real `ServerPlayer`. `ComputeMachine.getFetchablePoints(UUID)` and `fetchPoint(UUID, int)` authorize the tool-bound Chorda team UUID against the machine owner, independently of the operator. Missing/wrong UUIDs and ownerless machines cannot extract. Real players claim legacy ownerless machines by ordinary click; fake-player clicks remain rejected. Extraction is capped by the requested maximum and cached balance.
 
 `RubbingTool` extracts through the player-authorized `ComputeMachine` interface. `fetchPoint(ServerPlayer,max)` returns zero for `max <= 0` or an unauthorized player; otherwise it removes exactly `min(max,currentPoints)`. The current rubbing workflow waits for at least `100` authorized points and extracts exactly `100`, retaining any excess machine cache.
 
@@ -312,3 +312,7 @@ Ordinary research code accesses JEI through `ResearchJeiBridge`, so no-JEI start
 5. Add full-load/relogin behavior, not only incremental event behavior.
 6. Test no-team fallback, FTB team changes, `/reload`, and an existing saved team.
 7. Document identifiers, units, defaults, bypasses, and revocation/reset behavior here.
+
+### Rubbing tool team binding
+
+`RubbingTool` stores `research` (string), `points` (int), and `team` (UUID IntArrayTag). Binding at the drawing desk records both the current research and Chorda team UUID. Collection uses the tool-bound team UUID and requires that team to have an active, unfinished bound research; the operator identity does not determine extraction ownership; submission checks the team before consuming anything. Points cannot be transferred to another team. Calculator ownership checks remain independent. Empty legacy tools without `team` may rebind at the desk to the current research/team. Legacy tools with positive points and no team retain their data but cannot collect or submit, because the original team cannot be recovered. No world migration guesses ownership.

@@ -52,6 +52,8 @@ import net.minecraftforge.common.capabilities.ICapabilityProvider;
 import java.util.List;
 
 public class SteamBottleItem extends FHBaseItem implements ITempAdjustFood {
+    private static final int STEAM_CAPACITY = 240;
+    private static final int CHARGER_POINTS_PER_UNIT = 400;
     private static final float HEAT_PER_STORED_UNIT_W = 46.66667F;
 
     public SteamBottleItem(Properties properties) {
@@ -60,8 +62,10 @@ public class SteamBottleItem extends FHBaseItem implements ITempAdjustFood {
 
     @Override
     public void appendHoverText(ItemStack stack, Level worldIn, List<Component> tooltip, TooltipFlag flagIn) {
-        String stored = FHCapabilities.ITEM_HEAT.getCapability(stack).map(t->t.getEnergyStored()).orElse(0f) + "/" + 240;
+        String stored = FHCapabilities.ITEM_HEAT.getCapability(stack).map(t->t.getEnergyStored()).orElse(0f)
+                + "/" + STEAM_CAPACITY;
         tooltip.add(Lang.translateTooltip("meme.steam_bottle").withStyle(ChatFormatting.GRAY));
+        tooltip.add(Lang.translateTooltip("charger.dock_supply").withStyle(ChatFormatting.GRAY));
         tooltip.add(Lang.translateTooltip("steam_stored", stored).withStyle(ChatFormatting.GOLD));
     }
 
@@ -70,7 +74,7 @@ public class SteamBottleItem extends FHBaseItem implements ITempAdjustFood {
         if (helper.isType(FHTabs.TOOLS)) {
             ItemStack is = new ItemStack(this);
             helper.accept(this);
-            FHCapabilities.ITEM_HEAT.getCapability(is).ifPresent(t->t.receiveEnergy(240, false));
+            FHCapabilities.ITEM_HEAT.getCapability(is).ifPresent(t->t.receiveEnergy(STEAM_CAPACITY, false));
             helper.accept(is);
         }
 	}
@@ -98,12 +102,6 @@ public class SteamBottleItem extends FHBaseItem implements ITempAdjustFood {
     @Override
     public int getUseDuration(ItemStack stack) {
         return 16;
-    }
-
-    @Override
-    public void onCraftedBy(ItemStack stack, Level worldIn, Player playerIn) {
-        super.onCraftedBy(stack, worldIn, playerIn);
-        FHCapabilities.ITEM_HEAT.getCapability(stack).ifPresent(t->t.receiveEnergy(240,false));
     }
 
     /**
@@ -151,7 +149,8 @@ public class SteamBottleItem extends FHBaseItem implements ITempAdjustFood {
 
 	@Override
 	public ICapabilityProvider initCapabilities(ItemStack stack,CompoundTag nbt) {
-		return CapabilityDispatchBuilder.builder().add(FHCapabilities.ITEM_HEAT.provider(()->new HeatStorageCapability(stack, 240)))
+		return CapabilityDispatchBuilder.builder().add(FHCapabilities.ITEM_HEAT,
+                () -> new HeatStorageCapability(stack, STEAM_CAPACITY, CHARGER_POINTS_PER_UNIT))
 				.add(FHCapabilities.EQUIPMENT_HEATING,()->new BodyHeatingCapability() {
 
 					@Override
@@ -159,9 +158,10 @@ public class SteamBottleItem extends FHBaseItem implements ITempAdjustFood {
 						float requested = (float) (
 								1.5D * data.getElapsedSeconds());
 						if (!(requested > 0.0F)) return;
-						float extracted = FHCapabilities.ITEM_HEAT.getCapability(stack)
-								.map(value -> value.extractEnergy(requested, false))
-								.orElse(0.0F);
+						HeatStorageCapability storage = FHCapabilities.ITEM_HEAT.getCapability(stack).orElse(null);
+						if (storage == null) return;
+						float extracted = storage.extractEnergy(requested, false);
+						if (!(extracted > 0F)) return;
 						data.addPower(BodyPart.TORSO,
 								extracted / requested * 1.5D
 								* HEAT_PER_STORED_UNIT_W);

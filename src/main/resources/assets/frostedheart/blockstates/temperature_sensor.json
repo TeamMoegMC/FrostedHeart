@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "powered=false": {
+      "model": "frostedheart:block/temperature_sensor"
+    },
+    "powered=true": {
+      "model": "frostedheart:block/temperature_sensor_on"
+    }
+  }
+}

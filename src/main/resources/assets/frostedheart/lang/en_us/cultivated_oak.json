@@ -1,0 +1,19 @@
+{
+  "block.frostedheart.cultivated_oak_sapling": "Cultivated Oak Sapling",
+  "message.frostedheart.cultivated_oak.status": "Stage %s/4, progress %s; %s",
+  "message.frostedheart.cultivated_oak.growing": "Growing",
+  "message.frostedheart.cultivated_oak.profile": "Waiting for cultivation profile",
+  "message.frostedheart.cultivated_oak.light": "Waiting for light",
+  "message.frostedheart.cultivated_oak.temperature": "Waiting for suitable temperature",
+  "message.frostedheart.cultivated_oak.yield": "Waiting for enough growth yield",
+  "message.frostedheart.cultivated_oak.space": "Waiting for space",
+  "message.frostedheart.cultivated_oak.square": "Waiting for a same-species 2x2 square",
+  "message.frostedheart.cultivated_oak.progress": "Growth progress",
+  "message.frostedheart.cultivated_oak.current_temperature": "Current temperature",
+  "message.frostedheart.cultivated_oak.ideal_temperature": "Ideal temperature",
+  "message.frostedheart.cultivated_oak.stage.0": "Sprouting",
+  "message.frostedheart.cultivated_oak.stage.1": "Seedling",
+  "message.frostedheart.cultivated_oak.stage.2": "Growing",
+  "message.frostedheart.cultivated_oak.stage.3": "Established",
+  "message.frostedheart.cultivated_oak.stage.4": "Awaiting tree growth"
+}

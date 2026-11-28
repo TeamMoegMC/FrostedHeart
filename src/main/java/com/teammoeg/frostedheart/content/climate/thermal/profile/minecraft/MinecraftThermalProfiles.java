@@ -72,8 +72,7 @@ public final class MinecraftThermalProfiles {
                         config.farFieldConductanceWPerK.get(),
                         config.dormantTemperatureHalfLifeSeconds.get(),
                         MinecraftPhysicalSourceProfile.campfire(
-                                config.campfirePowerW.get(), config.campfireRadiationShare.get()),
-                        config.continuousAirCorrectionToleranceC.get());
+                                config.campfirePowerW.get(), config.campfireRadiationShare.get()));
         List<Block> blocks = new ArrayList<>(ForgeRegistries.BLOCKS.getValues());
         blocks.sort(
                 Comparator.comparing(
@@ -128,6 +127,11 @@ public final class MinecraftThermalProfiles {
                     if (phase) transitionStates++;
                     else staticStates++;
                 }
+                // The fuel and flame occupy an effective thermal cell with six exchange faces.
+                int faces = profileId == 0 ? 0 : isCampfire(state) ? 0x3f : StateStaticThermalResolver.fullContactFaces(state);
+                int octants = StateStaticThermalResolver.occupiedOctants(state);
+                int patches = octants < 0 ? ResolvedThermalSignature.patchesForFullFaces(faces)
+                        : ResolvedThermalSignature.patchesForOctants(octants);
                 int signatureId =
                         signatures.intern(
                                 new ResolvedThermalSignature(
@@ -136,16 +140,13 @@ public final class MinecraftThermalProfiles {
                                         profileId == 0
                                                 ? -1
                                                 : Block.BLOCK_STATE_REGISTRY.getId(state),
-                                        profileId == 0
-                                                ? 0
-                                                : StateStaticThermalResolver.fullContactFaces(
-                                                        state),
+                                        faces,
                                         state.isAir(),
                                         profileId == 0
                                                 ? -1
                                                 : net.minecraft.core.registries.BuiltInRegistries
                                                         .BLOCK
-                                                        .getId(block)));
+                                                        .getId(block), patches));
                 int radiationProfileId = 0;
                 if (staticRadiationEnabled && !isCampfire(state)) {
                     if (state.getFluidState().is(FluidTags.LAVA)) {
@@ -191,13 +192,6 @@ public final class MinecraftThermalProfiles {
         return profileEpoch;
     }
 
-    public static boolean lavaBlockRadiationEnabled() {
-        Snapshot current = snapshot;
-        return current != null
-                && current.states.hasRadiationMode(
-                        MinecraftStateThermalTable.RADIATION_LAVA_SURFACE);
-    }
-
     private static boolean isCampfire(BlockState state) {
         return state.is(Blocks.CAMPFIRE) || state.is(Blocks.SOUL_CAMPFIRE);
     }
@@ -212,6 +206,7 @@ public final class MinecraftThermalProfiles {
                         * (Math.pow(lavaK, 4.0D) - Math.pow(referenceK, 4.0D)));
     }
 
+    /** Selects the block material defaults before state transition data can override them. */
     private static GameplayMaterial classify(BlockState state) {
         if (state.isAir()
                 || state.getBlock() instanceof net.minecraft.world.level.block.BaseFireBlock
@@ -221,9 +216,9 @@ public final class MinecraftThermalProfiles {
                 || state.getBlock() instanceof net.minecraft.world.level.block.StructureVoidBlock
                 || state.getBlock() instanceof net.minecraft.world.level.block.LightBlock)
             return null;
+        if (state.is(BlockTags.CROPS)) return GameplayMaterial.CROP;
         if (state.getBlock() instanceof LeavesBlock
                 || state.is(BlockTags.LEAVES)
-                || state.is(BlockTags.CROPS)
                 || state.is(BlockTags.SAPLINGS)
                 || state.is(BlockTags.FLOWERS)
                 || state.is(BlockTags.REPLACEABLE)) {
@@ -235,6 +230,7 @@ public final class MinecraftThermalProfiles {
         if (state.is(Tags.Blocks.GLASS) || state.is(Tags.Blocks.GLASS_PANES)) {
             return GameplayMaterial.GLASS;
         }
+        if (isCampfire(state)) return GameplayMaterial.CAMPFIRE;
         if (isMetal(state)) return GameplayMaterial.METAL;
         if (isWood(state)) return GameplayMaterial.WOOD;
         if (isEarth(state)) return GameplayMaterial.EARTH;
@@ -257,7 +253,9 @@ public final class MinecraftThermalProfiles {
         if (state.getBlock() instanceof net.minecraft.world.level.block.LiquidBlock) {
             return WATER_CAPACITY_J_PER_K * state.getFluidState().getAmount() / 8.0;
         }
-        return 6 * material.capacity
+        int octants = StateStaticThermalResolver.occupiedOctants(state);
+        double volume = octants < 0 ? 1 : Integer.bitCount(octants) / 8.0;
+        return 6 * material.capacity * volume
                 + (state.getFluidState().is(FluidTags.WATER) ? WATERLOGGED_CAPACITY_J_PER_K : 0);
     }
 
@@ -325,8 +323,7 @@ public final class MinecraftThermalProfiles {
             double airMixingWPerBlockK,
             double farFieldConductanceWPerK,
             double dormantTemperatureHalfLifeSeconds,
-            MinecraftPhysicalSourceProfile campfire,
-            double continuousAirCorrectionToleranceC) {}
+            MinecraftPhysicalSourceProfile campfire) {}
 
     private record BodyKey(
             double conductance,
@@ -336,7 +333,9 @@ public final class MinecraftThermalProfiles {
 
     private enum GameplayMaterial {
         INSULATING_FABRIC(0.12D, 120.0D),
+        CROP(2.5D, 120.0D),
         WOOD(0.45D, 450.0D),
+        CAMPFIRE(3.0D, 150.0D),
         EARTH(1.0D, 1_100.0D),
         MASONRY(1.4D, 900.0D),
         GLASS(0.8D, 250.0D),
