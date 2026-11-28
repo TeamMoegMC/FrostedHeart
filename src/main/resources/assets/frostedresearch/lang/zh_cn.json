@@ -819,7 +819,6 @@
   "gui.frostedresearch.journal.research.stage_after_start": "开始后显示当前阶段的操作。",
   "gui.frostedresearch.journal.research.stage_ready": "本阶段无需额外任务，可手动继续。",
   "gui.frostedresearch.furnace.fuel": "燃料",
-  "gui.frostedresearch.furnace.fuel_time_left": "燃料剩余 %s 秒",
   "gui.frostedresearch.furnace.out_of_fuel": "燃料耗尽，已停炉。",
   "gui.frostedresearch.furnace.start": "开始",
   "gui.frostedresearch.furnace.stop": "停止",

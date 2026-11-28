@@ -819,7 +819,6 @@
   "gui.frostedresearch.journal.research.stage_after_start": "Start research to see the current stage’s tasks.",
   "gui.frostedresearch.journal.research.stage_ready": "This stage needs no additional tasks. Continue when ready.",
   "gui.frostedresearch.furnace.fuel": "Fuel",
-  "gui.frostedresearch.furnace.fuel_time_left": "Fuel left: %s s",
   "gui.frostedresearch.furnace.out_of_fuel": "Firing stopped when the fuel ran out.",
   "gui.frostedresearch.furnace.start": "Start",
   "gui.frostedresearch.furnace.stop": "Stop",

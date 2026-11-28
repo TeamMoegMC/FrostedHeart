@@ -77,7 +77,6 @@ public final class ControlledFurnaceBlockEntity extends CBlockEntity implements 
     public String message() { return message; }
     public int fuelTicks() { return fuelTicks; }
     public int fuelDuration() { return fuelDuration; }
-    public int fuelSeconds() { return (int) ((fuelTicks + TICKS_PER_SECOND - 1L) / TICKS_PER_SECOND); }
 
     public static boolean isFuel(ItemStack stack) {
         return burnTime(stack) > 0;

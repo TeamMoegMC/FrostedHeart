@@ -20,10 +20,8 @@ public final class ControlledFurnaceScreen extends AbstractContainerScreen<Contr
     private static final ResourceLocation PANEL = new ResourceLocation("minecraft", "textures/gui/demo_background.png");
     private static final ResourceLocation FURNACE = new ResourceLocation("minecraft", "textures/gui/container/furnace.png");
     private static final ResourceLocation FUEL_HINT = new ResourceLocation("frostedresearch", "textures/gui/furnace_fuel_hint.png");
-    private static final int FUEL_GAUGE_X = ControlledFurnaceMenu.FUEL_X + 20;
-    private static final int FUEL_GAUGE_Y = ControlledFurnaceMenu.FUEL_Y - 1;
-    private static final int FUEL_GAUGE_WIDTH = 7;
-    private static final int FUEL_GAUGE_HEIGHT = 18;
+    private static final int FLAME_WIDTH = 14;
+    private static final int FLAME_HEIGHT = 13;
     private EditBox temperature, timer;
     private Button cooler, hotter, start, stop;
 
@@ -116,18 +114,17 @@ public final class ControlledFurnaceScreen extends AbstractContainerScreen<Contr
         graphics.blitNineSliced(PANEL, leftPos, topPos, imageWidth, imageHeight, 4, 248, 166, 0, 0);
         for (var slot : menu.slots)
             graphics.blit(FURNACE, leftPos + slot.x - 1, topPos + slot.y - 1, 55, 16, 18, 18);
-        if (fuelSlotEmpty())
-            graphics.blit(FUEL_HINT, leftPos + ControlledFurnaceMenu.FUEL_X + 2,
-                    topPos + ControlledFurnaceMenu.FUEL_Y + 2, 0, 0, 12, 12, 12, 12);
-        int x = leftPos + FUEL_GAUGE_X;
-        int y = topPos + FUEL_GAUGE_Y;
-        int bottom = y + FUEL_GAUGE_HEIGHT - 1;
-        graphics.fill(x, y, x + FUEL_GAUGE_WIDTH, bottom + 1, 0xFF505050);
-        graphics.fill(x + 1, y + 1, x + FUEL_GAUGE_WIDTH - 1, bottom, 0xFF303030);
         var furnace = menu.getBlock();
         if (furnace.fuelTicks() > 0) {
-            int height = (int) Math.ceil((FUEL_GAUGE_HEIGHT - 2) * (double) furnace.fuelTicks() / furnace.fuelDuration());
-            graphics.fillGradient(x + 1, bottom - height, x + FUEL_GAUGE_WIDTH - 1, bottom, 0xFFFFC055, 0xFFCB531A);
+            int x = leftPos + ControlledFurnaceMenu.FUEL_X + 1;
+            int y = topPos + ControlledFurnaceMenu.FUEL_Y - FLAME_HEIGHT - 3;
+            int height = (int) Math.ceil(FLAME_HEIGHT * (double) furnace.fuelTicks() / furnace.fuelDuration());
+            int unlitHeight = FLAME_HEIGHT - height;
+            graphics.blit(FURNACE, x, y, 56, 36, FLAME_WIDTH, unlitHeight);
+            graphics.blit(FURNACE, x, y + unlitHeight, 176, unlitHeight, FLAME_WIDTH, height);
+        } else if (fuelSlotEmpty()) {
+            graphics.blit(FUEL_HINT, leftPos + ControlledFurnaceMenu.FUEL_X + 2,
+                    topPos + ControlledFurnaceMenu.FUEL_Y + 2, 0, 0, 12, 12, 12, 12);
         }
     }
 
@@ -171,9 +168,7 @@ public final class ControlledFurnaceScreen extends AbstractContainerScreen<Contr
         renderBackground(graphics);
         super.render(graphics, mouseX, mouseY, partialTick);
         renderTooltip(graphics, mouseX, mouseY);
-        if (isHovering(FUEL_GAUGE_X, FUEL_GAUGE_Y, FUEL_GAUGE_WIDTH, FUEL_GAUGE_HEIGHT, mouseX, mouseY))
-            graphics.renderTooltip(font, t("fuel_time_left", menu.getBlock().fuelSeconds()), mouseX, mouseY);
-        else if (!menu.getBlock().running() && isHovering(156, 112, 112, 20, mouseX, mouseY))
+        if (!menu.getBlock().running() && isHovering(156, 112, 112, 20, mouseX, mouseY))
             graphics.renderTooltip(font, t(menu.getBlock().message()), mouseX, mouseY);
         else if (fuelSlotEmpty() && isHovering(ControlledFurnaceMenu.FUEL_X, ControlledFurnaceMenu.FUEL_Y, 16, 16, mouseX, mouseY))
             graphics.renderTooltip(font, t("fuel"), mouseX, mouseY);
