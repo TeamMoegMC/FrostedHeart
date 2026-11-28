@@ -159,6 +159,7 @@ run-online-latency/
 /usernamecache.json
 
 .claude/
+/.workbuddy/
 /run/kubejs/config/
 /run/kubejs/client_scripts/
 /run/kubejs/README.txt

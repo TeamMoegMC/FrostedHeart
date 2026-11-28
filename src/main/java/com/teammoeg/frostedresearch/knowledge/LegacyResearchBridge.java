@@ -176,6 +176,7 @@ public final class LegacyResearchBridge {
             list.add(tag);
         }); return list;
     }
+
     private static List<EffectItemReward> pendingItemRewards(TeamDataHolder team, String old, ResourceLocation project) {
         var definition = KnowledgeDefinitions.current().projects().get(project);
         if (definition == null || !mapping(definition, old).carryItemRewards()) return List.of();

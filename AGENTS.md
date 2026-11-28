@@ -64,6 +64,10 @@ Before changing KubeJS scripts, recipes, datapacks, quests, or pack configuratio
 - inspect both repositories for related identifiers and registrations;
 - validate and report changes for each Git repository separately.
 
+## Test Delegation
+
+You may delegate straightforward tests with clear steps and expected results to a GPT-6.1 Terra subagent. Examples include running a scripted in-game check and capturing screenshots at specified points.
+
 ## Code Review & Inspection Specification
 First, stop this inhumane practice of copying a version and recompiling it, and on top of that, requiring a path-sensitive hash. Also check the image building part—don't give me that insane pinning of a single version:
 raw materials and components have nothing to do with your one-time build; they are just there, and each build artifact can have its own unique hash. If an attacker has already gained operational privileges, what's the point of defending against them?
